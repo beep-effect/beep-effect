@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/phoenix",
+  "sourceHead": "f5b35a42f0ab1fc986b5ae32dd2be7c0d93b5ebf",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.170338055999309,
+  "bunWholeCommandSeconds": 2.0679632449973724,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [17.19873046875, 20.6748046875, 15.24658203125],
+  "loadAfter": [16.7021484375, 20.51416015625, 15.2236328125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.13 avg60=1.79 avg300=2.35 total=259066669\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.06 avg60=0.41 avg300=0.58 total=95681829\nfull avg10=0.06 avg60=0.39 avg300=0.55 total=92887005\n",
+    "io": "some avg10=0.00 avg60=0.29 avg300=0.30 total=707478993\nfull avg10=0.00 avg60=0.15 avg300=0.14 total=638460758\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.08 avg60=1.67 avg300=2.32 total=259073193\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.04 avg60=0.38 avg300=0.58 total=95681855\nfull avg10=0.04 avg60=0.37 avg300=0.54 total=92887029\n",
+    "io": "some avg10=0.00 avg60=0.27 avg300=0.30 total=707481980\nfull avg10=0.00 avg60=0.14 avg300=0.14 total=638462770\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "44104d108871e6f22446fc390261a3465a0e1890d8c6a8598bc0fe9b7a1efc3f"
+    },
+    {
+      "file": "packages/drivers/phoenix/package.json",
+      "sha256": "54257f119694e322a8915cdda45e135c49b058668603b7cedb39115e6dfb85a9"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.config.ts",
+      "sha256": "b9bfe4ba6638804ab495054a80bf3bed5c8478405de49e3b25677e2718b25ffd"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
+      "sha256": "2f4db57ed4414075b15e1a4bfc095a693bc3666f60c7a4220397ed98bd4d0240"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+      "sha256": "d65c1297be41c3378bae043e6bda17d02f5a8e1bb8acf1067af597935c8bb8f2"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+      "sha256": "79c92d2c3fdaefefd1ce4f9b2296e29095b1dbbed176f1c0acbeeb638d9548e7"
+    },
+    {
+      "file": "packages/drivers/phoenix/src/index.ts",
+      "sha256": "b806d75e7f79febc99672e16c5b338f0f5963b061da129b64363bab186733ca3"
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "sha256": "1ec86ed74903b085db33d70b08cfb4310aecb74aea6b35ee1706a91e9a2ff274"
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "sha256": "9f660cbaed9ebd7a5f2b9f5762b7905e3a3bb7b4ac94a333b1fb35442f647297"
+    }
+  ],
+  "rawReporterSha256": "db66d4a70306e8804866f5bdd1e7911a177f55cbb06c447055f23968eabfe472",
+  "rawLogSha256": "6d867928baceb5d86e2a9b9cb9757f487e650c6ff311bd8fa05c3d449eb7bd29",
+  "acceptance": "Single observed configured Node run, 30 passed cases in two suites. Load and pressure retained; no adjustment, best-of selection or causal speed claim. Frozen baseline used older runtimes and bundled 22 schema laws into one registration."
+}

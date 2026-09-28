@@ -1,4 +1,7 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 import { ContactRoutePayloadError } from "@/app/api/contact/ContactRouteResponse";
 import { ContactSubmissionError } from "@/contact/ContactSubmission.service";
@@ -14,8 +17,8 @@ describe("OIP tagged-error declared equivalence", () => {
     const b = ContactRoutePayloadError.fromReason("schema");
     const c = ContactRoutePayloadError.fromReason("form-data");
 
-    expect(sameContactRoutePayloadError(a, b)).toBe(true);
-    expect(sameContactRoutePayloadError(a, c)).toBe(false);
+    pipe(sameContactRoutePayloadError(a, b), assertTrue);
+    pipe(sameContactRoutePayloadError(a, c), assertFalse);
   });
 
   it("compares ContactSubmissionError by declared fields", () => {
@@ -35,8 +38,8 @@ describe("OIP tagged-error declared equivalence", () => {
       status: 502,
     });
 
-    expect(sameContactSubmissionError(a, b)).toBe(true);
-    expect(sameContactSubmissionError(a, c)).toBe(false);
+    pipe(sameContactSubmissionError(a, b), assertTrue);
+    pipe(sameContactSubmissionError(a, c), assertFalse);
   });
 
   it("compares OipContentLoadError by declared fields", () => {
@@ -56,7 +59,7 @@ describe("OIP tagged-error declared equivalence", () => {
       status: 502,
     });
 
-    expect(sameOipContentLoadError(a, b)).toBe(true);
-    expect(sameOipContentLoadError(a, c)).toBe(false);
+    pipe(sameOipContentLoadError(a, b), assertTrue);
+    pipe(sameOipContentLoadError(a, c), assertFalse);
   });
 });

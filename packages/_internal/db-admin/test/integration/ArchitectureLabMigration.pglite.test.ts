@@ -1,8 +1,9 @@
 import { fileURLToPath } from "node:url";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
@@ -22,7 +23,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin architecture-lab migration PgLite integration", () => {});
 } else {
   describe.concurrent("db-admin architecture-lab migration PgLite integration", () => {
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the architecture-lab migration target SQL",
         Effect.fnUntraced(function* () {

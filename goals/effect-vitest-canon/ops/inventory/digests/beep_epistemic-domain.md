@@ -34,3 +34,15 @@ P2 remains gated. Proposed order: scope, assertions, property, flake, observabil
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The original inventory above is historical. All saved findings for this package
+are fixed, with commit-specific evidence in
+history/2026-09-27-law-epistemic-reconciliation.md. Native properties retain
+original domains, comparator laws, run floors and total deadlines. Node/Bun
+tests and complete package audit/docgen pass. Property checks pass with
+400 runs and seed 20260708; negative controls restore exact source bytes.
+Timing receipts include workstation load and do not establish causal speedup.
+The consolidated goal and final full-head PR proof remain in progress.

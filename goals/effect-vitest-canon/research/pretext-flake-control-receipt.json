@@ -1,0 +1,10 @@
+{
+  "beforeExit": 1,
+  "beforeFailed": [
+    "detectEngineProfile pins the non-browser fence values mirrored from upstream v0.0.8"
+  ],
+  "afterExit": 0,
+  "restoredSha256": "5eadf7facfa22240470de53ff4ee960872c3e6f485533955fc4966476530a27b",
+  "sourceRestored": true,
+  "probe": "Node configured suite with Chromium userAgent, no canvas mock; actual browser proof unavailable due Vite optimizer failure then stalled startup."
+}

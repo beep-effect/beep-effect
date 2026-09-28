@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/openclaw",
+  "sourceHead": "54d73d964055baba14dd2fc34c4d493248b7d951",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 15.536932694012648,
+  "bunWholeCommandSeconds": 13.433941565992427,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.47509765625, 5.05859375, 4.7734375],
+  "loadAfter": [6.5888671875, 4.98876953125, 4.75537109375],
+  "pressureBefore": {
+    "cpu": "some avg10=1.29 avg60=0.28 avg300=0.15 total=695636606\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=1.27 avg60=0.52 avg300=0.34 total=184727336\nfull avg10=1.27 avg60=0.51 avg300=0.34 total=176666864\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=792175910\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=693206610\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.26 avg60=0.21 avg300=0.14 total=695646973\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.25 avg60=0.39 avg300=0.32 total=184727357\nfull avg10=0.25 avg60=0.39 avg300=0.32 total=176666886\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=792176956\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=693207498\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "ce3d610d0a82f2840650d313ec833098b01f16d39f9ceee617f343bea1750ac8"
+    },
+    {
+      "file": "packages/drivers/openclaw/package.json",
+      "sha256": "f45dd499582acbcd315c9feeea1b003474ac0f2eaef5b40e0da38323970b43b8"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/Openclaw.config.ts",
+      "sha256": "5c01e20c9628ee0bc73063ec94d97e4d3a3c8c2f239201d7da1042c91d22c2aa"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/Openclaw.errors.ts",
+      "sha256": "0d1dbe314e60aa4ceddda258f795727bf348f040c3ce07a41aa54035b9017d11"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "sha256": "7bb6d035f7a871b1a2654466e79594261fc41d73a4abe86093ee47ff92ec1917"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "sha256": "0ae8334142ffe2c1b1cedf83b6d3d2b174b39553349d685a531c21f158b77fce"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+      "sha256": "55d176882446604984a36f1fd8e65db93ad6e24ddfd346781047a01f23c2c97c"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawProbe.service.ts",
+      "sha256": "9dacdec92df9b750fd5d433985e84f2e58580ee824f0c50b95e925360eebe36f"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "sha256": "874dcb8cd89ad1b6ffff2dfbf77b45ac35761a5c5f9a45f3b70940fba239d394"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/OpenclawSystemd.service.ts",
+      "sha256": "3e68400c3efb930c049dc8c849be04a2041bd4d090fe6b2a5a1f6930db2af0d5"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/index.ts",
+      "sha256": "47c74699af6415ae5ee9bb34de7df674f2d19ddbee5341142d6907841748ec57"
+    },
+    {
+      "file": "packages/drivers/openclaw/src/internal/spawn.ts",
+      "sha256": "f4af1057124ac9db70e50e97c87d482e353a287871883f43691d48ca325b1bca"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.equivalence.test.ts",
+      "sha256": "f9a604d1c71ef1038d25479b4c2c56abd6094e806585dfd93a161b28bcf483ba"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "sha256": "88b98b42806999f1ff83b206e8de8a916802a0704b03c93385abef408013c31f"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
+      "sha256": "f699e368fdf3efbc83567cae0355fdb86fa834a9d5b7ca9261f6afc48673eb42"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "sha256": "ac3a385db235fe40e70c9fdc6934c977c5d8999a1069f3755aec441bfbedb8f8"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawProbe.service.test.ts",
+      "sha256": "80c3f1de35877abb68372e860e3251d7aa90e34d8e22b93cd2f255ef77856d87"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
+      "sha256": "0ed3b5181d6fda45aef6713a2772206e9c4aef1b02700b5114255c2cacf4bf0e"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
+      "sha256": "b39435907392a1fb130bebc2938dccd89309609e5f72b96cefdf835c38f00cbf"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/fixtures/golden-intent.expected.ts",
+      "sha256": "b7db8ee551096577826caea36eafc3374aef4028b16b2ebd9c0e8aa704e33d1f"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "sha256": "957a62a03e7b13c92c8905a6fec6b88860fb8d5bebaf380fc668bb70894c4f3c"
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawTimeout.acceptance.test.ts",
+      "sha256": "67f8225307f70baf2529d39e67558ef03ba18c46a896fc64dd509de77fd986a1"
+    }
+  ],
+  "environmentMode": "Unit stubs plus actual pinned OpenClaw binary acceptance tests, native processes and child-visible scoped directories. Existing staged binary/runtime cache may be reused; warmth is not independently measured. No real provider credentials.",
+  "bunProof": {
+    "passedTests": 67,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.51123046875, 4.63818359375, 4.64501953125],
+    "loadAfter": [5.0390625, 4.765625, 4.6875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.12 avg300=0.12 total=695657189\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.23 avg300=0.29 total=184727397\nfull avg10=0.00 avg60=0.22 avg300=0.28 total=176666924\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=792180134\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=693210371\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.10 avg300=0.11 total=695673163\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.18 avg300=0.27 total=184728211\nfull avg10=0.00 avg60=0.18 avg300=0.27 total=176667735\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=792186425\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=693216217\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark. The final suite adds one generated acceptance property and one real ten-second driver timeout with escalation and cleanup, so workloads differ (65 before versus 67 after)."
+}

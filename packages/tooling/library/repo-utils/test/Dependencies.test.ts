@@ -5,7 +5,8 @@ import {
   workspaceDependencyNames,
 } from "@beep/repo-utils/Dependencies";
 import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, HashSet } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

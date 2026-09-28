@@ -13,12 +13,19 @@ import {
   ciRunnersWorkerSecurityGroupName,
   makeCiRunnersStackArgsFromConfigValues,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const decodeCiRunnersPulumiConfigValues = S.decodeEffect(CiRunnersPulumiConfigValues);
+const isCiRunnersPulumiConfigValues = S.is(CiRunnersPulumiConfigValues);
+const CiRunnersPulumiConfigValuesEquivalent = S.toEquivalence(CiRunnersPulumiConfigValues);
 
 const decodeCiRunnersNetworkConfig = S.decodeEffect(CiRunnersNetworkConfig);
 const encodeUnknownCiRunnersNetworkConfig = S.encodeUnknownEffect(CiRunnersNetworkConfig);
@@ -37,7 +44,7 @@ describe("@beep/infra CiRunners", () => {
     expect(args.worker.rootVolumeSizeGb).toBe(100);
     expect(args.worker.maxRunMinutes).toBe(60);
     expect(args.reaper.ttlMinutes).toBe(90);
-    expect(O.isNone(args.image.amiId)).toBe(true);
+    assertNone(args.image.amiId);
     expect(args.image.ssmParameterName).toBe(
       "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"
     );
@@ -123,39 +130,77 @@ describe("@beep/infra CiRunners", () => {
     expect(ciRunnersReaperFunctionName).toBe("beep-ci-runner-reaper");
   });
 
-  it("decodes optional Pulumi config shape", () => {
-    const decoded = Effect.runSync(
-      CiRunnersPulumiConfigValues.decodeEffect({ instanceType: "m7i.2xlarge", rootVolumeSizeGb: 150 })
-    );
+  it.effect(
+    "decodes optional Pulumi config shape",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* CiRunnersPulumiConfigValues.decodeEffect({
+        instanceType: "m7i.2xlarge",
+        rootVolumeSizeGb: 150,
+      });
 
-    expect(decoded.instanceType).toBe("m7i.2xlarge");
-    expect(decoded.rootVolumeSizeGb).toBe(150);
-  });
+      expect(decoded.instanceType).toBe("m7i.2xlarge");
+      expect(decoded.rootVolumeSizeGb).toBe(150);
+    })
+  );
 
-  it("round-trips the network config through its encoded wire value", () => {
-    // The class-level zones-within-region check makes independently generated
-    // arbitraries near-impossible to satisfy, so this round-trip is deterministic.
-    const network = CiRunnersNetworkConfig.make({
-      availabilityZoneA: "us-east-2a",
-      availabilityZoneB: "us-east-2b",
-      publicSubnetACidr: "10.99.0.0/20",
-      publicSubnetBCidr: "10.99.16.0/20",
-      region: "us-east-2",
-      vpcCidr: "10.99.0.0/16",
-    });
-    const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
+  it.effect(
+    "round-trips the network config through its encoded wire value",
+    Effect.fnUntraced(function* () {
+      // The class-level zones-within-region check makes independently generated
+      // arbitraries near-impossible to satisfy, so this round-trip is deterministic.
+      const network = CiRunnersNetworkConfig.make({
+        availabilityZoneA: "us-east-2a",
+        availabilityZoneB: "us-east-2b",
+        publicSubnetACidr: "10.99.0.0/20",
+        publicSubnetBCidr: "10.99.16.0/20",
+        region: "us-east-2",
+        vpcCidr: "10.99.0.0/16",
+      });
+      const equivalent = S.toEquivalence(CiRunnersNetworkConfig);
 
-    const encoded = Effect.runSync(encodeUnknownCiRunnersNetworkConfig(network));
-    const decoded = Effect.runSync(decodeCiRunnersNetworkConfig(encoded));
+      const encoded = yield* encodeUnknownCiRunnersNetworkConfig(network);
+      const decoded = yield* decodeCiRunnersNetworkConfig(encoded);
 
-    expect(equivalent(decoded, network)).toBe(true);
-  });
+      pipe(equivalent(decoded, network), assertTrue);
+    })
+  );
 
-  it("round-trips CI runner config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(CiRunnersPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(CiRunnersPulumiConfigValues);
-    expectSchemaRoundTrip(CiRunnersImageConfig);
-    expectSchemaRoundTrip(CiRunnersWorkerConfig);
-    expectSchemaRoundTrip(CiRunnersReaperConfig);
-  });
+  it.effect.prop(
+    "round-trips CI runner config schemas through encoded wire values",
+    [Arbitrary.schema(CiRunnersPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeCiRunnersPulumiConfigValues(value);
+        assertTrue(isCiRunnersPulumiConfigValues(value) && CiRunnersPulumiConfigValuesEquivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersImageConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersImageConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersImageConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersWorkerConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersWorkerConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersWorkerConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips CiRunnersReaperConfig through its encoded wire codec",
+    [Arbitrary.schema(CiRunnersReaperConfig)],
+    ([value]) => expectSchemaRoundTrip(CiRunnersReaperConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

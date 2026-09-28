@@ -9,10 +9,12 @@ import {
   AiMetricsRetentionSelector,
   runAiMetricsRetentionDelete,
 } from "@beep/repo-ai-metrics/retention";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -90,33 +92,33 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
       untilEpochMillis: O.some(10),
     })
   ).toThrow();
-  expect(
-    Result.isFailure(
-      decodeRetentionInventoryResult({
-        derivedExports: [],
-        explicitWindow: false,
-        rawArchiveObjects: [],
-        reports: [],
-        schemaVersion: "beep.ai_metrics.retention_inventory.v2",
-        selectedDerivedExportCount: 0,
-        selectedRawArchiveObjectCount: 0,
-        selectedReportCount: 0,
-      })
-    )
-  ).toBe(true);
-  expect(
-    Result.isFailure(
-      decodeDerivedStorageWriteResult({
-        archiveObjectCount: 0,
-        duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",
-        ingestRunId: "ingest-1",
-        parquetExportMode: "snapshot",
-        parquetTables: ["not_a_derived_table"],
-        sourceFileCount: 0,
-        turnCount: 0,
-      })
-    )
-  ).toBe(true);
+  pipe(
+    decodeRetentionInventoryResult({
+      derivedExports: [],
+      explicitWindow: false,
+      rawArchiveObjects: [],
+      reports: [],
+      schemaVersion: "beep.ai_metrics.retention_inventory.v2",
+      selectedDerivedExportCount: 0,
+      selectedRawArchiveObjectCount: 0,
+      selectedReportCount: 0,
+    }),
+    Result.isFailure,
+    assertTrue
+  );
+  pipe(
+    decodeDerivedStorageWriteResult({
+      archiveObjectCount: 0,
+      duckDbPath: "/tmp/metrics/derived/ai-metrics.duckdb",
+      ingestRunId: "ingest-1",
+      parquetExportMode: "snapshot",
+      parquetTables: ["not_a_derived_table"],
+      sourceFileCount: 0,
+      turnCount: 0,
+    }),
+    Result.isFailure,
+    assertTrue
+  );
   const absentParquetDir = Result.getOrThrow(
     decodeDerivedStorageWriteResult({
       archiveObjectCount: 0,
@@ -128,20 +130,18 @@ it("enforces retention policy, window, version, and Parquet-table invariants at 
       turnCount: 0,
     })
   );
-  expect(absentParquetDir.parquetExportDir).toEqual(O.none());
+  assertNone(absentParquetDir.parquetExportDir);
   expect(Result.getOrThrow(encodeDerivedStorageWriteResult(absentParquetDir))).not.toHaveProperty("parquetExportDir");
 });
 
-it("derives valid storage results from the schema", () =>
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([DerivedStorageWriteResultArbitrary]),
-        ([result]) => isDerivedStorageWriteResult(result),
-        fcRuns(12)
-      )
-    )._tag
-  ).toBe("Passed"));
+it.prop(
+  "derives valid storage results from the schema",
+  [DerivedStorageWriteResultArbitrary],
+  ([result]) => {
+    assertTrue(isDerivedStorageWriteResult(result));
+  },
+  { arbitrary: fcRuns(12) }
+);
 
 it.effect(
   "defaults and encodes the retention inventory schema version",
@@ -160,22 +160,23 @@ it.effect(
   })
 );
 
-it.effect(
-  "does not select a legacy NULL timestamp for a before window",
-  Effect.fn(function* () {
-    yield* withTempDirectory(
-      Effect.fn(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const dataRoot = path.join(tmpDir, "metrics");
-        const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-        yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
+it.layer(NodeServices.layer)((it) => {
+  it.effect(
+    "does not select a legacy NULL timestamp for a before window",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dataRoot = path.join(tmpDir, "metrics");
+          const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
+          yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
 
-        const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }));
-        yield* Effect.gen(function* () {
-          const duckdb = yield* DuckDb;
-          yield* duckdb.runMany([
-            `CREATE TABLE ai_metrics_raw_archive_objects (
+          const duckDbLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }));
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* duckdb.runMany([
+              `CREATE TABLE ai_metrics_raw_archive_objects (
               archive_run_object_id VARCHAR,
               archive_object_id VARCHAR,
               ingest_run_id VARCHAR,
@@ -185,42 +186,43 @@ it.effect(
               archive_path VARCHAR,
               encrypted_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_ingest_runs (
+              `CREATE TABLE ai_metrics_ingest_runs (
               ingest_run_id VARCHAR,
               completed_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_outcome_labels (
+              `CREATE TABLE ai_metrics_outcome_labels (
               label_id VARCHAR,
               labeled_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_benchmark_runs (
+              `CREATE TABLE ai_metrics_benchmark_runs (
               benchmark_run_id VARCHAR,
               recorded_at_epoch_ms DOUBLE
             )`,
-            `CREATE TABLE ai_metrics_scorecards (
+              `CREATE TABLE ai_metrics_scorecards (
               scorecard_id VARCHAR,
               window_end_epoch_ms DOUBLE
             )`,
-          ]);
-          yield* duckdb.run(
-            "INSERT INTO ai_metrics_outcome_labels (label_id, labeled_at_epoch_ms) VALUES ('legacy-null', NULL)"
-          );
-        }).pipe(provideScopedLayer(duckDbLayer));
+            ]);
+            yield* duckdb.run(
+              "INSERT INTO ai_metrics_outcome_labels (label_id, labeled_at_epoch_ms) VALUES ('legacy-null', NULL)"
+            );
+          }).pipe(provideScopedLayer(duckDbLayer));
 
-        yield* runAiMetricsRetentionDelete(
-          AiMetricsRetentionSelector.make({
-            beforeEpochMillis: O.some(4_102_444_800_000),
-            dataRoot,
-          }),
-          false
-        ).pipe(provideScopedLayer(duckDbLayer));
+          yield* runAiMetricsRetentionDelete(
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(4_102_444_800_000),
+              dataRoot,
+            }),
+            false
+          ).pipe(provideScopedLayer(duckDbLayer));
 
-        const rows = yield* Effect.gen(function* () {
-          const duckdb = yield* DuckDb;
-          return yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_outcome_labels");
-        }).pipe(provideScopedLayer(duckDbLayer));
-        expect(globalThis.Number(rows[0]?.count)).toBe(1);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer));
-  })
-);
+          const rows = yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            return yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_outcome_labels");
+          }).pipe(provideScopedLayer(duckDbLayer));
+          expect(globalThis.Number(rows[0]?.count)).toBe(1);
+        })
+      );
+    })
+  );
+});

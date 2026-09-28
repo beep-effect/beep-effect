@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/skill-contract",
+  "sourceHead": "6b3a8b0096a30b1640a0ab140d0dace9c5b210e1",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.822536395004136,
+  "bunWholeCommandSeconds": 2.6182090539950877,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.56787109375, 3.40771484375, 4.08447265625],
+  "loadAfter": [4.8837890625, 3.68359375, 4.17041015625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.08 avg60=0.20 avg300=0.13 total=681344142\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=178959894\nfull avg10=0.00 avg60=0.00 avg300=0.09 total=171059595\n",
+    "io": "some avg10=0.02 avg60=0.24 avg300=0.12 total=786318574\nfull avg10=0.02 avg60=0.18 avg300=0.07 total=688435908\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.04 avg60=0.18 avg300=0.13 total=681355097\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=178959900\nfull avg10=0.00 avg60=0.00 avg300=0.08 total=171059600\n",
+    "io": "some avg10=0.01 avg60=0.21 avg300=0.11 total=786322440\nfull avg10=0.01 avg60=0.16 avg300=0.07 total=688439282\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "7271c9c0f22e428ad564e4126171e08886b495dcfdcadcaa1ce2273ee8b3d249"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/package.json",
+      "sha256": "90e467b62220cee846c54f9617cfff56729a98ce08bdc49665a857a4b6fa849c"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
+      "sha256": "34d7dbc3eeb319b433668340983f76f0f101d2a4624243c414c4c9791c40b353"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
+      "sha256": "7340d2e54114eb6989d235140351ede23250812368298774c119ae6d76108f13"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/Gate.ts",
+      "sha256": "54212ff391b5b4e819aff33455b08e9294a5219aacf01d01ad361fbecb76b811"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "sha256": "f833a4c49c52f9462ebb29ef080b73558d73b5b3eddac2e41c2dfac841b2fe23"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SchemaReference.ts",
+      "sha256": "3179b3b20a638d34a9fb58bbe7dd071ffef9624e55d08c550d47c14844a31668"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
+      "sha256": "eea17db23f52e2a6bb8c1d79d965aef73ba02b4422853690ee742970f7773785"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillContract.ts",
+      "sha256": "db8c33eac91396920338d50da8e31b376312c3c64485f261d77fcc7bda0e390a"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/SkillProjection.ts",
+      "sha256": "a5ce2bcf6169d47896e09cab8ff1837cf94adec0ce826eee467852d9b440e478"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/src/index.ts",
+      "sha256": "33df56f08794cb3e8bafe58dc8674d79c567682daef75dbaee17c28ed100cdba"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "sha256": "7a0ed3c2d30c12f3e86ee4c73947972765e3ebc1103ebab3b95663d22a38bd94"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "sha256": "5fd8297f89d36570f5fb33772b7a9826a6bd83083c64b39cb254aa8ab71294ab"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "sha256": "9d805d2cbc4ec2248f2fba7d25c66ce3ce3a3e475b6ac7259b1b57055c2a921f"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "sha256": "c3bb05c941dd9902a55fd26bb67d109c3e090c9bf755932a6e6206fa5ce3b140"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "sha256": "cb6d527ca20c3012eec88364962d4f973b8894f05c23abf8fb5be070407fd405"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "sha256": "d7d3a9950f07ef85c6cef4e5bc27b2e9549b968a63ecf49641882c12607b8391"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "sha256": "4cd6736d417567845eca8f1781286ae3ff676fd3c8c574d8798860bd0df9b4b6"
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "sha256": "8d8966eefd010d4c9345daab665e2edd3f6e0c0f06a35a4485a5e60f55cdd0c1"
+    }
+  ],
+  "environmentMode": "Pure skill contract schemas and deterministic evidence verification; no live provider, database, filesystem fixture or credential lookup.",
+  "bunProof": {
+    "passedTests": 47,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.8837890625, 3.68359375, 4.17041015625],
+    "loadAfter": [4.8837890625, 3.68359375, 4.17041015625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.04 avg60=0.18 avg300=0.13 total=681355111\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=178959900\nfull avg10=0.00 avg60=0.00 avg300=0.08 total=171059600\n",
+      "io": "some avg10=0.01 avg60=0.21 avg300=0.11 total=786322472\nfull avg10=0.01 avg60=0.16 avg300=0.07 total=688439283\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.03 avg60=0.17 avg300=0.13 total=681364278\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=178959901\nfull avg10=0.00 avg60=0.00 avg300=0.08 total=171059602\n",
+      "io": "some avg10=0.01 avg60=0.21 avg300=0.11 total=786323121\nfull avg10=0.00 avg60=0.15 avg300=0.07 total=688439803\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

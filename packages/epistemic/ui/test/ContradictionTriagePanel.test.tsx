@@ -2,12 +2,13 @@
 
 import { contradictionKnownAtAtom, contradictionValidAtAtom } from "@beep/epistemic-client";
 import { ContradictionTriagePanel } from "@beep/epistemic-ui";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type * as DateTime from "effect/DateTime";
 import type { Root } from "react-dom/client";
 
@@ -16,6 +17,7 @@ declare global {
 }
 
 describe("ContradictionTriagePanel", () => {
+  const originalActEnvironment = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
   let container: HTMLDivElement;
   let root: Root;
 
@@ -55,5 +57,9 @@ describe("ContradictionTriagePanel", () => {
     expect(alert?.getAttribute("aria-live")).toBe("assertive");
     expect(alert?.textContent).toContain("Unable to initialize the contradiction timeline");
     expect(alert?.textContent).not.toContain("private temporal failure");
+  });
+  afterAll(() => {
+    if (originalActEnvironment === undefined) Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    else Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", originalActEnvironment);
   });
 });

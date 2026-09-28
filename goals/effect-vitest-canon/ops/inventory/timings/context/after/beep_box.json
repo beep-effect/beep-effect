@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/box",
+  "sourceHead": "c38ba004b40b18283fe7db288c3403a7253d3ed0",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.220827460999999,
+  "bunWholeCommandSeconds": 1.6667783590000909,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [18.9521484375, 17.6826171875, 10.72216796875],
+  "loadAfter": [18.71533203125, 17.654296875, 10.7509765625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.17 avg60=1.69 avg300=1.65 total=16244765\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=16776\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16174\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=6193507\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=4762947\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.11 avg60=1.58 avg300=1.63 total=16259178\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=16776\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16174\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=6194075\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=4763441\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "e5a763323198d8ad04d59c058aa25a64cf72b8c27fa9e6bdae51dda27688d2ef"
+    },
+    {
+      "file": "packages/drivers/box/README.md",
+      "sha256": "daf3bbe7bfcd30babedd56ddd962070d79377cd2d6c067df04f97410582259d8"
+    },
+    {
+      "file": "packages/drivers/box/docgen.json",
+      "sha256": "a80d352d88baa3cb7351cb55607b630d20111cd19523b341a197bbe195749637"
+    },
+    {
+      "file": "packages/drivers/box/package.json",
+      "sha256": "981358776423beda7303f9a51c6d8574e40aa72b6af6b347c74eac6480107f89"
+    },
+    {
+      "file": "packages/drivers/box/scripts/box.surface.ts",
+      "sha256": "cc44efa6082ede67074f1390c6616949638d9840fdf5815bfc4b1def9eb50dad"
+    },
+    {
+      "file": "packages/drivers/box/scripts/generate.ts",
+      "sha256": "a6a73a2f47d00d2bac4ee199e9081f73ce40b16b509866826cf0884450fc6b92"
+    },
+    {
+      "file": "packages/drivers/box/src/Box.config.ts",
+      "sha256": "a2c809e050c681ad43bc055564411db2ab06f8c5b51f02c6f912e2ce3851162a"
+    },
+    {
+      "file": "packages/drivers/box/src/Box.errors.ts",
+      "sha256": "24c3a6f20a96a58a3a6768cc55961c6be5c797cf23be9e0069ee1476015cd000"
+    },
+    {
+      "file": "packages/drivers/box/src/Box.models.ts",
+      "sha256": "c2efa88a2440fcc2c994939e7e92f6ff9d7c337e1a2e2bdbe6e2faca4d5b1d9a"
+    },
+    {
+      "file": "packages/drivers/box/src/Box.service.ts",
+      "sha256": "212671f7bca93859a0d6b424657803d4222beb2a1ff98b73d2fe68faf1b80c0d"
+    },
+    {
+      "file": "packages/drivers/box/src/Box.streaming.ts",
+      "sha256": "f9f4daa3126c4227a34ad5c2e2738cb88e98e72e08467b01f00c14d3dc6f180c"
+    },
+    {
+      "file": "packages/drivers/box/src/_generated/Box.models.gen.ts",
+      "sha256": "434b89c628d37bf7f13d7ed7e7ab1d75ab0e87981dbda61d234a25f4d46a5ff0"
+    },
+    {
+      "file": "packages/drivers/box/src/_generated/Box.operations.gen.ts",
+      "sha256": "50d95895e2fecda8d51da6c151a0823df69c68d094d6b68d1c6319e73e5f06fb"
+    },
+    {
+      "file": "packages/drivers/box/src/index.ts",
+      "sha256": "0cecb95e2efe55315b13d80f593e3a12c870a66944cd6c6984c9ab24401cc55f"
+    },
+    {
+      "file": "packages/drivers/box/src/internal/Box.constants.ts",
+      "sha256": "10b4e56b48fa64474b0d171ef8e4c67ff561b54516a84bcd7db3d270bad88753"
+    },
+    {
+      "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+      "sha256": "3c19e226aa917917356e5a5e64ef8f1d3f5c1d261865ab34e731f8711ab0da45"
+    },
+    {
+      "file": "packages/drivers/box/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/box/test/Box.equivalence.test.ts",
+      "sha256": "c3cda607435a70400c5c8b179cfd92eb41ecd5627dc6e6a4eb9800a8c66f8e11"
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "sha256": "103083986cbd54abb7359881ed8bbe2b30b7a3aece81b00bf725c3769d1c1ada"
+    },
+    {
+      "file": "packages/drivers/box/test/integration/Box.live.test.ts",
+      "sha256": "04fe4f10afa9103b2a20c2ef81a58f32b1b7836fc810262c3c42daf57c59b78d"
+    },
+    {
+      "file": "packages/drivers/box/tsconfig.check.json",
+      "sha256": "f203a2376e5e7d51fa57313e952b9de18df554099944b8031c7f07bfc157e2f9"
+    },
+    {
+      "file": "packages/drivers/box/tsconfig.json",
+      "sha256": "21263e5ec5a7eaeb5fe9bf91f414209fca4caa852741e4ef1cebb2b566e4e25d"
+    },
+    {
+      "file": "packages/drivers/box/tsconfig.scripts.json",
+      "sha256": "c32846d01a47daf277d97aa282bb73d4286321bbd08e1fb697834310568da0fc"
+    },
+    {
+      "file": "packages/drivers/box/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/box/vitest.config.ts",
+      "sha256": "358c7ceb34c0d61f3cae689e7fd3066706bec02f86d1c12d6441e74c0f0308cf"
+    }
+  ],
+  "environmentMode": "Configured Box unit fixtures exercise fake SDK dispatch, schema laws and actual local stream lifecycle. Live provider integration is excluded from these timing observations. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 40,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [18.71533203125, 17.654296875, 10.7509765625],
+    "loadAfter": [18.71533203125, 17.654296875, 10.7509765625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.11 avg60=1.58 avg300=1.63 total=16259333\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=16776\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16174\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=6194075\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=4763441\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.09 avg60=1.53 avg300=1.62 total=16273137\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=16879\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16277\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=6196410\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=4765094\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 40,
+    "skipped": 0
+  },
+  "interpretation": "All31baseline and40final unit tests pass on Node and Bun, zero skips and stable sources. All104original assertions and33static registrations including credential-gated integration remain. Six native schema laws retain original arbitraries and25-case floors. New regressions cover a non-cancellable SDK method and two never-EOF readable lifetimes. Live provider integration is excluded from these observations. Host load and pressure are recorded; these are observations, not causal speedup claims."
+}

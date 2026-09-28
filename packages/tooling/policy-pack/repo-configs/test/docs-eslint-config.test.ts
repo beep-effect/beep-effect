@@ -1,7 +1,8 @@
 import { DeprecatedApisESLintConfig } from "@beep/repo-configs/eslint/DeprecatedApisESLintConfig";
 import { DocsESLintConfig } from "@beep/repo-configs/eslint/DocsESLintConfig";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "vitest";
 
 const configIncludesPlugin = (pluginName: string): boolean =>
   A.some(DocsESLintConfig, (entry) => entry.plugins !== undefined && pluginName in entry.plugins);

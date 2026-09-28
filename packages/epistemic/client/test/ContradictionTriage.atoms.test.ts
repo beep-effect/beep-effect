@@ -23,9 +23,11 @@ import {
   ReviewContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
 import { NonNegativeInt } from "@beep/schema/Int";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, Layer, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { DateTime, Effect, Layer, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -43,7 +45,6 @@ const encodeSourceRequest = S.encodeResult(EvidenceSourcePagePayload);
 const encodeDetailRequest = S.encodeResult(GetContradictionCandidate);
 const detailRequestEquivalence = S.toEquivalence(GetContradictionCandidate);
 const sourceRequestEquivalence = S.toEquivalence(EvidenceSourcePagePayload);
-const settle = Effect.repeat(Effect.yieldNow, { times: 4 });
 const detailKnownAtMillis = 2_000;
 const detailValidAtMillis = 1_500;
 const reviewResolvedAtMillis = 3_000;
@@ -118,42 +119,44 @@ const registryWithReviewSuccess = () =>
   });
 
 describe("@beep/epistemic-client contradiction atoms", () => {
-  it("round-trips schema-derived detail and source payloads", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(GetContradictionCandidate), Arbitrary.schema(EvidenceSourcePagePayload)]),
-          ([detailRequest, sourceRequest]) => {
-            expect(
-              detailRequestEquivalence(
-                encodeDetailRequest(detailRequest).pipe(Result.getOrThrow, decodeDetailRequest, Result.getOrThrow),
-                detailRequest
-              )
-            ).toBe(true);
-            expect(
-              sourceRequestEquivalence(
-                encodeSourceRequest(sourceRequest).pipe(Result.getOrThrow, decodeSourceRequest, Result.getOrThrow),
-                sourceRequest
-              )
-            ).toBe(true);
+  it.prop(
+    "round-trips schema-derived detail and source payloads",
+    [Arbitrary.schema(GetContradictionCandidate), Arbitrary.schema(EvidenceSourcePagePayload)],
+    ([detailRequest, sourceRequest]) => {
+      pipe(
+        detailRequestEquivalence(
+          encodeDetailRequest(detailRequest).pipe(Result.getOrThrow, decodeDetailRequest, Result.getOrThrow),
+          detailRequest
+        ),
+        assertTrue
+      );
+      pipe(
+        sourceRequestEquivalence(
+          encodeSourceRequest(sourceRequest).pipe(Result.getOrThrow, decodeSourceRequest, Result.getOrThrow),
+          sourceRequest
+        ),
+        assertTrue
+      );
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.effect(
+    "starts with an open queue and explicit unselected resource states",
+    Effect.fnUntraced(function* () {
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-  it("starts with an open queue and explicit unselected resource states", () => {
-    const registry = AtomRegistry.make();
-
-    expect(registry.get(contradictionDispositionFilterAtom)).toBe("open");
-    expect(registry.get(contradictionQueueOffsetAtom)).toBe(0);
-    expect(AsyncResult.isAsyncResult(registry.get(contradictionValidAtAtom))).toBe(true);
-    expect(AsyncResult.isAsyncResult(registry.get(contradictionKnownAtAtom))).toBe(true);
-    expect(AsyncResult.isInitial(registry.get(selectedContradictionCandidateAtom))).toBe(true);
-    expect(AsyncResult.isInitial(registry.get(contradictionEvidenceSourcePageAtom))).toBe(true);
-  });
+      expect(registry.get(contradictionDispositionFilterAtom)).toBe("open");
+      expect(registry.get(contradictionQueueOffsetAtom)).toBe(0);
+      pipe(AsyncResult.isAsyncResult(registry.get(contradictionValidAtAtom)), assertTrue);
+      pipe(AsyncResult.isAsyncResult(registry.get(contradictionKnownAtAtom)), assertTrue);
+      pipe(AsyncResult.isInitial(registry.get(selectedContradictionCandidateAtom)), assertTrue);
+      pipe(AsyncResult.isInitial(registry.get(contradictionEvidenceSourcePageAtom)), assertTrue);
+    })
+  );
 
   it.effect(
     "initializes both temporal axes from the Effect TestClock",
@@ -161,38 +164,48 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       const targetMillis = 1_767_225_600_000;
       yield* TestClock.setTime(targetMillis);
       const clock = yield* Clock.Clock;
-      const registry = registryWithReviewFailureAndClock(clock);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewFailureAndClock(clock)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       registry.get(contradictionValidAtAtom);
       registry.get(contradictionKnownAtAtom);
-      yield* settle;
+      yield* AtomRegistry.getResult(registry, contradictionValidAtAtom, { suspendOnWaiting: true });
+      yield* AtomRegistry.getResult(registry, contradictionKnownAtAtom, { suspendOnWaiting: true });
 
-      expect(O.map(AsyncResult.value(registry.get(contradictionValidAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(targetMillis)
+      assertSome(
+        O.map(AsyncResult.value(registry.get(contradictionValidAtAtom)), DateTime.toEpochMillis),
+        targetMillis
       );
-      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(targetMillis)
+      assertSome(
+        O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis),
+        targetMillis
       );
-      registry.dispose();
     })
   );
 
   it.effect(
     "preserves temporal runtime initialization failures",
     Effect.fnUntraced(function* () {
-      const registry = AtomRegistry.make({
-        initialValues: [
-          [ContradictionClient.runtime.layer, Layer.effectDiscard(Effect.fail("temporal-clock-unavailable"))],
-        ],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            initialValues: [
+              [ContradictionClient.runtime.layer, Layer.effectDiscard(Effect.fail("temporal-clock-unavailable"))],
+            ],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       registry.get(contradictionValidAtAtom);
       registry.get(contradictionKnownAtAtom);
-      yield* settle;
+      yield* Effect.exit(AtomRegistry.getResult(registry, contradictionValidAtAtom, { suspendOnWaiting: true }));
+      yield* Effect.exit(AtomRegistry.getResult(registry, contradictionKnownAtAtom, { suspendOnWaiting: true }));
 
-      expect(AsyncResult.isFailure(registry.get(contradictionValidAtAtom))).toBe(true);
-      expect(AsyncResult.isFailure(registry.get(contradictionKnownAtAtom))).toBe(true);
-      registry.dispose();
+      pipe(AsyncResult.isFailure(registry.get(contradictionValidAtAtom)), assertTrue);
+      pipe(AsyncResult.isFailure(registry.get(contradictionKnownAtAtom)), assertTrue);
     })
   );
 
@@ -204,7 +217,10 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       const clock = yield* Clock.Clock;
       const target = yield* DateTime.now;
       const prior = DateTime.subtract(target, { days: 1 });
-      const registry = registryWithReviewFailureAndClock(clock);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewFailureAndClock(clock)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       registry.set(contradictionValidAtAtom, prior);
       registry.set(contradictionKnownAtAtom, prior);
@@ -212,14 +228,15 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(resetContradictionTemporalViewAtom, undefined);
       yield* AtomRegistry.getResult(registry, resetContradictionTemporalViewAtom);
 
-      expect(O.map(AsyncResult.value(registry.get(contradictionValidAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(targetMillis)
+      assertSome(
+        O.map(AsyncResult.value(registry.get(contradictionValidAtAtom)), DateTime.toEpochMillis),
+        targetMillis
       );
-      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(targetMillis)
+      assertSome(
+        O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis),
+        targetMillis
       );
       expect(registry.get(contradictionQueueOffsetAtom)).toBe(0);
-      registry.dispose();
     })
   );
 
@@ -228,7 +245,10 @@ describe("@beep/epistemic-client contradiction atoms", () => {
     Effect.fnUntraced(function* () {
       yield* TestClock.setTime(1_767_225_600_000);
       const clock = yield* Clock.Clock;
-      const registry = registryWithReviewFailureAndClock(clock);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewFailureAndClock(clock)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const previousRequest = Result.getOrThrow(
         decodeSourceRequest({
           candidateId: 7,
@@ -254,42 +274,50 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(selectContradictionCandidateAtom, nextRequest.candidateId);
       yield* AtomRegistry.getResult(registry, selectContradictionCandidateAtom);
 
-      expect(registry.get(selectedContradictionCandidateIdAtom)).toStrictEqual(O.some(nextRequest.candidateId));
-      expect(registry.get(selectedContradictionEvidenceSourceAtom)).toStrictEqual(O.none());
-      expect(registry.get(contradictionReviewCandidateIdAtom)).toStrictEqual(O.none());
-      registry.dispose();
+      assertSome(registry.get(selectedContradictionCandidateIdAtom), nextRequest.candidateId);
+      assertNone(registry.get(selectedContradictionEvidenceSourceAtom));
+      assertNone(registry.get(contradictionReviewCandidateIdAtom));
     })
   );
 
-  it("keeps a candidate-authorized source selection as one narrow payload", () => {
-    const registry = AtomRegistry.make();
-    const request = Result.getOrThrow(
-      decodeSourceRequest({
-        candidateId: 7,
-        evidenceId: 11,
-        knownAt: 2_000,
-        selector: EvidenceSourcePageSelector.cases.page.make({
+  it.effect(
+    "keeps a candidate-authorized source selection as one narrow payload",
+    Effect.fnUntraced(function* () {
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      const request = Result.getOrThrow(
+        decodeSourceRequest({
+          candidateId: 7,
+          evidenceId: 11,
+          knownAt: 2_000,
+          selector: EvidenceSourcePageSelector.cases.page.make({
+            pageIndex: NonNegativeInt.make(2),
+          }),
+          validAt: 1_500,
+        })
+      );
+
+      registry.set(selectedContradictionEvidenceSourceAtom, O.some(request));
+
+      assertSome(registry.get(selectedContradictionEvidenceSourceAtom), request);
+      expect(request.selector).toStrictEqual(
+        EvidenceSourcePageSelector.cases.page.make({
           pageIndex: NonNegativeInt.make(2),
-        }),
-        validAt: 1_500,
-      })
-    );
-
-    registry.set(selectedContradictionEvidenceSourceAtom, O.some(request));
-
-    expect(registry.get(selectedContradictionEvidenceSourceAtom)).toStrictEqual(O.some(request));
-    expect(request.selector).toStrictEqual(
-      EvidenceSourcePageSelector.cases.page.make({
-        pageIndex: NonNegativeInt.make(2),
-      })
-    );
-  });
+        })
+      );
+    })
+  );
 
   it.effect(
     "carries both active temporal axes into the selected candidate detail request",
     Effect.fnUntraced(function* () {
-      const registry = registryWithReviewFailure();
-      const unmount = registry.mount(selectedContradictionCandidateAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewFailure()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, selectedContradictionCandidateAtom);
       const request = Result.getOrThrow(
         decodeDetailRequest({
           candidateId: 7,
@@ -301,11 +329,11 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(detailKnownAtMillis));
       registry.set(contradictionValidAtAtom, DateTime.makeUnsafe(detailValidAtMillis));
       registry.set(selectedContradictionCandidateIdAtom, O.some(request.candidateId));
-      yield* settle;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
+      );
 
-      expect(AsyncResult.isFailure(registry.get(selectedContradictionCandidateAtom))).toBe(true);
-      unmount();
-      registry.dispose();
+      pipe(AsyncResult.isFailure(registry.get(selectedContradictionCandidateAtom)), assertTrue);
     })
   );
 
@@ -325,19 +353,30 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       const client = Layer.effect(ContradictionClient, RpcTest.makeClient(ContradictionRpcs, { flatten: true })).pipe(
         Layer.provide(handlers)
       );
-      const registry = AtomRegistry.make({
-        initialValues: [[ContradictionClient.runtime.layer, Layer.mergeAll(client, Reactivity.layer)]],
-      });
-      const unmount = registry.mount(selectedContradictionCandidateAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            initialValues: [[ContradictionClient.runtime.layer, Layer.mergeAll(client, Reactivity.layer)]],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, selectedContradictionCandidateAtom);
 
       registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(2_000));
       registry.set(contradictionValidAtAtom, DateTime.makeUnsafe(1_500));
       registry.set(selectedContradictionCandidateIdAtom, O.some(GetContradictionCandidate.fields.candidateId.make(7)));
-      yield* settle;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
+      );
       registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(2_100));
-      yield* settle;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
+      );
       registry.set(contradictionValidAtAtom, DateTime.makeUnsafe(1_600));
-      yield* settle;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
+      );
 
       const capturedRequests = A.map(yield* Ref.get(requests), ({ knownAt, validAt }) => ({
         knownAt: DateTime.toEpochMillis(knownAt),
@@ -353,16 +392,17 @@ describe("@beep/epistemic-client contradiction atoms", () => {
         { knownAt: 2_100, validAt: 1_500 },
         { knownAt: 2_100, validAt: 1_600 },
       ]);
-      unmount();
-      registry.dispose();
     })
   );
 
   it.effect(
     "advances transaction time before refreshing a successful review",
     Effect.fnUntraced(function* () {
-      const registry = registryWithReviewSuccess();
-      const unmount = registry.mount(reviewContradictionCandidateAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewSuccess()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, reviewContradictionCandidateAtom);
       const command = Result.getOrThrow(
         decodeReview({
           candidateId: 7,
@@ -379,23 +419,23 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(reviewContradictionCandidateAtom, command);
       yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
 
-      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(reviewResolvedAtMillis)
+      assertSome(
+        O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis),
+        reviewResolvedAtMillis
       );
       expect(registry.get(contradictionQueueOffsetAtom)).toBe(0);
-      expect(AsyncResult.value(registry.get(reviewContradictionCandidateAtom))).toStrictEqual(
-        O.some(reviewedDisposition)
-      );
-      unmount();
-      registry.dispose();
+      assertSome(AsyncResult.value(registry.get(reviewContradictionCandidateAtom)), reviewedDisposition);
     })
   );
 
   it.effect(
     "preserves a selected transaction time later than a successful review",
     Effect.fnUntraced(function* () {
-      const registry = registryWithReviewSuccess();
-      const unmount = registry.mount(reviewContradictionCandidateAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewSuccess()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, reviewContradictionCandidateAtom);
       const command = Result.getOrThrow(
         decodeReview({
           candidateId: 7,
@@ -411,19 +451,18 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       registry.set(reviewContradictionCandidateAtom, command);
       yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
 
-      expect(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis)).toStrictEqual(
-        O.some(4_000)
-      );
-      unmount();
-      registry.dispose();
+      assertSome(O.map(AsyncResult.value(registry.get(contradictionKnownAtAtom)), DateTime.toEpochMillis), 4_000);
     })
   );
 
   it.effect(
     "surfaces a typed review failure through the mutation AsyncResult",
     Effect.fnUntraced(function* () {
-      const registry = registryWithReviewFailure();
-      const unmount = registry.mount(reviewContradictionCandidateAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithReviewFailure()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, reviewContradictionCandidateAtom);
       const command = Result.getOrThrow(
         decodeReview({
           candidateId: 7,
@@ -436,12 +475,12 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       );
 
       registry.set(reviewContradictionCandidateAtom, command);
-      yield* settle;
+      yield* Effect.exit(
+        AtomRegistry.getResult(registry, reviewContradictionCandidateAtom, { suspendOnWaiting: true })
+      );
 
       const result = registry.get(reviewContradictionCandidateAtom);
-      expect(AsyncResult.isFailure(result)).toBe(true);
-      unmount();
-      registry.dispose();
+      pipe(AsyncResult.isFailure(result), assertTrue);
     })
   );
 });

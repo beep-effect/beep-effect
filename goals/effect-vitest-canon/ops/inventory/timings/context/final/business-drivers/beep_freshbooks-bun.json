@@ -1,0 +1,119 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/business-freshbooks-runner-final-bun.json"
+  ],
+  "phase": "runner-final-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "7f2819b899f6fd54821857b738fbf8f73029d65cf2976321f0ed6af47b1f52de"
+    },
+    {
+      "file": "packages/drivers/freshbooks/package.json",
+      "sha256": "787f49ebbf28ea40557814ea4a63066ea48ee584e6ff7e403eea805aee0098bb"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.config.ts",
+      "sha256": "7c1cc683d8e951d1263c63e9731068d8b6f3ffed1423e9518d2abafe2f75d14e"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.errors.ts",
+      "sha256": "9a85f9864b303ee0e09c33fa79a83d298045388a6d6a0f6695918906c7fc0f1c"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "sha256": "e574c0cdcbf66153a6a52a87a83d00a8b7a5bfba9e739b466503611cfd10109f"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.service.ts",
+      "sha256": "9b7c1f5dde09f013c5d2b3eea6e56f58fbab16524bdc98d8c0b559cb10723eb2"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.token.ts",
+      "sha256": "632c8c370b1acf9f8695436bd795d3851f41fb4212fd1a46f10b82f86e9d4739"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/index.ts",
+      "sha256": "bcf396ef45ece0e0b8a8bc08d1f9df20c7f9b663ce503c215ed42f4e86c314f9"
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "sha256": "513310872cc5d7b148716d1a8196777024d0589c2ace1cdb68752686c96d3454"
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "sha256": "a5724c42f7b699ee9e7cbc8f21e7f0f769b7a18ce6c03fc09a6c95e57817cc6f"
+    }
+  ],
+  "loadBefore": [31.5673828125, 37.40625, 30.42041015625],
+  "pressureBefore": {
+    "cpu": "some avg10=6.53 avg60=6.67 avg300=7.62 total=2509084291\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.08 avg60=0.07 avg300=0.21 total=208454868\nfull avg10=0.08 avg60=0.06 avg300=0.19 total=181263409\n",
+    "io": "some avg10=0.02 avg60=0.11 avg300=0.45 total=980541651\nfull avg10=0.00 avg60=0.05 avg300=0.28 total=668915380\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 1.4177168800088111,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "7f2819b899f6fd54821857b738fbf8f73029d65cf2976321f0ed6af47b1f52de"
+    },
+    {
+      "file": "packages/drivers/freshbooks/package.json",
+      "sha256": "787f49ebbf28ea40557814ea4a63066ea48ee584e6ff7e403eea805aee0098bb"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.config.ts",
+      "sha256": "7c1cc683d8e951d1263c63e9731068d8b6f3ffed1423e9518d2abafe2f75d14e"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.errors.ts",
+      "sha256": "9a85f9864b303ee0e09c33fa79a83d298045388a6d6a0f6695918906c7fc0f1c"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
+      "sha256": "e574c0cdcbf66153a6a52a87a83d00a8b7a5bfba9e739b466503611cfd10109f"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.service.ts",
+      "sha256": "9b7c1f5dde09f013c5d2b3eea6e56f58fbab16524bdc98d8c0b559cb10723eb2"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/Freshbooks.token.ts",
+      "sha256": "632c8c370b1acf9f8695436bd795d3851f41fb4212fd1a46f10b82f86e9d4739"
+    },
+    {
+      "file": "packages/drivers/freshbooks/src/index.ts",
+      "sha256": "bcf396ef45ece0e0b8a8bc08d1f9df20c7f9b663ce503c215ed42f4e86c314f9"
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "sha256": "513310872cc5d7b148716d1a8196777024d0589c2ace1cdb68752686c96d3454"
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "sha256": "a5724c42f7b699ee9e7cbc8f21e7f0f769b7a18ce6c03fc09a6c95e57817cc6f"
+    }
+  ],
+  "loadAfter": [31.5673828125, 37.40625, 30.42041015625],
+  "pressureAfter": {
+    "cpu": "some avg10=5.35 avg60=6.45 avg300=7.57 total=2509091413\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.06 avg60=0.06 avg300=0.20 total=208454873\nfull avg10=0.06 avg60=0.06 avg300=0.19 total=181263414\n",
+    "io": "some avg10=0.01 avg60=0.11 avg300=0.45 total=980542287\nfull avg10=0.00 avg60=0.05 avg300=0.28 total=668915950\n"
+  },
+  "sourceStable": true
+}

@@ -8,9 +8,11 @@ import {
   circuitBreakerRoot,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
@@ -107,7 +109,7 @@ const decodedEvents = Effect.fnUntraced(function* (store: BreakerStore) {
   return yield* Effect.forEach(yield* eventRows(store), (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
 });
 
-layer(NodeServices.layer)("agent command circuit breaker", (it) => {
+it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
   it("declares only bounded content-free persisted fields", () => {
     expect(A.difference(R.keys(CircuitBreakerEventV1.fields), canonicalEventKeys)).toEqual([]);
     expect(A.difference(canonicalEventKeys, R.keys(CircuitBreakerEventV1.fields))).toEqual([]);
@@ -116,69 +118,71 @@ layer(NodeServices.layer)("agent command circuit breaker", (it) => {
   });
 
   it.effect("trips once across agent adapters, labels the retry skip, and recovers only after reset", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const store = yield* makeBreakerStore();
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeBreakerStore();
 
-        const failed = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/bin/false"]);
-        expect(failed).toEqual({ exitCode: 1, stderr: "", stdout: "" });
+      const failed = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/bin/false"]);
+      expect(failed).toEqual({ exitCode: 1, stderr: "", stdout: "" });
 
-        const openState = yield* CircuitBreakerOpenStateV1.decodeJsonEffect(
-          yield* fs.readFileString(store.openStatePath)
-        );
-        expect(openState.probe).toBe("op");
-        expect(openState.exitCode).toBe(1);
-        expect(openState.retryAfterEpochMs).toBeGreaterThan(openState.trippedEpochMs);
+      const openState = yield* CircuitBreakerOpenStateV1.decodeJsonEffect(
+        yield* fs.readFileString(store.openStatePath)
+      );
+      expect(openState.probe).toBe("op");
+      expect(openState.exitCode).toBe(1);
+      expect(openState.retryAfterEpochMs).toBeGreaterThan(openState.trippedEpochMs);
 
-        const skipped = yield* runBreaker(
-          store,
-          ["run", "op", "codex-cli", "--", "/usr/bin/touch", store.markerPath],
-          codexBreakerPath
-        );
-        expect(skipped).toEqual({ exitCode: 75, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.markerPath)).toBe(false);
+      const skipped = yield* runBreaker(
+        store,
+        ["run", "op", "codex-cli", "--", "/usr/bin/touch", store.markerPath],
+        codexBreakerPath
+      );
+      expect(skipped).toEqual({ exitCode: 75, stderr: "", stdout: "" });
+      pipe(yield* fs.exists(store.markerPath), assertFalse);
 
-        const reset = yield* runBreaker(store, ["reset", "op", "operator"]);
-        expect(reset).toEqual({ exitCode: 0, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.openStatePath)).toBe(false);
+      const reset = yield* runBreaker(store, ["reset", "op", "operator"]);
+      expect(reset).toEqual({ exitCode: 0, stderr: "", stdout: "" });
+      pipe(yield* fs.exists(store.openStatePath), assertFalse);
 
-        const succeeded = yield* runBreaker(store, ["run", "op", "codex-cli", "--", "/bin/true"]);
-        expect(succeeded).toEqual({ exitCode: 0, stderr: "", stdout: "" });
+      const succeeded = yield* runBreaker(store, ["run", "op", "codex-cli", "--", "/bin/true"]);
+      expect(succeeded).toEqual({ exitCode: 0, stderr: "", stdout: "" });
 
-        const events = yield* decodedEvents(store);
-        expect(A.map(events, ({ outcome }) => outcome.status)).toEqual([
-          "tripped",
-          "retry-skipped",
-          "reset",
-          "probe-succeeded",
-        ]);
-        expect(A.map(events, ({ caller }) => caller)).toEqual(["claude-code", "codex-cli", "operator", "codex-cli"]);
-        expect(A.every(yield* eventRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      const events = yield* decodedEvents(store);
+      expect(A.map(events, ({ outcome }) => outcome.status)).toEqual([
+        "tripped",
+        "retry-skipped",
+        "reset",
+        "probe-succeeded",
+      ]);
+      expect(A.map(events, ({ caller }) => caller)).toEqual(["claude-code", "codex-cli", "operator", "codex-cli"]);
+      pipe(
+        A.every(yield* eventRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
+    })
   );
 
   it.effect("refuses malformed shared state without running or guessing", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const store = yield* makeBreakerStore();
-        yield* fs.makeDirectory(path.dirname(store.openStatePath), { recursive: true });
-        yield* fs.writeFileString(
-          store.openStatePath,
-          yield* encodeJson({ schemaVersion: "unknown", command: CANARY, retryAfterEpochMs: 0 })
-        );
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* makeBreakerStore();
+      yield* fs.makeDirectory(path.dirname(store.openStatePath), { recursive: true });
+      yield* fs.writeFileString(
+        store.openStatePath,
+        yield* encodeJson({ schemaVersion: "unknown", command: CANARY, retryAfterEpochMs: 0 })
+      );
 
-        const run = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/usr/bin/touch", store.markerPath]);
-        expect(run).toEqual({ exitCode: 76, stderr: "", stdout: "" });
-        expect(yield* fs.exists(store.markerPath)).toBe(false);
+      const run = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/usr/bin/touch", store.markerPath]);
+      expect(run).toEqual({ exitCode: 76, stderr: "", stdout: "" });
+      pipe(yield* fs.exists(store.markerPath), assertFalse);
 
-        const events = yield* decodedEvents(store);
-        expect(A.map(events, ({ outcome }) => outcome.status)).toEqual(["coordination-skipped"]);
-        expect(A.every(yield* eventRows(store), (row) => !row.includes(CANARY))).toBe(true);
-      })
-    )
+      const events = yield* decodedEvents(store);
+      expect(A.map(events, ({ outcome }) => outcome.status)).toEqual(["coordination-skipped"]);
+      pipe(
+        A.every(yield* eventRows(store), (row) => !row.includes(CANARY)),
+        assertTrue
+      );
+    })
   );
 });

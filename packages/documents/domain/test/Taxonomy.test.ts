@@ -9,9 +9,11 @@ import {
   projectInboxDocumentPath,
   projectIntakeInboxPath,
 } from "@beep/documents-domain/values/Taxonomy";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -65,26 +67,17 @@ describe("@beep/documents-domain taxonomy seed", () => {
     })
   );
 
-  it("round-trips the filing outcome union with schema-derived arbitraries", () => {
-    const equivalent = S.toEquivalence(FilingOutcome);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(FilingOutcome),
-          (outcome) => {
-            const encoded = Result.getOrThrow(encodeFilingOutcomeResult(outcome));
-            const decoded = Result.getOrThrow(decodeUnknownFilingOutcomeResult(encoded));
-
-            expect(equivalent(decoded, outcome)).toBe(true);
-
-            return true;
-          },
-          fcRuns(10)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips the filing outcome union with schema-derived arbitraries",
+    { outcome: Arbitrary.schema(FilingOutcome) },
+    ({ outcome }) => {
+      const equivalent = S.toEquivalence(FilingOutcome);
+      const encoded = Result.getOrThrow(encodeFilingOutcomeResult(outcome));
+      const decoded = Result.getOrThrow(decodeUnknownFilingOutcomeResult(encoded));
+      pipe(equivalent(decoded, outcome), assertTrue);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
   it("retains native tagged-union utilities alongside its selected decoder", () => {
     const outcome = FilingOutcome.decodeUnknownSync({
@@ -94,8 +87,8 @@ describe("@beep/documents-domain taxonomy seed", () => {
       taxonomyConceptId: "pleadings",
     });
 
-    expect(FilingOutcome.guards.filed(outcome)).toBe(true);
+    pipe(FilingOutcome.guards.filed(outcome), assertTrue);
     expect(FilingOutcome.match(outcome, { filed: () => "filed", inboxed: () => "inboxed" })).toBe("filed");
-    expect(Reflect.has(FilingOutcome, "decodeUnknownOption")).toBe(false);
+    pipe(Reflect.has(FilingOutcome, "decodeUnknownOption"), assertFalse);
   });
 });

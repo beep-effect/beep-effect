@@ -1,0 +1,60 @@
+{
+  "baseSha": "4f1489f57d5525ef7bc76ef1b60e59989a9c981f",
+  "package": "@beep/phoenix",
+  "admittedFiles": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "frozenSha256": "4073fd19c43189357805f4cd71ce3d1f5fffc5e17baae0447f7fac823c41749a",
+      "currentSha256": "4073fd19c43189357805f4cd71ce3d1f5fffc5e17baae0447f7fac823c41749a",
+      "changedSinceFrozen": false
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "frozenSha256": "6a1d8a7f99d35df77136260627e885181f7cd0f68f27d1d976acac8840dfebeb",
+      "currentSha256": "a2d78b412f754c8694a980a50298261077d879f022b295821891b6c1cb6068e9",
+      "changedSinceFrozen": true
+    }
+  ],
+  "packageAuditSeconds": 7.2,
+  "docgenSeconds": 2.9,
+  "proofs": [
+    {
+      "runtime": "node",
+      "cases": 9,
+      "failures": 0,
+      "wholeCommandSeconds": 4.020440230000531,
+      "sourceStable": true,
+      "loadBefore": [5.1552734375, 6.9990234375, 6.9697265625],
+      "loadAfter": [5.142578125, 6.9658203125, 6.958984375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.89 avg60=0.28 avg300=0.39 total=235483640\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88221699\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620443\n",
+        "io": "some avg10=0.40 avg60=0.30 avg300=0.13 total=697223837\nfull avg10=0.34 avg60=0.23 avg300=0.09 total=631130823\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.59 avg60=0.26 avg300=0.38 total=235492599\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88221755\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620494\n",
+        "io": "some avg10=0.26 avg60=0.28 avg300=0.13 total=697224084\nfull avg10=0.22 avg60=0.22 avg300=0.09 total=631131018\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "cases": 9,
+      "failures": 0,
+      "wholeCommandSeconds": 1.4158219370001461,
+      "sourceStable": true,
+      "loadBefore": [5.142578125, 6.9658203125, 6.958984375],
+      "loadAfter": [5.142578125, 6.9658203125, 6.958984375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.59 avg60=0.26 avg300=0.38 total=235492621\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88221755\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620494\n",
+        "io": "some avg10=0.26 avg60=0.28 avg300=0.13 total=697224084\nfull avg10=0.22 avg60=0.22 avg300=0.09 total=631131018\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.48 avg60=0.25 avg300=0.38 total=235495136\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88221772\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85620511\n",
+        "io": "some avg10=0.22 avg60=0.27 avg300=0.13 total=697228197\nfull avg10=0.18 avg60=0.21 avg300=0.09 total=631134082\n"
+      }
+    }
+  ]
+}

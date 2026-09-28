@@ -1,0 +1,264 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-tables",
+  "sourceHead": "c88fcd342f43f3dde1356966cb8c2be62b028d3f",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.421305238007335,
+  "bunWholeCommandSeconds": 1.466165040008491,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [10.48876953125, 6.57470703125, 4.3076171875],
+  "loadAfter": [9.96875, 6.53173828125, 4.3056640625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.72 avg60=0.18 avg300=0.12 total=735399251\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199583\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125700\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=812287379\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710858908\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.48 avg60=0.16 avg300=0.12 total=735404125\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199583\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125700\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=812288797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710859378\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "5489623d204a1990323ec4eda3b13f8e1e9a2753474dc9e48f2043c94e28358a"
+    },
+    {
+      "file": "packages/epistemic/tables/AGENTS.md",
+      "sha256": "b7d7421ca2e9b54eff0d53094331d73677294206a27e5af1931d279ccc07e06f"
+    },
+    {
+      "file": "packages/epistemic/tables/CHANGELOG.md",
+      "sha256": "fdf92bcb100e08a0edf0a97ea1916eb8929ea9c40a1cbe21732209c52f592009"
+    },
+    {
+      "file": "packages/epistemic/tables/CLAUDE.md",
+      "sha256": "b7d7421ca2e9b54eff0d53094331d73677294206a27e5af1931d279ccc07e06f"
+    },
+    {
+      "file": "packages/epistemic/tables/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/epistemic/tables/README.md",
+      "sha256": "b2c6db415a024b7abe4009d0f0664d82343641b4f88f4fd7c95b6aacef97d3dc"
+    },
+    {
+      "file": "packages/epistemic/tables/docgen.json",
+      "sha256": "720e65fa41da10081a56147bd92eb3822bf6d688cd53a7909d8c087781d8e90b"
+    },
+    {
+      "file": "packages/epistemic/tables/package.json",
+      "sha256": "3bd0f533d0c4cd4734eb32fac09a575411c48b83dcc2042fa7c70f1963620b6f"
+    },
+    {
+      "file": "packages/epistemic/tables/src/Schema.ts",
+      "sha256": "bae61f3470c4c2f29f34a59360e17aa1ed176b232ed59b4a7d520f1a9b8c3c34"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.converters.ts",
+      "sha256": "fca8ea3581e780153c9f50e807ea831bbabef0687e0760b5de03b9a0aff55fbd"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.errors.ts",
+      "sha256": "6e76ef4a9b4a252cfb338fdedd9cdc6e40258496b40f7ca602763961ffb2c643"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.table.ts",
+      "sha256": "3dd46c8db248fcd84a2f229e69510155d358d025357098855c1d0ca51d623982"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/CandidateClaim/index.ts",
+      "sha256": "4a4cb3d1edd01fc2fec0431069f64de4e63986b84b643f5ee6f7b1dd200459b6"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.converters.ts",
+      "sha256": "d153f89fde2ee2b92173318e2a5da32d1907143d8f3e28252241e6912ccdd542"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.errors.ts",
+      "sha256": "ca305f8432bac943ef40d1b7d1fb3739a52400f0f4e521f203ad8579c81f592b"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.table.ts",
+      "sha256": "e8c69144c47db78d2a22e06b238366b7aa0d47707163ff9a76afb4b9d1eb13f3"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/ClaimDisposition/index.ts",
+      "sha256": "85e2d2e7a9f327dd8ca180a71c227d9b8fd78d21d14fdfe51ef652016ec03c4f"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Contradiction/Contradiction.converters.ts",
+      "sha256": "da23fcc02a890a5c2b305137e966d2a89e8e49a8ca56a699ca7c4b253678e1e9"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Contradiction/Contradiction.table.ts",
+      "sha256": "6b3ad63e6ab1692973374ecb9b9597311598464fed2b819905b8c82f12356cee"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Contradiction/index.ts",
+      "sha256": "0dca49b46b128458a85d69731d43568a41e11750e93388cf07c91630d4345217"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.converters.ts",
+      "sha256": "2e04a59e96c459e96af4ecf4c5a9ab15bb5904a58ab1805a0223132715406e15"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.errors.ts",
+      "sha256": "c989a5e50cec9909e17677420dc0a597d9755fb74968ea55bf00ea912fe0a1cf"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.table.ts",
+      "sha256": "1608fa6434f33eda5285d787765f03b3dd9dbc06b486e3044cb079ba610e718c"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EdgeVersion/index.ts",
+      "sha256": "b34eef7745be8b849ef323ae973a17eee83cdef052e26de84b9193e34748a323"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Evidence/Evidence.converters.ts",
+      "sha256": "73f9c1fb95ee947b3b56509339dbdb208fe0231f409089ea01ebf5a4890dc4f5"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Evidence/Evidence.errors.ts",
+      "sha256": "220c8f1dd51ac5b769eb99d095abd0e4916be20ac0ca1dddc40c7376f2b75a4b"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Evidence/Evidence.table.ts",
+      "sha256": "4428c98393cb2ff9d0403a596bd8e52dda04dd372257c0f8282d280599c342ea"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/Evidence/index.ts",
+      "sha256": "885f6c06b06a4f678dc48e85bb49e86bd05bee5de449f6ddf541b4e947d3383a"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
+      "sha256": "a51c79eb5670827ad378a996e47aca03e900d77c39fca207fb6820fbe8ffac94"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.table.ts",
+      "sha256": "9ea20d6f3e131689045096f6cb06d766d5ae2da8812fb03e50b68d264e0dac41"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/EvidenceVerification/index.ts",
+      "sha256": "6fd0b5d4e3bc934ddd567729a501314b95c8cf5ff5ab03ce20e4146b4316eec4"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.converters.ts",
+      "sha256": "fe9cbbfb32d800cff46075819bd4d741652d46c4a55bc898dcb856c14b054d3c"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.errors.ts",
+      "sha256": "083df288a88ecf3cb42240344b229c3e95e4db11c06f2e9137455d38f5ea12f9"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.table.ts",
+      "sha256": "c98090c911f27243bc365668e1cbccc842d419de1f054e6b86c1cb138af5c2d6"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/UsageRecord/index.ts",
+      "sha256": "045858b1870cdaad27f4878d004d04127c90b7257d3b138f20b13819973d4a66"
+    },
+    {
+      "file": "packages/epistemic/tables/src/entities/index.ts",
+      "sha256": "9b6e6f2cb25c1e6204b870c58e3554549ded749ba73a89aa06980ec8854e5239"
+    },
+    {
+      "file": "packages/epistemic/tables/src/index.ts",
+      "sha256": "e70ea86a79b34b00e6bf842e000d51f468333593a348ebd2857b76e4257f057b"
+    },
+    {
+      "file": "packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.converters.ts",
+      "sha256": "69bf8a1d86eaf246321e3162ab801787efb517407eea5dbc5f47a82c066939f2"
+    },
+    {
+      "file": "packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.errors.ts",
+      "sha256": "36f193bb1ea7afc5d06e36a7419c1b17ccf2cd0aa1ee0d341951961b83c5a77d"
+    },
+    {
+      "file": "packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.table.ts",
+      "sha256": "01522dc9ec0395e57eaab62fc04c0c390adfc8f3bd4a3798eb3d7868172b8b99"
+    },
+    {
+      "file": "packages/epistemic/tables/src/values/ExecutionRecord/index.ts",
+      "sha256": "03d589c7b6043b5ee0d2b147e3fba5f5a4a6e9b7d385851f09460d3ed9025953"
+    },
+    {
+      "file": "packages/epistemic/tables/src/values/index.ts",
+      "sha256": "9e1e20a46d3d1747f3cbd17e78ba48f0f77429e0298ec25e3e7a5f177e96b2ff"
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "sha256": "336db6d0b82c2f1cbadf16b5c3b484e8e04ff36b42f00ad4ac021f815058c5fe"
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "sha256": "b8404dd8d6bb0614544232609609fa3f0a01543cbcd94b8b66b9e990af0abce1"
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "sha256": "67138b35cf54ac8ee4f180e141803e385604b7020206208273f707a94171eedc"
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "sha256": "532c96dd705e0c6a39dd74748abf909502418300a9919f29cea995f48f360535"
+    },
+    {
+      "file": "packages/epistemic/tables/tsconfig.check.json",
+      "sha256": "315e944327ff4a2ddb65905763bbba2314bc1e042f9578d71269fe0960aa536e"
+    },
+    {
+      "file": "packages/epistemic/tables/tsconfig.json",
+      "sha256": "4b20f62890ca1ff0943064c7861e53b737244d042f4471fec8a8e8d6249e28d3"
+    },
+    {
+      "file": "packages/epistemic/tables/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/epistemic/tables/vitest.config.ts",
+      "sha256": "fe31c735a04b936f6b93e42b43804787727d86e1818610ab98bc18e173cae24c"
+    }
+  ],
+  "environmentMode": "Actual Drizzle metadata, sealed public row converters, temporal and legacy row boundaries remain in process. Exact fixtures, wire representations, typed errors and labeled tampering assertions are retained. Three native properties preserve the original generators and converter laws with instrumented registrations. No live database or production implementation change is claimed.",
+  "bunProof": {
+    "passedTests": 50,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [9.96875, 6.53173828125, 4.3056640625],
+    "loadAfter": [9.96875, 6.53173828125, 4.3056640625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.48 avg60=0.16 avg300=0.12 total=735404141\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199583\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125700\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=812288797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710859378\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.39 avg60=0.16 avg300=0.12 total=735408914\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199583\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125700\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=812289631\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710859879\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 50,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 50 test cases before and after with zero skips. Three native properties preserve original generators, codec laws and 25/50/25 floors, with the configured run-count and replay seed. Timing differences are not causal speedup evidence."
+}

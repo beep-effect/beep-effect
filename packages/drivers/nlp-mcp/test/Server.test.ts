@@ -1,7 +1,8 @@
 import { StreamingToolkit } from "@beep/nlp-mcp/StreamingTools";
 import { NlpToolkit, NlpTools } from "@beep/nlp-processing/Tools/NlpToolkit";
+import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 
@@ -30,7 +31,7 @@ describe("nlp-mcp tool surface", () => {
 });
 
 describe("nlp-mcp wink-backed handlers", () => {
-  layer(WinkNlpToolkitLive)("via the mounted toolkit", (it) => {
+  it.layer(WinkNlpToolkitLive)("via the mounted toolkit", (it) => {
     it.effect(
       "Tokenize resolves through the wink handler layer",
       Effect.fnUntraced(function* () {

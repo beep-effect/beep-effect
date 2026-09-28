@@ -16,7 +16,9 @@ import {
   touchedGroupsInEvents,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { Effect, Layer } from "effect";
 import { Atom, AtomRegistry } from "effect/reactivity";
 import { groupOne, groupTwo, panelOne } from "./Fixtures.ts";
 import type { DockAtomFeedEntry, DockEvent } from "@beep/dock";
@@ -82,9 +84,14 @@ describe("recency projections over the operation feed", () => {
     expect(touchedGroups(feed)).toEqual([groupOne, groupTwo]);
   });
 
-  it("exposes recency as a derived atom over the host feed atom", () => {
-    const feedAtom = Atom.make(feed);
-    const registry = AtomRegistry.make();
-    expect(registry.get(makeMruGroupsAtom(feedAtom))).toEqual([groupOne, groupTwo]);
+  it.layer(Layer.fresh(AtomRegistry.layer))((it) => {
+    it.effect(
+      "exposes recency as a derived atom over the host feed atom",
+      Effect.fnUntraced(function* () {
+        const feedAtom = Atom.make(feed);
+        const registry = yield* AtomRegistry.AtomRegistry;
+        expect(registry.get(makeMruGroupsAtom(feedAtom))).toEqual([groupOne, groupTwo]);
+      })
+    );
   });
 });

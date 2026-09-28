@@ -27,6 +27,9 @@ const evidenceTestSource = `
   it("recognizes a double-quoted title", () => undefined)
   test.effect('recognizes a single-quoted title', () => undefined)
   it.scoped(\`recognizes a backtick-quoted title\`, () => undefined)
+  it.prop("recognizes a plain property title", {}, () => undefined)
+  it.effect.prop('recognizes an effect property title', {}, () => undefined)
+  test.effect.prop(\`recognizes a test effect property title\`, {}, () => undefined)
   it("rejects an invalid example", () => undefined)
 `;
 
@@ -377,6 +380,9 @@ it.layer(BunFileSystem.layer)("conformance-ledger validation", (it) => {
           `${evidenceFile}#recognizes-a-double-quoted-title`,
           `${evidenceFile}#recognizes-a-single-quoted-title`,
           `${evidenceFile}#recognizes-a-backtick-quoted-title`,
+          `${evidenceFile}#recognizes-a-plain-property-title`,
+          `${evidenceFile}#recognizes-an-effect-property-title`,
+          `${evidenceFile}#recognizes-a-test-effect-property-title`,
         ],
       });
 

@@ -1,0 +1,20 @@
+[
+  {
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "assertions": 7,
+    "onlyReviewedAssertionTokensChanged": true,
+    "sourceSha256": "575dee71ee884025b8e8d1fa63da3a2f29b9f4319c259ab30a13748e47019df0"
+  },
+  {
+    "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+    "assertions": 5,
+    "onlyReviewedAssertionTokensChanged": true,
+    "sourceSha256": "677418efb0eb52a2994d684bf9f96657e17f48a857eb5ce8e8cc6cc1d6be03ce"
+  },
+  {
+    "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+    "assertions": 2,
+    "onlyReviewedAssertionTokensChanged": true,
+    "sourceSha256": "43dbbc840a35af7406ad9cb1a6344927d860aff3e9e3af4a843d9edc38558b58"
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "rows": 44,
+  "statuses": {
+    "fixed": 25,
+    "open": 18,
+    "exception": 1
+  },
+  "historicalDetectorIdsRetained": 23,
+  "upstreamAttributedDetectorIds": 0,
+  "currentDetectorExceptions": 1,
+  "admittedFiles": 5,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7709,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 678,
+  "sourceHashes": [
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "sha256": "d30188a8f2cf9f19f9017b0b5f2e21b9a9ac992706d266f8f47d43742e92bec5"
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "sha256": "7ec76dde20531f6f41cd32aa09570aa95bf1f330f71bd1b3b03600bfbee9375e"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "sha256": "843dce1e46b2bf64d7e9bb226f61005ee9b1b1e137f983234780b5aab1997a1e"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "sha256": "134cbf9fa1eb579908942f1fbe05edd1d65afe9b260d277ec18406b9e7a46067"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "sha256": "27f11967b6dd840f899926c523fbd6bf73da9111484f0cca12f8ca9f691a7095"
+    }
+  ]
+}

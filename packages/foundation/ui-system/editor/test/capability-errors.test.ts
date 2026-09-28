@@ -9,7 +9,8 @@ import {
   UnknownCommandError,
 } from "@beep/editor/capability/errors";
 import { CapabilityId, CommandId, KeyChord, ProfileId } from "@beep/editor/capability/schemas";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 
@@ -42,8 +43,19 @@ describe("capability resolution error messages", () => {
           commandIds: [commandId, CommandId.make("format.italic")],
         }),
       ];
+      const identifiers: Readonly<Record<(typeof errors)[number]["_tag"], ReadonlyArray<string>>> = {
+        UnknownCapabilityError: [profileId, capabilityId],
+        MissingDependencyError: [profileId, capabilityId, dependencyId],
+        DependencyCycleError: [profileId, capabilityId, dependencyId],
+        CapabilityConflictError: [profileId, capabilityId, dependencyId],
+        DevelopmentOnlyCapabilityError: [profileId, capabilityId],
+        IncompatibleRegistrationError: [capabilityId, "CheckListPlugin", "CheckListPlugin requires ListPlugin"],
+        UnknownCommandError: [profileId, commandId],
+        KeybindingConflictError: [profileId, "windows-linux", commandId, "format.italic"],
+      };
       A.forEach(errors, (error) => {
         expect(error.message.length).toBeGreaterThan(20);
+        A.forEach(identifiers[error._tag], (identifier) => expect(error.message).toContain(identifier));
       });
       expect(
         IncompatibleRegistrationError.make({

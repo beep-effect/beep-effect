@@ -1,4 +1,4 @@
-import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import {
@@ -6,21 +6,17 @@ import {
   CanonicalizationService,
   CanonicalizeDatasetRequest,
 } from "@beep/semantic-web/services/canonicalization";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { afterEach, describe, expect } from "@effect/vitest";
+import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { afterEach, vi } from "vitest";
+import { vi } from "vitest";
 
 const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);
 const encodeCanonicalizeDatasetRequest = S.encodeEffect(CanonicalizeDatasetRequest);
 const encodeDataset = S.encodeEffect(Dataset);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const { canonizeMock } = vi.hoisted(() => ({
   canonizeMock: vi.fn(),
@@ -33,16 +29,24 @@ vi.mock("rdf-canonize", (importOriginal) =>
   }))
 );
 
-const expectEncodedRoundTrip = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
-  schema: Schema,
-  value: Schema["Type"]
-): void => {
-  const encoded = Effect.runSync(S.encodeEffect(schema)(value));
-  const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
-  const reencoded = Effect.runSync(S.encodeEffect(schema)(decoded));
-
+const expectEncodedRoundTrip = Effect.fnUntraced(function* <
+  Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>,
+>(schema: Schema, value: Schema["Type"]) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  const reencoded = yield* S.encodeEffect(schema)(decoded);
   expect(reencoded).toEqual(encoded);
-};
+});
+
+const BoundedDataset = S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) });
+const CanonicalDatasetResultArbitrary = Arbitrary.schema(
+  S.Struct({ ...CanonicalDatasetResult.fields, dataset: BoundedDataset })
+).pipe(Arbitrary.map((result) => CanonicalDatasetResult.make({ ...result, dataset: Dataset.make(result.dataset) })));
+const CanonicalizeDatasetRequestArbitrary = Arbitrary.schema(
+  S.Struct({ ...CanonicalizeDatasetRequest.fields, dataset: BoundedDataset })
+).pipe(
+  Arbitrary.map((request) => CanonicalizeDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
+);
 
 const dataset = makeDataset([
   makeQuad(
@@ -55,29 +59,19 @@ const dataset = makeDataset([
   }),
 ]);
 
-const runCanonicalization = <A, E>(effect: Effect.Effect<A, E, CanonicalizationService>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(CanonicalizationServiceLive), Effect.orDie));
-
-const expectSemanticBudgetFailure = (error: Error) => {
+const expectSemanticBudgetFailure = Effect.fnUntraced(function* (error: Error) {
   canonizeMock.mockRejectedValueOnce(error);
-
-  return expect(
-    runCanonicalization(
-      Effect.gen(function* () {
-        const service = yield* CanonicalizationService;
-        return yield* service.canonicalize(
-          yield* decodeCanonicalizeDatasetRequest({
-            algorithm: "rdfc-1.0",
-            dataset: yield* encodeDataset(dataset),
-          })
-        );
-      })
-    )
-  ).rejects.toMatchObject({
+  const service = yield* CanonicalizationService;
+  const request = yield* decodeCanonicalizeDatasetRequest({
+    algorithm: "rdfc-1.0",
+    dataset: yield* encodeDataset(dataset),
+  });
+  const failure = yield* service.canonicalize(request).pipe(Effect.flip);
+  expect(failure).toMatchObject({
     message: expect.stringContaining("configured resource budget"),
     reason: "workLimitExceeded",
   });
-};
+});
 
 afterEach(() => {
   canonizeMock.mockReset();
@@ -89,142 +83,75 @@ afterEach(() => {
 // consume each other's queued rejections and assert against foreign call
 // history. That was latent while these cases returned an Effect nobody ran.
 describe("Canonicalization security hardening", { concurrent: false }, () => {
-  it.effect("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
-    Effect.gen(function* () {
-      const actual = yield* Effect.promise(() =>
-        Promise.resolve(vi.importActual<typeof import("rdf-canonize")>("rdf-canonize"))
-      );
-      canonizeMock.mockImplementation(actual.canonize);
-
-      yield* Effect.promise(() =>
-        Promise.resolve(
-          runCanonicalization(
-            Effect.gen(function* () {
-              const service = yield* CanonicalizationService;
-              return yield* service.canonicalize(
-                yield* decodeCanonicalizeDatasetRequest({
-                  algorithm: "rdfc-1.0",
-                  dataset: yield* encodeDataset(dataset),
-                })
-              );
-            })
-          )
-        )
-      );
-
-      expect(canonizeMock).toHaveBeenCalledTimes(1);
-      const call = canonizeMock.mock.calls[0];
-      expect(call).toBeDefined();
-
-      if (call === undefined) {
-        return;
-      }
-
-      const [, options] = call;
-      expect(options.algorithm).toBe("RDFC-1.0");
-      expect(options.format).toBe("application/n-quads");
-      expect(options.maxWorkFactor).toBe(1);
-      expect(options.signal).toBeInstanceOf(AbortSignal);
-    })
-  );
-
-  it.effect("maps semantic resource-budget failures to work-limit errors", () =>
-    Effect.promise(() =>
-      Promise.resolve(expectSemanticBudgetFailure(new Error("Maximum deep iterations exceeded (8).")))
-    )
-  );
-
-  it.effect("maps abort-signal budget failures to work-limit errors", () =>
-    Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(new Error("Abort signal received"))))
-  );
-
-  it.effect("maps timeout-style budget failures to work-limit errors", () =>
-    Effect.gen(function* () {
-      const timeoutError = new Error("signal timed out");
-      timeoutError.name = "TimeoutError";
-
-      yield* Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(timeoutError)));
-    })
-  );
-
-  it.effect("canonicalizes lexical requests without changing result encoded shape", () =>
-    Effect.gen(function* () {
-      const result = yield* Effect.promise(() =>
-        runCanonicalization(
-          Effect.gen(function* () {
-            const service = yield* CanonicalizationService;
-            return yield* service.canonicalize(
-              yield* decodeCanonicalizeDatasetRequest({
-                algorithm: "lexical-sort-v1",
-                dataset: yield* encodeDataset(dataset),
-              })
-            );
-          })
-        )
-      );
-
-      expectEncodedRoundTrip(CanonicalDatasetResult, result);
-      expect(result.canonicalText).toContain("<https://example.com/people/alice>");
-    })
-  );
-
-  it("round-trips schema-derived canonical dataset results through encoded form", {
-    timeout: 30000,
-  }, () => {
-    const arbitrary = Arbitrary.schema(CanonicalDatasetResult).pipe(
-      Arbitrary.map((result) =>
-        CanonicalDatasetResult.make({
-          ...result,
-          dataset: makeDataset(result.dataset.quads.slice(0, 3)),
-        })
-      )
-    );
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([result]) => {
-            expectEncodedRoundTrip(CanonicalDatasetResult, result);
-
-            return true;
-          },
-          fcRuns(5)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
-
-  it.effect(
-    "derives canonicalization requests from the source schema and proves an encode/decode round-trip",
-    () =>
+  it.layer(CanonicalizationServiceLive, { timeout: "30 seconds" })((it) => {
+    it.effect("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
       Effect.gen(function* () {
-        // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
-        // stays fast and reliable. The round-trip law holds regardless of dataset size.
-        const arbitrary = Arbitrary.schema(CanonicalizeDatasetRequest).pipe(
-          Arbitrary.map((request) =>
-            CanonicalizeDatasetRequest.make({
-              ...request,
-              dataset: makeDataset(request.dataset.quads.slice(0, 3)),
-            })
-          )
+        const actual = yield* Effect.promise(() =>
+          Promise.resolve(vi.importActual<typeof import("rdf-canonize")>("rdf-canonize"))
         );
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([request]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeCanonicalizeDatasetRequest(request);
-              const decoded = yield* decodeCanonicalizeDatasetRequest(encoded);
-
-              expect(yield* encodeCanonicalizeDatasetRequest(decoded)).toEqual(encoded);
-
-              return true;
-            }),
-          fcRuns(5)
+        canonizeMock.mockImplementation(actual.canonize);
+        const service = yield* CanonicalizationService;
+        yield* service.canonicalize(
+          yield* decodeCanonicalizeDatasetRequest({
+            algorithm: "rdfc-1.0",
+            dataset: yield* encodeDataset(dataset),
+          })
         );
-
-        expect(result).toMatchObject({ _tag: "Passed" });
-      }),
-    { timeout: 30000 }
-  );
+        expect(canonizeMock).toHaveBeenCalledTimes(1);
+        const call = canonizeMock.mock.calls[0];
+        expect(call).toBeDefined();
+        if (call === undefined) {
+          return;
+        }
+        const [, options] = call;
+        expect(options.algorithm).toBe("RDFC-1.0");
+        expect(options.format).toBe("application/n-quads");
+        expect(options.maxWorkFactor).toBe(1);
+        expect(options.signal).toBeInstanceOf(AbortSignal);
+      })
+    );
+    it.effect("maps semantic resource-budget failures to work-limit errors", () =>
+      expectSemanticBudgetFailure(new Error("Maximum deep iterations exceeded (8)."))
+    );
+    it.effect("maps abort-signal budget failures to work-limit errors", () =>
+      expectSemanticBudgetFailure(new Error("Abort signal received"))
+    );
+    it.effect("maps timeout-style budget failures to work-limit errors", () =>
+      Effect.gen(function* () {
+        const timeoutError = new Error("signal timed out");
+        timeoutError.name = "TimeoutError";
+        yield* expectSemanticBudgetFailure(timeoutError);
+      })
+    );
+    it.effect("canonicalizes lexical requests without changing result encoded shape", () =>
+      Effect.gen(function* () {
+        const service = yield* CanonicalizationService;
+        const result = yield* service.canonicalize(
+          yield* decodeCanonicalizeDatasetRequest({
+            algorithm: "lexical-sort-v1",
+            dataset: yield* encodeDataset(dataset),
+          })
+        );
+        yield* expectEncodedRoundTrip(CanonicalDatasetResult, result);
+        expect(result.canonicalText).toContain("<https://example.com/people/alice>");
+      })
+    );
+    it.effect.prop(
+      "round-trips schema-derived canonical dataset results through encoded form",
+      [CanonicalDatasetResultArbitrary],
+      ([result]) => expectEncodedRoundTrip(CanonicalDatasetResult, result),
+      { arbitrary: fcRuns(5), timeout: 30000 }
+    );
+    it.effect.prop(
+      "derives canonicalization requests from the source schema and proves an encode/decode round-trip",
+      [CanonicalizeDatasetRequestArbitrary],
+      ([request]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeCanonicalizeDatasetRequest(request);
+          const decoded = yield* decodeCanonicalizeDatasetRequest(encoded);
+          expect(yield* encodeCanonicalizeDatasetRequest(decoded)).toEqual(encoded);
+        }),
+      { arbitrary: fcRuns(5), timeout: 30000 }
+    );
+  });
 });

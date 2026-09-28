@@ -1,5 +1,8 @@
 import { SessionChangeRejected, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 describe("ontology domain tagged-error declared equivalence", () => {
@@ -21,7 +24,7 @@ describe("ontology domain tagged-error declared equivalence", () => {
       message: "The change was rejected.",
     });
 
-    expect(same(first, second)).toBe(true);
-    expect(same(first, different)).toBe(false);
+    pipe(same(first, second), assertTrue);
+    pipe(same(first, different), assertFalse);
   });
 });

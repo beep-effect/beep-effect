@@ -12,16 +12,18 @@ import {
   verifyCurrentSpanHistory,
 } from "@beep/langextract/VerifiedSpan";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { ISOStr } from "@beep/schema/Timestamp";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Ref, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertEquals, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -134,23 +136,17 @@ const persistAndReload = Effect.fnUntraced(function* (history: VerifiedSpanHisto
 });
 
 describe("verified-span persistence and re-anchor history", () => {
-  it("round-trips schema-derived persisted failures", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(VerifiedSpanAttemptFailure)]),
-          ([failure]) => {
-            const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
-            const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
+  it.prop(
+    "round-trips schema-derived persisted failures",
+    { failure: Arbitrary.schema(VerifiedSpanAttemptFailure) },
+    ({ failure }) => {
+      const encoded = Result.getOrThrow(encodeUnknownVerifiedSpanAttemptFailureResult(failure));
+      const decoded = Result.getOrThrow(decodeVerifiedSpanAttemptFailureResult(encoded));
 
-            expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(S.toEquivalence(VerifiedSpanAttemptFailure)(decoded, failure)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "persists exact raw anchors, raw candidates, source identity, and pinned versions across restart",
@@ -223,10 +219,10 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(unrelatedReanchor.reason).toBe("invalid-history");
       expect(reanchored.attempts[0]).toEqual(initial.attempts[0]);
       expect(second.kind).toBe("verification");
-      expect(second.previousAttemptId).toEqual(O.some(first.attemptId));
+      assertSome(second.previousAttemptId, first.attemptId);
       expect(second.outcome.status).toBe("failed");
       expect(third.kind).toBe("re-anchor");
-      expect(third.previousAttemptId).toEqual(O.some(second.attemptId));
+      assertSome(third.previousAttemptId, second.attemptId);
       expect(third.outcome.status).toBe("verified");
       expect(historyEquivalence(restarted, reanchored)).toBe(true);
       if (VerifiedSpanAttemptOutcome.guards.failed(second.outcome)) {
@@ -288,7 +284,7 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(outcome.status).toBe("failed");
       if (VerifiedSpanAttemptOutcome.guards.failed(outcome)) {
         expect(outcome.failure).toMatchObject({ reason: "absent-text", stage: "location" });
-        expect(outcome.failure.candidateIndex).toEqual(O.none());
+        assertNone(outcome.failure.candidateIndex);
       }
       expect("anchors" in outcome).toBe(false);
     }, provideTestCrypto)
@@ -370,9 +366,9 @@ describe("verified-span persistence and re-anchor history", () => {
             },
           ],
         };
-        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(swappedAssociations))).toBe(true);
-        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(swappedReceipts))).toBe(true);
-        expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(duplicatedReceipt))).toBe(true);
+        pipe(decodeUnknownVerifiedSpanHistoryResult(swappedAssociations), Result.isFailure, assertTrue);
+        pipe(decodeUnknownVerifiedSpanHistoryResult(swappedReceipts), Result.isFailure, assertTrue);
+        pipe(decodeUnknownVerifiedSpanHistoryResult(duplicatedReceipt), Result.isFailure, assertTrue);
       }
     }, provideTestCrypto)
   );
@@ -422,7 +418,7 @@ describe("verified-span persistence and re-anchor history", () => {
       }
       if (VerifiedSpanAttemptOutcome.guards.failed(ambiguous.attempts[0].outcome)) {
         expect(ambiguous.attempts[0].outcome.failure).toMatchObject({ reason: "ambiguous", stage: "location" });
-        expect(ambiguous.attempts[0].outcome.failure.candidateIndex).toEqual(O.some(0));
+        assertSome(ambiguous.attempts[0].outcome.failure.candidateIndex, NonNegativeInt.make(0));
       }
       if (VerifiedSpanAttemptOutcome.guards.failed(unsupported.attempts[0].outcome)) {
         expect(unsupported.attempts[0].outcome.failure).toMatchObject({
@@ -436,8 +432,8 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(historyEquivalence(restartedCrossMatter, crossMatter)).toBe(true);
       expect(historyEquivalence(restartedUnsupported, unsupported)).toBe(true);
       expect(historyEquivalence(restartedMixedVersion, mixedVersion)).toBe(true);
-      expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationMatter))).toBe(true);
-      expect(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationSourceScope))).toBe(true);
+      pipe(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationMatter), Result.isFailure, assertTrue);
+      pipe(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationSourceScope), Result.isFailure, assertTrue);
     }, provideTestCrypto)
   );
 
@@ -660,7 +656,7 @@ describe("verified-span persistence and re-anchor history", () => {
         ],
       };
 
-      const tamperedHistories = [
+      const tamperedHistories = {
         tamperedLink,
         contradictoryNegative,
         reanchorWithoutDrift,
@@ -681,11 +677,11 @@ describe("verified-span persistence and re-anchor history", () => {
         changedReceiptSource,
         wrongAnchorCount,
         supportedNormalizationFailure,
-      ];
+      };
 
-      expect(
-        A.every(tamperedHistories, (history) => Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history)))
-      ).toBe(true);
+      for (const [invariant, history] of R.toEntries(tamperedHistories)) {
+        assertEquals(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history)), true, invariant);
+      }
     }, provideTestCrypto)
   );
 });

@@ -9,11 +9,14 @@ import {
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -49,7 +52,7 @@ describe("parseModelOutput", () => {
 
       expect(candidates).toHaveLength(1);
       expect(candidates[0]?.label).toBe("person");
-      expect(candidates[0]?.confidence).toStrictEqual(O.some(UnitInterval.make(0.9)));
+      assertSome(O.getOrThrow(A.head(candidates)).confidence, UnitInterval.make(0.9));
     })
   );
 
@@ -63,34 +66,21 @@ describe("parseModelOutput", () => {
     })
   );
 
-  it("round-trips schema-derived candidates from both accepted wire shapes", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ExtractionCandidatesArbitrary]),
-          ([candidates]) => {
-            const fromArray = Effect.runSync(
-              Effect.gen(function* () {
-                const text = yield* encodeCandidateArrayJson(candidates);
-                return yield* parseModelOutput(text);
-              })
-            );
-            const fromEnvelope = Effect.runSync(
-              Effect.gen(function* () {
-                const text = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
-                return yield* parseModelOutput(text);
-              })
-            );
+  it.effect.prop(
+    "round-trips schema-derived candidates from both accepted wire shapes",
+    { candidates: ExtractionCandidatesArbitrary },
+    ({ candidates }) =>
+      Effect.gen(function* () {
+        const arrayJson = yield* encodeCandidateArrayJson(candidates);
+        const fromArray = yield* parseModelOutput(arrayJson);
+        const envelopeJson = yield* encodeCandidateEnvelopeJson({ extractions: candidates });
+        const fromEnvelope = yield* parseModelOutput(envelopeJson);
 
-            expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
-            expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
+        expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it.effect(
     "keeps grounded-case encoded optional-key shape unchanged",
@@ -213,10 +203,10 @@ describe("parseModelOutput", () => {
 
       expect(request.targets).toHaveLength(1);
       expect(request.targets[0]?.attributes).toEqual([]);
-      expect(O.isNone(request.targets[0]?.description)).toBe(true);
+      assertNone(request.targets[0]?.description);
       expect(request.examples).toEqual([]);
-      expect(O.isNone(request.options.fuzzyThreshold)).toBe(true);
-      expect(O.isNone(request.options.maxExtractions)).toBe(true);
+      assertNone(request.options.fuzzyThreshold);
+      assertNone(request.options.maxExtractions);
 
       expect(yield* encodeLangExtractRequest(request)).toEqual({
         documentId: "doc-1",

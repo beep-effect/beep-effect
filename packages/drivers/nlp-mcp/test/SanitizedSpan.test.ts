@@ -10,8 +10,9 @@
  */
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
+import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
@@ -61,7 +62,7 @@ const registrationLayer = sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNl
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
 
 describe("nlp-mcp sanitized dispatch", () => {
-  layer(fullLayer)("with NlpToolkit mounted via sanitizedToolkit", (it) => {
+  it.layer(fullLayer)("with NlpToolkit mounted via sanitizedToolkit", (it) => {
     it.effect(
       "does not leak the raw Tokenize request text onto span attributes",
       Effect.fnUntraced(function* () {

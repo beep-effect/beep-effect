@@ -11,8 +11,10 @@ import {
   requireAbsoluteAiMetricsDataRoot,
   resolveAiMetricsDataRoot,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -140,8 +142,8 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       ];
 
       for (const input of unresolvable) {
-        expect(O.isNone(resolveAiMetricsDataRoot(input))).toBe(true);
-        expect(O.isNone(aiMetricsStateHome(input))).toBe(true);
+        assertNone(resolveAiMetricsDataRoot(input));
+        assertNone(aiMetricsStateHome(input));
       }
 
       // The dankserver rung and an explicit XDG_STATE_HOME still resolve without a home.
@@ -178,7 +180,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
       for (const input of inputs) {
         const resolved = resolveRoot(input);
         expect(resolved.path).not.toBe(cloneRelativeRoot);
-        expect(pipe(resolved.path, Str.startsWith(`${cloneRelativeRoot}/`))).toBe(false);
+        pipe(resolved.path, Str.startsWith(`${cloneRelativeRoot}/`), assertFalse);
         expect(resolved.path).not.toContain(".beep/ai-metrics");
       }
     })
@@ -193,10 +195,10 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     const evidenceRoot = agentEvidenceRoot(stateHome);
 
     expect(metricsRoot).toBe(xdgDefaultRoot);
-    expect(pipe(metricsRoot, Str.endsWith("/beep/ai-metrics"))).toBe(true);
+    pipe(metricsRoot, Str.endsWith("/beep/ai-metrics"), assertTrue);
     expect(metricsRoot).not.toBe(evidenceRoot);
-    expect(pipe(metricsRoot, Str.startsWith(`${evidenceRoot}/`))).toBe(false);
-    expect(pipe(evidenceRoot, Str.startsWith(`${metricsRoot}/`))).toBe(false);
+    pipe(metricsRoot, Str.startsWith(`${evidenceRoot}/`), assertFalse);
+    pipe(evidenceRoot, Str.startsWith(`${metricsRoot}/`), assertFalse);
     expect(metricsRoot).not.toBe(stateHome);
     expect(metricsRoot).not.toBe(`${stateHome}/beep`);
   });

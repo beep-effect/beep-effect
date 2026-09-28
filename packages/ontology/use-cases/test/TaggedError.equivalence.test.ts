@@ -18,12 +18,15 @@ import {
   OntologyToolExecutionError,
 } from "@beep/ontology-use-cases/tools";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  pipe(same(first, second), assertTrue);
+  pipe(same(first, different), assertFalse);
 };
 
 describe("ontology use-case tagged-error declared equivalence", () => {

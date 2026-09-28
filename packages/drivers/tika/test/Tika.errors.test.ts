@@ -1,4 +1,5 @@
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import {
   makeTikaError,
   TIKA_ENGINE_NAME,
@@ -9,7 +10,7 @@ import {
   tikaOperationError,
 } from "@beep/tika";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Order, Result } from "effect";
 import * as S from "effect/Schema";
 import { makeExtractOperationFixture } from "./fixtures.ts";

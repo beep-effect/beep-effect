@@ -1,0 +1,531 @@
+{
+  "numTotalTestSuites": 10,
+  "numPassedTestSuites": 10,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 43,
+  "numPassedTests": 43,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790419215712,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Postgres declared-field equivalence"],
+          "fullName": "Postgres declared-field equivalence treats field-equal PostgresError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal PostgresError instances as equivalent and field-different ones as distinct",
+          "duration": 4.8488669999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres declared-field equivalence"],
+          "fullName": "Postgres declared-field equivalence treats defect-only differences as equivalent",
+          "status": "passed",
+          "title": "treats defect-only differences as equivalent",
+          "duration": 4.530126000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790419219393,
+      "endTime": 1790419219397.8489,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/postgres/test/Postgres.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError extracts SQLSTATE diagnostics from pg-like failures",
+          "status": "passed",
+          "title": "extracts SQLSTATE diagnostics from pg-like failures",
+          "duration": 5.902719000000161,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError keeps duplicate SQLSTATE aliases without losing the canonical name",
+          "status": "passed",
+          "title": "keeps duplicate SQLSTATE aliases without losing the canonical name",
+          "duration": 5.5700879999999415,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError extracts Drizzle failed query messages",
+          "status": "passed",
+          "title": "extracts Drizzle failed query messages",
+          "duration": 5.547273000000132,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError constructs schema-owned diagnostic context",
+          "status": "passed",
+          "title": "constructs schema-owned diagnostic context",
+          "duration": 5.5392400000000634,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError keeps diagnostic context and error encoded shapes at the raw optional boundary",
+          "status": "passed",
+          "title": "keeps diagnostic context and error encoded shapes at the raw optional boundary",
+          "duration": 5.533090000000357,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError round-trips schema-derived SQLSTATE and Postgres error values",
+          "status": "passed",
+          "title": "round-trips schema-derived SQLSTATE and Postgres error values",
+          "duration": 36.47979400000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError keeps fallback Drizzle message params opaque when they contain commas",
+          "status": "passed",
+          "title": "keeps fallback Drizzle message params opaque when they contain commas",
+          "duration": 3.4299809999997706,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError falls back to reason when cause is missing or undefined",
+          "status": "passed",
+          "title": "falls back to reason when cause is missing or undefined",
+          "duration": 3.3859840000000077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError is idempotent for already-normalized PostgresError values",
+          "status": "passed",
+          "title": "is idempotent for already-normalized PostgresError values",
+          "duration": 3.361666000000241,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError unwraps Cause.fail pg-like failures",
+          "status": "passed",
+          "title": "unwraps Cause.fail pg-like failures",
+          "duration": 3.3451310000000376,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError unwraps Cause.die native Drizzle query failures",
+          "status": "passed",
+          "title": "unwraps Cause.die native Drizzle query failures",
+          "duration": 2.1814190000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError unwraps Cause.fail existing PostgresError values",
+          "status": "passed",
+          "title": "unwraps Cause.fail existing PostgresError values",
+          "duration": 0.9544599999999264,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError normalizes hostile proxy inputs without throwing",
+          "status": "passed",
+          "title": "normalizes hostile proxy inputs without throwing",
+          "duration": 0.9216400000000249,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError does not retain proxied Cause values with throwing reasons getters",
+          "status": "passed",
+          "title": "does not retain proxied Cause values with throwing reasons getters",
+          "duration": 0.8906210000000101,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError ignores hostile Cause reason entries without throwing",
+          "status": "passed",
+          "title": "ignores hostile Cause reason entries without throwing",
+          "duration": 0.8816280000000916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError ignores hostile Error.stack getters",
+          "status": "passed",
+          "title": "ignores hostile Error.stack getters",
+          "duration": 1.5742839999998068,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PostgresError"],
+          "fullName": "PostgresError follows reason fallbacks when sibling getters throw",
+          "status": "passed",
+          "title": "follows reason fallbacks when sibling getters throw",
+          "duration": 1.2195879999999306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats SQL and parameters with a disabled color palette",
+          "status": "passed",
+          "title": "formats SQL and parameters with a disabled color palette",
+          "duration": 15.493978999999854,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Postgres errors",
+          "status": "passed",
+          "title": "formats Postgres errors",
+          "duration": 15.478013999999803,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting falls back to raw SQL when the formatter rejects invalid SQL",
+          "status": "passed",
+          "title": "falls back to raw SQL when the formatter rejects invalid SQL",
+          "duration": 15.469861000000037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats invalid Date params without throwing",
+          "status": "passed",
+          "title": "formats invalid Date params without throwing",
+          "duration": 15.459235000000263,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Postgres errors with invalid SQL without throwing",
+          "status": "passed",
+          "title": "formats Postgres errors with invalid SQL without throwing",
+          "duration": 15.452735000000303,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Postgres errors with invalid Date params without throwing",
+          "status": "passed",
+          "title": "formats Postgres errors with invalid Date params without throwing",
+          "duration": 3.3366580000001704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats array params with throwing string coercion without throwing",
+          "status": "passed",
+          "title": "formats array params with throwing string coercion without throwing",
+          "duration": 2.2298329999998714,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Postgres errors with array params that throw during string coercion",
+          "status": "passed",
+          "title": "formats Postgres errors with array params that throw during string coercion",
+          "duration": 2.2044240000000173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats hostile proxy and Date subclass params without throwing",
+          "status": "passed",
+          "title": "formats hostile proxy and Date subclass params without throwing",
+          "duration": 2.189871999999923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Postgres errors with hostile proxy and Date subclass params without throwing",
+          "status": "passed",
+          "title": "formats Postgres errors with hostile proxy and Date subclass params without throwing",
+          "duration": 2.1854950000001736,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats hostile proxy errors without throwing",
+          "status": "passed",
+          "title": "formats hostile proxy errors without throwing",
+          "duration": 0.8738459999999577,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting formats Cause values with hostile reason boundaries without throwing",
+          "status": "passed",
+          "title": "formats Cause values with hostile reason boundaries without throwing",
+          "duration": 1.6077460000001338,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres formatting"],
+          "fullName": "Postgres formatting preserves embedded PostgresError diagnostics from Cause.fail",
+          "status": "passed",
+          "title": "preserves embedded PostgresError diagnostics from Cause.fail",
+          "duration": 1.5919819999999163,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres interop"],
+          "fullName": "Postgres interop exports native PgClient interop",
+          "status": "passed",
+          "title": "exports native PgClient interop",
+          "duration": 36.57903699999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres Drizzle migrations"],
+          "fullName": "Postgres Drizzle migrations normalizes synchronous native migrator setup failures",
+          "status": "passed",
+          "title": "normalizes synchronous native migrator setup failures",
+          "duration": 36.525415000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres Drizzle migrations"],
+          "fullName": "Postgres Drizzle migrations validates and prepares in-memory migration bundles before native execution",
+          "status": "passed",
+          "title": "validates and prepares in-memory migration bundles before native execution",
+          "duration": 36.507306999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres client"],
+          "fullName": "Postgres client provides all client service keys from an existing PgClient",
+          "status": "passed",
+          "title": "provides all client service keys from an existing PgClient",
+          "duration": 36.49906400000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790419219418,
+      "endTime": 1790419219484.6077,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/postgres/test/Postgres.errors.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration provides PostgresClient over the PgLite PgClient",
+          "status": "passed",
+          "title": "provides PostgresClient over the PgLite PgClient",
+          "duration": 2638.7766359999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration runs Drizzle CRUD and transactions through makeDrizzleLayer",
+          "status": "passed",
+          "title": "runs Drizzle CRUD and transactions through makeDrizzleLayer",
+          "duration": 2905.199523,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration runs Drizzle migrations from a fixture folder through PgLite",
+          "status": "passed",
+          "title": "runs Drizzle migrations from a fixture folder through PgLite",
+          "duration": 4931.56633,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration continues a folder-migrated journal from an in-memory bundle",
+          "status": "passed",
+          "title": "continues a folder-migrated journal from an in-memory bundle",
+          "duration": 3357.485272,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration skips a re-baseline only after the complete legacy journal is present",
+          "status": "passed",
+          "title": "skips a re-baseline only after the complete legacy journal is present",
+          "duration": 17.66320800000176,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration upgrades a complete version-zero legacy journal before skipping a re-baseline",
+          "status": "passed",
+          "title": "upgrades a complete version-zero legacy journal before skipping a re-baseline",
+          "duration": 15.069205000003421,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Postgres PgLite integration"],
+          "fullName": "Postgres PgLite integration refuses a partial legacy journal instead of applying a conflicting baseline",
+          "status": "passed",
+          "title": "refuses a partial legacy journal instead of applying a conflicting baseline",
+          "duration": 42.8826029999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790419219427,
+      "endTime": 1790419233335.8826,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts"
+    }
+  ]
+}

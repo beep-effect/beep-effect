@@ -1,0 +1,255 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "5f4da5f738997f01c58cc8b5ced869423ebdb974e5e33e51b5eee65991e9586b"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "sha256": "3db5256b9539da9aec1182b2cdddcfd3d69faf2fccdc3515db5d8f6b8b2bb80e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "sha256": "af239de0eda321a9d37b63c38544b52018e637ac071cbdd8c1a26d61b698fa75"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "sha256": "1ec635a271fbbff2180ffbe77a1681073d12533958a829579dc15e9cb0900dd9"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "d2d4f1ce8ff1f07729eb68526e5e141559d14192396aa23b5734fcd31b6372c4"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "sha256": "f562f2a00eca1ea3bf86f2e82086f9a677015458d2eb8374da86e128d0fb186a"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "58be8aed096555f1b92f6181069c50794e24ca4ae3a5709e5f14ab1cc916f018"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "4bf0d3cc67eb0cd79cc893814646f207a10efeeac650f31b5fb0951c73a09a70"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+      "sha256": "eafcff7c5b47646c224fb7709a9bd344a339b4282b65c14375749938a429f6ff"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/Version.ts",
+      "sha256": "8b918d8d087f8f164fe98bd7949fb4d9dcfba1e1afa9dce206b40261e6712e37"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+      "sha256": "c27026c9cc9f2d7e22b529b17685d44274335435a8837ab4c2db05139179b75a"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "sha256": "6f94fc1285935a6420611272638503daf00e015c18665a332cd20973a7fe8571"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+      "sha256": "3eb8b93697f6965f161e14a227e8b7e0e085b908822361504293164acbbeda81"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+      "sha256": "473d571c2f24f6ba4f5a55beb1790bbed92831b3210f6f1a8d7c6d5cdbb7d5f7"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "sha256": "5d4779610956f5ecf3a720135f37ed0936d71797a3d7ec7afd3ba8c9d70036a8"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/Client.test.ts",
+      "sha256": "8d197793581079c9323c8fd4acd76a496f51d999a1834e764074f23cbec63cbe"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ClientNode.test.ts",
+      "sha256": "4b965a58b9910c28126ba1ff5ee25e66dd1ffb0ddfd81f067d42d693dc72f716"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/Conformance.test.ts",
+      "sha256": "1229ed8531423f8d37877de7054d2e8c218421b1876adadc8591982c664bb84d"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "sha256": "2a0f731989a4a6c25706822559ffdf2adba211bba043a289f4bf29c83869cecc"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/McpCaller.test.ts",
+      "sha256": "6fd39f0d519856aafb39d18a3b45378353d09e80f87c9ba7407552f8ce14efbb"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+      "sha256": "9335e0f17dd451a9c669278eb686e47f58261bf3cce735240190a4e3940fed40"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "sha256": "b7d483f5888484cbe5723f1df5ee18e246a07424f5f97b8bfccefc4f546e4583"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "sha256": "f6ce2a4bed9a6b53bc064328b8e8f99798eb220da95e7582f07d34d05f7ab6ec"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+      "sha256": "bcce63a472d5faf0e3678f878191acece3b23cc3f7a77cb17b3a70234af9eaba"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/fixtures/FixtureHost.ts",
+      "sha256": "f99e6dfeca66fdab46b069bcaf7fcf426d2626fd1830744771ad6e422a0f7e37"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/fixtures/McpClient.ts",
+      "sha256": "55f40c88a5b11f2b44576c2e55dcc1bf75181839c7679d4d099b5cee4e4e5d7f"
+    }
+  ],
+  "loadBefore": [12.9658203125, 19.97802734375, 20.10400390625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.02 avg60=0.29 avg300=1.83 total=1889041190\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=165709936\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=149753353\n",
+    "io": "some avg10=0.02 avg60=0.20 avg300=0.35 total=876075226\nfull avg10=0.02 avg60=0.15 avg300=0.13 total=621603030\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 2.4460901130078128,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/package.json",
+      "sha256": "5f4da5f738997f01c58cc8b5ced869423ebdb974e5e33e51b5eee65991e9586b"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "sha256": "3db5256b9539da9aec1182b2cdddcfd3d69faf2fccdc3515db5d8f6b8b2bb80e"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "sha256": "af239de0eda321a9d37b63c38544b52018e637ac071cbdd8c1a26d61b698fa75"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "sha256": "1ec635a271fbbff2180ffbe77a1681073d12533958a829579dc15e9cb0900dd9"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "d2d4f1ce8ff1f07729eb68526e5e141559d14192396aa23b5734fcd31b6372c4"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "sha256": "f562f2a00eca1ea3bf86f2e82086f9a677015458d2eb8374da86e128d0fb186a"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "58be8aed096555f1b92f6181069c50794e24ca4ae3a5709e5f14ab1cc916f018"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "4bf0d3cc67eb0cd79cc893814646f207a10efeeac650f31b5fb0951c73a09a70"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+      "sha256": "eafcff7c5b47646c224fb7709a9bd344a339b4282b65c14375749938a429f6ff"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/Version.ts",
+      "sha256": "8b918d8d087f8f164fe98bd7949fb4d9dcfba1e1afa9dce206b40261e6712e37"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+      "sha256": "c27026c9cc9f2d7e22b529b17685d44274335435a8837ab4c2db05139179b75a"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "sha256": "6f94fc1285935a6420611272638503daf00e015c18665a332cd20973a7fe8571"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+      "sha256": "3eb8b93697f6965f161e14a227e8b7e0e085b908822361504293164acbbeda81"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+      "sha256": "473d571c2f24f6ba4f5a55beb1790bbed92831b3210f6f1a8d7c6d5cdbb7d5f7"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "sha256": "5d4779610956f5ecf3a720135f37ed0936d71797a3d7ec7afd3ba8c9d70036a8"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/Client.test.ts",
+      "sha256": "8d197793581079c9323c8fd4acd76a496f51d999a1834e764074f23cbec63cbe"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ClientNode.test.ts",
+      "sha256": "4b965a58b9910c28126ba1ff5ee25e66dd1ffb0ddfd81f067d42d693dc72f716"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/Conformance.test.ts",
+      "sha256": "1229ed8531423f8d37877de7054d2e8c218421b1876adadc8591982c664bb84d"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "sha256": "2a0f731989a4a6c25706822559ffdf2adba211bba043a289f4bf29c83869cecc"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/McpCaller.test.ts",
+      "sha256": "6fd39f0d519856aafb39d18a3b45378353d09e80f87c9ba7407552f8ce14efbb"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+      "sha256": "9335e0f17dd451a9c669278eb686e47f58261bf3cce735240190a4e3940fed40"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "sha256": "b7d483f5888484cbe5723f1df5ee18e246a07424f5f97b8bfccefc4f546e4583"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "sha256": "f6ce2a4bed9a6b53bc064328b8e8f99798eb220da95e7582f07d34d05f7ab6ec"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+      "sha256": "bcce63a472d5faf0e3678f878191acece3b23cc3f7a77cb17b3a70234af9eaba"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/fixtures/FixtureHost.ts",
+      "sha256": "f99e6dfeca66fdab46b069bcaf7fcf426d2626fd1830744771ad6e422a0f7e37"
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/fixtures/McpClient.ts",
+      "sha256": "55f40c88a5b11f2b44576c2e55dcc1bf75181839c7679d4d099b5cee4e4e5d7f"
+    }
+  ],
+  "loadAfter": [12.9658203125, 19.97802734375, 20.10400390625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.27 avg300=1.81 total=1889059939\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=165710286\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=149753692\n",
+    "io": "some avg10=0.01 avg60=0.19 avg300=0.35 total=876075785\nfull avg10=0.01 avg60=0.14 avg300=0.13 total=621603444\n"
+  },
+  "sourceStable": true
+}

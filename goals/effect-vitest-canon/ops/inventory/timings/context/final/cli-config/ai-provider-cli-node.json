@@ -1,0 +1,135 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/cli-config-ai-provider-cli-runner-node.json"
+  ],
+  "phase": "runner-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "52390fdf245b7483bd5303d9be7629eeaadb842055d04ff90c5fe708794132e6"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/package.json",
+      "sha256": "67cee3715a22457b1f9ba04e45b8dd34d0951ccde39315b612e369eb1f398c1b"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+      "sha256": "92904c2c87c4425689a26494d93deeffb9b8429083db7e8ff65e1f99d70de84c"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "c99371ff02fd2284ce5367b079cf59d1217bba81bd3547cecc08e19f95eec1c8"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+      "sha256": "866ceab738fddd12f0b857ada79518db4610ac74e6ac021e4cbf8864cd436d43"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "sha256": "8db5ea32a589fe08293f2076279d842bb45b146ec6dd681826c9ac83d14e02a0"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "sha256": "a0c2bfdbeb7ed0d8dce6740193ed02e4b384ef9c3dd1ac02acec039393a4e5e6"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.service.ts",
+      "sha256": "a57c8fec812d32cf1509c21ffa3fe11e0fa051beccac1d7fb8dd3b2941a4090b"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/index.ts",
+      "sha256": "dc3b2ddcb8cf235145bf246f1a90131cc6183e7073b1520804d5c07d3e7137be"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "sha256": "d3ecec8802fea3616b42bdc3a78989d96e62dc6c597f86ebd4322b01b930ff4d"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "sha256": "4376a80b9dc4d4bdb0e6b942649ec46172272fd6fb63acfafa70bb1d2f080d1d"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts",
+      "sha256": "e8c8be3ea15122d4724f0baa84cc0c867cda957d29704ea609f05bd89be8eab8"
+    }
+  ],
+  "loadBefore": [5.7626953125, 10.1865234375, 14.01025390625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.19 avg300=0.61 total=2628785686\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.02 avg300=0.13 total=224594923\nfull avg10=0.00 avg60=0.01 avg300=0.12 total=195305708\n",
+    "io": "some avg10=0.01 avg60=0.12 avg300=0.07 total=1015904330\nfull avg10=0.01 avg60=0.10 avg300=0.03 total=689782485\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 3.3680845399940154,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "52390fdf245b7483bd5303d9be7629eeaadb842055d04ff90c5fe708794132e6"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/package.json",
+      "sha256": "67cee3715a22457b1f9ba04e45b8dd34d0951ccde39315b612e369eb1f398c1b"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+      "sha256": "92904c2c87c4425689a26494d93deeffb9b8429083db7e8ff65e1f99d70de84c"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+      "sha256": "c99371ff02fd2284ce5367b079cf59d1217bba81bd3547cecc08e19f95eec1c8"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+      "sha256": "866ceab738fddd12f0b857ada79518db4610ac74e6ac021e4cbf8864cd436d43"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "sha256": "8db5ea32a589fe08293f2076279d842bb45b146ec6dd681826c9ac83d14e02a0"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts",
+      "sha256": "a0c2bfdbeb7ed0d8dce6740193ed02e4b384ef9c3dd1ac02acec039393a4e5e6"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.service.ts",
+      "sha256": "a57c8fec812d32cf1509c21ffa3fe11e0fa051beccac1d7fb8dd3b2941a4090b"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/src/index.ts",
+      "sha256": "dc3b2ddcb8cf235145bf246f1a90131cc6183e7073b1520804d5c07d3e7137be"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "sha256": "d3ecec8802fea3616b42bdc3a78989d96e62dc6c597f86ebd4322b01b930ff4d"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "sha256": "4376a80b9dc4d4bdb0e6b942649ec46172272fd6fb63acfafa70bb1d2f080d1d"
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts",
+      "sha256": "e8c8be3ea15122d4724f0baa84cc0c867cda957d29704ea609f05bd89be8eab8"
+    }
+  ],
+  "loadAfter": [5.78173828125, 10.11669921875, 13.966796875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.17 avg300=0.60 total=2628793849\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.13 total=224594931\nfull avg10=0.00 avg60=0.01 avg300=0.12 total=195305716\n",
+    "io": "some avg10=0.00 avg60=0.11 avg300=0.07 total=1015904529\nfull avg10=0.00 avg60=0.09 avg300=0.03 total=689782636\n"
+  },
+  "sourceStable": true
+}

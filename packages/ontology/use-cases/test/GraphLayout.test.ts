@@ -8,7 +8,8 @@ import {
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 

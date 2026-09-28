@@ -18,7 +18,10 @@ import {
 } from "@beep/epistemic-use-cases/server";
 import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -30,8 +33,8 @@ const expectDeclaredEquivalence = <Schema extends S.Top>(
 ): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(a, b)).toBe(true);
-  expect(same(a, c)).toBe(false);
+  pipe(same(a, b), assertTrue);
+  pipe(same(a, c), assertFalse);
 };
 
 const candidateId = Epistemic.ContradictionCandidateId.make(1);

@@ -17,9 +17,11 @@ import {
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { ConfigProvider, Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -323,25 +325,20 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
-  it("round-trips disarm artifacts through their production JSON codecs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)]),
-          ([sentinel, window]) => {
-            const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
-            const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
+  it.prop(
+    "round-trips disarm artifacts through their production JSON codecs",
+    [Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)],
+    ([sentinel, window]) => {
+      const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
 
-            expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
-            expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+      const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      expect(Result.getOrThrow(HookPulseDisarmSentinel.decodeJsonResult(sentinelJson))).toEqual(sentinel);
+
+      expect(Result.getOrThrow(HookPulseDisarmWindow.decodeJsonResult(windowJson))).toEqual(window);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
     Effect.gen(function* () {
@@ -375,69 +372,57 @@ describe("HookPulseV1", () => {
     })
   );
 
-  it("round-trips schema-derived arbitrary values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HookPulseV1Arbitrary]),
-          ([value]) => {
-            const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
-            const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
+  it.prop(
+    "round-trips schema-derived arbitrary values",
+    [HookPulseV1Arbitrary],
+    ([value]) => {
+      const encoded = Result.getOrThrow(HookPulseV1.encodeResult(value));
 
-            expect(hookPulseEquivalent(decoded, value)).toBe(true);
+      const decoded = Result.getOrThrow(HookPulseV1.decodeResult(encoded));
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      pipe(hookPulseEquivalent(decoded, value), assertTrue);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("round-trips arbitrary encodable canonical values through the raw-event codec", () => {
+  {
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
     const arbitrary = Arbitrary.filter(
       Arbitrary.filter(HookPulseV1Arbitrary, (value) => O.isSome(value.transcriptPath)),
       (value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier))
     );
+    it.prop(
+      "round-trips arbitrary encodable canonical values through the raw-event codec",
+      [arbitrary],
+      ([value]) => {
+        const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([value]) => {
-            const encoded = Result.getOrThrow(HookPulseV1FromRawEvent.encodeResult(value));
-            const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
+        const decoded = Result.getOrThrow(HookPulseV1FromRawEvent.decodeUnknownResult(encoded));
 
-            expect(hookPulseEquivalent(decoded, value)).toBe(true);
+        pipe(hookPulseEquivalent(decoded, value), assertTrue);
+      },
+      { arbitrary: fcRuns(50) }
+    );
+  }
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "derives a total wait reason for arbitrary raw events",
+    [Arbitrary.schema(HookPulseRawEvent)],
+    Effect.fnUntraced(function* ([event]) {
+      const encodedEvent = yield* encodeRawHookPulse(event);
+      const decoded = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromRaw({
+          ...baseRawInputFixture,
+          ts: "2026-08-01T08:00:00.000Z",
+          event: encodedEvent,
+        })
+      );
 
-  it.effect("derives a total wait reason for arbitrary raw events", () =>
-    Effect.forEach(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HookPulseRawEvent), { count: 50, seed: 804 })),
-      Effect.fnUntraced(function* (event) {
-        const encodedEvent = yield* encodeRawHookPulse(event);
-        const decoded = yield* withSaltEnv(
-          {},
-          decodeHookPulseFromRaw({
-            ...baseRawInputFixture,
-            ts: "2026-08-01T08:00:00.000Z",
-            event: encodedEvent,
-          })
-        );
-
-        expect(decoded.waitReason).toBeDefined();
-        expect(isHookPulseWaitReason(decoded.waitReason)).toBe(true);
-      }),
-      { discard: true }
-    )
+      expect(decoded.waitReason).toBeDefined();
+      pipe(isHookPulseWaitReason(decoded.waitReason), assertTrue);
+    }),
+    { arbitrary: { ...fcRuns(50), seed: 804 } }
   );
 
   it.effect("pseudonymizes raw session and filesystem identifiers", () =>
@@ -569,8 +554,8 @@ describe("HookPulseV1", () => {
         { concurrency: 1 }
       );
 
-      expect(decoded.permissionDenied.sessionEndReason).toEqual(O.none());
-      expect(decoded.sessionEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
+      assertNone(decoded.permissionDenied.sessionEndReason);
+      assertSome(decoded.sessionEnd.sessionEndReason, "prompt_input_exit");
     })
   );
 
@@ -631,21 +616,21 @@ describe("HookPulseV1", () => {
         { concurrency: 1 }
       );
 
-      expect(decoded.postToolUse.isInterrupt).toEqual(O.none());
-      expect(decoded.postToolUseFailure.isInterrupt).toEqual(O.some(true));
-      expect(decoded.erroredFailure.isInterrupt).toEqual(O.some(false));
-      expect(reencoded.interrupted.event.is_interrupt).toBe(true);
+      assertNone(decoded.postToolUse.isInterrupt);
+      assertSome(decoded.postToolUseFailure.isInterrupt, true);
+      assertSome(decoded.erroredFailure.isInterrupt, false);
+      pipe(reencoded.interrupted.event.is_interrupt, assertTrue);
       // `false` must survive the encode path as a value. A regression to a
       // truthiness check would drop the key and erase every "the tool errored"
       // row's distinction from "the human hit escape" — and the loss is
       // invisible, because the resulting row still decodes cleanly.
-      expect(reencoded.errored.event.is_interrupt).toBe(false);
+      strictEqual(reencoded.errored.event.is_interrupt, false);
       // A failed call is a bracket *end*, not a human wait.
       expect(decoded.postToolUseFailure.waitReason).toBe(HookPulseWaitReason.Enum.none);
       // The closing evidence the two-hop join needs: without both of these a
       // failed call's wait is unmeasurable rather than merely unrecorded.
-      expect(decoded.postToolUseFailure.toolUseId).toEqual(O.some("tool-failed-1"));
-      expect(decoded.postToolUseFailure.durationMs).toEqual(O.some(12));
+      assertSome(decoded.postToolUseFailure.toolUseId, "tool-failed-1");
+      assertSome(decoded.postToolUseFailure.durationMs, 12);
     })
   );
 
@@ -665,10 +650,10 @@ describe("HookPulseV1", () => {
       );
 
       expect(decoded.notificationType.hookEvent).toBe(HookPulseEvent.Enum.Stop);
-      expect(decoded.notificationType.notificationType).toEqual(O.none());
+      assertNone(decoded.notificationType.notificationType);
       expect(decoded.notificationType.waitReason).toBe(HookPulseWaitReason.Enum.none);
-      expect(decoded.reason.sessionEndReason).toEqual(O.none());
-      expect(decoded.isInterrupt.isInterrupt).toEqual(O.none());
+      assertNone(decoded.reason.sessionEndReason);
+      assertNone(decoded.isInterrupt.isInterrupt);
     })
   );
 
@@ -719,10 +704,10 @@ describe("HookPulseV1", () => {
 
       expect(encoded.sessionEnd.event.reason).toBe("prompt_input_exit");
       expect(encoded.notification.event.notification_type).toBe(HookPulseNotificationType.Enum.idle_prompt);
-      expect(roundTripped.sessionEnd.sessionEndReason).toEqual(O.some("prompt_input_exit"));
-      expect(roundTripped.notification.notificationType).toEqual(O.some(HookPulseNotificationType.Enum.idle_prompt));
-      expect(hookPulseEquivalent(roundTripped.sessionEnd, canonical.sessionEnd)).toBe(true);
-      expect(hookPulseEquivalent(roundTripped.notification, canonical.notification)).toBe(true);
+      assertSome(roundTripped.sessionEnd.sessionEndReason, "prompt_input_exit");
+      assertSome(roundTripped.notification.notificationType, HookPulseNotificationType.Enum.idle_prompt);
+      pipe(hookPulseEquivalent(roundTripped.sessionEnd, canonical.sessionEnd), assertTrue);
+      pipe(hookPulseEquivalent(roundTripped.notification, canonical.notification), assertTrue);
     })
   );
 
@@ -747,9 +732,9 @@ describe("HookPulseV1", () => {
         "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType"
       );
       expect(decoded.hookEvent).toBe("PermissionRequest");
-      expect(decoded.toolName).toEqual(O.some("ExitPlanMode"));
+      assertSome(decoded.toolName, "ExitPlanMode");
       expect(decoded.waitReason).toBe("plan-approval");
-      expect(hookPulseEquivalent(roundTripped, decoded)).toBe(true);
+      pipe(hookPulseEquivalent(roundTripped, decoded), assertTrue);
     })
   );
 
@@ -857,7 +842,7 @@ describe("HookPulseV1", () => {
       expect(decoded).toBeInstanceOf(HookPulseV1);
       expect(decoded.hookEvent).toBe("Notification");
       expect(decoded.waitReason).toBe("unknown");
-      expect(decoded.notificationType).toEqual(O.none());
+      assertNone(decoded.notificationType);
       expect(decoded).not.toHaveProperty("message");
     })
   );
@@ -986,8 +971,9 @@ describe("HookPulseV1", () => {
         yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(HOOK_RUNG_SALT))
       );
       expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.some(HOOK_RUNG_SALT)));
-      expect(decoded.transcriptPath).toEqual(
-        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.some(HOOK_RUNG_SALT)))
+      assertSome(
+        decoded.transcriptPath,
+        yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.some(HOOK_RUNG_SALT))
       );
       // Non-vacuity: every shape assertion elsewhere in this file is satisfied
       // by a codec that ignored the salt entirely, because the library default
@@ -1034,9 +1020,7 @@ describe("HookPulseV1", () => {
 
       expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
       expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none()));
-      expect(decoded.transcriptPath).toEqual(
-        O.some(yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.none()))
-      );
+      assertSome(decoded.transcriptPath, yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.none()));
     })
   );
 
@@ -1086,9 +1070,7 @@ describe("HookPulseV1", () => {
 
       expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.some(AI_RUNG_SALT)));
       expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(legacy.cwd, O.some(AI_RUNG_SALT)));
-      expect(decoded.transcriptPath).toEqual(
-        O.some(yield* hashPrivateIdentifier(legacy.transcriptPath, O.some(AI_RUNG_SALT)))
-      );
+      assertSome(decoded.transcriptPath, yield* hashPrivateIdentifier(legacy.transcriptPath, O.some(AI_RUNG_SALT)));
       expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.none()));
     })
   );
@@ -1153,14 +1135,14 @@ describe("HookPulseV1", () => {
       const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded.skill));
 
       // The leading slash of a slash-command invocation is not part of the name.
-      expect(decoded.skill.surface).toEqual(O.some(yield* hashPublicTextSha256(`skill:${surfaceSkillName}`)));
-      expect(decoded.mcp.surface).toEqual(O.some(yield* hashPublicTextSha256("mcp-server:notion")));
-      expect(decoded.sourceRead.surface).toEqual(O.none());
-      expect(decoded.hookEdit.surface).toEqual(O.some(yield* hashPublicTextSha256("hook:law-pulse.sh")));
+      assertSome(decoded.skill.surface, yield* hashPublicTextSha256(`skill:${surfaceSkillName}`));
+      assertSome(decoded.mcp.surface, yield* hashPublicTextSha256("mcp-server:notion"));
+      assertNone(decoded.sourceRead.surface);
+      assertSome(decoded.hookEdit.surface, yield* hashPublicTextSha256("hook:law-pulse.sh"));
       // CLAUDE.md is a symlink to AGENTS.md: one surface, one digest.
-      expect(decoded.claudeMd.surface).toEqual(O.some(yield* hashPublicTextSha256("agents-md:AGENTS.md")));
+      assertSome(decoded.claudeMd.surface, yield* hashPublicTextSha256("agents-md:AGENTS.md"));
       // PostToolUse owns the field, so the same skill call's PreToolUse carries none.
-      expect(decoded.preToolUse.surface).toEqual(O.none());
+      assertNone(decoded.preToolUse.surface);
       expect(serialized).not.toContain(surfaceSkillName);
     })
   );
@@ -1193,7 +1175,7 @@ describe("HookPulseV1", () => {
 
       expect(raw.surface).toBe(O.getOrThrow(decoded.surface));
       expect(raw.event.tool_input).toBeUndefined();
-      expect(hookPulseEquivalent(roundTripped, decoded)).toBe(true);
+      pipe(hookPulseEquivalent(roundTripped, decoded), assertTrue);
     })
   );
 
@@ -1234,14 +1216,14 @@ describe("HookPulseV1", () => {
         )
       );
 
-      expect(decoded.skillFile.surface).toEqual(O.some(yield* hashPublicTextSha256("skill:surface-canary")));
-      expect(decoded.agent.surface).toEqual(O.some(yield* hashPublicTextSha256("agent-definition:reviewer.md")));
-      expect(decoded.settings.surface).toEqual(O.some(yield* hashPublicTextSha256("settings:settings.local.json")));
-      expect(decoded.notSettings.surface).toEqual(O.none());
-      expect(decoded.pattern.surface).toEqual(O.some(yield* hashPublicTextSha256("pattern:jsdoc-documentation.md")));
-      expect(decoded.malformedPaths.surface).toEqual(O.none());
-      expect(decoded.malformedSkill.surface).toEqual(O.none());
-      expect(decoded.outsideRepo.surface).toEqual(O.none());
+      assertSome(decoded.skillFile.surface, yield* hashPublicTextSha256("skill:surface-canary"));
+      assertSome(decoded.agent.surface, yield* hashPublicTextSha256("agent-definition:reviewer.md"));
+      assertSome(decoded.settings.surface, yield* hashPublicTextSha256("settings:settings.local.json"));
+      assertNone(decoded.notSettings.surface);
+      assertSome(decoded.pattern.surface, yield* hashPublicTextSha256("pattern:jsdoc-documentation.md"));
+      assertNone(decoded.malformedPaths.surface);
+      assertNone(decoded.malformedSkill.surface);
+      assertNone(decoded.outsideRepo.surface);
     })
   );
 
@@ -1267,7 +1249,7 @@ describe("HookPulseV1", () => {
       // The legacy codec's encode side is the identity: the canonical row is its own legacy form.
       const legacyEncoded = yield* encodeHookPulseToLegacy(decoded);
 
-      expect(decoded.transcriptPath).toEqual(O.none());
+      assertNone(decoded.transcriptPath);
       expect(legacyEncoded.sessionId).toBe(decoded.sessionId);
       expect(legacyEncoded.transcriptPath).toBeUndefined();
       expect(failure._tag).toBe("SchemaError");

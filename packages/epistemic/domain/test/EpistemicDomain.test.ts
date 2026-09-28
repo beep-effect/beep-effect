@@ -19,9 +19,11 @@ import {
 import { EvidenceSpanArbitrary } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -52,31 +54,14 @@ const expectMadeValueEncodedRoundTrip = <Schema extends S.Codec<unknown>>(
   expectEncodedRoundTrip(schema, encoded);
 };
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  options?: {
-    readonly runs?: number;
-  },
-  arbitrary: Arbitrary.Arbitrary<Schema["Type"]> = Arbitrary.schema(schema)
+  value: Schema["Type"],
+  label: string
 ): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(options?.runs ?? 50)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
 const isConfidence = S.is(Confidence);
@@ -86,11 +71,12 @@ describe("@beep/epistemic-domain", () => {
     expect(ClaimLifecycle.is.candidate("candidate")).toBe(true);
   });
 
-  it("derives valid Confidence samples", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 })).every(isConfidence)
-    ).toBe(true);
-  });
+  it.effect("derives valid Confidence samples", () =>
+    Effect.gen(function* () {
+      const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 });
+      expect(samples.every(isConfidence)).toBe(true);
+    })
+  );
 
   it("wires CandidateClaim to the epistemic product identity", () => {
     expect(CandidateClaim.sql.tableName).toBe(Epistemic.CandidateClaimId.tableName);
@@ -98,56 +84,51 @@ describe("@beep/epistemic-domain", () => {
     expect(Object.keys(CandidateClaim.fields)).toEqual(expect.arrayContaining(["id", "snapshot"]));
   });
 
-  it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
-    expect(
-      Result.isFailure(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: 13,
-          quote: "a claimed fact",
-          startChar: 12,
-        })
-      )
-    ).toBe(true);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceSpanArbitrary]),
-          ([span]) => {
-            const result = EvidenceSpan.isInternallyConsistent(span);
-            return result;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "rejects inconsistent evidence-span widths and derives only consistent spans",
+    [EvidenceSpanArbitrary],
+    ([span]) =>
+      Effect.sync(() => {
+        pipe(
+          decodeEvidenceSpanResult({
+            confidence: 0.92,
+            endChar: 13,
+            quote: "a claimed fact",
+            startChar: 12,
+          }),
+          Result.isFailure,
+          assertTrue
+        );
+        const result = EvidenceSpan.isInternallyConsistent(span);
+        expect(result).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("bounds evidence quotes to one source-text page", () => {
     const maximumQuote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH)("a");
     const overLimitQuote = `${maximumQuote}a`;
 
-    expect(
-      Result.isSuccess(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
-          quote: maximumQuote,
-          startChar: 0,
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeEvidenceSpanResult({
-          confidence: 0.92,
-          endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
-          quote: overLimitQuote,
-          startChar: 0,
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeEvidenceSpanResult({
+        confidence: 0.92,
+        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
+        quote: maximumQuote,
+        startChar: 0,
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeEvidenceSpanResult({
+        confidence: 0.92,
+        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
+        quote: overLimitQuote,
+        startChar: 0,
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("matches an evidence span only to its exact provenance anchor", () => {
@@ -217,6 +198,7 @@ describe("@beep/epistemic-domain", () => {
       expect(appended.entityType).toBe("EpistemicUsageRecord");
       expect(O.getOrElse(appended.credentialReference, () => "")).toBe("op://Private/Claude/token");
       expect(O.getOrElse(appended.unitCount, () => 0)).toBe(0);
+      assertNone(appended.unitCount);
       expect(appended.metadata).toEqual({ threadId: 9, turnId: 12 });
     })
   );
@@ -297,28 +279,46 @@ describe("@beep/epistemic-domain", () => {
     });
   });
 
-  it("derives schema arbitraries for crispened epistemic schemas", () => {
-    const options = { runs: 10 };
-
-    assertSchemaArbitraryRoundTrip(EpistemicFixtureKey, options);
-    assertSchemaArbitraryRoundTrip(Confidence, options);
-    assertSchemaArbitraryRoundTrip(ClaimGateSeverity, options);
-    assertSchemaArbitraryRoundTrip(ClaimGateViolation, options);
-    assertSchemaArbitraryRoundTrip(ClaimGateResult, options);
-    assertSchemaArbitraryRoundTrip(ClaimLifecycleError, options);
-    assertSchemaArbitraryRoundTrip(EvidenceSpan, options, EvidenceSpanArbitrary);
-    assertSchemaArbitraryRoundTrip(ClaimProjectionView, options);
-    assertSchemaArbitraryRoundTrip(Activity, options);
-    assertSchemaArbitraryRoundTrip(CandidateClaim, options);
-    assertSchemaArbitraryRoundTrip(
-      Evidence,
-      options,
-      Arbitrary.all({
+  it.effect.prop(
+    "derives schema arbitraries for crispened epistemic schemas",
+    {
+      EpistemicFixtureKey: Arbitrary.schema(EpistemicFixtureKey),
+      Confidence: Arbitrary.schema(Confidence),
+      ClaimGateSeverity: Arbitrary.schema(ClaimGateSeverity),
+      ClaimGateViolation: Arbitrary.schema(ClaimGateViolation),
+      ClaimGateResult: Arbitrary.schema(ClaimGateResult),
+      ClaimLifecycleError: Arbitrary.schema(ClaimLifecycleError),
+      EvidenceSpan: EvidenceSpanArbitrary,
+      ClaimProjectionView: Arbitrary.schema(ClaimProjectionView),
+      Activity: Arbitrary.schema(Activity),
+      CandidateClaim: Arbitrary.schema(CandidateClaim),
+      Evidence: Arbitrary.all({
         fields: Arbitrary.schema(S.Struct(Evidence.fields).mapFields(({ span, ...fields }) => fields)),
         span: EvidenceSpanArbitrary,
-      }).pipe(Arbitrary.map(({ fields, span }) => Evidence.make({ ...fields, span })))
-    );
-    assertSchemaArbitraryRoundTrip(UsageRecord, options);
-    assertSchemaArbitraryRoundTrip(TurnFinalizationUsageAppend, options);
-  });
+      }).pipe(Arbitrary.map(({ fields, span }) => Evidence.make({ ...fields, span }))),
+      UsageRecord: Arbitrary.schema(UsageRecord),
+      TurnFinalizationUsageAppend: Arbitrary.schema(TurnFinalizationUsageAppend),
+    },
+    (values) =>
+      Effect.sync(() => {
+        assertSchemaRoundTrip(EpistemicFixtureKey, values.EpistemicFixtureKey, "EpistemicFixtureKey");
+        assertSchemaRoundTrip(Confidence, values.Confidence, "Confidence");
+        assertSchemaRoundTrip(ClaimGateSeverity, values.ClaimGateSeverity, "ClaimGateSeverity");
+        assertSchemaRoundTrip(ClaimGateViolation, values.ClaimGateViolation, "ClaimGateViolation");
+        assertSchemaRoundTrip(ClaimGateResult, values.ClaimGateResult, "ClaimGateResult");
+        assertSchemaRoundTrip(ClaimLifecycleError, values.ClaimLifecycleError, "ClaimLifecycleError");
+        assertSchemaRoundTrip(EvidenceSpan, values.EvidenceSpan, "EvidenceSpan");
+        assertSchemaRoundTrip(ClaimProjectionView, values.ClaimProjectionView, "ClaimProjectionView");
+        assertSchemaRoundTrip(Activity, values.Activity, "Activity");
+        assertSchemaRoundTrip(CandidateClaim, values.CandidateClaim, "CandidateClaim");
+        assertSchemaRoundTrip(Evidence, values.Evidence, "Evidence");
+        assertSchemaRoundTrip(UsageRecord, values.UsageRecord, "UsageRecord");
+        assertSchemaRoundTrip(
+          TurnFinalizationUsageAppend,
+          values.TurnFinalizationUsageAppend,
+          "TurnFinalizationUsageAppend"
+        );
+      }),
+    { arbitrary: fcRuns(10) }
+  );
 });

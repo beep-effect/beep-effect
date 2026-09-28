@@ -1,8 +1,10 @@
 import { DbAdminMigrationTargets, DocumentsSyncMigrationTarget, WorkspaceThreadMigrationTarget } from "@beep/db-admin";
 import { ArchitectureLabMigrationTarget, DbAdminMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -54,55 +56,47 @@ describe("db-admin migration targets", () => {
     });
   });
 
-  it("round-trips migration target metadata from schema-derived arbitraries", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([MigrationTargetArbitrary]),
-          ([target]) => {
-            const encoded = Result.getOrThrow(encodeMigrationTarget(target));
-            const decoded = Result.getOrThrow(decodeMigrationTarget(encoded));
-
-            expect(Eq.equals(decoded, target)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips migration target metadata from schema-derived arbitraries",
+    [MigrationTargetArbitrary],
+    ([target]) => {
+      const encoded = Result.getOrThrow(encodeMigrationTarget(target));
+      const decoded = Result.getOrThrow(decodeMigrationTarget(encoded));
+      pipe(Eq.equals(decoded, target), assertTrue);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("rejects invalid migration target identifiers at the schema boundary", () => {
-    expect(
-      Result.isFailure(
-        decodeMigrationTarget({
-          drizzleSchema: {},
-          name: "ArchitectureLab",
-          schemaName: "architecture_lab",
-          tables: ["architecture_lab_work_item"],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeMigrationTarget({
-          drizzleSchema: {},
-          name: "architecture-lab",
-          schemaName: "ArchitectureLab",
-          tables: ["architecture_lab_work_item"],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeMigrationTarget({
-          drizzleSchema: {},
-          name: "architecture-lab",
-          schemaName: "architecture_lab",
-          tables: [],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeMigrationTarget({
+        drizzleSchema: {},
+        name: "ArchitectureLab",
+        schemaName: "architecture_lab",
+        tables: ["architecture_lab_work_item"],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeMigrationTarget({
+        drizzleSchema: {},
+        name: "architecture-lab",
+        schemaName: "ArchitectureLab",
+        tables: ["architecture_lab_work_item"],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeMigrationTarget({
+        drizzleSchema: {},
+        name: "architecture-lab",
+        schemaName: "architecture_lab",
+        tables: [],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 });

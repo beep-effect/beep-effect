@@ -1,7 +1,8 @@
 import { inspectPandocConformance } from "@beep/pandoc-ast/Pandoc.conformance";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import { vi } from "vitest";
 
 vi.mock("@beep/pandoc-ast/Pandoc.codec", (importOriginal) =>
@@ -18,19 +19,22 @@ vi.mock("@beep/pandoc-ast/Pandoc.codec", (importOriginal) =>
 );
 
 describe("Pandoc conformance strict projection failure", () => {
-  it("retains a losslessly valid wire when its strict projection fails", () => {
-    const wire = {
-      "pandoc-api-version": [1, 23, 1],
-      blocks: [],
-      meta: {},
-    };
-    const result = Effect.runSync(inspectPandocConformance(wire));
+  it.effect(
+    "retains a losslessly valid wire when its strict projection fails",
+    Effect.fnUntraced(function* () {
+      const wire = {
+        "pandoc-api-version": [1, 23, 1],
+        blocks: [],
+        meta: {},
+      };
+      const result = yield* inspectPandocConformance(wire);
 
-    expect(result._tag).toBe("invalid");
-    if (result._tag === "invalid") {
-      expect(result.message).toBe("forced strict projection failure");
-      expect(result.issues).toEqual([]);
-      expect(result.wire).toEqual(O.some(wire));
-    }
-  });
+      expect(result._tag).toBe("invalid");
+      if (result._tag === "invalid") {
+        expect(result.message).toBe("forced strict projection failure");
+        expect(result.issues).toEqual([]);
+        assertSome(result.wire, wire);
+      }
+    })
+  );
 });

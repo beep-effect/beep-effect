@@ -25,7 +25,10 @@ import {
   SyncOperationRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import * as Documents from "@beep/shared-domain/identity/Documents";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
@@ -36,8 +39,8 @@ const expectDeclaredEquivalence = <Schema extends S.Top>(
 ): void => {
   const same = S.toEquivalence(schema);
 
-  expect(same(a, b)).toBe(true);
-  expect(same(a, c)).toBe(false);
+  pipe(same(a, b), assertTrue);
+  pipe(same(a, c), assertFalse);
 };
 
 const conflictId = Documents.SyncConflictId.make(1);

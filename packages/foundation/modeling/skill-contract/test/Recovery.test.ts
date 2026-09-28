@@ -16,8 +16,9 @@ import {
   RecoveryBudgetConsumed,
   RecoveryPolicy,
 } from "@beep/skill-contract";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Duration, Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -239,21 +240,16 @@ describe("@beep/skill-contract Recovery", () => {
     expect(RecoveryPolicy.match(bounded, { bounded: ({ budget: value }) => value.maxAttempts, none: () => 0 })).toBe(2);
   });
 
-  it("round-trips schema-derived arbitrary recovery policies", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(RecoveryPolicy)]),
-          ([candidate]) => {
-            const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
-            const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
+  it.effect.prop(
+    "round-trips schema-derived arbitrary recovery policies",
+    [Arbitrary.schema(RecoveryPolicy)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const encoded = Result.getOrThrow(encodeUnknownRecoveryPolicyResult(candidate));
+        const decoded = Result.getOrThrow(decodeRecoveryPolicyResult(encoded));
 
-            expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(S.toEquivalence(RecoveryPolicy)(decoded, candidate)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

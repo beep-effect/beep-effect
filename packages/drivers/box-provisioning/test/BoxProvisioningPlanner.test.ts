@@ -18,15 +18,19 @@ import {
   planBoxProvisioning,
 } from "@beep/box-provisioning";
 import { HttpsUrl } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect, layer } from "@effect/vitest";
-import { Effect, Equal } from "effect";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
+
+const equivalentBoxObservedFolder = S.toEquivalence(BoxObservedFolder);
 
 const decodeBoxObservedFolder = S.decodeEffect(BoxObservedFolder);
 const encodeBoxObservedFolder = S.encodeEffect(BoxObservedFolder);
@@ -34,25 +38,15 @@ const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
 const encodeBoxProvisioningPlanJson = S.encodeEffect(S.fromJsonString(BoxProvisioningPlan));
 const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
 
-layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
-  it.effect(
+it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning planner", (it) => {
+  it.effect.prop(
     "round-trips schema-derived observed folders",
-    Effect.fnUntraced(function* () {
-      const equivalent = S.toEquivalence(BoxObservedFolder);
-      const encode = encodeBoxObservedFolder;
-      const decode = decodeBoxObservedFolder;
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(BoxObservedFolder)]),
-        ([folder]) =>
-          encode(folder).pipe(
-            Effect.flatMap(decode),
-            Effect.map((decoded) => equivalent(decoded, folder))
-          ),
-        fcRuns(10)
-      );
-
-      expect(result).toMatchObject({ _tag: "Passed" });
-    })
+    { folder: Arbitrary.schema(BoxObservedFolder) },
+    Effect.fnUntraced(function* ({ folder }) {
+      const decoded = yield* encodeBoxObservedFolder(folder).pipe(Effect.flatMap(decodeBoxObservedFolder));
+      pipe(equivalentBoxObservedFolder(decoded, folder), assertTrue);
+    }),
+    { arbitrary: fcRuns(10) }
   );
 
   it.effect(
@@ -62,7 +56,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const second = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const text = yield* encodeBoxProvisioningPlanJson(first);
 
-      expect(Equal.equals(first, second)).toBe(true);
+      pipe(Equal.equals(first, second), assertTrue);
       expect(first.planDigest).toBe(second.planDigest);
       expect(first.blockerCount).toBe(2);
       expect(first.destructiveCount).toBe(0);
@@ -149,7 +143,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const forward = yield* planBoxProvisioning(forwardDesired, forwardObserved);
       const reversed = yield* planBoxProvisioning(reversedDesired, reversedObserved);
 
-      expect(Equal.equals(forward, reversed)).toBe(true);
+      pipe(Equal.equals(forward, reversed), assertTrue);
       expect(forward.desiredStateDigest).toBe(reversed.desiredStateDigest);
       expect(forward.liveStateDigest).toBe(reversed.liveStateDigest);
       expect(forward.planDigest).toBe(reversed.planDigest);
@@ -206,7 +200,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       retention: [],
     });
 
-    expect(O.isNone(decoded)).toBe(true);
+    assertNone(decoded);
   });
 
   it.effect(
@@ -229,18 +223,14 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
         logicalKey: "webhook.duplicate",
       };
 
-      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(true);
-      expect(
-        O.isNone(
-          decodeBoxDesiredStateOption({
-            ...encoded,
-            collaborations: [...collaborations, duplicateCollaboration],
-          })
-        )
-      ).toBe(true);
-      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(
-        true
+      assertNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicateFolder] }));
+      assertNone(
+        decodeBoxDesiredStateOption({
+          ...encoded,
+          collaborations: [...collaborations, duplicateCollaboration],
+        })
       );
+      assertNone(decodeBoxDesiredStateOption({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }));
     })
   );
 
@@ -262,23 +252,28 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
         "Blocked",
         "Blocked",
       ]);
-      expect(
-        A.some(plan.foreignResources, (resource) => resource.resourceKind === "folder" && resource.providerId === "100")
-      ).toBe(true);
+      pipe(
+        A.some(
+          plan.foreignResources,
+          (resource) => resource.resourceKind === "folder" && resource.providerId === "100"
+        ),
+        assertTrue
+      );
       const first = plan.actions[0];
       expect(first?._tag).toBe("Blocked");
       if (first?._tag === "Blocked") {
         expect(first.reason._tag).toBe("BlockedByPolicy");
       }
-      expect(
+      pipe(
         A.every(
           A.drop(plan.actions, 1),
           (action) =>
             action._tag === "Blocked" &&
             action.reason._tag === "BlockedByPolicy" &&
             action.reason.policy === "blocked-folder-dependency"
-        )
-      ).toBe(true);
+        ),
+        assertTrue
+      );
     })
   );
 
@@ -288,7 +283,10 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
 
       expect(plan.actions[0]?._tag).toBe("Noop");
-      expect(A.some(plan.foreignResources, (resource) => resource.providerId === "100")).toBe(false);
+      pipe(
+        A.some(plan.foreignResources, (resource) => resource.providerId === "100"),
+        assertFalse
+      );
     })
   );
 
@@ -316,7 +314,10 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       if (first?._tag === "Blocked") {
         expect(first.reason._tag).toBe("BlockedByPolicy");
       }
-      expect(A.some(plan.foreignResources, (resource) => resource.providerId === "100")).toBe(true);
+      pipe(
+        A.some(plan.foreignResources, (resource) => resource.providerId === "100"),
+        assertTrue
+      );
     })
   );
 
@@ -341,8 +342,9 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       if (first?._tag === "Blocked") {
         expect(first.reason._tag).toBe("BlockedByPolicy");
       }
-      expect(A.some(plan.actions, (action) => action.resourceKind === "folder" && action._tag === "Create")).toBe(
-        false
+      pipe(
+        A.some(plan.actions, (action) => action.resourceKind === "folder" && action._tag === "Create"),
+        assertFalse
       );
     })
   );
@@ -454,8 +456,14 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const plan = yield* planBoxProvisioning(desiredByProviderId, observed);
       const collaborationAction = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
 
-      expect(O.map(collaborationAction, (action) => action._tag)).toEqual(O.some("Noop"));
-      expect(A.some(plan.foreignResources, (resource) => resource.resourceKind === "collaboration")).toBe(false);
+      assertSome(
+        O.map(collaborationAction, (action) => action._tag),
+        "Noop"
+      );
+      pipe(
+        A.some(plan.foreignResources, (resource) => resource.resourceKind === "collaboration"),
+        assertFalse
+      );
     })
   );
 
@@ -475,7 +483,15 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       );
       const metadataAction = A.findFirst(plan.actions, (action) => action.resourceKind === "metadata");
 
-      expect(O.isSome(metadataAction)).toBe(true);
+      pipe(metadataAction, O.isSome, assertTrue);
+      expect(metadataAction).toMatchObject({
+        _tag: "Some",
+        value: {
+          _tag: "Blocked",
+          resourceKind: "metadata",
+          reason: { _tag: "BlockedByEntitlement", entitlement: "metadata" },
+        },
+      });
       if (O.isSome(metadataAction) && metadataAction.value._tag === "Blocked") {
         expect(metadataAction.value.reason._tag).toBe("BlockedByEntitlement");
         if (metadataAction.value.reason._tag === "BlockedByEntitlement") {
@@ -499,11 +515,13 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const emptyMetadata = A.findFirst(emptyPlan.actions, (action) => action.resourceKind === "metadata");
       const conflictingMetadata = A.findFirst(conflictingPlan.actions, (action) => action.resourceKind === "metadata");
 
-      expect(O.map(emptyMetadata, (action) => action._tag === "Blocked" && action.reason._tag)).toEqual(
-        O.some("BlockedByEntitlement")
+      assertSome(
+        O.map(emptyMetadata, (action) => action._tag === "Blocked" && action.reason._tag),
+        "BlockedByEntitlement"
       );
-      expect(O.map(conflictingMetadata, (action) => action._tag === "Blocked" && action.reason._tag)).toEqual(
-        O.some("BlockedByPolicy")
+      assertSome(
+        O.map(conflictingMetadata, (action) => action._tag === "Blocked" && action.reason._tag),
+        "BlockedByPolicy"
       );
       if (O.isSome(conflictingMetadata) && conflictingMetadata.value._tag === "Blocked") {
         const reason = conflictingMetadata.value.reason;
@@ -530,7 +548,10 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const plan = yield* planBoxProvisioning(desiredFixture, ambiguous, postApplyAdoptionsFixture);
       const collaboration = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
 
-      expect(O.map(collaboration, (action) => action._tag)).toEqual(O.some("Blocked"));
+      assertSome(
+        O.map(collaboration, (action) => action._tag),
+        "Blocked"
+      );
     })
   );
 
@@ -562,7 +583,10 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const plan = yield* planBoxProvisioning(desiredFixture, drifted, postApplyAdoptionsFixture);
       const collaboration = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
 
-      expect(O.map(collaboration, (action) => action._tag)).toEqual(O.some("Update"));
+      assertSome(
+        O.map(collaboration, (action) => action._tag),
+        "Update"
+      );
     })
   );
 
@@ -579,7 +603,10 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
       const plan = yield* planBoxProvisioning(desiredFixture, drifted, postApplyAdoptionsFixture);
       const webhook = A.findFirst(plan.actions, (action) => action.resourceKind === "webhook");
 
-      expect(O.map(webhook, (action) => action._tag)).toEqual(O.some("Update"));
+      assertSome(
+        O.map(webhook, (action) => action._tag),
+        "Update"
+      );
     })
   );
 

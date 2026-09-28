@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/documents-use-cases",
+  "sourceHead": "e8c31e1b261c30242ffd21f29c26557f4cf3a874",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.420889077999163,
+  "bunWholeCommandSeconds": 2.4180591760086827,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.78564453125, 2.9921875, 3.55078125],
+  "loadAfter": [2.28369140625, 3.07568359375, 3.57470703125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.62 avg60=0.30 avg300=0.17 total=787028439\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217360\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141274\n",
+    "io": "some avg10=0.99 avg60=0.24 avg300=0.05 total=848772731\nfull avg10=0.72 avg60=0.18 avg300=0.04 total=742488547\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.56 avg60=0.31 avg300=0.18 total=787058662\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217360\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141274\n",
+    "io": "some avg10=0.66 avg60=0.22 avg300=0.05 total=848787542\nfull avg10=0.48 avg60=0.17 avg300=0.03 total=742498903\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "ae3c610ff6b37fa36d3616297537f0109f2ba325310bbb486b20d19ccfcd8db8"
+    },
+    {
+      "file": "packages/documents/use-cases/AGENTS.md",
+      "sha256": "558086763c88a38502ee4f2d9f404773a426efa9ef78289e19d3c3e1c8bb960e"
+    },
+    {
+      "file": "packages/documents/use-cases/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/documents/use-cases/README.md",
+      "sha256": "3918eb25dbea9fabf1f4e59d4c775550eaf76dd14ff29af9fb3fec66d682fb6d"
+    },
+    {
+      "file": "packages/documents/use-cases/docgen.json",
+      "sha256": "8dfaf854f20b3390f94534aac63bf865fff6f03ea002b16cf7b14c9a485391f6"
+    },
+    {
+      "file": "packages/documents/use-cases/package.json",
+      "sha256": "836b2926a5d3b8d8037ddc2832702d55609452bfeff4e888fecdaa20d63a69b5"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.errors.ts",
+      "sha256": "d93f4dcfaaa79847581360bf42271ca15540b6ba79b895c46bb202930f575b52"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.rpc.ts",
+      "sha256": "d5954528d755c05747c0eb766ae4a589d448e45f19d846ac2b9f12b33f5b2ca7"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/DocumentIntake.ts",
+      "sha256": "d41baf8a63d7d75b486616aaefd1ba48647d7b9e61ff8d7b2bc56c37d9fbd7a9"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
+      "sha256": "a734ef3b26d2d5ceed9260856e09b057226e797850bdd9e5e86f203ce0c2449d"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/index.ts",
+      "sha256": "154606ef29e0062b4fdba277ae1d8e8be934abfcada6c34ee966b7ef7cedb5f3"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/server.ts",
+      "sha256": "3c31f861b2aaf63ee70442ff5b9804108cfaf03cb37273d9640243ec206d2377"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "sha256": "4ba8bec7124ed7e4e540c65dc2e256364cd5c7bb9847a0b36dc4776e115542cb"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "sha256": "ab2c8419e27a52028e48d64bd95404419c15d48dc4324dbc07fe7ad96528ce48"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.rpc.ts",
+      "sha256": "8f1d56271c4539798f6d5ce1cbfed0787ef6c0fcb4ce696ae373f58b3d840303"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "sha256": "6bd7223acd3c8b572b92cba3a7878a4e595dc96dda24e2ebe588fb09d09eaf68"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/index.ts",
+      "sha256": "5805be896403fcddd1770a0c55becb8d79fd92400c13e66a4540f2096f00bfa7"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/server.ts",
+      "sha256": "fa1e9218fe5bda16976dd561050eff5dad991bd82356659b067e5d7fd739b160"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "sha256": "f8c66839159af67d571178bea84484b36c050ff414fa859d4f523886f267cff5"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/index.ts",
+      "sha256": "b6a433e90f699aa55e2575ef887fc7a014b79377a00fe07d421abe5308ac5a92"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/server.ts",
+      "sha256": "cbd7ef33084f43d043c557bf673e76c6ab3c9a54807b1e825a65537e54bf90d3"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
+      "sha256": "e6c71e454e8dd384b78716fd5de46c84b783b33ff03a53a6c6b5276f4c116dcf"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/index.ts",
+      "sha256": "51f17d884eca034087906da476480c60a86f3f1095ed9293b47f5779f46115ee"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/server.ts",
+      "sha256": "c2ed77138b59ff0a1762feeff07a9c5e9e69a200893a3b83a3b513855132499e"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "sha256": "e1178614b8b8c2485b2919d33004655ce989eeb9019dc30e2708e1e8643e62a1"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/index.ts",
+      "sha256": "1923aca22a2866475453a38fe8785ba71ebf8b4d562d5d30e121cf88cd15466e"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/server.ts",
+      "sha256": "f66a333b0c7e5d6499572086b86539d9101a42c9cbab24a0b6eda419cae5603c"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "sha256": "abfd6f7c1c57292c6b55e83c77976729ed453dd4f0ce6a9325a2ba0777c4a520"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/index.ts",
+      "sha256": "c0bd1201f7c3182ce1c84688e57ab3d61f42d59d3d9188b45f7de3f1c5743013"
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/server.ts",
+      "sha256": "983d593b2f70bc205e9235708b3a183ae15d6c8ad769d6c6559f208249d5cdd2"
+    },
+    {
+      "file": "packages/documents/use-cases/src/index.ts",
+      "sha256": "ac82bf4652122f6b2088a1abbc3c1600eabda6af6018a1ea8180822cc178c8f5"
+    },
+    {
+      "file": "packages/documents/use-cases/src/public.ts",
+      "sha256": "facd6d6e45239448cf38a34b0a8ed0bcd5123035dd610b5a6ac97a6e1e276572"
+    },
+    {
+      "file": "packages/documents/use-cases/src/server.ts",
+      "sha256": "96de785f384c497175272ccaf11d53e5db0db6b7faa186d79a98f7b0ace33885"
+    },
+    {
+      "file": "packages/documents/use-cases/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/documents/use-cases/test/Document.errors.test.ts",
+      "sha256": "a8828d4663fd523b8270572dbad922f1f2b040e92e2a24d6debdc56a769bacd2"
+    },
+    {
+      "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
+      "sha256": "2b0db4c39c65eee48620cb3e57836f3de32d825d740bb708ec3b534dd493fb92"
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "sha256": "ad18bb3ca312f9ad6f0e539c326d943aeb39874f128e73038382a0a633985942"
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "sha256": "2a7bced51bb3da26490c6c93d2145ddce66e4416399d87e27f52feb5eb5d66bb"
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
+      "sha256": "011df7721848556f59a298164439a6a2380f69c46f7043448088410982e990f0"
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncItem.test.ts",
+      "sha256": "d79f63e183842176379aaeae7dd5a982b6f5a4a49b6c45c5a453c81fc926f14d"
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "sha256": "dd8521874208e41a2d9a82fd8af3ecd29df8da023faaefd0fac21b74864d2cd3"
+    },
+    {
+      "file": "packages/documents/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "945b61daec226168298f0c3a09cd74ddce087239eee6a7b28ff1e5c09573de16"
+    },
+    {
+      "file": "packages/documents/use-cases/tsconfig.check.json",
+      "sha256": "198158501c29308c87fc5556df6b6cb346586ab939c9dc96374bb3d49206bb5c"
+    },
+    {
+      "file": "packages/documents/use-cases/tsconfig.json",
+      "sha256": "9b7ec2cf371b60d74c1f8e274a7ea765952d803ae71cd9ba391bbf9ca058d39c"
+    },
+    {
+      "file": "packages/documents/use-cases/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/documents/use-cases/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured documents-use-cases local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 37,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.28369140625, 3.07568359375, 3.57470703125],
+    "loadAfter": [2.28369140625, 3.07568359375, 3.57470703125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.56 avg60=0.31 avg300=0.18 total=787058668\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217360\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141274\n",
+      "io": "some avg10=0.66 avg60=0.22 avg300=0.05 total=848787542\nfull avg10=0.48 avg60=0.17 avg300=0.03 total=742498903\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.46 avg60=0.30 avg300=0.18 total=787067563\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217360\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141274\n",
+      "io": "some avg10=0.54 avg60=0.22 avg300=0.05 total=848789473\nfull avg10=0.39 avg60=0.16 avg300=0.03 total=742500143\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 37,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All37configured tests pass before and after with no skips and stable source. All61original assertions and37registrations remain, with30public helper conversions and six aggregate Passed assertions retired. Nine native property registrations retain32original schema laws and10-run floors; independent inversions expose native replay and shrinking. Local fake controls now witness cursor workspace isolation and recovery selection; no production database conformance is claimed. Baseline overlaps an early publisher; after can overlap package proof and root policies. No external endpoint is contacted."
+}

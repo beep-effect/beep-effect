@@ -1,0 +1,332 @@
+{
+  "checkpointBefore": "fe89640f11",
+  "scope": "Existing nineteen admitted paths; sixteen registered suites adopt @beep/test-runner, three compile fixtures unchanged",
+  "preservation": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "changed": true,
+      "beforeSha": "d9ae03d06d90d9780acbeab82f00e974d1f375420927b980607883d52ce95ab6",
+      "afterSha": "f7515bf2d51f533afaef6580ba2b013d1c0aae77b6cc63f70d00a02e5678868e",
+      "assertionCount": 11,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "changed": true,
+      "beforeSha": "8bcbeebdb48dfe5c864e1349a5069e93352ec84ccaaa511f7877f9ad8142289d",
+      "afterSha": "7249c4fd9d3fbd3b1d337652dba5c2349f203f9ed578c28f799d277bfee408a2",
+      "assertionCount": 12,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "changed": true,
+      "beforeSha": "c8f070ae4ff4a50f5d8d32230629e0491a664ee20d2193fd089e1d129f822096",
+      "afterSha": "93de1599e0ede4eada42c79a15fad88a0c914c86d9dce918b435e9b5abfa813d",
+      "assertionCount": 43,
+      "propertyCount": 2,
+      "caseCount": 15,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "changed": true,
+      "beforeSha": "3bd35baab98354cac65a96c75387fe098ee8f86da50956eac23497f865ae495b",
+      "afterSha": "599d447877d0c6a29fb7ec14314a2d97dd0d06b46b571d3f1920d05da78e76ff",
+      "assertionCount": 2,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "changed": true,
+      "beforeSha": "8862a98a72e4cea2c6e9cd7571f36d0e8c35b03738568e5bbf460ff7818a71aa",
+      "afterSha": "0f1baefa5ac2a153f419a3bf072cfb0e78e5c54de6605a17857c1b5c7d7a28d7",
+      "assertionCount": 7,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "changed": true,
+      "beforeSha": "93d42e99d5b0a842aba5461bacc9524a4bafbfec715e341e055d5d17978781bb",
+      "afterSha": "db7e9501788782ca2e5dfee668b24b7e64843b650baa49677a75190398172b05",
+      "assertionCount": 5,
+      "propertyCount": 2,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "changed": true,
+      "beforeSha": "cecc0e5492f612435adc6715a662d211af9c2a71e8d9ce613c329b10ce6416d2",
+      "afterSha": "f496bfdf8975f5d512764c532cba29ff9ebb756d2d29918f135ed018b11a8691",
+      "assertionCount": 13,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "changed": true,
+      "beforeSha": "8047d04f8acb4d905256c43237672c2ee383d7ca0c2b44431b925410131a1fc5",
+      "afterSha": "507bf5782162b4b7a1cd4f9aef51ee504b016c6ec4e670494ba145f99781c912",
+      "assertionCount": 9,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "changed": true,
+      "beforeSha": "8ba65ede8a47250bcddc7954f46ae4dd5f1a51ba754e4b26e8ce720569c039ff",
+      "afterSha": "ebc731f6695997744444b89c8e0dc00629fa36d9be4a2b85be1ea79d63a84a45",
+      "assertionCount": 8,
+      "propertyCount": 2,
+      "caseCount": 6,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "changed": true,
+      "beforeSha": "1ae67850fbf19f277dc05dd355b2fb31b2eef923dcc7d02f0eeb943a0ee1db7e",
+      "afterSha": "50525eca7804001ea428cc47c7c25bdc1831c3a957dae3687025790fd80a73eb",
+      "assertionCount": 24,
+      "propertyCount": 1,
+      "caseCount": 8,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "changed": true,
+      "beforeSha": "5e31cb856716ddc888216d5c614a9c53b0fe920d3a68e1bec8e0150cc73b36c2",
+      "afterSha": "fa7ab99b41808231b1899da1662c18d71fa90dca867da0279881159743dac1d5",
+      "assertionCount": 16,
+      "propertyCount": 0,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "changed": true,
+      "beforeSha": "e6cacbdd2c7bb58997730adc14606133c906701960a8e7841cf57144afda6fc5",
+      "afterSha": "f2d296781c16cf41fad29e070928c30974fc6c7ffd9efd070fedd5c01237b3dc",
+      "assertionCount": 33,
+      "propertyCount": 4,
+      "caseCount": 10,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "changed": true,
+      "beforeSha": "df2a2829e5f51753ad7b2abc4ed6de4598370c6382841bc8a7b7b5be64851a24",
+      "afterSha": "c248d57ff0648d47f96c3d0e80c3d108029dc9d5f351c2b834110c794d664e5b",
+      "assertionCount": 8,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "changed": true,
+      "beforeSha": "ca8d68962c1233d77c28948bc9d1a27853f55a4bcb635860f986cf8ca5530921",
+      "afterSha": "692c63eca6033cb4fe6d863fe551275778164d22227c2f0a3e5d9698d5c41c50",
+      "assertionCount": 16,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "changed": true,
+      "beforeSha": "d11028602ccf5bce7f1c39b05277afe9485f9bbe4bb552686d758d0d7f735f09",
+      "afterSha": "a60d45f005d2eb8435babf8b016ebf1626ac00296512218a3ee0ff1edceabe13",
+      "assertionCount": 4,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "changed": true,
+      "beforeSha": "a27953f074770b5ae5644ed0d03cdb1913cf999c3e90f403a08dcb358b5ceee5",
+      "afterSha": "8c486a5ff0226b2a10590ceaeb2e5b75b0d4954700033fdbb202b72bc999e65a",
+      "assertionCount": 5,
+      "propertyCount": 0,
+      "caseCount": 14,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "changed": false,
+      "beforeSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "afterSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "changed": false,
+      "beforeSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "afterSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "changed": false,
+      "beforeSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "afterSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    }
+  ],
+  "nativeHarnessExceptions": [
+    {
+      "file": "CauseRedaction.test.ts",
+      "cases": 2,
+      "reason": "Exact captured log annotation records"
+    },
+    {
+      "file": "Logging.test.ts",
+      "cases": 2,
+      "reason": "Exact Info-and-above sequence and None silence"
+    },
+    {
+      "file": "PhaseProfiler.test.ts",
+      "cases": 1,
+      "reason": "Exact interruption annotation record"
+    }
+  ],
+  "proof": {
+    "packageVerify": {
+      "exit": 0,
+      "auditSeconds": 9.1,
+      "docgenSeconds": 3.3
+    },
+    "traceOn": {
+      "CI": "true",
+      "BEEP_TEST_TRACE": "1",
+      "passed": 86,
+      "failed": 0
+    },
+    "traceOffLoggerSubjects": {
+      "CI": "unset",
+      "BEEP_TEST_TRACE": "0",
+      "passed": 26,
+      "failed": 0
+    },
+    "negative": {
+      "exitCode": 1,
+      "sourceRestored": true,
+      "sourceSha256": "50525eca7804001ea428cc47c7c25bdc1831c3a957dae3687025790fd80a73eb",
+      "startAndFailureEndCaptured": true,
+      "log": "observability-runner-negative-captured.log",
+      "capture": "Temporary finalizer reads TestConsole.logLines after runner end; no production or retained test mutation"
+    },
+    "node": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [10.1328125, 6.71533203125, 8.11376953125],
+      "loadAfter": [12.60498046875, 7.28466796875, 8.29052734375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.41 avg60=0.42 avg300=0.25 total=215868595\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86762293\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=84193964\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692080673\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627172797\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.22 avg60=0.37 avg300=0.24 total=215917371\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86762300\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=84193971\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692081066\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627173080\n"
+      },
+      "wholeCommandSeconds": 6.878975738000008,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "bun": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [12.60498046875, 7.28466796875, 8.29052734375],
+      "loadAfter": [12.796875, 7.4130859375, 8.32666015625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.22 avg60=0.37 avg300=0.24 total=215917421\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86762300\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=84193971\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692081066\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627173080\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.48 avg60=0.42 avg300=0.25 total=215964897\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86762682\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=84194352\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692081237\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627173196\n"
+      },
+      "wholeCommandSeconds": 3.470239424997999,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "limits": [
+    "Five subject-logger cases retain native harness ownership and original hook budgets",
+    "Earlier CI=true/BEEP_TEST_TRACE=0 runs are trace-on and excluded from trace-off credit",
+    "Initial reporter-only negative probe could not observe TestConsole lifecycle output; the corrected probe captures it explicitly",
+    "Local focused proof does not establish full Yeet or hosted readiness"
+  ]
+}

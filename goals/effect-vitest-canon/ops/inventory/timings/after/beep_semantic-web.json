@@ -1,0 +1,81 @@
+{
+  "package": "@beep/semantic-web",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T22:21:23.140000+00:00",
+  "totalMs": 3787.709716796875,
+  "testCount": 31,
+  "files": [
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "ms": 59.8193359375,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
+      "ms": 16.12158203125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "ms": 23.709716796875,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/TaggedError.equivalence.test.ts",
+      "ms": 1.207275390625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "encodes IdentityRdfBinding through its generation link",
+      "ms": 59.81933100000015
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding property-checks the codec with schema-generated entry fields",
+      "ms": 37.81972799999994
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding derives only pairwise-distinct predicate bindings",
+      "ms": 18.686761000000388
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding derives only unique required-fiber policies",
+      "ms": 18.683474999999817
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding rejects duplicate required fibers during construction and decoding",
+      "ms": 18.682733999999982
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding rejects predicate collisions during construction and decoding",
+      "ms": 18.666499999999814
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "testName": "Services and Surface publishes a canonical arbitrary for SHACL severity",
+      "ms": 13.940991999999824
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding round-trips exact identity entries through an RDF dataset",
+      "ms": 13.940690999999788
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "testName": "identity RDF binding fails encoding and projection when a fiber predicate is unmapped",
+      "ms": 13.853686999999809
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "testName": "Services and Surface round-trips schema-derived RDF datasets and canonicalization DTOs through boundary encoders",
+      "ms": 13.705459000000246
+    }
+  ]
+}

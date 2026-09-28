@@ -58,13 +58,15 @@ import {
 } from "@beep/law-practice-domain";
 import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
@@ -128,22 +130,17 @@ const isPatentDocumentTriplet = S.is(PatentDocumentTriplet);
 const isPatentNumber = S.is(PatentNumber);
 const isWipoSt13OfficeCode = S.is(WipoSt13OfficeCode);
 
-const assertSchemaEncodedRoundTrips = Effect.fn("LawPracticeDomainTest.assertSchemaEncodedRoundTrips")(function* <
+const assertSchemaEncodedRoundTrip = Effect.fn("DomainTest.assertSchemaEncodedRoundTrip")(function* <
   Schema extends S.Codec<unknown>,
->(schema: Schema, runs = 10) {
-  const decode = S.decodeUnknownEffect(schema);
-  const encode = S.encodeEffect(schema);
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      Effect.gen(function* () {
-        return equivalent(yield* decode(yield* encode(value)), value);
-      }),
-    { runs }
-  );
-
-  expect(result, S.resolveAnnotations(schema)?.identifier).toMatchObject({ _tag: "Passed" });
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const decoded = yield* S.decodeUnknownEffect(schema)(yield* S.encodeEffect(schema)(value));
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
+});
+const assertSchemaDecodesToSelf = Effect.fn("DomainTest.assertSchemaDecodesToSelf")(function* <
+  Schema extends S.Codec<unknown>,
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const decoded = yield* S.decodeUnknownEffect(schema)(value);
+  expect(S.is(schema)(value) && S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 const span = (end: number) =>
@@ -177,7 +174,7 @@ describe("@beep/law-practice-domain", () => {
     expect(getStatusFromKindCode()).toBe("unknown");
     expect(getStatusFromKindCode({ country: "WO" })).toBe("international");
     expect(getStatusFromKindCode({ country: "US", kindCode: O.some("B2") })).toBe("granted");
-    expect(O.isNone(getKindCodeExplanation())).toBe(true);
+    assertNone(getKindCodeExplanation());
     expect(O.getOrThrow(getKindCodeExplanation({ country: "EP", kindCode: "A1" }))).toContain("European");
 
     const display = getPatentDisplay({
@@ -199,16 +196,16 @@ describe("@beep/law-practice-domain", () => {
 
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
-    expect(LegalClientStatus.fromUnknown("active_client")).toEqual(Result.succeed("active_client"));
+    assertSuccess(LegalClientStatus.fromUnknown("active_client"), "active_client");
     expect(LegalClientStatus.decodeOption("active_client")._tag).toBe("Some");
     expect(LegalContactRole.is.founder("founder")).toBe(true);
-    expect(LegalContactRole.fromUnknown("founder")).toEqual(Result.succeed("founder"));
+    assertSuccess(LegalContactRole.fromUnknown("founder"), "founder");
     expect(LegalContactRole.decodeOption("founder")._tag).toBe("Some");
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
-    expect(MatterType.fromUnknown("patent_application")).toEqual(Result.succeed("patent_application"));
+    assertSuccess(MatterType.fromUnknown("patent_application"), "patent_application");
     expect(MatterType.decodeOption("patent_application")._tag).toBe("Some");
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
-    expect(PatentAssetStatus.fromUnknown("pre_filing")).toEqual(Result.succeed("pre_filing"));
+    assertSuccess(PatentAssetStatus.fromUnknown("pre_filing"), "pre_filing");
     expect(PatentAssetStatus.decodeOption("pre_filing")._tag).toBe("Some");
     expect(RejectionGround.is({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
     expect(DistinctionDetail.is({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
@@ -251,32 +248,28 @@ describe("@beep/law-practice-domain", () => {
     expect(WipoSt13OfficeCode.is.EP("EP")).toBe(true);
     expect("US" in WipoSt13OfficeCode.is).toBe(false);
     expect("XX" in WipoSt13OfficeCode.is).toBe(false);
-    expect(
-      O.isSome(
-        decodeCitingApplicationIdentityOption({
-          applicationNumber: "102014000345678",
-          kind: "WipoSt13",
-          officeCode: "EP",
-        })
-      )
-    ).toBe(true);
-    expect(
-      O.isNone(
-        decodeUnknownCitingApplicationIdentityOption({
-          applicationNumber: "102018000138242",
-          kind: "WipoSt13",
-          officeCode: "US",
-        })
-      )
-    ).toBe(true);
-    expect(
-      O.isNone(
-        decodeUnknownCitingApplicationIdentityOption({
-          applicationNumber: "102014000345678",
-          kind: "WipoSt13",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeCitingApplicationIdentityOption({
+        applicationNumber: "102014000345678",
+        kind: "WipoSt13",
+        officeCode: "EP",
+      }),
+      O.isSome,
+      assertTrue
+    );
+    assertNone(
+      decodeUnknownCitingApplicationIdentityOption({
+        applicationNumber: "102018000138242",
+        kind: "WipoSt13",
+        officeCode: "US",
+      })
+    );
+    assertNone(
+      decodeUnknownCitingApplicationIdentityOption({
+        applicationNumber: "102014000345678",
+        kind: "WipoSt13",
+      })
+    );
 
     expect(KindCode.is.A("A")).toBe(true);
     expect(KindCode.is.A1("A1")).toBe(true);
@@ -293,46 +286,108 @@ describe("@beep/law-practice-domain", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips schema-owned law-practice invariants through encoded form",
-    Effect.fnUntraced(function* () {
-      for (const schema of [
-        LawPracticeFixtureKey,
-        LawPracticeText,
-        ClaimNumber,
-        LegalClientStatus,
-        LegalContactRole,
-        MatterType,
-        PatentAssetStatus,
-        RejectionGround,
-        DistinctionDetail,
-      ]) {
-        assertSchemaArbitraryDecodesToSelf(schema, { runs: 10 });
-        yield* assertSchemaEncodedRoundTrips(schema, 10);
-      }
-    })
+    {
+      LawPracticeFixtureKey: Arbitrary.schema(LawPracticeFixtureKey),
+      LawPracticeFixtureKeySelf: Arbitrary.schema(LawPracticeFixtureKey),
+      LawPracticeText: Arbitrary.schema(LawPracticeText),
+      LawPracticeTextSelf: Arbitrary.schema(LawPracticeText),
+      ClaimNumber: Arbitrary.schema(ClaimNumber),
+      ClaimNumberSelf: Arbitrary.schema(ClaimNumber),
+      LegalClientStatus: Arbitrary.schema(LegalClientStatus),
+      LegalClientStatusSelf: Arbitrary.schema(LegalClientStatus),
+      LegalContactRole: Arbitrary.schema(LegalContactRole),
+      LegalContactRoleSelf: Arbitrary.schema(LegalContactRole),
+      MatterType: Arbitrary.schema(MatterType),
+      MatterTypeSelf: Arbitrary.schema(MatterType),
+      PatentAssetStatus: Arbitrary.schema(PatentAssetStatus),
+      PatentAssetStatusSelf: Arbitrary.schema(PatentAssetStatus),
+      RejectionGround: Arbitrary.schema(RejectionGround),
+      RejectionGroundSelf: Arbitrary.schema(RejectionGround),
+      DistinctionDetail: Arbitrary.schema(DistinctionDetail),
+      DistinctionDetailSelf: Arbitrary.schema(DistinctionDetail),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaEncodedRoundTrip(
+          LawPracticeFixtureKey,
+          values.LawPracticeFixtureKey,
+          "LawPracticeFixtureKey"
+        );
+        yield* assertSchemaDecodesToSelf(
+          LawPracticeFixtureKey,
+          values.LawPracticeFixtureKeySelf,
+          "LawPracticeFixtureKey decode to self"
+        );
+        yield* assertSchemaEncodedRoundTrip(LawPracticeText, values.LawPracticeText, "LawPracticeText");
+        yield* assertSchemaDecodesToSelf(LawPracticeText, values.LawPracticeTextSelf, "LawPracticeText decode to self");
+        yield* assertSchemaEncodedRoundTrip(ClaimNumber, values.ClaimNumber, "ClaimNumber");
+        yield* assertSchemaDecodesToSelf(ClaimNumber, values.ClaimNumberSelf, "ClaimNumber decode to self");
+        yield* assertSchemaEncodedRoundTrip(LegalClientStatus, values.LegalClientStatus, "LegalClientStatus");
+        yield* assertSchemaDecodesToSelf(
+          LegalClientStatus,
+          values.LegalClientStatusSelf,
+          "LegalClientStatus decode to self"
+        );
+        yield* assertSchemaEncodedRoundTrip(LegalContactRole, values.LegalContactRole, "LegalContactRole");
+        yield* assertSchemaDecodesToSelf(
+          LegalContactRole,
+          values.LegalContactRoleSelf,
+          "LegalContactRole decode to self"
+        );
+        yield* assertSchemaEncodedRoundTrip(MatterType, values.MatterType, "MatterType");
+        yield* assertSchemaDecodesToSelf(MatterType, values.MatterTypeSelf, "MatterType decode to self");
+        yield* assertSchemaEncodedRoundTrip(PatentAssetStatus, values.PatentAssetStatus, "PatentAssetStatus");
+        yield* assertSchemaDecodesToSelf(
+          PatentAssetStatus,
+          values.PatentAssetStatusSelf,
+          "PatentAssetStatus decode to self"
+        );
+        yield* assertSchemaEncodedRoundTrip(RejectionGround, values.RejectionGround, "RejectionGround");
+        yield* assertSchemaDecodesToSelf(RejectionGround, values.RejectionGroundSelf, "RejectionGround decode to self");
+        yield* assertSchemaEncodedRoundTrip(DistinctionDetail, values.DistinctionDetail, "DistinctionDetail");
+        yield* assertSchemaDecodesToSelf(
+          DistinctionDetail,
+          values.DistinctionDetailSelf,
+          "DistinctionDetail decode to self"
+        );
+      }),
+    { arbitrary: fcRuns(10) }
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips law-practice entity schemas through encoded form",
-    Effect.fnUntraced(function* () {
-      for (const schema of [
-        LegalClient,
-        LegalContact,
-        Matter,
-        PatentAsset,
-        OfficeAction,
-        Claim,
-        PriorArtReference,
-        Rejection,
-        Distinction,
-        PatentCitationEvent,
-        CandorDisposition,
-        IdsSubmissionFact,
-      ]) {
-        yield* assertSchemaEncodedRoundTrips(schema, 3);
-      }
-    })
+    {
+      LegalClient: Arbitrary.schema(LegalClient),
+      LegalContact: Arbitrary.schema(LegalContact),
+      Matter: Arbitrary.schema(Matter),
+      PatentAsset: Arbitrary.schema(PatentAsset),
+      OfficeAction: Arbitrary.schema(OfficeAction),
+      Claim: Arbitrary.schema(Claim),
+      PriorArtReference: Arbitrary.schema(PriorArtReference),
+      Rejection: Arbitrary.schema(Rejection),
+      Distinction: Arbitrary.schema(Distinction),
+      PatentCitationEvent: Arbitrary.schema(PatentCitationEvent),
+      CandorDisposition: Arbitrary.schema(CandorDisposition),
+      IdsSubmissionFact: Arbitrary.schema(IdsSubmissionFact),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaEncodedRoundTrip(LegalClient, values.LegalClient, "LegalClient");
+        yield* assertSchemaEncodedRoundTrip(LegalContact, values.LegalContact, "LegalContact");
+        yield* assertSchemaEncodedRoundTrip(Matter, values.Matter, "Matter");
+        yield* assertSchemaEncodedRoundTrip(PatentAsset, values.PatentAsset, "PatentAsset");
+        yield* assertSchemaEncodedRoundTrip(OfficeAction, values.OfficeAction, "OfficeAction");
+        yield* assertSchemaEncodedRoundTrip(Claim, values.Claim, "Claim");
+        yield* assertSchemaEncodedRoundTrip(PriorArtReference, values.PriorArtReference, "PriorArtReference");
+        yield* assertSchemaEncodedRoundTrip(Rejection, values.Rejection, "Rejection");
+        yield* assertSchemaEncodedRoundTrip(Distinction, values.Distinction, "Distinction");
+        yield* assertSchemaEncodedRoundTrip(PatentCitationEvent, values.PatentCitationEvent, "PatentCitationEvent");
+        yield* assertSchemaEncodedRoundTrip(CandorDisposition, values.CandorDisposition, "CandorDisposition");
+        yield* assertSchemaEncodedRoundTrip(IdsSubmissionFact, values.IdsSubmissionFact, "IdsSubmissionFact");
+      }),
+    { arbitrary: fcRuns(3) }
   );
 
   it("wires Matter to the law-practice product-entity identity", () => {
@@ -560,7 +615,7 @@ describe("@beep/law-practice-domain", () => {
     expect(pincite.additionalPincites).toStrictEqual([]);
     expect(resolution.warnings).toStrictEqual([]);
     expect(context.type).toBe("sentence");
-    expect(O.isNone(context.maxLength)).toBe(true);
+    assertNone(context.maxLength);
     expect(locator.space).toBe("original");
     expect(locator.fullSpan).toBe(false);
     expect(locator.contextLength).toBe(32);
@@ -740,7 +795,7 @@ describe("@beep/law-practice-domain", () => {
     expect(pincite.additionalPincites).toStrictEqual([extraPincite]);
     expect(resolution.warnings).toStrictEqual(["Multiple antecedents"]);
     expect(context.type).toBe("paragraph");
-    expect(context.maxLength).toStrictEqual(O.some(NonNegativeInt.make(1000)));
+    assertSome(context.maxLength, NonNegativeInt.make(1000));
     expect(locator.space).toBe("clean");
     expect(locator.fullSpan).toBe(true);
     expect(locator.contextLength).toBe(64);
@@ -773,22 +828,36 @@ describe("@beep/law-practice-domain", () => {
     expect(FullCaseCitation.toBlueBook(rawCourtCitation)).toBe("410 U.S. 113 (D. Mass. 2021)");
   });
 
-  it.effect(
+  it.effect.prop(
     "round-trips leaf citation value schemas through encoded form",
-    Effect.fnUntraced(function* () {
-      for (const schema of [StatuteCitation, RegulationCitation, DocketCitation]) {
-        yield* assertSchemaEncodedRoundTrips(schema, 10);
-      }
-    })
+    {
+      StatuteCitation: Arbitrary.schema(StatuteCitation),
+      RegulationCitation: Arbitrary.schema(RegulationCitation),
+      DocketCitation: Arbitrary.schema(DocketCitation),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaEncodedRoundTrip(StatuteCitation, values.StatuteCitation, "StatuteCitation");
+        yield* assertSchemaEncodedRoundTrip(RegulationCitation, values.RegulationCitation, "RegulationCitation");
+        yield* assertSchemaEncodedRoundTrip(DocketCitation, values.DocketCitation, "DocketCitation");
+      }),
+    { arbitrary: fcRuns(10) }
   );
 
-  it.effect(
+  it.effect.prop(
     "round-trips the recursive citation unions via schema-derived arbitraries",
-    Effect.fnUntraced(function* () {
-      for (const schema of [Citation, FullCitation, ShortFormCitation]) {
-        yield* assertSchemaEncodedRoundTrips(schema, 5);
-      }
-    })
+    {
+      Citation: Arbitrary.schema(Citation),
+      FullCitation: Arbitrary.schema(FullCitation),
+      ShortFormCitation: Arbitrary.schema(ShortFormCitation),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaEncodedRoundTrip(Citation, values.Citation, "Citation");
+        yield* assertSchemaEncodedRoundTrip(FullCitation, values.FullCitation, "FullCitation");
+        yield* assertSchemaEncodedRoundTrip(ShortFormCitation, values.ShortFormCitation, "ShortFormCitation");
+      }),
+    { arbitrary: fcRuns(5) }
   );
 
   it.effect(

@@ -1,8 +1,14 @@
 import { createInvalidDateTime } from "@beep/schema/DateTimeUtcFromValid";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { AdapterEffectDateTime } from "@beep/ui/components/effect-date-time-picker";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const adapter = new AdapterEffectDateTime({ locale: "en-US" });
@@ -37,10 +43,10 @@ describe("AdapterEffectDateTime", () => {
   it("creates invalid DateTime-shaped values for MUI validation", () => {
     const invalid = createInvalidDateTime();
 
-    expect(adapter.isValid(invalid)).toBe(false);
-    expect(adapter.isValid(undefined)).toBe(false);
-    expect(adapter.isValid("" as unknown as DateTime.DateTime)).toBe(false);
-    expect(Number.isNaN(invalid.epochMilliseconds)).toBe(true);
+    pipe(adapter.isValid(invalid), assertFalse);
+    pipe(adapter.isValid(undefined), assertFalse);
+    pipe(adapter.isValid("" as unknown as DateTime.DateTime), assertFalse);
+    pipe(Number.isNaN(invalid.epochMilliseconds), assertTrue);
   });
 
   it("formats absent picker values as invalid instead of throwing", () => {
@@ -58,8 +64,8 @@ describe("AdapterEffectDateTime", () => {
   it("uses MUI reference-date semantics for undefined adapter dates", () => {
     const referenceDate = adapter.date(undefined, "UTC");
 
-    expect(DateTime.isDateTime(referenceDate)).toBe(true);
-    expect(referenceDate !== null && DateTime.isUtc(referenceDate)).toBe(true);
+    pipe(DateTime.isDateTime(referenceDate), assertTrue);
+    pipe(referenceDate !== null && DateTime.isUtc(referenceDate), assertTrue);
   });
 
   it("formats clock field section tokens without meridiem leakage", () => {
@@ -80,4 +86,20 @@ describe("AdapterEffectDateTime", () => {
     expect(meridiem).toMatch(/^(AM|PM)$/u);
     expect(adapter.formatByString(afternoon, "AA")).toBe(Str.toUpperCase(adapter.formatByString(afternoon, "aa")));
   });
+  it.prop(
+    "preserves UTC instants and timezone tokens across seasonal boundaries",
+    [Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1577836800000, maximum: 1924991999999 })))],
+    ([epochMilliseconds]) => {
+      for (const timezone of ["UTC", "Europe/London", "America/New_York", "Asia/Kolkata", "Australia/Sydney"]) {
+        const value = DateTime.makeUnsafe(epochMilliseconds);
+        const zoned = adapter.setTimezone(value, timezone);
+        expect(zoned.epochMilliseconds).toBe(epochMilliseconds);
+        expect(adapter.getTimezone(zoned)).toBe(
+          new Intl.DateTimeFormat("en-US", { timeZone: timezone }).resolvedOptions().timeZone
+        );
+        expect(adapter.setTimezone(zoned, "UTC").epochMilliseconds).toBe(epochMilliseconds);
+      }
+    },
+    { arbitrary: fcRuns(100) }
+  );
 });

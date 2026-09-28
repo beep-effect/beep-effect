@@ -25,3 +25,12 @@ Proposed P2 order: scope, assertions, property, flake, observability. Preserve a
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## P2 completion — 2026-09-27
+
+The four saved findings are reconciled. Both files pass all nine cases on Node
+and Bun with native property registration and instrumented tests. All six schema
+laws, independent inputs, original floor and single deadline remain. Real parser
+subjects and caller-byte preservation are unchanged and have regression controls.
+See the [completion receipt](../../../history/2026-09-27-doc-text-complete.md)
+for proof scope, strict ledger validation and timing limitations.

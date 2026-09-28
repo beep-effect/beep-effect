@@ -1,0 +1,81 @@
+{
+  "package": "@beep/epistemic-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T16:33:49.941000+00:00",
+  "totalMs": 4070.583740234375,
+  "testCount": 50,
+  "files": [
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "ms": 19.892333984375,
+      "tests": 9
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "ms": 47.583740234375,
+      "tests": 26
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "ms": 20.328369140625,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "ms": 10.44921875,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables round-trips schema-derived UsageRecords through the row converters",
+      "ms": 32.5836989999998
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable projects the immutable sidecar column shape",
+      "ms": 20.328366000000187
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable publishes the table through both aggregates",
+      "ms": 20.14166800000021
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable round-trips schema-derived manifestations through the sealed row converters",
+      "ms": 20.13550899999973
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable round-trips rows through schema-derived converters",
+      "ms": 20.11614899999995
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable uses the manifestation schema as the digest input contract",
+      "ms": 20.108476999999766
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables round-trips a ClaimDisposition row through the converters",
+      "ms": 13.961771000000226
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables reports a typed CandidateClaim converter failure on both sides of the boundary",
+      "ms": 13.920628000000306
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables reports a typed ClaimDisposition converter failure on both sides of the boundary",
+      "ms": 13.919466000000284
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables reports a typed EdgeVersion converter failure on both sides of the boundary",
+      "ms": 13.91840400000001
+    }
+  ]
+}

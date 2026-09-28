@@ -1,0 +1,38 @@
+{
+  "reviewedNodes": 10,
+  "changedDependencyLists": 7,
+  "edges": [
+    {
+      "computation": "@beep/trustgraph-workbench#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#dev",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#test",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "e5a8d46e9b2ee93e31774ca13206fe7f148a711425f6e40b40d9bb82e1bedbe1"
+}

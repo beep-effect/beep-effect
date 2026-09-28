@@ -1,0 +1,26 @@
+{
+  "package": "@beep/architecture-lab-client",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:55:32.233000+00:00",
+  "totalMs": 3909.678466796875,
+  "testCount": 2,
+  "files": [
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "ms": 6.678466796875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "testName": "WorkItem client exposes the client facade version",
+      "ms": 5.882379000000128
+    },
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "testName": "WorkItem client delegates through a client-safe transport",
+      "ms": 5.678375999999844
+    }
+  ]
+}

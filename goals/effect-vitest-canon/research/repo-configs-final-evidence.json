@@ -1,0 +1,72 @@
+{
+  "sourceSha": "d598781a65af5c48097bc4132c860b4227930e96",
+  "timings": [
+    {
+      "runtime": "node",
+      "baselineTests": 77,
+      "finalTests": 83,
+      "registeredFiles": 11,
+      "failures": 0,
+      "skips": 0,
+      "baselineSeconds": 4.72140982500423,
+      "finalSeconds": 4.422551960000419,
+      "sourceStable": true,
+      "loadBefore": [15.4267578125, 27.82080078125, 18.38623046875],
+      "loadAfter": [16.11376953125, 27.75732421875, 18.41650390625]
+    },
+    {
+      "runtime": "bun",
+      "baselineTests": 77,
+      "finalTests": 83,
+      "registeredFiles": 11,
+      "failures": 0,
+      "skips": 0,
+      "baselineSeconds": 2.5180230810001376,
+      "finalSeconds": 1.7167580659952364,
+      "sourceStable": true,
+      "loadBefore": [13.57861328125, 26.2314453125, 18.15966796875],
+      "loadAfter": [13.57861328125, 26.2314453125, 18.15966796875]
+    }
+  ],
+  "countChange": "Sixteen original laws now have distinct registrations; splitting four aggregate cases adds six reported tests without adding or removing domains.",
+  "timingLimit": "Single before/after observations with captured host load and pressure; not a controlled performance estimate.",
+  "packageProof": {
+    "command": "bun run beep quality package-verify @beep/repo-configs",
+    "exit": 0,
+    "auditSeconds": 16.9,
+    "docgenSeconds": 8.1
+  },
+  "propertyProof": {
+    "numRuns": 400,
+    "seed": 20260708,
+    "passed": 16,
+    "failed": 0,
+    "unselected": 47
+  },
+  "traceControls": {
+    "cases": ["compiler versions", "compiler diagnostic"],
+    "eachPositiveSelectedPassed": 1,
+    "eachNegativeSelectedFailed": 1,
+    "sourceRestored": true
+  },
+  "cacheAudit": {
+    "blocking": 0,
+    "inheritedAdvisories": 11
+  },
+  "rootOxlint": {
+    "exit": 0,
+    "scope": "packages/tooling/policy-pack/repo-configs/test"
+  },
+  "inventory": {
+    "files": 11,
+    "rows": 120,
+    "fixed": 65,
+    "openNoFindings": 39,
+    "exceptions": 16,
+    "strictValid": true,
+    "strictComplete": true,
+    "missingCoverage": 0,
+    "rootRowsBefore": 74,
+    "rootRowsAfter": 13
+  }
+}

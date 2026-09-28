@@ -1,0 +1,90 @@
+{
+  "reviewedNodes": 15,
+  "changedDependencyLists": 10,
+  "edges": [
+    {
+      "computation": "@beep/editor#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/editor#audit",
+      "addedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/editor#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/editor#build",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/editor#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/editor#check",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/editor#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/editor#coverage",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/editor#doctest",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/editor#doctest",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/editor#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/editor#lint:deprecated-apis",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/editor#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/editor#package-test-typecheck",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/editor#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/editor#test",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/editor#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/editor#test:integration",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/editor#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/editor#test:property",
+      "addedDependency": "@beep/test-utils#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "4e5cff3e6b7a38bcff416f6fe1caad6b5bba4a754e7224ff12b753d3df49782e"
+}

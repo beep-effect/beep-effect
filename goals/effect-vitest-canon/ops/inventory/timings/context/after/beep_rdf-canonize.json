@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/rdf-canonize",
+  "sourceHead": "bc0a819a62d36b9fecad7267f8787a7179296566",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 3.9699618449958507,
+  "bunWholeCommandSeconds": 1.3660721070045838,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.32763671875, 3.53515625, 3.32470703125],
+  "loadAfter": [3.32763671875, 3.53515625, 3.32470703125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.05 avg60=0.12 avg300=0.09 total=782592352\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216621\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140576\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=846949930\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=740983390\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.11 avg300=0.09 total=782596180\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216621\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140576\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=846949933\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=740983390\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "8a0e3e667932a652d13f40e0300308c0e8ee7d31c6acef48c9e11ec38c7f83dc"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/CHANGELOG.md",
+      "sha256": "f881b1fdb8c26acc2b0d65b405a2af216b61727de6c1749998c352b480bc8cb1"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/README.md",
+      "sha256": "9e14155965e8e4d9134b56dc45e23db787faa54e2e95d7dcbcd0a4eb81f502fb"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/docgen.json",
+      "sha256": "4c9767a0b58122503af2c710caf7519080df4594f964311332c335e3ee788c78"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/package.json",
+      "sha256": "29987b8a4253a1163d0df51ad5e8076d7639aba5f03db9aca1b8db3195eae394"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/src/adapters/canonicalization.ts",
+      "sha256": "339cce940bc14916e3b4059e8b4d834953d6aeb41f6e895a557a0ed0fdd40adf"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/src/index.ts",
+      "sha256": "ac0509443c44fc5f4576a516a822c5392c5957ecd3ecc290c75f38e0c2c42f99"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/src/rdf-canonize.d.ts",
+      "sha256": "619943b49db95c8515e6f76f026f891d603818510c35c150ff499396801cfeda"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "sha256": "2db7c3f7466ec34718f5791ae4c35e0acd263f774c141c8f17cc0ac94c8ba521"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/tsconfig.check.json",
+      "sha256": "e2bd86d18adc23e6c09fefd462a2d1c75a6b8d2e8dfca03b82d19247f11c0a7b"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/tsconfig.json",
+      "sha256": "370e21d3fb46657bc38a19d5dd8cceb5dae38201d9f44943b7813120061bce7f"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/vitest.config.ts",
+      "sha256": "9ff5e2e35a92f784b2638496f07e0f04a4ec43f11b4a9f141a7d57f391264846"
+    }
+  ],
+  "environmentMode": "Configured rdf-canonize local-engine Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 7,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.22119140625, 3.50927734375, 3.3173828125],
+    "loadAfter": [3.22119140625, 3.50927734375, 3.3173828125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.03 avg60=0.11 avg300=0.09 total=782596188\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216621\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140576\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=846949933\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=740983390\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.02 avg60=0.11 avg300=0.09 total=782598625\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216621\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140576\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=846949935\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=740983393\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 7,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All seven configured cases pass before and after without skips and with stable source. Nine original assertions and seven registrations remain; two aggregate Passed checks become native property failures. Both five-run floors and30-second deadlines remain. Generation now bounds quads before allocation, with400-sample source-schema validity and empty/max boundary probes. Neither timing phase overlaps this lane early publisher; package verification and policy checks can overlap the after sample. No external endpoint is contacted."
+}

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import {
   getWorkspaceDir,
@@ -5,20 +6,22 @@ import {
   resolveWorkspacePackages,
   workspaceGlobsFrom,
 } from "@beep/repo-utils/Workspaces";
+import { it as rootIt } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, HashMap, Layer, Path } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, HashMap, Layer, Path } from "effect";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const pathApi = Effect.runSync(Effect.scoped(Layer.build(NodePath.layer).pipe(Effect.map(Context.get(Path.Path)))));
 
-const MOCK_ROOT = pathApi.resolve(__dirname, "fixtures/mock-monorepo");
+const MOCK_ROOT = fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
 
-layer(TestLayer)("Workspaces", (it) => {
+rootIt.layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
   describe("resolveWorkspaceDirs", () => {
     it.effect(
       "should resolve all workspace packages",
@@ -34,9 +37,10 @@ layer(TestLayer)("Workspaces", (it) => {
     it.effect(
       "should map names to absolute directory paths",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const workspaces = yield* resolveWorkspaceDirs(MOCK_ROOT);
         const dirA = HashMap.get(workspaces, "@mock/pkg-a");
-        expect(O.isSome(dirA)).toBe(true);
+        dirA.pipe(O.isSome, assertTrue);
         if (O.isSome(dirA)) {
           expect(dirA.value).toContain("packages/pkg-a");
           expect(pathApi.isAbsolute(dirA.value)).toBe(true);
@@ -47,6 +51,7 @@ layer(TestLayer)("Workspaces", (it) => {
     it.effect(
       "should return empty HashMap when no workspaces defined",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         // pkg-a has no workspaces field
         const workspaces = yield* resolveWorkspaceDirs(pathApi.resolve(MOCK_ROOT, "packages/pkg-a"));
         expect(HashMap.size(workspaces)).toBe(0);
@@ -56,30 +61,26 @@ layer(TestLayer)("Workspaces", (it) => {
     it.effect(
       "should ignore generated coverage directories while resolving workspaces",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageDir = pathApi.join(tmpDir, "packages", "pkg-a");
         const coverageDir = pathApi.join(packageDir, "coverage");
 
-        const workspaces = yield* Effect.acquireUseRelease(
-          Effect.gen(function* () {
-            yield* fs.makeDirectory(coverageDir, { recursive: true });
-            yield* fs.writeFileString(
-              pathApi.join(tmpDir, "package.json"),
-              '{ "name": "root", "workspaces": ["packages/*", "packages/*/coverage"] }'
-            );
-            yield* fs.writeFileString(
-              pathApi.join(packageDir, "package.json"),
-              '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
-            );
-            yield* fs.writeFileString(
-              pathApi.join(coverageDir, "package.json"),
-              '{ "name": "@generated/coverage-artifact", "version": "1.0.0" }'
-            );
-          }),
-          () => resolveWorkspaceDirs(tmpDir),
-          () => fs.remove(tmpDir, { recursive: true })
+        yield* fs.makeDirectory(coverageDir, { recursive: true });
+        yield* fs.writeFileString(
+          pathApi.join(tmpDir, "package.json"),
+          '{ "name": "root", "workspaces": ["packages/*", "packages/*/coverage"] }'
         );
+        yield* fs.writeFileString(
+          pathApi.join(packageDir, "package.json"),
+          '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
+        );
+        yield* fs.writeFileString(
+          pathApi.join(coverageDir, "package.json"),
+          '{ "name": "@generated/coverage-artifact", "version": "1.0.0" }'
+        );
+        const workspaces = yield* resolveWorkspaceDirs(tmpDir);
 
         expect(HashMap.has(workspaces, "@mock/pkg-a")).toBe(true);
         expect(HashMap.has(workspaces, "@generated/coverage-artifact")).toBe(false);
@@ -89,48 +90,57 @@ layer(TestLayer)("Workspaces", (it) => {
     it.effect(
       "should resolve only existing members when a workspace glob matches zero directories",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageDir = pathApi.join(tmpDir, "packages", "pkg-a");
 
         // The apps/labs/* glob is declared before any lab exists (ratified
         // lab-apps row 1): resolution must yield only the existing members.
-        const workspaces = yield* Effect.acquireUseRelease(
-          Effect.gen(function* () {
-            yield* fs.makeDirectory(packageDir, { recursive: true });
-            yield* fs.writeFileString(
-              pathApi.join(tmpDir, "package.json"),
-              '{ "name": "root", "workspaces": ["packages/*", "apps/labs/*"] }'
-            );
-            yield* fs.writeFileString(
-              pathApi.join(packageDir, "package.json"),
-              '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
-            );
-          }),
-          () => resolveWorkspaceDirs(tmpDir),
-          () => fs.remove(tmpDir, { recursive: true })
+        yield* fs.makeDirectory(packageDir, { recursive: true });
+        yield* fs.writeFileString(
+          pathApi.join(tmpDir, "package.json"),
+          '{ "name": "root", "workspaces": ["packages/*", "apps/labs/*"] }'
         );
+        yield* fs.writeFileString(
+          pathApi.join(packageDir, "package.json"),
+          '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
+        );
+        const workspaces = yield* resolveWorkspaceDirs(tmpDir);
 
         expect(HashMap.size(workspaces)).toBe(1);
         expect(HashMap.has(workspaces, "@mock/pkg-a")).toBe(true);
       })
     );
 
-    it.effect(
-      "should fail with NoSuchFileError for missing root",
-      Effect.fn(function* () {
-        const result = yield* resolveWorkspaceDirs("/nonexistent/root").pipe(
-          Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
-        );
-        expect(result).toBe("caught: NoSuchFileError");
-      })
-    );
+    rootIt.layer(FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer))), {
+      timeout: "10 seconds",
+    })((it) => {
+      it.effect(
+        "should fail with NoSuchFileError for missing root",
+        Effect.fn(function* () {
+          const result = yield* resolveWorkspaceDirs("/nonexistent/root").pipe(
+            Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
+          );
+          expect(result).toBe("caught: NoSuchFileError");
+
+          const fs = yield* Fs.FileSystem;
+          const present = yield* fs.makeTempDirectoryScoped();
+          yield* fs.writeFileString(`${present}/package.json`, '{ "name": "present-root" }');
+          // No workspaces: the subject returns after decoding this manifest,
+          // before reaching the native glob implementation.
+          const workspaces = yield* resolveWorkspaceDirs(present);
+          expect(HashMap.size(workspaces)).toBe(0);
+        })
+      );
+    });
 
     it.effect(
       "should fail with DomainError for invalid root package.json",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(pathApi.join(tmpDir, "package.json"), "not valid json");
 
@@ -139,16 +149,15 @@ layer(TestLayer)("Workspaces", (it) => {
         );
 
         expect(result).toContain(`Failed to parse JSON at "${pathApi.join(tmpDir, "package.json")}"`);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
     it.effect(
       "should fail with DomainError for invalid child package.json",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packagesDir = pathApi.join(tmpDir, "packages");
         const packageDir = pathApi.join(packagesDir, "pkg-a");
         const rootPackageJsonPath = pathApi.join(tmpDir, "package.json");
@@ -163,16 +172,15 @@ layer(TestLayer)("Workspaces", (it) => {
         );
 
         expect(result).toContain(`Failed to parse JSON at "${childPackageJsonPath}"`);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
     it.effect(
       "should fail closed for workspace globs that traverse outside the repo root",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(pathApi.join(tmpDir, "package.json"), '{ "name": "root", "workspaces": ["../*"] }');
 
@@ -181,16 +189,15 @@ layer(TestLayer)("Workspaces", (it) => {
         );
 
         expect(result).toContain('Unsafe workspace glob "../*" escapes the repository root.');
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
     it.effect(
       "should fail closed for Windows absolute workspace globs",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(
           pathApi.join(tmpDir, "package.json"),
@@ -202,17 +209,16 @@ layer(TestLayer)("Workspaces", (it) => {
         );
 
         expect(result).toContain('Unsafe workspace glob "C:/outside/*" escapes the repository root.');
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
     it.effect(
       "should reject symlinked workspace directories that resolve outside the repo root",
       Effect.fn(function* () {
+        const pathApi = yield* Path.Path;
         const fs = yield* Fs.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
-        const externalDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const externalDir = yield* fs.makeTempDirectoryScoped();
         const packagesDir = pathApi.join(tmpDir, "packages");
         const symlinkDir = pathApi.join(packagesDir, "pkg-outside");
         const rootPackageJsonPath = pathApi.join(tmpDir, "package.json");
@@ -230,9 +236,6 @@ layer(TestLayer)("Workspaces", (it) => {
         );
 
         expect(result).toContain(`Workspace path escapes repository root: "${symlinkDir}" -> "${externalDir}"`);
-
-        yield* fs.remove(tmpDir, { recursive: true });
-        yield* fs.remove(externalDir, { recursive: true });
       })
     );
   });
@@ -242,7 +245,7 @@ layer(TestLayer)("Workspaces", (it) => {
       "should find an existing workspace by name",
       Effect.fn(function* () {
         const dir = yield* getWorkspaceDir(MOCK_ROOT, "@mock/pkg-b");
-        expect(O.isSome(dir)).toBe(true);
+        dir.pipe(O.isSome, assertTrue);
         if (O.isSome(dir)) {
           expect(dir.value).toContain("packages/pkg-b");
         }
@@ -253,7 +256,7 @@ layer(TestLayer)("Workspaces", (it) => {
       "should return None for a non-existent workspace",
       Effect.fn(function* () {
         const dir = yield* getWorkspaceDir(MOCK_ROOT, "@mock/nonexistent");
-        expect(O.isNone(dir)).toBe(true);
+        assertNone(dir);
       })
     );
   });
@@ -266,7 +269,7 @@ layer(TestLayer)("Workspaces", (it) => {
         expect(HashMap.size(packages)).toBe(3);
 
         const pkgA = HashMap.get(packages, "@mock/pkg-a");
-        expect(O.isSome(pkgA)).toBe(true);
+        pkgA.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgA)) {
           expect(pkgA.value.dir).toContain("packages/pkg-a");
           expect(pkgA.value.manifest.name).toBe("@mock/pkg-a");

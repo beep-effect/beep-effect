@@ -1,0 +1,71 @@
+{
+  "package": "@beep/workspace-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:30:18.870000+00:00",
+  "totalMs": 4177.915771484375,
+  "testCount": 12,
+  "files": [
+    {
+      "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
+      "ms": 4.027099609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "ms": 54.915771484375,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived exported workspace domain schemas",
+      "ms": 42.915828999999576
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain exports value schemas from the package identity",
+      "ms": 8.066792000000532
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived message roles",
+      "ms": 7.879592999999659
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain wires Workspace to the workspace ProductEntity identity",
+      "ms": 7.8564870000000155
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain decodes and constructs a Workspace row",
+      "ms": 7.855626000000484
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain rejects relative, tilde, and blank workspace vault roots",
+      "ms": 7.847913999999946
+    },
+    {
+      "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
+      "testName": "workspace entity materialization materializes model extras into table indexes",
+      "ms": 4.0270409999998265
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain normalizes trailing separators on workspace vault roots but still rejects bare roots",
+      "ms": 3.868507000000136
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain preserves crispened workspace and email wire shapes",
+      "ms": 3.836275999999998
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain wires Thread, Turn, and Message to workspace identities",
+      "ms": 3.805449000000408
+    }
+  ]
+}

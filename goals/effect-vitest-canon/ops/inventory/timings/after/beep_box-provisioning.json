@@ -1,0 +1,96 @@
+{
+  "package": "@beep/box-provisioning",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T04:50:53.562000+00:00",
+  "totalMs": 4570.720703125,
+  "testCount": 104,
+  "files": [
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "ms": 55.985107421875,
+      "tests": 17
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "ms": 51.720703125,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "ms": 38.198486328125,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
+      "ms": 3.119384765625,
+      "tests": 36
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
+      "ms": 16.551025390625,
+      "tests": 8
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
+      "ms": 24.134521484375,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
+      "ms": 45.532470703125,
+      "tests": 21
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration returns every created folder adoption and replans them as Noop",
+      "ms": 55.985059999999976
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "testName": "@beep/box-provisioning applier isolates mutation recorders while two SDK folder creates overlap",
+      "ms": 43.59490000000005
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "testName": "@beep/box-provisioning applier executes only planned v1 mutations and records blocked actions",
+      "ms": 39.07517700000062
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "testName": "@beep/box-provisioning applier applies planned collaboration and webhook updates",
+      "ms": 39.01054600000043
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "testName": "@beep/box-provisioning applier rejects a desired payload other than the one bound into the plan",
+      "ms": 38.94184899999982
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "testName": "@beep/box-provisioning applier performs zero dependent mutations for an unallowlisted exact-name collision",
+      "ms": 38.92662500000006
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal retains every prior Applied entry and the failed folder when folder N fails",
+      "ms": 33.00721599999997
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal retains applied folders and the failed collaboration after collaboration rejection",
+      "ms": 32.82945799999925
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal generates a distinct attempt id for each apply invocation",
+      "ms": 32.82024400000046
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal recovers exactly the folders applied before folder N fails",
+      "ms": 32.78677200000038
+    }
+  ]
+}

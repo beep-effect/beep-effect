@@ -10,8 +10,10 @@ import {
   SemanticSchemaSpecification,
 } from "@beep/rdf/SemanticSchemaMetadata";
 import { makeAnnotation } from "@beep/schema/Conformance";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -180,8 +182,9 @@ describe("semantic schema conformance", () => {
       "RootIdentifier",
       "ChildIdentifier",
     ]);
-    expect(O.map(getSemanticSchemaMetadata(Root), ({ canonicalName }) => canonicalName)).toEqual(
-      O.some("RootIdentifier")
+    assertSome(
+      O.map(getSemanticSchemaMetadata(Root), ({ canonicalName }) => canonicalName),
+      "RootIdentifier"
     );
     expect(
       pipe(getSemanticSchemaMetadataResult(Root), Result.map(O.map(({ canonicalName }) => canonicalName)))
@@ -196,12 +199,12 @@ describe("semantic schema conformance", () => {
     const collectedResult = collectSemanticSchemaMetadataResult(Invalid);
     const metadataResult = makeSemanticSchemaMetadataResult({ kind: "unknown" });
 
-    expect(Result.isFailure(collectedResult)).toBe(true);
+    pipe(collectedResult, Result.isFailure, assertTrue);
     if (Result.isFailure(collectedResult)) {
       expect(collectedResult.failure).toBeInstanceOf(S.SchemaError);
     }
     expect(() => collectSemanticSchemaMetadata(Invalid)).toThrow(S.SchemaError);
-    expect(Result.isFailure(metadataResult)).toBe(true);
+    pipe(metadataResult, Result.isFailure, assertTrue);
     if (Result.isFailure(metadataResult)) {
       expect(metadataResult.failure).toBeInstanceOf(S.SchemaError);
     }
@@ -215,7 +218,7 @@ describe("semantic schema conformance", () => {
 
     const result = collectSemanticSchemaMetadataResult(Broken);
 
-    expect(Result.isFailure(result)).toBe(true);
+    pipe(result, Result.isFailure, assertTrue);
     if (Result.isFailure(result)) {
       expect(result.failure).toBeInstanceOf(S.SchemaError);
     }
@@ -272,12 +275,17 @@ describe("semantic schema conformance", () => {
     expect(A.map(specifications, ({ revision }) => ({ ...O.getOrThrow(revision) }))).toEqual(
       A.map(revisionAnnotation.sources, ({ revision }) => revision)
     );
-    expect(specifications[0]?.contentSha256).toEqual(
-      O.some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    const firstSpecification = specifications[0];
+    const secondSpecification = specifications[1];
+    assertDefined(firstSpecification);
+    assertDefined(secondSpecification);
+    assertSome<string>(
+      firstSpecification.contentSha256,
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     );
-    expect(specifications[0]?.license).toEqual(O.some("CC-BY-4.0"));
-    expect(specifications[0]?.scope).toEqual(O.some("Sections 1-3"));
-    expect(specifications[1]?.license).toEqual(O.none());
+    assertSome(firstSpecification.license, "CC-BY-4.0");
+    assertSome(firstSpecification.scope, "Sections 1-3");
+    assertNone(secondSpecification.license);
 
     const roundTrip = pipe(
       encodeSemanticSchemaSpecificationResult(specifications[0]!),

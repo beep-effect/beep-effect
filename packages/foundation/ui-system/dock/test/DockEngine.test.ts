@@ -26,9 +26,12 @@ import {
   TabsNode,
   TopLeftAnchoredBox,
 } from "@beep/dock";
+import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -93,8 +96,8 @@ describe("DockEngine", () => {
     expect(split._tag).toBe("Split");
     expect(PanelId.is(panelOne.id)).toBe(true);
     expect(PanelId.equals(panelOne.id)(panelOne.id)).toBe(true);
-    expect(Panel.findInTabs(left, panelOne.id)).toEqual(O.some(panelOne));
-    expect(TabsNode.findForPanel(split, panelTwo.id)).toEqual(O.some(right));
+    assertSome(Panel.findInTabs(left, panelOne.id), panelOne);
+    assertSome(TabsNode.findForPanel(split, panelTwo.id), right);
   });
 
   it.layer(DockEngineLive)("live transition layer", (it) => {
@@ -243,7 +246,7 @@ describe("DockEngine", () => {
         const snapshot = yield* engine.encodeSnapshot(restored);
         const outcome = yield* requireChanged(yield* engine.restore(DockWorkspace.empty, snapshot, request));
 
-        expect(DockWorkspace.findTabs(outcome.state, groupOne)).toEqual(O.none());
+        assertNone(DockWorkspace.findTabs(outcome.state, groupOne));
         expect(A.map(DockWorkspace.panels(outcome.state), (panel) => panel.id)).toEqual([allowed.id, panelOne.id]);
 
         const deniedOnly = yield* engine.encodeSnapshot(
@@ -336,7 +339,7 @@ describe("DockEngine", () => {
         });
 
         expect(root.groupId).toBe(groupThree);
-        expect(installed.maximized).toEqual(O.none());
+        assertNone(installed.maximized);
         expect(installed.floating).toHaveLength(1);
         expect(floatingRoot.groupId).toBe(groupSix);
 
@@ -404,8 +407,9 @@ describe("DockEngine", () => {
         const moved = yield* requireChanged(yield* engine.transition(state, moveBeside));
 
         expect(DockWorkspace.groupCount(moved.state)).toBe(3);
-        expect(O.map(DockWorkspace.findTabs(moved.state, groupThree), (tabs) => tabs.active.id)).toEqual(
-          O.some(panelTwo.id)
+        assertSome(
+          O.map(DockWorkspace.findTabs(moved.state, groupThree), (tabs) => tabs.active.id),
+          panelTwo.id
         );
         expect(moved.events[0]).toMatchObject({ kind: "panelMoved", toGroupId: groupThree });
       })
@@ -576,6 +580,7 @@ describe("DockEngine", () => {
         const engine = yield* DockEngine;
         const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
         const before = opened.state;
+        const beforeEncoded = yield* encodeDockWorkspaceJson(before);
         const duplicate = envelope(
           "command-duplicate",
           OpenPanelCommand.make({
@@ -592,6 +597,7 @@ describe("DockEngine", () => {
         const failure = yield* Effect.flip(engine.transition(before, duplicate));
         expect(failure._tag).toBe("DockCommandRejected");
         expect(workspaceEquals(before, opened.state)).toBe(true);
+        expect(yield* encodeDockWorkspaceJson(before)).toBe(beforeEncoded);
       })
     );
 
@@ -611,22 +617,13 @@ describe("DockEngine", () => {
 });
 
 describe("dock snapshot codec properties", () => {
-  it.effect("round-trips arbitrary snapshots through the JSON codec", () =>
-    Effect.sync(() =>
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(DockSnapshot)]),
-            ([snapshot]) => {
-              const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
-              expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
-
-              return true;
-            },
-            { runs: 24 }
-          )
-        )._tag
-      ).toBe("Passed")
-    )
+  it.prop(
+    "round-trips arbitrary snapshots through the JSON codec",
+    [Arbitrary.schema(DockSnapshot)],
+    ([snapshot]) => {
+      const decoded = O.flatMap(encodeDockSnapshotJsonOption(snapshot), decodeUnknownDockSnapshotJsonOption);
+      expect(O.exists(decoded, (value) => workspaceEquals(value.workspace, snapshot.workspace))).toBe(true);
+    },
+    { arbitrary: fcRuns(24) }
   );
 });

@@ -1,0 +1,26 @@
+{
+  "rows": 16,
+  "statuses": {
+    "fixed": 10,
+    "open": 6
+  },
+  "historicalDetectorIdsRetained": 8,
+  "upstreamAttributedIds": 0,
+  "currentDetectorExceptions": 0,
+  "subjectLoggerExceptions": 0,
+  "admittedFiles": 2,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7732,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 683,
+  "sourceHashes": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "sha256": "1ec86ed74903b085db33d70b08cfb4310aecb74aea6b35ee1706a91e9a2ff274"
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "sha256": "9f660cbaed9ebd7a5f2b9f5762b7905e3a3bb7b4ac94a333b1fb35442f647297"
+    }
+  ]
+}

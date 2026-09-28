@@ -1,0 +1,116 @@
+{
+  "package": "@beep/ontology-client",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T00:10:08.104000+00:00",
+  "totalMs": 5483.95654296875,
+  "testCount": 29,
+  "files": [
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "ms": 42.674072265625,
+      "tests": 10
+    },
+    {
+      "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+      "ms": 0.9931640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/client/test/auto-open.test.ts",
+      "ms": 14.13134765625,
+      "tests": 4
+    },
+    {
+      "file": "packages/ontology/client/test/failure-messages.test.ts",
+      "ms": 13.383544921875,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "ms": 359.95654296875,
+      "tests": 3
+    },
+    {
+      "file": "packages/ontology/client/test/graph-labels.test.ts",
+      "ms": 1.843505859375,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/client/test/inspector-actions.test.ts",
+      "ms": 12.1015625,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/client/test/stale-read.test.ts",
+      "ms": 7.054931640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "ms": 206.33447265625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/client/test/worker-command-encode-failure.test.ts",
+      "ms": 13.633056640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/client/test/worker-wire.test.ts",
+      "ms": 4.84375,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "testName": "3d graph centrality budget does not reuse channels for unrelated projections with the same revision",
+      "ms": 359.1411969999999
+    },
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "testName": "3d graph centrality budget stays exact at the cutover and samples deterministically above it",
+      "ms": 358.9564529999998
+    },
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "testName": "3d graph centrality budget leaves every importance at zero when no node sits between two others",
+      "ms": 358.9383749999997
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "testName": "ontology workbench state lifetime keeps the open document when the workbench is unmounted for longer than the idle TTL",
+      "ms": 206.33438599999954
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "testName": "Session atoms shares the chat transport selector for ontology RPCs",
+      "ms": 22.291921000000002
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "testName": "Session atoms detects dirty change-log divergence at the saved length",
+      "ms": 22.07173199999943
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "testName": "Session atoms schema round-trips round-trips session client schemas with schema-derived arbitraries (ChangeOperation)",
+      "ms": 21.975352999999814
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "testName": "Session atoms schema round-trips round-trips session client schemas with schema-derived arbitraries (CreateSessionInput)",
+      "ms": 21.96859300000051
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "testName": "Session atoms schema round-trips round-trips session client schemas with schema-derived arbitraries",
+      "ms": 21.958638000000064
+    },
+    {
+      "file": "packages/ontology/client/test/auto-open.test.ts",
+      "testName": "ontologyWorkbenchAutoOpenAtom opens the seeded tutorial when the app session starts with no document",
+      "ms": 14.131394
+    }
+  ]
+}

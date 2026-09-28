@@ -50,3 +50,15 @@ After separate authorization: scope and preserve native/cache boundaries; migrat
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The original inventory above is historical. All saved actionable findings are
+fixed. Nine named in-memory fixtures retain separate stores and explicitly
+check empty initial cache state. Native properties preserve schema domains,
+metric normalization and comparator laws, run floors and original grouped
+deadlines. Multi-leaf cost and both alt identity directions now have exact
+witnesses. All 84 tests pass Node/Bun and full package audit/docgen passes.
+See history/2026-09-27-nlp-processing-reconciliation.md for proof and the nine
+fixture-hook budget exceptions. Final consolidated PR proof remains pending.

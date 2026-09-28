@@ -35,14 +35,16 @@ import {
   TextStatsOutput,
   ValidateJsonlOptions,
 } from "@beep/nlp-mcp/StreamingTools";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const StringDatasetResult = S.String.pipe(DatasetResult);
 
 const encode = <Sch extends S.Top & S.ConstraintEncoder<unknown>>(schema: Sch, value: Sch["Type"]): Sch["Encoded"] =>
   Result.getOrThrow(S.encodeUnknownResult(schema)(value));
@@ -51,50 +53,98 @@ const decode = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(schema: Sch, v
   Result.getOrThrow(S.decodeUnknownResult(schema)(value));
 
 const assertRoundTrip = <Sch extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
-  schema: Sch
-): void =>
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(Eq.equals(decode(schema, encode(schema, value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
+  schema: Sch,
+  value: Sch["Type"]
+): void => {
+  expect(Eq.equals(decode(schema, encode(schema, value)), value)).toBe(true);
+};
 
 describe("streaming schema laws", () => {
-  it("round-trips defaulted option schemas", () => {
-    assertRoundTrip(TextReadOptions);
-    assertRoundTrip(TextStreamOptions);
-    assertRoundTrip(DatasetLoadTextOptions);
-    assertRoundTrip(DatasetLoadLinesOptions);
-    assertRoundTrip(DatasetLoadJsonlOptions);
-    assertRoundTrip(DatasetLoadJsonOptions);
-    assertRoundTrip(JsonlReadOptions);
-    assertRoundTrip(PipelineProcessOptions);
-  });
+  it.prop(
+    "round-trips defaulted option schemas",
+    {
+      textReadOptions: Arbitrary.schema(TextReadOptions),
+      textStreamOptions: Arbitrary.schema(TextStreamOptions),
+      datasetLoadTextOptions: Arbitrary.schema(DatasetLoadTextOptions),
+      datasetLoadLinesOptions: Arbitrary.schema(DatasetLoadLinesOptions),
+      datasetLoadJsonlOptions: Arbitrary.schema(DatasetLoadJsonlOptions),
+      datasetLoadJsonOptions: Arbitrary.schema(DatasetLoadJsonOptions),
+      jsonlReadOptions: Arbitrary.schema(JsonlReadOptions),
+      pipelineProcessOptions: Arbitrary.schema(PipelineProcessOptions),
+    },
+    ({
+      textReadOptions,
+      textStreamOptions,
+      datasetLoadTextOptions,
+      datasetLoadLinesOptions,
+      datasetLoadJsonlOptions,
+      datasetLoadJsonOptions,
+      jsonlReadOptions,
+      pipelineProcessOptions,
+    }) => {
+      assertRoundTrip(TextReadOptions, textReadOptions);
+      assertRoundTrip(TextStreamOptions, textStreamOptions);
+      assertRoundTrip(DatasetLoadTextOptions, datasetLoadTextOptions);
+      assertRoundTrip(DatasetLoadLinesOptions, datasetLoadLinesOptions);
+      assertRoundTrip(DatasetLoadJsonlOptions, datasetLoadJsonlOptions);
+      assertRoundTrip(DatasetLoadJsonOptions, datasetLoadJsonOptions);
+      assertRoundTrip(JsonlReadOptions, jsonlReadOptions);
+      assertRoundTrip(PipelineProcessOptions, pipelineProcessOptions);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("round-trips integer-refined result schemas", () => {
-    assertRoundTrip(TextStreamStats);
-    assertRoundTrip(JsonlLineError);
-    assertRoundTrip(JsonlStats);
-    assertRoundTrip(JsonlValidationResult);
-    assertRoundTrip(S.String.pipe(DatasetResult));
-    assertRoundTrip(PipelineResult);
-    assertRoundTrip(LinesOutput);
-    assertRoundTrip(FileInfoOutput);
-    assertRoundTrip(TextStatsOutput);
-    assertRoundTrip(JsonlOutput);
-    assertRoundTrip(JsonlStatsOutput);
-    assertRoundTrip(DatasetMetaOutput);
-    assertRoundTrip(DataOutput);
-    assertRoundTrip(PipelineOutput);
-  });
+  it.prop(
+    "round-trips integer-refined result schemas",
+    {
+      textStreamStats: Arbitrary.schema(TextStreamStats),
+      jsonlLineError: Arbitrary.schema(JsonlLineError),
+      jsonlStats: Arbitrary.schema(JsonlStats),
+      jsonlValidationResult: Arbitrary.schema(JsonlValidationResult),
+      stringDatasetResult: Arbitrary.schema(StringDatasetResult),
+      pipelineResult: Arbitrary.schema(PipelineResult),
+      linesOutput: Arbitrary.schema(LinesOutput),
+      fileInfoOutput: Arbitrary.schema(FileInfoOutput),
+      textStatsOutput: Arbitrary.schema(TextStatsOutput),
+      jsonlOutput: Arbitrary.schema(JsonlOutput),
+      jsonlStatsOutput: Arbitrary.schema(JsonlStatsOutput),
+      datasetMetaOutput: Arbitrary.schema(DatasetMetaOutput),
+      dataOutput: Arbitrary.schema(DataOutput),
+      pipelineOutput: Arbitrary.schema(PipelineOutput),
+    },
+    ({
+      textStreamStats,
+      jsonlLineError,
+      jsonlStats,
+      jsonlValidationResult,
+      stringDatasetResult,
+      pipelineResult,
+      linesOutput,
+      fileInfoOutput,
+      textStatsOutput,
+      jsonlOutput,
+      jsonlStatsOutput,
+      datasetMetaOutput,
+      dataOutput,
+      pipelineOutput,
+    }) => {
+      assertRoundTrip(TextStreamStats, textStreamStats);
+      assertRoundTrip(JsonlLineError, jsonlLineError);
+      assertRoundTrip(JsonlStats, jsonlStats);
+      assertRoundTrip(JsonlValidationResult, jsonlValidationResult);
+      assertRoundTrip(StringDatasetResult, stringDatasetResult);
+      assertRoundTrip(PipelineResult, pipelineResult);
+      assertRoundTrip(LinesOutput, linesOutput);
+      assertRoundTrip(FileInfoOutput, fileInfoOutput);
+      assertRoundTrip(TextStatsOutput, textStatsOutput);
+      assertRoundTrip(JsonlOutput, jsonlOutput);
+      assertRoundTrip(JsonlStatsOutput, jsonlStatsOutput);
+      assertRoundTrip(DatasetMetaOutput, datasetMetaOutput);
+      assertRoundTrip(DataOutput, dataOutput);
+      assertRoundTrip(PipelineOutput, pipelineOutput);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps optional metadata wire shape byte-identical", () => {
     const withoutSize = DatasetMeta.make({
@@ -140,23 +190,60 @@ describe("streaming schema laws", () => {
     });
   });
 
-  it("round-trips tool-parameter option schemas extracted from inline S.Struct (RC-SF)", () => {
-    assertRoundTrip(ReadLinesOptions);
-    assertRoundTrip(TextStatsOptions);
-    assertRoundTrip(SampleLinesOptions);
-    assertRoundTrip(ReadJsonlOptions);
-    assertRoundTrip(ValidateJsonlOptions);
-    assertRoundTrip(SampleJsonlOptions);
-    assertRoundTrip(LoadTextOptions);
-    assertRoundTrip(LoadLinesOptions);
-    assertRoundTrip(LoadJsonlOptions);
-    assertRoundTrip(LoadJsonOptions);
-    assertRoundTrip(ProcessFileOptions);
-    assertRoundTrip(FilterLinesOptions);
-    assertRoundTrip(ExtractMatchesOptions);
-    assertRoundTrip(CountLinesOptions);
-    assertRoundTrip(CountJsonlOptions);
-  });
+  it.prop(
+    "round-trips tool-parameter option schemas extracted from inline S.Struct (RC-SF)",
+    {
+      readLinesOptions: Arbitrary.schema(ReadLinesOptions),
+      textStatsOptions: Arbitrary.schema(TextStatsOptions),
+      sampleLinesOptions: Arbitrary.schema(SampleLinesOptions),
+      readJsonlOptions: Arbitrary.schema(ReadJsonlOptions),
+      validateJsonlOptions: Arbitrary.schema(ValidateJsonlOptions),
+      sampleJsonlOptions: Arbitrary.schema(SampleJsonlOptions),
+      loadTextOptions: Arbitrary.schema(LoadTextOptions),
+      loadLinesOptions: Arbitrary.schema(LoadLinesOptions),
+      loadJsonlOptions: Arbitrary.schema(LoadJsonlOptions),
+      loadJsonOptions: Arbitrary.schema(LoadJsonOptions),
+      processFileOptions: Arbitrary.schema(ProcessFileOptions),
+      filterLinesOptions: Arbitrary.schema(FilterLinesOptions),
+      extractMatchesOptions: Arbitrary.schema(ExtractMatchesOptions),
+      countLinesOptions: Arbitrary.schema(CountLinesOptions),
+      countJsonlOptions: Arbitrary.schema(CountJsonlOptions),
+    },
+    ({
+      readLinesOptions,
+      textStatsOptions,
+      sampleLinesOptions,
+      readJsonlOptions,
+      validateJsonlOptions,
+      sampleJsonlOptions,
+      loadTextOptions,
+      loadLinesOptions,
+      loadJsonlOptions,
+      loadJsonOptions,
+      processFileOptions,
+      filterLinesOptions,
+      extractMatchesOptions,
+      countLinesOptions,
+      countJsonlOptions,
+    }) => {
+      assertRoundTrip(ReadLinesOptions, readLinesOptions);
+      assertRoundTrip(TextStatsOptions, textStatsOptions);
+      assertRoundTrip(SampleLinesOptions, sampleLinesOptions);
+      assertRoundTrip(ReadJsonlOptions, readJsonlOptions);
+      assertRoundTrip(ValidateJsonlOptions, validateJsonlOptions);
+      assertRoundTrip(SampleJsonlOptions, sampleJsonlOptions);
+      assertRoundTrip(LoadTextOptions, loadTextOptions);
+      assertRoundTrip(LoadLinesOptions, loadLinesOptions);
+      assertRoundTrip(LoadJsonlOptions, loadJsonlOptions);
+      assertRoundTrip(LoadJsonOptions, loadJsonOptions);
+      assertRoundTrip(ProcessFileOptions, processFileOptions);
+      assertRoundTrip(FilterLinesOptions, filterLinesOptions);
+      assertRoundTrip(ExtractMatchesOptions, extractMatchesOptions);
+      assertRoundTrip(CountLinesOptions, countLinesOptions);
+      assertRoundTrip(CountJsonlOptions, countJsonlOptions);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps extracted tool-parameter option wire shape byte-identical to the prior inline S.Struct", () => {
     // Every field stayed S.optionalKey with no default: an empty call still

@@ -7,8 +7,10 @@ import {
   toSyncItemInsert,
 } from "@beep/documents-tables/entities/SyncItem";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
@@ -34,7 +36,7 @@ const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A
 
 const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
   expect(error._tag).toBe(tag);
-  expect(Str.isNonEmpty(error.message)).toBe(true);
+  pipe(Str.isNonEmpty(error.message), assertTrue);
 };
 
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
@@ -83,22 +85,22 @@ describe("SyncItem table", () => {
     expect(getTableConfig(syncItemTable).name).toBe("documents_sync_item");
     expect(SYNC_ITEM_TABLE_NAME).toBe("documents_sync_item");
     expect(DomainSyncItem.SyncItem.sql.tableName).toBe("documents_sync_item");
-    expect(columns.id.primary).toBe(true);
+    pipe(columns.id.primary, assertTrue);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.publicId.name).toBe("public_id");
     expect(columns.contentDigest.name).toBe("content_digest");
-    expect(columns.contentDigest.notNull).toBe(false);
+    pipe(columns.contentDigest.notNull, assertFalse);
     expect(columns.contentSizeBytes.name).toBe("content_size_bytes");
     expect(columns.contentSizeBytes.columnType).toBe("PgInteger");
     expect(columns.itemKind.name).toBe("item_kind");
     expect(columns.itemKind.columnType).toBe("PgText");
-    expect(columns.itemKind.notNull).toBe(true);
+    pipe(columns.itemKind.notNull, assertTrue);
     expect(columns.localRelPath.name).toBe("local_rel_path");
-    expect(columns.localRelPath.notNull).toBe(true);
+    pipe(columns.localRelPath.notNull, assertTrue);
     expect(columns.syncState.name).toBe("sync_state");
     expect(columns.workspaceId.name).toBe("workspace_id");
     expect(columns.workspaceId.columnType).toBe("PgInteger");
-    expect(columns.workspaceId.notNull).toBe(true);
+    pipe(columns.workspaceId.notNull, assertTrue);
   });
 
   it("builds the SyncItem indexes from schema-first hints", () => {
@@ -108,7 +110,7 @@ describe("SyncItem table", () => {
     const syncStateLookup = indexConfigNamed("documents_sync_item_sync_state_lookup_idx");
     const workspaceIdBtree = indexConfigNamed("documents_sync_item_workspace_id_btree_idx");
 
-    expect(O.getOrThrow(publicIdUnique).config.unique).toBe(true);
+    pipe(O.getOrThrow(publicIdUnique).config.unique, assertTrue);
     expect(O.getOrThrow(localRelPathLookup).config.columns[0]).toMatchObject({ name: "local_rel_path" });
     expect(O.getOrThrow(remoteIdLookup).config.columns[0]).toMatchObject({ name: "remote_id" });
     expect(O.getOrThrow(syncStateLookup).config.columns[0]).toMatchObject({ name: "sync_state" });
@@ -129,7 +131,7 @@ describe("SyncItem table", () => {
       const syncItem = yield* decodeUnknownSyncItem(fileRow);
       const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
 
-      expect("id" in insert).toBe(false);
+      pipe("id" in insert, assertFalse);
       expect(insert.localRelPath).toBe("matters/client-default/complaint.pdf");
       expect(insert.syncState).toBe("pending");
       expect(insert.workspaceId).toBe(2);
@@ -137,9 +139,9 @@ describe("SyncItem table", () => {
 
       const roundTripped = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, 10)));
 
-      expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
-      expect(roundTripped.lastError).toEqual(O.none());
-      expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
+      assertSome<string>(roundTripped.contentDigest, "abc123");
+      assertNone(roundTripped.lastError);
+      pipe(SyncItemEquivalence(roundTripped, syncItem), assertTrue);
     })
   );
 
@@ -150,7 +152,7 @@ describe("SyncItem table", () => {
       const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
       const decoded = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, syncItem.id)));
 
-      expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
+      pipe(SyncItemEquivalence(decoded, syncItem), assertTrue);
     }),
     { arbitrary: fcRuns(50) }
   );

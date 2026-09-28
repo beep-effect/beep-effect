@@ -6,12 +6,19 @@ import {
   OipWebPulumiConfigValues,
   OipWebStackArgs,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const decodeOipWebPulumiConfigValues = S.decodeEffect(OipWebPulumiConfigValues);
+const isOipWebPulumiConfigValues = S.is(OipWebPulumiConfigValues);
+const OipWebPulumiConfigValuesEquivalent = S.toEquivalence(OipWebPulumiConfigValues);
 
 const encodeUnknownOipDnsConfig = S.encodeUnknownEffect(OipDnsConfig);
 const encodeUnknownOipVercelProjectConfig = S.encodeUnknownEffect(OipVercelProjectConfig);
@@ -21,12 +28,12 @@ describe("@beep/infra OipWeb", () => {
     const args = makeOipWebStackArgsFromConfigValues();
 
     expect(args.state.bucketName).toBe("oip-law-pulumi-state");
-    expect(args.state.createDynamoDbLockTable).toBe(false);
-    expect(args.state.protect).toBe(true);
-    expect(args.dns.attachProductionDomains).toBe(false);
-    expect(args.dns.attachStagingDomain).toBe(true);
+    pipe(args.state.createDynamoDbLockTable, assertFalse);
+    pipe(args.state.protect, assertTrue);
+    pipe(args.dns.attachProductionDomains, assertFalse);
+    pipe(args.dns.attachStagingDomain, assertTrue);
     expect(args.assets.bucketName).toBe("assets.oip.law");
-    expect(args.assets.protect).toBe(true);
+    pipe(args.assets.protect, assertTrue);
     expect(args.dns.productionDomain).toBe("oip.law");
     expect(args.dns.stagingDomain).toBe("staging.oip.law");
     expect(args.dns.vercelApexTarget).toBe("76.76.21.21");
@@ -68,12 +75,12 @@ describe("@beep/infra OipWeb", () => {
 
     expect(args.state.bucketName).toBe("example-pulumi-state");
     expect(args.state.lockTableName).toBe("example-pulumi-state-locks");
-    expect(args.state.createDynamoDbLockTable).toBe(true);
+    pipe(args.state.createDynamoDbLockTable, assertTrue);
     expect(args.state.region).toBe("us-west-2");
     expect(args.assets.bucketName).toBe("assets.example.com");
     expect(args.assets.region).toBe("us-west-2");
-    expect(args.dns.attachProductionDomains).toBe(true);
-    expect(args.dns.attachStagingDomain).toBe(false);
+    pipe(args.dns.attachProductionDomains, assertTrue);
+    pipe(args.dns.attachStagingDomain, assertFalse);
     expect(O.getOrUndefined(args.dns.cloudflareZoneId)).toBe("zone_123");
     expect(O.getOrUndefined(args.dns.legacyCloudflareZoneId)).toBe("legacy_zone_123");
     expect(O.getOrUndefined(args.dns.legacyProductionDnsRecordImportId)).toBe("legacy_zone_123/legacy_apex_record");
@@ -104,72 +111,97 @@ describe("@beep/infra OipWeb", () => {
     expect(args.state.lockTableName).toBe("custom-pulumi-state-locks");
   });
 
-  it("decodes optional Pulumi config shape", () => {
-    const decoded = Effect.runSync(
-      OipWebPulumiConfigValues.decodeEffect({
+  it.effect(
+    "decodes optional Pulumi config shape",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* OipWebPulumiConfigValues.decodeEffect({
         attachProductionDomains: true,
         attachStagingDomain: false,
         createDynamoDbLockTable: true,
         productionDnsRecordImportId: "zone_123/apex_record",
         pulumiStateBucketName: "oip-state",
-      })
-    );
+      });
 
-    expect(decoded.attachProductionDomains).toBe(true);
-    expect(decoded.attachStagingDomain).toBe(false);
-    expect(decoded.createDynamoDbLockTable).toBe(true);
-    expect(decoded.productionDnsRecordImportId).toBe("zone_123/apex_record");
-    expect(decoded.pulumiStateBucketName).toBe("oip-state");
-  });
+      pipe(decoded.attachProductionDomains, assertTrue);
+      strictEqual(decoded.attachStagingDomain, false);
+      pipe(decoded.createDynamoDbLockTable, assertTrue);
+      expect(decoded.productionDnsRecordImportId).toBe("zone_123/apex_record");
+      expect(decoded.pulumiStateBucketName).toBe("oip-state");
+    })
+  );
 
-  it("encodes OIP provider configs with unchanged optional-key wire shapes", () => {
-    const encodedDns = Effect.runSync(
-      encodeUnknownOipDnsConfig(
+  it.effect(
+    "encodes OIP provider configs with unchanged optional-key wire shapes",
+    Effect.fnUntraced(function* () {
+      const encodedDns = yield* encodeUnknownOipDnsConfig(
         OipDnsConfig.make({
           cloudflareZoneId: O.some("zone_123"),
           productionDnsRecordImportId: O.some("zone_123/apex_record"),
         })
-      )
-    );
-    const encodedVercel = Effect.runSync(
-      encodeUnknownOipVercelProjectConfig(
+      );
+      const encodedVercel = yield* encodeUnknownOipVercelProjectConfig(
         OipVercelProjectConfig.make({
           hubSpotAccountId: O.some("12345"),
           teamId: O.some("team_123"),
         })
-      )
-    );
+      );
 
-    expect(encodedDns).toEqual({
-      attachProductionDomains: false,
-      attachStagingDomain: true,
-      cloudflareZoneId: "zone_123",
-      legacyProductionDomain: "opip.law",
-      legacyStagingDomain: "staging.opip.law",
-      legacyWwwDomain: "www.opip.law",
-      productionDnsRecordImportId: "zone_123/apex_record",
-      productionDomain: "oip.law",
-      stagingDomain: "staging.oip.law",
-      vercelApexTarget: "76.76.21.21",
-      vercelCnameTarget: "cname.vercel-dns.com",
-      wwwDomain: "www.oip.law",
-    });
-    expect(encodedVercel).toEqual({
-      hubSpotAccountId: "12345",
-      projectName: "oip-web",
-      productionBranch: "main",
-      repository: "beep-effect/beep-effect",
-      rootDirectory: "apps/oip-web",
-      stagingBranch: "staging",
-      teamId: "team_123",
-      vercelAuthenticationDeploymentType: "none",
-    });
-  });
+      expect(encodedDns).toEqual({
+        attachProductionDomains: false,
+        attachStagingDomain: true,
+        cloudflareZoneId: "zone_123",
+        legacyProductionDomain: "opip.law",
+        legacyStagingDomain: "staging.opip.law",
+        legacyWwwDomain: "www.opip.law",
+        productionDnsRecordImportId: "zone_123/apex_record",
+        productionDomain: "oip.law",
+        stagingDomain: "staging.oip.law",
+        vercelApexTarget: "76.76.21.21",
+        vercelCnameTarget: "cname.vercel-dns.com",
+        wwwDomain: "www.oip.law",
+      });
+      expect(encodedVercel).toEqual({
+        hubSpotAccountId: "12345",
+        projectName: "oip-web",
+        productionBranch: "main",
+        repository: "beep-effect/beep-effect",
+        rootDirectory: "apps/oip-web",
+        stagingBranch: "staging",
+        teamId: "team_123",
+        vercelAuthenticationDeploymentType: "none",
+      });
+    })
+  );
 
-  it("round-trips OIP config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(OipWebPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(OipWebPulumiConfigValues);
-    expectSchemaRoundTrip(OipDnsConfig);
-    expectSchemaRoundTrip(OipVercelProjectConfig);
-  });
+  it.effect.prop(
+    "round-trips OIP config schemas through encoded wire values",
+    [Arbitrary.schema(OipWebPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeOipWebPulumiConfigValues(value);
+        assertTrue(isOipWebPulumiConfigValues(value) && OipWebPulumiConfigValuesEquivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipWebPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(OipWebPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(OipWebPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipDnsConfig through its encoded wire codec",
+    [Arbitrary.schema(OipDnsConfig)],
+    ([value]) => expectSchemaRoundTrip(OipDnsConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OipVercelProjectConfig through its encoded wire codec",
+    [Arbitrary.schema(OipVercelProjectConfig)],
+    ([value]) => expectSchemaRoundTrip(OipVercelProjectConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

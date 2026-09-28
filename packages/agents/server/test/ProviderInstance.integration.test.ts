@@ -32,11 +32,12 @@ import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { OrganizationId } from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as HostPath from "@beep/utils/Path";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { sql } from "drizzle-orm";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
@@ -147,7 +148,7 @@ const prepareTable = Effect.fnUntraced(function* () {
 });
 
 describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
-  layer(TestLayer, { timeout: "5 minutes" })((it) => {
+  it.layer(TestLayer, { timeout: "5 minutes" })((it) => {
     it.effect(
       "persists an authenticated probe snapshot and lists it",
       Effect.fnUntraced(function* () {

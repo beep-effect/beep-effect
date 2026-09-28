@@ -1,0 +1,106 @@
+{
+  "package": "@beep/qa-capture",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T13:00:35.160000+00:00",
+  "totalMs": 4429.684814453125,
+  "testCount": 41,
+  "files": [
+    {
+      "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
+      "ms": 4.0126953125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
+      "ms": 10.4248046875,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
+      "ms": 16.2763671875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "ms": 50.582763671875,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.equivalence.test.ts",
+      "ms": 1.14501953125,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "ms": 69.725830078125,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
+      "ms": 14.492919921875,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Witness.service.test.ts",
+      "ms": 6.55029296875,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "ms": 160.684814453125,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "testName": "@beep/qa-capture live clock correlator recovers the wall-clock offset from a synthesized beacon video",
+      "ms": 160.6849229999998
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "testName": "@beep/qa-capture models round-trips session, provenance, and plan models",
+      "ms": 68.72577999999976
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "testName": "@beep/qa-capture models round-trips every action-event variant and the union",
+      "ms": 54.87090099999932
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "testName": "@beep/qa-capture models round-trips literal domains",
+      "ms": 52.88645400000041
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "testName": "@beep/qa-capture models decodes an NDJSON line into the tagged union",
+      "ms": 52.648057000000335
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "testName": "@beep/qa-capture models rejects printable key identities by construction",
+      "ms": 52.64087599999948
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "testName": "@beep/qa-capture extraction planner anchors hover strips at enter-50/enter+150/leave+50",
+      "ms": 45.85042799999974
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "testName": "@beep/qa-capture extraction planner merge law: no two same-kind windows closer than the merge gap survive",
+      "ms": 45.82884399999966
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "testName": "@beep/qa-capture extraction planner merge law: every absorbed window is recorded in dropped",
+      "ms": 45.81546400000025
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "testName": "@beep/qa-capture extraction planner budget law: the fitted estimate never exceeds the budget",
+      "ms": 45.80722099999912
+    }
+  ]
+}

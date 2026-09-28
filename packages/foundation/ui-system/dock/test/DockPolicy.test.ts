@@ -25,7 +25,8 @@ import {
   TextPanelView,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";

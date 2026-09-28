@@ -2338,6 +2338,41 @@ while retaining the real test-utils layer/retry implementation. A mock-hit asser
 and exact twenty-retries-plus-initial-attempt check would have caught this drift
 when the adapter changed. Production code remains outside this repair.
 
+## Markdown CLI resume report-root mismatch
+
+Resuming the read-only preparation session for bounded assertion edits did not
+retain the additional writable private report directory. The child stopped
+before writing its required report or editing source because approvals were
+disabled. Start a fresh bounded CLI lane with explicit worktree and report
+write roots; do not turn this into permission prompts or treat the stopped
+resume as implementation progress. A resume launcher should verify and restore
+all required writable roots before dispatch.
+
+### Markdown detector command spelling
+
+During the Markdown final ratchet check, `beep lint effect-vitest --check` was
+rejected with `Unrecognized flag: --check`. The default command is already the
+check mode; rerunning without that flag passed. An explicit check-mode example
+in the command help would prevent borrowing flags from adjacent lint commands.
+
+### Detached proof user-manager environment
+
+The Markdown cheap-gates launch reported `Detached proof jobs require an active
+systemd user manager` before starting a job. The user manager was confirmed live;
+rerunning with the documented XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS
+restored the supported detached path. A launcher diagnostic distinguishing
+missing session environment from an unavailable manager would avoid ambiguity.
+
+### Exit error projection discards mixed Cause reasons
+
+Supplemental Markdown review traced installed rc.117 Exit.mapError to first-error
+selection. Controls reproduced acceptance of expected typed failure plus a defect,
+interruption or additional failure. Cause.map preserves those reasons. Grounding
+Cause preservation in implementation and mixed-failure controls, rather than an
+API name or pure-failure example, would have prevented the overbroad assertion
+claim. The same projection pattern is being repaired in the open HTML wave.
+
+
 ### 2026-09-25 — reference checkout ahead of installed Schema aliases
 
 While migrating HTML's runtime-boundary tests, the Effect reference checkout at
@@ -2417,6 +2452,93 @@ No heavy-admission label was applied without observing the remaining Property
 Laws result. A shared quota-aware read cache would reduce duplicate PR polling
 across active workstreams; local implementation and proof can continue meanwhile.
 
+## Runner dependency and receipt generation
+
+`bun add --dev @beep/test-runner@workspace:^` wrote workspace:* in Chalk,
+which Syncpack rejected. The manifest was corrected and verified. The generator
+should preserve the workspace protocol policy. Separately, PR #1282 review
+found that its scoped dependency projection retained an inherited Graph3D
+review receipt; a package-specific receipt and hash now identify its Provenance
+edges. Dependency reconciliation should require a matching review basis.
+
+## 2026-09-26 — unrelated proof-job timeouts block HTML coverage
+
+While closing HTML PR #1279, Heavy / Coverage Regression failed in two
+`test/proof-job.test.ts` job-wait wave-return cases with `Timed out waiting for
+proof job`. The HTML diff changes neither that test nor ProofJobLauncher.
+Evidence: GitHub run 36216289583, job 108333072900. The unchanged focused command
+`bunx vitest run test/proof-job.test.ts -t 'job wait wave return' --coverage`
+passed all four selected cases (81 filtered out) in 10.68 seconds. Only the
+failed hosted job was retried; that retry is not yet passing evidence. The
+existing full local proof remains active and its inputs were left intact.
+A deterministic timing seam for wave-return tests, or stronger failure telemetry
+for their bounded waits, would make coverage-load failures easier to attribute.
+No timeout increase, retry configuration, CLI source change or waiver was made.
+
+## 2026-09-26 — Box audit regenerates an invalid SDK operation
+
+During the Box scope phase, `bun run beep quality package-verify @beep/box`
+regenerated bindings from installed SDK 10.16.0 and failed audit with TS6133:
+`signal` is declared but never read in generated Box.operations.gen.ts.
+The generator always renders `(decoded, signal)` although getCachedUploadPart
+has no cancellationToken or optionalsInput argument. The test changes do not
+alter generator inputs, the package manifest or the lockfile. Docgen passed;
+test typechecking and all 32 configured tests pass on the committed bindings.
+The generated diff was retained as evidence and generated files restored.
+A generator regression case covering SDK methods without cancellation arguments
+would have exposed this before the mandatory package audit. A separate narrow
+repair requires the operator's production-code exception; no waiver was made.
+## 2026-09-26: Observability charter retained the old runner import
+
+Preparing the twelve recorded Anthropic, OpenAI, OpenAI compatibility, Venice,
+and xAI tests exposed a stale All Seeing Eye charter: it still directed new
+adopters to the historical test-utils/Vitest subpath. Current merged test
+suites use the accepted test-runner package. The charter now names that public
+package while retaining the historical rc.112/rc.113 evidence and semantics.
+Updating consumer instructions in the runner extraction PR would have prevented
+new remediation lanes from repeating the obsolete import.
+
+## 2026-09-26: Scoped test typecheck did not prove package audit diagnostics
+
+OpenAI compatibility scope migration passed its configured nineteen tests and
+package-test-typecheck, but mandatory package-verify failed in beep:check:tests
+with five TS377083 nestedEffectGenYield diagnostics. Removing layer provision
+left redundant nested generators on error-capture paths. These diagnostics are
+introduced by the test refactor, not inherited source failures. The repair
+inlines the redundant generator boundary while retaining Effect.flip on the
+failing operation and the same error assertions. Running the package's actual
+audit check path before handoff would have caught this distinction earlier.
+
+## 2026-09-26: Git signer socket failed after green provider proofs
+
+Saving the OpenAI, Venice, and xAI phase repairs failed after all commit hooks
+passed: `1Password: Could not connect to socket`, followed by `failed to write
+commit object`. The prescribed op-doctor check found the automation backend
+healthy, but the configured Git signer still failed. The source changes are
+preserved in the index and a private patch; signing was not disabled and no
+credential was exported. A signer-health preflight distinct from automation
+secret-backend health would have exposed this publication boundary earlier.
+
+### 2026-09-26 — Markdown proof reaches an unbuilt generated SDK
+
+The full Markdown proof stopped in infra docgen with TS1205, TS1294 and
+TS4114 under the installed Pulumi gharunners SDK. Its source, package
+manifest, build script, infra docgen config and compiler matched main, but
+its compiled `bin/index.d.ts` was absent. Running the SDK's existing build
+script restored the declarations; infra docgen then passed all 101 examples.
+No production source or compiler policy changed. Bootstrapping the generated
+SDK before admitting a full proof would have prevented this failed run. The
+full proof still requires a new successful run after main integration.
+
+
+### Markdown full proof: guard compilation and timing metadata
+
+The full Markdown proof rejected two inline NonEmptyArray safety-violation
+guards and three private timing output paths in root Lint Policy. Hoist the
+unchanged guard once and redact those destinations as `<private-output>`.
+Focused root-policy checks before publication would catch these conditions
+that package verification alone did not reject.
+
 ## 2026-09-26: Ready proof-job waves raced a negative-path deadline
 
 Coverage on PRs #1277 and #1279 failed in the proof-job wave-return tests
@@ -2482,6 +2604,39 @@ does not cover these root policy gates; include focused oxlint and knowledge
 reference checks before the next full proof.
 
 
+### Runner dependency protocol preflight
+
+The Provenance full proof rejected the newly added runner dependency because
+Syncpack requires workspace:^ while the install command had requested workspace:*.
+The same uncommitted addition existed in NLP and MCP kit. Correct the manifests
+and run Syncpack immediately after adding workspace dependencies; cheap gates
+and package verification alone did not expose this pin policy.
+
+## MCP kit assertion reconciliation
+
+The final detector pass found the inherited SanitizedSpan parent Option assertion
+still open after the assertion phase. Replaced its structural Some equality with
+assertSome using the unchanged parent operand. A detector check at each phase
+boundary would have caught this before final timing collection; the prior final
+measurements are preserved and a new measurement is required for the repair.
+
+## MCP kit census scope drift
+
+The authoritative `beep lint effect-vitest --census` emits both
+`src/test/Conformance.test-kit.ts` and the generated
+`dist/test/Conformance.test-kit.d.ts`, beyond the earlier test-directory delta.
+Partial validation therefore reports 28 missing lens entries, not 20. A
+source-aware delta against the full D9 census would prevent that undercount;
+the generated declaration requires scope reconciliation before final coverage.
+### Provenance scope migration: pure service overrides
+
+The scope-phase package check rejected two test-local Effect.provide(Layer)
+applications with TS377032 (strictEffectProvide), although the focused tests
+passed. Both fixtures construct pure Crypto values, so Effect.provideService
+preserves their per-case behavior without a nested Layer boundary. The corrected
+full package verification passed. Classifying pure service overrides before
+replacing scoped helpers would have prevented this failed check.
+
 ### Drizzle full-proof follow-up: compiled codecs and private output references
 
 PR #1277 full proof reached Lint Policy and rejected eight inline schema compiler
@@ -2490,6 +2645,349 @@ Hoist the unchanged insert/update codecs and guards to module scope, and redact
 the timing command output destination as `<private-output>`. Package proof alone
 did not cover these root policies; running the focused root policies before
 publication would have caught both failures earlier.
+
+## 2026-09-26: Existing UI precision counterexample still reproduces
+
+While selecting the next existing inventory wave, the admitted UI property row
+was checked against current main. SpinParams.make({ precision: 101, step: 1 })
+accepts the value; both numberToString(1, 101) and the number-input blur helper
+throw RangeError: "toFixed() argument must be between 0 and 100". No production
+change or narrowed generator was made. The schema/runtime precision contract
+needs a separately authorized repair before this finding can close. Aligning
+public schema bounds with the formatting API would prevent this mismatch.
+
+PR #1300 also exposed transient GitHub discovery failure: GraphQL reported a rate
+limit while the REST endpoint confirmed the open PR and matching head. The
+readiness monitor terminated with "requires an open pull request". Its result
+was acknowledged; the publisher remains live. Preserve the original API error
+in discovery diagnostics to distinguish quota failure from a missing PR.
+
+## 2026-09-26: timing hash keys trigger secret scanning heuristics
+
+The observability baseline commit was rejected because file-path-keyed SHA-256
+receipts containing HttpApiTelemetry matched the generic API-key heuristic.
+The flagged values were verified source hashes, not credentials. Store the same
+path/hash facts as explicit `file` and `sha256` records, as in earlier waves,
+so public proof remains complete without weakening the scanner or adding ignores.
+
+## 2026-09-26: subprocess shim hides cancellation ownership
+
+The observability compiler-boundary scope review found that the configured Node
+Bun.spawn shim returns only an exit promise. Adding a Bun kill finalizer would
+therefore typecheck against Bun while failing under the configured Node runner.
+The subject is real compiler validation, so use the existing native Effect
+process service for the same commands and fixtures, with its shorter child scope.
+Preserve command ordering, exit assertions and deadlines. Documenting the shim's
+minimal contract alongside scope-migration guidance would prevent this mismatch;
+no shared shim or production change is required for this test ownership repair.
+
+## 2026-09-27: publisher retained proof capacity while watching hosted checks
+
+PR #1287's publisher completed all 33 reported local proof lanes successfully,
+then entered its GitHub check watch while other publishers still reported that
+process as the merged-preview reservation holder. A dedicated until-ready monitor
+was started and confirmed live before stopping the completed publisher's watch.
+The saved proof remains intact; no failing job was bypassed. Release proof
+reservations before remote-only monitoring so finished local work does not keep
+other exact-head proofs waiting.
+
+## 2026-09-27: Effect test adapter overload differs from plain Vitest
+
+The observability scope conversion initially retained Vitest's options-before-body
+argument order. The installed Effect adapter accepts the body second and options
+third; typecheck caught all three Boundary registrations. Moving the same timeout
+objects preserves the two 60-second and one 600-second budgets. Removing obsolete
+provider wrappers also exposed three nested generators to nestedEffectGenYield;
+flattening them preserved every assertion and capture order. Check adapter
+overloads and generator adjacency during mechanical registration migrations.
+
+## 2026-09-26: Assertion helpers expose branded payload and composition requirements
+
+The observability assertion-only checkpoint passed its configured Node and Bun
+suites, but package verification caught a branded expected status mismatch
+(TS2345) and three nested-call composition diagnostics (TS377050). The repairs
+construct the same literal 503 with NonNegativeInt.make and use equivalent
+pipe composition for the three Option predicates. No expected value, domain or
+production behavior changes. Including the package test compiler in the
+assertion conversion checklist would expose these constraints earlier.
+
+## 2026-09-26: Traced Cause annotations affect strict Exit assertions
+
+The observability witness checkpoint initially used assertExitFailure with a
+fresh unannotated Cause for trackDuration and profilePhase. Both failed only
+on installed Effect stack annotations; the original error payloads were intact.
+The new witness now requires a Failure Exit, exactly one Fail reason and the
+independently supplied original payload. No original assertion was removed and
+no annotation was stripped. The untraced HTTP witness retains complete Cause
+comparison. A testing guide example distinguishing semantic payload preservation
+from runtime Cause annotation identity would prevent this mismatched oracle.
+
+## 2026-09-26: Codec composition and hosted API quota
+
+The Observed codec pilot passed its full generated domains and pinned cases,
+but package verification rejected two nested toCodecJson/fromJsonString calls
+with TS377050. Equivalent schema.pipe(...) composition preserves the same
+codec and passed the next validation. Use pipe when hoisting composed codecs.
+Separately, refreshing the goal PR set reached the GitHub GraphQL rate limit.
+Required hosted readiness remains unverified while quota is unavailable; local
+work continues. Sharing a bounded PR-state read across active monitors would
+reduce redundant quota use without relaxing any merge gate.
+
+## 2026-09-26: Runner lifecycle logs enter logger-subject captures
+
+The observability trace-on pilot failed four exact logger assertions because
+runner start events reached the subject arrays (three instead of two records,
+two instead of one, and an extra Info level). Moving the subject layers inside
+the body passed both trace modes but violated strictEffectProvide. The five
+logger-subject cases therefore retain native harness layer ownership and hook
+budgets as explicit instrumentation exceptions; ordinary cases adopt the runner.
+No capture was filtered/reset, assertion weakened or compiler rule suppressed.
+A separately approved runner facility for isolated logger subjects would remove
+this adoption constraint without changing the tested logging behavior.
+
+## 2026-09-26: Nested property assertion missed before registration
+
+Final admitted-inventory reconciliation found one generated redaction-law branch
+still using expect(O.isNone(safe.detail)).toBe(true). The earlier assertion pass
+missed this nested callback, so the later property checkpoint preserved its old
+syntax. Replaced it with assertNone on the identical value and retained the
+branch, input domains and run floor. A per-package residual detector review
+before leaving the assertion phase would have caught this missed conversion.
+
+## Observability runner dependency publication parity
+
+PR #1300 Repo Sanity failed because adding the test-runner development dependency
+also requires generated project references and an in-range changeset. The hosted
+`beep tsconfig-sync --check` named two package reference files; changeset-status
+named @beep/observability. This was introduced by the runner integration. Run
+`beep tsconfig-sync` and `beep quality changeset-status --since origin/main`
+before each future runner publication to catch both together.
+
+## Runner dependency generated-boundary follow-up
+
+After TypeScript sync passed on PR #1300, the next Repo Sanity stage found
+`standards/fallow.boundaries.generated.jsonc` stale. The runner development
+dependency adds exactly two allowed-boundary entries for the owning package.
+Regenerated with `bun run fallow:boundaries:write`; no boundary policy or
+unrelated package entry changed. Include this command beside tsconfig-sync
+when admitting the runner dependency in later waves.
+## 2026-09-26: Cache merge must preserve dependency multiplicity
+
+Merging the provider wave with main used a set to combine task dependency lists.
+That removed six duplicate utils transit edges, causing cache audit configuration
+drift despite unchanged task configuration. The current census and main both
+retain those edges. Restored their exact multiplicity; future merge checks must
+compare dependency multisets and serialized lists, not just membership. The
+provider proof queued on the incorrect metadata was cancelled before correction.
+### Business-driver assertions: preserve observation and branded expectations
+
+During the assertion phase, a provisional FreshBooks full-Cause comparison
+introduced a stricter singleton expectation and failed on stack annotations.
+The original oracle observes the first typed error. Preserve that observation
+with `Exit.match`, `Cause.findErrorOption` and native `assertSome`, retaining
+all original class and payload checks without reconstructing the cause.
+
+USPTO package verification then rejected four raw string expectations with
+`TS2345` because native assertion helpers enforce the branded payload type.
+Use the existing `NonEmptyTrimmedStr.make` constructor for the unchanged literal
+values. A small preflight against the actual test compiler would catch this
+introduced typing error before the full package audit. Neither failure
+justifies a production change, weakened assertion or quality-gate waiver.
+
+### 2026-09-26 — Pure test stubs and strict Effect provide diagnostics
+
+The CLI/config scope migration removed redundant scoped-layer wrappers and
+used direct `Effect.provide` for verified `Layer.succeed` test stubs, as D14
+permits. Full package proofs for `@beep/ai-provider-cli` and
+`@beep/architecture-lab-config` rejected those calls with TS377032
+`effect(strictEffectProvide)`. The packet exemption does not imply checker
+acceptance. Move ownership to the test harness without suppressing diagnostics
+or rebuilding a manual layer wrapper. Preparation should check both D14 and
+the active language-service diagnostic before recommending a direct stub
+provide; this would have avoided a failed proof in each package.
+
+### 2026-09-26 — Runner trace events reach a fixture diagnostic logger
+
+The CLI snapshot trace-enabled proof failed its exact diagnostic log record:
+runner `start`/`end` events reached a logger installed for the entire harness
+layer. The production diagnostic payload was unchanged. Keep the full exact
+assertion and supply the logger reference only around the provider call;
+runner lifecycle logs remain outside that capture. A trace-enabled example
+for exact logger assertions would prevent this scope mismatch. The first
+attempt used the deep-property environment floor, which excludes this
+non-property file; its zero-test exit was rejected as proof and the real
+13-test snapshot suite was run without that filter.
+
+### 2026-09-26 — Media ledger evidence length and detector runtime
+
+The seven-file media wave's first strict ledger validation rejected several
+`evidence` fields longer than the schema's 200-character limit. The findings
+and source dispositions were retained; concise evidence belongs in that field,
+with fuller explanations in `reason` and `replacement.sketch`. Checking the
+field length during report-to-row conversion would prevent this repair pass.
+
+The normal Effect/Vitest ratchet passed with `introduced=0 resolved=0`, but
+reported `scanMs=24656.5` across 1181 files. This does not satisfy the goal's
+under-ten-second detector target. Concurrent workstation load is recorded in
+this wave's timing receipts; no performance improvement or target waiver is
+claimed from a passing ratchet.
+
+
+## Database test migration compiler feedback
+
+While moving the existing DuckDB wire-format fixture into an Effect test,
+`package-verify @beep/duckdb` rejected the unchanged JSON.stringify oracle
+with TS377026. The installed Schema declaration also lacked the
+UnknownFromJsonString convenience export present in the reference source.
+The compatible public expression is S.fromJsonString(S.Unknown); using its
+Effect encoder retains the independently specified expected wire payloads.
+A pinned example checked against the installed declaration surface would
+have prevented both edit/proof iterations. This is migration-tooling friction,
+not evidence of a production codec defect.
+
+
+## Generated infra SDK declarations missing after lane install
+
+The media wave's full proof stopped in infra docgen on TypeScript diagnostics
+inside node_modules/@pulumi/gharunners. Source and docgen configuration matched
+main; main passed its 101 examples while the worktree lacked bin/index.d.ts.
+Running the dependency's existing build script restored declarations, after
+which the same infra docgen command passed. No tracked source or compiler rule
+changed. An install preflight checking generated file dependencies for their
+declared build artifacts would prevent this expensive late-proof failure.
+The full proof was resubmitted; focused docgen alone is not full proof credit.
+
+## Reproof after an already published clean head
+
+Four SDK-repaired lanes retried `yeet publish --start-pr-early` after their heads
+had already reached GitHub. Each stopped before proof with "requires reviewed
+staged changes or a clean local commit ahead". The correct recovery is a
+standalone detached verify plus an until-ready monitor at the existing head.
+A publish recovery hint distinguishing an already-pushed head from missing work
+would avoid these discarded proof submissions. No empty commit is needed.
+
+## 2026-09-26: ACP scope wrapper cleanup
+
+The ACP scope phase removed manual context provision and cleanup, leaving two
+result-capture generators with a single yielded effect. Full package verification
+reported TS377083. Flattening the redundant generators preserved the exact effects
+and assertions; the next full audit and docgen passed. Include this compiler check
+when removing fixture wrappers so redundant generators are caught in the same phase.
+
+## 2026-09-26: ACP diagnostic level verification
+
+ACP package verification passed with debug-level phase events, but a temporary
+TestConsole positive control under BEEP_TEST_TRACE=1 captured the runner start
+and none of those events. The current minimum log level filters debug messages.
+Promote only the static phase events to info and repeat positive/negative capture
+controls before crediting observability. Package behavior alone cannot establish
+that the intended diagnostics are visible. The temporary probe was restored.
+
+## 2026-09-26: ACP inventory line-count convention
+
+The first strict ACP inventory validation rejected refreshed census line counts
+although all 55 rows were schema-valid and every lens had coverage. The source
+validator counts the terminal newline differently from splitlines. Use the
+public validator's line-count convention when refreshing both census entries
+and whole-file spans; do not weaken validation or alter source to fit metadata.
+
+## 2026-09-26: Repository-config trace selection guard
+
+The temporary compiler diagnostic trace probe initially used an inaccurate test
+name. Vitest exited zero while selecting no tests; the receipt's exact count
+check rejected both positive and negative runs. Source was restored byte for
+byte. Read the actual registered name from the JSON reporter and rerun that
+case. Reusing reporter names instead of reconstructing them prevents this
+false-positive verification path. No product test or deadline was changed.
+
+## 2026-09-26: Inventory line-count convention
+
+Repository-config strict validation rejected census line counts that included the
+trailing empty line. Use the active validator bridge's source-line count rather
+than inheriting a previous wave's newline convention. Preserve file bytes and
+membership, correct only owned counts and spans, and rerun the unchanged
+validator. A shared count function in receipt generation would prevent this
+off-by-one evidence drift.
+
+## 2026-09-26: Repository-config changeset gate
+
+The first repository-config cheap-gate run passed fourteen lanes but rejected
+`quality:changeset-status`: the versioned workspace needed an in-range changeset
+even though this wave changes tests and their development dependency. Add a real
+package patch changeset, then rerun the gate. Check release-policy classification
+before publication instead of inferring exemption from a private package flag.
+
+## 2026-09-26: hosted lint runner communication loss
+
+While continuing the existing repo-utils inventory, PR #1287 job 108491528753
+(Heavy / Lint Policy) failed with the annotation “The self-hosted runner lost
+communication with the server.” No workflow step reported failure and the job
+log was unavailable while its parent run continued. This is an environment
+failure, not evidence of a lint defect. Preserve sibling running jobs and retry
+only the failed job once the parent run completes. Durable runner health and
+resource telemetry would make this attribution quicker and more precise.
+
+## 2026-09-26: assertion helper prototype semantics
+
+The repo-utils assertion phase exposed a test-helper compatibility boundary:
+`assertSome` uses Node deepStrictEqual, while existing Vitest toEqual checks
+compare decoded Schema.Class values to independent plain-object expectations.
+Package verification caught prototype-only mismatches for PersonObject,
+WorkspacesObject, BeepDriverMetadata, RepositoryObject and TSConfigReference.
+Keep the original complete comparisons wherever this boundary applies and record
+exceptions; do not manufacture class expectations or project away prototypes.
+A helper migration checklist that compares equality semantics before replacement
+would prevent this failed proof. No production defect was demonstrated.
+
+## 2026-09-26: focused Vitest selector needs result-count validation
+
+The repo-utils flake-control focused Node command exited zero while selecting no
+tests because its assumed composite names did not match the runner's filter
+semantics. The expected-name/count guard rejected that run; its report remains
+a diagnostic artifact with no passing credit. Select the actual existing test
+titles and validate all six expected full names in the resulting JSON before
+accepting focused proof. Process exit zero alone is insufficient evidence.
+
+## 2026-09-26: independent nested layers must retain independent memoization
+
+Repo-utils runner adoption changed a formerly standalone nested layer call into
+a callback-local it.layer call. The new Workspaces positive control caught reuse
+of its outer native FsUtils service against an inner memory fixture: the package
+proof had 231 passing cases and one introduced failure. Keep formerly standalone
+registrations on an unshadowed root runner alias, preserving independent memo
+maps and all original fixture/assertion semantics. No production defect was
+demonstrated. A runner migration checklist should distinguish lexical nesting
+from inherited layer composition before changing the registration receiver.
+
+## 2026-09-26: a second hosted runner communication loss
+
+PR #1285 coverage job 108491590575 failed with the GitHub annotation “The
+self-hosted runner lost communication with the server.” No workflow step reports
+failure, so this does not establish a coverage regression. Preserve other jobs
+and allow one job-specific retry after the parent run finishes. Together with
+PR #1287's earlier runner loss, this reinforces the need for retained runner
+health/resource telemetry; the available annotations do not identify the cause.
+
+## 2026-09-26: historical and current detector identity collision
+
+Repo-utils reconciliation found a repaired browser-map assertion and a retained
+bugs-object assertion sharing one line-based EV006 ID after source movement.
+Their occurrence hashes differ. Unique-ID validation caught this before tracked
+application. The current detector ID remains canonical; the historical occurrence
+and fix SHA are retained in `repo-utils-inventory-lineage.json`. A reconciliation
+preflight should check ID collisions across historical and current generations
+before assigning fixed credit or replacing current exceptions.
+
+## 2026-09-26: schema inventory line drift after runner imports
+
+The repo-utils cheap gates rejected a stale golden-test exception at line 14
+after the public runner import moved its anchor to line 15. Regeneration found
+the new anchor but demoted the reviewed exception to an advisory because identity
+includes the line. Preserve the existing golden-test rationale and all unrelated
+entries; carry only the generator-confirmed line change. The focused schema-first
+check then passed. A post-import inventory preflight should detect moved anchors
+and retain reviewed dispositions rather than resetting them on line drift.
+
 
 ## 2026-09-26: generated boundary parity after test-runner adoption
 
@@ -2520,3 +3018,866 @@ after test-runner devDependencies were added. Package audit and docgen had passe
 but they did not establish generated project-reference parity. Run tsconfig-sync
 and its check after adding runner dependencies, before early publication. The
 service-driver wave applied the generator to its six affected configs as well.
+
+## 2026-09-27: fleet readiness polling exhausted GraphQL quota
+
+Refreshing the active canonical Vitest PR fleet encountered `API rate limit
+already exceeded` during review and readiness queries. The GraphQL rateLimit
+query confirmed zero remaining requests; the REST rate-limit endpoint reported
+a different available bucket. Local proof and early pushes remained intact.
+Several detached monitors had also reached their lifetime or registration
+limits and required explicit resubmission. Preserve terminal receipts, avoid
+restarting live handles, and gate fresh review/merge decisions on recovered
+GraphQL evidence. A fleet-aware polling budget and a directly exposed next-poll
+control would prevent parallel monitors from exhausting shared account quota.
+
+## 2026-09-27: Option helper exposed prototype-sensitive expected fixtures
+
+The Pretext assertion phase replaced an Option-wrapped loose equality matcher
+with `assertSome`. Both Node and Bun rejected the line-range expectation because
+the subject returns `LineRange` instances while the original independent expected
+values were plain objects. Package audit also identified two introduced nested
+call diagnostics. Preserve every numeric expected operand, construct matching
+expected values through the existing public model, and use the pipeable predicate
+form. A matcher-semantics review must include schema-class prototypes, not only
+payload fields, before counting a constructor-shaped assertion as migrated.
+
+## Pretext native browser proof friction (2026-09-27)
+
+A scoped Vitest Chromium probe for the runtime profile fence failed during Vite
+dependency optimization: `Cannot destructure property exportsData`. Disabling
+discovery in the private probe exited 1 with zero cases, so it earned no browser
+proof credit. Configured Node/Bun package proof and a controlled Chromium
+user-agent counterexample pass. A qualified browser unit-test harness would avoid
+this setup detour without changing the package's native canvas subject.
+
+## Early publication retry after GraphQL exhaustion (2026-09-27)
+
+Pretext's early publisher pushed its reviewed head, then `gh pr create` failed
+with `API rate limit already exceeded`. After quota recovery, retrying the same
+canonical early-publish command refused because no local commit remained ahead
+of the publish remote. No full proof had started. A subsequent required merge
+from main supplied a meaningful new commit and publication created PR #1303.
+A retry path that recognizes an already-pushed reviewed head with no PR would
+avoid coupling PR-creation recovery to another branch change. Preserve the
+normal proof and provenance gates; this receipt does not authorize bypassing them.
+
+## 2026-09-27 — unused helper dependency after runner migration
+
+Pretext PR #1303 hosted Knip job 108563381090 rejected the manifest because
+`@beep/test-utils` became unused after the test migration. Package audit/docgen
+did not flag this repo-level dependency condition. The repair removes the unused
+dev dependency, regenerates lockfile and TypeScript references, and reviews only
+the removed cache dependency edges. A runner-phase check for dependencies made
+unused by removed helper imports would have prevented the delayed CI feedback.
+
+## 2026-09-27: native subprocess signal absence differs across runners
+
+The lint-rules observability Node run failed with `Schema validation failed`
+when the new process-error guard treated absent signals as undefined-only.
+`vitest.setup.ts` forwards Node's `result.signal`, which is null on normal
+termination; Bun declares its corresponding field optional. Normalize nullish
+signal absence at the harness boundary before validating the error payload.
+This preserved the native subprocess subject and made all 78 cases pass on both
+runtimes. Running both runtimes before publishing caught the mismatch that the
+configured Bun-only package audit did not.
+
+## Consolidation: strict ledger decoding finds inherited malformed rows
+
+The root detector ratchet passed while aggregate strict ledger decoding found
+two inherited rows rejected by the shared schema: OBS evidence exceeded200
+characters, and a CLI flake row used a descriptive noncanonical rule ID.
+Both files matched main before repair. Decode every row with excess properties
+rejected before committing ledger updates; root ratchet success alone does not
+validate all human inventory families. Stable finding IDs and fix evidence are
+preserved by the narrow metadata corrections.
+
+## M365 assertion helper composition
+
+Replacing assert.isTrue(O.isSome(first)) with the native assertTrue helper
+exposed TS377050 missedPipeableOpportunity during package test typechecking.
+Use pipe(first, O.isSome, assertTrue), retaining the original Boolean observation
+and subsequent payload branch. The focused package audit catches this policy
+diagnostic even when runtime assertions are equivalent.
+
+## Consolidation lockfile protocol normalization
+
+Adding the next three runner dependencies caused Bun to normalize the existing
+MCP-kit lock entry from workspace:* to workspace:^. Its manifest already used
+workspace:^, and no version or resolved package changed. Preserve the manifest
+policy in the generated lockfile and check lock entries after workspace protocol
+repairs; a frozen install had not exposed this metadata discrepancy.
+
+## Timing receipt hash-map false positives
+
+The commit secret scan interpreted SHA-256 source hashes under OnePassword
+file-path keys as generic API keys. Each value was verified against the local
+source bytes. Encode source hashes as explicit file/sha256 records, preserving
+the values and avoiding ambiguous credential-like field names. No secret-scan
+rule, allowlist or bypass was changed.
+
+## 2026-09-27: Branded Option payload in native assertion migration
+
+Workspace Domain package verification rejected `assertSome(option, 12)` with
+TS2345 because the option carries a branded TurnId. The original oracle used
+the numeric literal 12. Explicitly select the safe numeric supertype with
+`assertSome<number>` to preserve that exact expected value without a cast or
+new decoding operation. Review branded operands before mechanical migrations.
+
+## 2026-09-27: Vitest root flag does not select the package property configuration
+
+Launching workspace property proof from the repository root with `--root`
+returned exit zero but `No test files found`. That observation earns no proof.
+Run from each package directory instead and inspect passed-test counts, not
+only exit status. The shared property filter depends on package context.
+
+## 2026-09-27: Assertion migration left an unused import
+
+The architecture-lab UI assertion phase removed its last Option use but retained
+the namespace import. Package verification and the commit hook rejected it with
+noUnusedImports. Remove the unused import, then repeat the affected package proof
+before committing the phase. Check terminal results before writing pass receipts.
+
+## 2026-09-27: Recording fixture callbacks require Effect.fn
+
+Architecture use-case verification rejected a recording create callback with
+TS377047 (effectFnOpportunity). Name both recording create/get effects with
+Effect.fn and explicit schema-derived argument types. Run service-shaped test
+fixtures through the same Effect rules as production methods.
+
+
+### Server property boundary and hosted SQL isolation (2026-09-27)
+
+Migrating scanChunk into an Effect property exposed TS377026 at JSON.stringify.
+The diagnostic recommends a removed UnknownFromJsonString export; installed rc.117
+instead provides fromJsonString(Unknown). Use that codec without narrowing generated block
+shapes or changing exact slice/order equality. Package verification caught the
+boundary diagnostic before publication; migration review should check raw JSON
+calls entering Effect callbacks.
+
+PR #1307 head aa7c7a1447, Heavy / Test Integration job 108590652002 failed both
+Drizzle integration cases with neutral_notes missing/already existing. The
+consolidated change adds a second fresh layer under a concurrent suite. The
+external PostgreSQL lane must be reproduced; fresh Effect layers alone do not
+prove physical session/schema isolation. Preserve both transaction tests and
+repair ownership after attribution. Local in-process success did not exercise
+this external backend. A baseline/fix proof on that backend would have caught it.
+
+
+### Vitest mock hoisting import boundary (2026-09-27)
+
+Agents Server runner verification and Node timing failed before collecting all
+six kernel tests: "problems in resolving the mocks API". Re-exporting vi from
+@effect/vitest prevents the installed Vitest hoist transform from resolving it.
+Keep only vi imported directly from vitest; beforeEach/describe/expect stay on
+@effect/vitest and registration stays on the instrumented runner. No globals
+configuration change. Ledger the proven import-boundary exception; do not count
+the partial 21-test timing as a successful baseline or after result.
+
+
+### Domain inventory drift and precise runner migration (2026-09-27)
+
+Scoped reconciliation in LawPracticeDomain found four current Result.succeed
+assertions absent from the older saved package detector rows. Preserve the
+existing active-client/founder/patent-application/pre-filing expected literals
+with assertSuccess, then merge the original root rows into the package ledger.
+Do not equate exhausting an old per-package list with exhausting its current
+owned-file findings. The initial property formatter also reported one unused
+Arbitrary import in Contradiction after replacing its direct runner; remove it
+before claiming package proof. Both were caught before publication.
+
+Installing the two runner dependencies normalized the already configured
+@beep/provenance runner workspace range from * to ^ in the lockfile; its manifest
+already uses ^. No provenance source or qualification change is included.
+
+
+### Skill Contract assertion export boundary (2026-09-27)
+
+The package audit caught TS2724 after importing assertTrue from @effect/vitest.
+The installed adapter exports the helper from @effect/vitest/utils. Correcting
+the explicit import restores the full package audit and docgen. Consult the
+installed utility barrel before grouping new assertion imports.
+
+
+### Property proof environment typo (2026-09-27)
+
+The Skill Contract elevated property command used BEEP_FC_RUNS=400, while
+fcRuns reads BEEP_FC_NUM_RUNS. That pass did not establish the claimed floor.
+Rerunning with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708 passes all
+47 tests. A direct helper probe confirms runs 400 and seed 20260708. Recent
+Law Practice (50), Epistemic (64), Agents Server (4) and architecture proof (2)
+selected properties also pass fresh commands with the explicit correct variable.
+Record exact environment maps with proof receipts to prevent ambiguous claims.
+
+
+### Native fixture timing snapshot overlap (2026-09-27)
+
+Repo-docgen timing overlapped its package audit. The tests passed, but the
+source hash snapshot included the audit's temporary copied fixture source,
+which correctly disappeared before the second snapshot. Exclude that timing
+observation and rerun after the audit. Exact-source timing should serialize
+against tests that create temporary sources under the audited tree.
+
+
+### Parser test layer boundary (2026-09-27)
+
+Replacing private Layer.build helpers with Effect.provide(layer) triggered
+TS377032 strictEffectProvide at eight parser call sites. The correct boundary
+is suite it.layer(Path.layer), with pure per-case Source/configuration values
+in Context. This removes manual builders without suppressing diagnostics or
+sharing source nodes between tests. Full package audit/docgen pass afterward.
+
+
+### NLP graph witness uses public topology (2026-09-27)
+
+The cost-scaling test draft referenced getLeafNodes from the public graph module,
+but that helper is private to the executor. Package typecheck caught TS2339.
+Use public getChildren to prove two terminal children and retain the exact
+numeric time/token relation; no production export is needed. The corrected
+package audit and docgen pass.
+
+## OpenClaw fixture service keys
+
+The first recorder isolation package check rejected two new test service keys
+with TS377049. The compiler supplies the exact deterministic file-qualified
+keys; using those keys repairs this introduced test-only error. Following the
+existing integration fixture key pattern would have prevented this iteration.
+
+OpenClaw property preparation also caught a stale Option.fromNullable API
+reference (TS2339). The fixture already needs a head Option, so Array.head
+provides the exact operation directly. Using the live helper rather than a
+remembered nullable conversion avoids the unnecessary intermediate value.
+
+## Langextract native assertion typing
+
+The assertion migration exposed an optional array access and an unbranded zero
+that broad matchers accepted. Use the existing Array.head/Option.getOrThrow
+path to require the candidate, and NonNegativeInt.make(0) for the same expected
+number. Include the required imports in the same edit; missing imports caused
+an avoidable second typecheck failure. All original cardinality checks remain.
+
+Langextract native property conversion exposed nested Effect.gen yields
+(TS377083) where old runSync calls had hidden runtime boundaries. Inline the
+array/envelope encode-parse steps in the parent generator, preserving their
+order and separate equivalence checks.
+
+- File Processing platform registration: `quality package-verify @beep/file-processing` rejected a test-only `node:path` separator import with `TS377057 effect(nodeBuiltinImport)`. Use the runtime platform at registration and assert the injected Path separator inside the POSIX body. A documented native-test platform registration example would prevent this detour.
+
+- Doc Text property edit: a private ts-morph CallExpression replacement included a trailing statement semicolon and failed with `children ... expected to have the same count`. No source was saved. Keep replacement text at expression granularity and check the mutation exit before starting validation.
+
+- FFmpeg native prerequisite reporting: full package check caught `TS377114 mapSomeToAsSome` and `TS377117 preferSucceedSomeOrNone`. Replaced the generic Option wrappers with `Effect.asSome` and `Effect.succeedNone`; keep these current RC helper idioms in test examples as well as production guidance. A temporary context-skip probe also needed an absolute cleanup path because its runner used the package cwd; the probe was removed before final validation.
+
+### FFmpeg fixture complexity caught only by full proof (2026-09-27)
+
+The package audit passed, but the full publish at `9cea1eee92` failed both
+Fallow health and audit on the scripted capture spawner (cognitive 11). The
+new first-frame exit witness added branches to an existing dispatch callback.
+Use an Option match for the optional output target, keeping output writes and
+the successful-exit Deferred together. Run both root Fallow gates for this
+fixture repair; do not weaken the complexity policy or the staging witness.
+
+### Tika timing export must distinguish skips (2026-09-27)
+
+The private timing exporter initially accepted `pending` but Vitest5 emits
+`skipped` for dynamic context skips while counting them in `numPendingTests`.
+The exporter stopped before publishing the after summary. Accept the explicit
+status, omit skipped cases from slowest-executed rankings, and retain separate
+passed/skipped counts and the historical no-op caveat in timing context.
+
+### QA Capture cleanup-control temp root (2026-09-27)
+
+The private failure-control harness assumed `/tmp`, but the workstation routes
+native temp directories through its configured cache directory. All nine scoped
+roots were removed correctly; only the harness parent-path assertion failed.
+Preserve that report and use the runtime temp-directory setting when validating
+ownership before cleaning the unscoped control's exact recorded roots.
+
+## QA Capture continuation: fixture and verification harness friction
+
+- While strengthening capture assertions, a private mutation harness traversed
+  stale ts-morph nodes after replacing a parent expression. Evidence: the
+  submitted-sequence control raised `node that was removed or forgotten` before
+  running tests. Selecting registrations before mutation and applying edits in
+  reverse order completed the controls; the harness restored exact source bytes.
+- A preservation harness tokenized whole files containing template literals and
+  falsely reported a missing unchanged assertion. Comparing parsed call-expression
+  tokens instead verified all 117 originals. Use AST-selected fragments for these
+  receipts rather than a bare whole-file scanner without template rescanning.
+- Removed the unused Effect import left by the planner property migration after
+  package verification reported TS6133. The corrected full package proof passed.
+- The hosted Heavy / Lint Policy job for PR #1307 reported eight inline schema
+  compilations across DuckDB, OpenClaw and lint-rules tests. All eight are additions
+  relative to main. Package audits alone did not exercise the root oxlint policy;
+  include the policy check before publishing future test batches.
+
+- During the hosted lint repair's line remap, two current detector IDs were
+  already owned by the historical resource ledger. A detector-local ID index
+  added duplicate entries; strict global validation rejected them before commit.
+  Preserve the original family ownership and consult the global ledger ID index
+  when joining fresh detector rows. The corrected ledger passes uniqueness.
+
+## Lexical property adoption: test-evidence discovery
+
+- The canonical `it.effect.prop` migration preserved test titles, but the real
+  conformance-ledger validation reported two titles as undeclared. The scanner
+  admitted only one method suffix. A focused fixture now includes plain and
+  effect properties through both `it` and `test`; the old scanner fails exactly
+  that registration. Supporting the additional `.prop` suffix restores the real
+  artifact check. This is test-evidence tooling support, not an application-code
+  or ledger-ID change.
+- The private generator codemod initially found zero yield nodes in non-generator
+  callbacks: the parser treats the temporary syntax outside a generator context
+  differently. A second explicit wrapper pass repaired those callbacks before
+  verification. Assertion, fixture and native editor-call conservation checks
+  plus the full package proof guard the transformation.
+- Native pure-property failures print shrunk inputs and run/shrink counts without
+  necessarily printing the seed. A control harness initially overrequired the
+  word `seed` after the expected assertion failed. Receipts now preserve the
+  actual diagnostic and explicit `BEEP_FC_SEED=20260708` replay environment;
+  they do not claim the failure text contains a seed when it does not.
+
+### Libpff adapter and control-harness diagnostics
+
+The saved native-layer migration initially passed generator functions directly
+into `it.effect`; package verification rejected them with TS2345. Keeping the
+existing `Effect.fnUntraced` wrapper fixes the adapter shape. A preservation
+check confirms the original assertions and fixtures survive that correction.
+
+The property control harness expected the literal word `counterexample`, while
+this native effect adapter reports `Shrunk input:` and `Replay:`. The skip
+control likewise expected `pending`, while dynamic `context.skip` reports
+`skipped`. Both harness assumptions were corrected against the actual JSON
+reports; failing mutations still fail their intended registrations and the
+original source bytes are restored. A shared diagnostic normalizer covering
+these reporter variants would prevent repeated harness-only failures.
+
+### Pandoc migration receipts and inherited JSON boundary
+
+Moving the arbitrary-future-JSON law into an Effect generator exposed TS377026
+on its existing `JSON.stringify` call. The current public compact JSON schema
+codec supplies the equivalent wire encoding; the input arbitrary and decoded
+roundtrip equality remain unchanged. The first package proof reports the policy
+error, and the corrected full proof passes.
+
+The codemod found nine generic throw/rejection expectations, including two in the
+mapping suite, while its assertion expected seven codec-only cases. It had
+already saved source before writing receipts. Replaying the transformation from
+the committed source in an in-memory project recovered all nine receipts without
+reapplying edits. Future transforms should validate complete input counts and
+persist their receipt before any source write. All nine before/after controls
+reject unexpected successful operations.
+
+The strict-projection fault fixture must import `vi` directly from `vitest`.
+Moving it to the Effect re-export typechecks but Vitest's hoisted `vi.mock`
+transform rejects the module with “problems in resolving the mocks API”. The
+original direct import is restored as a reviewed exception; the public Effect
+runner still owns registration. Detector guidance should distinguish ordinary
+`vi.spyOn` calls from hoisted `vi.mock` bindings before suggesting this rewrite.
+
+### Wink native layer migration exposes redundant generators
+
+Removing test-local provider wrappers exposed two existing nested `Effect.gen`
+blocks in the bundle and toolkit-result cases. Full package verification rejected
+both with `TS377083` (`nestedEffectGenYield`). Inlining their bodies preserves the
+same acquired services, stream drain, result binding and assertions. A resource
+migration preflight should flag generators whose only boundary was the provider
+being removed; this avoids a preventable full audit round trip.
+
+The Wink conservation receipt initially counted both a complete assertion and
+its nested `expect(...)` call in the fixed-seed smoke test. Filtering by the call
+expression before matching assertion syntax corrects the original count from
+107 to 106. Historical before/after source comparisons still preserve every
+assertion. Future receipts should identify matcher calls structurally instead
+of treating expression-text matches alone as distinct assertions.
+
+### NLP MCP recording-client proof needs construction-time injection
+
+While strengthening the saved SSRF test, inspection of StreamingHandlers showed
+that handlers capture their HTTP client when their layer is built. A client
+provided only around an already constructed handler call would miss the subject.
+A native recording-client fixture now constructs the actual handler layer with
+that dependency. Its public-host positive control traverses the toolkit and
+increments the counter without opening a socket.
+
+The initial test-local Layer provision failed the repository's
+strictEffectProvide diagnostic. Moving construction to native layer registration
+preserves the service boundary. The direct loader can also return PlatformError;
+its failure must be narrowed before encoding DatasetLoadError. Decode the type
+side with S.toType here: applying the wire decoder to an already-decoded error
+misinterprets its Option-valued cause and fails with "Expected JSON value".
+A test-repair checklist distinguishing captured service contexts and decoded
+values from wire inputs would have prevented these audit round trips.
+
+### Branded Option expectations need an explicit comparison domain
+
+Law Practice Tables assertion migration initially failed package verification:
+`assertSome(returned.reference.number, "7654321")` inferred the branded
+PatentNumber payload, so the literal expected string failed TS2345. The original
+oracle compared this same textual value. An explicit `assertSome<string>` keeps
+that comparison and the exact payload without a cast or fabricated branded
+value. The restored package audit and docgen pass. Including branded payloads in
+the assertion migration checklist would have prevented this failed proof cycle.
+
+### Package proof omitted the manifest-order gate
+
+PR #1307 Repo Sanity on the NLP MCP batch failed `repo-sanity:sherif` because
+Wink and NLP MCP development dependencies were not alphabetized after adding the
+runner. Local reproduction found exactly those two manifests. Sorting only their
+development-dependency keys preserves every dependency value and the generated
+scripts; Sherif now passes all 143 packages. Add this root check to the batch
+publication sequence: individual package audit/docgen does not run it.
+
+### Resource-sharing controls need a defined state transition order
+
+The Workspace Server negative control combined two originally independent vault
+fixtures. Under concurrent scheduling it passed without establishing that the
+configured state existed before the missing-root case. Making only the control
+sequential reproduces the unwanted shared state and fails the original
+post-failure absence assertion. Production tests remain independently layered;
+all control edits were restored. Future isolation controls should define the
+prior state explicitly instead of relying on registration order.
+
+### Saved assertion counts lagged the owned live file
+
+The Epistemic Tables migration guard expected 31 saved assertion candidates but
+found 33 equivalent shapes in the current files. Two newer typed-converter
+failure checks had appeared in EpistemicTables.test.ts. Reconstructing receipts
+from the saved source head confirmed both operands were conserved, along with
+all 272 original assertion expressions and labeled tampering diagnostics. The
+batch now records both the saved count and the live count. A count preflight
+before applying a mechanical transform would have avoided the guard failure;
+this does not require restarting the whole-repository human inventory.
+
+### Line-sensitive schema inventory drift after runner migration
+
+The Epistemic Tables early-push proof failed `lint:schema-first` because the
+existing ExecutionRecordTables exception moved from line 52 to 53. The inventory
+writer treated the new position as a fresh advisory and also reordered unrelated
+entries. The repair preserves every existing status and rationale and updates
+only the owned line; the full schema-first check passes. Run this root gate
+before batch publication, since package verification does not cover this drift.
+
+### Preserve semantic failure evidence without comparing trace annotations
+
+Dock's capture witness initially compared the whole Exit against a newly built
+failure Cause. The real fixture carries Effect tracing annotations, so deep
+Cause equality rejected the same typed error value. Decode the extracted error
+against its runtime type schema and assert its operation/message instead. This
+retains failure-completion evidence while avoiding incidental stack metadata.
+For timeout controls, pair the JSON reporter with the default reporter: the
+JSON-only failure contained a generic Error stack but omitted the timeout text.
+
+### Root lint must settle before final timing capture
+
+Dock package verification passed, but root Oxlint rejected the inline runtime
+error decoder with `no-inline-schema-compile`. Hoisting it preserved behavior and
+cleared the rule. The earlier timing capture had already completed, so its
+receipts were retained and final measurements were captured under a new phase
+name after the fix. Await every root-check result before committing and timing
+final source; package audit alone does not prove root custom rules.
+
+### Cleanup probes must distinguish test mounts from internal Atom lifetimes
+
+The Agents Client lifecycle probe initially treated every intercepted registry
+mount as test-owned and required zero immediately before disposal. Actual Atom
+runtime mounts can survive until registry disposal, so that oracle overreached.
+The corrected probe checks zero active mounts and disposed registry after scope
+completion, retaining pre-disposal counts as diagnostics. The assertion-failure
+control distinguishes the repaired scope from the original cleanup-after-asserts
+path. File receipts were needed because this test environment suppresses console
+output; AST probes should insert after declaration spans rather than comment-
+sensitive statement indices. All temporary source instrumentation is restored.
+
+### Audit every nested scenario boundary during scoped resource migration
+
+The first Agents Client pass scoped two named helpers but missed four nested
+scenario helpers whose registries previously ended before return. Ordinary tests
+and post-suite cleanup probes passed because the outer test eventually disposed
+them. An AST ownership audit found all six helpers; return-boundary probes now
+pass and reject the intermediate version in four tests. Preserve and test the
+shortest original resource lifetime, not just eventual suite cleanup.
+
+## Agents Client storage capability during flake repair
+
+The exact-key restoration edit initially assumed `globalThis.localStorage`
+existed. `quality package-verify @beep/agents-client` reproduced a TypeError
+at the acquisition read under Bun, before the original defect assertions ran.
+The root setup only supplies its shim for the unsupported Node getter case;
+absence is legitimate in this test environment. Capture the storage capability
+once and restore the exact key only when it exists. Validate both capability
+states and preserve actual draft atom behavior; never clear all storage.
+An explicit runtime capability note in the saved inventory would have prevented
+the assumption. This is an introduced test repair, not a product regression.
+
+The first delayed-RPC control delayed the shared fixture decoder, including
+its call before atom mounting. That also changed registry setup lifetime and
+produced an HTTP transport error rather than isolating RPC completion. Moving
+the temporary delay inside the two actual RPC handlers leaves setup intact:
+all three new tests pass and all three old fixed-yield tests fail. Keep mutation
+controls at the behavior boundary they are intended to measure.
+
+## Agents Client release-metadata gate mismatch
+
+The consolidated publishing proof rejected Agents Client because its new direct
+runner dependency lacked an in-range changeset. The earlier generic
+`bunx changeset status --since=origin/main` passed; it is weaker than the required
+`bun run beep quality changeset-status --since origin/main`. Add the package
+changeset and use the exact repository gate for subsequent package closeouts.
+This was introduced by the runner dependency, not an environment failure.
+
+## Dock React bindings after scoped disposal
+
+The first resource package proof identified three TS6133 bindings whose only
+use had been a manual disposal tail. Preserve their `yield* mount(true)` calls
+and remove only the unused bindings. The next full package proof passes.
+A resource rewrite should inspect references when removing disposal tails,
+including multi-graph tests that need an intermediate scope boundary.
+
+## Dock React minimum contract drift in a saved test title
+
+The saved property proposal and existing title describe a 32 px floor, but
+`FloatingPane.tsx` uses 240 px width and 160 px height. Preserve the legitimate
+proposal to test below-minimum shrink, verify the current production contract,
+and update the stale title without changing production minima. Independent
+width/height clamp-removal controls fail the new witness and pass the old test.
+Binding inventory prose to the implementation constants would make this drift
+visible before remediation.
+
+## 2026-09-27: Invalid comparator mutation was not oracle evidence
+
+The AI metrics snapshot-order negative control initially called an unavailable
+`Order.reverse` helper in the pinned Effect release. Both revised and original
+tests failed with `Order.reverse is not a function`, so neither result counted
+as sensitivity evidence. Production and test files were restored by the
+control's finalizer. The control now reverses the existing comparator arguments;
+its receipts have a separate version. Mutation harnesses should validate their
+fault seam against the pinned API before interpreting a red test.
+
+A subsequent lease-payload control initially reused the fixture's existing
+all-f hash, so it changed nothing and the revised test correctly passed. That
+run is not sensitivity evidence. The corrected mutation uses a distinct hash;
+control setup should assert that replacement values differ from the fixture.
+
+## 2026-09-27: Wrapper packet category disagreed with the failed inner lane
+
+The consolidated AI metrics publish packet categorized its cheap-gates failure
+as schema-first policy. The same job's detailed lane log showed schema-first
+passing and `lint:effect-vitest` failing on 78 changed finding identities. A
+focused schema-first rerun was unnecessary attribution work. Operator summaries
+should preserve the actual failed inner lane from the verdict instead of an
+older or broad wrapper category. The remaining AI metrics findings still need
+review and ledger reconciliation; this discrepancy is not a reason to waive them.
+
+### Infra baseline: stale SDK transform after dependency preparation
+
+- Task: establish the unchanged infrastructure Node/Vitest baseline.
+- Evidence: 92 cases passed and the CiFleetController wiring case failed with
+  `Cannot find module './provider'`. The existing `infra:prepare-gha-runners`
+  command built the local SDK successfully, and plain Node loaded its Provider,
+  but the cached Vitest case still failed. Disabling only the filesystem module
+  cache passed all11 cases in that file. The cached CiFleetController transform
+  retained the pre-build `@pulumi/gharunners/index.ts` target; that single entry
+  was archived with a hash receipt before refreshing the normal cached baseline.
+- Prevention: prepare local generated SDKs before first test transform, or include
+  generated dependency entrypoint changes in resolution-cache invalidation.
+  This is environment attribution; no production source or SDK stub was changed.
+
+The infrastructure runner dependency install reproduced the preparation boundary:
+`bun install --ignore-scripts` replaced the local file dependency without its
+compiled bin output. Package typechecking/docgen then entered generated CommonJS
+TypeScript and reported TS1295/TS1205. Running the existing
+`infra:prepare-gha-runners` command after installation restores the intended SDK
+entrypoint. Dependency-changing proof recipes should include this preparation
+before package verification; no generated SDK source was edited.
+
+### UI timezone oracle portability
+
+- Work: verify the new UI timezone property under both configured runtimes.
+- Evidence: the first Node after-run failed with `Asia/Calcutta` versus
+  `Asia/Kolkata`; Bun passed. Upstream Effect canonicalizes named zones through
+  Intl resolvedOptions.
+- Prevention: model canonical timezone identity in generated assertions and
+  run Node plus Bun before crediting a property batch. The five input zones and
+  instant checks remain; no domain was filtered to silence the counterexample.
+
+### Workbench cleanup observation ordering
+
+- Work: add a private negative control proving test-owned DOM cleanup after an
+  injected assertion failure.
+- Evidence: a trailing DOM-empty assertion raced concurrent tests under the
+  shared runner configuration; the attempted `describe.sequential` convenience
+  API is absent in installed Vitest 5.0.1.
+- Prevention: inspect the installed CLI contract and use the supported
+  `--sequence.concurrent=false` only for the ordered private cleanup experiment.
+  The shipped tests and normal package verification retain shared concurrency.
+  Neither failed experiment counts as a successful cleanup proof.
+
+### OIP provider snapshots and mock hoisting
+
+- Work: migrate the OIP route/page tests to the canonical runner while excluding
+  ambient HubSpot and Sanity configuration.
+- Evidence: per-test environment stubs still allowed a provider attempt under a
+  synthetic hostile environment because Effect's default provider had already
+  captured its environment. Explicit Vitest worker env settings pass the paired
+  control; removing them fails the route and page no-request assertions.
+- Prevention: configure absence before application modules load, and assert at
+  the public fetch boundary that the no-provider route/page cases make no call.
+  All controls use synthetic values with fetch rejected or mocked.
+- Related evidence: routing `vi` through the Effect Vitest export-star failed
+  module loading with `problems in resolving the mocks API`. Preserve the direct
+  `vitest` import for `vi.mock` hoisting, while the three test files register
+  through the instrumented runner. Do not change globals or the root runner to
+  hide this compatibility requirement.
+
+- OIP full package proof exposed a cached FetchHttpClient.Fetch default after
+  filtered controls passed: the provider-rejection spy saw zero calls. Supplying
+  each native test's spy through the public Fetch reference prevents cross-test
+  reuse. A full-file run alongside filtered mutation controls would surface this
+  interaction earlier; the failed audit remains a diagnostic receipt.
+
+- Editor projection strengthening initially used the pre-RC Option contract for
+  Array.filterMap and the wrong slash surface token. Full package checks exposed
+  both; replace with explicit filter/map over the declared slash-menu surface.
+  Parse every focused JSON outcome before reporting it green, and establish the
+  positive oracle before crediting mutation controls. A separate private disposal
+  probe also required preserving its method receiver with call(registry).
+
+## RDF focused property configuration omitted example boundaries
+
+While validating the PROV timestamp schema repair, a focused Vitest JSON report
+returned success with zero tests. The shared config selects only property-bearing
+files when BEEP_FC_NUM_RUNS is set, so the example-only ProvO file was excluded.
+Running it without the deep-sweep variable executed all eight cases successfully.
+The generated core law was separately verified with the 400-run floor. A focused
+proof wrapper that rejects zero executed tests would prevent accidental credit.
+
+## N3 cleanup probe needed a suite-level witness
+
+While checking spy cleanup after an injected early failure, the first probe used
+an afterEach assertion attached to an expected-failure test. Both implementations
+passed, so that probe was excluded from acceptance. Moving the restoration check
+to afterAll distinguished the original leak (suite exit 1) from scoped cleanup
+(exit 0). Cleanup probes should put their witness outside expected-failure
+inversion and inspect suite-level errors as well as individual test counts.
+
+## Range changeset checks require committed package changes
+
+The Oxigraph pre-commit range check passed, but the next package's check reported
+Oxigraph missing an in-range changeset. An uncommitted new changeset did not
+satisfy the range check either. A committed changeset now names both Oxigraph and
+SHACL. Run the range-based gate after committing each source batch and its
+changeset; a dirty-worktree preflight alone does not prove committed coverage.
+
+## Ontology Option payload needs its original comparison semantics
+
+The Option helper conversion for admitted alignment arrays failed because
+assertSome uses strict deep equality: the actual ConceptAlignment instance and
+original plain-object expected value have different prototypes. The original
+whole-value toEqual assertion is retained with a scoped detector exception.
+Helper selection must account for nested schema instances, not only Option shape.
+Two optional Boolean assertions also require strictEqual so undefined remains a
+failure without narrowing the assertion input type prematurely.
+
+## Codec regressions can cross the schema-property lint threshold
+
+The consolidated early publisher stopped at `lint:schema-first` after adding
+PROV timestamp boundary regressions. `ProvO.test.ts` now had three codec
+assertions without a local schema-derived property, despite adjacent RDF
+property coverage and a passing package audit. A native source-derived timestamp
+round-trip property closes the gap. Run the root schema-first gate when adding
+codec regressions; package audit alone does not enforce this file-level policy.
+
+## Detector receipts must follow final formatting
+
+The ontology-use-cases scanner ran before the runner-import formatter settled.
+Formatting moved the retained NodeServices exception from line 19 to line 21;
+the root ratchet then reported one new finding despite the same reviewed native
+loader boundary. A final scan refreshed only that owned exception and preserved
+its history. Wait for formatting and dependency synchronization to finish before
+capturing detector identities for reconciliation.
+
+## Untouched ontology browser suite fails in dependency optimization
+
+Before editing ontology-client, its configured browser command failed before
+running any test. Vite raised `exportsData` destructuring from a missing
+`depForEntryFileName[chunk.fileName]` entry. Archiving only this package's ignored
+Vite cache and rerunning reproduced it; an explicit Node invocation also failed.
+The passing Node/Bun suites do not prove browser behavior. Capture a browser
+baseline before migration and retain this distinct optimizer failure while
+investigating a bounded execution fix.
+
+The isolated optimizer diagnostic identified the collision: inputs
+`effect_schema` and `effect_Schema` produced an unmapped `effect_Schema2.js`.
+Excluding only `effect/schema` from this package's browser prebundling lets both
+original browser tests pass against the real renderers. The package-local config
+keeps both modules and avoids changing Vite or the application implementation.
+
+### Ontology client browser assertions and renderer ownership
+
+- Activity: close the saved ontology-client resource and assertion inventory.
+- Evidence: importing `@effect/vitest/utils` in the Chromium suite fails with
+  `deepStrictEqual is not a function` from Vite's externalized `node:assert`.
+  Keep the seven original browser assertions as explicit platform exceptions;
+  introducing a Node polyfill would change this test's environment.
+- Evidence: clearing the container and then disposing the registry does not
+  establish removal of every canvas. Moving that wait across registry disposal
+  still times out. The test now observes the actual renderer factories and
+  releases any handle not already destroyed before removing its DOM container.
+  The same call-through observers expose real selection statistics and update
+  delivery, replacing two unacknowledged sleeps. Both real browser cases pass;
+  dropped selection and projection controls pass the old checks and fail the new.
+- Prevention: provide a public renderer lifetime acknowledgement for integration
+  fixtures, and document the Node-only assertion-helper boundary. No renderer or
+  atom production implementation is changed by this repair.
+
+### Db-admin schema-first exception anchors after import changes
+
+- Activity: preserve existing migration regression exceptions while adopting the
+  shared test runner and assertion helpers.
+- Evidence: root schema-first reports three missing/stale pairs at the same
+  symbols; only their line numbers moved by one or two lines. The schema codec
+  counts and established exception reasons are unchanged.
+- Disposition: re-anchor only those three owned entries, preserving every other
+  field and unrelated entry. No new exception or baseline-wide rewrite is made.
+- Prevention: stable symbol identities would avoid re-adjudicating unchanged
+  exceptions after import-only line movement.
+
+
+### Schema advisory identity drift during law-practice test migration
+
+Adding runner and assertion imports moved the existing CandorPolicy schema-codec
+advisory from line 39 to 41. `bun run lint:schema-first` reported one missing and
+one stale entry. The canonical `--write` refreshed the location but also replaced
+the prior justified exception with an advisory and reordered unrelated entries.
+The final edit preserves every original entry and reason, changing only the owned
+line location. Stable advisory identities independent of line offsets, with
+exception preservation during regeneration, would prevent this repair.
+
+### Full detector rescan after a package-local resource refinement
+
+While finishing Semantica, `beep lint effect-vitest --rows <output>` spent
+more than three minutes in its full-repository scan before the final resource
+review identified two unnecessary platform layers and two private wrappers.
+The preliminary scan was terminated and is not accepted as proof; the final
+source receives a fresh full scan. The command exposes no package selection.
+A supported package-local diagnostic mode, with full scanning retained for the
+ratchet acceptance gate, would make iterative remediation cheaper.
+
+Follow-up diagnosis: the slowdown was a detector defect exposed by the nested
+cache clock test, not ordinary full-scan cost. The preceding package scan took
+11.2 seconds. A per-file diagnostic isolated `ProviderCache.test.ts`; the old
+recursion guard compared ts-morph nodes with `A.contains`, which invokes Effect
+equality. Replacing that guard with explicit node identity scanned the same file
+in about 73 milliseconds and the entire repository in 8.8 seconds. Preserve AST
+identity when tracking visited syntax graph nodes. The simple nested-generator
+regression retains classification coverage; the full cache fixture, rather than
+that small example, reproduces the severe performance failure.
+
+### Pacer batch cancellation cleanup
+
+The saved resource lens identified a possible report lifetime gap. A controlled
+mock-HTTP witness reached the first status request after report creation, then
+interrupted the download. The original implementation recorded no deletion;
+report 1078 remained allocated. `Effect.result` followed by cleanup misses both
+interruption and defects. Three regression cases reproduce the omission against
+the original source and pass with `Effect.acquireUseRelease`, including a failed
+best-effort deletion. The operator approved this narrow production repair in
+PR #1307. Resource cleanup tests should cover cancellation and defects alongside
+success and typed failures, with acquisition barriers instead of elapsed sleeps.
+
+### Unicode and envelope accounting in response budgets
+
+The USPTO saved inventory's byte-budget concern reproduced with 200 valid
+multibyte document identifiers: an 8,000-byte budget admitted a 13,779-byte inline
+response. The shared estimator counted UTF-16 string units, and the projector
+omitted its response wrapper. An ASCII boundary independently admitted 5,779
+bytes under a 5,733-byte limit. Independent encoded-byte oracles and exact
+wrapper-boundary tests would have prevented both gaps. The standing production
+repair authorization covers the fix; details and verification are recorded in
+`uspto-byte-budget-repair.md`.
+
+## 2026-09-27 — Box SDK code generation fails on a non-cancellable method
+
+The saved Box package proof regenerated against the installed SDK and failed
+`tsgo -p tsconfig.check.json` with TS6133 on `getCachedUploadPart`: the generated
+callback declared an unused `signal`. Its four SDK parameters contain neither
+`cancellationToken` nor `optionalsInput`. Generation itself exited successfully.
+The original two generated files were restored after the reproduction.
+The renderer now derives callback bindings from the SDK parameters; methods
+that support cancellation retain signal forwarding. A generation-plus-typecheck
+gate catches this defect; SDK upgrade verification should run that gate before
+landing a version change. This repair follows the standing production authority.
+
+## 2026-09-27 — Box declaration build depends on compiler runtime
+
+The full Box package audit reached `tsc -p tsconfig.json` and returned a
+locationless TS2589. Controlled Bun compiler runs failed with both the previous
+and regenerated operation/model files; each source swap was restored exactly.
+An explicit Node TypeScript build passed, followed by a complete canonical
+package verification (audit 11.9 seconds, docgen 4.6 seconds). Record the
+compiler runtime with locationless declaration failures before changing generated
+schemas. This receipt does not establish a compiler root cause or a source fix.
+
+## 2026-09-27 — malformed destinations received the weaker audience
+
+The saved Epistemic Config finding reproduces in six current test cases: bare
+loopback names/addresses, including trimmed and case variants, classify as
+`local-workspace` after URL parsing fails. The documented contract requires
+`external-network` for unparseable input. The existing destination schema accepts
+these strings; narrowing it would obscure this classifier defect. The repair
+uses the existing URL codec's Option result and allows the local branch only
+for a successfully parsed loopback hostname. Original local/external cases and
+valid parser behavior remain controls. This follows the standing production
+repair authorization; no network operation or credential is needed to reproduce.
+
+## 2026-09-27 — Box Provisioning fixture ownership under concurrent tests
+
+The saved resource and flake inventories identified module-owned SDK mutation
+counters in `BoxProvisioningApplier.test.ts`. Rebuilding a layer does not isolate
+state captured by its client callbacks. The normal baseline passed, but a
+controlled overlap witness using shared counters fails the exact per-invocation
+mutation totals. Per-invocation fixture factories and a two-client entry barrier
+now protect the test. Additional test reviews should inspect ownership of the
+objects captured by layers, not only whether each test constructs a layer.
+Status: repaired in the current Box Provisioning batch; ordinary historical
+flakiness is not claimed.
+
+## 2026-09-27 — a presence assertion did not establish the action variant
+
+The planner permission-discovery test asserted that a metadata action existed,
+then checked its reason only inside a Blocked guard. A test-local Noop mutant
+passed the old oracle and fails the new unconditional Blocked/entitlement shape
+assertion. Preserve narrowing guards for TypeScript where useful, but establish
+the expected variant unconditionally before relying on guarded assertions.
+Status: hardened in `BoxProvisioningPlanner.test.ts`; this witness identifies a
+test weakness, not a reproduced production planner defect.
+
+## 2026-09-27 — privacy checks hid the failing carrier and input category
+
+Two aggregate tests in `BoxProvisioningArtifactPrivacy.test.ts` combined four
+synthetic input forms across nine carrier/blocker predicates. The replacement
+36-case matrix preserves every predicate while naming schema and category. An
+inverted-oracle control reports every expected combination without printing the
+sentinel values. Other privacy tests that reduce multiple checks to one Boolean
+should expose diagnostic categories without logging sensitive input values.
+Status: hardened in the current batch, with positive and negative proof.
+
+## 2026-09-27 — package verification omitted a root compilation-placement rule
+
+`bun run beep quality package-verify @beep/box-provisioning` passed after the
+native-property migration, but `bun run lint:oxlint` rejected 18 newly introduced
+in-trial codec compilations with `beep(no-inline-schema-compile)`. Hoisting the
+nine encoder/decoder pairs repairs the issue; the root command and full package
+verification then pass. Package verification alone did not cover this root rule.
+A focused package-level invocation of applicable root Oxlint rules would catch
+this earlier. Status: source repaired; broader verification integration remains
+an improvement opportunity and should preserve the existing root gate.
+
+## 2026-09-27 — unknown nested help can look successful
+
+While locating the cache inventory command, `bun run beep quality cache-census
+--help` exited zero with the parent quality help, even though cache-census is not
+one of its subcommands. The actual command is `bun run beep cache census`.
+Unknown nested command help should identify the unrecognized segment and, where
+possible, suggest the valid route. Status: tooling follow-up; no command routing
+change is included in the Box Provisioning test batch.

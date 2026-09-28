@@ -1,0 +1,101 @@
+{
+  "package": "@beep/skill-contract",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:59:19.378000+00:00",
+  "totalMs": 4453.201904296875,
+  "testCount": 47,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "ms": 41.080810546875,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "ms": 27.6103515625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "ms": 13.38525390625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "ms": 20.966552734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "ms": 14.224609375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "ms": 14.87890625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "ms": 8.91650390625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "ms": 70.201904296875,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection refuses allowed verdicts that lack both passed checks and denied verdicts without a failure",
+      "ms": 53.25888600000053
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection allows every schema-derived contract after render and verification",
+      "ms": 53.20194899999933
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder maps transport completion to Accepted and exposes only immediate monotonic transitions",
+      "ms": 40.28646600000047
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder enforces every rung's cumulative predicate-type demands",
+      "ms": 40.08071899999959
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder gives each contract-bound ladder schema a distinct identity",
+      "ms": 40.06487599999946
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder round-trips schema-derived arbitrary structural ladder states",
+      "ms": 40.05427899999995
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt round-trips an unsigned digest-bound typed receipt with a pinned predicate identity",
+      "ms": 26.868180000000393
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt rejects an unrelated predicate type, empty subjects, and malformed digests",
+      "ms": 26.610344000000623
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt round-trips schema-derived arbitrary receipts",
+      "ms": 26.576281000000563
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt gives every pinned factory instance a distinct schema identity and supports data-last construction",
+      "ms": 26.55493900000056
+    }
+  ]
+}

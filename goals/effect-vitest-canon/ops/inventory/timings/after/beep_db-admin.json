@@ -1,0 +1,111 @@
+{
+  "package": "@beep/db-admin",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T00:24:24.430000+00:00",
+  "totalMs": 11194.083251953125,
+  "testCount": 22,
+  "files": [
+    {
+      "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
+      "ms": 8.499267578125,
+      "tests": 6
+    },
+    {
+      "file": "packages/_internal/db-admin/test/index.test.ts",
+      "ms": 0.77294921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
+      "ms": 1055.43505859375,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+      "ms": 1167.70068359375,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "ms": 1065.906005859375,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+      "ms": 1196.710693359375,
+      "tests": 2
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+      "ms": 1166.14599609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+      "ms": 1179.487548828125,
+      "tests": 1
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "ms": 4299.083251953125,
+      "tests": 6
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "ms": 2033.232421875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+      "testName": "db-admin epistemic-execution-ledger migration PgLite integration runs the epistemic-execution-ledger migration target SQL",
+      "ms": 1179.4875790000006
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "testName": "db-admin law-practice-legal-position migration PgLite integration runs the law-practice-legal-position migration and rejects re-kinding a stored relation",
+      "ms": 1175.2679900000003
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+      "testName": "db-admin architecture-lab migration PgLite integration runs the architecture-lab migration target SQL",
+      "ms": 1167.7006959999999
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+      "testName": "db-admin epistemic-edge migration PgLite integration runs the epistemic-edge migration target SQL",
+      "ms": 1166.1458910000001
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+      "testName": "db-admin epistemic-contradiction migration PgLite integration migrates the tenant-bound append-only evidence-verification sidecar",
+      "ms": 1150.59292
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "testName": "db-admin law-practice-candor-gate migration PgLite integration runs the law-practice-candor-gate migration and rejects updating a recorded disposition",
+      "ms": 1149.1968199999992
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "testName": "db-admin documents-sync migration PgLite integration runs the documents-sync migration target SQL",
+      "ms": 1065.906008
+    },
+    {
+      "file": "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
+      "testName": "applies boot migrations once and preserves the journal on a second boot",
+      "ms": 1055.4350219999997
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "testName": "db-admin law-practice-legal-position migration PgLite integration rejects deleting a recorded power exercise",
+      "ms": 858.2325300000002
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "testName": "db-admin law-practice-candor-gate migration PgLite integration rejects deleting a recorded disposition",
+      "ms": 833.3709630000003
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "package": "@beep/architecture-lab-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:42:40.779000+00:00",
+  "totalMs": 3924.642822265625,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 1.31591796875,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "ms": 16.642822265625,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
+      "ms": 0.876220703125,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "ms": 7.073974609375,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived arbitrary values",
+      "ms": 16.642887999999857
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate keeps encoded WorkItem wire shape stable after constructor defaults",
+      "ms": 16.446136000000024
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate moves through assignment, completion, reopen, and archive",
+      "ms": 16.428907999999865
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate rejects reopening an archived WorkItem",
+      "ms": 16.418181999999888
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "testName": "Worker entity creates a product-entity-backed active Worker",
+      "ms": 7.073987999999645
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "testName": "Worker entity materializes Worker model extras into table indexes",
+      "ms": 6.815740000000005
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
+      "testName": "architecture-lab-domain tagged-error declared equivalence compares every WorkItem domain error by its declared fields",
+      "ms": 1.315867000000253
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
+      "testName": "WorkPriority value object ranks reusable WorkItem priorities",
+      "ms": 0.8762799999999515
+    }
+  ]
+}

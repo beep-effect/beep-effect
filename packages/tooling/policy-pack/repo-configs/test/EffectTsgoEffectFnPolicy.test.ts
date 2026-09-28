@@ -1,16 +1,16 @@
 import { fileURLToPath } from "node:url";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as jsonc from "jsonc-parser";
 import typescript from "typescript";
-import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
 const tscBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
@@ -27,15 +27,6 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
       () => "",
       (text, chunk) => `${text}${chunk}`
     )
-  );
-
-const withTempProject = <A, E, R>(use: (projectDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-tsgo-effect-fn-" });
-      return yield* use(projectDir);
-    })
   );
 
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
@@ -112,7 +103,9 @@ const runCommand = Effect.fn("EffectTsgoEffectFnPolicy.runCommand")(function* (
   });
   return yield* Effect.scoped(
     Effect.gen(function* () {
+      yield* Effect.logInfo("compiler child: acquiring");
       const handle = yield* child;
+      yield* Effect.logInfo("compiler child: draining stdout, stderr and exit");
       const result = yield* Effect.all(
         {
           stdout: collectText(handle.stdout),
@@ -122,6 +115,7 @@ const runCommand = Effect.fn("EffectTsgoEffectFnPolicy.runCommand")(function* (
         { concurrency: 3 }
       );
 
+      yield* Effect.logInfo("compiler child: output and exit observed");
       return {
         stdout: Str.trim(result.stdout),
         stderr: Str.trim(result.stderr),
@@ -140,10 +134,12 @@ const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
   );
 });
 
-describe("TypeScript compiler routing", () => {
-  it("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
-    Effect.runPromise(
+// Share native platform services only; each compiler call owns its child scope.
+it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
+  describe("TypeScript compiler routing", () => {
+    it.effect("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
       Effect.gen(function* () {
+        yield* Effect.logInfo("compiler versions: starting");
         const [tsc, tsgo] = yield* Effect.all(
           [
             runCommand(process.execPath, [tscBinPath, "--version"], repoRoot),
@@ -151,40 +147,43 @@ describe("TypeScript compiler routing", () => {
           ],
           { concurrency: 1 }
         );
-
-        expect(tsc.exitCode).toBe(0);
-        expect(tsgo.exitCode).toBe(0);
-        expect(tsc.stdout).toBe(tsgo.stdout);
-        expect(tsc.stdout).toMatch(/^Version 7\..*\+effect-tsgo\./u);
-        expect(typescript.version).toMatch(/^6\./u);
-      }).pipe(provideScopedLayer(TestLayer))
-    ));
-});
-
-describe("Effect tsgo effectFn policy", () => {
-  it(
-    "fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
-    () =>
-      Effect.runPromise(
-        withTempProject((projectDir) =>
-          Effect.gen(function* () {
-            yield* bootstrapTsgoProject(projectDir);
-            const result = yield* runTsgoOnProject(projectDir);
-            const output = Str.trim(`${result.stdout}\n${result.stderr}`);
-            const effectFnOpportunityMatches = pipe(
-              output,
-              Str.match(/effect\(effectFnOpportunity\)/g),
-              O.getOrElse(() => [])
-            );
-
-            expect(result.exitCode).not.toBe(0);
-            expect(effectFnOpportunityMatches).toHaveLength(1);
-            expect(output).toContain("error TS");
-            expect(output).toContain('Effect.fn("shouldError")(function*(value) { ... })');
-            expect(output).not.toContain("shortPlain");
-          })
-        ).pipe(provideScopedLayer(TestLayer))
-      ),
-    15_000
-  );
+        yield* Effect.logInfo("compiler versions: completed");
+        const tscContext = `tsc --version: stdout=${Str.takeLeft(tsc.stdout, 2048)}; stderr=${Str.takeLeft(tsc.stderr, 2048)}`;
+        const tsgoContext = `tsgo --version: stdout=${Str.takeLeft(tsgo.stdout, 2048)}; stderr=${Str.takeLeft(tsgo.stderr, 2048)}`;
+        expect(tsc.exitCode, tscContext).toBe(0);
+        expect(tsgo.exitCode, tsgoContext).toBe(0);
+        expect(tsc.stdout, `${tscContext}; ${tsgoContext}`).toBe(tsgo.stdout);
+        expect(tsc.stdout, tscContext).toMatch(/^Version 7\..*\+effect-tsgo\./u);
+        expect(typescript.version, "TypeScript API version").toMatch(/^6\./u);
+      })
+    );
+  });
+  describe("Effect tsgo effectFn policy", () => {
+    it.effect(
+      "fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-tsgo-effect-fn-" });
+          yield* Effect.logInfo("compiler diagnostic: preparing fixture");
+          yield* bootstrapTsgoProject(projectDir);
+          yield* Effect.logInfo("compiler diagnostic: starting");
+          const result = yield* runTsgoOnProject(projectDir);
+          yield* Effect.logInfo("compiler diagnostic: completed");
+          const diagnosticContext = `tsgo diagnostic: stdout=${Str.takeLeft(result.stdout, 2048)}; stderr=${Str.takeLeft(result.stderr, 2048)}`;
+          const output = Str.trim(`${result.stdout}\n${result.stderr}`);
+          const effectFnOpportunityMatches = pipe(
+            output,
+            Str.match(/effect\(effectFnOpportunity\)/g),
+            O.getOrElse(() => [])
+          );
+          expect(result.exitCode, diagnosticContext).not.toBe(0);
+          expect(effectFnOpportunityMatches, diagnosticContext).toHaveLength(1);
+          expect(output, diagnosticContext).toContain("error TS");
+          expect(output, diagnosticContext).toContain('Effect.fn("shouldError")(function*(value) { ... })');
+          expect(output, diagnosticContext).not.toContain("shortPlain");
+        }),
+      15_000
+    );
+  });
 });

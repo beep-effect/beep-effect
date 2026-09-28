@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/architecture-lab-proof",
+  "sourceHead": "3a1385d9e4274d9e89586c0bd4a9bf77ab9538de",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.570599276994471,
+  "bunWholeCommandSeconds": 3.019711593995453,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [9.6611328125, 6.4912109375, 5.7373046875],
+  "loadAfter": [10.5693359375, 6.732421875, 5.8193359375],
+  "pressureBefore": {
+    "cpu": "some avg10=1.32 avg60=0.56 avg300=0.30 total=676262494\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.09 avg60=0.02 avg300=0.05 total=174928194\nfull avg10=0.09 avg60=0.02 avg300=0.04 total=167088965\n",
+    "io": "some avg10=0.03 avg60=0.05 avg300=0.01 total=783768900\nfull avg10=0.03 avg60=0.04 avg300=0.00 total=686262894\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.88 avg60=0.53 avg300=0.29 total=676276599\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.06 avg60=0.02 avg300=0.04 total=174928211\nfull avg10=0.06 avg60=0.02 avg300=0.04 total=167088983\n",
+    "io": "some avg10=0.02 avg60=0.05 avg300=0.00 total=783769887\nfull avg10=0.02 avg60=0.04 avg300=0.00 total=686263332\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/architecture-lab-proof/package.json",
+      "sha256": "76d638e4c5f695fa379aa563b4927a3439813f0756ed41d9e19a27e2a8931331"
+    },
+    {
+      "file": "apps/architecture-lab-proof/src/index.ts",
+      "sha256": "755cb59f1bce8f75d39be12cda7a0b74624cda340a3266403a8196545be3ca5e"
+    },
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "sha256": "1da5ecb0af42f0d12a434094de481bcedc3c0be66ee610a2c6241c5b9209cf4b"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "a19c9bd1b115e12ca152267e565d9bc8db39ee704d89af419b2d715722083984"
+    }
+  ],
+  "environmentMode": "Scripted provider with real stream/repair logic and real in-process PGlite tenant isolation; architecture proof composes actual in-memory services and projections. No live provider or credential lookup.",
+  "bunProof": {
+    "passedTests": 2,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [10.5693359375, 6.732421875, 5.8193359375],
+    "loadAfter": [10.123046875, 6.70361328125, 5.814453125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.88 avg60=0.53 avg300=0.29 total=676276610\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.06 avg60=0.02 avg300=0.04 total=174928211\nfull avg10=0.06 avg60=0.02 avg300=0.04 total=167088983\n",
+      "io": "some avg10=0.02 avg60=0.05 avg300=0.00 total=783770018\nfull avg10=0.02 avg60=0.04 avg300=0.00 total=686263332\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.63 avg60=0.67 avg300=0.32 total=676374752\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.05 avg60=0.02 avg300=0.04 total=174928312\nfull avg10=0.05 avg60=0.02 avg300=0.04 total=167089058\n",
+      "io": "some avg10=0.02 avg60=0.04 avg300=0.00 total=783770728\nfull avg10=0.02 avg60=0.03 avg300=0.00 total=686263872\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

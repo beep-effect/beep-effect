@@ -1,0 +1,299 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/nlp-processing",
+  "sourceHead": "dda834a0d6ff2c1a313ed459637c645b72c4e871",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.42203274401254,
+  "bunWholeCommandSeconds": 1.5663955110067036,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [11.900390625, 5.96533203125, 5.6123046875],
+  "loadAfter": [11.748046875, 6.03271484375, 5.63623046875],
+  "pressureBefore": {
+    "cpu": "some avg10=2.51 avg60=0.77 avg300=0.28 total=690031954\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=182090012\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=174092640\n",
+    "io": "some avg10=0.12 avg60=0.02 avg300=0.00 total=789352375\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=690859765\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.37 avg60=0.70 avg300=0.28 total=690044340\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=182090014\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=174092643\n",
+    "io": "some avg10=0.06 avg60=0.02 avg300=0.00 total=789353180\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=690860305\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "4c91a3a5956d54986fd2651a347e1e5c7b36ff6f3afdca4920837de50660f3ba"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/package.json",
+      "sha256": "33ba8e30066cd5f010680d7ffe74f23f3eadf5218241bbf21fbfc85faedef698"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
+      "sha256": "395039f21af38c49c7a11737ad46377dce63fb3baaefdc9b08771d7961b362f5"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "sha256": "5dd5f1850bfe3e914f638972c159e09ba3d24e88db17c315ad9f62a8e13d71f4"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/index.ts",
+      "sha256": "856faa330c92f7a3c319c0eba5189f4fedb0a748221024f475f916bc0f74057b"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Core/Tokenization.ts",
+      "sha256": "c86e3fbc857d4b3d893ea7b3baa5dc28cfabd7152d3013ae943b688e665a0da8"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Core/index.ts",
+      "sha256": "13062b45fa2cd3684b7767d194f08e254534b215ad21e53abfd8a85c6b055bc7"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "sha256": "b00bac0173281341f9c58e4af6d1f42fa49690eb154f97e47d4e3eec47bcdfe6"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+      "sha256": "1535a3b030b2055b84e4f0bccd38f8a5eba279dddb683fa17c82c30644782477"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Catalog.ts",
+      "sha256": "95e5628ac441064d7a9168289d1d7e11e875e279ed087d9f209a59076ae656e1"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts",
+      "sha256": "315387111c50671d7ca363d147af7746f354bcedb4bdc34554645bd28c54fb19"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
+      "sha256": "23a794846846867ba71f5237749558d0153870535ec1bd5bc09295f44b90ac51"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
+      "sha256": "881c579604c274ae40b973924c37e9239a6fa9c36e5b552f7592cf61a593303c"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+      "sha256": "abe7b69c76e27b13b1d90a23fdfe0ebbfa7809998be1e91f4289475344c06400"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "sha256": "f0f7370e52c6de1d010aed5f72e05a315e31896fd52213b2393a582bb180c9e0"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/index.ts",
+      "sha256": "b5cbd7587f144eb4da2e31e053e9322e1c0af7a469b8ad9f59d2b8072efda6a0"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+      "sha256": "b4715c1c581d6ebf7e8e9ab6c3ad68bbe0156a977657b2e04854126dde6c92fb"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+      "sha256": "c95554d76b27d5f8659aead6a8c6100baa46a1c855f2287932c9ba59dd530203"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/index.ts",
+      "sha256": "209ff56df40c26e1875e9b75763c5364ad67532c1f9aa2ef780eef72a4480028"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/NLPService.ts",
+      "sha256": "9f72709cfe38f604ed75927f8841d102f13134c249d267826f2ed9b7e447305d"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Analyze.ts",
+      "sha256": "f9437aea72e0a17e2590644be519d6edb9c832bc33659685c1e8a11769fbf29e"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/BagOfWords.ts",
+      "sha256": "9cbc6f617b11c31e3ed416bb71bbb06b2c3ce7b51bbb6a84eea02cf4eea9c42c"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/BowCosineSimilarity.ts",
+      "sha256": "e4df6d8dbf8157147734da39f0ddf52b239b828f59feb0bd1f9bbed53cbadf23"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ChunkBySentences.ts",
+      "sha256": "5b131ac484c30220c098193edb3656df423d235abaccd9588ccfec05dd639719"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CorpusStats.ts",
+      "sha256": "ed486f8628df92bb224ee035f8d49924157c123db3a98db277d421643811b8e5"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CreateCorpus.ts",
+      "sha256": "f8ad0b0922298066507e93b2a04255784a6a4549cb81bbff7bb9dbfffee9a396"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/DeleteCorpus.ts",
+      "sha256": "42f1ad8e433b0649bc18a163ba8c75b401f6f840790aaca69b7b3a1e5c226f65"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/DocumentStats.ts",
+      "sha256": "d7d78b0009e125f4cee9251d1f4840c0f4fb698e8a1b65fe52c91fe20a8c381a"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ExtractEntities.ts",
+      "sha256": "e574a1cc660941544aa729c12c6ef0b376d08718555b1f203672ad6c715c2774"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ExtractKeywords.ts",
+      "sha256": "b824e148924310c0f257f7e5babd78fc0a9a1a0abaa838c5e5470c8afae123da"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/LearnCorpus.ts",
+      "sha256": "e7c3c1647a0c53ec0c4fcff8a770a1f765df5414f5d807347eb3bc9dfe81dc8d"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/LearnCustomEntities.ts",
+      "sha256": "9826125f821ef3680079bf152ba625083bf13c65735978c53a3825e112b0ee01"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/NGrams.ts",
+      "sha256": "fb0e3f76c726fd8bb0754ab4bc6c2ae956b159ff4d1b9e465f111f83cb399765"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/NlpToolkit.ts",
+      "sha256": "4d9c3848d267a5dcbb6ae3555669550f87d80cf8ac06cf8aec7bfbe5d90b2576"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Paragraphize.ts",
+      "sha256": "5a7496ecdd97ab77de30f8906938f4891dcd35017ad6decf556f4f3713f35a09"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/PhoneticMatch.ts",
+      "sha256": "6a3dc1b1669602bdd9e329c56eba92d2aaedbc1290221997a3686aec08c5e92a"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/QueryCorpus.ts",
+      "sha256": "cde7b55565a924ee35efb391aa61790df5cc638a9ddafc5b55e1a059a2525248"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/RankByRelevance.ts",
+      "sha256": "fbee948119f2cd47e22934a3026da57640cc2cb8af493503a14f9fe963f6be5a"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/RemoveStopWords.ts",
+      "sha256": "245bd32aacd14b851f37a40d6ba60ad91a7c366d0dcf7250ddc575ab492ace63"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Sentences.ts",
+      "sha256": "eabeeddf01c4ad45a922d34cabc81b87661476889a5a72ec89d1ebd559d8e980"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Stem.ts",
+      "sha256": "e46d8bf7720ac62e8cc094d87b5e13ffb3b166d1282af3f687a574da5c67db41"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TextSimilarity.ts",
+      "sha256": "cf0afb102e9ac7ba5c3bcbf2c288a1f9f940c40ebac89c992bf9ed25e4f621c0"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Tokenize.ts",
+      "sha256": "5f142fd920c098b888d79b3996280292e375ab9d36b5502cb841ef8218856931"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+      "sha256": "aed19e829453074bd591ae9610b4c9ef9d7bfcd5994fb8c53c422a3f8fde1563"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TransformText.ts",
+      "sha256": "eeff5f3ce083c88c9566c4325adf51640ecd6cfc8a74a6093de4b92db0e5b7a2"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TverskySimilarity.ts",
+      "sha256": "6fde1fe7d6399329295f2fe8d96a7a5a7c622e943bd09f98bdd3aa190b4f578c"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/WordCount.ts",
+      "sha256": "a9ac8af9a22c4c9a7c4c93c05c72f295ea9f662a9832e4ba6c83f2c5a745081e"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
+      "sha256": "3d3a20029425b69affede5d8f943984b75aaf856fe7296ddd93c4a28673eec01"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/index.ts",
+      "sha256": "53c13c178fbb1c3452cb1be711d92dab4ea4e851f00d6b9c578d57ab736c3428"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/index.ts",
+      "sha256": "adc9ffb15a9494c2b4dcbf7ab6c03b516f6ce8e14cd296213d01d78b39d934ea"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/internal/observability.ts",
+      "sha256": "42b6d434fff3a1cd01980b0ff8f21cfbaa36c4651f9982ede9a77ec8fb0cca40"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "sha256": "a96bc07f5c23e0f90afac956f8b5297050c07f880c5ced8077179ab61d4002cc"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
+      "sha256": "b5179e760d4ad3fa89e02acd8ed7baab97b76a18a0746ad8edbee4495690687c"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "sha256": "5c7ef0efce7b5d74e4e939c1a24df685fdc60a831e1322f5dc917ef06fb6df27"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "sha256": "92f4e02ae812708a3dc429d4260e3e9ad8c8a9b601fcb0518c72557d54bc5943"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "sha256": "cf363f8a79fc9145719ee5334135ca72c1c732e4270fd5a469d991263fee45ff"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
+      "sha256": "45b56b58708c8dc22405a25ac83850297d33d29e014991057c4caf503a0c0b4f"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
+      "sha256": "d6a09d2973b0045494dd93a3711a3cb8c085138e88c7e7ab07259737a470f929"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
+      "sha256": "a8bc4b8ecfa9cbc7834cdc51c52a1430bb523f4bdbf7c2751b58725f69e45a7f"
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "sha256": "a6acdcb5016b880675994ec4c6cd7458dda065f48a13bedd219918e4adda757c"
+    }
+  ],
+  "environmentMode": "Pure NLP graphs, local backend stubs and independent in-memory cache fixtures; no live provider, database, filesystem fixture or credential lookup.",
+  "bunProof": {
+    "passedTests": 84,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [11.748046875, 6.03271484375, 5.63623046875],
+    "loadAfter": [11.748046875, 6.03271484375, 5.63623046875],
+    "pressureBefore": {
+      "cpu": "some avg10=1.37 avg60=0.70 avg300=0.28 total=690044352\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=182090014\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=174092643\n",
+      "io": "some avg10=0.06 avg60=0.02 avg300=0.00 total=789353180\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=690860305\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.37 avg60=0.70 avg300=0.28 total=690049614\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=182090015\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=174092644\n",
+      "io": "some avg10=0.06 avg60=0.02 avg300=0.00 total=789353191\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=690860316\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

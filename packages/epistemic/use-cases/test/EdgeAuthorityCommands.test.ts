@@ -1,6 +1,9 @@
 import { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -61,7 +64,7 @@ const asOfEncoded = {
 const withoutValidFrom = ({ validFrom: _validFrom, ...rest }: { readonly validFrom: number }) => rest;
 
 const expectOrgScopeFailure = (exit: Exit.Exit<unknown, S.SchemaError>) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  pipe(exit, Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(S.isSchemaError(error) ? error.message : "").toMatch(/\["identity"\]\["orgScope"\]/);
@@ -73,7 +76,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     Effect.gen(function* () {
       const decoded = yield* decodeUnknownRecordEdgeFact(recordEncoded);
 
-      expect(O.isNone(decoded.validTo)).toBe(true);
+      assertNone(decoded.validTo);
       expect(decoded.identity.relation).toBe("supports");
       expect(yield* encodeRecordEdgeFact(decoded)).toStrictEqual(recordEncoded);
     })
@@ -84,7 +87,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const decoded = yield* decodeUnknownSupersedeEdgeFact(supersedeEncoded);
 
       expect(decoded.expectedVersion).toBe(1);
-      expect(O.isSome(decoded.validTo)).toBe(true);
+      pipe(decoded.validTo, O.isSome, assertTrue);
       expect(yield* encodeSupersedeEdgeFact(decoded)).toStrictEqual(supersedeEncoded);
     })
   );
@@ -98,11 +101,11 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
   );
 
   it("rejects a record command with no validFrom, so no edge can be asserted without a known valid time", () => {
-    expect(O.isNone(decodeUnknownRecordEdgeFactOption(withoutValidFrom(recordEncoded)))).toBe(true);
+    assertNone(decodeUnknownRecordEdgeFactOption(withoutValidFrom(recordEncoded)));
   });
 
   it("rejects a supersede command with no validFrom", () => {
-    expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(withoutValidFrom(supersedeEncoded)))).toBe(true);
+    assertNone(decodeUnknownSupersedeEdgeFactOption(withoutValidFrom(supersedeEncoded)));
   });
 
   // EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
@@ -129,7 +132,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     Effect.gen(function* () {
       const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };
 
-      expect(O.isNone(decodeUnknownRecordEdgeFactOption(mismatched))).toBe(true);
+      assertNone(decodeUnknownRecordEdgeFactOption(mismatched));
       expectOrgScopeFailure(yield* Effect.exit(decodeUnknownRecordEdgeFact(mismatched)));
     })
   );
@@ -138,19 +141,17 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     Effect.gen(function* () {
       const mismatched = { ...supersedeEncoded, identity: { ...identity, orgScope: "2" } };
 
-      expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(mismatched))).toBe(true);
+      assertNone(decodeUnknownSupersedeEdgeFactOption(mismatched));
       expectOrgScopeFailure(yield* Effect.exit(decodeUnknownSupersedeEdgeFact(mismatched)));
     })
   );
 
   it("rejects an endpoint kind outside the bounded vocabulary", () => {
-    expect(
-      O.isNone(
-        decodeUnknownRecordEdgeFactOption({
-          ...recordEncoded,
-          identity: { ...identity, source: { kind: "rumour", rumourRef: "hearsay" } },
-        })
-      )
-    ).toBe(true);
+    assertNone(
+      decodeUnknownRecordEdgeFactOption({
+        ...recordEncoded,
+        identity: { ...identity, source: { kind: "rumour", rumourRef: "hearsay" } },
+      })
+    );
   });
 });

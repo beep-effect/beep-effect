@@ -1,0 +1,212 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 14,
+  "numPassedTests": 14,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790418318346,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["FaceDetectionError declared-field equivalence"],
+          "fullName": "FaceDetectionError declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different errors as distinct",
+          "duration": 2.190853000000061,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790418321742,
+      "endTime": 1790418321744.191,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/face-detection/test/FaceDetection.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection preserves encoded schema wire shapes",
+          "status": "passed",
+          "title": "preserves encoded schema wire shapes",
+          "duration": 78.27747599999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection round-trips schema-derived face-detection values through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived face-detection values through encoded form",
+          "duration": 77.835466,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection normalizes raw model confidence at the schema boundary",
+          "status": "passed",
+          "title": "normalizes raw model confidence at the schema boundary",
+          "duration": 77.77580399999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection computes padded and fixed-model preprocessing geometry",
+          "status": "passed",
+          "title": "computes padded and fixed-model preprocessing geometry",
+          "duration": 77.76528800000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection runs workflows through the service contract",
+          "status": "passed",
+          "title": "runs workflows through the service contract",
+          "duration": 77.86658299999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/face-detection"],
+          "fullName": "@beep/face-detection supports data-last detector workflows",
+          "status": "passed",
+          "title": "supports data-last detector workflows",
+          "duration": 2.5866719999999077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790418321862,
+      "endTime": 1790418321942.5867,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/face-detection/test/FaceDetection.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer loads fflate through the narrowly scoped installer dependency",
+          "status": "passed",
+          "title": "loads fflate through the narrowly scoped installer dependency",
+          "duration": 34.510752000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer installs the selected binary and replaces an existing binary",
+          "status": "passed",
+          "title": "installs the selected binary and replaces an existing binary",
+          "duration": 78.03995099999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer does not follow a symlink planted at the former predictable extraction path",
+          "status": "passed",
+          "title": "does not follow a symlink planted at the former predictable extraction path",
+          "duration": 77.93401800000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer replaces a destination symlink without overwriting the linked file",
+          "status": "passed",
+          "title": "replaces a destination symlink without overwriting the linked file",
+          "duration": 64.39204500000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer ignores archive paths outside the selected manifest entry",
+          "status": "passed",
+          "title": "ignores archive paths outside the selected manifest entry",
+          "duration": 62.041605000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer rejects missing entries and cleans up the download",
+          "status": "passed",
+          "title": "rejects missing entries and cleans up the download",
+          "duration": 40.38393499999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ONNX Runtime's patched NuGet installer"],
+          "fullName": "ONNX Runtime's patched NuGet installer rejects corrupt archives and cleans up the download",
+          "status": "passed",
+          "title": "rejects corrupt archives and cleans up the download",
+          "duration": 23.642176000000063,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790418318896,
+      "endTime": 1790418318982.642,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts"
+    }
+  ]
+}

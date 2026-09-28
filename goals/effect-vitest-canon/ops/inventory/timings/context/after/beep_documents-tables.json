@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/documents-tables",
+  "sourceHead": "da7cd0390ec450a3c045181db0ff7f2c3527949c",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.5217910049977945,
+  "bunWholeCommandSeconds": 2.219263923005201,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.44921875, 3.69384765625, 3.82861328125],
+  "loadAfter": [1.97412109375, 3.765625, 3.85107421875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.09 avg300=0.11 total=786287713\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217359\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141273\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=848458213\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742220302\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.08 avg300=0.11 total=786305685\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217359\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141273\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=848458303\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742220361\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "ae3c610ff6b37fa36d3616297537f0109f2ba325310bbb486b20d19ccfcd8db8"
+    },
+    {
+      "file": "packages/documents/tables/AGENTS.md",
+      "sha256": "196dbcc5ef1055455668a321381a5d3c6b23e66be57b3c9f33945443bf8a3734"
+    },
+    {
+      "file": "packages/documents/tables/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/documents/tables/README.md",
+      "sha256": "25fda33dcefbde380921071168a696f367ddf0f85a9f252c646afa81b59c2081"
+    },
+    {
+      "file": "packages/documents/tables/docgen.json",
+      "sha256": "7add083dfa705bacfeb903c76c043907178f54dfbc604be1eb9e5c35f8f24d02"
+    },
+    {
+      "file": "packages/documents/tables/package.json",
+      "sha256": "5ac827d6d7008715ad12f6fb0b7a403f3b23ed40e94ff1126512c757d5033e0c"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncConflict/SyncConflict.converters.ts",
+      "sha256": "6a9c4355d71af6ef9923c6a612608bada50a8f84fe9743f423a225796bf03013"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncConflict/SyncConflict.errors.ts",
+      "sha256": "312f03ca3984a72cd65ab583e30a1182fb87c7ff9747f05fc53d4a408c4d22b7"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncConflict/SyncConflict.table.ts",
+      "sha256": "2ae56fd6c22c6fc4979beef218b2cf41b25b016056d243df640696b58c3618bf"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncConflict/index.ts",
+      "sha256": "1a5c7ddc573cf09bb40971931c167e7c6143c30b94078a944aedb49559acb280"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncCursor/SyncCursor.converters.ts",
+      "sha256": "f7da5a5d448d92034947a29e3e503afd06f5fb60c8394e1267f9f4768cee34b1"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncCursor/SyncCursor.errors.ts",
+      "sha256": "6cbbdb544bcb93094cc36d8304033488545002553cb653fddeb175f2fdd32a9f"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncCursor/SyncCursor.table.ts",
+      "sha256": "533eecb8f732a8e56f3f1760d5144f8fc1249cdf21afbce561a568b5cd4c3326"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncCursor/index.ts",
+      "sha256": "ce9ca2fdc82f0a2522631d5ae19aa7a07d8f0847bdd72ca1094f483932f92f4c"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncItem/SyncItem.converters.ts",
+      "sha256": "3042c927bfbe1320fea6ec2269d0eb20ae0c5a385fa363da74fefcc033e1759f"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncItem/SyncItem.errors.ts",
+      "sha256": "ccf72bf3b3cdbab00ce5a6ed17f92decfa41c05b072c6a4b2038304fd7890059"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncItem/SyncItem.table.ts",
+      "sha256": "045cd953e10ae64d3ae946b5421e8dd668379fb03c3c96bcdd48c5396036b203"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncItem/index.ts",
+      "sha256": "880e2c58cb5328ea67def0900fbbf37e3f7a6853eeac7d115fb2cb9b5eb7fc0f"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncOperation/SyncOperation.converters.ts",
+      "sha256": "9d30ca1313e5e730d052f821b103ed47dd6b75dd58c77ccfbfbb5658b93738f7"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncOperation/SyncOperation.errors.ts",
+      "sha256": "4d936975132a95c746935e5c6af6d8b7fc55c1d0f60853a04c50d6404bcbadcf"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncOperation/SyncOperation.table.ts",
+      "sha256": "7456450bd99857bbb5d2fd57c918b3affd7687b35010fd610a1e2bb72d666e99"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/SyncOperation/index.ts",
+      "sha256": "6e8299b0ab94312d127a8cb3a1de8038278362577c58082231832564b815b042"
+    },
+    {
+      "file": "packages/documents/tables/src/entities/index.ts",
+      "sha256": "dc3da799ce4c42c23c985e29f18c7bf238b02ab6088a72aeb10ebcfb2459c9c6"
+    },
+    {
+      "file": "packages/documents/tables/src/index.ts",
+      "sha256": "c73bc46b3384e70ab948d98a8f7ed9e37f5f4b5eaab535c916e9bca866162a94"
+    },
+    {
+      "file": "packages/documents/tables/src/tables.ts",
+      "sha256": "8eb1bb2faa776c607f70672ab79d1b7eaec18b617ad998082f304a790fa56608"
+    },
+    {
+      "file": "packages/documents/tables/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "sha256": "196d35b29487dd738a942a8acbe4ca9a41400f654ce9f5389007d8d6241c4f11"
+    },
+    {
+      "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
+      "sha256": "238123b00f8ba678886b54e2b62473b05817337389f2f2bf0184ed4206df6647"
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "sha256": "1e396909e2886df94f2b03bf9961f26a72f5c533332b3b5926496426bc103815"
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "sha256": "e7d6b9300a9645932c7e8cc28d573046c63cfc18602dba518b80e78d308450aa"
+    },
+    {
+      "file": "packages/documents/tables/tsconfig.check.json",
+      "sha256": "c0634a60974a7dd43c25d397c939cfa36ed4c57b0be918be16227c183977971e"
+    },
+    {
+      "file": "packages/documents/tables/tsconfig.json",
+      "sha256": "8186d19b02f601f64425d5a9cd13238a6fab03b6b87764e719f4acb5e031587f"
+    },
+    {
+      "file": "packages/documents/tables/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/documents/tables/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured documents-tables local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 21,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.97412109375, 3.765625, 3.85107421875],
+    "loadAfter": [2.697265625, 3.8857421875, 3.8896484375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.08 avg300=0.11 total=786305749\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217359\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141273\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=848458303\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742220361\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.08 avg300=0.11 total=786455264\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217359\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141273\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=848458379\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=742220405\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 21,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All21configured tests pass before and after without skips and with stable source. All original assertions,21registrations and four existing native converter properties retain their domains and50-run floors. Fifty-eight public helper conversions preserve operands and polarity, including success guards and their full payload checks. Table metadata tests never open a database. Baseline overlaps an early publisher; the after sample can overlap package verification and policy checks. No external endpoint is contacted."
+}

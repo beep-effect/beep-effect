@@ -18,6 +18,9 @@
       "path": "../../packages/architecture-lab/use-cases/tsconfig.json"
     },
     {
+      "path": "../../packages/tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
       "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ],

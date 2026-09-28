@@ -1,11 +1,26 @@
 import { AbsoluteIRI, canonicalizeSchemaOrgIri, IRI, IRIReference, RelativeIRIReference } from "@beep/rdf/Iri";
 import { makeNamedNode } from "@beep/rdf/Rdf";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const IRIDecodeEffect = S.decodeEffect(IRI);
+const IRIIs = S.is(IRI);
+const IRIToEquivalence = S.toEquivalence(IRI);
+const AbsoluteIRIDecodeEffect = S.decodeEffect(AbsoluteIRI);
+const AbsoluteIRIIs = S.is(AbsoluteIRI);
+const AbsoluteIRIToEquivalence = S.toEquivalence(AbsoluteIRI);
+const IRIReferenceDecodeEffect = S.decodeEffect(IRIReference);
+const IRIReferenceIs = S.is(IRIReference);
+const IRIReferenceToEquivalence = S.toEquivalence(IRIReference);
+const RelativeIRIReferenceDecodeEffect = S.decodeEffect(RelativeIRIReference);
+const RelativeIRIReferenceIs = S.is(RelativeIRIReference);
+const RelativeIRIReferenceToEquivalence = S.toEquivalence(RelativeIRIReference);
 const decodeAbsoluteIRI = S.decodeUnknownEffect(AbsoluteIRI);
 const decodeIRI = S.decodeUnknownEffect(IRI);
 const decodeIRIReference = S.decodeUnknownEffect(IRIReference);
@@ -24,40 +39,64 @@ describe("IRI", () => {
   it.effect("rejects invalid facade inputs with the RDF schema diagnostics", () =>
     Effect.gen(function* () {
       const invalidIri = yield* Effect.exit(decodeIRI("https://example.com/%ZZ"));
-      expect(Exit.isFailure(invalidIri)).toBe(true);
+      pipe(invalidIri, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidIri)) {
         expect(Cause.pretty(invalidIri.cause)).toContain("Expected a valid RFC 3987 IRI");
       }
 
       const invalidAbsolute = yield* Effect.exit(decodeAbsoluteIRI("https://example.com/path#frag"));
-      expect(Exit.isFailure(invalidAbsolute)).toBe(true);
+      pipe(invalidAbsolute, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidAbsolute)) {
         expect(Cause.pretty(invalidAbsolute.cause)).toContain("Expected a valid RFC 3987 absolute IRI");
       }
 
       const invalidRelative = yield* Effect.exit(decodeRelativeIRIReference("folder:child/leaf"));
-      expect(Exit.isFailure(invalidRelative)).toBe(true);
+      pipe(invalidRelative, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidRelative)) {
         expect(Cause.pretty(invalidRelative.cause)).toContain("Expected a valid RFC 3987 relative IRI reference");
       }
     })
   );
 
-  it("only generates RFC 3987 IRI values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(IRI);
-  });
+  it.effect.prop(
+    "only generates RFC 3987 IRI values that decode to themselves",
+    [Arbitrary.schema(IRI)],
+    ([value]) => Effect.map(IRIDecodeEffect(value), (decoded) => IRIIs(value) && IRIToEquivalence(decoded, value)),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3987 AbsoluteIRI values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(AbsoluteIRI);
-  });
+  it.effect.prop(
+    "only generates RFC 3987 AbsoluteIRI values that decode to themselves",
+    [Arbitrary.schema(AbsoluteIRI)],
+    ([value]) =>
+      Effect.map(
+        AbsoluteIRIDecodeEffect(value),
+        (decoded) => AbsoluteIRIIs(value) && AbsoluteIRIToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3987 IRIReference values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(IRIReference);
-  });
+  it.effect.prop(
+    "only generates RFC 3987 IRIReference values that decode to themselves",
+    [Arbitrary.schema(IRIReference)],
+    ([value]) =>
+      Effect.map(
+        IRIReferenceDecodeEffect(value),
+        (decoded) => IRIReferenceIs(value) && IRIReferenceToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3987 RelativeIRIReference values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(RelativeIRIReference);
-  });
+  it.effect.prop(
+    "only generates RFC 3987 RelativeIRIReference values that decode to themselves",
+    [Arbitrary.schema(RelativeIRIReference)],
+    ([value]) =>
+      Effect.map(
+        RelativeIRIReferenceDecodeEffect(value),
+        (decoded) => RelativeIRIReferenceIs(value) && RelativeIRIReferenceToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("schema.org namespace canonicalization", () => {
@@ -88,10 +127,10 @@ describe("schema.org namespace canonicalization", () => {
   });
 
   it("accepts valid legacy schema.org forms on the type side", () => {
-    expect(IRI.is("http://schema.org/name")).toBe(true);
-    expect(IRI.is("https://schema.org/name")).toBe(true);
-    expect(O.isNone(IRI.decodeUnknownOption("https://example.com/%ZZ"))).toBe(true);
-    expect(O.isSome(IRI.makeOption("http://schema.org/name"))).toBe(true);
+    pipe(IRI.is("http://schema.org/name"), assertTrue);
+    pipe(IRI.is("https://schema.org/name"), assertTrue);
+    assertNone(IRI.decodeUnknownOption("https://example.com/%ZZ"));
+    pipe(IRI.makeOption("http://schema.org/name"), O.isSome, assertTrue);
     expect(() => IRI.make("http://schema.org/name")).not.toThrow();
   });
 });

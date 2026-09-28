@@ -1,0 +1,36 @@
+{
+  "phase": "runner",
+  "files": [
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "d30188a8f2cf9f19f9017b0b5f2e21b9a9ac992706d266f8f47d43742e92bec5",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "7ec76dde20531f6f41cd32aa09570aa95bf1f330f71bd1b3b03600bfbee9375e",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "843dce1e46b2bf64d7e9bb226f61005ee9b1b1e137f983234780b5aab1997a1e",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "134cbf9fa1eb579908942f1fbe05edd1d65afe9b260d277ec18406b9e7a46067",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "onlyRunnerImportsAndLayerReceiverChanged": true,
+      "sourceSha256": "27f11967b6dd840f899926c523fbd6bf73da9111484f0cca12f8ca9f691a7095",
+      "instrumented": true
+    }
+  ],
+  "testUtilsRetainedForFcRuns": true
+}

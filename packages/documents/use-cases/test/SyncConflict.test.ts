@@ -8,9 +8,11 @@ import {
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -19,25 +21,13 @@ import type { SyncConflictRepositoryShape } from "@beep/documents-use-cases/enti
 
 const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
@@ -156,13 +146,22 @@ describe("SyncConflict repository port", () => {
       const error = yield* repository
         .markReviewed(MarkSyncConflictReviewedInput.make({ conflictId: unknownConflictId }))
         .pipe(Effect.flip);
-      expect(SyncConflictRepositoryNotFound.is(error)).toBe(true);
+      pipe(SyncConflictRepositoryNotFound.is(error), assertTrue);
     })
   );
 
-  it("round-trips schema-derived seeds and inputs", () => {
-    assertSchemaArbitraryRoundTrip(SyncConflictSeed);
-    assertSchemaArbitraryRoundTrip(ListOpenSyncConflictsInput);
-    assertSchemaArbitraryRoundTrip(MarkSyncConflictReviewedInput);
-  });
+  it.prop(
+    "round-trips schema-derived seeds and inputs",
+    [
+      Arbitrary.schema(SyncConflictSeed),
+      Arbitrary.schema(ListOpenSyncConflictsInput),
+      Arbitrary.schema(MarkSyncConflictReviewedInput),
+    ],
+    ([syncConflictSeed, listOpenSyncConflictsInput, markSyncConflictReviewedInput]) => {
+      assertSchemaRoundTrip(SyncConflictSeed, syncConflictSeed);
+      assertSchemaRoundTrip(ListOpenSyncConflictsInput, listOpenSyncConflictsInput);
+      assertSchemaRoundTrip(MarkSyncConflictReviewedInput, markSyncConflictReviewedInput);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

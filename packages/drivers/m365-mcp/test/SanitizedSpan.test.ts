@@ -11,7 +11,8 @@
 import { GraphSite, M365, M365GetSiteRequest } from "@beep/m365";
 import { M365Toolkit, M365ToolkitHandlersLive } from "@beep/m365-mcp";
 import { sanitizedToolkit } from "@beep/mcp-kit";
-import { assert, describe, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
@@ -91,7 +92,7 @@ const StubMcpClientLayer = Layer.succeed(
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
 
 describe("m365-mcp sanitized dispatch", () => {
-  layer(fullLayer)("with M365Toolkit mounted via sanitizedToolkit", (it) => {
+  it.layer(fullLayer)("with M365Toolkit mounted via sanitizedToolkit", (it) => {
     it.effect(
       "does not leak the raw m365_get_site request payload onto span attributes",
       Effect.fnUntraced(function* () {

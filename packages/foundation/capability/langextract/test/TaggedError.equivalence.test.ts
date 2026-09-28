@@ -1,6 +1,7 @@
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { VerifiedSpanError } from "@beep/langextract/VerifiedSpan";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(

@@ -11,9 +11,11 @@ import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Crypto, Effect, Exit, Layer } from "effect";
 import { cast } from "effect/Function";
@@ -58,13 +60,9 @@ const TestCryptoLayer = Layer.succeed(
   })
 );
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(TestCryptoLayer));
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assert.strictEqual(Exit.isFailure(exit), true);
+  assertTrue(Exit.isFailure(exit));
 });
 
 const systemPrincipal = {
@@ -102,36 +100,36 @@ describe("EntityId", () => {
       expect(DocumentId.entityType).toBe("SharedDocument");
       expect(DocumentId.brand).toBe("SharedDocumentId");
       expect(DocumentId.definition.description).toBe("SharedDocument entity identifier.");
-      expect(DocumentId.equivalence(cast(1), cast(1))).toBe(true);
-      expect(DocumentId.equivalence(cast(1), cast(2))).toBe(false);
+      assertTrue(DocumentId.equivalence(cast(1), cast(1)));
+      assertFalse(DocumentId.equivalence(cast(1), cast(2)));
       expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
 
-      expect(DocumentId.is(1)).toBe(true);
-      expect(DocumentId.is(0)).toBe(false);
+      assertTrue(DocumentId.is(1));
+      assertFalse(DocumentId.is(0));
       expect(DocumentId.decodeUnknownSync(1)).toBe(1);
-      expect(O.isSome(DocumentId.decodeUnknownOption(1))).toBe(true);
-      expect(O.isNone(DocumentId.decodeUnknownOption(0))).toBe(true);
+      DocumentId.decodeUnknownOption(1).pipe(O.isSome, assertTrue);
+      assertNone(DocumentId.decodeUnknownOption(0));
       const decoded = yield* DocumentId.decodeUnknownEffect(1);
       expect(decoded).toBe(1);
       expect(yield* DocumentId.encodeEffect(decoded)).toBe(1);
-      expect(DocumentId.equivalence(decoded, decoded)).toBe(true);
-      expect(DocumentId.equivalence(decoded, cast(2))).toBe(false);
+      assertTrue(DocumentId.equivalence(decoded, decoded));
+      assertFalse(DocumentId.equivalence(decoded, cast(2)));
       // The canonical static is the schema's own (per-AST memoized) equivalence, not the
       // codec groups' `dual(2, ...)` wrapper: the wrapper curries below its arity, while the
       // plain form always answers with a boolean.
       expect(DocumentId.equivalence).toBe(S.toEquivalence(DocumentId));
-      expect(P.isFunction(O.getOrThrow(invokeStatic(DocumentId, "equivalence")))).toBe(false);
+      invokeStatic(DocumentId, "equivalence").pipe(O.getOrThrow, P.isFunction, assertFalse);
 
       const Annotated = DocumentId.annotate({ description: "proof" });
       expect(Annotated).not.toBe(DocumentId);
-      expect(hasFunctionStatic(Annotated, "is")).toBe(true);
-      expect(hasFunctionStatic(Annotated, "decodeUnknownSync")).toBe(true);
-      expect(hasFunctionStatic(Annotated, "decodeUnknownEffect")).toBe(true);
-      expect(hasFunctionStatic(Annotated, "fromUnknown")).toBe(false);
+      assertTrue(hasFunctionStatic(Annotated, "is"));
+      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownSync"));
+      assertTrue(hasFunctionStatic(Annotated, "decodeUnknownEffect"));
+      assertFalse(hasFunctionStatic(Annotated, "fromUnknown"));
       expect(O.getOrThrow(invokeStatic(Annotated, "decodeUnknownSync", 1))).toBe(1);
-      expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, decoded))).toBe(true);
+      invokeStatic(Annotated, "equivalence", decoded, decoded).pipe(O.getOrThrow, assertTrue);
       expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, 2))).toBe(false);
-      expect(P.isFunction(O.getOrThrow(invokeStatic(Annotated, "equivalence")))).toBe(false);
+      invokeStatic(Annotated, "equivalence").pipe(O.getOrThrow, P.isFunction, assertFalse);
       const annotatedEquivalence: unknown = Reflect.get(Annotated, "equivalence");
       expect(annotatedEquivalence).toBe(DocumentId.equivalence);
     })
@@ -164,21 +162,23 @@ describe("PublicEntityId", () => {
       expect(DocumentPublicId.brand).toBe("SharedDocumentPublicId");
       expect(DocumentPublicId.sourceEntityId).toBe(DocumentId);
       expect(PublicEntityId.fromCuid(DocumentId, Cuid.make("a123"))).toBe(publicId);
-      expect(DocumentPublicId.equivalence(publicId, publicId)).toBe(true);
+      assertTrue(DocumentPublicId.equivalence(publicId, publicId));
       yield* expectFailure(decodeUnknownDocumentPublicId("shared_user_a123"));
       yield* expectFailure(decodeUnknownDocumentPublicId("shared_document_123"));
     })
   );
 
-  it.effect(
-    "generates public ids with the entity prefix",
-    Effect.fnUntraced(function* () {
-      const publicId = yield* PublicEntityId.generate(DocumentId);
+  it.layer(CuidTestLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "generates public ids with the entity prefix",
+      Effect.fnUntraced(function* () {
+        const publicId = yield* PublicEntityId.generate(DocumentId);
 
-      expect(DocumentPublicId.is(publicId)).toBe(true);
-      expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
-    }, provideScopedLayer(CuidTestLayer))
-  );
+        assertTrue(DocumentPublicId.is(publicId));
+        assertTrue(publicId.startsWith(`${DocumentId.tableName}_`));
+      })
+    );
+  });
 });
 
 describe("ProductEntity", () => {
@@ -210,9 +210,10 @@ describe("ProductEntity", () => {
     expect(Object.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
   });
 
-  it("applies insert-time audit defaults without inventing row identity", () => {
-    const inserted = Effect.runSync(
-      makeEffect(ProductDocument.insert)({
+  it.effect(
+    "applies insert-time audit defaults without inventing row identity",
+    Effect.fnUntraced(function* () {
+      const inserted = yield* makeEffect(ProductDocument.insert)({
         createdByPrincipal: systemPrincipal,
         entityType: DocumentId.entityType,
         note: "hello",
@@ -221,14 +222,14 @@ describe("ProductEntity", () => {
         schemaVersion: "0.0.0",
         source: "Application",
         updatedByPrincipal: systemPrincipal,
-      })
-    );
+      });
 
-    expect(inserted.createdAt).toBeDefined();
-    expect(inserted.updatedAt).toBeDefined();
-    expect("id" in inserted).toBe(false);
-    expect("rowVersion" in inserted).toBe(false);
-  });
+      expect(inserted.createdAt).toBeDefined();
+      expect(inserted.updatedAt).toBeDefined();
+      assertFalse("id" in inserted);
+      assertFalse("rowVersion" in inserted);
+    })
+  );
 
   it("materializes model extras into kit-provided table indexes", () => {
     const membership = Membership.Model.pipe(toPgTable, getTableConfig);
@@ -323,7 +324,7 @@ describe("EntityRef and shared entity primitives", () => {
 
       expect(ref.entityType).toBe("SharedDocument");
       expect(dataLastRef.id).toBe(1);
-      expect(Result.isSuccess(resultRef)).toBe(true);
+      resultRef.pipe(Result.isSuccess, assertTrue);
       if (Result.isSuccess(resultRef)) {
         expect(resultRef.success.id).toBe(1);
       }
@@ -350,8 +351,8 @@ describe("EntityRef and shared entity primitives", () => {
         id,
       });
       expect(decodedRef.entityType).toBe(DocumentId.entityType);
-      expect(DocumentId.equivalence(cast(decodedRef.id), cast(id))).toBe(true);
-      expect(Result.isSuccess(EntityRef.makeResult(DocumentId, id))).toBe(true);
+      assertTrue(DocumentId.equivalence(cast(decodedRef.id), cast(id)));
+      EntityRef.makeResult(DocumentId, id).pipe(Result.isSuccess, assertTrue);
 
       return true;
     }),
@@ -389,12 +390,12 @@ describe("EntityRef and shared entity primitives", () => {
       });
 
       expect(user.kind).toBe("User");
-      expect(O.isNone(serviceAccount.onBehalfOfUserId)).toBe(true);
-      expect(O.isNone(agent.onBehalfOfTeamId)).toBe(true);
-      expect(O.isNone(connector.onBehalfOfUserId)).toBe(true);
+      assertNone(serviceAccount.onBehalfOfUserId);
+      assertNone(agent.onBehalfOfTeamId);
+      assertNone(connector.onBehalfOfUserId);
       expect(system.component).toBe("Runtime");
-      expect(isPrincipalSystemPrincipal(principal)).toBe(true);
-      expect(SourceKind.SourceKind.is.Agent("Agent")).toBe(true);
+      assertTrue(isPrincipalSystemPrincipal(principal));
+      assertTrue(SourceKind.SourceKind.is.Agent("Agent"));
       expect(EntityBarrel.ProductEntity.Entity).toBe(ProductEntity.Entity);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);
       expect(EntityBarrel.EntityRef.EntityRef).toBe(EntityRef.EntityRef);

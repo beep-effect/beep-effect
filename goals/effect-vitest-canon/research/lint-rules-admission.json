@@ -1,0 +1,117 @@
+{
+  "base": "1f7a14ec4e03a06a7c790f23c5bb31006dc484db",
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/codec.ts",
+      "sha256": "005fe9b30ce3686b5d3d8dea81bae9d69055822840d162841ea5ab6def668310",
+      "bytes": 2300,
+      "lines": 45
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+      "sha256": "96c5e160087a29252c3447d9bed353bb7076d04b3547e5f82835a32edebb359f",
+      "bytes": 5175,
+      "lines": 132
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+      "sha256": "4546737758bf298b54503d083ed9d82d40645fa05c1a0d0ae6aa2d9a581707dc",
+      "bytes": 9650,
+      "lines": 262
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "sha256": "9e11309c93b957011a45758527ea0bcb9e21eb76550af2d7d7d6e470488e3775",
+      "bytes": 4860,
+      "lines": 125
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+      "sha256": "28f1087a0d947a725762757efe0486a3fb367658173c33b4ee4aafecfdef520b",
+      "bytes": 14640,
+      "lines": 436
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "sha256": "7f5190a5529a1131fb848538db66e4f4766ed312e4c1756a941f4551431d81db",
+      "bytes": 5016,
+      "lines": 127
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "sha256": "da7fd3e441cd5475ee9a02fe90641cbd7853d04ad4ba472291a7f3f904061aa3",
+      "bytes": 1475,
+      "lines": 37
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "sha256": "72d99fd7e6ede7437cbdcfb9fe1ca56f2914f7b948e92cd0ec462471d248e9b9",
+      "bytes": 2834,
+      "lines": 74
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
+      "sha256": "60085bed0ca464287ab2f046eb14c5dd2ffffa74f1325db47c7b80e187d418f6",
+      "bytes": 1816,
+      "lines": 46
+    }
+  ],
+  "observations": {
+    "node": {
+      "wholeCommandSeconds": 14.891117361999932,
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [12.212890625, 30.92041015625, 37.833984375],
+      "loadAfter": [13.56982421875, 30.30322265625, 37.5205078125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.00 avg60=0.06 avg300=4.41 total=548608683\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.02 avg300=0.18 total=147024998\nfull avg10=0.00 avg60=0.02 avg300=0.14 total=140099130\n",
+        "io": "some avg10=0.00 avg60=0.02 avg300=0.47 total=761252667\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=669703054\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=2.17 avg60=0.44 avg300=4.26 total=548945224\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.26 avg60=0.07 avg300=0.18 total=147154933\nfull avg10=0.26 avg60=0.07 avg300=0.14 total=140219794\n",
+        "io": "some avg10=0.36 avg60=0.08 avg300=0.46 total=761323927\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=669734184\n"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "sourceStable": true,
+      "total": 66,
+      "passed": 66,
+      "suites": 4
+    },
+    "bun": {
+      "wholeCommandSeconds": 7.576917557002162,
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [13.56982421875, 30.30322265625, 37.5205078125],
+      "loadAfter": [15.2060546875, 30.36474609375, 37.50146484375],
+      "pressureBefore": {
+        "cpu": "some avg10=2.17 avg60=0.44 avg300=4.26 total=548945365\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.26 avg60=0.07 avg300=0.18 total=147154933\nfull avg10=0.26 avg60=0.07 avg300=0.14 total=140219794\n",
+        "io": "some avg10=0.36 avg60=0.08 avg300=0.46 total=761324164\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=669734348\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=1.07 avg60=0.41 avg300=4.15 total=548970800\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.21 avg60=0.09 avg300=0.18 total=147155868\nfull avg10=0.21 avg60=0.09 avg300=0.14 total=140220687\n",
+        "io": "some avg10=0.16 avg60=0.06 avg300=0.45 total=761338378\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=669744402\n"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "sourceStable": true,
+      "total": 66,
+      "passed": 66,
+      "suites": 4
+    }
+  }
+}

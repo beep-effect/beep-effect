@@ -25,9 +25,11 @@ import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
@@ -183,42 +185,39 @@ type Fixture = {
   readonly sources: ReadonlyArray<SourceEntry>;
 };
 
-const readerLayer = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =>
-  Layer.effect(
+const readerLayer = (fixture: Fixture) =>
+  Layer.succeed(
     CandorRecordReader,
-    Effect.map(build, (fixture) =>
-      CandorRecordReaderShape.make({
-        snapshotForFiling: () =>
-          Effect.succeed(CandorRecordSnapshot.make({ dispositions: fixture.dispositions, events: fixture.events })),
-      })
-    )
+    CandorRecordReaderShape.make({
+      snapshotForFiling: () =>
+        Effect.succeed(CandorRecordSnapshot.make({ dispositions: fixture.dispositions, events: fixture.events })),
+    })
   );
 
-const resolverLayer = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =>
-  Layer.effect(
+const resolverLayer = (fixture: Fixture) =>
+  Layer.succeed(
     SourceTextResolver,
-    Effect.map(build, (fixture) =>
-      SourceTextResolver.of({
-        resolve: Effect.fnUntraced(function* (request) {
-          const found = A.findFirst(
-            fixture.sources,
-            (source) => source.identity.textDigest === request.identity.textDigest
-          );
-          return yield* O.match(found, {
-            onNone: () =>
-              Effect.fail(
-                SourceTextResolverError.new("source-unavailable", "No canonical source text for that identity.")
-              ),
-            onSome: (source) =>
-              Effect.succeed(ResolvedSourceText.make({ identity: source.identity, text: source.text })),
-          });
-        }),
-      })
-    )
+    SourceTextResolver.of({
+      resolve: Effect.fnUntraced(function* (request) {
+        const found = A.findFirst(
+          fixture.sources,
+          (source) => source.identity.textDigest === request.identity.textDigest
+        );
+        return yield* O.match(found, {
+          onNone: () =>
+            Effect.fail(
+              SourceTextResolverError.new("source-unavailable", "No canonical source text for that identity.")
+            ),
+          onSome: (source) => Effect.succeed(ResolvedSourceText.make({ identity: source.identity, text: source.text })),
+        });
+      }),
+    })
   );
 
 const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =>
-  Layer.mergeAll(CandorPolicyLive, readerLayer(build), resolverLayer(build)).pipe(Layer.provideMerge(TestCrypto));
+  Layer.unwrap(
+    Effect.map(build, (fixture) => Layer.mergeAll(CandorPolicyLive, readerLayer(fixture), resolverLayer(fixture)))
+  ).pipe(Layer.provideMerge(TestCrypto));
 
 const evaluateFiling = Effect.fnUntraced(function* () {
   const citingApplication = yield* decodeCitingApplicationIdentity(FILING_ENCODED);
@@ -239,12 +238,12 @@ const blockedEventIds = (verdict: CandorGateVerdict) =>
 
 /** Assert a blocking verdict whose reasons are exactly `expected` (sorted). */
 const expectBlocked = (verdict: CandorGateVerdict, expected: ReadonlyArray<string>) => {
-  expect(CandorGateVerdict.isBlocked(verdict)).toBe(true);
+  pipe(CandorGateVerdict.isBlocked(verdict), assertTrue);
   expect(reasons(verdict)).toEqual(expected);
 };
 
 const expectReleased = (verdict: CandorGateVerdict) => {
-  expect(CandorGateVerdict.isBlocked(verdict)).toBe(false);
+  pipe(CandorGateVerdict.isBlocked(verdict), assertFalse);
   expect(verdict.uncovered).toEqual([]);
 };
 
@@ -453,7 +452,7 @@ const examinerOnly = (disposed: boolean) =>
 // ---------------------------------------------------------------------------
 
 describe("CandorPolicy — one AI-discovered event", () => {
-  layer(scenario(undisposed()))((it) => {
+  it.layer(scenario(undisposed()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks promotion while the event carries no disposition", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["no-disposition"]);
@@ -461,7 +460,7 @@ describe("CandorPolicy — one AI-discovered event", () => {
     );
   });
 
-  layer(scenario(disposed()))((it) => {
+  it.layer(scenario(disposed()), { timeout: "30 seconds" })((it) => {
     it.effect("stops blocking once a disposition covers the exact observation version", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
@@ -471,7 +470,7 @@ describe("CandorPolicy — one AI-discovered event", () => {
 });
 
 describe("CandorPolicy — the quantifier above cardinality one", () => {
-  layer(scenario(twoReferences(false, false)()))((it) => {
+  it.layer(scenario(twoReferences(false, false)()), { timeout: "30 seconds" })((it) => {
     it.effect("gates on both current events when neither is disposed", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -481,7 +480,7 @@ describe("CandorPolicy — the quantifier above cardinality one", () => {
     );
   });
 
-  layer(scenario(twoReferences(true, false)()))((it) => {
+  it.layer(scenario(twoReferences(true, false)()), { timeout: "30 seconds" })((it) => {
     it.effect("stays blocked when only one of the two references is disposed", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -491,7 +490,7 @@ describe("CandorPolicy — the quantifier above cardinality one", () => {
     );
   });
 
-  layer(scenario(twoReferences(true, true)()))((it) => {
+  it.layer(scenario(twoReferences(true, true)()), { timeout: "30 seconds" })((it) => {
     it.effect("releases only once every current event is disposed", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
@@ -501,7 +500,7 @@ describe("CandorPolicy — the quantifier above cardinality one", () => {
 });
 
 describe("CandorPolicy — declared supersession moves currency", () => {
-  layer(scenario(supersession({ disposeNewer: false, disposeOlder: true })()))((it) => {
+  it.layer(scenario(supersession({ disposeNewer: false, disposeOlder: true })()), { timeout: "30 seconds" })((it) => {
     it.effect("re-blocks when a newer observation of the same source arrives undisposed", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -511,7 +510,7 @@ describe("CandorPolicy — declared supersession moves currency", () => {
     );
   });
 
-  layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()))((it) => {
+  it.layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()), { timeout: "30 seconds" })((it) => {
     it.effect("stops blocking the superseded event only once the newer event is disposed", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
@@ -519,7 +518,9 @@ describe("CandorPolicy — declared supersession moves currency", () => {
     );
   });
 
-  layer(scenario(supersession({ disposeNewer: false, disposeOlder: true, reverseOrder: true })()))((it) => {
+  it.layer(scenario(supersession({ disposeNewer: false, disposeOlder: true, reverseOrder: true })()), {
+    timeout: "30 seconds",
+  })((it) => {
     it.effect("derives the same head when the superseding observation is ingested first", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -529,7 +530,9 @@ describe("CandorPolicy — declared supersession moves currency", () => {
     );
   });
 
-  layer(scenario(supersession({ disposeNewer: false, disposeOlder: true, replay: true })()))((it) => {
+  it.layer(scenario(supersession({ disposeNewer: false, disposeOlder: true, replay: true })()), {
+    timeout: "30 seconds",
+  })((it) => {
     it.effect("releases nothing when an already-superseded observation is replayed", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -539,7 +542,7 @@ describe("CandorPolicy — declared supersession moves currency", () => {
     );
   });
 
-  layer(scenario(forkedLineage()))((it) => {
+  it.layer(scenario(forkedLineage()), { timeout: "30 seconds" })((it) => {
     it.effect("leaves two unsuperseded observations of one source uncovered even when both are disposed", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -551,7 +554,7 @@ describe("CandorPolicy — declared supersession moves currency", () => {
 });
 
 describe("CandorPolicy — supersession stays within one patent reference", () => {
-  layer(scenario(emptyReferenceSupersession()))((it) => {
+  it.layer(scenario(emptyReferenceSupersession()), { timeout: "30 seconds" })((it) => {
     it.effect("does not honor equality between two empty patent references", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -561,7 +564,7 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
     );
   });
 
-  layer(scenario(foreignReferenceSupersession()))((it) => {
+  it.layer(scenario(foreignReferenceSupersession()), { timeout: "30 seconds" })((it) => {
     it.effect("does not release an AI citation through a foreign reference's disposition", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -571,7 +574,7 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
     );
   });
 
-  layer(scenario(independentReferencesSameSource()))((it) => {
+  it.layer(scenario(independentReferencesSameSource()), { timeout: "30 seconds" })((it) => {
     it.effect("releases two independently disposed citations recorded in one prosecution source", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
@@ -579,7 +582,7 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
     );
   });
 
-  layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()))((it) => {
+  it.layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()), { timeout: "30 seconds" })((it) => {
     it.effect("honors supersession between equal references with a publication number", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
@@ -589,7 +592,7 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
 });
 
 describe("CandorPolicy — a judgment must still stand, and a human must have made it", () => {
-  layer(scenario(withDisposition({ lifecycle: "withdrawn" })()))((it) => {
+  it.layer(scenario(withDisposition({ lifecycle: "withdrawn" })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not let a withdrawn disposition cover its event", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["disposition-not-effective"]);
@@ -597,7 +600,7 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
     );
   });
 
-  layer(scenario(withDisposition({}, { lifecycle: "withdrawn" })()))((it) => {
+  it.layer(scenario(withDisposition({}, { lifecycle: "withdrawn" })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not let a superseded disposition cover its event", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["disposition-not-effective"]);
@@ -605,7 +608,7 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
     );
   });
 
-  layer(scenario(withDisposition({ principal: agentPrincipal })()))((it) => {
+  it.layer(scenario(withDisposition({ principal: agentPrincipal })()), { timeout: "30 seconds" })((it) => {
     it.effect("never lets an agent principal's disposition cover an AI-discovered event", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["disposition-author-not-user"]);
@@ -613,7 +616,7 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
     );
   });
 
-  layer(scenario(withDisposition({ rule56: null })()))((it) => {
+  it.layer(scenario(withDisposition({ rule56: null })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not treat a disposition with no Rule 56 decision as coverage", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["no-rule56-judgment"]);
@@ -623,7 +626,7 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
 });
 
 describe("CandorPolicy — retirement is derived over the whole recorded set", () => {
-  layer(scenario(retiredByForeignBinding()))((it) => {
+  it.layer(scenario(retiredByForeignBinding()), { timeout: "30 seconds" })((it) => {
     it.effect("stops covering when the retiring disposition names a different observation", () =>
       Effect.gen(function* () {
         // Before the fix the retiring row was filtered out by the event binding
@@ -636,7 +639,7 @@ describe("CandorPolicy — retirement is derived over the whole recorded set", (
 });
 
 describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
-  layer(scenario(unresolvableSource()))((it) => {
+  it.layer(scenario(unresolvableSource()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks when the canonical source text cannot be resolved", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["source-unresolved"]);
@@ -644,7 +647,7 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
     );
   });
 
-  layer(scenario(driftedSource()))((it) => {
+  it.layer(scenario(driftedSource()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks when the persisted receipt no longer re-verifies against the source", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["anchor-unverified"]);
@@ -652,7 +655,9 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
     );
   });
 
-  layer(scenario(withEventOptions({ quarantine: { rawDetail: "kind code ZZ", reason: "unknown-code" } })()))((it) => {
+  it.layer(scenario(withEventOptions({ quarantine: { rawDetail: "kind code ZZ", reason: "unknown-code" } })()), {
+    timeout: "30 seconds",
+  })((it) => {
     it.effect("treats a quarantined event as uncovered even when it carries a disposition", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["quarantined"]);
@@ -660,7 +665,7 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
     );
   });
 
-  layer(scenario(withEventOptions({ possibleDuplicateOf: 2 })()))((it) => {
+  it.layer(scenario(withEventOptions({ possibleDuplicateOf: 2 })()), { timeout: "30 seconds" })((it) => {
     it.effect("treats a possible duplicate as uncovered rather than resolving it", () =>
       Effect.gen(function* () {
         expectBlocked(yield* evaluateFiling(), ["possible-duplicate"]);
@@ -670,7 +675,7 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
 });
 
 describe("CandorPolicy — an examiner-observed head is dispositionable", () => {
-  layer(scenario(examinerHeadOverAiEvent(false)()))((it) => {
+  it.layer(scenario(examinerHeadOverAiEvent(false)()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks while the examiner-observed head that superseded an AI finding is undisposed", () =>
       Effect.gen(function* () {
         // The AI event is superseded, but its history is not discharged by the
@@ -682,7 +687,7 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
     );
   });
 
-  layer(scenario(examinerHeadOverAiEvent(true)()))((it) => {
+  it.layer(scenario(examinerHeadOverAiEvent(true)()), { timeout: "30 seconds" })((it) => {
     it.effect("releases once a disposition binds to that examiner-observed head", () =>
       Effect.gen(function* () {
         // The examiner head is the current observation; one human disposition
@@ -694,7 +699,7 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
 });
 
 describe("CandorPolicy — examiner occurrences gate in their own right", () => {
-  layer(scenario(examinerOnly(false)()))((it) => {
+  it.layer(scenario(examinerOnly(false)()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks on an examiner-observed event that carries no disposition", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
@@ -704,7 +709,7 @@ describe("CandorPolicy — examiner occurrences gate in their own right", () => 
     );
   });
 
-  layer(scenario(examinerOnly(true)()))((it) => {
+  it.layer(scenario(examinerOnly(true)()), { timeout: "30 seconds" })((it) => {
     it.effect("releases an examiner-only source after a human disposition", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());

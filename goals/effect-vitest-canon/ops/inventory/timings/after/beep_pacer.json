@@ -1,0 +1,71 @@
+{
+  "package": "@beep/pacer",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:13:03.332000+00:00",
+  "totalMs": 3687.43359375,
+  "testCount": 26,
+  "files": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
+      "ms": 0.985595703125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "ms": 247.43359375,
+      "tests": 25
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CourtCaseSearchDto arbitrary values round-trip",
+      "ms": 247.43362500000012
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) deletes the report when polling is interrupted (delete success)",
+      "ms": 203.36137700000018
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) deletes the report when polling is interrupted (delete failed)",
+      "ms": 191.99256800000012
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) pagination cap fails when pagination exceeds the hard page cap",
+      "ms": 178.2432819999999
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CourtCaseSearchDto round-trips",
+      "ms": 29.32402400000001
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CaseReportList round-trips",
+      "ms": 29.30748799999992
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) PartySearchDto round-trips",
+      "ms": 29.30595600000015
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) ReportInfoType round-trips",
+      "ms": 29.304603999999927
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) batch cleanup failure downloadCases returns successful results when best-effort delete cleanup fails",
+      "ms": 8.833806000000095
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) auth request body encodes login/logout request bodies without Effect Option internals",
+      "ms": 8.388800000000174
+    }
+  ]
+}

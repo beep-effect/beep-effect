@@ -13,9 +13,11 @@ import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -24,25 +26,13 @@ import type { SyncOperationRepositoryShape } from "@beep/documents-use-cases/ent
 
 const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
@@ -177,7 +167,10 @@ describe("SyncOperation repository port", () => {
         .pipe(Effect.flip);
 
       const conflict = O.liftPredicate(error, SyncOperationRepositoryConflict.is);
-      expect(O.map(conflict, (found) => found.idempotencyKey)).toEqual(O.some("sync-item-1:uploadFile:1"));
+      assertSome(
+        O.map(conflict, (found) => found.idempotencyKey),
+        "sync-item-1:uploadFile:1"
+      );
     })
   );
 
@@ -187,6 +180,16 @@ describe("SyncOperation repository port", () => {
       const repository = makeRepository();
       const created = yield* repository.enqueue(uploadSeed("sync-item-1:uploadFile:1", "matters/a/complaint.pdf"));
       yield* repository.update(withStatus(created, "leased"));
+      const otherWorkspaceId = WorkspaceIdentity.WorkspaceId.make(3);
+      const other = yield* repository.enqueue(
+        SyncOperationSeed.make({
+          ...uploadSeed("other-workspace:uploadFile:1", "matters/b/complaint.pdf"),
+          workspaceId: otherWorkspaceId,
+        })
+      );
+      yield* repository.update(withStatus(other, "leased"));
+      const failed = yield* repository.enqueue(uploadSeed("failed:uploadFile:1", "matters/a/failed.pdf"));
+      yield* repository.update(withStatus(failed, "failed"));
 
       const leasedBefore = yield* repository.listByStatus(
         ListSyncOperationsByStatusInput.make({ provider: "box", status: "leased", workspaceId })
@@ -200,6 +203,22 @@ describe("SyncOperation repository port", () => {
 
       const queued = yield* repository.listQueued(ListQueuedSyncOperationsInput.make({ provider: "box", workspaceId }));
       expect(A.map(queued, (operation) => operation.id)).toEqual([created.id]);
+      const leasedAfter = yield* repository.listByStatus(
+        ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "leased" })
+      );
+      expect(leasedAfter).toHaveLength(0);
+      const otherLeased = yield* repository.listByStatus(
+        ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId: otherWorkspaceId, status: "leased" })
+      );
+      expect(A.map(otherLeased, (operation) => operation.id)).toEqual([other.id]);
+      const failedAfter = yield* repository.listByStatus(
+        ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "failed" })
+      );
+      expect(A.map(failedAfter, (operation) => operation.id)).toEqual([failed.id]);
+      const otherQueued = yield* repository.listQueued(
+        ListQueuedSyncOperationsInput.make({ provider: "box", workspaceId: otherWorkspaceId })
+      );
+      expect(otherQueued).toHaveLength(0);
     })
   );
 
@@ -212,15 +231,32 @@ describe("SyncOperation repository port", () => {
       );
       const error = yield* repository.update(unknown).pipe(Effect.flip);
 
-      expect(SyncOperationRepositoryNotFound.is(error)).toBe(true);
+      pipe(SyncOperationRepositoryNotFound.is(error), assertTrue);
     })
   );
 
-  it("round-trips schema-derived seeds and listing inputs", () => {
-    assertSchemaArbitraryRoundTrip(SyncOperationSeed);
-    assertSchemaArbitraryRoundTrip(ListQueuedSyncOperationsInput);
-    assertSchemaArbitraryRoundTrip(ListQueuedSyncOperationsForItemInput);
-    assertSchemaArbitraryRoundTrip(RequeueLeasedSyncOperationsInput);
-    assertSchemaArbitraryRoundTrip(ListSyncOperationsByStatusInput);
-  });
+  it.prop(
+    "round-trips schema-derived seeds and listing inputs",
+    [
+      Arbitrary.schema(SyncOperationSeed),
+      Arbitrary.schema(ListQueuedSyncOperationsInput),
+      Arbitrary.schema(ListQueuedSyncOperationsForItemInput),
+      Arbitrary.schema(RequeueLeasedSyncOperationsInput),
+      Arbitrary.schema(ListSyncOperationsByStatusInput),
+    ],
+    ([
+      syncOperationSeed,
+      listQueuedSyncOperationsInput,
+      listQueuedSyncOperationsForItemInput,
+      requeueLeasedSyncOperationsInput,
+      listSyncOperationsByStatusInput,
+    ]) => {
+      assertSchemaRoundTrip(SyncOperationSeed, syncOperationSeed);
+      assertSchemaRoundTrip(ListQueuedSyncOperationsInput, listQueuedSyncOperationsInput);
+      assertSchemaRoundTrip(ListQueuedSyncOperationsForItemInput, listQueuedSyncOperationsForItemInput);
+      assertSchemaRoundTrip(RequeueLeasedSyncOperationsInput, requeueLeasedSyncOperationsInput);
+      assertSchemaRoundTrip(ListSyncOperationsByStatusInput, listSyncOperationsByStatusInput);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

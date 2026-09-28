@@ -1,5 +1,8 @@
 import { ShaclEngineError } from "@beep/shacl";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const sameShaclEngineError = S.toEquivalence(ShaclEngineError);
@@ -10,7 +13,7 @@ describe("SHACL declared-field equivalence", () => {
     const b = ShaclEngineError.make({ message: "validation failed", reason: "validationFailed" });
     const c = ShaclEngineError.make({ message: "validation failed", reason: "datasetLoadFailed" });
 
-    expect(sameShaclEngineError(a, b)).toBe(true);
-    expect(sameShaclEngineError(a, c)).toBe(false);
+    pipe(sameShaclEngineError(a, b), assertTrue);
+    pipe(sameShaclEngineError(a, c), assertFalse);
   });
 });

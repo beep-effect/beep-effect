@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-use-cases",
+  "sourceHead": "843a0cf344",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.725303673010785,
+  "bunWholeCommandSeconds": 2.768461395986378,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.24658203125, 3.37255859375, 2.55419921875],
+  "loadAfter": [11.47314453125, 4.69482421875, 2.986328125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.12 avg60=0.21 avg300=0.15 total=799988793\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218757\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142627\n",
+    "io": "some avg10=0.27 avg60=0.27 avg300=0.07 total=856837586\nfull avg10=0.21 avg60=0.20 avg300=0.05 total=749615653\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=2.07 avg60=0.56 avg300=0.22 total=800340760\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218757\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142627\n",
+    "io": "some avg10=0.18 avg60=0.25 avg300=0.07 total=856838971\nfull avg10=0.14 avg60=0.19 avg300=0.05 total=749615956\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "35f14498827b78f6417d964fe23af46233307b33a8422c43e9fa8d36bcc10850"
+    },
+    {
+      "file": "packages/epistemic/use-cases/README.md",
+      "sha256": "27a23dc3ff52f699907aae6804b1ccb6945c85b6156df67375d85d6c326a1db1"
+    },
+    {
+      "file": "packages/epistemic/use-cases/package.json",
+      "sha256": "5b9c6113b30f6ccb21690e07614d8f57dcc1dfc464d676e0a15c53f17016a4d7"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.commands.ts",
+      "sha256": "8dd89fce0bf147f1e94f68b8d2676bb33a0486cf2573fae78ea00f135f4ea140"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.ports.ts",
+      "sha256": "3e9255dbe7773b4b581fc72ee63bdda736dd0f4e4743e1acc34dc58000f44b38"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.service.ts",
+      "sha256": "8128d76b29544d1d5f75d7f10f174da5adb7aae9e3edeb7f1e26283ead6c109b"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/index.ts",
+      "sha256": "625f67ffa8815876aaf28b14f158f56fcd60255e0534476cee1b913a620fdcd7"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.commands.ts",
+      "sha256": "7a5610c127f9ee7909b6f55e575552c59ad3f6b4b6d44681265b517ace80cd0b"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.service.ts",
+      "sha256": "3942d3d563f7726e826d1b5c78d331ecc4888e7ca5bdc013dd755e83afc8e51c"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts",
+      "sha256": "d5d71058396b0dcd0494ab23d83c278e3bb7b3ca7986c83e56987de132f88bf2"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts",
+      "sha256": "85cf70254eaffda5261c33394bcaa4da5889194f4d5f952839d502034035866c"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts",
+      "sha256": "d3bc1807e4dc14300060b45050ed32dee9e247bbec1f77865a9da4b48940e5c0"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimGate/index.ts",
+      "sha256": "befc669fb7c87b5ccc70823cd311eb06257896188ec335b5cb10541a05fdb265"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts",
+      "sha256": "572a6e7438c48ae12e967c7cbd70b222f3719f77db84c352e458eef1675acd79"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimLifecycle/index.ts",
+      "sha256": "70bf68040a7ab1492b1027c0f11337fb5d9c602e1c3f2b32f55828690f5ee95c"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts",
+      "sha256": "5f415705549efa7485b9d959d941ba6422383c6a19608c5901fa902927a1adfd"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ClaimProjection/index.ts",
+      "sha256": "dd75afb53cbd7316bf622538b97962fa0614fa19f9df1deac37556e99569fd79"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.commands.ts",
+      "sha256": "f1ac0b184805a9821dc8e51d78fb9b409236efa11238500249185a0fbd137cdc"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.errors.ts",
+      "sha256": "939d9445d50069105a53b47d115e9ba58fae3df6cf625b33b1c57df0ee479268"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.ports.ts",
+      "sha256": "b027902add5260b4762c611fdf3445f7c811b6b55595b1c8a87d192f97fca0ec"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
+      "sha256": "71653f182ab922f84bcfa9343bb2153cfeed8af2f391f1620d154b8bc30a7357"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.service.ts",
+      "sha256": "815cebb7c8c342740169b04b561d00bab78b3e3bcab373d9964a2054ea51f699"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/index.ts",
+      "sha256": "9231cb8f8e7219ea3e794b04e20d51b7c923894b630a2bad43dec1651e62ff78"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/server.ts",
+      "sha256": "f4efab4ddcad828dc2086473896047cba5997015c4a0b9a12192c24039312958"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
+      "sha256": "d8511d63f736b2b6eaf2a0b0a0e056a9f381c416909da323fdfd922a56649471"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "sha256": "393393ce78242b1ed166df20c61282297f713af5c3cb074fd24afd88b5ea5532"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.ports.ts",
+      "sha256": "fb7aef76a740b71f42e567068fea96e1707655a725506bcb2a000ed218b84e3c"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/index.ts",
+      "sha256": "e21ca5b26562d901fd85b4fbe0c4499d482f9bbe1e2c5d0da1e8c6687cfb7de3"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "sha256": "f1a61bc7131ddc0fc545a9ef574a1b57b8dcbe52f9718addd7c4343d399a053f"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts",
+      "sha256": "f4cc8a58dfbf267eb9dbfc18088cf131c81afeb7bf287c4860c17cbcb1936b2d"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/index.ts",
+      "sha256": "ce573cf581eaa100f5914dbd1fc244a50759d28ca7848919d713779b03e1f54b"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/index.ts",
+      "sha256": "a7a2da066d6b12ffa10f33101904543c6136aabacc718dceaf738816941c34cc"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/public.ts",
+      "sha256": "d495bf6ba218ab7335865ff3c1a18dccb6f9adf6c1ecd7097195b39e0c377fce"
+    },
+    {
+      "file": "packages/epistemic/use-cases/src/server.ts",
+      "sha256": "a4cdada1e4cb71258d9e286158ac870811ad621af471c578f54e1b52ea1f44bf"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
+      "sha256": "dd75958c17a415a94d6a6601c023ca9e404891c62cc73b107c04324c2b07bb58"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimEvidenceReview.test.ts",
+      "sha256": "f1294529d1642d5fe9ce4ca77d183bdeb8a4aed7c5583092c1ee555c29a8333b"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "sha256": "284516075815b416c496486bbf99ae75c073705e9e4c607d875edeaa0a652596"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "sha256": "2e609f874c1d3752f04fead05d7208e1fd03c8d88d8efd82d347a63380c6fa61"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
+      "sha256": "aab1d29997df9057f339fbd982faf6ea684a648c50a6cf375a0bdf3bc90649be"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+      "sha256": "3c0ed9ddfd2a0459e900a9fc0621c4a4586684cd517e917ec62d5461fb66e6fe"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
+      "sha256": "f7643feab01168c3036436d00dcb9c34535d2b4144783d508eddc47cfb2c3681"
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "49c12567f6b36dac7f09d484898bd21ec0585800cd5739bc08315bab36847a79"
+    },
+    {
+      "file": "packages/epistemic/use-cases/tsconfig.check.json",
+      "sha256": "8721753b20b0d33f6a2c9bc2cd6d61efb181a43ea9e50e7bc68650054f0e319c"
+    },
+    {
+      "file": "packages/epistemic/use-cases/tsconfig.json",
+      "sha256": "e9b62ae48e296586b0c6c1bdf05020803b600c7c2a87c9efbd70cd95c119308f"
+    },
+    {
+      "file": "packages/epistemic/use-cases/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/epistemic/use-cases/vitest.config.ts",
+      "sha256": "74371247757931dbe82c40787e71e70ee755d7bc4019c6eab17167f3bc0bdc44"
+    }
+  ],
+  "environmentMode": "Configured epistemic use-case local schema, service and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 50,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [11.47314453125, 4.69482421875, 2.986328125],
+    "loadAfter": [10.87451171875, 4.68310546875, 2.9921875],
+    "pressureBefore": {
+      "cpu": "some avg10=2.07 avg60=0.56 avg300=0.22 total=800340869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218757\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142627\n",
+      "io": "some avg10=0.18 avg60=0.25 avg300=0.07 total=856838971\nfull avg10=0.14 avg60=0.19 avg300=0.05 total=749615956\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=2.13 avg60=0.68 avg300=0.26 total=800350118\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218999\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142868\n",
+      "io": "some avg10=0.12 avg60=0.24 avg300=0.07 total=856839407\nfull avg10=0.09 avg60=0.18 avg300=0.05 total=749616305\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 50,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not causal benchmarks. All50tests in8files pass before and after with zero skips and stable hashes. All144original assertions remain with52public helper conversions. Five manual properties migrated; two native effect laws were already upstream. All7laws have independently inverted replay/shrink controls. Floors remain50 for submissions/as-of/projection and25 for four source-page laws; deterministic sample count1 seed520 remains. Authentication boundary finding is explicitly open for the desktop batch. Baseline overlaps early publisher; after overlaps full package proof, census and detector scan."
+}

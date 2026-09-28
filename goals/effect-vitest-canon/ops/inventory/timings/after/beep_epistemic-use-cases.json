@@ -1,0 +1,101 @@
+{
+  "package": "@beep/epistemic-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:03:00.657000+00:00",
+  "totalMs": 6640.49169921875,
+  "testCount": 50,
+  "files": [
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
+      "ms": 7.904052734375,
+      "tests": 3
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ClaimEvidenceReview.test.ts",
+      "ms": 12.81640625,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "ms": 123.49169921875,
+      "tests": 5
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "ms": 48.882568359375,
+      "tests": 12
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
+      "ms": 33.586181640625,
+      "tests": 9
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+      "ms": 37.552978515625,
+      "tests": 5
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
+      "ms": 6.08984375,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.02587890625,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "testName": "Contradiction review commands round-trips schema-derived candidate submissions",
+      "ms": 123.49166700000023
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "testName": "Contradiction review commands rejects empty or reversed candidate validity intervals",
+      "ms": 73.11058000000048
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "testName": "Contradiction review commands rejects blank review reasons for both decisions",
+      "ms": 73.07903200000055
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "testName": "Contradiction review commands rejects over-limit review reasons for both decisions",
+      "ms": 73.07196100000056
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
+      "testName": "Contradiction review commands trims review reasons for both decisions",
+      "ms": 73.06244600000082
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "testName": "ContradictionTriage RPC contract rejects over-limit review reasons for both decisions at the RPC payload boundary",
+      "ms": 36.66559099999995
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "testName": "ContradictionTriage RPC contract exposes exact belief, evidence, anchor, and bounded source-page read models",
+      "ms": 36.63978099999986
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "testName": "ContradictionTriage RPC contract constructs only non-empty forward source highlights and rejects malformed ranges",
+      "ms": 36.635323999999855
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "testName": "ContradictionTriage RPC contract rejects a page whose source identity differs from its verified highlight",
+      "ms": 36.62836400000015
+    },
+    {
+      "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
+      "testName": "ContradictionTriage RPC contract constructs source pages that cover their highlight and rejects out-of-bounds offsets",
+      "ms": 36.61675600000035
+    }
+  ]
+}

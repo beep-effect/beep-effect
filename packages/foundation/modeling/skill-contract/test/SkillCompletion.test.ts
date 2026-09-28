@@ -38,9 +38,11 @@ import {
   SkillContractId,
   toSkillCompletionReceipt,
 } from "@beep/skill-contract";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -205,7 +207,7 @@ describe("@beep/skill-contract SkillCompletion", () => {
       });
 
       expect(evaluation.verdict).toBe("allowed");
-      expect(O.isSome(receipt)).toBe(true);
+      pipe(receipt, O.isSome, assertTrue);
       if (O.isNone(receipt)) {
         return;
       }
@@ -302,6 +304,21 @@ describe("@beep/skill-contract SkillCompletion", () => {
 
       expect(contractFailure.reason).toBe("contract-evidence-mismatch");
       expect(outputFailure.reason).toBe("output-subjects-mismatch");
+
+      const changedDigest = EvidenceDigest.make({
+        sha256: Sha256Hex.make("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"),
+      });
+      const changedContract = EvidenceSubject.make({ ...contractSubject, digest: changedDigest });
+      const changedOutput = EvidenceSubject.make({ ...outputSubject, digest: changedDigest });
+      const contractDigestFailure = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate], { evidenceSubject: changedContract }), summary)
+      ).pipe(Effect.flip);
+      const outputDigestFailure = yield* evaluateSkillCompletion(
+        evaluationInput(contractFor([blockingGate]), summary, ladder, [changedOutput])
+      ).pipe(Effect.flip);
+
+      expect(contractDigestFailure.reason).toBe("contract-evidence-mismatch");
+      expect(outputDigestFailure.reason).toBe("output-subjects-mismatch");
     })
   );
 
@@ -374,21 +391,16 @@ describe("@beep/skill-contract SkillCompletion", () => {
     })
   );
 
-  it("round-trips schema-derived arbitrary completion invariant reasons", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(CompletionInvariantReason)]),
-          ([candidate]) => {
-            const encoded = Result.getOrThrow(encodeUnknownCompletionInvariantReasonResult(candidate));
-            const decoded = Result.getOrThrow(decodeCompletionInvariantReasonResult(encoded));
+  it.effect.prop(
+    "round-trips schema-derived arbitrary completion invariant reasons",
+    [Arbitrary.schema(CompletionInvariantReason)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const encoded = Result.getOrThrow(encodeUnknownCompletionInvariantReasonResult(candidate));
+        const decoded = Result.getOrThrow(decodeCompletionInvariantReasonResult(encoded));
 
-            expect(S.toEquivalence(CompletionInvariantReason)(decoded, candidate)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(S.toEquivalence(CompletionInvariantReason)(decoded, candidate)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

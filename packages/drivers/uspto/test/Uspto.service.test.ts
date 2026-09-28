@@ -1,5 +1,6 @@
-import { NonNegativeInt } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import {
   makeUsptoError,
   normalizeUsptoApplicationNumber,
@@ -14,7 +15,9 @@ import {
   UsptoErrorReason,
   UsptoPatentNumber,
 } from "@beep/uspto";
-import { describe, expect, it } from "@effect/vitest";
+import { thunkTrue } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -105,100 +108,99 @@ const expectEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 };
 
 describe("Uspto service", () => {
-  it.effect(
-    "resolves application metadata from a file wrapper envelope",
-    Effect.fnUntraced(
-      function* () {
-        const seenUrls: Array<string> = [];
-        const uspto = yield* Uspto;
-        const metadata = yield* uspto.getApplication("16138242");
+  {
+    const requestedUrls: Array<string> = [];
+    it.layer(usptoLayer(respondWith(applicationEnvelope, 200, requestedUrls)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        "resolves application metadata from a file wrapper envelope",
+        Effect.fnUntraced(function* () {
+          const uspto = yield* Uspto;
+          const metadata = yield* uspto.getApplication("16138242");
 
-        expect(metadata.applicationNumberText).toBe("16138242");
-        expect(metadata.inventionTitle).toStrictEqual(O.some("Adjustable widget assembly"));
-        expect(metadata.patentNumber).toStrictEqual(O.some("10772255"));
-        expect(metadata.firstApplicantName).toStrictEqual(O.some("Precision Widgets LLC"));
-        expect(seenUrls).toHaveLength(0);
-      },
-      provideScopedLayer(usptoLayer(respondWith(applicationEnvelope)))
-    )
-  );
-
-  it.effect(
-    "sends the application request to the open data portal path",
-    Effect.fnUntraced(function* () {
-      const seenUrls: Array<string> = [];
-      const layer = usptoLayer(respondWith(applicationEnvelope, 200, seenUrls));
-      yield* Uspto.pipe(
-        Effect.flatMap((uspto) => uspto.getApplication("16138242")),
-        provideScopedLayer(layer)
+          expect(metadata.applicationNumberText).toBe("16138242");
+          assertSome(metadata.inventionTitle, NonEmptyTrimmedStr.make("Adjustable widget assembly"));
+          assertSome(metadata.patentNumber, NonEmptyTrimmedStr.make("10772255"));
+          assertSome(metadata.firstApplicantName, NonEmptyTrimmedStr.make("Precision Widgets LLC"));
+          expect(requestedUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
+        })
       );
-      expect(seenUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
-    })
-  );
+    });
+  }
 
-  it.effect(
-    "maps 404 responses to not-found",
-    Effect.fnUntraced(
-      function* () {
+  {
+    const seenUrls: Array<string> = [];
+    it.layer(usptoLayer(respondWith(applicationEnvelope, 200, seenUrls)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        "sends the application request to the open data portal path",
+        Effect.fnUntraced(function* () {
+          yield* Uspto.pipe(Effect.flatMap((uspto) => uspto.getApplication("16138242")));
+          expect(seenUrls).toStrictEqual(["https://api.uspto.gov/api/v1/patent/applications/16138242"]);
+        })
+      );
+    });
+  }
+
+  it.layer(usptoLayer(respondWith("{}", 404)), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "maps 404 responses to not-found",
+      Effect.fnUntraced(function* () {
         const uspto = yield* Uspto;
         const error = yield* uspto.getApplication("99999999").pipe(Effect.flip);
         expect(error.reason).toBe("not-found");
-      },
-      provideScopedLayer(usptoLayer(respondWith("{}", 404)))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps 429 responses to rate-limited",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(usptoLayer(respondWith("{}", 429)), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "maps 429 responses to rate-limited",
+      Effect.fnUntraced(function* () {
         const uspto = yield* Uspto;
         const error = yield* uspto.getApplication("16138242").pipe(Effect.flip);
         expect(error.reason).toBe("rate-limited");
-      },
-      provideScopedLayer(usptoLayer(respondWith("{}", 429)))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "extracts continuity parents and children",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(usptoLayer(respondWith(continuityEnvelope)), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "extracts continuity parents and children",
+      Effect.fnUntraced(function* () {
         const uspto = yield* Uspto;
         const continuity = yield* uspto.getContinuity("16138242");
         expect(continuity.parentApplicationNumbers).toStrictEqual(["15111111"]);
         expect(continuity.childApplicationNumbers).toStrictEqual(["17999999"]);
-      },
-      provideScopedLayer(usptoLayer(respondWith(continuityEnvelope)))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "extracts document references with download urls and skips id-less rows",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(usptoLayer(respondWith(documentsEnvelope)), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "extracts document references with download urls and skips id-less rows",
+      Effect.fnUntraced(function* () {
         const uspto = yield* Uspto;
         const documents = yield* uspto.getDocuments("16138242");
         expect(documents).toHaveLength(1);
         expect(documents[0]?.documentIdentifier).toBe("DOC123");
         expect(documents[0]?.downloadUrl).toBe("https://api.uspto.gov/docs/DOC123.pdf");
-      },
-      provideScopedLayer(usptoLayer(respondWith(documentsEnvelope)))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "searches applications and projects each wrapper",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(usptoLayer(respondWith(applicationEnvelope)), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "searches applications and projects each wrapper",
+      Effect.fnUntraced(function* () {
         const uspto = yield* Uspto;
         const results = yield* uspto.searchApplications('applicationMetaData.patentNumber:"10772255"');
         expect(results).toHaveLength(1);
-        expect(results[0]?.patentNumber).toStrictEqual(O.some("10772255"));
-      },
-      provideScopedLayer(usptoLayer(respondWith(applicationEnvelope)))
-    )
-  );
+        assertSome(
+          O.flatMap(O.fromUndefinedOr(results[0]), (result) => result.patentNumber),
+          NonEmptyTrimmedStr.make("10772255")
+        );
+      })
+    );
+  });
 });
 
 describe("Uspto identifier normalization", () => {
@@ -206,21 +208,21 @@ describe("Uspto identifier normalization", () => {
     const error = makeUsptoError({ cause: "socket hang up" })("transport");
 
     expect(error.reason).toBe("transport");
-    expect(error.cause).toStrictEqual(O.some("socket hang up"));
+    assertSome(error.cause, "socket hang up");
   });
 
   it("normalizes application numbers", () => {
-    expect(normalizeUsptoApplicationNumber("16/138,242")).toStrictEqual(O.some("16138242"));
-    expect(normalizeUsptoApplicationNumber("16-138-242")).toStrictEqual(O.some("16138242"));
-    expect(O.isNone(normalizeUsptoApplicationNumber("12345"))).toBe(true);
-    expect(O.isNone(normalizeUsptoApplicationNumber("not a number"))).toBe(true);
+    assertSome(normalizeUsptoApplicationNumber("16/138,242"), "16138242");
+    assertSome(normalizeUsptoApplicationNumber("16-138-242"), "16138242");
+    assertNone(normalizeUsptoApplicationNumber("12345"));
+    assertNone(normalizeUsptoApplicationNumber("not a number"));
   });
 
   it("normalizes patent numbers", () => {
-    expect(normalizeUsptoPatentNumber("US 10,772,255 B2")).toStrictEqual(O.some("10772255"));
-    expect(normalizeUsptoPatentNumber("10772255")).toStrictEqual(O.some("10772255"));
-    expect(normalizeUsptoPatentNumber("RE46,604")).toStrictEqual(O.some("RE46604"));
-    expect(O.isNone(normalizeUsptoPatentNumber("ABC"))).toBe(true);
+    assertSome(normalizeUsptoPatentNumber("US 10,772,255 B2"), "10772255");
+    assertSome(normalizeUsptoPatentNumber("10772255"), "10772255");
+    assertSome(normalizeUsptoPatentNumber("RE46,604"), "RE46604");
+    assertNone(normalizeUsptoPatentNumber("ABC"));
   });
 });
 
@@ -257,7 +259,7 @@ describe("Uspto schema parity", () => {
       apiKey: "test-key",
       apiUrl: "https://api.uspto.gov",
     });
-    expect(Result.isFailure(decodeUsptoConfigInputResult({ apiUrl: "//" }))).toBe(true);
+    assertFailure(Result.mapError(decodeUsptoConfigInputResult({ apiUrl: "//" }), thunkTrue), true);
     expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
       applicationNumberText: "16138242",
       firstApplicantName: "Precision Widgets LLC",

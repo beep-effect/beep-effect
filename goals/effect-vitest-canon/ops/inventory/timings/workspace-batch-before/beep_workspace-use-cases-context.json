@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/workspace-use-cases",
+  "sourceHead": "411bf443d2e02ff419dc24c7576be605db6a5c82",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.421031652993406,
+  "bunWholeCommandSeconds": 2.367794480000157,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [10.49169921875, 6.21044921875, 7.2021484375],
+  "loadAfter": [10.0517578125, 6.18994140625, 7.18994140625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.05 avg60=0.24 avg300=0.13 total=661133965\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.04 avg60=0.22 avg300=0.21 total=167371695\nfull avg10=0.04 avg60=0.22 avg300=0.20 total=159663095\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775076367\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679404580\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.23 avg300=0.12 total=661144144\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.03 avg60=0.20 avg300=0.20 total=167371706\nfull avg10=0.03 avg60=0.20 avg300=0.20 total=159663105\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775078165\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679406176\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "4469264619371fcc19535c5af9c96a2d50415d4f181c4d7b320e242f855dcae2"
+    },
+    {
+      "file": "packages/workspace/use-cases/package.json",
+      "sha256": "b00dfba8d30e684c807d2b06ef722a78e0bc7e934e3904a368f2270704f08598"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts",
+      "sha256": "43b05209d157fbf19614a4b70fef054721f8a619f80e62b5b8b972f4ffbbcebc"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
+      "sha256": "c796b15ddc17737eafdee5515f0f352a4bb4fd5741dfdbbd7fdb1b642a14801d"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts",
+      "sha256": "2b66e3c9f89f54cbc32648092c449bb3cd367e115641b71422233e061fd5e8d7"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Thread/index.ts",
+      "sha256": "23b2fdf5cddc193be6f32f9711dacf55d3383e95b485c076c90e1a1b15c5e0c9"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Thread/server.ts",
+      "sha256": "6952d10c8757edcbaf327fb84da011a5666dd862a8eae357bd2aa5f39121f196"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.rpc.ts",
+      "sha256": "f7488f23f40dd7a08623971e1889c1cbb16c2214d752930391cf34a722a4395c"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "sha256": "5e765363d4c640b7e8ce625fc7f48d503ec3ee4450623560931e0fd5b991980d"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/index.ts",
+      "sha256": "2f4a2476a312d22ff6f2ce899f182abf80ced241ba576e81ec461fde0fa0beda"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/server.ts",
+      "sha256": "6ae9cccc6a570bd89ae36ccdae71ee84a026ddccef5fa6f13efbacd10f3ba086"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/index.ts",
+      "sha256": "f67e48caa21e633491a32f143c29c57330b9a1e9912cae3b6c518e8875310a5a"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/public.ts",
+      "sha256": "5de6c8426c4fd2729b1d894097104722de95f8b714ded769c870941bfa6b9820"
+    },
+    {
+      "file": "packages/workspace/use-cases/src/server.ts",
+      "sha256": "de1f7b6c548d7d1d89ac186592a7ab50a4c1f6bef89a2c34a11d0881860a2aac"
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "ee3967638c5364541439d15f274a34b90391e8ff1408ea7af805b71df692f3ef"
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "sha256": "3fd12c39fdc7b81605b1f6821d69e83955c4d2361192f7a4d44218fe229a2660"
+    }
+  ],
+  "environmentMode": "Configured workspace codec and declaration metadata suites; no database or external process.",
+  "bunProof": {
+    "passedTests": 13,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [10.0517578125, 6.18994140625, 7.18994140625],
+    "loadAfter": [10.0517578125, 6.18994140625, 7.18994140625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.03 avg60=0.23 avg300=0.12 total=661144206\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.03 avg60=0.20 avg300=0.20 total=167371706\nfull avg10=0.03 avg60=0.20 avg300=0.20 total=159663105\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775078166\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679406177\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.02 avg60=0.22 avg300=0.12 total=661150100\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.02 avg60=0.20 avg300=0.20 total=167371738\nfull avg10=0.02 avg60=0.20 avg300=0.20 total=159663135\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775086077\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679412442\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

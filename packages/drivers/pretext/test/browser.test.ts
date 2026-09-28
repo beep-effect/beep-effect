@@ -1,7 +1,8 @@
 import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
-import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
 const runtimeHasCanvas2d = P.isFunction(globalThis.OffscreenCanvas) || !P.isUndefined(globalThis.document);
@@ -10,7 +11,22 @@ describe("detectEngineProfile", () => {
   it.effect(
     "pins the non-browser fence values mirrored from upstream v0.0.8",
     Effect.fnUntraced(function* () {
-      const profile = detectEngineProfile();
+      const profile = yield* Effect.sync(() => {
+        const original = O.fromNullishOr(Object.getOwnPropertyDescriptor(globalThis, "navigator"));
+        Object.defineProperty(globalThis, "navigator", { configurable: true, value: undefined });
+        try {
+          return detectEngineProfile();
+        } finally {
+          O.match(original, {
+            onNone: () => {
+              Reflect.deleteProperty(globalThis, "navigator");
+            },
+            onSome: (descriptor) => {
+              Object.defineProperty(globalThis, "navigator", descriptor);
+            },
+          });
+        }
+      });
 
       expect(profile.lineFitEpsilon).toBe(0.005);
       expect(profile.carryCJKAfterClosingQuote).toBe(false);
@@ -22,56 +38,63 @@ describe("detectEngineProfile", () => {
 });
 
 describe("PretextCaptureLive", () => {
-  it.effect(
-    "rejects system-ui with a typed error in any runtime",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const error = yield* Effect.flip(
-        capture.captureFontMetrics(
-          PretextCaptureRequest.make({
-            font: "16px system-ui",
-            lineHeight: 20,
-            words: ["the"],
-          })
-        )
-      );
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects system-ui with a typed error in any runtime",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const error = yield* Effect.flip(
+          capture.captureFontMetrics(
+            PretextCaptureRequest.make({
+              font: "16px system-ui",
+              lineHeight: 20,
+              words: ["the"],
+            })
+          )
+        );
 
-      expect(error._tag).toBe("PretextUnsupportedFontError");
-    }, provideScopedLayer(PretextCaptureLive))
-  );
+        expect(error._tag).toBe("PretextUnsupportedFontError");
+      })
+    );
+  });
 
-  it.effect.skipIf(runtimeHasCanvas2d)(
-    "fails typed, not thrown, when the runtime cannot measure",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const error = yield* Effect.flip(
-        capture.captureFontMetrics(
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect.skipIf(runtimeHasCanvas2d)(
+      "fails typed, not thrown, when the runtime cannot measure",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const error = yield* Effect.flip(
+          capture.captureFontMetrics(
+            PretextCaptureRequest.make({
+              font: "16px Arial",
+              lineHeight: 20,
+              words: ["the"],
+            })
+          )
+        );
+
+        expect(error).toMatchObject({ _tag: "PretextMeasurementUnavailableError", reason: "missingCanvas2d" });
+      })
+    );
+  });
+
+  it.layer(PretextCaptureLive, { timeout: "10 seconds" })((it) => {
+    it.effect.skipIf(!runtimeHasCanvas2d)(
+      "captures a live snapshot when the runtime can measure",
+      Effect.fnUntraced(function* () {
+        const capture = yield* PretextCapture;
+        const snapshot = yield* capture.captureFontMetrics(
           PretextCaptureRequest.make({
             font: "16px Arial",
             lineHeight: 20,
-            words: ["the"],
+            words: ["the", "dragon"],
           })
-        )
-      );
+        );
 
-      expect(error).toMatchObject({ _tag: "PretextMeasurementUnavailableError", reason: "missingCanvas2d" });
-    }, provideScopedLayer(PretextCaptureLive))
-  );
-
-  it.effect.skipIf(!runtimeHasCanvas2d)(
-    "captures a live snapshot when the runtime can measure",
-    Effect.fnUntraced(function* () {
-      const capture = yield* PretextCapture;
-      const snapshot = yield* capture.captureFontMetrics(
-        PretextCaptureRequest.make({
-          font: "16px Arial",
-          lineHeight: 20,
-          words: ["the", "dragon"],
-        })
-      );
-
-      expect(snapshot.version).toBe(1);
-      expect(snapshot.metrics.lineHeight).toBe(20);
-    }, provideScopedLayer(PretextCaptureLive))
-  );
+        expect(snapshot.version).toBe(1);
+        expect(snapshot.metrics.lineHeight).toBe(20);
+        expect(snapshot.metrics.engineProfile).toEqual(detectEngineProfile());
+      })
+    );
+  });
 });

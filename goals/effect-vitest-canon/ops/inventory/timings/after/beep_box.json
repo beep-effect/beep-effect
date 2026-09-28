@@ -1,0 +1,71 @@
+{
+  "package": "@beep/box",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T04:11:07.378000+00:00",
+  "totalMs": 3861.201416015625,
+  "testCount": 40,
+  "files": [
+    {
+      "file": "packages/drivers/box/test/Box.equivalence.test.ts",
+      "ms": 1.296875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "ms": 55.201416015625,
+      "tests": 39
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box accepts future Box enum values generated as open unions",
+      "ms": 15.640382000000045
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box decodes generated collection fields through their suspended schemas",
+      "ms": 15.400235000000066
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxCcgConfig without encoded-shape drift",
+      "ms": 15.384619999999813
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxErrorOptions without encoded-shape drift",
+      "ms": 15.376278000000184
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box bridges SDK byte downloads into Effect streams",
+      "ms": 14.632309999999961
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box generated methods without cancellation parameters forwards cached-part arguments and preserves an absent cache result",
+      "ms": 13.507129999999961
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxErrorDiagnostic without encoded-shape drift",
+      "ms": 13.464154000000235
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxError without encoded-shape drift",
+      "ms": 13.450333000000228
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxPartAccumulator without encoded-shape drift",
+      "ms": 13.416171000000304
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips BoxUploadBigFilePayload without encoded-shape drift",
+      "ms": 13.414107000000058
+    }
+  ]
+}

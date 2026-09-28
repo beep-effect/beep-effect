@@ -1,0 +1,19 @@
+{
+  "boundedReview": "Original three no-findings rows retained: fixed timestamps, source traversal without mutation and no native provider authentication or wall-clock polling. One shuffled pass does not establish absence of races.",
+  "runs": [
+    {
+      "package": "@beep/agents-domain",
+      "registered": 22,
+      "passed": 22,
+      "shuffleSeed": 20260708
+    },
+    {
+      "package": "@beep/agents-tables",
+      "registered": 6,
+      "passed": 6,
+      "shuffleSeed": 20260708
+    }
+  ],
+  "addedRetries": 0,
+  "timeoutChanges": 0
+}

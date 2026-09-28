@@ -1,0 +1,21 @@
+{
+  "controls": [
+    {
+      "control": "reported-node",
+      "expectedFailureExit": 1,
+      "failedCase": "oxlint rules classifies static and runtime schema compiler inputs in-process",
+      "restoredExactSource": true,
+      "restoredSha256": "c0eb07f1e7a7d57b6b88d8c8e9e48634adaf6cd6305983aa6c9852f8da6e87ed"
+    },
+    {
+      "control": "comment-only-plugin",
+      "expectedFailureExit": 1,
+      "failedCase": "rule registry every rule is wired into the repo-root biome.jsonc lint pass",
+      "restoredExactSource": true,
+      "restoredSha256": "6d80800faa3ab2f6a491262691cff705dacd45359fca16d798c72fb7b79d54db"
+    }
+  ],
+  "existingNativeProperties": 4,
+  "deepFloor": 400,
+  "seed": 20260708
+}

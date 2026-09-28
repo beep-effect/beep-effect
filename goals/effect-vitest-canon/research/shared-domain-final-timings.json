@@ -1,0 +1,982 @@
+{
+  "baseSha": "4f1489f57d5525ef7bc76ef1b60e59989a9c981f",
+  "sourceSha": "783e3e5886",
+  "baselineWholeCommandSeconds": {
+    "node": 4.571546065,
+    "bun": 2.26755012
+  },
+  "baselineCases": 62,
+  "final": [
+    {
+      "runtime": "node",
+      "cases": 116,
+      "failures": 0,
+      "sourceHashes": [
+        {
+          "file": "bun.lock",
+          "sha256": "671e99dd9572c7282f351cd807ba5064ea86cfb42d1dc5029e2d0fba6e968e84"
+        },
+        {
+          "file": "packages/shared/domain/package.json",
+          "sha256": "28ba09e5c5561df9edd01829b14705e0781aaeb4d555c6b369a0754b5f3edfad"
+        },
+        {
+          "file": "packages/shared/domain/src/aggregates.ts",
+          "sha256": "0930fbc356ee342cfdbf96ba70110b7d77da72177707de0dd5be2e36cba4575a"
+        },
+        {
+          "file": "packages/shared/domain/src/entities.ts",
+          "sha256": "6d757e50c77ed6d0fdb4190b6fa6a8f9fc8042891db6bfd0c2aa447f9eec1be3"
+        },
+        {
+          "file": "packages/shared/domain/src/entity.ts",
+          "sha256": "37b0b3f3577fb25985cca4dd94ffcbcf79bf5b203886d6841bef3960bf4e14e5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity.ts",
+          "sha256": "974a94f9b2cc643ade378b787c362ff6f372714912c098597ec79e93c57d073f"
+        },
+        {
+          "file": "packages/shared/domain/src/index.ts",
+          "sha256": "e5b404892a1d2a145f3b4545642880c07e882a90772a9d00580234766bc17a34"
+        },
+        {
+          "file": "packages/shared/domain/src/values.ts",
+          "sha256": "b12527cadb60a346ab175eac174dbf4d323f36c65ffbda32f33fe462f7791f7f"
+        },
+        {
+          "file": "packages/shared/domain/src/aggregates/index.ts",
+          "sha256": "214b20fad796f2128b023f99e525317806f0854e3c7883406ada9e516976b4f4"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/index.ts",
+          "sha256": "4f56d5ed4e8f74151e465d4eda09f2929490e8d5c391a13857b3831604f8ece8"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "sha256": "78a3bb19a29314c51ce30c2993a813d06333a326630be95b8cd98787888903c0"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "sha256": "19956d81f9e257feb74a3ce486598d784a6aad73a67f0609d7769bf30f502935"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityId.ts",
+          "sha256": "b7f4525af89d0703232886ee289030b6923b1d9c3b31c1a40d7ad0d7e199151a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityKit.ts",
+          "sha256": "404bcdcd0de795ae8e6cad421b9eccab74f5bd748f49202c45f674a36a4c47e8"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityRef.ts",
+          "sha256": "8cf77c986aa36c014304b7fb2949caced4ca6e6eed7efc05c18c0a615a78038a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "sha256": "00e07ac2e840407d43cb60fa291a3a85c57b6624e2905fa65710f3578acc308a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/Principal.ts",
+          "sha256": "4df4ac33fb9606c9ec9f8be486f975cb123c9e4b536dc3d0682fa06ce8479838"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/ProductEntity.ts",
+          "sha256": "72cfd2e3fcb0bc43d5b80f51c2935fc7d51fd1c7049e521a3fcf6f41220ceedb"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/PublicEntityId.ts",
+          "sha256": "31c81a9d93007f124d4e543e4070a43a4ae1b2b542d64460c9787e434ab68fd7"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/SourceKind.ts",
+          "sha256": "82d51e2229a9a817426c800aa005128a4d43b96d8f8bac6d62eae7ff97686eb6"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/index.ts",
+          "sha256": "9d80c2ae23dde12eacbdceb90e241e2612f1f67682504c6531d71fe0a0af9d12"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/primitives.ts",
+          "sha256": "13e07ccc9ca7f2fa472d1dfb335a29d751bbfb0905d50a720e63d543e9a2f6dc"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/index.ts",
+          "sha256": "3356eb1f4613bee06b8cc4ad81e0653fbd6e74d07d42d2871338efaa611e6f32"
+        },
+        {
+          "file": "packages/shared/domain/src/values/index.ts",
+          "sha256": "23f87768eb55a31b7b43bbe528bee578f3d84c4f6115ef3d813fe65bce79d796"
+        },
+        {
+          "file": "packages/shared/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts",
+          "sha256": "f3d140b703606775ccb3bc9f3a5f51e2983904e0c2a19078cc5dd42b7e3431f4"
+        },
+        {
+          "file": "packages/shared/domain/src/values/ClaimLifecycle/index.ts",
+          "sha256": "2018ef9cd4170e9311001af7f5e5f7f1acc8617437dbd225e7fc0cdadbbeeb35"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+          "sha256": "614b4b48cd7dcb1378a8b33962592d5cb1f2b0948f38eaba9d324715d7930eb3"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.calendar.ts",
+          "sha256": "af287113e5f7c55bbcf37ea2e4ecc3c04d3f27aeed2849e6f828c7af264b5532"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
+          "sha256": "ae7b6b8ef41381329d1cf73cc0039a3f6eba3667ddf1c833a7f300fc5cccf5ce"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/index.ts",
+          "sha256": "830e0228ba2ef8e69597720bf606d1eb517aef754a9eb0e6c3060a0b12a33337"
+        },
+        {
+          "file": "packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts",
+          "sha256": "c155e15b5b43edef0dc5f1c18e42d5f430d89e7aa86dbf315aefd31b5aaf0e24"
+        },
+        {
+          "file": "packages/shared/domain/src/values/OnePasswordReference/index.ts",
+          "sha256": "c07a21b897599772828f20380a50c6153110746328cb0fbb34ccee19eec2861e"
+        },
+        {
+          "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+          "sha256": "8264e5d61152418a8c1c61448a91a127e3e1bc13a7ac79ecfbf91e21f4e6fb70"
+        },
+        {
+          "file": "packages/shared/domain/src/values/Rule/index.ts",
+          "sha256": "f915f67507d9f6c35243b8f8ea545a02801e28f59066b0cabdb0ba45e440692a"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/AgentId.ts",
+          "sha256": "2744457d9e526021e8663b66b5f47a945bb104dd1629b39dc0eaf6da109c557b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/ProviderInstanceId.ts",
+          "sha256": "856996e8b857c1109f71ce5a811743cc4f10df530d797609b21719f2d7f20506"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/SkillId.ts",
+          "sha256": "2e0d9db46669963ea0474bdce069abe231db39f2f2d8b6de0cecfd04479a6cfb"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/index.ts",
+          "sha256": "933b7ccd0367060fa39c80ebb4f2666f63eba44135e518b8a973354486d01040"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/ArchitectureLab/WorkerId.ts",
+          "sha256": "23be2bb0d606c2cf5eccbd53cd7e45a5b386e36c622d9fd807648fda67a7e701"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/ArchitectureLab/index.ts",
+          "sha256": "64eb587393ce2ce765ea6a269e89b425d77bbabbc194103aeee3b45fb353934b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncConflictId.ts",
+          "sha256": "d9908debc6923d6237ba3de6e3d72a784a933a0b0de936df2611c4d87051ee5d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncCursorId.ts",
+          "sha256": "84eea263b03b2723798af27188c26a158783fc26fe21fce9ac1d7d27af7f4850"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncItemId.ts",
+          "sha256": "43fdfe7d3a69b00fe38aba0ed3040e651aeaa2d20bc27236491626f1b53a53c9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncOperationId.ts",
+          "sha256": "4e3d4c226663a80666e06309a1cfe7440fdf471981a807b81429ea6d4ed167ed"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/index.ts",
+          "sha256": "538f5430e8e0c2a3ad83fc03234ed575b9f661a0b7fe1db747892a7486db72b5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ActivityId.ts",
+          "sha256": "ce040f1eec8766a6c73bbeac16335cb74019727fee4ba108129417496ef633ef"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/CandidateClaimId.ts",
+          "sha256": "8b1594647ba58185c65a0c4592bb80b0fa4061bf16f23ce3825e60fa87dc236e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ClaimDispositionId.ts",
+          "sha256": "11f237d33d333b2ede88d1ff63bb3a7a53dfe480264293604f09e955e5cb61cf"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionCandidateId.ts",
+          "sha256": "ba205008cc6e06c4c663a9f965a8d717123d4b40794a2b1b6af2ad8695c8ceb7"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionDispositionId.ts",
+          "sha256": "384ff7943d3436575b1508cf36c7fb954edf987e713595c979128aa4583d0eb6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionReceiptId.ts",
+          "sha256": "fa809ac0e431d2e168a84bf9bf7046aa2fee72ac720293a5b78d5a7f8420f9f3"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EdgeVersionId.ts",
+          "sha256": "2a4e27c0db9adb3d068c0b78cb8db8273fed1075f55e371c59795bf2c87bce35"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EvidenceId.ts",
+          "sha256": "ba8b4ae2256ccc83c6ebe980f59758bb4595724b8485119d6f8fe49b5a31de90"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EvidenceVerificationId.ts",
+          "sha256": "29bb185c7fc117c0d4289d187cb95fdf762a4493377145b44c2b3b6f4101e975"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/UsageRecordId.ts",
+          "sha256": "367d9f7d947b8f120dbd0e3c1b7c9d1e21b3280ecd77c574ffe325f729f62519"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/index.ts",
+          "sha256": "f75df9056e899a4bb34b9d04ce4e27ad499df8e9296bca23e59f76660e0c4a34"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/ActFrameId.ts",
+          "sha256": "41fd1be116f294322ee43f3e333afb0317d31019e54cca48939ed0d02cb38332"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CandorDispositionId.ts",
+          "sha256": "a5140656ca2731bbe54c25f7400a5f2b545a3ffa717191203ad028d3695c88a6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CitationId.ts",
+          "sha256": "dce33d80b0736ea77e40512f0155521300ed6176f7e32b6ced7a3683db2bebf4"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/ClaimId.ts",
+          "sha256": "f570563181af521b31e198576a83c9af8a1b8cb5251ba2880cbb03e0c0cbbab7"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CorrectionDeltaId.ts",
+          "sha256": "b7a088a73d45ffaaa4de62df5a140980dd56c2116e2972dff9227506395f2044"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/DistinctionId.ts",
+          "sha256": "4776d25030c8db3f0a4b43430603cc241e1a3bf2924e1bf79894b7a8005aeaab"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/IdsSubmissionFactId.ts",
+          "sha256": "e630206f0786c896657e0e8c3587fea1b668eeac1882ed6a89001c6254fed4b1"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalClientId.ts",
+          "sha256": "3a570633d69859c7d404089186bade2a58efad5508305fb7af8505cf7b8383ca"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalContactId.ts",
+          "sha256": "b2789e71b69abd67538a6ecdae242964a30a5ec54a390be2bbd60e4e2d609466"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalOppositionCandidateId.ts",
+          "sha256": "fab0917f1fa4c3d9df47c1885aad357953136dcb85690c5755ee72ce29d24742"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalPositionRelatorId.ts",
+          "sha256": "55b9b712bc67130943cd88506efa182d0ad521a150184793d235fb42c11d2a7d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/MatterId.ts",
+          "sha256": "dfb12e5df9bba6167ebf9adb47b2bf8de14e179866dfff4fcdf878f28be378f6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/OfficeActionId.ts",
+          "sha256": "fd94cad52941b85b452d28b43a41c0ded935a8e3509962432b8f1687828ee9f5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PartyId.ts",
+          "sha256": "af2250b9d53ff6a16352c33420413e3bfab9bb5f12b177a57d19f5bf38df6afc"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PatentAssetId.ts",
+          "sha256": "f7845c6ef4e49d67559d72e79231b32eac7750a1cc96c109779212a2db645a34"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PatentCitationEventId.ts",
+          "sha256": "fb25810f4ca59b4b577f71351a4d5e08c276bcbd4c13571b1270f1fa675b4c9b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PowerExerciseId.ts",
+          "sha256": "95aee93d71d26a1b5cce3238e0d2e06958c856606275dd6b1d6fb10a7548823e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PriorArtReferenceId.ts",
+          "sha256": "54fc22ad9b2a95edc9952887372c2919b166f81925a02931b4afd63a9d1802ba"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/RejectionId.ts",
+          "sha256": "b50d6393ff224045b16a49b2e034fe60d3e849b63716d3154623a3bd0152815c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/index.ts",
+          "sha256": "8ec64eb12bb3ed002647fea5d93fa6934ada3639f7fe2fa6857a44592f791ebb"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ActivityId.ts",
+          "sha256": "c7887949b6acd1fa35b05deec0b0c29b44d90e212b2a26c0062150fa342e069f"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/AgentId.ts",
+          "sha256": "24e1c4a131571f18411a3a51fcf97fea6edf2f778126bdcb21b3822da8ccd93c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/AgentVersionId.ts",
+          "sha256": "0e00d30fcb400c936c885b47f16ce4ed209a8ddb7467a46c8a8946921a00dba9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ConnectorAccountId.ts",
+          "sha256": "8b36b005a3cd37b574fe032f6ea46956c952faf95d748b3a1a55d54b030fa63c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/LocalMachineId.ts",
+          "sha256": "4ab7a8c2f6d00f448a13ab46e3abc9c3077500ec462e3bdd83e48e0f1c4dfbf9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/MembershipId.ts",
+          "sha256": "2fe21dd11844e8737945d350c404b7b4d9938c394d08f79624d6469824c172f8"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/OrganizationId.ts",
+          "sha256": "51d10dbdcc1f7b8141a17ddbb8b811bf7898b47abe6664497754ab60bd115a90"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ServiceAccountId.ts",
+          "sha256": "e9e77c426ed920b7358530df1b8633d3f9dfd981886a31bfdee8968a13f9c7ea"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/TeamId.ts",
+          "sha256": "baac4cbc9d93e2541ef46e292075bc90902605fe7217f6989fed910338cfdc6a"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/UserId.ts",
+          "sha256": "9120bfb56052ec0eee289c2a4d2d52d880d113dc4e57de6bf2c913a6b28ac226"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/index.ts",
+          "sha256": "e0ea79931e00eb9c839587d6787bb53b6f7d151fbaa9bde4819396ead3fee46b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ApprovalGateId.ts",
+          "sha256": "9c6623da93ae72a3419acd2dfb34b90df56a18c4237b8c5074616a4a6696b8ca"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateDraftId.ts",
+          "sha256": "f675dcf8e82ad18bdf1e72cbbb56e73f1030d666d453a26e71cd99b34c4fa7da"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateProjectId.ts",
+          "sha256": "29782d81df057401a858de247d5904cf857528a87928ee151a888f934a3d0ca1"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateTaskId.ts",
+          "sha256": "d840b80c98096447c0a5e51f769a989f923f387e9c57b5e3dcdc95123b83197f"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ContextPacketId.ts",
+          "sha256": "9fc7246d1417e35d5c058ce7fd94f967f31924a771259998902e4c2c6ba3338b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/EmailArtifactId.ts",
+          "sha256": "d17a33683fba856b22348cc35cc316d6d6a7aca5712b34d4207a6456424be74e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/MessageId.ts",
+          "sha256": "fb4774ba9c0d146232b26c3041f07b9c6e8c7449f600099f0f8649914af9420d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ThreadId.ts",
+          "sha256": "101a98757255a81d1c576b651f6a9914e15b8aacc9d9d7a8f0b8fcbc6ed3a429"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/TurnId.ts",
+          "sha256": "38fd65af65232d7f0a403fb005ce547e9822cb9f00d46174ed02fd25676e9b4e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/WorkspaceId.ts",
+          "sha256": "710f68a4601da0dfa5efadc58093936cba065a0fa25ac68c4f3a0041c6f1e502"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/index.ts",
+          "sha256": "87631ba6373b7a4ed690e164ad77069e70f0fa889a76487556415d49cc953ce1"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/Membership.model.ts",
+          "sha256": "27b0ea9ea634bb9423723eeec324ff70496a709aedeaea4adf86966d5d8a1b11"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
+          "sha256": "ef83b7b412d11bf8cb2fdd52efdf5682bf801e03136d26a1ecf3b4f5a9e6d047"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/index.ts",
+          "sha256": "0dabb1a144236678c17b01478410518dfc5afcc588c88ba815b4dedbb15b3bb5"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.behavior.ts",
+          "sha256": "c1213b6a6ae6abd554cfeb5f4f4b979b87787be89763851a3153696e967ef99c"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.model.ts",
+          "sha256": "7e4a81ed6a9f4eae77484adea89a2f54961d57d1e5a94b5240516ae52b4bca2a"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.values.ts",
+          "sha256": "1b328f6fae03e9ac3d9ff793b492e30017f02a75b20264926f27f9db821a0236"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/index.ts",
+          "sha256": "1e50c723e356f27bb407e717123c9cfd77c4a8da1529139cc2e7bcbcd62f33cd"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/User/User.model.ts",
+          "sha256": "767c8cf5f192e74a1ea77d001faf3ac0a0562715b0b324e9e2c20b570867861f"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/User/index.ts",
+          "sha256": "592367284077577b5fc7a125b306995a92c4ff811b53b5a809968f1d67a29b2a"
+        },
+        {
+          "file": "packages/shared/domain/test/EntityKernel.test.ts",
+          "sha256": "84c375cee1e41ed2100efce28a171f76d839057f1613a96e0e8fb6b881b0c1ad"
+        },
+        {
+          "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+          "sha256": "0cf874dbd989836d84db51ad022750c5036a8258366d878e498d6565be56121f"
+        },
+        {
+          "file": "packages/shared/domain/test/LocalDate.test.ts",
+          "sha256": "d996dc64941d592ad41593d1c4352e532c9769ebf72d65b1ee242a663c399fdb"
+        },
+        {
+          "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+          "sha256": "51aaa52d65210e4997b7fcf256ec9fd1f60ecc67a3692b4ab3733875856d49b9"
+        },
+        {
+          "file": "packages/shared/domain/test/Organization.test.ts",
+          "sha256": "ab6e3307d7633199393c31a7e6be5f78337c24f804230c28f5ab8556ff8115f5"
+        },
+        {
+          "file": "packages/shared/domain/test/SchemaParity.test.ts",
+          "sha256": "b6faa33f1930a3eefa47b469018d0cbc8feb6507426af811bb73912a07c517a9"
+        },
+        {
+          "file": "packages/shared/domain/test/StaticProbes.ts",
+          "sha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da"
+        },
+        {
+          "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+          "sha256": "54941f8301e41ef74428071856a56cc96d0333218590bef40b3c7aa828c9e5ad"
+        },
+        {
+          "file": "packages/shared/domain/test/UserMembership.test.ts",
+          "sha256": "1a340a2ca3bbbb0fb95bf402bcf04a3cc12aa5bceabc3c7d081618de29a5d026"
+        }
+      ],
+      "wholeCommandSeconds": 3.9211786140003824,
+      "sourceStable": true,
+      "loadBefore": [8.9833984375, 8.0732421875, 6.92578125],
+      "loadAfter": [9.78564453125, 8.2548828125, 6.99072265625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.08 avg60=0.25 avg300=0.28 total=231929508\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88090834\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85491574\n",
+        "io": "some avg10=0.00 avg60=0.01 avg300=0.00 total=695932592\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=630141052\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.05 avg60=0.23 avg300=0.27 total=231944695\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88090835\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85491574\n",
+        "io": "some avg10=0.00 avg60=0.01 avg300=0.00 total=695933503\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=630141726\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "cases": 116,
+      "failures": 0,
+      "sourceHashes": [
+        {
+          "file": "bun.lock",
+          "sha256": "671e99dd9572c7282f351cd807ba5064ea86cfb42d1dc5029e2d0fba6e968e84"
+        },
+        {
+          "file": "packages/shared/domain/package.json",
+          "sha256": "28ba09e5c5561df9edd01829b14705e0781aaeb4d555c6b369a0754b5f3edfad"
+        },
+        {
+          "file": "packages/shared/domain/src/aggregates.ts",
+          "sha256": "0930fbc356ee342cfdbf96ba70110b7d77da72177707de0dd5be2e36cba4575a"
+        },
+        {
+          "file": "packages/shared/domain/src/entities.ts",
+          "sha256": "6d757e50c77ed6d0fdb4190b6fa6a8f9fc8042891db6bfd0c2aa447f9eec1be3"
+        },
+        {
+          "file": "packages/shared/domain/src/entity.ts",
+          "sha256": "37b0b3f3577fb25985cca4dd94ffcbcf79bf5b203886d6841bef3960bf4e14e5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity.ts",
+          "sha256": "974a94f9b2cc643ade378b787c362ff6f372714912c098597ec79e93c57d073f"
+        },
+        {
+          "file": "packages/shared/domain/src/index.ts",
+          "sha256": "e5b404892a1d2a145f3b4545642880c07e882a90772a9d00580234766bc17a34"
+        },
+        {
+          "file": "packages/shared/domain/src/values.ts",
+          "sha256": "b12527cadb60a346ab175eac174dbf4d323f36c65ffbda32f33fe462f7791f7f"
+        },
+        {
+          "file": "packages/shared/domain/src/aggregates/index.ts",
+          "sha256": "214b20fad796f2128b023f99e525317806f0854e3c7883406ada9e516976b4f4"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/index.ts",
+          "sha256": "4f56d5ed4e8f74151e465d4eda09f2929490e8d5c391a13857b3831604f8ece8"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/AuditEntity.ts",
+          "sha256": "78a3bb19a29314c51ce30c2993a813d06333a326630be95b8cd98787888903c0"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/BaseEntity.ts",
+          "sha256": "19956d81f9e257feb74a3ce486598d784a6aad73a67f0609d7769bf30f502935"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityId.ts",
+          "sha256": "b7f4525af89d0703232886ee289030b6923b1d9c3b31c1a40d7ad0d7e199151a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityKit.ts",
+          "sha256": "404bcdcd0de795ae8e6cad421b9eccab74f5bd748f49202c45f674a36a4c47e8"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/EntityRef.ts",
+          "sha256": "8cf77c986aa36c014304b7fb2949caced4ca6e6eed7efc05c18c0a615a78038a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/OrgEntity.ts",
+          "sha256": "00e07ac2e840407d43cb60fa291a3a85c57b6624e2905fa65710f3578acc308a"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/Principal.ts",
+          "sha256": "4df4ac33fb9606c9ec9f8be486f975cb123c9e4b536dc3d0682fa06ce8479838"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/ProductEntity.ts",
+          "sha256": "72cfd2e3fcb0bc43d5b80f51c2935fc7d51fd1c7049e521a3fcf6f41220ceedb"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/PublicEntityId.ts",
+          "sha256": "31c81a9d93007f124d4e543e4070a43a4ae1b2b542d64460c9787e434ab68fd7"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/SourceKind.ts",
+          "sha256": "82d51e2229a9a817426c800aa005128a4d43b96d8f8bac6d62eae7ff97686eb6"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/index.ts",
+          "sha256": "9d80c2ae23dde12eacbdceb90e241e2612f1f67682504c6531d71fe0a0af9d12"
+        },
+        {
+          "file": "packages/shared/domain/src/entity/primitives.ts",
+          "sha256": "13e07ccc9ca7f2fa472d1dfb335a29d751bbfb0905d50a720e63d543e9a2f6dc"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/index.ts",
+          "sha256": "3356eb1f4613bee06b8cc4ad81e0653fbd6e74d07d42d2871338efaa611e6f32"
+        },
+        {
+          "file": "packages/shared/domain/src/values/index.ts",
+          "sha256": "23f87768eb55a31b7b43bbe528bee578f3d84c4f6115ef3d813fe65bce79d796"
+        },
+        {
+          "file": "packages/shared/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts",
+          "sha256": "f3d140b703606775ccb3bc9f3a5f51e2983904e0c2a19078cc5dd42b7e3431f4"
+        },
+        {
+          "file": "packages/shared/domain/src/values/ClaimLifecycle/index.ts",
+          "sha256": "2018ef9cd4170e9311001af7f5e5f7f1acc8617437dbd225e7fc0cdadbbeeb35"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+          "sha256": "614b4b48cd7dcb1378a8b33962592d5cb1f2b0948f38eaba9d324715d7930eb3"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.calendar.ts",
+          "sha256": "af287113e5f7c55bbcf37ea2e4ecc3c04d3f27aeed2849e6f828c7af264b5532"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
+          "sha256": "ae7b6b8ef41381329d1cf73cc0039a3f6eba3667ddf1c833a7f300fc5cccf5ce"
+        },
+        {
+          "file": "packages/shared/domain/src/values/LocalDate/index.ts",
+          "sha256": "830e0228ba2ef8e69597720bf606d1eb517aef754a9eb0e6c3060a0b12a33337"
+        },
+        {
+          "file": "packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts",
+          "sha256": "c155e15b5b43edef0dc5f1c18e42d5f430d89e7aa86dbf315aefd31b5aaf0e24"
+        },
+        {
+          "file": "packages/shared/domain/src/values/OnePasswordReference/index.ts",
+          "sha256": "c07a21b897599772828f20380a50c6153110746328cb0fbb34ccee19eec2861e"
+        },
+        {
+          "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+          "sha256": "8264e5d61152418a8c1c61448a91a127e3e1bc13a7ac79ecfbf91e21f4e6fb70"
+        },
+        {
+          "file": "packages/shared/domain/src/values/Rule/index.ts",
+          "sha256": "f915f67507d9f6c35243b8f8ea545a02801e28f59066b0cabdb0ba45e440692a"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/AgentId.ts",
+          "sha256": "2744457d9e526021e8663b66b5f47a945bb104dd1629b39dc0eaf6da109c557b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/ProviderInstanceId.ts",
+          "sha256": "856996e8b857c1109f71ce5a811743cc4f10df530d797609b21719f2d7f20506"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/SkillId.ts",
+          "sha256": "2e0d9db46669963ea0474bdce069abe231db39f2f2d8b6de0cecfd04479a6cfb"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Agents/index.ts",
+          "sha256": "933b7ccd0367060fa39c80ebb4f2666f63eba44135e518b8a973354486d01040"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/ArchitectureLab/WorkerId.ts",
+          "sha256": "23be2bb0d606c2cf5eccbd53cd7e45a5b386e36c622d9fd807648fda67a7e701"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/ArchitectureLab/index.ts",
+          "sha256": "64eb587393ce2ce765ea6a269e89b425d77bbabbc194103aeee3b45fb353934b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncConflictId.ts",
+          "sha256": "d9908debc6923d6237ba3de6e3d72a784a933a0b0de936df2611c4d87051ee5d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncCursorId.ts",
+          "sha256": "84eea263b03b2723798af27188c26a158783fc26fe21fce9ac1d7d27af7f4850"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncItemId.ts",
+          "sha256": "43fdfe7d3a69b00fe38aba0ed3040e651aeaa2d20bc27236491626f1b53a53c9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/SyncOperationId.ts",
+          "sha256": "4e3d4c226663a80666e06309a1cfe7440fdf471981a807b81429ea6d4ed167ed"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Documents/index.ts",
+          "sha256": "538f5430e8e0c2a3ad83fc03234ed575b9f661a0b7fe1db747892a7486db72b5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ActivityId.ts",
+          "sha256": "ce040f1eec8766a6c73bbeac16335cb74019727fee4ba108129417496ef633ef"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/CandidateClaimId.ts",
+          "sha256": "8b1594647ba58185c65a0c4592bb80b0fa4061bf16f23ce3825e60fa87dc236e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ClaimDispositionId.ts",
+          "sha256": "11f237d33d333b2ede88d1ff63bb3a7a53dfe480264293604f09e955e5cb61cf"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionCandidateId.ts",
+          "sha256": "ba205008cc6e06c4c663a9f965a8d717123d4b40794a2b1b6af2ad8695c8ceb7"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionDispositionId.ts",
+          "sha256": "384ff7943d3436575b1508cf36c7fb954edf987e713595c979128aa4583d0eb6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/ContradictionReceiptId.ts",
+          "sha256": "fa809ac0e431d2e168a84bf9bf7046aa2fee72ac720293a5b78d5a7f8420f9f3"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EdgeVersionId.ts",
+          "sha256": "2a4e27c0db9adb3d068c0b78cb8db8273fed1075f55e371c59795bf2c87bce35"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EvidenceId.ts",
+          "sha256": "ba8b4ae2256ccc83c6ebe980f59758bb4595724b8485119d6f8fe49b5a31de90"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/EvidenceVerificationId.ts",
+          "sha256": "29bb185c7fc117c0d4289d187cb95fdf762a4493377145b44c2b3b6f4101e975"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/UsageRecordId.ts",
+          "sha256": "367d9f7d947b8f120dbd0e3c1b7c9d1e21b3280ecd77c574ffe325f729f62519"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Epistemic/index.ts",
+          "sha256": "f75df9056e899a4bb34b9d04ce4e27ad499df8e9296bca23e59f76660e0c4a34"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/ActFrameId.ts",
+          "sha256": "41fd1be116f294322ee43f3e333afb0317d31019e54cca48939ed0d02cb38332"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CandorDispositionId.ts",
+          "sha256": "a5140656ca2731bbe54c25f7400a5f2b545a3ffa717191203ad028d3695c88a6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CitationId.ts",
+          "sha256": "dce33d80b0736ea77e40512f0155521300ed6176f7e32b6ced7a3683db2bebf4"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/ClaimId.ts",
+          "sha256": "f570563181af521b31e198576a83c9af8a1b8cb5251ba2880cbb03e0c0cbbab7"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/CorrectionDeltaId.ts",
+          "sha256": "b7a088a73d45ffaaa4de62df5a140980dd56c2116e2972dff9227506395f2044"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/DistinctionId.ts",
+          "sha256": "4776d25030c8db3f0a4b43430603cc241e1a3bf2924e1bf79894b7a8005aeaab"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/IdsSubmissionFactId.ts",
+          "sha256": "e630206f0786c896657e0e8c3587fea1b668eeac1882ed6a89001c6254fed4b1"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalClientId.ts",
+          "sha256": "3a570633d69859c7d404089186bade2a58efad5508305fb7af8505cf7b8383ca"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalContactId.ts",
+          "sha256": "b2789e71b69abd67538a6ecdae242964a30a5ec54a390be2bbd60e4e2d609466"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalOppositionCandidateId.ts",
+          "sha256": "fab0917f1fa4c3d9df47c1885aad357953136dcb85690c5755ee72ce29d24742"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/LegalPositionRelatorId.ts",
+          "sha256": "55b9b712bc67130943cd88506efa182d0ad521a150184793d235fb42c11d2a7d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/MatterId.ts",
+          "sha256": "dfb12e5df9bba6167ebf9adb47b2bf8de14e179866dfff4fcdf878f28be378f6"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/OfficeActionId.ts",
+          "sha256": "fd94cad52941b85b452d28b43a41c0ded935a8e3509962432b8f1687828ee9f5"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PartyId.ts",
+          "sha256": "af2250b9d53ff6a16352c33420413e3bfab9bb5f12b177a57d19f5bf38df6afc"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PatentAssetId.ts",
+          "sha256": "f7845c6ef4e49d67559d72e79231b32eac7750a1cc96c109779212a2db645a34"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PatentCitationEventId.ts",
+          "sha256": "fb25810f4ca59b4b577f71351a4d5e08c276bcbd4c13571b1270f1fa675b4c9b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PowerExerciseId.ts",
+          "sha256": "95aee93d71d26a1b5cce3238e0d2e06958c856606275dd6b1d6fb10a7548823e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/PriorArtReferenceId.ts",
+          "sha256": "54fc22ad9b2a95edc9952887372c2919b166f81925a02931b4afd63a9d1802ba"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/RejectionId.ts",
+          "sha256": "b50d6393ff224045b16a49b2e034fe60d3e849b63716d3154623a3bd0152815c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/LawPractice/index.ts",
+          "sha256": "8ec64eb12bb3ed002647fea5d93fa6934ada3639f7fe2fa6857a44592f791ebb"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ActivityId.ts",
+          "sha256": "c7887949b6acd1fa35b05deec0b0c29b44d90e212b2a26c0062150fa342e069f"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/AgentId.ts",
+          "sha256": "24e1c4a131571f18411a3a51fcf97fea6edf2f778126bdcb21b3822da8ccd93c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/AgentVersionId.ts",
+          "sha256": "0e00d30fcb400c936c885b47f16ce4ed209a8ddb7467a46c8a8946921a00dba9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ConnectorAccountId.ts",
+          "sha256": "8b36b005a3cd37b574fe032f6ea46956c952faf95d748b3a1a55d54b030fa63c"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/LocalMachineId.ts",
+          "sha256": "4ab7a8c2f6d00f448a13ab46e3abc9c3077500ec462e3bdd83e48e0f1c4dfbf9"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/MembershipId.ts",
+          "sha256": "2fe21dd11844e8737945d350c404b7b4d9938c394d08f79624d6469824c172f8"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/OrganizationId.ts",
+          "sha256": "51d10dbdcc1f7b8141a17ddbb8b811bf7898b47abe6664497754ab60bd115a90"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/ServiceAccountId.ts",
+          "sha256": "e9e77c426ed920b7358530df1b8633d3f9dfd981886a31bfdee8968a13f9c7ea"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/TeamId.ts",
+          "sha256": "baac4cbc9d93e2541ef46e292075bc90902605fe7217f6989fed910338cfdc6a"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/UserId.ts",
+          "sha256": "9120bfb56052ec0eee289c2a4d2d52d880d113dc4e57de6bf2c913a6b28ac226"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Shared/index.ts",
+          "sha256": "e0ea79931e00eb9c839587d6787bb53b6f7d151fbaa9bde4819396ead3fee46b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ApprovalGateId.ts",
+          "sha256": "9c6623da93ae72a3419acd2dfb34b90df56a18c4237b8c5074616a4a6696b8ca"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateDraftId.ts",
+          "sha256": "f675dcf8e82ad18bdf1e72cbbb56e73f1030d666d453a26e71cd99b34c4fa7da"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateProjectId.ts",
+          "sha256": "29782d81df057401a858de247d5904cf857528a87928ee151a888f934a3d0ca1"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/CandidateTaskId.ts",
+          "sha256": "d840b80c98096447c0a5e51f769a989f923f387e9c57b5e3dcdc95123b83197f"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ContextPacketId.ts",
+          "sha256": "9fc7246d1417e35d5c058ce7fd94f967f31924a771259998902e4c2c6ba3338b"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/EmailArtifactId.ts",
+          "sha256": "d17a33683fba856b22348cc35cc316d6d6a7aca5712b34d4207a6456424be74e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/MessageId.ts",
+          "sha256": "fb4774ba9c0d146232b26c3041f07b9c6e8c7449f600099f0f8649914af9420d"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/ThreadId.ts",
+          "sha256": "101a98757255a81d1c576b651f6a9914e15b8aacc9d9d7a8f0b8fcbc6ed3a429"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/TurnId.ts",
+          "sha256": "38fd65af65232d7f0a403fb005ce547e9822cb9f00d46174ed02fd25676e9b4e"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/WorkspaceId.ts",
+          "sha256": "710f68a4601da0dfa5efadc58093936cba065a0fa25ac68c4f3a0041c6f1e502"
+        },
+        {
+          "file": "packages/shared/domain/src/identity/Workspace/index.ts",
+          "sha256": "87631ba6373b7a4ed690e164ad77069e70f0fa889a76487556415d49cc953ce1"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/Membership.model.ts",
+          "sha256": "27b0ea9ea634bb9423723eeec324ff70496a709aedeaea4adf86966d5d8a1b11"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
+          "sha256": "ef83b7b412d11bf8cb2fdd52efdf5682bf801e03136d26a1ecf3b4f5a9e6d047"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Membership/index.ts",
+          "sha256": "0dabb1a144236678c17b01478410518dfc5afcc588c88ba815b4dedbb15b3bb5"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.behavior.ts",
+          "sha256": "c1213b6a6ae6abd554cfeb5f4f4b979b87787be89763851a3153696e967ef99c"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.model.ts",
+          "sha256": "7e4a81ed6a9f4eae77484adea89a2f54961d57d1e5a94b5240516ae52b4bca2a"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/Organization.values.ts",
+          "sha256": "1b328f6fae03e9ac3d9ff793b492e30017f02a75b20264926f27f9db821a0236"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/Organization/index.ts",
+          "sha256": "1e50c723e356f27bb407e717123c9cfd77c4a8da1529139cc2e7bcbcd62f33cd"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/User/User.model.ts",
+          "sha256": "767c8cf5f192e74a1ea77d001faf3ac0a0562715b0b324e9e2c20b570867861f"
+        },
+        {
+          "file": "packages/shared/domain/src/entities/User/index.ts",
+          "sha256": "592367284077577b5fc7a125b306995a92c4ff811b53b5a809968f1d67a29b2a"
+        },
+        {
+          "file": "packages/shared/domain/test/EntityKernel.test.ts",
+          "sha256": "84c375cee1e41ed2100efce28a171f76d839057f1613a96e0e8fb6b881b0c1ad"
+        },
+        {
+          "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+          "sha256": "0cf874dbd989836d84db51ad022750c5036a8258366d878e498d6565be56121f"
+        },
+        {
+          "file": "packages/shared/domain/test/LocalDate.test.ts",
+          "sha256": "d996dc64941d592ad41593d1c4352e532c9769ebf72d65b1ee242a663c399fdb"
+        },
+        {
+          "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+          "sha256": "51aaa52d65210e4997b7fcf256ec9fd1f60ecc67a3692b4ab3733875856d49b9"
+        },
+        {
+          "file": "packages/shared/domain/test/Organization.test.ts",
+          "sha256": "ab6e3307d7633199393c31a7e6be5f78337c24f804230c28f5ab8556ff8115f5"
+        },
+        {
+          "file": "packages/shared/domain/test/SchemaParity.test.ts",
+          "sha256": "b6faa33f1930a3eefa47b469018d0cbc8feb6507426af811bb73912a07c517a9"
+        },
+        {
+          "file": "packages/shared/domain/test/StaticProbes.ts",
+          "sha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da"
+        },
+        {
+          "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+          "sha256": "54941f8301e41ef74428071856a56cc96d0333218590bef40b3c7aa828c9e5ad"
+        },
+        {
+          "file": "packages/shared/domain/test/UserMembership.test.ts",
+          "sha256": "1a340a2ca3bbbb0fb95bf402bcf04a3cc12aa5bceabc3c7d081618de29a5d026"
+        }
+      ],
+      "wholeCommandSeconds": 1.6666762059976463,
+      "sourceStable": true,
+      "loadBefore": [9.78564453125, 8.2548828125, 6.99072265625],
+      "loadAfter": [9.78564453125, 8.2548828125, 6.99072265625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.05 avg60=0.23 avg300=0.27 total=231944896\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88090835\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85491574\n",
+        "io": "some avg10=0.00 avg60=0.01 avg300=0.00 total=695933503\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=630141726\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.04 avg60=0.22 avg300=0.27 total=231954691\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88090966\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85491699\n",
+        "io": "some avg10=0.00 avg60=0.01 avg300=0.00 total=695936491\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=630144209\n"
+      }
+    }
+  ],
+  "interpretation": "Unnormalized configured timings; case registration expands from62to116 while the original laws and floors are retained. Not a controlled benchmark or coverage result."
+}

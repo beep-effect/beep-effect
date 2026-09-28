@@ -1,6 +1,7 @@
+import { it } from "@beep/test-runner";
 import { chipTheme } from "@beep/ui/themes/components/chip";
 import { controlsTheme } from "@beep/ui/themes/components/controls";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 const paletteColor = { main: "#246", text: "#fff" };
 const theme = {

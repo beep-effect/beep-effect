@@ -1,0 +1,74 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/repo-docgen#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/repo-docgen#audit",
+      "addedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/repo-docgen#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#build",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#check",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#coverage",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/repo-docgen#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#lint:deprecated-apis",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#package-test-typecheck",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#test",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/repo-docgen#test:property",
+      "addedDependency": "@beep/test-utils#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "8285fe3d1d6e46236fabbb7a1704408936f360fa719144a65fadbee352aff705"
+}

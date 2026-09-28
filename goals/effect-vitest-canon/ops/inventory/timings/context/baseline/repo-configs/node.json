@@ -1,0 +1,411 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/repo-configs-repo-configs-before-node.json"
+  ],
+  "phase": "before",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/package.json",
+      "sha256": "1cbc3c78cdc15b61fe72f95f3bfbdcdf2bdca477d94c11932c0aadf3c2e2cc2f"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/index.ts",
+      "sha256": "0a86959fc04942e581c3a331518853cdd66be13bb3126a557afce234d2a5df63"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next.ts",
+      "sha256": "3641d624a94accf6491647b2996f5e2fef55bbcfddc8d15d885854b1961bcea7"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts",
+      "sha256": "4331be4e05ff98c7b8c8bbcdf89276ce5a7a685d195c315fbea47b72feeace87"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "sha256": "16553fbb07aafc724394861a2131d260efe404ef00e166ba2d315e940d4e73be"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/index.ts",
+      "sha256": "ce045a4d0d55e9817922b99ee10a84171f296edf61da10b0e04d137e9b51c3be"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts",
+      "sha256": "1ed58b596e4b3d03ced83bd748018653bc96a9b684061765d7f7993e8180e058"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts",
+      "sha256": "69c32e156c63354823456f555870d7e0da3a2cbc68651ba2d0a37ebbec3a9447"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+      "sha256": "72d73badad58461b7eeaaab153ce089960df2d0fe346a9c918fd81635ce9b45c"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+      "sha256": "c09fc9ddd68c32476ce4fc53820657434633222ad84e8c0f5fa6f28c816c0c72"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts",
+      "sha256": "5afe231edbc84c985667ce4f86740bc2b59012592ad644c642f3bc22c428c529"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/Shared.ts",
+      "sha256": "bc52c2f50c99a68f98765c0f36b4fefc7903007a14c742de74fc0be9309b8d64"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+      "sha256": "d0ef3e2ea861ecfa7066e9abe8670dca0972dfaaeca1f817f1d38e04c1c415c6"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+      "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/index.ts",
+      "sha256": "a756a21de7b638c5894ace912b6693225121637a571060fbebfab1a4b28102b1"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/internal.ts",
+      "sha256": "ae07f683c11e9fb337c8cb020e775ab164511f1ed819ec815faac76b67ecd68c"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/security.ts",
+      "sha256": "0888181e88b6bac740f499d1605d08b0e2b9355925e29a244af2df528b56baab"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/AllowedDevOrigin.schema.ts",
+      "sha256": "10abf5458ceee16353ae96c37b2fa4d46825ee40314b925568bdfbafa99bc81a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Compiler.schema.ts",
+      "sha256": "d1a36cf6c5bfb6b94ff8f39660896a3029add26e794d43829d15cfad7c3fb0fe"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ConfigPrimitives.schema.ts",
+      "sha256": "414f396e37ad0641282e2cd26946c8d8c901d49fe5a485acba45a3256d2efa31"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ExperimentalConfig.schema.ts",
+      "sha256": "49ead00b4e6a6f09da68bb58f9d72101a8f6c7d46aaa47ab56b49b7668613838"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
+      "sha256": "f1b8983e0fdd258232edd2a118a4c8ab4e7c76ba95c261e216547d8c47168895"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/PrefetchInliningConfig.schema.ts",
+      "sha256": "e04a4b79ba6fed2b4f527b9fa8512225e516081178c6dbaf914e47013465b4cb"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts",
+      "sha256": "367de01f8d6e85fd662b51f25326db2932443a7f26e30c4990426af4406a08d8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Shared.schema.ts",
+      "sha256": "fe5ad1950254adcb0d0c6c113df979b11f38c086197ca599fce3ce7355cc7a53"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/SubresourceIntegrityPlugin.schema.ts",
+      "sha256": "432a667a04357b1248bff337729e3a3f582b7235c0fde9bd42fede81f47a19a2"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Turbopack.schema.ts",
+      "sha256": "0a09b2a1fedd2221c0a5e6a5138f4a49b3c95a65c6a2bb011116ab889528d0b6"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/index.ts",
+      "sha256": "7c034ad0f9a61627ca1fcca5da04da74558115e8e77c90df6463ab580196c5aa"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/security/index.ts",
+      "sha256": "0b4048efda979a27393a291a9cbe8af822416bbf1c338af1e065c6c1cc020f5a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+      "sha256": "42b826c2723532ea9781d1d2331242780bcec3ba67416cd6d83a2227b26a66bd"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSnapshotCodegen.ts",
+      "sha256": "28aee23d777f8da9a081bb8a43770e8d226ef5739d653d9fddcdb8a6ea9d8a2b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
+      "sha256": "f2a93b374c1ad6cfe485915a5041dc29dadd6d0c702100d383fef393ef041ec3"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleHelpers.ts",
+      "sha256": "ac31d6a10b17a21e951603f92daa17c2ee5931f07f2f2d5c2dda5785f8f47178"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+      "sha256": "0c7d5094063de6cb4680fbd7ec3b495c4033718aeef01f6be9eac3fa73476032"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "0983ede3f843e394e0a3b719b468ee1d652d232e70b160d09480a4110c0ebf59"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "sha256": "3eb68ae1b987492c70070230cbfa44beabfcc0e87651bd37c359c02429165194"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "sha256": "c05f43bd3969e9ea6118402ba61bce2108c348d50dc539d4ec68e432c3ee615b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "sha256": "3eba9e18d649d5bb42a06ae676a27c70b7ce2d8056360cfdd0d5e5536f0c4fbd"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "sha256": "fe069ae3fb1cf97db681f41d1d1e30b6608322e4c4aa6232cdc9ccb5100555c8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "sha256": "53150fe10d68780cec91181d2af9eb644d5b82717d092d7000bc1e20e776b191"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
+      "sha256": "6ce2d0f83a8a80e578deb4facb724665fdb435ecb1532c3066b90b98f9b94e3b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+      "sha256": "e89eb802ce58328e7cb0645586e2c36a9ee79e5710fd91fb182b6162ee8ed4e8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts",
+      "sha256": "24f79b2526422519274c8069b3df024a2067af80428d182e54cbe87bd44fc8dc"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "sha256": "b84ff55010eb2c44dd0f60505925bbef706cb42dc77bd6b6bd2eb4c099f757ef"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
+      "sha256": "1b5121ad8f8ee9dc1d90450a5acca6bd34a56b964eedbdbb4132df89466c9f02"
+    }
+  ],
+  "loadBefore": [8.20849609375, 6.314453125, 5.66259765625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.26 avg60=0.11 avg300=0.04 total=67940759\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=64657452\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=63404229\n",
+    "io": "some avg10=0.23 avg60=0.26 avg300=0.12 total=659320573\nfull avg10=0.13 avg60=0.17 avg300=0.08 total=603990213\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Configured repo-configs native compiler and checkout-policy suites; no external endpoint selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 4.72140982500423,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/package.json",
+      "sha256": "1cbc3c78cdc15b61fe72f95f3bfbdcdf2bdca477d94c11932c0aadf3c2e2cc2f"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/index.ts",
+      "sha256": "0a86959fc04942e581c3a331518853cdd66be13bb3126a557afce234d2a5df63"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next.ts",
+      "sha256": "3641d624a94accf6491647b2996f5e2fef55bbcfddc8d15d885854b1961bcea7"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts",
+      "sha256": "4331be4e05ff98c7b8c8bbcdf89276ce5a7a685d195c315fbea47b72feeace87"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "sha256": "16553fbb07aafc724394861a2131d260efe404ef00e166ba2d315e940d4e73be"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/cache/index.ts",
+      "sha256": "ce045a4d0d55e9817922b99ee10a84171f296edf61da10b0e04d137e9b51c3be"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts",
+      "sha256": "1ed58b596e4b3d03ced83bd748018653bc96a9b684061765d7f7993e8180e058"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts",
+      "sha256": "69c32e156c63354823456f555870d7e0da3a2cbc68651ba2d0a37ebbec3a9447"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+      "sha256": "72d73badad58461b7eeaaab153ce089960df2d0fe346a9c918fd81635ce9b45c"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+      "sha256": "c09fc9ddd68c32476ce4fc53820657434633222ad84e8c0f5fa6f28c816c0c72"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts",
+      "sha256": "5afe231edbc84c985667ce4f86740bc2b59012592ad644c642f3bc22c428c529"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/eslint/Shared.ts",
+      "sha256": "bc52c2f50c99a68f98765c0f36b4fefc7903007a14c742de74fc0be9309b8d64"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+      "sha256": "d0ef3e2ea861ecfa7066e9abe8670dca0972dfaaeca1f817f1d38e04c1c415c6"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+      "sha256": "523a6a06bffaac0320189d423faa8f37b58a012a1d6d2d4081af489c316d1664"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/index.ts",
+      "sha256": "a756a21de7b638c5894ace912b6693225121637a571060fbebfab1a4b28102b1"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/internal.ts",
+      "sha256": "ae07f683c11e9fb337c8cb020e775ab164511f1ed819ec815faac76b67ecd68c"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/security.ts",
+      "sha256": "0888181e88b6bac740f499d1605d08b0e2b9355925e29a244af2df528b56baab"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/AllowedDevOrigin.schema.ts",
+      "sha256": "10abf5458ceee16353ae96c37b2fa4d46825ee40314b925568bdfbafa99bc81a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Compiler.schema.ts",
+      "sha256": "d1a36cf6c5bfb6b94ff8f39660896a3029add26e794d43829d15cfad7c3fb0fe"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ConfigPrimitives.schema.ts",
+      "sha256": "414f396e37ad0641282e2cd26946c8d8c901d49fe5a485acba45a3256d2efa31"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ExperimentalConfig.schema.ts",
+      "sha256": "49ead00b4e6a6f09da68bb58f9d72101a8f6c7d46aaa47ab56b49b7668613838"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
+      "sha256": "f1b8983e0fdd258232edd2a118a4c8ab4e7c76ba95c261e216547d8c47168895"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/PrefetchInliningConfig.schema.ts",
+      "sha256": "e04a4b79ba6fed2b4f527b9fa8512225e516081178c6dbaf914e47013465b4cb"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts",
+      "sha256": "367de01f8d6e85fd662b51f25326db2932443a7f26e30c4990426af4406a08d8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Shared.schema.ts",
+      "sha256": "fe5ad1950254adcb0d0c6c113df979b11f38c086197ca599fce3ce7355cc7a53"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/SubresourceIntegrityPlugin.schema.ts",
+      "sha256": "432a667a04357b1248bff337729e3a3f582b7235c0fde9bd42fede81f47a19a2"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Turbopack.schema.ts",
+      "sha256": "0a09b2a1fedd2221c0a5e6a5138f4a49b3c95a65c6a2bb011116ab889528d0b6"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/models/index.ts",
+      "sha256": "7c034ad0f9a61627ca1fcca5da04da74558115e8e77c90df6463ab580196c5aa"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/next/security/index.ts",
+      "sha256": "0b4048efda979a27393a291a9cbe8af822416bbf1c338af1e065c6c1cc020f5a"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+      "sha256": "42b826c2723532ea9781d1d2331242780bcec3ba67416cd6d83a2227b26a66bd"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSnapshotCodegen.ts",
+      "sha256": "28aee23d777f8da9a081bb8a43770e8d226ef5739d653d9fddcdb8a6ea9d8a2b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
+      "sha256": "f2a93b374c1ad6cfe485915a5041dc29dadd6d0c702100d383fef393ef041ec3"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleHelpers.ts",
+      "sha256": "ac31d6a10b17a21e951603f92daa17c2ee5931f07f2f2d5c2dda5785f8f47178"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+      "sha256": "0c7d5094063de6cb4680fbd7ec3b495c4033718aeef01f6be9eac3fa73476032"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "0983ede3f843e394e0a3b719b468ee1d652d232e70b160d09480a4110c0ebf59"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "sha256": "3eb68ae1b987492c70070230cbfa44beabfcc0e87651bd37c359c02429165194"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "sha256": "c05f43bd3969e9ea6118402ba61bce2108c348d50dc539d4ec68e432c3ee615b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "sha256": "3eba9e18d649d5bb42a06ae676a27c70b7ce2d8056360cfdd0d5e5536f0c4fbd"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "sha256": "fe069ae3fb1cf97db681f41d1d1e30b6608322e4c4aa6232cdc9ccb5100555c8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "sha256": "53150fe10d68780cec91181d2af9eb644d5b82717d092d7000bc1e20e776b191"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
+      "sha256": "6ce2d0f83a8a80e578deb4facb724665fdb435ecb1532c3066b90b98f9b94e3b"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+      "sha256": "e89eb802ce58328e7cb0645586e2c36a9ee79e5710fd91fb182b6162ee8ed4e8"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts",
+      "sha256": "24f79b2526422519274c8069b3df024a2067af80428d182e54cbe87bd44fc8dc"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "sha256": "b84ff55010eb2c44dd0f60505925bbef706cb42dc77bd6b6bd2eb4c099f757ef"
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
+      "sha256": "1b5121ad8f8ee9dc1d90450a5acca6bd34a56b964eedbdbb4132df89466c9f02"
+    }
+  ],
+  "loadAfter": [7.951171875, 6.29248046875, 5.65869140625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.17 avg60=0.10 avg300=0.04 total=67953906\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=64657452\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=63404229\n",
+    "io": "some avg10=0.15 avg60=0.24 avg300=0.12 total=659325472\nfull avg10=0.08 avg60=0.16 avg300=0.08 total=603993286\n"
+  },
+  "sourceStable": true,
+  "propertyOverridesAbsent": true,
+  "traceOverrideAbsent": true
+}

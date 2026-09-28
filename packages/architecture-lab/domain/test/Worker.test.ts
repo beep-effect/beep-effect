@@ -1,7 +1,8 @@
 import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
 import { toPgTable } from "@beep/effect-drizzle/pg";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
 import * as S from "effect/Schema";

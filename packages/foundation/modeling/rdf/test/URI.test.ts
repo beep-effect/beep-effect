@@ -7,11 +7,26 @@ import {
   URI,
   URIReference,
 } from "@beep/rdf/Uri";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
+const URIDecodeEffect = S.decodeEffect(URI);
+const URIIs = S.is(URI);
+const URIToEquivalence = S.toEquivalence(URI);
+const AbsoluteURIDecodeEffect = S.decodeEffect(AbsoluteURI);
+const AbsoluteURIIs = S.is(AbsoluteURI);
+const AbsoluteURIToEquivalence = S.toEquivalence(AbsoluteURI);
+const URIReferenceDecodeEffect = S.decodeEffect(URIReference);
+const URIReferenceIs = S.is(URIReference);
+const URIReferenceToEquivalence = S.toEquivalence(URIReference);
+const RelativeURIReferenceDecodeEffect = S.decodeEffect(RelativeURIReference);
+const RelativeURIReferenceIs = S.is(RelativeURIReference);
+const RelativeURIReferenceToEquivalence = S.toEquivalence(RelativeURIReference);
 const decodeUri = S.decodeUnknownEffect(URI);
 const decodeAbsoluteUri = S.decodeUnknownEffect(AbsoluteURI);
 const decodeUriReference = S.decodeUnknownEffect(URIReference);
@@ -40,20 +55,20 @@ describe("URI", () => {
   });
 
   it("compares URIs by normalized equivalence", () => {
-    expect(areUrisEquivalent("https://example.com:443/%7Ealice", "https://example.com/~alice")).toBe(true);
-    expect(areUrisEquivalent("https://example.com/a", "https://example.com/b")).toBe(false);
+    pipe(areUrisEquivalent("https://example.com:443/%7Ealice", "https://example.com/~alice"), assertTrue);
+    pipe(areUrisEquivalent("https://example.com/a", "https://example.com/b"), assertFalse);
   });
 
   it.effect("rejects malformed absolute and relative URI values", () =>
     Effect.gen(function* () {
       const invalidAbsolute = yield* Effect.exit(decodeAbsoluteUri("folder/child"));
-      expect(Exit.isFailure(invalidAbsolute)).toBe(true);
+      pipe(invalidAbsolute, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidAbsolute)) {
         expect(Cause.pretty(invalidAbsolute.cause)).toContain("Expected a valid RFC 3986 absolute URI");
       }
 
       const leadingWhitespace = yield* Effect.exit(decodeUri(" https://example.com"));
-      expect(Exit.isFailure(leadingWhitespace)).toBe(true);
+      pipe(leadingWhitespace, Exit.isFailure, assertTrue);
       if (Exit.isFailure(leadingWhitespace)) {
         expect(Cause.pretty(leadingWhitespace.cause)).toContain(
           "URI values must not contain leading or trailing whitespace"
@@ -61,7 +76,7 @@ describe("URI", () => {
       }
 
       const invalidRelative = yield* Effect.exit(decodeRelativeUriReference("scheme://example.com"));
-      expect(Exit.isFailure(invalidRelative)).toBe(true);
+      pipe(invalidRelative, Exit.isFailure, assertTrue);
       if (Exit.isFailure(invalidRelative)) {
         expect(Cause.pretty(invalidRelative.cause)).toContain("Expected a valid RFC 3986 relative URI reference");
       }
@@ -70,19 +85,43 @@ describe("URI", () => {
 });
 
 describe("schema-derived arbitraries", () => {
-  it("only generates RFC 3986 URI values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(URI);
-  });
+  it.effect.prop(
+    "only generates RFC 3986 URI values that decode to themselves",
+    [Arbitrary.schema(URI)],
+    ([value]) => Effect.map(URIDecodeEffect(value), (decoded) => URIIs(value) && URIToEquivalence(decoded, value)),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3986 AbsoluteURI values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(AbsoluteURI);
-  });
+  it.effect.prop(
+    "only generates RFC 3986 AbsoluteURI values that decode to themselves",
+    [Arbitrary.schema(AbsoluteURI)],
+    ([value]) =>
+      Effect.map(
+        AbsoluteURIDecodeEffect(value),
+        (decoded) => AbsoluteURIIs(value) && AbsoluteURIToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3986 URIReference values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(URIReference);
-  });
+  it.effect.prop(
+    "only generates RFC 3986 URIReference values that decode to themselves",
+    [Arbitrary.schema(URIReference)],
+    ([value]) =>
+      Effect.map(
+        URIReferenceDecodeEffect(value),
+        (decoded) => URIReferenceIs(value) && URIReferenceToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates RFC 3986 RelativeURIReference values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(RelativeURIReference);
-  });
+  it.effect.prop(
+    "only generates RFC 3986 RelativeURIReference values that decode to themselves",
+    [Arbitrary.schema(RelativeURIReference)],
+    ([value]) =>
+      Effect.map(
+        RelativeURIReferenceDecodeEffect(value),
+        (decoded) => RelativeURIReferenceIs(value) && RelativeURIReferenceToEquivalence(decoded, value)
+      ),
+    { arbitrary: fcRuns(50) }
+  );
 });

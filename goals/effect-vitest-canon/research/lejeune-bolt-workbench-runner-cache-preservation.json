@@ -1,0 +1,38 @@
+{
+  "reviewedNodes": 10,
+  "changedDependencyLists": 7,
+  "edges": [
+    {
+      "computation": "@beep/lejeune-bolt-workbench#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#dev",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#test",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "706bd56261d9e142fea782bd3f667c168b30df209e5f0471d5542320bca8f902"
+}

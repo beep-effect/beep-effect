@@ -5,12 +5,19 @@ import {
   StorybookVercelAuthenticationDeploymentType,
   StorybookVercelProjectConfig,
 } from "@beep/infra";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const decodeStorybookPulumiConfigValues = S.decodeEffect(StorybookPulumiConfigValues);
+const isStorybookPulumiConfigValues = S.is(StorybookPulumiConfigValues);
+const StorybookPulumiConfigValuesEquivalent = S.toEquivalence(StorybookPulumiConfigValues);
 
 const encodeUnknownStorybookVercelProjectConfig = S.encodeUnknownEffect(StorybookVercelProjectConfig);
 
@@ -26,7 +33,7 @@ describe("@beep/infra Storybook", () => {
     expect(args.vercel.buildCommand).toBe("cd ../.. && bun run storybook:build");
     expect(args.vercel.productionBranch).toBe("main");
     expect(args.vercel.vercelAuthenticationDeploymentType).toBe("none");
-    expect(O.isNone(args.vercel.teamId)).toBe(true);
+    assertNone(args.vercel.teamId);
   });
 
   it("maps Pulumi config overrides into Storybook Vercel args", () => {
@@ -68,55 +75,84 @@ describe("@beep/infra Storybook", () => {
     expect(args.vercel.rootDirectory).toBe("apps/storybook");
   });
 
-  it("decodes optional Pulumi config shape", () => {
-    const decoded = Effect.runSync(
-      StorybookPulumiConfigValues.decodeEffect({
+  it.effect(
+    "decodes optional Pulumi config shape",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* StorybookPulumiConfigValues.decodeEffect({
         outputDirectory: "storybook-static-preview",
         projectName: "beep-storybook-preview",
         vercelAuthenticationDeploymentType: "none",
-      })
-    );
+      });
 
-    expect(decoded.outputDirectory).toBe("storybook-static-preview");
-    expect(decoded.projectName).toBe("beep-storybook-preview");
-    expect(decoded.vercelAuthenticationDeploymentType).toBe("none");
-  });
+      expect(decoded.outputDirectory).toBe("storybook-static-preview");
+      expect(decoded.projectName).toBe("beep-storybook-preview");
+      expect(decoded.vercelAuthenticationDeploymentType).toBe("none");
+    })
+  );
 
-  it("encodes Storybook Vercel config with the same optional team-id wire shape", () => {
-    const encodedWithTeam = Effect.runSync(
-      encodeUnknownStorybookVercelProjectConfig(StorybookVercelProjectConfig.make({ teamId: O.some("team_123") }))
-    );
-    const encodedWithoutTeam = Effect.runSync(
-      encodeUnknownStorybookVercelProjectConfig(StorybookVercelProjectConfig.make({}))
-    );
+  it.effect(
+    "encodes Storybook Vercel config with the same optional team-id wire shape",
+    Effect.fnUntraced(function* () {
+      const encodedWithTeam = yield* encodeUnknownStorybookVercelProjectConfig(
+        StorybookVercelProjectConfig.make({ teamId: O.some("team_123") })
+      );
+      const encodedWithoutTeam = yield* encodeUnknownStorybookVercelProjectConfig(
+        StorybookVercelProjectConfig.make({})
+      );
 
-    expect(encodedWithTeam).toEqual({
-      buildCommand: "cd ../.. && bun run storybook:build",
-      installCommand: "cd ../.. && bun install",
-      outputDirectory: "storybook-static",
-      productionBranch: "main",
-      projectName: "beep-storybook",
-      repository: "beep-effect/beep-effect",
-      rootDirectory: "apps/storybook",
-      teamId: "team_123",
-      vercelAuthenticationDeploymentType: "none",
-    });
-    expect(encodedWithoutTeam).toEqual({
-      buildCommand: "cd ../.. && bun run storybook:build",
-      installCommand: "cd ../.. && bun install",
-      outputDirectory: "storybook-static",
-      productionBranch: "main",
-      projectName: "beep-storybook",
-      repository: "beep-effect/beep-effect",
-      rootDirectory: "apps/storybook",
-      vercelAuthenticationDeploymentType: "none",
-    });
-  });
+      expect(encodedWithTeam).toEqual({
+        buildCommand: "cd ../.. && bun run storybook:build",
+        installCommand: "cd ../.. && bun install",
+        outputDirectory: "storybook-static",
+        productionBranch: "main",
+        projectName: "beep-storybook",
+        repository: "beep-effect/beep-effect",
+        rootDirectory: "apps/storybook",
+        teamId: "team_123",
+        vercelAuthenticationDeploymentType: "none",
+      });
+      expect(encodedWithoutTeam).toEqual({
+        buildCommand: "cd ../.. && bun run storybook:build",
+        installCommand: "cd ../.. && bun install",
+        outputDirectory: "storybook-static",
+        productionBranch: "main",
+        projectName: "beep-storybook",
+        repository: "beep-effect/beep-effect",
+        rootDirectory: "apps/storybook",
+        vercelAuthenticationDeploymentType: "none",
+      });
+    })
+  );
 
-  it("round-trips Storybook config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(StorybookPulumiConfigValues, { runs: 25 });
-    expectSchemaRoundTrip(StorybookVercelAuthenticationDeploymentType);
-    expectSchemaRoundTrip(StorybookPulumiConfigValues);
-    expectSchemaRoundTrip(StorybookVercelProjectConfig);
-  });
+  it.effect.prop(
+    "round-trips Storybook config schemas through encoded wire values",
+    [Arbitrary.schema(StorybookPulumiConfigValues)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeStorybookPulumiConfigValues(value);
+        assertTrue(isStorybookPulumiConfigValues(value) && StorybookPulumiConfigValuesEquivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookVercelAuthenticationDeploymentType through its encoded wire codec",
+    [Arbitrary.schema(StorybookVercelAuthenticationDeploymentType)],
+    ([value]) => expectSchemaRoundTrip(StorybookVercelAuthenticationDeploymentType, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookPulumiConfigValues through its encoded wire codec",
+    [Arbitrary.schema(StorybookPulumiConfigValues)],
+    ([value]) => expectSchemaRoundTrip(StorybookPulumiConfigValues, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips StorybookVercelProjectConfig through its encoded wire codec",
+    [Arbitrary.schema(StorybookVercelProjectConfig)],
+    ([value]) => expectSchemaRoundTrip(StorybookVercelProjectConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

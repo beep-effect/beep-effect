@@ -10,6 +10,11 @@
  * very first `check` run is expected to report the `xhigh` and `high` copies
  * as `stale` rather than silently adopting them.
  *
+ * Since the 2026-09-24 directive every sub-agent, delegation, and Workflow
+ * child is `child.heavy` = `claude-opus-5-5` (the explicit id; the `opus`
+ * alias is not a pin). The `codex.heavy` bindings stay pinned for the
+ * Codex-only clients, which are opt-in lanes rather than the default pool.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -58,7 +63,8 @@ const binding = (
   surface: RoutingSurface,
   id: string,
   effort: O.Option<EffortLevel>,
-  supersedes: ReadonlyArray<string> = []
+  supersedes: ReadonlyArray<string> = [],
+  note: O.Option<string> = O.none()
 ): ModelBinding =>
   ModelBinding.make({
     role,
@@ -66,8 +72,16 @@ const binding = (
     modelId: modelId(id),
     effort,
     supersedes: A.map(supersedes, modelId),
-    note: O.none(),
+    note,
   });
+
+const codexOptIn = O.some("Codex opt-in lane only since 2026-09-24; default delegation is child.heavy.");
+const opusDefault = O.some(
+  "Every sub-agent, delegation, and Workflow child since 2026-09-24; explicit id, never the opus alias."
+);
+const opusProxyGap = O.some(
+  "Same route for proxy sessions; unknown-model until the CLIProxyAPI registry lists claude-opus-5-5 (absent 2026-09-27)."
+);
 
 const at = (role: RoutingRole, surface: RoutingSurface, field: LocatorField): LocatorBinding =>
   LocatorBinding.make({ role, surface, field });
@@ -123,11 +137,11 @@ const doctrineEffort: Locator = {
   after: '"',
 };
 
-const exampleModels = (id: string, path: string, role: RoutingRole): ModelSyncTarget =>
+const exampleModels = (id: string, path: string, role: RoutingRole, surface: RoutingSurface): ModelSyncTarget =>
   target(id, "repo", `packages/tooling/tool/cli/src/commands/${path}`, false, [
     {
       _tag: "line-value",
-      binding: at(role, "codex-plugin", "model"),
+      binding: at(role, surface, "model"),
       render: verbatim,
       linePrefix: " *",
       before: 'model: "',
@@ -166,11 +180,13 @@ const agentRollout = (id: string, path: string): ModelSyncTarget =>
   ]);
 
 const seedBindings: ReadonlyArray<ModelBinding> = [
-  binding("codex.heavy", "codex-cli", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
-  binding("codex.heavy", "codex-plugin", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
-  binding("codex.heavy", "proxy-workflow", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
-  binding("codex.heavy", "jetbrains-codex", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"]),
-  binding("codex.plan", "codex-cli", "gpt-6-astra", O.some("medium")),
+  binding("child.heavy", "claude-code", "claude-opus-5-5", O.none(), [], opusDefault),
+  binding("child.heavy", "proxy-workflow", "claude-opus-5-5", O.none(), [], opusProxyGap),
+  binding("codex.heavy", "codex-cli", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
+  binding("codex.heavy", "codex-plugin", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
+  binding("codex.heavy", "proxy-workflow", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
+  binding("codex.heavy", "jetbrains-codex", "gpt-6-astra", O.some("medium"), ["gpt-5.6-sol"], codexOptIn),
+  binding("codex.plan", "codex-cli", "gpt-6-astra", O.some("medium"), [], codexOptIn),
   binding("child.lightweight", "proxy-workflow", "gpt-5.6-luna", O.none()),
   binding("research.web", "grok-cli", "grok-4.6", O.some("xhigh"), ["grok-4.5"]),
   binding("research.web", "proxy-workflow", "grok-4.6", O.none(), ["grok-4.5"]),
@@ -178,7 +194,7 @@ const seedBindings: ReadonlyArray<ModelBinding> = [
   binding("cursor.volume", "cursor-seat", "composer-2.5", O.none()),
   binding("cursor.review", "cursor-seat", "claude-opus-5-thinking-high", O.none()),
   binding("cursor.mechanical", "cursor-seat", "composer-2.5", O.none()),
-  binding("qa.judge", "codex-plugin", "gpt-6-astra", O.some("medium")),
+  binding("qa.judge", "claude-code", "claude-opus-5-5", O.none(), [], opusDefault),
   binding("graft.deep", "proxy-workflow", "claude-opus-5", O.none()),
   binding("jsdoc.migrate-titles", "grok-cli", "grok-4.6", O.none(), ["grok-4.5"]),
   binding("deprecated.routable", "proxy-workflow", "gpt-daybreak-blue-latest", O.none()),
@@ -391,28 +407,20 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
     "home",
     "$HOME/.agents/skills/impeccable/agents/impeccable_manual_edit_applier.toml"
   ),
-  exampleModels("repo.examples.qa-inventory", "Qa/Inventory.schemas.ts", "qa.judge"),
-  exampleModels("repo.examples.qa-judge-check", "Qa/JudgeCheck.ts", "qa.judge"),
-  exampleModels("repo.examples.qa-render", "Qa/Qa.render.ts", "qa.judge"),
-  exampleModels("repo.examples.yeet-provenance", "Yeet/internal/Provenance.ts", "codex.heavy"),
-  exampleModels("repo.examples.yeet-resume", "Yeet/internal/Resume.ts", "codex.heavy"),
-  exampleModels("repo.examples.docgen-worker", "Docgen/internal/QualityWorkerEval.ts", "codex.heavy"),
+  exampleModels("repo.examples.qa-inventory", "Qa/Inventory.schemas.ts", "qa.judge", "claude-code"),
+  exampleModels("repo.examples.qa-judge-check", "Qa/JudgeCheck.ts", "qa.judge", "claude-code"),
+  exampleModels("repo.examples.qa-render", "Qa/Qa.render.ts", "qa.judge", "claude-code"),
+  exampleModels("repo.examples.yeet-provenance", "Yeet/internal/Provenance.ts", "codex.heavy", "codex-plugin"),
+  exampleModels("repo.examples.yeet-resume", "Yeet/internal/Resume.ts", "codex.heavy", "codex-plugin"),
+  exampleModels("repo.examples.docgen-worker", "Docgen/internal/QualityWorkerEval.ts", "codex.heavy", "codex-plugin"),
   target("repo.code.qa-judge-pack", "repo", "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts", false, [
     {
       _tag: "line-value",
-      binding: at("qa.judge", "codex-plugin", "model"),
+      binding: at("qa.judge", "claude-code", "model"),
       render: verbatim,
       linePrefix: "",
-      before: "task --model ",
-      after: " --effort ",
-    },
-    {
-      _tag: "line-value",
-      binding: at("qa.judge", "codex-plugin", "effort"),
-      render: verbatim,
-      linePrefix: "",
-      before: " --effort ",
-      after: " --prompt-file ",
+      before: 'judge model: "',
+      after: '"',
     },
   ]),
 ];
@@ -422,7 +430,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  *
  * **Details**
  *
- * Sixteen bindings cover the routing concepts the census named; the targets
+ * Eighteen bindings cover the routing concepts the census named; the targets
  * are the repo rows of ruling 9 plus the home rows of ruling 7 and the
  * `$HOME` sweep. Home paths are written `$HOME/…` rather than absolute, so the
  * file stays portable and safe to read aloud.
@@ -433,7 +441,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  * import { seedModelsManifest } from "@beep/repo-cli/commands/Models"
  *
  * console.log(seedModelsManifest.version) // "beep-models/v1"
- * console.log(seedModelsManifest.bindings.length) // 16
+ * console.log(seedModelsManifest.bindings.length) // 18
  * ```
  *
  * @category models

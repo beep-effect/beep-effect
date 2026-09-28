@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ontology",
+  "sourceHead": "d5d54cee3b4c2ad692803ebe5709deeed9abd34d",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.169734199997038,
+  "bunWholeCommandSeconds": 2.0671896830026526,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.57470703125, 2.57470703125, 2.98291015625],
+  "loadAfter": [1.60888671875, 2.56494140625, 2.9775390625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.30 avg60=0.23 avg300=0.11 total=783054676\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216624\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140578\n",
+    "io": "some avg10=0.88 avg60=0.42 avg300=0.12 total=847367472\nfull avg10=0.64 avg60=0.31 avg300=0.08 total=741307617\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.20 avg60=0.21 avg300=0.11 total=783062867\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216625\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140579\n",
+    "io": "some avg10=0.59 avg60=0.40 avg300=0.12 total=847373747\nfull avg10=0.43 avg60=0.29 avg300=0.08 total=741310867\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "8a0e3e667932a652d13f40e0300308c0e8ee7d31c6acef48c9e11ec38c7f83dc"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/README.md",
+      "sha256": "c103a422c8c237d2a267e389c9848ea2cd5fc30a666d28f5cf2b10eca4a478f0"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/docgen.json",
+      "sha256": "9b8ddefa8e942be51b194b99579fd624d55687f4fe776ba03b5c3fcf2b61a1bc"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/package.json",
+      "sha256": "7e3383deaa24f3bf81e116fe5680e995df91c8ace8ef92b2422627e052154cf2"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.assembly.ts",
+      "sha256": "c8ac1ea3fd39a8e79aed7a59e66cae1cb75a25451b20105e0761ca9d26a36ed7"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
+      "sha256": "8ad6542769a46383ef89519c4d48936ef10951b2a3d43670b35c0b85f5f56dc3"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
+      "sha256": "5dcb0c7c1c03d90571b77099140dbbe851f57ae5f1d5883934aa35dd743e734f"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
+      "sha256": "52e49f58df0ee24fae86432c9ce7a2aac519026d2c7bc14bda51f51e2217147e"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+      "sha256": "d5f38113171311a923258533ed3d6e7a2c6dd2020bba559d3afa5930b860873e"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts",
+      "sha256": "e12bed696f93fc3d9cd7c617eae5780b68a8ad4b9b403aa9583ef8ba5383f332"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/SemanticFoundation.seed.ts",
+      "sha256": "9b3671ad64a49b4a89227b36413cbec9067e49a328eff8f096a8e370bfc31f25"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "sha256": "e4c1f8b5c6dd99c33d3256046b76dc5cb271bdb1790ada4e3262049d58f9afb7"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyRegistry.ts",
+      "sha256": "bcd04988ac889746773d819476c9cb0efcc1083fd5cdbe46301940a9dad15339"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/index.ts",
+      "sha256": "dc0122bc7d7c68359a45b95a63ec2e9459950e47694dc0694a618ff5a8f9c854"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/internal/Fold.ts",
+      "sha256": "ba8998082f776ad5c86442018bb1d9500088f82dcca3019e5d29ef52f4dfc240"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.jsonld",
+      "sha256": "023d7f7007c07b225cb029f478558582e6163347e0fdc627f5612d47def66849"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/src/seed/legal-intake.ttl",
+      "sha256": "e58d1ce0e119f1e45f1f94fbd7b9db38ff17a870619ae1fb42501732275b2be2"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "sha256": "38cc31d034d571a67aab5b35ea5fcffd97f2ae96f7fffaac684ec6bdd9883d8a"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "sha256": "9701d274494c1293a5f8f7109120bfb3ba2d83d0033a5c6b0d7a2e9a3be4250b"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
+      "sha256": "c2c7b99cd13ee31264af7de8ce9a6ae4cbb7e242078e83c95f2e3a0b4ae2525a"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/TaggedError.equivalence.test.ts",
+      "sha256": "b6d1a65a3faa491ffa6a93b907cf3205003726183607c370b7cb5fbe21b15bfb"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/fixtures/fixture-slice.jsonld",
+      "sha256": "1d551dd33478aaf98301a48ce9dc013aaab91e707faf6d5e77749d823da0ca3c"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/fixtures/vendor-manifest.jsonl",
+      "sha256": "2a7477ffde89f807d7a5636855c4904de4581f5088156d51e25aab1cd5d827b5"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/tsconfig.check.json",
+      "sha256": "48a92212a1c38d4dc36a39a08ca88f31148658ea8db75ccb655ff02bb7514ff2"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/tsconfig.json",
+      "sha256": "d143364f44ce008051f807fc74428ed063f9be7e3f01c49a7ed9dafc09d618bd"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/tsconfig.test.json",
+      "sha256": "a75fb483faa0db9c1e828904eb6e863ea775d0412c9bbc6a90c035a7ced02a46"
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/vitest.config.ts",
+      "sha256": "b2105d17a31fce82631de4c40bb8fcb050e5aa4746c66f3f8668eb40372fd93e"
+    }
+  ],
+  "environmentMode": "Configured ontology local-schema and RDF adapter Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 70,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.60888671875, 2.56494140625, 2.9775390625],
+    "loadAfter": [2.841796875, 2.8046875, 3.05322265625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.20 avg60=0.21 avg300=0.11 total=783062887\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216625\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140579\n",
+      "io": "some avg10=0.59 avg60=0.40 avg300=0.12 total=847373747\nfull avg10=0.43 avg60=0.29 avg300=0.08 total=741310867\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.16 avg60=0.21 avg300=0.11 total=783071032\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216625\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140579\n",
+      "io": "some avg10=0.48 avg60=0.38 avg300=0.12 total=847373845\nfull avg10=0.35 avg60=0.28 avg300=0.08 total=741310937\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 70,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All70configured tests pass before and after without skips and with stable source.132original assertions and70registrations remain; three aggregate Passed checks become native failures. Three native properties retain original domains andfloors25/50/default100. Twelve independent inversions demonstrate replay and shrunk input. Native scoped symlink and missing-path tests remain. Baseline overlaps an early publisher; the after sample can overlap package verification and policy checks. No external endpoint is contacted."
+}

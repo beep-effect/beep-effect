@@ -1,5 +1,8 @@
 import { N3TurtleCodecError } from "@beep/n3";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const sameN3TurtleCodecError = S.toEquivalence(N3TurtleCodecError);
@@ -10,7 +13,7 @@ describe("N3 declared-field equivalence", () => {
     const b = N3TurtleCodecError.make({ message: "N3 rejected the source", reason: "parseFailed" });
     const c = N3TurtleCodecError.make({ message: "N3 rejected the source", reason: "serializeFailed" });
 
-    expect(sameN3TurtleCodecError(a, b)).toBe(true);
-    expect(sameN3TurtleCodecError(a, c)).toBe(false);
+    pipe(sameN3TurtleCodecError(a, b), assertTrue);
+    pipe(sameN3TurtleCodecError(a, c), assertFalse);
   });
 });
