@@ -90,8 +90,12 @@ orchestrator owns schemas, contracts, and judgment.
       `Heavy / matrix.name` context), fixed by #1165 (lanes pass without work on a hosted
       runner); the re-run on `c43cf7618a` passed (every `Heavy / <lane>` success on
       `ubuntu-24.04`, `--until-ready` exit 0; evidence in `research/b8-implementation.md`).
-- [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
+- [x] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
       "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
+      Captured 2026-09-16 as `explorations/github-merge-queue` (PR #1164, stage `capture`); closed
+      2026-09-28 as captured, not scheduled. The grill and any implementation stay behind the
+      ship-velocity E8 flip condition (`main` full-gauntlet success at or above 80% over 14 days) and
+      move with that exploration, not with this packet (round 25).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink
@@ -172,9 +176,13 @@ orchestrator owns schemas, contracts, and judgment.
   - [ ] C4.2 enforcement (attempt-to-attempt within pre-push) once `proof-report` reads `ready`
         and every C5 fixture is green; deletes `LaneProofReuse` and `lane-proofs.json` with a
         retirement receipt (ruling 60). Hosted reuse stays a separate decision.
-        Blocked on sample accumulation: the ledger is per-worktree and lanes retire after each PR
-        (receipt 2026-09-24 in OPPORTUNITIES.md; ruling 71 proposed in the C5 grill draft), and on
-        ruling 72 (disagreements are unobservable while red runs record no digest).
+        Unblocked 2026-09-28 (round 25): ruling 71 moves the ledger to the owning clone, so
+        sibling lanes share one sample and a retired lane no longer takes it with it; ruling 72
+        records a red run's digest as an observation, so a disagreement is observable and ruling
+        7's bar can fail. Now waits only on the sample (ruling 80):
+        `bun run beep yeet proof-report --since <round-25 merge instant>` ready in the owning
+        clone, zero malformed rows, every C5 fixture green, and the ruling-69 root-input gap
+        closed with its own must-fail fixture. The flip PR is the packet's final PR.
 - [x] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse — done 2026-09-24
       (epoch and cross-profile fixtures in #1214; the changed-package tripwire, its package-scope
       plumbing and its fixtures in this PR under rulings 68–70).
@@ -211,6 +219,15 @@ orchestrator owns schemas, contracts, and judgment.
       `yeet-economics/v1` report (attempt mixes, wrapper and inner lanes as separate populations, first
       failure, red-to-green episodes, terminations, the M4 fingerprint-repeat proxy, data quality) and
       `yeet closeout` prints its five-line branch summary.
-- [ ] A1 re-run at close; M1–M5 compared with the P0 baseline.
+- [x] A1 re-run at close; M1–M5 compared with the P0 baseline — done 2026-09-28 (round 25):
+      `research/economics-close.md` from `--run close` over `research/inputs/close/` (live capture
+      2026-09-28T12:57Z, 124 checkouts; hosted Check runs from 2026-09-14), after fixing the
+      wrapper/inner double count and the numbered-lane discovery. Post-P0 attempts against the
+      baseline: M1 closed-episode P50 1.02 h vs 43.3 min (a censored lower bound: 58 closed
+      episodes, 129 open streaks); M2 completion P50 4.9 min vs 8.4 min; M3 Test Integration and
+      Docgen 1.184 and 1.199 runs per attempt vs 1.264; M4 measured for the first time (16
+      fingerprint repeats, unclassified by gate class); M5 starts without a finish 2.0% vs
+      10.65%. The flip PR re-runs the same mode with enforcement live (ruling 80).
 - [ ] Closeout reflection, status flip, final PR to Yeet merge-ready; merge subject cites the
-      packet slug.
+      packet slug. Rides the C4.2 flip PR (ruling 80); the packet is `paused` until its resume
+      condition holds.

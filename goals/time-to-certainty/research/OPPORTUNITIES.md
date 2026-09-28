@@ -2656,3 +2656,138 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   `git fetch origin main:main` (ref-only, fast-forward only), delete the remote branch with the
   plan's leased push (`git push origin --force-with-lease=refs/heads/<b>:<pr-head> :refs/heads/<b>`)
   if it is still at the PR head, and run no `bun install` in that clone.
+
+## 2026-09-28 — local-shard P0 rows outlived the merge of the branch that raised them
+
+- Doing: starting the P4 close from the shared clone after the operator re-registered the goal as
+  "complete the remaining work in 1 single PR".
+- Evidence: the clone's inbox held four unacknowledged or expiring P0 `local-shard-failed` rows
+  (`full:00-cheap-gates` at `7b1fe5b`, `full:01-pre-push` at `b6a87f2`, `4832e3b` and `168c607`),
+  all raised by verifies of one branch that had merged as `a452e795dc` hours earlier with every
+  hosted required check green. Two carried waivers another session had placed and one a waiver this
+  session had placed; the fourth was bare. The P0 attention hook fired on every tool call until each
+  row was acknowledged by hand (`--wontfix`, with the merge as the attribution). Nothing in the
+  inbox links a `local-shard-failed` row to its branch's PR, so a merge cannot supersede it the way
+  a new head supersedes a hosted-check row.
+- Prevention: stamp `local-shard-failed` rows with the branch and PR the shard verified, and let
+  `yeet monitor --until-merged` (or the post-merge sweep) mark them superseded when that PR merges,
+  as hosted-check rows already are on a new head. Until then, a session starting in a shared clone
+  runs `bun run beep yeet inbox list` first and attributes each P0 row to its branch before acking.
+
+## 2026-09-28 — effect-vitest ratchet hides which findings are new (code track, rulings 71/72)
+
+- Doing: updating three existing `it.effect(..., providePlatform)` tests in
+  `packages/tooling/tool/cli/test/turbo-lane-digest.test.ts` whose assertions ruling 72 inverts.
+- Evidence: `bun run beep lint effect-vitest` exited 1 with
+  `turbo-lane-digest.test.ts: 4 new finding(s)` (then 7 after a first fix) and no rule id, line or
+  evidence. The occurrence hash of an untouched `providePlatform` / `expect(...).toEqual(O.none())`
+  line changes whenever its enclosing test body or block changes, so editing one assertion
+  re-surfaces every legacy finding in that test as "new". The only way to see the rows was to run
+  `--write`, diff `standards/effect-vitest.inventory.jsonc` by `occurrence` against `HEAD`, and
+  restore the file by hand.
+- Resolution: moved the three edited tests into `it.layer(NodeServices.layer, { timeout })` blocks
+  and rewrote their Option assertions to `assertSome`/`assertNone`; the gate then read
+  `introduced=0 resolved=14` with no `--write`.
+- Prevention: print each new finding's rule id, line and evidence on failure (a
+  `--explain` or default listing), and say in the failure text that editing a test re-keys its
+  legacy findings.
+
+## 2026-09-28 — `test_pristine_inputs_pass` red on main: the baseline's script receipt was never re-pinned
+
+- Doing: attributing reds before editing `research/scripts/economics.py` for the A1 close.
+- Evidence: on `main` (22cff02ba3), `cd goals/time-to-certainty/research/scripts && python3 -m
+  unittest test_economics` fails 1 of 17: `test_pristine_inputs_pass` re-renders `economics.json`
+  and the embedded `reproduction-script` receipt moves from `bytes: 102635` to `102754`. #1143
+  edited the script (termination reasons) without re-rendering the baseline or moving
+  `GATE_ORDER_SOURCE.sha256` — a skipped ruling-77 pin move. Attribution: inherited.
+- Resolution: this PR's baseline re-render (`--from-inputs`) moves only the script receipt, and the
+  ruling-77 pin move follows (`WaveOrder.ts` sha256 + handoff snapshot). The test is green again.
+- Prevention: a check (the Python unit test already is one) wired into a hosted lane
+  whenever `research/scripts/economics.py` changes; today nothing hosted runs it.
+
+## 2026-09-28 — the default replay fails closed on the redacted in-repo corpus
+
+- Doing: re-rendering the P0 baseline with `python3 …/economics.py --from-inputs` for the pin move.
+- Evidence: the script validated the run-2 corpus whenever the default corpus directory existed, and
+the committed corpus was redacted after ratification (#1032, #1037, #1041), so every default replay
+  on `main` died with `corpus validation failed; differing paths:` (47 paths: MANIFEST.yaml plus
+  46 attempt/verdict files). The same failure reproduces with the `main` copy of the script.
+  Attribution: inherited. A compare of the full baseline report built from the embedded frozen
+  facts against one built from the redacted corpus (`--allow-corpus-drift`, in memory, nothing
+  written) gives identical values in every section; the redaction touched `verdict.message` text
+  only (pid, tmp path, host residue).
+- Resolution: corpus validation is now opt-in (`--corpus <dir>`), as the docstring and
+  `economics.md` already described it; the default replays the embedded ratified facts. The corpus
+  can no longer validate against the ratified receipts at all; re-pinning them would be a reseed.
+- Prevention: the security PRs that rewrote the corpus running the A1 replay (or its
+  unit tests) as a check.
+
+## 2026-09-28 — the hosted capture silently truncates at GitHub's 1,000-run cap
+
+- Doing: the close `--capture-hosted` (14 UTC days of `Check` runs).
+- Evidence: `gh run list --workflow Check --created '>=2026-09-14' --limit 2000` returned exactly
+  1000 runs, the oldest `2026-09-16T10:10:47Z`: the API caps a `created` query at 1,000 results
+  without an error, so the script's `>= 2000` guard could never fire. The P0 capture has the same
+  shape (896 kept runs, oldest `2026-08-23T18:27:23Z` against a stated cutoff of `2026-08-20`), so
+  the baseline's hosted window is 2026-08-23 onward, not 2026-08-20. Attribution: inherited
+  (baseline values unchanged; recorded, not reseeded).
+- Resolution: the capture lists one UTC date per query and fails closed when any date reaches 1,000.
+- Prevention: asserting the oldest captured `createdAt` against the cutoff.
+
+## 2026-09-28 — sweep-stamped terminal rows added 132,051 phantom machine-hours to the A1 close
+
+- Doing: the first close render.
+- Evidence: the A1 loader derived `elapsedMs = recordedAt - startedAt` for every terminated row, so
+  the 280 rows the journal reconciler stamps at sweep time (`legacy-unowned-start` 275,
+  `owner-dead` 5) contributed 132,050.8 h of elapsed time; the comparable episode
+  `attempt-machine min` read 3,978,023 against 16,427 once fixed. Ruling 75 already defines the rule
+  for the TypeScript surface (a sweep-stamped row ends no duration); the A1 script never got it.
+  Attribution: introduced by A5's terminal rows meeting an unchanged script; the P0 inputs carry no
+  terminated rows, so the baseline does not move.
+- Resolution: the script applies ruling 75's elapsed rule (`RECONCILER_TERMINATION_REASONS`:
+  elapsed and endedAt unknown, order and redness kept). The close M5 rows also carry the
+  P0-comparable count (unfinished starts + sweep-stamped terminations: 377 in the union, against
+  P0's 327), because the reconciler turned most of P0's "starts without finish" into terminal rows.
+- Prevention: one shared metric-definition fixture run by both the A1 script and
+  `yeet economics`.
+
+## 2026-09-28 — the M3 hosted join matched 86 of 977 PR runs
+
+- Doing: reading the close M3 rows.
+- Evidence: `executionAmplification.hostedPrRunsMatchedToPublishAttempts` 86, unmatched 891. The
+  join
+  needs the local publish attempt's journal, and `yeet sweep --retire` deletes a lane's
+  `.beep/yeet/` with the lane, so most PRs published from retired lanes have no attempt to match
+  (the same loss ruling 71 fixes for the proof ledger). M3 runs per attempt are therefore a
+  lower-bound-biased sample. Attribution: environment/design (retire deletes journals), recorded.
+- Prevention: attempt journals living in the owning clone like the ruling-71 ledger.
+
+## 2026-09-28 — the fleet name glob admitted a private duplicate repository into a public input
+
+- Doing: the A1 close capture under ruling 73's discovery rule (`beep-effect*`).
+- Evidence: `inputs/close/live-journals.json.gz` carried 3 files (attempts, state, verdict of one
+  run) from a sibling clone whose origin is a private duplicate repository, so its head SHAs,
+  fingerprints and repair text were about to be committed into this public repository, and 15
+  finished attempts entered the close union.
+- Repair: `discover_live_roots` now keeps a candidate only when its owning clone's `remote "origin"`
+  resolves to `beep-effect/beep-effect` (resolution mirrors `git rev-parse --git-common-dir` from
+  the `.git` dir/file and `commondir`; a half-removed lane without `.git` falls back to the
+  `<clone>-worktrees/<lane>` layout). Recaptured live (1902 files, 124 checkouts, none from the
+  private clone), rewrote `inputs/close/RECEIPTS.json`, re-rendered both reports, moved the
+  ruling-77 pin again.
+- Prevention: a discovery rule stated as "checkouts of this repository" rather than a directory-name
+  glob; name globs over a projects root are not an identity check.
+
+## 2026-09-28 — every economics.py edit re-renders two reports, and nothing tests the second
+
+- Doing: the repair pass on the close run.
+- Evidence: `economics-close.json` embeds the same `reproduction-script` receipt as
+  `economics.json`; no test replays the close run from its committed inputs, so a later script edit
+  leaves the close receipt stale silently (the #1143 failure class, now on two outputs).
+- Prevention: a close-mode twin of `test_pristine_inputs_pass`, added once the close inputs are
+  committed; and a hosted lane that runs `research/scripts/test_economics.py`.
+- Resolution: `CloseInputValidationTest` in `research/scripts/test_economics.py` replays the
+  committed close
+  report byte for byte and fails closed on a drifted baseline or close input; a one-line edit to
+`economics.py` turns `test_pristine_close_inputs_pass` red (probed 2026-09-28). The hosted lane is
+  still owed.

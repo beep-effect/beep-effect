@@ -156,6 +156,116 @@ class EmbeddedInputValidationTest(unittest.TestCase):
         self.assertEqual(self.outputs(), outputs_before)
 
 
+class CloseInputValidationTest(unittest.TestCase):
+    """The committed close report replays byte for byte from its committed inputs.
+
+    A later economics.py edit moves the reproduction-script receipt the close report
+    embeds, so this replay goes red until the close report is re-rendered in the same
+    change: the stale-pin class that left the baseline receipt behind on main.
+    """
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temporary.name) / "repo"
+        self.output_root = self.repo / "goals" / "time-to-certainty" / "research"
+        self.close_inputs = self.output_root / "inputs" / economics.CLOSE_INPUT_DIRECTORY
+        self.script = self.output_root / "scripts" / "economics.py"
+        self.close_json = self.output_root / economics.CLOSE_JSON_NAME
+        self.close_md = self.output_root / economics.CLOSE_MD_NAME
+        self.baseline_json = self.output_root / "economics.json"
+        source_root = economics.SCRIPT.parent.parent
+        sources = (
+            (economics.SCRIPT, self.script),
+            (source_root / "economics.json", self.baseline_json),
+            (source_root / economics.CLOSE_JSON_NAME, self.close_json),
+            (source_root / economics.CLOSE_MD_NAME, self.close_md),
+            *(
+                (source_root / "inputs" / economics.CLOSE_INPUT_DIRECTORY / name, self.close_inputs / name)
+                for name in ("live-journals.json.gz", "hosted-runs.json.gz", "RECEIPTS.json")
+            ),
+        )
+        for source, destination in sources:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+
+        self.patches = contextlib.ExitStack()
+        replacements = {
+            "SCRIPT": self.script,
+            "OUTPUT_ROOT": self.output_root,
+            "REPO_ROOT": self.repo,
+            "DEFAULT_CORPUS": self.repo / "missing-corpus",
+            "RUN": economics.RUN,
+            "INPUT_ROOT": economics.INPUT_ROOT,
+            "LIVE_SNAPSHOT": economics.LIVE_SNAPSHOT,
+            "HOSTED_SNAPSHOT": economics.HOSTED_SNAPSHOT,
+            "INPUT_RECEIPTS": economics.INPUT_RECEIPTS,
+            "ECONOMICS_JSON": economics.ECONOMICS_JSON,
+            "ECONOMICS_MD": economics.ECONOMICS_MD,
+        }
+        for name, value in replacements.items():
+            self.patches.enter_context(mock.patch.object(economics, name, value))
+
+        self.git("init", "-q")
+        self.git("add", ".")
+        self.git(
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.com",
+            "commit",
+            "-qm",
+            "fixture",
+        )
+
+    def tearDown(self) -> None:
+        self.patches.close()
+        self.temporary.cleanup()
+
+    def git(self, *args: str) -> None:
+        subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True, text=True)
+
+    def replay(self, *args: str) -> tuple[str, str]:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        argv = [str(self.script), "--run", economics.CLOSE_RUN, "--from-inputs", *args]
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                economics.main()
+        return stdout.getvalue(), stderr.getvalue()
+
+    def outputs(self) -> tuple[bytes, bytes]:
+        return self.close_json.read_bytes(), self.close_md.read_bytes()
+
+    def test_pristine_close_inputs_pass(self) -> None:
+        outputs_before = self.outputs()
+        self.replay()
+        self.assertEqual(self.outputs(), outputs_before)
+
+    def test_modified_baseline_fails_closed_and_names_path(self) -> None:
+        report = json.loads(self.baseline_json.read_text(encoding="utf-8"))
+        report["unratifiedMutation"] = True
+        economics.write_json(self.baseline_json, report)
+        outputs_before = self.outputs()
+        with self.assertRaises(SystemExit) as raised:
+            self.replay()
+        self.assertIn("goals/time-to-certainty/research/economics.json", str(raised.exception))
+        self.assertEqual(self.outputs(), outputs_before)
+
+    def test_modified_close_input_fails_closed_and_names_path(self) -> None:
+        live = self.close_inputs / "live-journals.json.gz"
+        data = bytearray(live.read_bytes())
+        data[9] = (data[9] + 1) % 256
+        live.write_bytes(data)
+        outputs_before = self.outputs()
+        with self.assertRaises(SystemExit) as raised:
+            self.replay()
+        self.assertIn(
+            f"goals/time-to-certainty/research/inputs/{economics.CLOSE_INPUT_DIRECTORY}/live-journals.json.gz",
+            str(raised.exception),
+        )
+        self.assertEqual(self.outputs(), outputs_before)
+
+
 class AttemptLoaderTest(unittest.TestCase):
     def test_finished_and_abnormal_terminal_rows_both_close_started_attempts(self) -> None:
         source = {
