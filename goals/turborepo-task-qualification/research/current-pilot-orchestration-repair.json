@@ -1,0 +1,84 @@
+{
+  "authority": "Actual installed Turbo dry-plan perturbations and full touched-package audit/docgen",
+  "baseRevision": "4d076aaef5c6c21d2ee93ad6614da490f4ab9a5c",
+  "turboVersion": "2.11.4",
+  "taskId": "@beep/identity#lint",
+  "changedConfiguration": {
+    "path": "packages/foundation/modeling/identity/turbo.json",
+    "sha256": "d1c4fec9a3cce605d12d59439b171bb28f30da0c0f8a6571a4a0d7bc7dead911",
+    "addedInputExclusion": "!$TURBO_ROOT$/**/.turbo/**",
+    "cacheEnabled": false
+  },
+  "checks": {
+    "generatedLogAdditionPreservesInputs": true,
+    "generatedLogMutationPreservesInputs": true,
+    "semanticSourceAdditionChangesInputs": true,
+    "semanticSourceMutationChangesInputs": true,
+    "cleanupRestoresInputs": true,
+    "noTurboDirectoryInputs": true,
+    "cacheRemainsDisabled": true
+  },
+  "baselineInputCount": 769,
+  "sourceInputCount": 770,
+  "taskHashes": {
+    "baseline": "b8acf1f3a8320f21",
+    "logAdded": "b8acf1f3a8320f21",
+    "logChanged": "b8acf1f3a8320f21",
+    "sourceAdded": "8c98c41950e112de",
+    "sourceChanged": "775b600e6ccee1ff",
+    "restored": "b8acf1f3a8320f21"
+  },
+  "method": [
+    "Run installed Turbo dry plan for the real identity lint task at baseline.",
+    "Create a uniquely named generated-log probe under sibling utils/.turbo; observe input map and task hash before and after changing its bytes.",
+    "Create a uniquely named sibling source probe; observe input map and task hash before and after changing its bytes.",
+    "Remove only the two probes created by this experiment and verify baseline restoration. Existing logs were not altered."
+  ],
+  "dryPlanArtifacts": [
+    {
+      "file": "baseline.json",
+      "sha256": "f654f05e8f7aa3202f1769534d818d4988ac6da9c529ff94d012b4920f7461ce"
+    },
+    {
+      "file": "log-added.json",
+      "sha256": "af33f50a87fb6ada455b4b24c2daab4d41cb691fe695869934d13afd96c1a402"
+    },
+    {
+      "file": "log-changed.json",
+      "sha256": "7a504ff3f999af9604eb9a5f7172f54924595be57b4aac59845677903302a896"
+    },
+    {
+      "file": "restored.json",
+      "sha256": "380d5407fc6c4c953d5270c121789a7dd0586e72d1c63442f45bd498ae94c8e9"
+    },
+    {
+      "file": "source-added.json",
+      "sha256": "2d65152f1c069687e2f5fc8f9fd5481aab75a28e054e5284e18a70e0801f38b8"
+    },
+    {
+      "file": "source-changed.json",
+      "sha256": "7a81757e7f499cedbe750340f3482a4375f8b537b6ea5ef4c636ced73a7fd6ca"
+    }
+  ],
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/identity",
+    "exitCode": 0,
+    "audit": "passed",
+    "docgen": "passed",
+    "logSha256": "d274804cb52fd61cfdb11aff969af33ed569924d0aef53362f34c4924ae98863"
+  },
+  "limits": [
+    "This changes only identity lint input configuration and leaves task caching disabled.",
+    "Dry-plan hashing is not task execution, output comparison, a remote cache hit, or a new qualification epoch.",
+    "Historical pilot evidence predates this configuration change; affected runtime comparisons require renewal.",
+    "Other task input changes and the signed conformance/trust handoffs remain open."
+  ],
+  "policyAudit": {
+    "command": "bun run beep quality cache-policy",
+    "exitCode": 0,
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 1251,
+    "configurationDriftReviewRemains": true,
+    "logSha256": "dd8908686e27037d5c55c4f5bea29e1433d3df9a0148cca673174a3cad9e2416"
+  }
+}

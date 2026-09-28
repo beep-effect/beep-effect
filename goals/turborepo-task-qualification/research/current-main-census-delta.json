@@ -1,0 +1,129 @@
+{
+  "authority": "Executable census and source hash comparison only",
+  "revision": "980b4cd44c485a68d436465caa72b8201a958f98",
+  "previousCensusRevision": "e10cd090a8f5f894107483c95f64c509362dffc4",
+  "turboVersions": {
+    "previous": "2.11.3",
+    "current": "2.11.4"
+  },
+  "counts": {
+    "workspaces": 144,
+    "nodes": 3473,
+    "executable": 1970
+  },
+  "addedNodes": [],
+  "removedNodes": [],
+  "nodeChanges": {
+    "command": {
+      "count": 0,
+      "examples": []
+    },
+    "commandDigest": {
+      "count": 0,
+      "examples": []
+    },
+    "dependencies": {
+      "count": 2074,
+      "examples": [
+        "@beep/acp#audit",
+        "@beep/acp#build",
+        "@beep/acp#check",
+        "@beep/acp#codegen",
+        "@beep/acp#coverage"
+      ]
+    },
+    "configuration": {
+      "count": 0,
+      "examples": []
+    },
+    "inputCount": {
+      "count": 235,
+      "examples": [
+        "//#changeset:status",
+        "//#fallow:audit:check",
+        "//#fallow:boundaries:advisory",
+        "//#fallow:boundaries:config-check",
+        "//#fallow:dead-code:check"
+      ]
+    },
+    "inputsDigest": {
+      "count": 3448,
+      "examples": [
+        "//#changeset:status",
+        "//#config-sync:check",
+        "//#fallow:audit:check",
+        "//#fallow:boundaries:advisory",
+        "//#fallow:boundaries:config-check"
+      ]
+    }
+  },
+  "rootScriptsChanged": false,
+  "globalConfigurationChanged": false,
+  "previousReviewSources": {
+    "unchanged": 526,
+    "unavailable": [
+      ".beep/dependency-exclusions/attachment/refresh-entrypoint-plans.ts",
+      ".beep/dependency-exclusions/attachment/refresh-workflow-sources.ts",
+      ".beep/dependency-exclusions/attachment/refresh-yeet-plans.ts"
+    ],
+    "changedCount": 490,
+    "changedExamples": [
+      {
+        "path": "apps/architecture-lab-proof/package.json",
+        "beforeSha256": "e010d3c555bf00be734ed05c68960f97de4cb6e1dce9079f758be7ecfb0a8b68",
+        "afterSha256": "76d638e4c5f695fa379aa563b4927a3439813f0756ed41d9e19a27e2a8931331"
+      },
+      {
+        "path": "apps/architecture-lab-proof/tsconfig.check.json",
+        "beforeSha256": "6371c21d5b997ce480676371b8e9b10d6182e26061f0cc4a2891e82d1c8876d3",
+        "afterSha256": "92afaa9364396c31c38872a9dd7f31cb92f30918397b163f144c58c3a2d9837a"
+      },
+      {
+        "path": "apps/architecture-lab-proof/tsconfig.json",
+        "beforeSha256": "ad3ab3541f7e9a9be1b496e6ffde597730af380b9f6ff987eaffe369d0e17fdb",
+        "afterSha256": "a0c401bf5db9b4db0ac3b0d68627c1fc7131586fdbf07d3d97bb0b80a5401163"
+      },
+      {
+        "path": "apps/labs/api-docs/package.json",
+        "beforeSha256": "2326348f54a3fe9e0d05c79807917d4561a8ae41476677ce7356bad32e0478bc",
+        "afterSha256": "f3aa0304b8007b66c1f22da64910532274e4b9c5288c95ae9db2d004c7a83ef9"
+      },
+      {
+        "path": "apps/labs/api-docs/tsconfig.check.json",
+        "beforeSha256": "7e101439c21871b4d69bb58f57c8653cc879a095b59dca565969687e6f796178",
+        "afterSha256": "99a882b0de5900a3b046b4d3180b25a73bc0af6faa2cad14bd8a9eb320d2146d"
+      },
+      {
+        "path": "apps/labs/api-docs/tsconfig.json",
+        "beforeSha256": "0ff437f777beabe7694c7e0f622d6645e7320354017da51c84af61e01aa97ea7",
+        "afterSha256": "08136dc01730e46b32658171690e21244e2c5f9404e35075040982e1e3bdc705"
+      },
+      {
+        "path": "apps/labs/api-docs/turbo.json",
+        "beforeSha256": "47d749b799500cf46b6acf26c7fc1360f142d2dcf0423f2a0e476e44b52a2196",
+        "afterSha256": "20279475951c76f4a856d98627253dfaa27542810836c5f2f09be9dcc76e20ab"
+      },
+      {
+        "path": "apps/labs/ciops/package.json",
+        "beforeSha256": "e470aeb844c2034916dbfce96a20fb33866b4a15e46ec7ec9c35ace61582fe55",
+        "afterSha256": "9162ddd130246f0bd6d5936747cda32837ca3a53dac7ad1bb6d940a06378127d"
+      }
+    ]
+  },
+  "limits": [
+    "Historical receipts retain original revision and toolchain pins.",
+    "Previous review attachment is not accepted against current main. Changed sources need review; unavailable private evidence needs recovery or reproduction.",
+    "Full semantic coverage and signed remote acceptance remain incomplete. No tuple is qualified."
+  ],
+  "dependencyMembershipChanged": {
+    "count": 2074,
+    "examples": [
+      "@beep/acp#audit",
+      "@beep/acp#build",
+      "@beep/acp#check",
+      "@beep/acp#codegen",
+      "@beep/acp#coverage"
+    ]
+  },
+  "rawDeltaSha256": "867045e3220b1d9e10bbb05466acab687ace3862e15282ada97edc3dc93b7d3d"
+}

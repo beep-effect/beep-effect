@@ -1,0 +1,74 @@
+{
+  "authority": "Hash-matched source and TypeScript parser comparison; selective Effect reference inspection",
+  "revision": "33a75409164b47a6637f4b9f2683c497f97ce0db",
+  "parserComparison": {
+    "comparedSources": 70,
+    "nonImportSyntaxEqual": 31,
+    "nonImportSyntaxChanged": 39,
+    "method": "TypeScript printer removes comments and normalizes formatting; import declarations are compared separately. No parse diagnostics were accepted.",
+    "equalBodySources": [
+      "packages/_internal/db-admin/scripts/check-migrations-drift.ts",
+      "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+      "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts",
+      "packages/tooling/library/codegen-kit/src/internal/format.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
+      "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
+      "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+      "packages/tooling/tool/docgen/src/CLI.ts",
+      "packages/tooling/tool/docgen/src/Core.ts",
+      "packages/tooling/tool/docgen/src/bin.ts",
+      "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+      "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts"
+    ],
+    "rawSha256": "f723baac7c05d4e64d2b8d421ca30daf11aa683667d92f62ffdc05463907089c"
+  },
+  "effectReferences": {
+    "before": "14a3f140095fdebbff9162944fe7d4ea83e054e6",
+    "after": "e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+  },
+  "hexMigration": {
+    "callers": [
+      "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts"
+    ],
+    "change": "Encoding.encodeHex becomes Hex.encode",
+    "byteEncodingHelperIdentical": true,
+    "helperSha256": "7ebffd56deb44e181658ab378abae6d6ee809fcd0c4f42d0bdd9bbfc493181cd",
+    "scope": "The inspected callers encode digest bytes. Byte lookup table and concatenation loop are identical; upstream digest services and complete module effects are not proven here."
+  },
+  "prefixSchemaMigration": {
+    "caller": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
+    "change": "isStartsWith becomes isStartingWith",
+    "runtimePredicate": "Both use s.startsWith(startsWith).",
+    "differences": [
+      "Representation id and generated runtime code use the new name.",
+      "JSON Schema construction now handles a trailing high surrogate and calls literalToJsonSchema."
+    ],
+    "limit": "Equal runtime prefix predicate does not establish equality of schema representations or generated artifacts."
+  },
+  "limits": [
+    "Non-import syntax equality is not runtime equivalence; changed imports, import ordering and compiler-relevant comments remain inputs.",
+    "39 files with changed non-import syntax still require targeted review.",
+    "No task execution, signed remote evidence renewal or qualification promotion."
+  ]
+}

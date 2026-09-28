@@ -1,0 +1,281 @@
+{
+  "authority": "Canonical cache census with hash-verified entrypoint attachment; identity binding only",
+  "revision": "3979bcfc7057cabe4564b1e7fb7d6aca789b22e3",
+  "turboVersion": "2.11.4",
+  "command": "bun run beep cache census --entrypoint-review .beep/qualification-current/current-reviewed-request.json --output .beep/qualification-current/current-reviewed-census.json",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970,
+    "discoveredEntrypointSources": 145
+  },
+  "attachment": {
+    "sources": 1020,
+    "reviews": 67,
+    "artifacts": 6,
+    "unresolvedObligations": 19,
+    "priorReferenceMismatches": 0,
+    "newReviewDeclaredSourceMismatches": 0
+  },
+  "newlyAttachedReviews": [
+    {
+      "path": "goals/turborepo-task-qualification/research/current-census-handoff-review.json",
+      "sha256": "3790d8c3ed4be1b398b6adbbd923c78bd9b1d16bd995c4ea8cbeff32493e8d75"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-failed-lane-digest-review.json",
+      "sha256": "3893dd4ce094c2d7de3c9ca773f673858249827810db83864346df55ab68bb0b"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-monitor-escalation-review.json",
+      "sha256": "652ea792a7d48a0ce164b1ed3eb3e003ac73d0cea509a4b5d645afead0f20f6f"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-package-turbo-review.json",
+      "sha256": "9beab416d9811ab4bb6750fbb8f18e3aea35f73ee2dc09e73a5f6338828e52a4"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-proof-ledger-storage-review.json",
+      "sha256": "0c7225ce30875475862bd0a460b77e2fd19c5e17fb84704789b7dd57f0c0b9a5"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-proof-shadow-review.json",
+      "sha256": "85e7c51643ea523508684d17ef894ea211bc917ca3b89478a37193e23cccce80"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-reference-refresh-review.json",
+      "sha256": "34f262a26b12e68c02ea9f94ae9594a7bc5be8c9b70552616302252537f135a6"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-source-migration-review.json",
+      "sha256": "c15511b0358ee70a59581b2975e0feec25313d5402d0c1caab35690a3e5e05b7"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-sweep-ordering-review.json",
+      "sha256": "fe24ac2f11b76e159754e8f65d86022971640f590b1abe3fead331440a69bd7d"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-tsconfig-reference-review.json",
+      "sha256": "29eea557bf547756dcbeebc121512684af91f83983a431d98d5983f5d37f3461"
+    },
+    {
+      "path": "goals/turborepo-task-qualification/research/current-vitest-config-review.json",
+      "sha256": "9910a476479667efd0e04ea89017680d4cf018cdbe22d010a8ee5adf2339f32e"
+    }
+  ],
+  "comparisonToRestoredCensus": {
+    "rootScripts": true,
+    "globalConfiguration": true,
+    "workspaces": true,
+    "nodes": false,
+    "sources": true,
+    "entrypointSources": true
+  },
+  "privateArtifacts": [
+    {
+      "path": ".beep/qualification-current/current-reviewed-request.json",
+      "sha256": "a2c5a4b43e868cd805c29dd11e59e8579e6ecd2ff1a55b7f637421615c0470a3"
+    },
+    {
+      "path": ".beep/qualification-current/current-reviewed-census.json",
+      "sha256": "19802d255397b746b676f203ab73cc7f43203ff4c85f05eb83946b55b8b7643b"
+    },
+    {
+      "path": ".beep/qualification-current/current-reviewed-census.log",
+      "sha256": "a00ea4417737ced63e77bc048084b6914ecce51de6c81b1b0ae99c1b3a3a7a04"
+    }
+  ],
+  "limits": [
+    "This attachment proves source and review byte identity, not semantic completeness or runtime acceptance.",
+    "Historical missing quality and refs entrypoint reviews remain omitted; current bounded reviews do not silently replace their entire scope.",
+    "Historical workflow and command projections remain historical.",
+    "Signed remote conformance, trust boundary and full real-pilot comparison matrix remain incomplete."
+  ],
+  "nodeDelta": {
+    "changedFields": {
+      "inputCount": 17,
+      "inputsDigest": 20
+    },
+    "nodes": [
+      {
+        "taskId": "//#fallow:audit:check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:boundaries:advisory",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:boundaries:config-check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 11850,
+        "currentInputCount": 13425
+      },
+      {
+        "taskId": "//#fallow:dead-code:check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:fix-preview:advisory",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:flags:advisory",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:health:advisory",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:health:check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#fallow:security:advisory",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 12317,
+        "currentInputCount": 13894
+      },
+      {
+        "taskId": "//#goals:doctor",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 22125,
+        "currentInputCount": 22136
+      },
+      {
+        "taskId": "//#goals:index-check",
+        "changedFields": [
+          "inputsDigest"
+        ],
+        "priorInputCount": 576,
+        "currentInputCount": 576
+      },
+      {
+        "taskId": "//#knip:check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 6662,
+        "currentInputCount": 6664
+      },
+      {
+        "taskId": "//#knowledge:refs-check",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 27587,
+        "currentInputCount": 27598
+      },
+      {
+        "taskId": "//#knowledge:semantic-delta",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 27587,
+        "currentInputCount": 27598
+      },
+      {
+        "taskId": "//#lint:effect-imports-markdown",
+        "changedFields": [
+          "inputsDigest"
+        ],
+        "priorInputCount": 1927,
+        "currentInputCount": 1927
+      },
+      {
+        "taskId": "//#lint:reflection-artifacts",
+        "changedFields": [
+          "inputsDigest"
+        ],
+        "priorInputCount": 527,
+        "currentInputCount": 527
+      },
+      {
+        "taskId": "//#lint:roadmap-refs",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 22126,
+        "currentInputCount": 22137
+      },
+      {
+        "taskId": "//#lint:schema-first",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 5383,
+        "currentInputCount": 5385
+      },
+      {
+        "taskId": "//#lint:typos",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 8845,
+        "currentInputCount": 10437
+      },
+      {
+        "taskId": "@beep/identity#lint",
+        "changedFields": [
+          "inputCount",
+          "inputsDigest"
+        ],
+        "priorInputCount": 769,
+        "currentInputCount": 771
+      }
+    ],
+    "attribution": "Task identities, commands, dependencies and configurations are unchanged. Full attribution of all changed input maps remains open."
+  }
+}

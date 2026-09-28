@@ -1,0 +1,60 @@
+{
+  "authority": "Bounded source-delta review and existing focused tests",
+  "revision": "c1a3e98c596f6a08feb3ec99f346918e0bad7cf2",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "8f28a011a026d68d0be5956b76b73d29e64216d135e1088b6737b6e05316f2b3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "sha256": "ab91c9bdea6d5511910cc05229f12c11fd2f4bac60adda4c8da76e83c433c641"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "sha256": "701275211b70396632847a02984d500d4e4468b87164f985b8702d7becdba000"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/turbo-lane-digest.test.ts",
+      "sha256": "ea9e7b9c1539f052149edc80f79b5d0e3f66394f7e5b2b47291c55f1c5494f65"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "sha256": "bd9c31eab82f7d666c963cb3be4f2edfd8d7ec198d869b24f7ba206a1739aad3"
+    }
+  ],
+  "observedChange": [
+    "Failed direct Turbo steps now declare their input digest to the parent ledger.",
+    "Failed wrapper and direct lanes resolve input digest and package scope through the same source path as passed lanes.",
+    "The digest folds selected taskId/hash pairs regardless of task outcome; an empty selection still returns None.",
+    "Exact failed proof facts are rejected with prior-failed. Retaining a failed observation is not accepting it for reuse."
+  ],
+  "semanticInputs": [
+    "Task selection and complete selected taskId/hash rows",
+    "Repository root and .turbo/runs directory contents",
+    "Summary start times, caller start time and file modification times",
+    "Wrapper ledger path, declarations and completion state",
+    "Declared digest, if supplied, which takes precedence with no derived package scope",
+    "Existing proof facts, outcome, profile, epoch and expiry context"
+  ],
+  "effects": [
+    "Reads and decodes fresh Turbo run summaries",
+    "Writes wrapper lane digest declarations",
+    "Removes temporary wrapper ledger directory after resolution",
+    "Records failed observations for comparison with prior evidence; does not change hosted proof ownership"
+  ],
+  "verification": {
+    "command": "bun --no-env-file run beep:test test/turbo-lane-digest.test.ts test/proof-ledger.test.ts --maxWorkers=1",
+    "workspace": "packages/tooling/tool/cli",
+    "vitestVersion": "5.0.1",
+    "filesPassed": 2,
+    "testsPassed": 27,
+    "exitCode": 0,
+    "logSha256": "1e8decc0ec92f40171c62bf1702b3c7592675a8fbaede57b501532d8366ff1c3"
+  },
+  "limits": [
+    "Selected-row equality is required for equal keys: an aborted run with a different task set can produce a different digest.",
+    "These tests exercise fixtures and focused ledger behavior, not exhaustive real-lane executions or signed remote qualification.",
+    "Complete transitive error, persistence, orchestration and concurrency semantics remain outside this receipt."
+  ]
+}

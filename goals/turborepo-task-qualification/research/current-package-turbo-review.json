@@ -1,0 +1,219 @@
+{
+  "authority": "Parsed JSON comparison against archived source hashes; configuration review only",
+  "revision": "33a75409164b47a6637f4b9f2683c497f97ce0db",
+  "counts": {
+    "turboConfigs": 11,
+    "packageManifests": 124,
+    "devDependencyOnlyManifests": 122,
+    "cliExportsAndPublishConfigOnly": 1,
+    "rootCatalogOverridePatchChanges": 1,
+    "unreviewedBaselines": 0
+  },
+  "turboConfigReview": {
+    "onlyChangedKey": "$schema",
+    "before": "https://v2-11-3.turborepo.dev/schema.json",
+    "after": "https://v2-11-4.turborepo.dev/schema.json",
+    "otherParsedSettingsEqual": true
+  },
+  "rootManifestChanges": {
+    "catalog": [
+      {
+        "name": "@effect/ai-anthropic",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/ai-anthropic@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/ai-openai",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/ai-openai@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/atom-react",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/atom-react@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/doctest",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/doctest@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/openapi-generator",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/openapi-generator@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/opentelemetry",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/opentelemetry@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/platform-browser",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/platform-browser@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/platform-bun",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/platform-bun@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/platform-node",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/platform-node@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/platform-node-shared",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/platform-node-shared@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/sql-pg",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/sql-pg@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/sql-pglite",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/sql-pglite@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/sql-sqlite-bun",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/sql-sqlite-bun@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/sql-sqlite-node",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/sql-sqlite-node@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@effect/vitest",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/@effect/vitest@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "@next/bundle-analyzer",
+        "before": "16.4.0-canary.40",
+        "after": "16.4.0-canary.45"
+      },
+      {
+        "name": "@next/mdx",
+        "before": "16.4.0-canary.40",
+        "after": "16.4.0-canary.45"
+      },
+      {
+        "name": "@openai/codex-sdk",
+        "before": "~0.156.1",
+        "after": "~0.157.0"
+      },
+      {
+        "name": "@react-three/fiber",
+        "before": "^9.8.0",
+        "after": "^9.8.1"
+      },
+      {
+        "name": "@zip.js/zip.js",
+        "before": "^2.17.0",
+        "after": "^2.18.2"
+      },
+      {
+        "name": "effect",
+        "before": "4.0.0-rc.117",
+        "after": "https://pkg.pr.new/Effect-TS/effect/effect@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
+      },
+      {
+        "name": "framer-motion",
+        "before": "^13.4.2",
+        "after": "^13.4.3"
+      },
+      {
+        "name": "libphonenumber-js",
+        "before": "1.13.13",
+        "after": "1.13.14"
+      },
+      {
+        "name": "music-metadata",
+        "before": "^11.16.0",
+        "after": "^11.16.1"
+      },
+      {
+        "name": "next",
+        "before": "16.4.0-canary.40",
+        "after": "16.4.0-canary.45"
+      },
+      {
+        "name": "react-resizable-panels",
+        "before": "^4.13.2",
+        "after": "^4.13.3"
+      },
+      {
+        "name": "three",
+        "before": "^0.186.0",
+        "after": "^0.186.1"
+      },
+      {
+        "name": "turbo",
+        "before": "^2.11.3",
+        "after": "^2.11.4"
+      },
+      {
+        "name": "vite",
+        "before": "^8.3.0",
+        "after": "^8.3.1"
+      }
+    ],
+    "overrides": [
+      {
+        "name": "@effect/platform-node",
+        "before": null,
+        "after": "catalog:"
+      }
+    ],
+    "patchedDependencies": [
+      {
+        "name": "@effect/platform-node-shared@4.0.0-rc.117",
+        "before": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.117.patch",
+        "after": null
+      },
+      {
+        "name": "@effect/platform-node-shared@https://pkg.pr.new/Effect-TS/effect/@effect/platform-node-shared@e5f7d12af9abef188f7dc39b0207af1801b03ffd",
+        "before": null,
+        "after": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.118-e5f7d12af9.patch"
+      },
+      {
+        "name": "drizzle-orm@1.0.0-rc.5-ab785fc",
+        "before": null,
+        "after": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch"
+      },
+      {
+        "name": "effect@https://pkg.pr.new/Effect-TS/effect/effect@e5f7d12af9abef188f7dc39b0207af1801b03ffd",
+        "before": null,
+        "after": "patches/effect@4.0.0-rc.118-e5f7d12af9.patch"
+      }
+    ]
+  },
+  "cliExportChanges": {
+    "exports": [
+      {
+        "name": "./commands/HarnessLedger",
+        "before": null,
+        "after": "./src/commands/HarnessLedger/index.ts"
+      }
+    ],
+    "publishConfig": [
+      {
+        "name": "./commands/HarnessLedger",
+        "before": null,
+        "after": "./dist/commands/HarnessLedger/index.js"
+      }
+    ]
+  },
+  "rawComparisonSha256": "1378df1bff997709f7d299fecec00274006b2445dd046b95a17bb3a59b5aa4c5",
+  "limits": [
+    "The schema URL edit does not change the parsed task definitions. It does not prove equivalence of Turbo 2.11.3 and 2.11.4 execution.",
+    "Dependency versions, patch implementations and added export targets remain semantic inputs requiring their own review.",
+    "No scripts changed in these parsed manifest comparisons. This is not exhaustive nested-command or runtime evidence.",
+    "Historical runtime receipts remain pinned to their recorded versions; no tuple qualified."
+  ]
+}
