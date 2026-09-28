@@ -4819,64 +4819,64 @@
     "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 7383,
-    "lines": 212
+    "bytes": 7337,
+    "lines": 218
   },
   {
     "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 23108,
-    "lines": 499
+    "bytes": 23186,
+    "lines": 501
   },
   {
     "file": "packages/law-practice/server/test/CandorRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 11775,
-    "lines": 280
+    "bytes": 12072,
+    "lines": 290
   },
   {
     "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 50296,
-    "lines": 1196
+    "bytes": 50676,
+    "lines": 1218
   },
   {
     "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 8700,
-    "lines": 181
+    "bytes": 8862,
+    "lines": 182
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 22564,
-    "lines": 490
+    "bytes": 23679,
+    "lines": 511
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 14123,
-    "lines": 332
+    "bytes": 14461,
+    "lines": 343
   },
   {
     "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 46964,
-    "lines": 1020
+    "bytes": 51937,
+    "lines": 1126
   },
   {
     "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 2638,
-    "lines": 53
+    "bytes": 2759,
+    "lines": 56
   },
   {
     "file": "packages/law-practice/server/test/fixture.ts",

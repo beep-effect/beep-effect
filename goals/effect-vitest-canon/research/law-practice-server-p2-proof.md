@@ -54,5 +54,11 @@ The current scoped review retains 19 candidates: 18 shorter native connection or
 body-created MCP/claims lifetimes and one native-platform provenance finding.
 These have individual reasons; they are not an empty-baseline claim. Runner
 cache review preserves unrelated cache nodes and records only the new dependency
-edge. Ledger reconciliation and hosted readiness remain separate publication
-steps; the overall goal is active.
+edge. Ledger reconciliation closes all 58 saved actionable rows with source commit
+52f6a9bdff. It retains 110 historical detector records and 19 specific current
+exceptions, preserving 683 unrelated ledger files and unrelated root/census
+objects. Strict validation finds no invalid or duplicate rows; all ten owned
+census files and both timing summaries validate. The remaining saved queue is
+214 actions across Practice KG MCP, Professional Desktop and the real HTTP auth
+regression. Hosted readiness and final empty-baseline acceptance remain open;
+the overall goal is active.

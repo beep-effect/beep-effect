@@ -1,0 +1,229 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/law-practice-server",
+  "sourceHead": "52f6a9bdff8031655cc5b08e0ae885b8eccd8616",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 16.29598296900076,
+  "bunWholeCommandSeconds": 15.343277640999077,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.5751953125, 10.82861328125, 15.611328125],
+  "loadAfter": [15.0078125, 12.39892578125, 16.0537109375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.02 avg60=0.14 avg300=0.59 total=164519917\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=8015014\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7499799\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=41739948\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=31436436\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.07 avg60=0.66 avg300=0.69 total=164997736\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=8015127\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7499900\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=41771567\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=31458232\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "b97fcd68bf4e9daf21dc2078b1015fa353ff541c832eaf7513361803fe89f6c1"
+    },
+    {
+      "file": "packages/law-practice/server/README.md",
+      "sha256": "7a0df711537c35c3fbcd0b4f2666a3a4cde21fb4db56db0f550820fa1f4c132b"
+    },
+    {
+      "file": "packages/law-practice/server/docgen.json",
+      "sha256": "5cbce4ded0fb43df0e8d3ed37177553d45e670249faa766c645157d7fbdb890d"
+    },
+    {
+      "file": "packages/law-practice/server/package.json",
+      "sha256": "2a21d98625813a12f8c5ffa88af7786f8d3b7f3479e2281e42470c467a69360a"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.layer.ts",
+      "sha256": "004447ad3f7e5ce899f90a19dbdef207ee69aa93be476b352830300fd77f3399"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.ports.ts",
+      "sha256": "15907154ed0e673a27a33dbf33da330347090539f61292eacf3b36fcabab7e9b"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorPromotionGate/index.ts",
+      "sha256": "ba2dd42aabba1286d880e9be0218531a094f0eada9d4608dfc07714047ddc675"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorRecord/CandorRecord.layer.ts",
+      "sha256": "a40d48b6d26f7f11d324f9f667d59ff2e85cf4584a63e2269584637cc2dc11a0"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorRecord/CandorRecord.repo.ts",
+      "sha256": "747454ad077f9de8583de167672fef9358f7f6c1a88d546d4f875e00bfef9905"
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorRecord/index.ts",
+      "sha256": "5825eb1b03f28b3ec1827b82e1e36e14632a1989bbfcb4f14b94bbc2283729b0"
+    },
+    {
+      "file": "packages/law-practice/server/src/Layer.ts",
+      "sha256": "c9b092e7cb166e7603b1fc8af285706b9853a56818392613206b58ddaf7408a4"
+    },
+    {
+      "file": "packages/law-practice/server/src/LegalPositionRecord/LegalPositionRecord.layer.ts",
+      "sha256": "f79ff0d2431b0fbdb0352faa02440c9fc9d9c6d0233f8aeb9067b8ec62c48f8c"
+    },
+    {
+      "file": "packages/law-practice/server/src/LegalPositionRecord/LegalPositionRecord.repo.ts",
+      "sha256": "fedfaa83fcfe741d925532cdf971bb1dd2487b23604e2b2bb517d267cc39001b"
+    },
+    {
+      "file": "packages/law-practice/server/src/LegalPositionRecord/index.ts",
+      "sha256": "00f792b1f8f57b7042ef094b9a2b559296ba8a9a53a526ea9312c7fd5c0ab630"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.claims.ts",
+      "sha256": "d4d5bb630095d9a90c7e7690db80cf65a911285e477e37cf655f25a12c859ef0"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.emails.ts",
+      "sha256": "d56d923fc9ec8a315c11e892178d4c8b4bee66c8ab364f446687f40125eee80d"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.errors.ts",
+      "sha256": "390ae0753914ede178aae7f96ca00dc07d550f6e167cc2a6df7029d59a2328a6"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.fts.ts",
+      "sha256": "25e2e26b0d89c8e87e700ad59378d9cedd153e45e602c41266cf0a62d3557792"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.host.ts",
+      "sha256": "9358ac879698564d1b08e01bd979a42bb5a7a344cff2ca071d8e84be3337c46e"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.projections.ts",
+      "sha256": "a13c726081a4c6bf0b0722ff4de74398297c303d1b1ce01721d554f33a30b828"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.queries.ts",
+      "sha256": "960b641ca3d436b8e8be4fa84022bfaedb3bee7e2a5391aa7b75a9c2615a3fd0"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.rows.ts",
+      "sha256": "9bdc9b79c25f73c980b3cfeb7b114e867f0127107dc1631d7239e84797fd8ca0"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.schemas.ts",
+      "sha256": "c40c805991dedff3f8b44de286170208f8968ee83c5204335f7d4d27670e6a06"
+    },
+    {
+      "file": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
+      "sha256": "63e63c0a33940c864453822f646d173b756f4c3b62d1beed3d52dc8a143d0629"
+    },
+    {
+      "file": "packages/law-practice/server/src/Tools.ts",
+      "sha256": "f763abee8cb15b446b97efb12174591ace5e39c7c620908a08625466ebe31e9a"
+    },
+    {
+      "file": "packages/law-practice/server/src/index.ts",
+      "sha256": "77d0fb8dc263fea4f04d78562fa70fa69e100a775bc3a51edc1aa09292ca5588"
+    },
+    {
+      "file": "packages/law-practice/server/src/internal/RepoSupport.ts",
+      "sha256": "c41acff6c4cfb8863624e467306b03ae610db7d499479ccfe99e0fcdca8b5fa4"
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "sha256": "f780ad05ab92a6efe827003dde30d28945b7a25ceaf9deec09d4a60ded871eb8"
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "sha256": "168804ae458404e0e631d2a4b6c22db5a07fe98fc46e80e816e894543c258577"
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "sha256": "fef77bf319b2a5cb736d7c45b5af159a0fc77555aceb08d051bdad6bc44fdfba"
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "sha256": "5cce190e4c59f1fb901b6dc494e1ffe649b5bda22782979d53bc6e0327bc126d"
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "sha256": "005788dd8e048adb33d579602908252e60c5fcab80918f76191aab148e60b449"
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "sha256": "b92ed04c6eb31d7d454adb98f9cfaf7d9a6393312ed0c3d91e4760645e59cf42"
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "sha256": "7651ece8381a08d54f095d9ab16a968c4c527798a2a3a7683452ef0d76026a64"
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "sha256": "30e6dae58d31fb04fd9c942640180a38bfe66ef3202e135096d76c7d650be85b"
+    },
+    {
+      "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
+      "sha256": "c719b30c49e0a027a21f63c2e6cba46d677e582942225d1bf97aa92c0a0dfc4f"
+    },
+    {
+      "file": "packages/law-practice/server/test/fixture.ts",
+      "sha256": "ae88fa5f1de2165bda5eaeea320ee5912d97a8c5c2f349342d028a43394dc678"
+    },
+    {
+      "file": "packages/law-practice/server/tsconfig.check.json",
+      "sha256": "90e1f069b9b4f315041df8ff9d0f273f27a9eb55e67db853c9b0e4af9cbaeb49"
+    },
+    {
+      "file": "packages/law-practice/server/tsconfig.json",
+      "sha256": "f02c5277110366a0cf61d39eb6fd7b432175ddda05f3b45b925cf3be0d47b112"
+    },
+    {
+      "file": "packages/law-practice/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/law-practice/server/vitest.config.ts",
+      "sha256": "74371247757931dbe82c40787e71e70ee755d7bc4019c6eab17167f3bc0bdc44"
+    }
+  ],
+  "environmentMode": "Law Practice Server unit selection excludes test/integration. Native DuckDB/PGlite and filesystem cases run where registered in this selection; no external server or provider claim. Host load and pressure are recorded, not a causal performance claim.",
+  "bunProof": {
+    "passedTests": 86,
+    "skippedTests": 1,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [15.0078125, 12.39892578125, 16.0537109375],
+    "loadAfter": [16.24853515625, 12.80419921875, 16.12841796875],
+    "pressureBefore": {
+      "cpu": "some avg10=1.07 avg60=0.66 avg300=0.69 total=164998064\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=8015127\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7499900\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=41771567\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=31458232\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.21 avg60=0.50 avg300=0.66 total=165077977\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=8015134\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7499907\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=41833553\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=31503688\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 86,
+    "skipped": 1
+  },
+  "interpretation": "Baseline and final use rc118. The baseline has 85 passes and one intentional opt-in corpus skip; final adds one actual fixture-row property, giving 86 passes and the same skip. Preservation covers 335 assertions, 72 original titles, 39 fixture initializers and original deadlines. Native DuckDB/PGlite subjects remain. Host load, caches and case count differ, so timings do not establish causal speedup."
+}
