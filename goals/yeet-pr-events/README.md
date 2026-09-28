@@ -2,12 +2,13 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-Slice 1 (W1-W6) is implemented and in P11 verification; slice 2 (W7, W8)
-and slice 3 (W9) have not started.
+Slice 1 (W1-W6) merged as PR #1270 on 2026-09-25. On 2026-09-28 the W7
+socket probe failed for every detached sender, so slice 2 is cut (W8
+not built); W9 and W10 ship with the closeout in one PR.
 
 ## Mission
 
@@ -40,16 +41,20 @@ Use this command after the packet is activated:
 
 ## Current phase
 
-P11 verify for slice 1. W1-W6 ship as one producer PR whose own babysit is
-the first vertical slice; after it merges, slice 2 starts with the W7 socket
-probe.
+Closeout PR: W9 (dead-owner pr-wave notifier), W10 (Status chain collapse)
+and P13 in one PR, driven to merge-ready through Yeet.
 
 ## Latest evidence
 
-Not started. The operator-confirmed brief, the decomposition, D1-D38 and the
-measurement evidence remain in the source
-[`pr-event-awareness`](../../explorations/pr-event-awareness/README.md)
-exploration.
+- [`history/2026-09-25-slice-1-babysit.md`](./history/2026-09-25-slice-1-babysit.md)
+  — slice 1 proven on PR #1270's own babysit (exit 2 waves, injected row, fix
+  push supersede, exit 0, first push → row → ack timeline).
+- [`../../explorations/pr-event-awareness/research/2026-09-28-W7-socket-probe.md`](../../explorations/pr-event-awareness/research/2026-09-28-W7-socket-probe.md)
+  — W7 probe: wire contract, seven-sender delivery matrix, accepted frame,
+  refusal, slice-2 verdict (cut).
+- The operator-confirmed brief, the decomposition and D1-D39 remain in the
+  source [`pr-event-awareness`](../../explorations/pr-event-awareness/README.md)
+  exploration.
 
 ## Notes
 

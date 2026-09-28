@@ -2,14 +2,18 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
-Slice 1 (W1-W6) is implemented on `feat/yeet-pr-events-slice-1`, with four
-rulings the orchestrator ratified from the step reviews: a required red set
-that changes on the same head is a new wave, optional reds never wake a
-waiter, a REST actor typed `Bot` is a bot, and the yeet skill's comment-cursor
-text names the per-mode files. P11 verification is in progress; P12 publishes
-the slice-1 PR. W7-W10 have not started.
+Slice 1 (W1-W6) merged as PR #1270 (2026-09-25) with four rulings the
+orchestrator ratified from the step reviews: a required red set that changes on
+the same head is a new wave, optional reds never wake a waiter, a REST actor
+typed `Bot` is a bot, and the yeet skill's comment-cursor text names the
+per-mode files. On 2026-09-28 the operator collapsed the remaining slices into
+one PR (`feat/yeet-pr-events-slice-2`) to save PR-queue and runner cost: the
+W7 probe ran first and failed for every detached sender, so slice 2 is cut and
+W8 is skipped (`history/` and the exploration's
+`research/2026-09-28-W7-socket-probe.md`); W9 and W10 ship in that PR, and P13
+closes the packet in the same PR.
 
 ## Phases
 
@@ -22,8 +26,8 @@ the slice-1 PR. W7-W10 have not started.
 | W4 Comment rows + per-consumer cursor | complete | P1 `pr-comment` rows (URL, author, ~200-char excerpt) keyed on comment id; watermark namespaced per consumer; backlog after the job's submit time becomes rows. | `--watch` and `--until-ready` on one branch no longer share a cursor; the first namespaced run replays no history as rows. |
 | W5 Wave-exempt kit + hook parity | complete | `YeetInboxWaveExemptRowKind`; `yeetInboxRowLiveness` reads it; hook jq literal; a repo-cli test asserts the literal equals the kits. | Threads and comments survive a push in both readers; `base-drift` still supersedes; the parity test fails when either side drifts. |
 | W6 Attribution + law text | complete | Two allowlist names; `AGENTS.md` closeout bullet; yeet skill wave/exit text and vocabulary block; `CheckOutcome.ts`/`Remediation.ts` JSDoc; ttc exit-table amendment ratified by this PR. | Registry rows from a detached monitor carry harness and session id; docs describe the shipped behaviour. |
-| W7 Socket probe gate | pending | Post to `$CLAUDE_CODE_MESSAGING_SOCKET` from an in-hook child, a `&` child and a `setsid -f` child; record one accepted frame, one refusal, and which senders a bypass session delivers. | The probe record is in `explorations/pr-event-awareness/research/`; the slice-2 verdict (build W8 or close as cut) is written. |
-| W8 Session-owned inbox tail | pending | Shell worker spawned by SessionStart (pid file keyed by session id), `inotifywait` on `.beep/inbox/`, one message per new P0/P1 wave, cwd outside the lane, `/proc` start-identity reap, operator-registered SessionEnd teardown. | Survives the hook timeout; delivers into a bypass session; `yeet sweep --retire` succeeds with the tail running; proxy-session delivery; fleet census recorded. |
+| W7 Socket probe gate | complete | Post to `$CLAUDE_CODE_MESSAGING_SOCKET` from an in-hook child, a `&` child and a `setsid -f` child; record one accepted frame, one refusal, and which senders a bypass session delivers. | The probe record is in `explorations/pr-event-awareness/research/`; the slice-2 verdict (build W8 or close as cut) is written. |
+| W8 Session-owned inbox tail | complete (cut) | Shell worker spawned by SessionStart (pid file keyed by session id), `inotifywait` on `.beep/inbox/`, one message per new P0/P1 wave, cwd outside the lane, `/proc` start-identity reap, operator-registered SessionEnd teardown. | Survives the hook timeout; delivers into a bypass session; `yeet sweep --retire` succeeds with the tail running; proxy-session delivery; fleet census recorded. |
 | W9 pr-wave notifier + liveness rule | pending | Monitor-side no-live-owner check (unknown = dead) spawns the notifier with the wave descriptor; notify-send + ntfy; resolves on the row's ack; own ledger namespace. | A dead-owner wave produces a desktop and ntfy notification carrying `yeet resume <pr>` locally; `sequence-break-notifier.sh` is unchanged. |
 | W10 Snapshot collapse (follow-up) | pending | Collapse whichever chain the W1 timeline blames — the watch's ten GraphQL requests or the Status chain — as one small PR. | Measured per-poll cost drops; rows unchanged. |
 | P11 Verify | in-progress | Run the `SPEC.md` verification matrix per slice and capture evidence. | Tests, package verify, hook syntax, packet doctor and index checks pass or blockers are documented. |
@@ -59,6 +63,13 @@ Then land W3-W6 in the same PR.
   the result, mark W8 `skipped` in the manifest with the reason, and move to
   W9. Idle-owner wake then stays hook injection at the next tool call plus
   the desktop `set_monitor` switch.
+- **Outcome (2026-09-28): the probe failed.** Only a child posting while its
+  hook/tool invocation is in flight is delivered into a bypass session; a
+  plain background child posting after the invocation returned, a `setsid -f`
+  child and a `systemd-run` unit are all held (five of five), and a
+  1.1 M-character frame is refused. W8 is closed as cut (recorded `complete` with a cut reason, since the
+  manifest phase domain has no `skipped`); no D15 rejected option is revived
+  (exploration decision D39).
 - W8 acceptance runs in this order: survives the SessionStart 2 s timeout;
   a message from the surviving tail is delivered, not held, into a bypass
   session; `bun run beep yeet sweep --retire` still succeeds with the tail
