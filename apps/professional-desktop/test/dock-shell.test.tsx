@@ -104,7 +104,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "persists automatically once workspace changes settle (debounced binding)",
     Effect.fnUntraced(function* () {
       expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).toBeNull();

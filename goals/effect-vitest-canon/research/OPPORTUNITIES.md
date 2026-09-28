@@ -4662,3 +4662,13 @@ The interruption probe initially used a single Effect.yieldNow as a readiness
 barrier and observed no subscription yet. Waiting for the stream predicate's
 first invocation gives an actual subscription-processing witness before the
 interrupt. Scheduler yields should not be treated as proof of readiness.
+
+## Idle-lifetime tests should witness actual eviction
+
+The hidden-input lifetime test slept past its configured TTL and checked that
+the input remained available. Increasing the TTL beyond the unchanged wait still
+passed that original test. An unmounted witness atom now proves that eviction
+occurred in the same registry before checking input survival. The extended-TTL
+control fails the new witness while the original case passes; normal Node and
+Bun runs remain green. This pattern distinguishes lifetime preservation from a
+test that simply ran before any eviction.

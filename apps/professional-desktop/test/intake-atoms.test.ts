@@ -10,7 +10,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
+import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
 import * as Stream from "effect/Stream";
 import { vi } from "vitest";
 import {
@@ -418,6 +418,9 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
         Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 })),
         (registry) => Effect.sync(() => registry.dispose())
       );
+      const idleWitness = Atom.make(0);
+      registry.set(idleWitness, 1);
+      expect(registry.get(idleWitness)).toBe(1);
       const input = document.createElement("input");
       input.type = "file";
       const click = vi.spyOn(input, "click").mockImplementation(() => undefined);
@@ -430,6 +433,7 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
       releaseSetInput();
 
       yield* Effect.sleep(Duration.millis(50));
+      expect(registry.get(idleWitness)).toBe(0);
       assertSome(registry.get(intakeFileInputAtoms(workspaceId)), input);
 
       const releaseOpenPicker = registry.mount(openPicker);

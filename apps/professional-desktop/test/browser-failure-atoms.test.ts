@@ -1,12 +1,12 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { AtomRegistry } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
 import {
   BrowserFailure,
   browserFailureListenersAtom,
@@ -14,18 +14,10 @@ import {
 } from "@/runtime/BrowserFailure.atoms";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
-const waitForLog = (annotations: ReadonlyArray<Record<string, unknown>>): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    annotations.length > 0 ? Effect.void : Effect.fail("browser failure log has not been emitted")
-  ).pipe(
-    Effect.retry(
-      Schedule.spaced(Duration.millis(10)).pipe(Schedule.upTo({ duration: Duration.seconds(3), times: 300 }))
-    )
-  );
-
-const registryWithDelayedLogger = (annotations: Array<Record<string, unknown>>) => {
+const registryWithDelayedLogger = (annotations: Array<Record<string, unknown>>, logged: Deferred.Deferred<void>) => {
   const logger = Logger.make<unknown, void>((options) => {
     annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+    Deferred.doneUnsafe(logged, Effect.void);
   });
   return AtomRegistry.make({
     defaultIdleTTL: 0,
@@ -41,8 +33,9 @@ describe("browser failure atoms", () => {
     "observes a handled AsyncResult failure through the professional runtime",
     Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];
+      const logged = yield* Deferred.make<void>();
       const registry = yield* Effect.acquireRelease(
-        Effect.sync(() => registryWithDelayedLogger(annotations)),
+        Effect.sync(() => registryWithDelayedLogger(annotations, logged)),
         (registry) => Effect.sync(() => registry.dispose())
       );
       const failure = BrowserFailure.make({
@@ -65,8 +58,9 @@ describe("browser failure atoms", () => {
     "keeps the delegated global-listener reporting action mounted until logging completes",
     Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];
+      const logged = yield* Deferred.make<void>();
       const registry = yield* Effect.acquireRelease(
-        Effect.sync(() => registryWithDelayedLogger(annotations)),
+        Effect.sync(() => registryWithDelayedLogger(annotations, logged)),
         (registry) => Effect.sync(() => registry.dispose())
       );
       registry.mount(browserFailureListenersAtom);
@@ -76,7 +70,12 @@ describe("browser failure atoms", () => {
           error: new Error("token=listener-private-value at /home/operator/listener"),
         })
       );
-      yield* waitForLog(annotations);
+      yield* Deferred.await(logged).pipe(
+        Effect.timeoutOrElse({
+          duration: Duration.seconds(3),
+          orElse: () => Effect.fail("browser failure log has not been emitted"),
+        })
+      );
 
       expect(annotations[0]?.["professional_desktop.renderer.source"]).toBe("window_error");
       expect(annotations[0]?.cause_message).not.toContain("listener-private-value");

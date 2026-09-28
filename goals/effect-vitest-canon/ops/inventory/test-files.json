@@ -262,8 +262,8 @@
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3415,
-    "lines": 86
+    "bytes": 3412,
+    "lines": 85
   },
   {
     "file": "apps/professional-desktop/test/chat-contract.test.ts",
@@ -332,7 +332,7 @@
     "file": "apps/professional-desktop/test/dock-shell.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8959,
+    "bytes": 8961,
     "lines": 213
   },
   {
@@ -374,8 +374,8 @@
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 20221,
-    "lines": 502
+    "bytes": 20401,
+    "lines": 506
   },
   {
     "file": "apps/professional-desktop/test/intake-refusal.test.ts",
