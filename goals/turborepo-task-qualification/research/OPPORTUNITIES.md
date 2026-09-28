@@ -2240,8 +2240,9 @@ receipt and durable job logs would prevent treating this as a code diagnostic.
 
 The local early-publish proof separately exited 1 at `quality:coverage`, with
 11 file-level regressions across Pretext, Professional Desktop, repo-cli and
-Schema. None of those package surfaces or the baseline changed directly in this
-branch. Base/runtime reproduction is still required to distinguish inherited
+Schema. At that early-publish proof checkpoint, none of those package surfaces
+or the baseline had changed directly. The subsequent test repairs are recorded
+separately. Base/runtime reproduction was required to distinguish inherited
 coverage from environmental variation; no baseline was lowered. Preserve the
 runtime profile and exact uncovered branches with future baseline receipts.
 
