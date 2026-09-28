@@ -34,7 +34,8 @@ scanning 1,217 files in 9.72 seconds. No exception or new baseline debt is added
 The ledger plan matches 42 historical rows by exact occurrence and one by the
 unique remaining identical file/rule/class/symbol/evidence pair after assigning
 all other duplicates. Ten captured assertions have no unassigned historical
-equivalent and will receive separate fixed rows after the source commit.
+equivalent now have separate fixed records. All 53 records reference source
+commit `7dee42b8d9c02137b47d0855d61ac251a76ecb8c`; historical identities and evidence are preserved.
 
 All 440 tests pass before and after on Node and Bun, with identical file/title
 registration multiplicities, zero failures/skips and stable source hashes.

@@ -441,3 +441,15 @@ and the zero-new ratchet pass. Other finding groups retain their multiplicities.
 The detector ledger has 3,444 unique rows: 932 fixed, seven exceptions and
 2,505 open. There are no new ledger findings in this batch. Full package proof
 status is explicit in [the proof](../../../research/cli-assertion-residual-proof.md).
+
+
+## Boolean predicates and Exit cause assertions
+
+Commit `7dee42b8d9c02137b47d0855d61ac251a76ecb8c` migrates 53 assertions across four files.
+The ledger fixes 43 historical rows and adds ten captured fixed findings; one
+historical row is the unique remaining identical evidence pair after assigning
+other duplicates. All 440 registrations pass before/after on Node and Bun.
+Effect diagnostics and the ratchet pass with zero introduced findings. The CLI
+ledger has 3,454 unique rows: 985 fixed, seven exceptions and 2,462 open.
+Full package proof status remains explicit in
+[the proof](../../../research/cli-predicate-cause-proof.md).
