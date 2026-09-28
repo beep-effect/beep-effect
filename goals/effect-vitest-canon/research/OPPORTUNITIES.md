@@ -5309,3 +5309,22 @@ close a backend decision. A future inventory aid should track service provenance
 through platform aggregate layers and retain the Resource lens decision when
 import spelling changes. The existing native-platform anchor was updated without
 adding baseline members or claiming a Memory migration.
+
+### Scheduler status recipe requires an undocumented flag
+
+While checking the live docgen package proof, the Yeet skill's documented
+`bun run beep quality scheduler status` exited with `Missing required flag:
+--json`. The same read-only command with `--json` succeeded. Update the operator
+recipe or the command's optional-output flag behavior so the published status
+check works as written. No scheduler leases or sibling proofs were changed.
+
+### Native journal lock retries need an explicit live clock during migration
+
+The first Yeet harness draft passed 168 cases but timed out the two native
+journal contention cases at their existing 30-second limits. Their internal
+retry sleeps inherited TestClock, so the lock-refusal and concurrent-appender
+operations could not advance. The migration scopes TestClock.withLive to those
+two existing cases; assertions, concurrency and timeout values are unchanged.
+The failed cohort is retained separately from the final comparison. Future
+resource migrations should inspect transitive retry clocks, not only direct
+sleep calls in the test file. Final validation belongs in the Yeet batch proof.

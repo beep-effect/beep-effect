@@ -68,7 +68,8 @@ properties pass in the same Node/Bun cohorts.
 The CLI ledger contains 1,270 fixed, seven exception and 2,187 open records
 (3,464 total), strictly schema-valid with unique IDs.
 
-Full CLI package verification is running for source f309935ade. Its result is
-not yet claimed. No hosted readiness or goal completion is claimed. Private
+Full CLI package verification passed for source f309935ade: audit 777.9 seconds
+and docgen 20.4 seconds. Source remained unchanged during that proof; the
+intervening edits updated packet documentation only. No hosted readiness or goal completion is claimed. Private
 receipts use cli-docgen-runtime, cli-docgen-resource, cli-docgen-final-detector,
 cli-docgen-assertion-preservation, cli-docgen-lineage and cli-docgen-ledger.
