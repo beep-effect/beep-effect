@@ -12,6 +12,7 @@ import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shar
 import { pickVaultDirectoryOnHost } from "../src/intake/VaultDirectoryPickerOrchestrator";
 
 const encoder = new TextEncoder();
+const pickerLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 
 const mockHandle = (result: { stdout?: string; code?: number }) =>
   ChildProcessSpawner.makeHandle({
@@ -62,7 +63,7 @@ describe("pickVaultDirectoryOnHost", () => {
       assert.strictEqual(command.options.stderr, "ignore");
       return { stdout: "/home/user/vault1\n" };
     }),
-    { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" }
+    { timeout: pickerLayerTimeout }
   )("with a kdialog selection", (it) => {
     it.effect(
       "returns the picked path from kdialog stdout",
@@ -75,7 +76,7 @@ describe("pickVaultDirectoryOnHost", () => {
 
   it.layer(
     mockSpawnerLayer(() => ({ code: 1 })),
-    { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" }
+    { timeout: pickerLayerTimeout }
   )("with a cancelled dialog", (it) => {
     it.effect(
       "returns None",
@@ -88,7 +89,7 @@ describe("pickVaultDirectoryOnHost", () => {
 
   it.layer(
     mockSpawnerLayer(() => ({ stdout: "  \n" })),
-    { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" }
+    { timeout: pickerLayerTimeout }
   )("with a clean exit but no selection", (it) => {
     it.effect(
       "returns None",
@@ -101,7 +102,7 @@ describe("pickVaultDirectoryOnHost", () => {
 
   it.layer(
     mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })),
-    { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" }
+    { timeout: pickerLayerTimeout }
   )("with kdialog missing and zenity available", (it) => {
     it.effect(
       "falls back to zenity",
@@ -114,7 +115,7 @@ describe("pickVaultDirectoryOnHost", () => {
 
   it.layer(
     mockSpawnerLayer(() => "missing"),
-    { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" }
+    { timeout: pickerLayerTimeout }
   )("with no picker command available", (it) => {
     it.effect(
       "fails with a client-safe error",

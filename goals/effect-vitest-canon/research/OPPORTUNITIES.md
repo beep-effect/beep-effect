@@ -4438,3 +4438,13 @@ only the marker overlap before boot and no accumulated log text afterward.
 Real process I/O uses live-clock 20/30-second deadlines instead of an unadvanced
 TestClock. The enabled compiled IPC case, not its default zero-registration gate,
 is the execution evidence.
+
+## Proof repair hint disagreed with the actual failing lanes
+
+The sidecar IPC publisher reported a schema-first repair command even though its
+structured lane record and log showed schema-first passing. The actual failures
+were Fallow audit and health: five identical coverage/deep-sweep hook-budget
+expressions inflated the vault-directory picker registration callback's cognitive
+complexity. A shared file-local timeout preserves all five 10-second/5-minute
+budgets while evaluating the common condition once. Repair hints should derive
+from the failing lane records; this case needs a regression in the quality tool.
