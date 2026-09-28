@@ -429,7 +429,8 @@
     "research/current-config-controls-stable.json",
     "research/current-config-controls-canary.json",
     "research/current-packet-verification.json",
-    "research/current-native-io-review.json"
+    "research/current-native-io-review.json",
+    "research/current-git-exclusion-control.json"
   ],
   "agentLaunchers": [
     {

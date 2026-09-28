@@ -2566,3 +2566,16 @@ the reviewer and result. This closes process attribution for this observation;
 it does not freeze the shared Git metadata, hash returned read buffers, or
 prove that alternate Git layouts preserve semantics. Those contract obligations
 remain open alongside the undecoded ring operations.
+
+### Stable Git exclusion invalidation and behavior control
+
+The [ordinary CLI control](research/current-git-exclusion-control.json) passes
+nine expected outcomes with a private exclusion-file overlay. A comment-only
+change preserves native file inputs but changes the runtime binding and misses;
+restoring the original exclusion bytes recovers the baseline hit. Malformed
+source fails, excluding it succeeds and replays, removing that exclusion fails
+again, and removing the malformed source restores the baseline hit. Independent
+review verifies stream hashes, absent failure archives and identical successful
+archive logs. Shared host exclusions remain unchanged. This stable-only result
+retains the frozen dependency profile; canary, concurrent mutation, alternate
+Git layouts and signed-remote acceptance remain separate obligations.
