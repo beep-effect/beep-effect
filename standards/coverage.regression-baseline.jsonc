@@ -27477,6 +27477,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveNotifier.ts": {
+          "lines": 96.84,
+          "statements": 93.51,
+          "branches": 84.44,
+          "functions": 87.87,
+          "uncovered": {
+            "lines": 3,
+            "statements": 7,
+            "branches": 7,
+            "functions": 4
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts": {
           "lines": 100,
           "statements": 100,
