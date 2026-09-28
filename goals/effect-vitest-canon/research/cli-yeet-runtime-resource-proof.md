@@ -79,8 +79,9 @@ findings. The CLI ledger now has 1,356 fixed, seven exception and 2,105 open
 records: 3,468 strict schema-valid, unique rows. Only the shorter environment
 wrapper and native-filesystem judgment remain open in yeet.test.ts.
 
-Full CLI package verification is running for source 75fa5f2713. Its result is
-not yet claimed. The preceding docgen migration has its own completed full
+Full CLI package verification passed for source 75fa5f2713: audit 682.7 seconds
+and docgen 20.9 seconds. Package source remained unchanged during the proof;
+intervening edits updated only packet documentation and inventory. The preceding docgen migration has its own completed full
 package proof in cli-docgen-runtime-resource-proof.md. No hosted readiness or
 goal completion is claimed. Private receipt prefixes are cli-yeet-runtime,
 cli-yeet-resource, cli-yeet-final-detector, cli-yeet-assertion-preservation,

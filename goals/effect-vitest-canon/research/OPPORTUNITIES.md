@@ -5318,6 +5318,14 @@ While checking the live docgen package proof, the Yeet skill's documented
 recipe or the command's optional-output flag behavior so the published status
 check works as written. No scheduler leases or sibling proofs were changed.
 
+Repaired in f6b1dcaa28 by defaulting the Boolean output flag to false. A
+regression failed before the repair and passes on Node and Bun afterward;
+omitting the flag produces exactly the explicit --no-json output. The real
+unflagged command now succeeds. Quick package proof passed lint/check, and the
+133-case scheduler cohort passes on both runtimes. Full package proof covering
+this repair will accompany the scheduler migration; the earlier Yeet proof
+predates it.
+
 ### Native journal lock retries need an explicit live clock during migration
 
 The first Yeet harness draft passed 168 cases but timed out the two native
@@ -5338,3 +5346,25 @@ produces exact historical line/evidence matches for all 74 runtime rows. Future
 lineage tooling should reuse compactEvidence rather than recreating its text
 normalization; otherwise shared evidence prefixes create false ambiguity and
 unnecessary history scans. No detector or baseline behavior was changed.
+
+
+### Assertion conservation audits must include utility and pipeline forms
+
+The initial private AST audit recognized common expect/assert calls but omitted
+some imported helpers and direct assertion stages in pipe expressions. The
+expanded audit recognizes imported assertion utilities, local assert-prefixed
+helpers and assertion pipelines. Rechecking the original committed sources
+against the current migrations preserves 604 Yeet, 342 docgen and 472 files
+assertion trees. This strengthens migration evidence; it does not add behavioral
+coverage. Future audit tooling should report its recognized forms explicitly
+and include fixtures for aliased imports and piped assertions.
+
+### Layer fixtures share their parent clock unless explicitly isolated
+
+The scheduler migration draft exposes five TestClock.adjust findings across
+four cases. The installed harness caches the parent TestEnv and nested layers
+inherit it. The draft gives each adjusting case its own TestClock.layer(). A
+six-case public-API control passes on Node and Bun, while removing those nested
+layers fails all four identity checks on both runtimes. This is evidence for
+the fixture design, not yet proof of the actual scheduler suite. Keep the
+judgment rows pending until the migrated suite and its clock witnesses pass.
