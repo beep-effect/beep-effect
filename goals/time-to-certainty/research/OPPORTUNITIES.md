@@ -2854,3 +2854,23 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   a whole file from a backup in a shared tree; probe with a reverse patch (`git apply -R` of the
   probe hunk) or in a throwaway copy, and re-check `git diff HEAD --stat` of every owned file just
   before reporting.
+
+## 2026-09-28 — a test ported into the architecture lab broke the lab's generator round trip
+
+- Doing: carrying an orphaned lane's coverage tests forward in the #1321 follow-up (PR #1322).
+- Evidence: hosted `Test Unit (repo-cli-2)` failed `architecture-operation-plan.test.ts` ("generates
+  every manifest-included WorkItem proof file and second apply is a no-op") with ENOENT for the new
+  `packages/architecture-lab/server/test/DrizzleRepository.test.ts`. Every file under
+  `packages/architecture-lab` must be listed in `acceptedProofFiles`
+  (`packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`), whose
+  live files are the generator's templates, retargeted per concept. The ported file had no entry,
+  covered two domain kinds in one file, and carried no concept in its name, so even registered it
+  would have retargeted only the WorkItem half. None of the local gates run in the port (package
+  tests, `turbo check`, test-tsgo, oxlint, effect-vitest) exercises that round trip; it lives in a
+  repo-cli unit test outside the touched packages.
+- Prevention: split the test per concept (`WorkItemDrizzleRepository.test.ts`,
+  `WorkerDrizzleRepository.test.ts`), register both at stage `persistence`, and prove the round trip
+  with `bun run beep architecture plan > plan.json && bun run beep architecture check --file
+  plan.json` (landed in this PR). Any change under `packages/architecture-lab` should run that check
+  and `architecture-operation-plan.test.ts`; the lab's `AGENTS.md` could say so where a contributor
+  adding a test file would read it.
