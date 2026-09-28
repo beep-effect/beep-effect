@@ -290,8 +290,8 @@
     "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2263,
-    "lines": 54
+    "bytes": 2398,
+    "lines": 58
   },
   {
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
@@ -367,8 +367,8 @@
     "file": "apps/professional-desktop/test/fps-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1519,
-    "lines": 46
+    "bytes": 1787,
+    "lines": 53
   },
   {
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",

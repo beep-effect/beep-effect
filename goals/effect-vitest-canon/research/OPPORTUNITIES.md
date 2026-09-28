@@ -4371,3 +4371,12 @@ scope before mounting. Review registry construction together with failure-path
 ownership; ordinary passing tests did not expose this leak. Two enclosing EV009
 fingerprints changed with the resource edit and were reanchored without closing
 or weakening the pending live-clock judgments.
+
+## Composer and FPS cleanup needed failure-path ownership
+
+The composer registry and FPS frame loop relied on success-tail disposal. Failure
+controls after real mounts reproduced missing cleanup in both original tests;
+test-scope acquisition now guarantees it. The FPS early-disposal assertion stays
+in place and checks the same latest frame ID. When intercepting registry methods
+in controls, bind the original method to its instance so the observation preserves
+native cleanup behavior; the preceding browser controls were rerun with that bind.

@@ -34,11 +34,16 @@ describe("composer delegated runtime action lifetime", () => {
   it.live(
     "keeps the delegated draft action mounted while its runtime layer builds",
     Effect.fnUntraced(function* () {
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 0,
-        timeoutResolution: 1,
-        initialValues: [[professionalBrowserRuntime.layer, Layer.effectDiscard(Effect.sleep(25))]],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 0,
+            timeoutResolution: 1,
+            initialValues: [[professionalBrowserRuntime.layer, Layer.effectDiscard(Effect.sleep(25))]],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const handlerAtom = composerSerializedChangeHandlerAtoms(threadId)(draft);
       registry.mount(draftAtoms(threadId));
       registry.mount(handlerAtom);
@@ -48,7 +53,6 @@ describe("composer delegated runtime action lifetime", () => {
       yield* waitForDraft(registry);
 
       expect(O.exists(registry.get(draftAtoms(threadId)), Equal.equals(draft))).toBe(true);
-      registry.dispose();
     })
   );
 });
