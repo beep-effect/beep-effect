@@ -12,9 +12,11 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect, layer } from "@effect/vitest";
-import { DateTime, Effect } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { DateTime, Effect, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -44,7 +46,7 @@ const makeBasis = () =>
   });
 const reviewer = UserPrincipal.make({ kind: "User", userId: SharedIdentity.UserId.make(1) });
 
-layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and approval", (it) => {
+it.layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and approval", (it) => {
   it.effect(
     "verifies before creating a detached timestamped approval",
     Effect.fnUntraced(function* () {
@@ -191,7 +193,7 @@ layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and
       expect(review.basis.assertion).toBe("The source states fact.");
       expect(review.basis.source.extractor.version).toBe("1");
       expect(review.reviewedBy.userId).toBe(1);
-      expect(isReview(review)).toBe(true);
+      pipe(isReview(review), assertTrue);
     })
   );
 });

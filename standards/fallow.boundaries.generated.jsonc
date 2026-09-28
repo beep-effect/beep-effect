@@ -1915,6 +1915,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1927,6 +1928,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

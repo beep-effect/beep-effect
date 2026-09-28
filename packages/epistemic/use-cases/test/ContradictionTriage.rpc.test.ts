@@ -22,10 +22,11 @@ import {
 import { ListContradictionCandidates } from "@beep/epistemic-use-cases/server";
 import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as N from "effect/Number";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -99,14 +100,14 @@ describe("ContradictionTriage RPC contract", () => {
   });
 
   it("bounds both internal and public queue pages to 1 through 100 rows", () => {
-    expect(Result.isSuccess(decodeUnknownListContradictionCandidatesFieldsLimitResult(1))).toBe(true);
-    expect(Result.isSuccess(decodeUnknownListContradictionCandidatesFieldsLimitResult(100))).toBe(true);
-    expect(Result.isFailure(decodeUnknownListContradictionCandidatesFieldsLimitResult(0))).toBe(true);
-    expect(Result.isFailure(decodeUnknownListContradictionCandidatesFieldsLimitResult(101))).toBe(true);
-    expect(Result.isSuccess(decodeUnknownContradictionListPayloadFieldsLimitResult(1))).toBe(true);
-    expect(Result.isSuccess(decodeUnknownContradictionListPayloadFieldsLimitResult(100))).toBe(true);
-    expect(Result.isFailure(decodeUnknownContradictionListPayloadFieldsLimitResult(0))).toBe(true);
-    expect(Result.isFailure(decodeUnknownContradictionListPayloadFieldsLimitResult(101))).toBe(true);
+    pipe(decodeUnknownListContradictionCandidatesFieldsLimitResult(1), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownListContradictionCandidatesFieldsLimitResult(100), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownListContradictionCandidatesFieldsLimitResult(0), Result.isFailure, assertTrue);
+    pipe(decodeUnknownListContradictionCandidatesFieldsLimitResult(101), Result.isFailure, assertTrue);
+    pipe(decodeUnknownContradictionListPayloadFieldsLimitResult(1), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownContradictionListPayloadFieldsLimitResult(100), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownContradictionListPayloadFieldsLimitResult(0), Result.isFailure, assertTrue);
+    pipe(decodeUnknownContradictionListPayloadFieldsLimitResult(101), Result.isFailure, assertTrue);
   });
 
   it("normalizes both review reasons at the RPC payload boundary", () => {
@@ -127,17 +128,19 @@ describe("ContradictionTriage RPC contract", () => {
   });
 
   it("rejects blank review reasons for both decisions at the RPC payload boundary", () => {
-    expect(Result.isFailure(decodeReviewPayload(reviewPayload({ decision: "reject", reason: " \n\t " })))).toBe(true);
-    expect(Result.isFailure(decodeReviewPayload(reviewPayload(supersedeDecisionInput(" \n\t "))))).toBe(true);
+    pipe(decodeReviewPayload(reviewPayload({ decision: "reject", reason: " \n\t " })), Result.isFailure, assertTrue);
+    pipe(decodeReviewPayload(reviewPayload(supersedeDecisionInput(" \n\t "))), Result.isFailure, assertTrue);
   });
 
   it("rejects over-limit review reasons for both decisions at the RPC payload boundary", () => {
     const overLimitReason = Str.repeat(2_001)("x");
 
-    expect(Result.isFailure(decodeReviewPayload(reviewPayload({ decision: "reject", reason: overLimitReason })))).toBe(
-      true
+    pipe(
+      decodeReviewPayload(reviewPayload({ decision: "reject", reason: overLimitReason })),
+      Result.isFailure,
+      assertTrue
     );
-    expect(Result.isFailure(decodeReviewPayload(reviewPayload(supersedeDecisionInput(overLimitReason))))).toBe(true);
+    pipe(decodeReviewPayload(reviewPayload(supersedeDecisionInput(overLimitReason))), Result.isFailure, assertTrue);
   });
 
   it("exposes exact belief, evidence, anchor, and bounded source-page read models", () => {
@@ -152,125 +155,99 @@ describe("ContradictionTriage RPC contract", () => {
     expect(R.keys(EvidenceSourcePage.fields)).toStrictEqual(["evidenceId", "highlight", "page"]);
   });
 
-  it("constructs only non-empty forward source highlights and rejects malformed ranges", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceSourceHighlightArbitrary]),
-          ([highlight]) => {
-            expect(highlight.startChar).toBeLessThan(highlight.endChar);
-            expect(
-              Result.isFailure(
-                decodeEvidenceSourceHighlightResult({
-                  ...highlight,
-                  endChar: highlight.startChar,
-                })
-              )
-            ).toBe(true);
-            expect(
-              Result.isFailure(
-                decodeEvidenceSourceHighlightResult({
-                  ...highlight,
-                  endChar: highlight.startChar,
-                  startChar: highlight.endChar,
-                })
-              )
-            ).toBe(true);
+  it.prop(
+    "constructs only non-empty forward source highlights and rejects malformed ranges",
+    [EvidenceSourceHighlightArbitrary],
+    ([highlight]) => {
+      expect(highlight.startChar).toBeLessThan(highlight.endChar);
+      pipe(
+        decodeEvidenceSourceHighlightResult({
+          ...highlight,
+          endChar: highlight.startChar,
+        }),
+        Result.isFailure,
+        assertTrue
+      );
+      pipe(
+        decodeEvidenceSourceHighlightResult({
+          ...highlight,
+          endChar: highlight.startChar,
+          startChar: highlight.endChar,
+        }),
+        Result.isFailure,
+        assertTrue
+      );
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
+  it.prop(
+    "rejects a page whose source identity differs from its verified highlight",
+    [EvidenceSourcePageArbitrary],
+    ([sourcePage]) => {
+      const otherSource = SourceTextIdentity.make({
+        ...sourcePage.highlight.source,
+        sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
+      });
+      const otherPage = SourceTextPage.make({
+        ...sourcePage.page,
+        identity: otherSource,
+      });
+
+      pipe(
+        decodeEvidenceSourcePageResult({
+          ...sourcePage,
+          page: otherPage,
+        }),
+        Result.isFailure,
+        assertTrue
+      );
+    },
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "constructs source pages that cover their highlight and rejects out-of-bounds offsets",
+    [EvidenceSourcePageArbitrary],
+    ([sourcePage]) => {
+      expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
+      pipe(
+        decodeEvidenceSourcePageResult({
+          ...sourcePage,
+          highlight: {
+            ...sourcePage.highlight,
+            endChar: N.increment(sourcePage.page.totalCodeUnits),
+            startChar: sourcePage.page.totalCodeUnits,
           },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        }),
+        Result.isFailure,
+        assertTrue
+      );
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("rejects a page whose source identity differs from its verified highlight", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceSourcePageArbitrary]),
-          ([sourcePage]) => {
-            const otherSource = SourceTextIdentity.make({
-              ...sourcePage.highlight.source,
-              sourceRef: `${sourcePage.highlight.source.sourceRef}:other`,
-            });
-            const otherPage = SourceTextPage.make({
-              ...sourcePage.page,
-              identity: otherSource,
-            });
+  it.prop(
+    "round-trips only source-aligned EvidenceSourcePage values",
+    [EvidenceSourcePageArbitrary],
+    ([sourcePage]) => {
+      const equivalent = S.toEquivalence(EvidenceSourcePage);
+      const encoded = encodeEvidenceSourcePageResult(sourcePage).pipe(Result.getOrThrow);
+      const decoded = decodeUnknownEvidenceSourcePageResult(encoded).pipe(Result.getOrThrow);
 
-            expect(
-              Result.isFailure(
-                decodeEvidenceSourcePageResult({
-                  ...sourcePage,
-                  page: otherPage,
-                })
-              )
-            ).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("constructs source pages that cover their highlight and rejects out-of-bounds offsets", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceSourcePageArbitrary]),
-          ([sourcePage]) => {
-            expect(sourcePage.highlight.endChar).toBeLessThanOrEqual(sourcePage.page.totalCodeUnits);
-            expect(
-              Result.isFailure(
-                decodeEvidenceSourcePageResult({
-                  ...sourcePage,
-                  highlight: {
-                    ...sourcePage.highlight,
-                    endChar: N.increment(sourcePage.page.totalCodeUnits),
-                    startChar: sourcePage.page.totalCodeUnits,
-                  },
-                })
-              )
-            ).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("round-trips only source-aligned EvidenceSourcePage values", () => {
-    const equivalent = S.toEquivalence(EvidenceSourcePage);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceSourcePageArbitrary]),
-          ([sourcePage]) => {
-            const encoded = encodeEvidenceSourcePageResult(sourcePage).pipe(Result.getOrThrow);
-            const decoded = decodeUnknownEvidenceSourcePageResult(encoded).pipe(Result.getOrThrow);
-
-            expect(equivalent(decoded, sourcePage)).toBe(true);
-            expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);
-            expect(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.highlight.source)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      pipe(equivalent(decoded, sourcePage), assertTrue);
+      expect(R.keys(encoded.highlight)).toStrictEqual(["endChar", "source", "startChar"]);
+      pipe(S.toEquivalence(SourceTextIdentity)(decoded.page.identity, decoded.highlight.source), assertTrue);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("carries only a closed, client-safe failure reason", () => {
     const error = ContradictionActionError.make({ reason: "source-access-denied" });
 
     expect(R.keys(ContradictionActionError.fields)).toStrictEqual(["_tag", "reason"]);
-    expect(ContradictionActionError.is(error)).toBe(true);
-    expect(ContradictionActionErrorReason.is["source-access-denied"](error.reason)).toBe(true);
-    expect(ContradictionActionErrorReason.is["source-unavailable"](error.reason)).toBe(false);
+    pipe(ContradictionActionError.is(error), assertTrue);
+    pipe(ContradictionActionErrorReason.is["source-access-denied"](error.reason), assertTrue);
+    pipe(ContradictionActionErrorReason.is["source-unavailable"](error.reason), assertFalse);
   });
 });
