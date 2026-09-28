@@ -318,8 +318,8 @@
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18957,
-    "lines": 513
+    "bytes": 19123,
+    "lines": 523
   },
   {
     "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",

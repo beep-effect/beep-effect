@@ -4607,3 +4607,13 @@ statuses and reasons with generic advisory entries. Restoring the original
 metadata while updating only the two locations preserves the existing review.
 A location-only refresh should retain exception metadata when the complete
 finding identity apart from its location is unchanged.
+
+## Dynamic handler tests need independent fixture ownership
+
+The contradiction registration suite's repeated dynamic providers coupled RPC
+client acquisition to body-local handler construction. Moving the same inputs
+into six independent public layer fixtures removes those providers without
+sharing the captured repository/resolver state. A temporary identity probe
+required six distinct, initially empty captures objects while all original cases
+passed. The first package check caught the obsolete `provideScopedLayer` import;
+removing it completes the migration without suppressing the compiler diagnostic.
