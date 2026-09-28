@@ -409,7 +409,8 @@
     "research/current-review-worklist.json",
     "research/current-ordinary-runtime-review.json",
     "research/current-pretext-coverage-repair.json",
-    "research/current-remaining-coverage-repairs.json"
+    "research/current-remaining-coverage-repairs.json",
+    "research/current-runtime-repairs-attachment.json"
   ],
   "agentLaunchers": [
     {

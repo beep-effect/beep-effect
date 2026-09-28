@@ -2375,3 +2375,12 @@ records executed lines/branches and keeps full coverage acceptance pending.
 Schema and Desktop package audit/docgen passed; repo-cli package verification is
 running at this checkpoint. No production source or baseline changed. The next
 census attachment must include the changed tests; prior reviews remain historical.
+
+### Runtime-repair attachment accepted
+
+At revision `424618d987`, canonical census validation accepts 1,025 source
+bindings, 77 reviews and six artifacts. The population remains 144 workspaces,
+3,473 graph nodes and 1,970 executable nodes. All 62 required private references
+were copied into the follow-up lane with matching hashes. The
+[receipt](research/current-runtime-repairs-attachment.json) retains 20 unresolved
+obligations. Acceptance proves byte binding, not semantic closure or qualification.

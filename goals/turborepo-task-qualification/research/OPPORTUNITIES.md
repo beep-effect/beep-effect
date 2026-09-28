@@ -2244,3 +2244,11 @@ Schema. None of those package surfaces or the baseline changed directly in this
 branch. Base/runtime reproduction is still required to distinguish inherited
 coverage from environmental variation; no baseline was lowered. Preserve the
 runtime profile and exact uncovered branches with future baseline receipts.
+
+### 2026-09-28 — Test-only coverage repairs still require release metadata
+
+PR #1327's early-publish proof and Repo Sanity stopped at
+`quality:changeset-status`: Pretext, Professional Desktop and Schema lacked an
+in-range changeset. The gate counts these changed product workspaces even when
+only tests change. Added the required patch entries; a pre-publication
+changeset-status check would have caught the omission before hosted CI.
