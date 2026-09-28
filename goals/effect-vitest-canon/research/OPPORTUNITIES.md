@@ -4759,3 +4759,13 @@ The repair preserves the same Boolean predicate and polarity. Desktop-only
 package proof could not catch this CLI test diagnostic; whole-branch hosted
 checks remain required. Job logs were retrievable directly through the jobs API
 while the workflow was active, although gh run view withheld the combined log.
+
+## Resource-wrapper detectors miss calls nested in ordinary generators
+
+The Desktop scan reported four withHttpServer calls, while exhaustive source
+inspection found twelve. The eight hidden calls used test-local ledger/egress
+probes or returned sequential execution windows inside Effect.gen. Removing the
+helper exposed their Context-provision and short-scope review points. Fixture
+migration should enumerate actual callers and verify workspace/session isolation
+and cleanup in each transport mode; a zero direct-wrapper count alone cannot
+establish canonical resource ownership.

@@ -28,6 +28,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -42,9 +43,10 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import {
   decodeOntologyFilePath,
+  HttpServerFixture,
+  makeHttpServerLayer,
   makeMcpClient,
   openThroughMcp,
-  withHttpServer,
 } from "./support/ontology-mcp-harness.ts";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 
@@ -164,111 +166,113 @@ ex:poison
         }
         egressFetch.preconnect = globalThis.fetch.preconnect;
 
-        const { firstRead, secondRead } = yield* withHttpServer(
-          {
-            mutationsEnabled: true,
-            approvedMutationTools: [PublishProvenanceTool.name],
-            egressFetch,
-            epistemicConfig: makeEpistemicConfigTest(
-              EpistemicServerConfig.make({
-                destinationAllowlist: [fixtureAllowedDestination],
-                policyRevision: defaultPolicyRevision,
-              })
-            ),
-            ledger: Layer.succeed(ExecutionLedger, ledger),
-          },
-          (root, ontologyPath) =>
-            Effect.gen(function* () {
-              const fileSystem = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const provenancePath = yield* decodeOntologyFilePath("poisoned.prov.ttl");
-              yield* fileSystem.writeFileString(path.join(root, ontologyPath), poisonedWorkspace);
-              yield* fileSystem.writeFileString(path.join(root, provenancePath), "published provenance");
+        const { firstRead, secondRead } = yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [PublishProvenanceTool.name],
+              egressFetch,
+              epistemicConfig: makeEpistemicConfigTest(
+                EpistemicServerConfig.make({
+                  destinationAllowlist: [fixtureAllowedDestination],
+                  policyRevision: defaultPolicyRevision,
+                })
+              ),
+              ledger: Layer.succeed(ExecutionLedger, ledger),
+            })
+          );
+          const { root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const provenancePath = yield* decodeOntologyFilePath("poisoned.prov.ttl");
+            yield* fileSystem.writeFileString(path.join(root, ontologyPath), poisonedWorkspace);
+            yield* fileSystem.writeFileString(path.join(root, provenancePath), "published provenance");
 
-              const client = yield* makeMcpClient();
-              const readDestination = Effect.fn("ExecutionAuthorityTest.readInjectedDestination")(function* (
-                predicate: "firstDestination" | "secondDestination"
-              ) {
-                const queryRequest = yield* encodeSparqlQueryRequest(
-                  OntologySparqlQueryRequest.make({
-                    path: ontologyPath,
-                    profile: "select",
-                    query: `PREFIX ex: <https://example.test/>
+            const client = yield* makeMcpClient();
+            const readDestination = Effect.fn("ExecutionAuthorityTest.readInjectedDestination")(function* (
+              predicate: "firstDestination" | "secondDestination"
+            ) {
+              const queryRequest = yield* encodeSparqlQueryRequest(
+                OntologySparqlQueryRequest.make({
+                  path: ontologyPath,
+                  profile: "select",
+                  query: `PREFIX ex: <https://example.test/>
 SELECT ?destination WHERE {
   ex:poison ex:${predicate} ?destination .
 }`,
-                  })
-                );
-                const queryCall = yield* client["tools/call"]({
-                  name: "ontology_sparql_query",
-                  arguments: queryRequest,
-                });
-                const queryJson = yield* encodeJson(queryCall.structuredContent);
-                const query = yield* decodeSparqlQueryResponse(queryCall.structuredContent);
-                expect(queryCall.isError).toBe(false);
-                const destinationTerm = O.getOrThrow(
-                  query.query.result.profile === "select"
-                    ? O.flatMap(A.head(query.query.result.rows), (row) => R.get(row, "destination"))
-                    : O.none()
-                );
-                return { destination: destinationTerm.value, json: queryJson };
+                })
+              );
+              const queryCall = yield* client["tools/call"]({
+                name: "ontology_sparql_query",
+                arguments: queryRequest,
               });
-              const firstRead = yield* readDestination("firstDestination");
-              const secondRead = yield* readDestination("secondDestination");
+              const queryJson = yield* encodeJson(queryCall.structuredContent);
+              const query = yield* decodeSparqlQueryResponse(queryCall.structuredContent);
+              expect(queryCall.isError).toBe(false);
+              const destinationTerm = O.getOrThrow(
+                query.query.result.profile === "select"
+                  ? O.flatMap(A.head(query.query.result.rows), (row) => R.get(row, "destination"))
+                  : O.none()
+              );
+              return { destination: destinationTerm.value, json: queryJson };
+            });
+            const firstRead = yield* readDestination("firstDestination");
+            const secondRead = yield* readDestination("secondDestination");
 
-              expect(Str.includes(firstInjectedDestination)(firstRead.json)).toBe(true);
-              expect(Str.includes(secondInjectedDestination)(secondRead.json)).toBe(true);
-              expect(firstRead.destination).toBe(firstInjectedDestination);
-              expect(secondRead.destination).toBe(secondInjectedDestination);
+            expect(Str.includes(firstInjectedDestination)(firstRead.json)).toBe(true);
+            expect(Str.includes(secondInjectedDestination)(secondRead.json)).toBe(true);
+            expect(firstRead.destination).toBe(firstInjectedDestination);
+            expect(secondRead.destination).toBe(secondInjectedDestination);
 
-              // Make the fixture generators stale after decoding. A publish
-              // that bypasses the decoded MCP values now targets different
-              // destinations and fails the ledger assertions below.
-              firstInjectedDestination = `${firstInjectedDestination}/stale`;
-              secondInjectedDestination = `${secondInjectedDestination}/stale`;
+            // Make the fixture generators stale after decoding. A publish
+            // that bypasses the decoded MCP values now targets different
+            // destinations and fails the ledger assertions below.
+            firstInjectedDestination = `${firstInjectedDestination}/stale`;
+            secondInjectedDestination = `${secondInjectedDestination}/stale`;
 
-              const allowedDestination = `${fixtureAllowedDestination}/acceptance`;
-              const allowedCall = yield* client["tools/call"]({
-                name: PublishProvenanceTool.name,
-                arguments: yield* encodePublishProvenanceRequest(
-                  PublishProvenanceRequest.make({
-                    provPath: provenancePath,
-                    destination: allowedDestination,
-                  })
-                ),
-              });
-              expect(allowedCall.isError).toBe(false);
+            const allowedDestination = `${fixtureAllowedDestination}/acceptance`;
+            const allowedCall = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: yield* encodePublishProvenanceRequest(
+                PublishProvenanceRequest.make({
+                  provPath: provenancePath,
+                  destination: allowedDestination,
+                })
+              ),
+            });
+            expect(allowedCall.isError).toBe(false);
 
-              const firstDeniedCall = yield* client["tools/call"]({
-                name: PublishProvenanceTool.name,
-                arguments: yield* encodePublishProvenanceRequest(
-                  PublishProvenanceRequest.make({
-                    provPath: provenancePath,
-                    destination: firstRead.destination,
-                  })
-                ),
-              });
-              const secondDeniedCall = yield* client["tools/call"]({
-                name: PublishProvenanceTool.name,
-                arguments: yield* encodePublishProvenanceRequest(
-                  PublishProvenanceRequest.make({
-                    provPath: provenancePath,
-                    destination: secondRead.destination,
-                  })
-                ),
-              });
+            const firstDeniedCall = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: yield* encodePublishProvenanceRequest(
+                PublishProvenanceRequest.make({
+                  provPath: provenancePath,
+                  destination: firstRead.destination,
+                })
+              ),
+            });
+            const secondDeniedCall = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: yield* encodePublishProvenanceRequest(
+                PublishProvenanceRequest.make({
+                  provPath: provenancePath,
+                  destination: secondRead.destination,
+                })
+              ),
+            });
 
-              expect(firstDeniedCall.isError).toBe(true);
-              expect(secondDeniedCall.isError).toBe(true);
-              const firstRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(firstDeniedCall));
-              const secondRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(secondDeniedCall));
-              expect(firstRefusal._tag).toBe("OntologyTierGateRefusal");
-              expect(secondRefusal._tag).toBe("OntologyTierGateRefusal");
-              expect(firstRefusal._tag === "OntologyTierGateRefusal" && firstRefusal.guidance).toBe(refusalGuidance);
-              expect(secondRefusal._tag === "OntologyTierGateRefusal" && secondRefusal.guidance).toBe(refusalGuidance);
-              return { firstRead, secondRead };
-            })
-        );
+            expect(firstDeniedCall.isError).toBe(true);
+            expect(secondDeniedCall.isError).toBe(true);
+            const firstRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(firstDeniedCall));
+            const secondRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(secondDeniedCall));
+            expect(firstRefusal._tag).toBe("OntologyTierGateRefusal");
+            expect(secondRefusal._tag).toBe("OntologyTierGateRefusal");
+            expect(firstRefusal._tag === "OntologyTierGateRefusal" && firstRefusal.guidance).toBe(refusalGuidance);
+            expect(secondRefusal._tag === "OntologyTierGateRefusal" && secondRefusal.guidance).toBe(refusalGuidance);
+            return { firstRead, secondRead };
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
 
         const allowedDestination = `${fixtureAllowedDestination}/acceptance`;
         expect(A.contains(attemptedUrls, allowedDestination)).toBe(true);
@@ -357,52 +361,54 @@ SELECT ?destination WHERE {
         }
         egressFetch.preconnect = globalThis.fetch.preconnect;
 
-        yield* withHttpServer(
-          {
-            mutationsEnabled: true,
-            approvedMutationTools: [PublishProvenanceTool.name],
-            egressFetch,
-            ledger: Layer.succeed(ExecutionLedger, ledger),
-          },
-          (root, ontologyPath) =>
-            Effect.gen(function* () {
-              const fileSystem = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const provenancePath = yield* decodeOntologyFilePath("canary.prov.ttl");
-              yield* fileSystem.writeFileString(path.join(root, ontologyPath), canaryWorkspace);
-              yield* fileSystem.writeFileString(path.join(root, provenancePath), `publish body ${publishBodyCanary}`);
+        yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [PublishProvenanceTool.name],
+              egressFetch,
+              ledger: Layer.succeed(ExecutionLedger, ledger),
+            })
+          );
+          const { root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const provenancePath = yield* decodeOntologyFilePath("canary.prov.ttl");
+            yield* fileSystem.writeFileString(path.join(root, ontologyPath), canaryWorkspace);
+            yield* fileSystem.writeFileString(path.join(root, provenancePath), `publish body ${publishBodyCanary}`);
 
-              const client = yield* makeMcpClient();
-              const workspaceReadCall = yield* client["tools/call"]({
-                name: "ontology_sparql_query",
-                arguments: yield* encodeSparqlQueryRequest(
-                  OntologySparqlQueryRequest.make({
-                    path: ontologyPath,
-                    profile: "select",
-                    query: `PREFIX ex: <https://example.test/>
+            const client = yield* makeMcpClient();
+            const workspaceReadCall = yield* client["tools/call"]({
+              name: "ontology_sparql_query",
+              arguments: yield* encodeSparqlQueryRequest(
+                OntologySparqlQueryRequest.make({
+                  path: ontologyPath,
+                  profile: "select",
+                  query: `PREFIX ex: <https://example.test/>
 SELECT ?value WHERE {
   ex:canary ex:value ?value .
 }`,
-                  })
-                ),
-              });
-              expect(workspaceReadCall.isError).toBe(false);
-              yield* decodeSparqlQueryResponse(workspaceReadCall.structuredContent);
-              const workspaceReadJson = yield* encodeJson(workspaceReadCall.structuredContent);
-              expect(Str.includes(workspaceCanary)(workspaceReadJson)).toBe(true);
+                })
+              ),
+            });
+            expect(workspaceReadCall.isError).toBe(false);
+            yield* decodeSparqlQueryResponse(workspaceReadCall.structuredContent);
+            const workspaceReadJson = yield* encodeJson(workspaceReadCall.structuredContent);
+            expect(Str.includes(workspaceCanary)(workspaceReadJson)).toBe(true);
 
-              const call = yield* client["tools/call"]({
-                name: PublishProvenanceTool.name,
-                arguments: yield* encodePublishProvenanceRequest(
-                  PublishProvenanceRequest.make({
-                    provPath: provenancePath,
-                    destination: `${fixtureAllowedDestination}/canary`,
-                  })
-                ),
-              });
-              expect(call.isError).toBe(false);
-            })
-        );
+            const call = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: yield* encodePublishProvenanceRequest(
+                PublishProvenanceRequest.make({
+                  provPath: provenancePath,
+                  destination: `${fixtureAllowedDestination}/canary`,
+                })
+              ),
+            });
+            expect(call.isError).toBe(false);
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
 
         expect(A.some(requestBodies, Str.includes(publishBodyCanary))).toBe(true);
         expect(A.some(responseBodies, Str.includes(responseBodyCanary))).toBe(true);
@@ -473,41 +479,43 @@ SELECT ?value WHERE {
           Effect.provideService(SqlClient.SqlClient, sqlClient)
         );
 
-        const exportWindow = yield* withHttpServer(
-          {
-            mutationsEnabled: true,
-            approvedMutationTools: [ExportProvenanceTool.name],
-            ledger: Layer.succeed(ExecutionLedger, ledger),
-          },
-          (root, ontologyPath) =>
-            Effect.gen(function* () {
-              const fileSystem = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const client = yield* makeMcpClient();
-              const opened = yield* openThroughMcp(client, ontologyPath);
-              const provPath = yield* decodeOntologyFilePath("cost.prov.ttl");
-              const datasetPath = yield* decodeOntologyFilePath("cost.dataset.ttl");
-              const before = yield* snapshot;
-              const call = yield* client["tools/call"]({
-                name: ExportProvenanceTool.name,
-                arguments: yield* encodeExportProvenanceRequest(
-                  ExportProvenanceRequest.make({
-                    path: ontologyPath,
-                    baseIri: O.none(),
-                    sessionHandle: O.none(),
-                    expectedFingerprint: opened.fingerprint,
-                    provPath,
-                    datasetPath,
-                  })
-                ),
-              });
-              const after = yield* snapshot;
-
-              expect(call.isError).toBe(false);
-              expect(yield* fileSystem.exists(path.join(root, provPath))).toBe(true);
-              return { after, before };
+        const exportWindow = yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [ExportProvenanceTool.name],
+              ledger: Layer.succeed(ExecutionLedger, ledger),
             })
-        );
+          );
+          const { root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const client = yield* makeMcpClient();
+            const opened = yield* openThroughMcp(client, ontologyPath);
+            const provPath = yield* decodeOntologyFilePath("cost.prov.ttl");
+            const datasetPath = yield* decodeOntologyFilePath("cost.dataset.ttl");
+            const before = yield* snapshot;
+            const call = yield* client["tools/call"]({
+              name: ExportProvenanceTool.name,
+              arguments: yield* encodeExportProvenanceRequest(
+                ExportProvenanceRequest.make({
+                  path: ontologyPath,
+                  baseIri: O.none(),
+                  sessionHandle: O.none(),
+                  expectedFingerprint: opened.fingerprint,
+                  provPath,
+                  datasetPath,
+                })
+              ),
+            });
+            const after = yield* snapshot;
+
+            expect(call.isError).toBe(false);
+            expect(yield* fileSystem.exists(path.join(root, provPath))).toBe(true);
+            return { after, before };
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
 
         const exportDecisions = newDecisions(exportWindow.before.decisions, exportWindow.after.decisions);
         const exportOutcomes = newOutcomes(exportWindow.before.outcomes, exportWindow.after.outcomes);
@@ -531,35 +539,37 @@ SELECT ?value WHERE {
         successfulEgressFetch.preconnect = globalThis.fetch.preconnect;
         const publishDestination = `${fixtureAllowedDestination}/cost`;
 
-        const publishWindow = yield* withHttpServer(
-          {
-            mutationsEnabled: true,
-            approvedMutationTools: [PublishProvenanceTool.name],
-            egressFetch: successfulEgressFetch,
-            ledger: Layer.succeed(ExecutionLedger, ledger),
-          },
-          (root) =>
-            Effect.gen(function* () {
-              const fileSystem = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const provPath = yield* decodeOntologyFilePath("cost-publish.prov.ttl");
-              yield* fileSystem.writeFileString(path.join(root, provPath), "published provenance");
-              const client = yield* makeMcpClient();
-              const before = yield* snapshot;
-              const call = yield* client["tools/call"]({
-                name: PublishProvenanceTool.name,
-                arguments: yield* encodePublishProvenanceRequest(
-                  PublishProvenanceRequest.make({
-                    provPath,
-                    destination: publishDestination,
-                  })
-                ),
-              });
-              const after = yield* snapshot;
-              expect(call.isError).toBe(false);
-              return { after, before };
+        const publishWindow = yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [PublishProvenanceTool.name],
+              egressFetch: successfulEgressFetch,
+              ledger: Layer.succeed(ExecutionLedger, ledger),
             })
-        );
+          );
+          const { root } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const provPath = yield* decodeOntologyFilePath("cost-publish.prov.ttl");
+            yield* fileSystem.writeFileString(path.join(root, provPath), "published provenance");
+            const client = yield* makeMcpClient();
+            const before = yield* snapshot;
+            const call = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: yield* encodePublishProvenanceRequest(
+                PublishProvenanceRequest.make({
+                  provPath,
+                  destination: publishDestination,
+                })
+              ),
+            });
+            const after = yield* snapshot;
+            expect(call.isError).toBe(false);
+            return { after, before };
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
 
         const publishDecisions = newDecisions(publishWindow.before.decisions, publishWindow.after.decisions);
         const publishOutcomes = newOutcomes(publishWindow.before.outcomes, publishWindow.after.outcomes);

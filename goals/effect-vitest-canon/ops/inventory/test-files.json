@@ -437,15 +437,15 @@
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 29375,
-    "lines": 599
+    "bytes": 29996,
+    "lines": 609
   },
   {
     "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 26342,
-    "lines": 535
+    "bytes": 27305,
+    "lines": 553
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
@@ -465,8 +465,8 @@
     "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
     "package": "@beep/professional-desktop",
     "kind": "support",
-    "bytes": 14628,
-    "lines": 312
+    "bytes": 15126,
+    "lines": 335
   },
   {
     "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
