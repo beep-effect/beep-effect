@@ -5389,3 +5389,20 @@ currently detects adjust only. Review extending the judgment detector to
 setTime and other clock mutations, with corresponding syntax tests and an
 explicit inventory update. Do not infer clock isolation from passing business
 assertions or from the absence of adjust findings.
+
+
+### Historical inventory can retain fixes already merged by other work
+
+The scheduler reconciliation matched six open historical rows to already merged
+changes in PRs #1143, #1146, #1200 and #1268. One registration was renamed when
+its single scope-unit case became a scope/service table. Comparing only current
+runtime calls misses these closures; retaining historical line/evidence and
+checking the landed registration establishes provenance. The complete pre-batch
+registrations match those commits after whitespace normalization. Record the
+upstream fix SHA rather than attributing these removals to the current batch.
+
+The lint-command assertion audit also exposed a coverage omission in the private
+conservation script: custom expectReportedExit calls were not counted. Including
+expect-prefixed assertion helpers raises the preserved-tree count from 159 to
+198. Future reusable audits should inventory custom assertion entrypoints as
+well as imported Vitest utilities; naming heuristics alone are incomplete.

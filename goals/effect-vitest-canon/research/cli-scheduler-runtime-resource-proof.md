@@ -47,10 +47,23 @@ verification remains pending.
 Native filesystem decisions, withProcessPath and the existing retry-loop
 judgment remain open. The disappearance of a wrapper detector row after moving
 registrations inside the fixture does not prove that helper canonical. Historical
-runtime lineage matched 93 of 97 ledger rows; those 93 are marked fixed by
-source commit a1de26d035. The other four require separate upstream-history
-reconciliation and remain open. Historical provider, property and live-test
-judgments still need row-level reconciliation; this proof does not silently
-close those rows. The CLI ledger has 3,473 unique schema-valid rows: 1,449 fixed,
-12 exceptions and 2,012 open. Full package verification is running for source
-a1de26d035; its terminal result is not yet available.
+runtime lineage matched 93 rows to source commit a1de26d035. All 19 remaining
+runtime/provider/property/live-test rows now have exact historical line/evidence
+matches. Thirteen correspond to this batch. Six were already fixed upstream:
+
+- Journal property runSync/checkEffect: b1aa7e320c, PR #1200.
+- Same-checkout contention and busy-origin tests: 678cf4198, PR #1146.
+- Live scope telemetry test: 5201b02fe5, PR #1268.
+- Scope-reap test expanded to scope/service table cases: 8a99d4aac9, PR #1143.
+
+The complete public harness registrations from those upstream commits match the
+pre-batch source after whitespace normalization. The scope-reap diff retains
+all original assertions and adds the service-unit case. These are verified
+upstream closures, not work attributed to the current migration.
+
+Eight additional pre-batch provider/live-test findings are recorded as fixed,
+covering the seven extra native providers and the table-driven live case. No
+historical scheduler runtime, provider, property or live-test row remains open.
+The CLI ledger has 3,481 unique schema-valid rows: 1,476 fixed, 12 exceptions
+and 1,993 open. Full package verification is running for source a1de26d035;
+its terminal result is not yet available.
