@@ -4458,3 +4458,12 @@ filesystem and path services to its routes repairs the boundary without rebuildi
 native services or sharing per-call workspace/session state. Keep both in-process
 and socket execution in this harness's validation matrix; compile-time layer
 requirements exposed the missing bridge before publication.
+
+## Conditional error guards can hide a missing failure-family assertion
+
+The contradiction seed source-conflict test checked failure polarity, then only
+checked the reason if the error already belonged to the expected family. Mapping
+the actual seed error to an unrelated Error still passed the original test. Direct
+public assertions now require both failure polarity and the error family before
+the unchanged reason/file/database assertions. Review guarded assertion bodies
+for vacuous success, including guards that only exist to narrow TypeScript types.

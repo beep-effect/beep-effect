@@ -291,10 +291,10 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
       yield* Effect.gen(function* () {
         yield* configureVault(qaVaultRoot);
         const result = yield* Effect.result(seedContradictionQaFixtures());
-        pipe(result, Result.isFailure, assertTrue);
-        if (Result.isFailure(result) && ContradictionQaSeedError.is(result.failure)) {
-          expect(result.failure.reason).toBe("source-conflict");
-        }
+        const failed = Result.isFailure(result);
+        assertTrue(failed);
+        assertTrue(ContradictionQaSeedError.is(result.failure));
+        expect(result.failure.reason).toBe("source-conflict");
         expect(yield* fs.readFileString(sourcePath)).toBe("user-owned source");
         expect((yield* databaseSnapshot()).candidates).toBe(0);
         expect((yield* databaseSnapshot()).evidence).toBe(0);

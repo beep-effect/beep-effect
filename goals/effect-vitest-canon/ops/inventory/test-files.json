@@ -423,7 +423,7 @@
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 13045,
+    "bytes": 13036,
     "lines": 307
   },
   {

@@ -27243,9 +27243,69 @@
     {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:269:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":269,"endLine":269,"symbol":"provideScopedLayer","occurrence":"v2:84d01a12ea20357aa91cd446b939fca3780fe05e2c568c01ddb57975eef71866","class":"unresolved-layer-provide","evidence":"provideScopedLayer(SeedServicesLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
     {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:270:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":270,"endLine":270,"symbol":"provideScopedLayer","occurrence":"v2:84d01a12ea20357aa91cd446b939fca3780fe05e2c568c01ddb57975eef71866","class":"unresolved-layer-provide","evidence":"provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
     {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:272:provideScopedLayer@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":272,"endLine":272,"symbol":"provideScopedLayer","occurrence":"v2:2367fffcf35ccf10b0e6fc3dd3cac061f4d9f019a24dfdbe42cadfa37e867ac1","class":"unresolved-layer-provide","evidence":"provideScopedLayer(TestPlatformLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
-    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":302,"endLine":302,"symbol":"provideScopedLayer","occurrence":"v2:2521707258cf564f812a8e227f53eaa41a67b57542970a53e27771f8f7380fcf","class":"unresolved-layer-provide","evidence":"provideScopedLayer(SeedServicesLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
-    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:303:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":303,"endLine":303,"symbol":"provideScopedLayer","occurrence":"v2:2521707258cf564f812a8e227f53eaa41a67b57542970a53e27771f8f7380fcf","class":"unresolved-layer-provide","evidence":"provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
-    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:305:provideScopedLayer@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":305,"endLine":305,"symbol":"provideScopedLayer","occurrence":"v2:1aab52f3a2bc5a6b2facd441ff41bcfe2c377b43a8bb36087655218989bfe5fa","class":"unresolved-layer-provide","evidence":"provideScopedLayer(TestPlatformLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {
+      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@8#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "line": 302,
+      "endLine": 302,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:f95cb1457560fbcce2360f1030ec1cd0be78d297a75528a175a52edb44cbfb3d",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(SeedServicesLive)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:303:provideScopedLayer@8#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "line": 303,
+      "endLine": 303,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:f95cb1457560fbcce2360f1030ec1cd0be78d297a75528a175a52edb44cbfb3d",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:305:provideScopedLayer@7#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+      "line": 305,
+      "endLine": 305,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:467434f2a47afc9dcb9c182694aaab608da54f92226e89ffdfba1ee12347e845",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(TestPlatformLive)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
     {
       "id": "EV002:apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts:56:provideScopedLayer@14#1",
       "lens": "resource",
