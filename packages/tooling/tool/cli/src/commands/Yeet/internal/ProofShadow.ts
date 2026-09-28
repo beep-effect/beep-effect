@@ -1,8 +1,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
+import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
-import { constFalse, dual } from "effect/Function";
+import { constFalse, constTrue, dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -165,7 +166,8 @@ export class ProofShadowMissCount extends S.Class<ProofShadowMissCount>($I`Proof
  *
  * **Details**
  *
- * Every count comes from the checkout's proof ledger alone: `attempts` and
+ * Every count comes from the owning clone's proof ledger alone (ruling 71), so a
+ * report run from any lane of a clone reads the same sample: `attempts` and
  * `branches` are distinct attempt ids and branches across all shadow rows,
  * `wouldReuse` is the hit decisions, `reusableMs` is the observed duration of
  * the hits whose lane passed (the time enforcement would have saved). The bar
@@ -173,7 +175,10 @@ export class ProofShadowMissCount extends S.Class<ProofShadowMissCount>($I`Proof
  * `barBranches` and `barDisagreements` count the rows whose stage and env
  * profile equal `barStage` / `barEnvProfile`, and `enforcementReady` is the
  * ratified bar applied to those, so merged-preview rows can never flip the
- * pre-push gate.
+ * pre-push gate. When the report was asked for with a `since` bound (ruling
+ * 80), the bar fields count only rows recorded at or after it and `since`
+ * echoes the bound; without one the field is absent and every bar-sample row
+ * counts.
  *
  * **Example** (Recognise a not-ready report)
  *
@@ -230,10 +235,11 @@ export class ProofShadowReport extends S.Class<ProofShadowReport>($I`ProofShadow
     barBranches: ProofCount,
     barDisagreements: ProofCount,
     enforcementReady: S.Boolean,
+    since: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ProofShadowReport", {
     description:
-      "Shadow-mode disagreement report: sample size, would-have-reused decisions, misses by reason, disagreements, ledger health, and the enforcement bar verdict over the first enforced pair's stage and env profile.",
+      "Shadow-mode disagreement report: sample size, would-have-reused decisions, misses by reason, disagreements, ledger health, and the enforcement bar verdict over the first enforced pair's stage and env profile, optionally bounded to rows recorded since an instant.",
   })
 ) {}
 
@@ -724,17 +730,17 @@ const laneInputScopes = (
  * lanes never reach the tripwire: the ledger refuses them as
  * `undeclared-inputs` first.
  *
- * A failed lane also carries an empty scope, and so does a lane whose digest the
- * executor declared. Neither is short of a ledger — every wrapper step is given
- * one, and it is removed afterwards whether or not it was read. The scope is
- * discarded because `resolveLaneInputDigestSource` returns at its
- * `declared`-or-`failure` short-circuit before reading it. In production the
- * declared digest is always `None` and Turbo folds no digest for a red run, so a
- * failed lane's key is `undeclared` and the ledger refuses it as
- * `undeclared-inputs` before the tripwire runs. That is why the tripwire never
- * sees a failed lane — not that nothing is lost by it: a red run recording no
- * digest is also why a hit-versus-failed disagreement cannot arise in
- * production (proposed ruling 72, open).
+ * A lane whose digest the executor declared carries an empty scope. It is not
+ * short of a ledger — every wrapper step is given one, and it is removed
+ * afterwards whether or not it was read — the scope is discarded because
+ * `resolveLaneInputDigestSource` returns at its `declared` short-circuit before
+ * reading it. A failed lane is not short-circuited (ruling 72): it resolves its
+ * digest and package scope through the same wrapper-ledger or direct-Turbo path
+ * as a passed lane, so the tripwire sees a failed lane's scope, and a failed lane
+ * whose key matches a live passed fact reads as a hit that failed — the
+ * hit-versus-failed disagreement the enforcement bar counts. A failed lane that
+ * still resolved no digest (no Turbo summary, a ledger missing a declaration) is
+ * `undeclared` and refused as `undeclared-inputs` before the tripwire runs.
  *
  * **Example** (A scoped lane trips on its own package)
  *
@@ -926,7 +932,8 @@ const isTripwireMiss = (row: ProofLedgerShadowRow): boolean =>
   isMiss(row.decision) && ProofMissReason.is["changed-package-tripwire"](row.decision.reason);
 
 /**
- * Shadow one attempt's inner lanes against the checkout proof ledger (ruling 63).
+ * Shadow one attempt's inner lanes against the owning clone's proof ledger
+ * (rulings 63, 71).
  *
  * **Details**
  *
@@ -966,7 +973,7 @@ const isTripwireMiss = (row: ProofLedgerShadowRow): boolean =>
  * console.log(Effect.isEffect(recordProofShadowForAttempt("/repo", facts, [], changed))) // true
  * ```
  *
- * @param repoRoot - Checkout whose ledger receives the rows.
+ * @param repoRoot - Checkout that ran; its owning clone's ledger receives the rows, and it is each fact's `originKey`.
  * @param facts - Attempt identity, branch, head, tier, stage and env profile.
  * @param reports - Durable inner-lane reports the wrappers wrote for this attempt.
  * @param changed - What the attempt knows about the packages its change touches.
@@ -1083,9 +1090,18 @@ const inBarSample = (row: ProofLedgerShadowRow): boolean =>
   ProofStage.is[PROOF_SHADOW_BAR_SAMPLE.stage](row.stage) &&
   ProofEnvProfile.is[PROOF_SHADOW_BAR_SAMPLE.envProfile](row.envProfile);
 
+// Ruling 80: a `since` bound keeps only rows recorded at or after it. A row
+// whose `recordedAt` does not parse cannot be placed after the bound, so it is
+// left out of a bounded sample.
+const recordedSince =
+  (since: DateTime.Utc) =>
+  (row: ProofLedgerShadowRow): boolean =>
+    O.exists(DateTime.make(row.recordedAt), DateTime.isGreaterThanOrEqualTo(since));
+
 /**
  * Inputs {@link buildProofShadowReport} folds: the ledger's shadow rows and
- * health counts, plus an optional bar override for fixtures.
+ * health counts, plus an optional bar override for fixtures and an optional
+ * `since` bound on the enforcement sample (ruling 80).
  *
  * **Example** (Describe an empty ledger)
  *
@@ -1115,9 +1131,11 @@ export class ProofShadowReportInput extends S.Class<ProofShadowReportInput>($I`P
     expiredFacts: ProofCount,
     malformedRows: ProofCount,
     bar: S.optionalKey(ProofShadowEnforcementBar),
+    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ProofShadowReportInput", {
-    description: "Shadow rows, ledger health counts, and an optional enforcement-bar override to fold into a report.",
+    description:
+      "Shadow rows, ledger health counts, an optional enforcement-bar override, and an optional lower bound on the rows the enforcement bar counts, to fold into a report.",
   })
 ) {}
 
@@ -1128,7 +1146,10 @@ export class ProofShadowReportInput extends S.Class<ProofShadowReportInput>($I`P
  *
  * The headline counts fold every shadow row; the enforcement verdict folds only
  * the rows in {@link PROOF_SHADOW_BAR_SAMPLE}, so a ledger full of
- * merged-preview rows reads `not ready` for the pre-push pair.
+ * merged-preview rows reads `not ready` for the pre-push pair. With a `since`
+ * bound the verdict also drops rows recorded before it (ruling 80: rows from
+ * before disagreements were observable never count toward the bar); the
+ * headline counts still fold every row.
  *
  * **Example** (An empty ledger is not ready)
  *
@@ -1172,7 +1193,8 @@ export const buildProofShadowReport = (input: ProofShadowReportInput): ProofShad
   );
   const attempts = distinctCount(input.rows, (row) => row.attemptId);
   const branches = distinctCount(input.rows, (row) => row.branch);
-  const barRows = A.filter(input.rows, inBarSample);
+  const counted = O.match(input.since, { onNone: () => constTrue, onSome: recordedSince });
+  const barRows = A.filter(input.rows, (row) => inBarSample(row) && counted(row));
   const barAttempts = distinctCount(barRows, (row) => row.attemptId);
   const barBranches = distinctCount(barRows, (row) => row.branch);
   const barDisagreements = A.length(A.filter(barRows, isDisagreement));
@@ -1203,6 +1225,7 @@ export const buildProofShadowReport = (input: ProofShadowReportInput): ProofShad
     barDisagreements,
     enforcementReady:
       barAttempts >= bar.attempts && barBranches >= bar.branches && barDisagreements <= bar.disagreements,
+    since: input.since,
   });
 };
 
@@ -1250,6 +1273,12 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
         ),
       ];
   const bar = report.bar;
+  const since = O.match(report.since, {
+    onNone: A.empty<string>,
+    onSome: (bound) => [
+      `enforcement sample since: ${DateTime.formatIso(bound)} (rows recorded earlier do not count toward the bar)`,
+    ],
+  });
   return A.join(
     [
       `proof shadow report (${report.ledgerPath})`,
@@ -1258,6 +1287,7 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
       ...misses,
       ...disagreements,
       `facts: ${report.facts} recorded, ${report.expiredFacts} expired; malformed rows: ${report.malformedRows}`,
+      ...since,
       `enforcement (attempt-to-attempt, ${report.barStage}, ${report.barEnvProfile}): ${report.enforcementReady ? "ready" : "not ready"} — attempts ${report.barAttempts}/${bar.attempts}, branches ${report.barBranches}/${bar.branches}, disagreements ${report.barDisagreements}/${bar.disagreements}`,
     ],
     "\n"
@@ -1266,6 +1296,11 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
 
 /**
  * Options for `yeet proof-report`.
+ *
+ * **Details**
+ *
+ * `since` bounds the enforcement sample to rows recorded at or after it
+ * (ruling 80); `None` counts every bar-sample row.
  *
  * **Example** (Ask for JSON)
  *
@@ -1279,9 +1314,13 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
  * @since 0.0.0
  */
 export class YeetProofReportOptions extends S.Class<YeetProofReportOptions>($I`YeetProofReportOptions`)(
-  { json: S.Boolean },
+  {
+    json: S.Boolean,
+    since: S.DateTimeUtc.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
   $I.annote("YeetProofReportOptions", {
-    description: "Parsed `yeet proof-report` flags: whether to print the report as JSON.",
+    description:
+      "Parsed `yeet proof-report` flags: whether to print the report as JSON, and an optional lower bound on the rows the enforcement bar counts.",
   })
 ) {}
 
@@ -1313,7 +1352,15 @@ const locateRepoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSys
 );
 
 /**
- * Build the disagreement report for one checkout from its proof ledger.
+ * Build the disagreement report for one checkout from its owning clone's proof
+ * ledger.
+ *
+ * **Details**
+ *
+ * The ledger read is the owning clone's (ruling 71), and the report's
+ * `ledgerPath` names it, so `yeet proof-report` run from a linked worktree
+ * prints `<clone>/.beep/yeet/proof-ledger.ndjson`. A `since` bound limits the
+ * enforcement bar to rows recorded at or after it (ruling 80).
  *
  * **Example** (Build the report effect)
  *
@@ -1324,11 +1371,15 @@ const locateRepoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSys
  * console.log(Effect.isEffect(loadProofShadowReport("/repo"))) // true
  * ```
  *
+ * @param repoRoot - Checkout that ran; the report reads its owning clone's ledger.
+ * @param since - Optional lower bound on the rows the enforcement bar counts.
+ * @returns The report over the clone's shadow rows.
  * @category services
  * @since 0.0.0
  */
 export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(function* (
-  repoRoot: string
+  repoRoot: string,
+  since: O.Option<DateTime.Utc> = O.none()
 ): Effect.fn.Return<ProofShadowReport, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const ledger = yield* ProofLedger.make(repoRoot, constFalse);
   const now = yield* DateTime.now;
@@ -1344,6 +1395,7 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
       facts: snapshot.facts,
       expiredFacts: snapshot.expiredFacts,
       malformedRows: snapshot.malformedRows,
+      since,
     })
   );
 });
@@ -1370,7 +1422,7 @@ export const runYeetProofReport = Effect.fn("Yeet.runProofReportCommand")(functi
   options: YeetProofReportOptions,
   repoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = locateRepoRoot
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const report = yield* loadProofShadowReport(yield* repoRoot);
+  const report = yield* loadProofShadowReport(yield* repoRoot, options.since);
   if (options.json) {
     const json = yield* ProofShadowReportJson.encode(report).pipe(
       Effect.mapError(YeetCommandError.new("Failed to encode the proof shadow report."))

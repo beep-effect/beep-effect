@@ -5,7 +5,7 @@
   "source": {
     "reference": {
       "path": "goals/time-to-certainty/research/economics.json",
-      "sha256": "37e854ef859c00e4930cb1b23cfba5989a2947c121a9f0bc88c30e2fc2785230"
+      "sha256": "f69f77ab80820defd38bb2aa66562e5bf0aaad308eeab6a7e10fcb9d2e2b7d9d"
     },
     "schemaVersion": "verification-economics/v1",
     "measurementAsOf": "2026-09-03T06:29:38.367Z",

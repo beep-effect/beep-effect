@@ -5,11 +5,13 @@ import {
   ProofInputDigest,
   ProofLedger,
   ProofLedgerFactRow,
+  ProofLedgerLocation,
   ProofLedgerShadowRow,
   ProofProvenance,
   ProofReuseHit,
   ProofReuseMiss,
   proofLedgerPathForCheckout,
+  resolveProofLedgerLocation,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -418,6 +420,127 @@ describe("ProofLedger", () => {
         );
         expect(A.length(sources)).toBe(2);
         expect(legacyImports).toStrictEqual([]);
+      })
+    );
+  });
+
+  // TTC ruling 71: the ledger's checkout is the owning clone, so every lane cut from one clone
+  // appends to and reads one sample, and retiring a lane never deletes it.
+  it.layer(PlatformLayer, { timeout: "30 seconds" })("owning-clone ledger", (it) => {
+    // A primary clone (a `.git` directory) and linked worktrees laid out the way
+    // `git worktree add` writes them: `<lane>/.git` is `gitdir: <clone>/.git/worktrees/<name>`,
+    // and that directory's `commondir` is `../..`.
+    const cloneWithLanes = Effect.fn("ProofLedgerTest.cloneWithLanes")(function* (
+      names: ReadonlyArray<string>,
+      relativeGitdir: boolean
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const base = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-clone-" });
+      const clone = path.join(base, "repo");
+      yield* fs.makeDirectory(path.join(clone, ".git"), { recursive: true });
+      const lanes = yield* Effect.forEach(
+        names,
+        Effect.fnUntraced(function* (name: string) {
+          const lane = path.join(base, "repo-worktrees", name);
+          const gitDir = path.join(clone, ".git", "worktrees", name);
+          yield* fs.makeDirectory(gitDir, { recursive: true });
+          yield* fs.makeDirectory(lane, { recursive: true });
+          yield* fs.writeFileString(path.join(gitDir, "commondir"), "../..\n");
+          yield* fs.writeFileString(path.join(gitDir, "gitdir"), `${path.join(lane, ".git")}\n`);
+          const target = relativeGitdir ? path.relative(lane, gitDir) : gitDir;
+          yield* fs.writeFileString(path.join(lane, ".git"), `gitdir: ${target}\n`);
+          return lane;
+        })
+      );
+      return { clone, lanes, ledgerPath: path.join(clone, ".beep", "yeet", "proof-ledger.ndjson") };
+    });
+
+    it.effect(
+      "resolves a primary clone and a bare directory to themselves",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { clone, ledgerPath } = yield* cloneWithLanes([], false);
+        expect(yield* resolveProofLedgerLocation(clone)).toStrictEqual(
+          ProofLedgerLocation.make({ originRoot: clone, ledgerRoot: clone, ledgerPath })
+        );
+        const bare = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-bare-" });
+        expect(yield* proofLedgerPathForCheckout(bare)).toBe(path.join(bare, ".beep", "yeet", "proof-ledger.ndjson"));
+      })
+    );
+
+    it.effect(
+      "resolves a linked worktree to its owning clone through gitdir and commondir",
+      Effect.fnUntraced(function* () {
+        const absolute = yield* cloneWithLanes(["lane-a"], false);
+        const laneA = A.getUnsafe(absolute.lanes, 0);
+        expect(yield* resolveProofLedgerLocation(laneA)).toStrictEqual(
+          ProofLedgerLocation.make({ originRoot: laneA, ledgerRoot: absolute.clone, ledgerPath: absolute.ledgerPath })
+        );
+        // `git worktree add` with `worktree.useRelativePaths` writes a relative gitdir,
+        // which resolves against the worktree itself.
+        const relative = yield* cloneWithLanes(["lane-r"], true);
+        expect(yield* proofLedgerPathForCheckout(A.getUnsafe(relative.lanes, 0))).toBe(relative.ledgerPath);
+      })
+    );
+
+    it.effect(
+      "keeps the ledger inside a common dir not named .git",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const base = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-bare-common-" });
+        // A worktree of a bare repository: `<base>/repo.git/worktrees/lane` with `commondir` `../..`.
+        const common = path.join(base, "repo.git");
+        const gitDir = path.join(common, "worktrees", "lane");
+        const lane = path.join(base, "lane");
+        yield* fs.makeDirectory(gitDir, { recursive: true });
+        yield* fs.makeDirectory(lane, { recursive: true });
+        yield* fs.writeFileString(path.join(gitDir, "commondir"), "../..\n");
+        yield* fs.writeFileString(path.join(lane, ".git"), `gitdir: ${gitDir}\n`);
+        expect(yield* resolveProofLedgerLocation(lane)).toStrictEqual(
+          ProofLedgerLocation.make({
+            originRoot: lane,
+            ledgerRoot: common,
+            ledgerPath: path.join(common, ".beep", "yeet", "proof-ledger.ndjson"),
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "refuses a .git file that names no gitdir instead of splitting the sample",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-gitfile-" });
+        yield* fs.writeFileString(path.join(root, ".git"), "not a gitfile\n");
+        const error = yield* resolveProofLedgerLocation(root).pipe(Effect.flip);
+        expect(error._tag).toBe("YeetCommandError");
+        expect(error.message).toContain('without a "gitdir:" line');
+      })
+    );
+
+    it.effect(
+      "shares one sample: a fact recorded from one lane is read by a sibling lane and the clone",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { clone, lanes, ledgerPath } = yield* cloneWithLanes(["lane-a", "lane-b"], false);
+        const laneA = A.getUnsafe(lanes, 0);
+        const laneB = A.getUnsafe(lanes, 1);
+        const fromA = yield* ProofLedger.make(laneA);
+        yield* fromA.record(fact({ provenance: ProofProvenance.make({ ...fact().provenance, originKey: laneA }) }));
+
+        const hit = ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" });
+        expect(yield* (yield* ProofLedger.make(laneB)).lookup(input(), NOW)).toStrictEqual(hit);
+        expect(yield* (yield* ProofLedger.make(clone)).lookup(input(), NOW)).toStrictEqual(hit);
+        // The row lands in the clone, carries the lane that ran as its origin, and no lane
+        // keeps a private ledger that `yeet sweep --retire` would delete.
+        expect(Str.includes(`"originKey":"${laneA}"`)(yield* fs.readFileString(ledgerPath))).toBe(true);
+        expect(yield* fs.exists(path.join(laneA, ".beep"))).toBe(false);
+        expect(yield* fs.exists(path.join(laneB, ".beep"))).toBe(false);
       })
     );
   });

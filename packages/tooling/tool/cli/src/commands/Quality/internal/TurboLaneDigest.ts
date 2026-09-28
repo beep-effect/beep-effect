@@ -123,10 +123,15 @@ export class TurboLaneTaskHash extends S.Class<TurboLaneTaskHash>($I`TurboLaneTa
  * **Details**
  *
  * The digest is the SHA-256 of the sorted `taskId=hash` lines, so it does not depend on Turbo's
- * task ordering and changes whenever any folded task hash changes. Only tasks that passed
- * (`execution.exitCode === 0`) or replayed from cache (`HIT`) fold in; a failed task yields no
- * digest, so a lane never records a reusable digest for a red run. A lane that ran several Turbo
- * invocations (the Fallow CI lane writes one summary per sublane) folds every summary it wrote.
+ * task ordering and changes whenever any folded task hash changes. It names the work, not the
+ * result: every selected task folds in whatever its outcome, so a red run records the same
+ * digest a green run of the same inputs would (time-to-certainty ruling 72). A red run's digest is
+ * recorded as an observation — it is what lets the proof ledger see a lane fail on inputs it
+ * would have reused — and is never a reuse source: the ledger answers an exact-match failed fact
+ * with `prior-failed`. A red run folds the selected tasks its run summary lists — the fold reads
+ * only each row's `taskId` and `hash`, never its `execution` — so when that set of rows differs
+ * from a full pass's, the key differs too. A lane that ran several Turbo invocations (the Fallow CI lane writes one summary per sublane) folds
+ * every summary it wrote.
  *
  * **Example** (Build a digest by hand)
  *
@@ -210,9 +215,6 @@ export const turboLaneDigestPackages = (digest: TurboLaneDigest): ReadonlyArray<
     A.sort(Order.String)
   );
 
-const taskPassed = (task: TurboSummaryTask): boolean =>
-  task.cache.status === "HIT" || (task.execution?.exitCode ?? null) === 0;
-
 const rowOrder = Order.mapInput(Order.String, (row: TurboLaneTaskHash) => row.taskId);
 
 const selectedRows = (tasks: ReadonlyArray<TurboSummaryTask>): ReadonlyArray<TurboLaneTaskHash> =>
@@ -264,12 +266,13 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  *
  * **Gotchas**
  *
- * An empty task list selects every task in the summary. Any selected task that neither passed
- * nor replayed from cache makes the result `None`.
+ * An empty task list selects every task in the summary. A selected task folds in whatever its
+ * exit code (ruling 72): a failed task's hash is part of the digest, so a red run and a green run
+ * of the same inputs share one key.
  *
  * @param summary - A decoded Turbo run summary.
  * @param taskNames - Bare task names (`lint:allowlist`, never `//#lint:allowlist`) to fold.
- * @returns The digest, or `None` when no selected task exists or one of them failed.
+ * @returns The digest, or `None` when no selected task exists.
  * @category mapping
  * @since 0.0.0
  */
@@ -285,7 +288,7 @@ export const turboLaneDigestFromSummary: {
   2,
   Effect.fnUntraced(function* (summary: TurboRunSummary, taskNames: ReadonlyArray<string>) {
     const selected = selectTasks(summary, taskNames);
-    if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
+    if (A.isReadonlyArrayEmpty(selected)) {
       return O.none<TurboLaneDigest>();
     }
     return O.some(yield* digestRows([summary.id], selectedRows(selected)));
@@ -310,8 +313,9 @@ const newestRowsByTask = (rows: ReadonlyArray<TurboLaneTaskHash>): ReadonlyArray
  * Only summaries whose `execution.startTime` is at or after `startedAtIso` count as this
  * attempt's own (§7.1.5 freshness); older summaries in `.turbo/runs` are ignored, and files that
  * fail to decode are skipped rather than failing the lane. When a task id appears in several fresh
- * summaries (a re-run inside the lane) the newest summary's hash wins; any selected task that
- * neither passed nor replayed from cache yields `None`.
+ * summaries (a re-run inside the lane) the newest summary's hash wins. Task outcomes do not gate
+ * the fold (ruling 72): a red run folds the tasks it ran, and the digest is recorded as an
+ * observation, never as a reuse source.
  *
  * **Example** (Digest after a lane step)
  *
@@ -326,7 +330,7 @@ const newestRowsByTask = (rows: ReadonlyArray<TurboLaneTaskHash>): ReadonlyArray
  * @param repoRoot - Repository root that owns `.turbo/runs`.
  * @param startedAtIso - ISO timestamp the lane step started at; older summaries are ignored.
  * @param taskNames - Bare task names the lane invoked.
- * @returns The folded digest, or `None` when no fresh passing summary covers the tasks.
+ * @returns The folded digest, or `None` when no fresh summary covers the tasks.
  * @category decoding
  * @since 0.0.0
  */
@@ -371,7 +375,7 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
     A.sortBy(summaryStartOrder)
   );
   const selected = A.flatMap(fresh, (summary) => selectTasks(summary, taskNames));
-  if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
+  if (A.isReadonlyArrayEmpty(selected)) {
     return O.none<TurboLaneDigest>();
   }
   return O.some(
