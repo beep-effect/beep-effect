@@ -7,6 +7,11 @@ rewrites economics.json and economics.md with stable ordering and nearest-rank
 percentiles. Pass --corpus to validate every replayed corpus file and its
 compact facts against the committed ratified baseline before use. Drift fails
 closed unless the matching explicit override is supplied.
+
+`--run close` is the P4 close re-run of the same recipe (ruling 8): inputs under
+../inputs/close/, outputs economics-close.json and economics-close.md, plus the
+inner-lane population, the post-A5 M4 and M5 facts, and the row-by-row
+comparison with the ratified baseline. The default run never changes shape.
 """
 
 from __future__ import annotations
@@ -32,7 +37,24 @@ SCRIPT = Path(__file__).resolve()
 OUTPUT_ROOT = SCRIPT.parent.parent
 INPUT_ROOT = OUTPUT_ROOT / "inputs"
 REPO_ROOT = SCRIPT.parents[4]
-PROJECTS_ROOT = REPO_ROOT.parent
+
+
+def derive_projects_root(repo_root: Path) -> Path:
+    """Return the directory that holds every clone and lane of the fleet (ruling 73).
+
+    A clone sits directly under the projects root; a lane sits one level deeper,
+    under `<clone>-worktrees/<lane>`, or three levels deeper, under
+    `<clone>/.claude/worktrees/<lane>`.
+    """
+    parent = repo_root.parent
+    if parent.name.endswith("-worktrees"):
+        return parent.parent
+    if parent.name == "worktrees" and parent.parent.name == ".claude":
+        return parent.parent.parent.parent
+    return parent
+
+
+PROJECTS_ROOT = derive_projects_root(REPO_ROOT)
 DEFAULT_CORPUS_RELATIVE = (
     Path("explorations")
     / "beep-ci-operational-ontology"
@@ -49,6 +71,18 @@ HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json.gz"
 INPUT_RECEIPTS = INPUT_ROOT / "RECEIPTS.json"
 ECONOMICS_JSON = OUTPUT_ROOT / "economics.json"
 ECONOMICS_MD = OUTPUT_ROOT / "economics.md"
+
+# `--run baseline` (the default) is the ratified P0 snapshot and never changes
+# shape; `--run close` is the P4 close re-run of the same recipe (ruling 8), with
+# its own inputs under inputs/close/ and its own outputs beside the baseline.
+BASELINE_RUN = "baseline"
+CLOSE_RUN = "close"
+RUN_NAMES = (BASELINE_RUN, CLOSE_RUN)
+RUN = BASELINE_RUN
+CLOSE_INPUT_DIRECTORY = "close"
+CLOSE_JSON_NAME = "economics-close.json"
+CLOSE_MD_NAME = "economics-close.md"
+CLOSE_TOP_INNER_ROWS = 15
 
 ATTEMPT_SCHEMA = "yeet-attempt-journal/v1"
 VERDICT_SCHEMA_V2 = "yeet-verdict/v2"
@@ -114,6 +148,7 @@ INNER_CONTEXT = {
     "quality:desktop-ipc": "Professional Desktop IPC Stdio",
     "quality:doctest": "Heavy / Doctest",
 }
+HOSTED_LIST_CAP = 1000
 REPO_SANITY_PREFIX = "repo-sanity:"
 EXECUTED_STATUSES = {"passed", "failed"}
 REUSED_STATUSES = {"reused"}
@@ -159,6 +194,10 @@ ATTEMPT_TERMINATION_REASONS = frozenset(
         "finalizer-missing",
     }
 )
+# Ruling 75: the journal reconciler stamps these reasons at sweep time, so the
+# row's `recordedAt` is the sweep, not the attempt's end. Such a row keeps its
+# order and stays red, but ends no duration (elapsed and endedAt are unknown).
+RECONCILER_TERMINATION_REASONS = frozenset({"legacy-unowned-start", "owner-dead", "stale-unverifiable-owner"})
 ATTEMPT_COMPACTION_FIELDS = (
     "_tag",
     "evictedAttemptIds",
@@ -198,10 +237,27 @@ LANE_FIELDS = (
     "durationMs",
     "id",
     "label",
+    "parentLaneId",
     "phase",
     "repairCommand",
     "status",
 )
+# Ruling 74: a lane is inner when it carries `parentLaneId`. A verdict in which
+# no lane carries one predates the field; its lanes split by these wrapper
+# phase prefixes, and every other lane is inner.
+WRAPPER_LANE_PREFIXES = (
+    "full:",
+    "feedback:",
+    "prepare:",
+    "publish:",
+    "monitor:",
+    "closeout:",
+    "advisory:",
+    "commit:",
+)
+# The first-failure walk's actionable-lane rule is what the baseline measured
+# and stays as it was (brief: "the first-failure walk is unchanged").
+ACTIONABLE_WRAPPER_PREFIXES = ("full:", "feedback:", "prepare:", "publish:", "monitor:", "closeout:")
 ADMISSION_FIELDS = (
     "_tag",
     "admittedAtMillis",
@@ -509,21 +565,112 @@ def markdown_escape(value: Any) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
-def discover_live_roots() -> list[Path]:
+LIVE_DISCOVERY_RULE = (
+    "repository root",
+    "projects-root directories named beep-effect* with .beep/yeet/runs",
+    "lanes under beep-effect*-worktrees/* with .beep/yeet/runs",
+    "lanes under beep-effect*/.claude/worktrees/* with .beep/yeet/runs",
+    "symlinked candidates skipped",
+    "candidates whose owning clone's origin is not beep-effect/beep-effect skipped",
+)
+FLEET_REPOSITORY = "beep-effect/beep-effect"
+
+
+def owning_clone(root: Path) -> Path | None:
+    """Resolve the clone that owns a checkout, as `git rev-parse --git-common-dir` would.
+
+    A `.git` directory marks a primary clone; a `.git` file names the lane's
+    gitdir, whose `commondir` (when present) points at the clone's `.git`. A
+    lane whose `.git` file is already gone (a half-removed worktree that still
+    holds journals) falls back to the fleet layout: `<clone>-worktrees/<lane>`
+    and `<clone>/.claude/worktrees/<lane>` name their clone. Returns None when
+    neither Git metadata nor the layout names a clone.
+    """
+    marker = root / ".git"
+    if marker.is_dir():
+        return root
+    if not marker.is_file():
+        parent = root.parent
+        if parent.name.endswith("-worktrees"):
+            clone = parent.parent / parent.name[: -len("-worktrees")]
+        elif parent.name == "worktrees" and parent.parent.name == ".claude":
+            clone = parent.parent.parent
+        else:
+            return None
+        return clone if (clone / ".git").is_dir() else None
+    try:
+        text = marker.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+    if not text.startswith("gitdir:"):
+        return None
+    gitdir = (root / text[len("gitdir:"):].strip()).resolve()
+    commondir_file = gitdir / "commondir"
+    common = gitdir
+    if commondir_file.is_file():
+        try:
+            common = (gitdir / commondir_file.read_text(encoding="utf-8").strip()).resolve()
+        except (OSError, UnicodeDecodeError):
+            return None
+    return common.parent
+
+
+def origin_repository(root: Path) -> str | None:
+    """Return `owner/repo` for the owning clone's `remote "origin"` url, else None."""
+    clone = owning_clone(root)
+    if clone is None:
+        return None
+    try:
+        lines = (clone / ".git" / "config").read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return None
+    in_origin = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("["):
+            in_origin = re.fullmatch(r'\[remote\s+"origin"\]', stripped) is not None
+            continue
+        key, _, value = stripped.partition("=")
+        if in_origin and key.strip() == "url":
+            match = re.search(r"[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$", value.strip())
+            return None if match is None else f"{match.group(1)}/{match.group(2)}"
+    return None
+
+
+def discover_live_roots(projects_root: Path | None = None) -> list[Path]:
+    """Return every fleet checkout with a Yeet run journal (ruling 73).
+
+    The fleet is the directories named `beep-effect*` under the projects root,
+    the lanes under `beep-effect-worktrees/*` and every numbered
+    `beep-effect<N>-worktrees/*`, and the lanes under each clone's
+    `.claude/worktrees/*`. The repository root is always a candidate, so a run
+    from a lane still reads its own journals. Any other candidate is kept only
+    when its owning clone's origin is `beep-effect/beep-effect`: a private
+    duplicate such as `beep-effect-private` matches the name glob but is another
+    repository, and its journals never enter this public repository's inputs.
+    """
+    root = PROJECTS_ROOT if projects_root is None else projects_root
+
+    def by_name(paths: Iterable[Path]) -> list[Path]:
+        return sorted((path for path in paths if path.is_dir()), key=lambda path: path.as_posix())
+
     candidates = [REPO_ROOT]
-    candidates.extend(sorted(PROJECTS_ROOT.glob("beep-effect[0-9]*"), key=lambda path: path.name))
-    worktrees = PROJECTS_ROOT / "beep-effect-worktrees"
-    if worktrees.is_dir():
-        candidates.extend(sorted((path for path in worktrees.iterdir() if path.is_dir()), key=lambda path: path.name))
+    candidates.extend(by_name(root.glob("beep-effect*")))
+    candidates.extend(by_name(root.glob("beep-effect*-worktrees/*")))
+    candidates.extend(by_name(root.glob("beep-effect*/.claude/worktrees/*")))
     roots: list[Path] = []
     seen: set[Path] = set()
     for candidate in candidates:
+        if candidate != REPO_ROOT and candidate.is_symlink():
+            continue
         resolved = candidate.resolve()
         if resolved in seen or not (resolved / ".beep" / "yeet" / "runs").is_dir():
             continue
+        if candidate != REPO_ROOT and origin_repository(resolved) != FLEET_REPOSITORY:
+            continue
         seen.add(resolved)
         roots.append(resolved)
-    return sorted(roots, key=portable_path)
+    return sorted(roots, key=checkout_label)
 
 
 def checkout_label(root: Path) -> str:
@@ -588,11 +735,7 @@ def capture_live(corpus_root: Path) -> None:
 
     snapshot = {
         "capturedAt": format_ts(captured_at),
-        "discoveryRule": [
-            "repository root",
-            "numbered sibling checkouts with .beep/yeet/runs",
-            "sibling beep-effect-worktrees children with .beep/yeet/runs",
-        ],
+        "discoveryRule": list(LIVE_DISCOVERY_RULE),
         "files": sorted(files, key=lambda entry: (entry["path"], entry["kind"])),
         "roots": [portable_path(root) for root in roots],
         "schemaVersion": LIVE_SCHEMA,
@@ -622,24 +765,35 @@ def capture_hosted() -> None:
         "databaseId,workflowName,displayTitle,event,status,conclusion,createdAt,updatedAt,"
         "headBranch,headSha,url,attempt"
     )
-    list_command = [
-        "gh",
-        "run",
-        "list",
-        "--workflow",
-        "Check",
-        "--created",
-        f">={cutoff_date}",
-        "--limit",
-        "2000",
-        "--json",
-        list_fields,
-    ]
-    summaries = json.loads(run_command(list_command, attempts=3))
-    if not isinstance(summaries, list):
-        raise SystemExit("gh run list returned a non-array payload")
-    if len(summaries) >= 2000:
-        raise SystemExit("hosted run capture reached its 2000-run safety limit")
+    # GitHub answers a `created` query with at most 1,000 runs, silently, so a
+    # single `>=cutoff` query drops the oldest days of a busy window. List one
+    # UTC date at a time and fail closed if any single date reaches the cap.
+    summaries_by_id: dict[Any, dict[str, Any]] = {}
+    day = dt.date.fromisoformat(cutoff_date)
+    while day <= captured_at.date():
+        list_command = [
+            "gh",
+            "run",
+            "list",
+            "--workflow",
+            "Check",
+            "--created",
+            day.isoformat(),
+            "--limit",
+            str(HOSTED_LIST_CAP),
+            "--json",
+            list_fields,
+        ]
+        page = json.loads(run_command(list_command, attempts=3))
+        if not isinstance(page, list):
+            raise SystemExit("gh run list returned a non-array payload")
+        if len(page) >= HOSTED_LIST_CAP:
+            raise SystemExit(f"hosted run capture reached the {HOSTED_LIST_CAP}-run API cap on {day.isoformat()}")
+        for row in page:
+            if isinstance(row, dict):
+                summaries_by_id[row.get("databaseId")] = row
+        day += dt.timedelta(days=1)
+    summaries = list(summaries_by_id.values())
     selected = [
         row
         for row in summaries
@@ -678,7 +832,7 @@ def capture_hosted() -> None:
         )
     snapshot = {
         "captureCommands": [
-            "gh run list --workflow Check --created >=YYYY-MM-DD --limit 2000 --json <run fields>",
+            "gh run list --workflow Check --created YYYY-MM-DD --limit 1000 --json <run fields> (one query per UTC date)",
             "gh run view <run-id> --json <run fields>,jobs",
             "gh api repos/beep-effect/beep-effect/rulesets/10240248",
         ],
@@ -841,7 +995,12 @@ def load_attempts(
         verdict = record.get("verdict") if isinstance(record.get("verdict"), dict) else {}
         start_record = starts.get(key, {}).get("record", {})
         started_at = parse_ts(verdict.get("startedAt") or start_record.get("startedAt"))
-        ended_at = parse_ts(verdict.get("endedAt") or verdict.get("createdAt") or record.get("recordedAt"))
+        swept = record.get("_tag") == "attempt-terminated" and record.get("reason") in RECONCILER_TERMINATION_REASONS
+        ended_at = (
+            None
+            if swept
+            else parse_ts(verdict.get("endedAt") or verdict.get("createdAt") or record.get("recordedAt"))
+        )
         elapsed = verdict.get("elapsedMs")
         if not isinstance(elapsed, (int, float)) and started_at is not None and ended_at is not None:
             elapsed = (ended_at - started_at).total_seconds() * 1000
@@ -933,17 +1092,82 @@ def ring_buffer_quality(
     }
 
 
+def split_lanes(lanes: list[Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Split one verdict's lanes into (wrapper, inner) populations (ruling 74).
+
+    A verdict in which any lane carries `parentLaneId` marks its inner lanes
+    explicitly; a lane without one is a wrapper. A verdict written before that
+    field splits by `WRAPPER_LANE_PREFIXES`.
+    """
+    rows = [lane for lane in lanes if isinstance(lane, dict)]
+    marks_parents = any(isinstance(lane.get("parentLaneId"), str) for lane in rows)
+    wrappers: list[dict[str, Any]] = []
+    inner: list[dict[str, Any]] = []
+    for lane in rows:
+        is_inner = (
+            isinstance(lane.get("parentLaneId"), str)
+            if marks_parents
+            else not str(lane.get("id") or "").startswith(WRAPPER_LANE_PREFIXES)
+        )
+        (inner if is_inner else wrappers).append(lane)
+    return wrappers, inner
+
+
+def wrapper_lanes(attempt: dict[str, Any]) -> list[dict[str, Any]]:
+    return split_lanes(attempt["lanes"])[0]
+
+
+def inner_lanes(attempt: dict[str, Any]) -> list[dict[str, Any]]:
+    return split_lanes(attempt["lanes"])[1]
+
+
+def timed_lane_duration(lane: dict[str, Any]) -> float | None:
+    duration = lane.get("durationMs")
+    if not isinstance(duration, (int, float)) or duration < 0:
+        return None
+    return float(duration)
+
+
 def lane_metrics(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Wrapper-lane rows and totals: the baseline's row shape and semantics.
+
+    Only wrapper lanes are counted (ruling 74), so a post-A5 verdict's inner
+    lanes are no longer summed a second time inside their wrapper; the accounted
+    percentage keeps the baseline denominator, every attempt's elapsed time.
+    """
+    return population_lane_metrics(attempts, wrapper_lanes, denominator="all-attempts")
+
+
+def inner_lane_metrics(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Inner-lane rows and totals: a separate population with its own denominator.
+
+    Shares are within the inner population; the accounted percentage divides by
+    the elapsed time of the attempts that contributed at least one timed inner lane.
+    """
+    return population_lane_metrics(attempts, inner_lanes, denominator="contributing-attempts")
+
+
+def population_lane_metrics(
+    attempts: list[dict[str, Any]],
+    population: Any,
+    *,
+    denominator: str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     by_lane: dict[tuple[str, str, str], list[tuple[dict[str, Any], float]]] = collections.defaultdict(list)
     all_durations: list[float] = []
+    lanes_by_attempt: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    contributing: dict[tuple[str, str, str], dict[str, Any]] = {}
     for attempt in attempts:
-        for lane in attempt["lanes"]:
-            duration = lane.get("durationMs")
-            if not isinstance(duration, (int, float)) or duration < 0:
+        lanes = population(attempt)
+        lanes_by_attempt[attempt["key"]] = lanes
+        for lane in lanes:
+            duration = timed_lane_duration(lane)
+            if duration is None:
                 continue
             key = (str(lane.get("id")), str(lane.get("label")), str(lane.get("phase")))
-            by_lane[key].append((attempt, float(duration)))
-            all_durations.append(float(duration))
+            by_lane[key].append((attempt, duration))
+            all_durations.append(duration)
+            contributing[attempt["key"]] = attempt
     total = sum(all_durations)
     rows: list[dict[str, Any]] = []
     for (lane_id, label, phase), observations in by_lane.items():
@@ -951,7 +1175,7 @@ def lane_metrics(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], 
         status_counts = collections.Counter(
             str(lane.get("status"))
             for attempt, _ in observations
-            for lane in attempt["lanes"]
+            for lane in lanes_by_attempt[attempt["key"]]
             if lane.get("id") == lane_id and lane.get("durationMs") is not None
         )
         rows.append(
@@ -969,11 +1193,21 @@ def lane_metrics(attempts: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], 
             }
         )
     rows.sort(key=lambda row: (-row["totalDurationMs"], row["id"], row["label"]))
-    total_attempt_elapsed = sum(attempt["elapsedMs"] or 0 for attempt in attempts)
+    if denominator == "all-attempts":
+        total_attempt_elapsed = sum(attempt["elapsedMs"] or 0 for attempt in attempts)
+        return rows, {
+            "accountedLaneTimeAsPctOfAttemptElapsed": pct_value(total, total_attempt_elapsed),
+            "measuredLaneExecutions": len(all_durations),
+            "totalAttemptElapsedMs": rounded_ms(total_attempt_elapsed),
+            "totalMeasuredLaneDurationMs": rounded_ms(total),
+        }
+    contributing_elapsed = sum(attempt["elapsedMs"] or 0 for attempt in contributing.values())
     return rows, {
-        "accountedLaneTimeAsPctOfAttemptElapsed": pct_value(total, total_attempt_elapsed),
+        "accountedLaneTimeAsPctOfAttemptElapsed": pct_value(total, contributing_elapsed),
+        "contributingAttempts": len(contributing),
+        "denominator": "elapsed time of the attempts with at least one timed inner lane",
         "measuredLaneExecutions": len(all_durations),
-        "totalAttemptElapsedMs": rounded_ms(total_attempt_elapsed),
+        "totalAttemptElapsedMs": rounded_ms(contributing_elapsed),
         "totalMeasuredLaneDurationMs": rounded_ms(total),
     }
 
@@ -998,6 +1232,20 @@ def classify_receipt_proxy(attempt: dict[str, Any]) -> str:
     return "unclassified"
 
 
+def actionable_lane(attempt: dict[str, Any]) -> str:
+    """The baseline's actionable lane: the first failed lane outside the legacy
+    wrapper prefixes, else `failedStepId`, else the first failed lane, else
+    `unlocated`."""
+    failed = [lane for lane in attempt["lanes"] if lane.get("status") == "failed"]
+    granular = next(
+        (lane for lane in failed if not str(lane.get("id", "")).startswith(ACTIONABLE_WRAPPER_PREFIXES)),
+        None,
+    )
+    if granular is not None:
+        return str(granular.get("id"))
+    return str(attempt.get("failedStepId") or (failed[0].get("id") if failed else "unlocated"))
+
+
 def first_failure_metrics(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     observations: list[dict[str, Any]] = []
     actionable_counts: collections.Counter[str] = collections.Counter()
@@ -1005,22 +1253,7 @@ def first_failure_metrics(attempts: list[dict[str, Any]]) -> dict[str, Any]:
     red_attempts = [attempt for attempt in attempts if attempt.get("outcome") != "success"]
     for attempt in red_attempts:
         proxy_counts[classify_receipt_proxy(attempt)] += 1
-        failed = [lane for lane in attempt["lanes"] if lane.get("status") == "failed"]
-        granular = next(
-            (
-                lane
-                for lane in failed
-                if not str(lane.get("id", "")).startswith(
-                    ("full:", "feedback:", "prepare:", "publish:", "monitor:", "closeout:")
-                )
-            ),
-            None,
-        )
-        actionable = (
-            str(granular.get("id"))
-            if granular is not None
-            else str(attempt.get("failedStepId") or (failed[0].get("id") if failed else "unlocated"))
-        )
+        actionable = actionable_lane(attempt)
         actionable_counts[actionable] += 1
         first_outer: dict[str, Any] | None = None
         offset = 0.0
@@ -1122,11 +1355,19 @@ def build_episodes(
                 "attempts": len(members),
                 "branch": branch,
                 "checkout": checkout,
-                "laneDurationMs": sum(
-                    float(lane["durationMs"])
+                # Wrapper lanes only (ruling 74): an inner lane's time is
+                # already inside its wrapper, so it is its own population.
+                "innerLaneDurationMs": sum(
+                    duration
                     for member in members
-                    for lane in member["lanes"]
-                    if isinstance(lane.get("durationMs"), (int, float)) and lane["durationMs"] >= 0
+                    for lane in inner_lanes(member)
+                    if (duration := timed_lane_duration(lane)) is not None
+                ),
+                "laneDurationMs": sum(
+                    duration
+                    for member in members
+                    for lane in wrapper_lanes(member)
+                    if (duration := timed_lane_duration(lane)) is not None
                 ),
                 "measuredAttemptMachineMs": sum(member["elapsedMs"] or 0 for member in members),
                 "spanMs": span_ms,
@@ -1151,10 +1392,15 @@ def build_episodes(
 
 
 def episode_summary(
-    rows: list[dict[str, Any]], censored: list[dict[str, Any]], left_censored: list[dict[str, Any]], label: str
+    rows: list[dict[str, Any]],
+    censored: list[dict[str, Any]],
+    left_censored: list[dict[str, Any]],
+    label: str,
+    *,
+    include_inner: bool = False,
 ) -> dict[str, Any]:
     spans = [row["spanMs"] for row in rows]
-    return {
+    summary = {
         "closedEpisodes": len(rows),
         "label": label,
         "leftCensoredEpisodesExcluded": len(left_censored),
@@ -1167,9 +1413,14 @@ def episode_summary(
         "rightCensoredRedAttempts": sum(row["attempts"] for row in censored),
         "totalEpisodeSpanMinutes": round(sum(spans) / 60_000, 2),
     }
+    if include_inner:
+        summary["measuredInnerLaneMachineMinutes"] = round(
+            sum(row["innerLaneDurationMs"] for row in rows) / 60_000, 2
+        )
+    return summary
 
 
-def red_to_green(attempts: list[dict[str, Any]]) -> dict[str, Any]:
+def red_to_green(attempts: list[dict[str, Any]], *, include_inner: bool = False) -> dict[str, Any]:
     comparable = comparable_attempts(attempts)
     uncut, censored, left_censored = build_episodes(comparable)
     cut = [row for row in uncut if row["spanMs"] <= COMPARABLE_EPISODE_CUT_MS]
@@ -1178,12 +1429,14 @@ def red_to_green(attempts: list[dict[str, Any]]) -> dict[str, Any]:
         censored,
         left_censored,
         "article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h",
+        include_inner=include_inner,
     )
     uncut_summary = episode_summary(
         uncut,
         censored,
         left_censored,
         "uncut tail: same modes/bounce/censor rule; no duration ceiling",
+        include_inner=include_inner,
     )
     cut_summary["closedEpisodesOver24hExcluded"] = len(uncut) - len(cut)
     current_p50 = cut_summary["p50Ms"]
@@ -1547,6 +1800,228 @@ def fingerprint_quality(attempts: list[dict[str, Any]], states: list[dict[str, A
     }
 
 
+def mix_rows(counter: collections.Counter[str], key: str) -> list[dict[str, Any]]:
+    return [
+        {"attempts": count, key: label}
+        for label, count in sorted(counter.items(), key=lambda item: (-item[1], item[0]))
+    ]
+
+
+def fingerprint_repeat_metrics(attempts: list[dict[str, Any]]) -> dict[str, Any]:
+    """M4 fingerprint-repeat proxy (ruling 75), computed where A5 journals carry it.
+
+    Within one (checkout, branch) sequence of comparable attempts, ordered as the
+    M1 walk orders them, count each pair of consecutive attempts whose red side
+    carries a verdict (a terminated row has no outcome and never counts) and
+    whose next attempt is green on the same `diffFingerprint`.
+    """
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
+    for attempt in comparable_attempts(attempts):
+        if attempt["startedAt"] is None:
+            continue
+        grouped[(attempt["checkout"], str(attempt["branch"]))].append(attempt)
+    repeats: list[dict[str, Any]] = []
+    for rows in grouped.values():
+        rows.sort(key=lambda row: (row["startedAt"], row["attemptId"]))
+        for current, following in zip(rows, rows[1:]):
+            fingerprint = current.get("diffFingerprint")
+            if (
+                current.get("outcome") is not None
+                and current.get("outcome") != "success"
+                and following.get("outcome") == "success"
+                and isinstance(fingerprint, str)
+                and fingerprint == following.get("diffFingerprint")
+            ):
+                repeats.append(current)
+    with_fingerprint = sum(1 for attempt in attempts if isinstance(attempt.get("diffFingerprint"), str))
+    return {
+        "attemptsWithFingerprint": with_fingerprint,
+        "byActionableLane": mix_rows(collections.Counter(actionable_lane(row) for row in repeats), "lane"),
+        "byReceiptProxy": mix_rows(collections.Counter(classify_receipt_proxy(row) for row in repeats), "class"),
+        "classification": "measured" if with_fingerprint > 0 else "unmeasurable",
+        "failedUnchangedFingerprintThenGreen": len(repeats),
+        "method": (
+            "ruling 75 fingerprint-repeat proxy over the M1 comparable sequence per (checkout, branch): "
+            "verdict-bearing red followed by green on the same diffFingerprint; the ack-resolution join is absent"
+        ),
+    }
+
+
+def close_fingerprint_quality(attempts: list[dict[str, Any]], states: list[dict[str, Any]]) -> dict[str, Any]:
+    """The baseline's M4 block with the post-A5 fingerprint-repeat proxy filled in."""
+    quality = fingerprint_quality(attempts, states)
+    repeats = fingerprint_repeat_metrics(attempts)
+    quality.update(repeats)
+    quality["failedUnchangedFingerprintThenGreen"] = repeats["failedUnchangedFingerprintThenGreen"]
+    quality["reason"] = (
+        "measured only over attempts whose journal rows carry diffFingerprint (A5 and later); "
+        "pre-A5 rows carry head=HEAD and stay outside the proxy"
+        if repeats["classification"] == "measured"
+        else "no attempt row carries diffFingerprint"
+    )
+    return quality
+
+
+def start_rows(sources: list[dict[str, Any]]) -> dict[tuple[str, str, str], dt.datetime | None]:
+    """Every journaled start with its time, deduplicated as `load_attempts` does."""
+    starts: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for source in sources:
+        for record in source["records"]:
+            if (
+                record.get("schemaVersion") != ATTEMPT_SCHEMA
+                or record.get("_tag") != "attempt-started"
+                or not isinstance(record.get("attemptId"), str)
+            ):
+                continue
+            key = attempt_key(str(source["checkout"]), str(source["runId"]), record["attemptId"])
+            if key not in starts or source["source"] == "live":
+                starts[key] = record
+    return {key: parse_ts(record.get("startedAt")) for key, record in starts.items()}
+
+
+def termination_metrics(
+    attempts: list[dict[str, Any]],
+    starts: dict[tuple[str, str, str], dt.datetime | None],
+) -> dict[str, Any]:
+    """M5: starts that never recorded a terminal row, and the journaled terminations."""
+    finished = {attempt["key"] for attempt in attempts}
+    unfinished = sum(1 for key in starts if key not in finished)
+    reasons = collections.Counter(
+        str(attempt["terminationReason"])
+        for attempt in attempts
+        if isinstance(attempt.get("terminationReason"), str)
+    )
+    swept = sum(count for reason, count in reasons.items() if reason in RECONCILER_TERMINATION_REASONS)
+    return {
+        "journaledTerminations": sum(reasons.values()),
+        "reasonMix": mix_rows(reasons, "reason"),
+        # The P0 proxy counted every start with no terminal row. Since A5 the
+        # reconciler sweeps many of those into sweep-stamped terminal rows, so
+        # the P0-comparable count adds them back.
+        "startsWithoutAttemptWrittenTerminal": unfinished + swept,
+        "sweepStampedTerminations": swept,
+        "starts": len(starts),
+        "startsWithoutFinish": unfinished,
+        "startsWithoutFinishPct": pct_value(unfinished, len(starts)),
+    }
+
+
+def attempt_instant(attempt: dict[str, Any]) -> dt.datetime | None:
+    return attempt["startedAt"] or attempt["endedAt"]
+
+
+def post_baseline_metrics(
+    attempts: list[dict[str, Any]],
+    starts: dict[tuple[str, str, str], dt.datetime | None],
+    hosted_snapshot: dict[str, Any],
+    hosted: dict[str, Any],
+    cut: dt.datetime,
+) -> dict[str, Any]:
+    """The same recipe over the attempts that started after the P0 live capture."""
+    subset = [attempt for attempt in attempts if (instant := attempt_instant(attempt)) is not None and instant > cut]
+    later_starts = {key: value for key, value in starts.items() if value is not None and value > cut}
+    amplification = execution_amplification(subset, hosted_snapshot, hosted)
+    return {
+        "attempts": attempt_outcomes(subset),
+        "cutUtc": format_ts(cut),
+        "executionAmplification": amplification,
+        "finishedAttempts": len(subset),
+        "firstFailure": first_failure_metrics(subset),
+        "population": "attempts whose startedAt (else endedAt) is after the P0 live capture; starts filtered the same way",
+        "redToGreen": red_to_green(subset, include_inner=True),
+        "terminations": termination_metrics(subset, later_starts),
+        "unchangedFingerprint": fingerprint_repeat_metrics(subset),
+    }
+
+
+def context_row(report_rows: list[dict[str, Any]], context: str) -> dict[str, Any]:
+    return next((row for row in report_rows if row.get("context") == context), {})
+
+
+def comparison_values(section: dict[str, Any], *, full_report: bool) -> dict[str, Any]:
+    """Project the ruling-8 rows (M1-M5) out of a report or a sub-population."""
+    red_green = section["redToGreen"]
+    first_failure = section["firstFailure"]
+    rows = section["requiredContextRows"] if full_report else section["executionAmplification"]["rows"]
+    integration = context_row(rows, "Heavy / Test Integration")
+    docgen = context_row(rows, "Heavy / Docgen")
+    fingerprint = section["unchangedFingerprint"]
+    if full_report:
+        diagnostics = section["dataQuality"]["diagnostics"]
+        terminations = section.get("terminations")
+        starts = diagnostics.get("starts")
+        unfinished = diagnostics.get("startsWithoutFinish")
+    else:
+        terminations = section["terminations"]
+        starts = terminations["starts"]
+        unfinished = terminations["startsWithoutFinish"]
+    return {
+        "M1 P50 comparable <=24h": red_green["comparable24h"]["p50Ms"],
+        "M1 P95 comparable <=24h": red_green["comparable24h"]["p95Ms"],
+        "M1 closed episodes (<=24h)": red_green["comparable24h"]["closedEpisodes"],
+        "M1 right-censored streaks (<=24h)": red_green["comparable24h"]["rightCensoredStreaks"],
+        "M1 right-censored red attempts (<=24h)": red_green["comparable24h"]["rightCensoredRedAttempts"],
+        "M1 P50 uncut": red_green["uncut"]["p50Ms"],
+        "M1 P95 uncut": red_green["uncut"]["p95Ms"],
+        "M2 start offset P50": first_failure["startOffsetP50Ms"],
+        "M2 start offset P95": first_failure["startOffsetP95Ms"],
+        "M2 completion P50": first_failure["completionOffsetP50Ms"],
+        "M2 completion P95": first_failure["completionOffsetP95Ms"],
+        "M2 reconstructable failures": first_failure["attemptsWithReconstructableOuterFailure"],
+        "M3 Test Integration runs per attempt": integration.get("runsPerAttempt"),
+        "M3 Test Integration max runs in one attempt": integration.get("maxRunsInOneAttempt"),
+        "M3 Docgen runs per attempt": docgen.get("runsPerAttempt"),
+        "M3 Docgen max runs in one attempt": docgen.get("maxRunsInOneAttempt"),
+        "M4 classification": fingerprint.get("classification"),
+        "M4 failed unchanged fingerprint then green": fingerprint.get("failedUnchangedFingerprintThenGreen"),
+        "M4 attempts with diff fingerprint": fingerprint.get(
+            "attemptsWithFingerprint", fingerprint.get("attemptsWithPerAttemptFingerprint")
+        ),
+        "M5 starts without finish": unfinished,
+        "M5 starts": starts,
+        "M5 starts without finish pct": pct_value(unfinished, starts) if isinstance(starts, int) else None,
+        "M5 journaled terminations": None if terminations is None else terminations["journaledTerminations"],
+        "M5 sweep-stamped terminations": None if terminations is None else terminations["sweepStampedTerminations"],
+        # P0-comparable: the baseline's unfinished starts had no reconciler.
+        "M5 starts without an attempt-written terminal row": (
+            unfinished if terminations is None else terminations["startsWithoutAttemptWrittenTerminal"]
+        ),
+    }
+
+
+COMPARISON_UNITS = {
+    "M1 P50 comparable <=24h": "ms",
+    "M1 P95 comparable <=24h": "ms",
+    "M1 P50 uncut": "ms",
+    "M1 P95 uncut": "ms",
+    "M2 start offset P50": "ms",
+    "M2 start offset P95": "ms",
+    "M2 completion P50": "ms",
+    "M2 completion P95": "ms",
+    "M4 classification": "label",
+    "M5 starts without finish pct": "pct",
+}
+
+
+def baseline_comparison(
+    baseline: dict[str, Any], close: dict[str, Any], post_baseline: dict[str, Any]
+) -> list[dict[str, Any]]:
+    before = comparison_values(baseline, full_report=True)
+    after = comparison_values(close, full_report=True)
+    later = comparison_values(post_baseline, full_report=False)
+    return [
+        {
+            "baseline": before[measure],
+            "close": after[measure],
+            "closePostBaseline": later[measure],
+            "id": measure.split(" ", 1)[0],
+            "measure": measure,
+            "unit": COMPARISON_UNITS.get(measure, "count"),
+        }
+        for measure in before
+    ]
+
+
 def output_quality(
     attempts: list[dict[str, Any]],
     diagnostics: dict[str, Any],
@@ -1609,24 +2084,30 @@ def markdown_table(headers: list[str], rows: list[list[Any]]) -> list[str]:
 
 
 def render_economics(report: dict[str, Any]) -> str:
+    close = report.get("run") == CLOSE_RUN
+    run_flag = " --run close" if close else ""
     lines: list[str] = [
-        "# Verification economics — fleet snapshot",
+        "# Verification economics — P4 close snapshot" if close else "# Verification economics — fleet snapshot",
         "",
         "Reproduce from a clean repository clone with the committed compact inputs:",
         "",
         "```sh",
-        "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs",
+        f"python3 goals/time-to-certainty/research/scripts/economics.py{run_flag} --from-inputs",
         "```",
         "",
         (
-            "Embedded replay verifies both compact inputs and `economics.json` against HEAD, then checks the "
+            "Embedded replay verifies both compact inputs, `economics-close.json` and the baseline "
+            "`economics.json` against HEAD, then checks the input bytes against `inputs/close/RECEIPTS.json`; "
+            "use `--allow-input-drift` only for non-ratified output."
+            if close
+            else "Embedded replay verifies both compact inputs and `economics.json` against HEAD, then checks the "
             "input bytes against `inputs/RECEIPTS.json`; use `--allow-input-drift` only for non-ratified output."
         ),
         "",
         "Validate an available frozen corpus before replaying it:",
         "",
         "```sh",
-        "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs --corpus <dir>",
+        f"python3 goals/time-to-certainty/research/scripts/economics.py{run_flag} --from-inputs --corpus <dir>",
         "```",
         "",
         "Corpus path, digest, manifest, or compact-fact drift fails closed before either output is written.",
@@ -1712,6 +2193,8 @@ def render_economics(report: dict[str, Any]) -> str:
             for row in report["localWrapperLanes"]
         ],
     )
+    if close:
+        lines += render_close_inner_lanes(report)
     lines += ["", "## C. Attempts and first actionable failure", ""]
     outcome = report["attempts"]
     lines += markdown_table(
@@ -1845,13 +2328,120 @@ def render_economics(report: dict[str, Any]) -> str:
             ["Failed preview allocation", f"{report['executionAmplification']['mergedPreviewFailedWrappersWithUnallocatedInnerRuns']} failed merged-preview wrappers have unknown child execution sets"],
             ["Episode tail", f"{report['redToGreen']['comparable24h']['closedEpisodesOver24hExcluded']} >24h closed episodes censored only for article comparison"],
             ["Cache", dq["wholeProofCacheHitRatio"]["reason"]],
-            ["Inputs", f"{len(report['inputs']['sourceFiles'])} replay files and {len(report['inputs']['corpusFiles'])} frozen corpus receipts; every path and sha256_12 in economics.json"],
+            ["Inputs", f"{len(report['inputs']['sourceFiles'])} replay files and {len(report['inputs']['corpusFiles'])} frozen corpus receipts; every path and sha256_12 in {ECONOMICS_JSON.name}"],
         ],
     )
+    if close:
+        lines += render_close_comparison(report)
     text = "\n".join(lines) + "\n"
     if len(text.splitlines()) > 300:
-        raise SystemExit(f"economics.md would exceed 300 lines ({len(text.splitlines())})")
+        raise SystemExit(f"{ECONOMICS_MD.name} would exceed 300 lines ({len(text.splitlines())})")
     return text
+
+
+def render_close_inner_lanes(report: dict[str, Any]) -> list[str]:
+    totals = report["localInnerTotals"]
+    rows = report["localInnerLanes"]
+    lines = [
+        "",
+        "## B2. Directly measured local inner lanes (separate population)",
+        "",
+        (
+            f"{totals['measuredLaneExecutions']} timed inner executions across {totals['contributingAttempts']} "
+            f"attempts, {fmt_ms(totals['totalMeasuredLaneDurationMs'])} in total, "
+            f"{totals['accountedLaneTimeAsPctOfAttemptElapsed']}% of those attempts' elapsed time. Shares are within "
+            f"this population and are never added to section B. Top {CLOSE_TOP_INNER_ROWS} of {len(rows)} rows; "
+            f"`{ECONOMICS_JSON.name}` has all of them."
+        ),
+        "",
+    ]
+    lines += markdown_table(
+        ["Inner lane", "phase", "attempts", "p50 ms", "p95 ms", "total", "inner time share"],
+        [
+            [
+                row["id"] if row["id"] == row["label"] else f"{row['id']} / {row['label']}",
+                row["phase"],
+                row["attempts"],
+                row["p50DurationMs"],
+                row["p95DurationMs"],
+                fmt_ms(row["totalDurationMs"]),
+                f"{row['shareOfMeasuredLocalLaneTimePct']}%",
+            ]
+            for row in rows[:CLOSE_TOP_INNER_ROWS]
+        ],
+    )
+    return lines
+
+
+def render_comparison_cell(value: Any, unit: str) -> str:
+    if value is None:
+        return "n/a"
+    if unit == "ms":
+        return fmt_ms(value)
+    if unit == "pct":
+        return f"{value}%"
+    return str(value)
+
+
+def render_close_comparison(report: dict[str, Any]) -> list[str]:
+    comparison = report["baselineComparison"]
+    post = report["postBaseline"]
+    terminations = report["terminations"]
+    fingerprint = report["unchangedFingerprint"]
+    lines = [
+        "",
+        "## Close versus P0 baseline",
+        "",
+        (
+            f"Ruling 8 rows, same script and recipe. P0 baseline: `{comparison['baseline']}` "
+            f"(live capture {comparison['baselineLiveCapturedAt']}). Close: the union population of this "
+            f"report. Post-P0: the same recipe over the {post['finishedAttempts']} finished attempts that "
+            f"started after {post['cutUtc']}. `n/a` in the baseline column means the P0 report does not carry the row."
+        ),
+        "",
+    ]
+    lines += markdown_table(
+        ["Id", "Measure", "P0 baseline", "Close (union)", "Close (post-P0 attempts)"],
+        [
+            [
+                row["id"],
+                row["measure"],
+                render_comparison_cell(row["baseline"], row["unit"]),
+                render_comparison_cell(row["close"], row["unit"]),
+                render_comparison_cell(row["closePostBaseline"], row["unit"]),
+            ]
+            for row in comparison["rows"]
+        ],
+    )
+    censoring = [
+        (label, section["redToGreen"]["comparable24h"])
+        for label, section in (("union", report), ("post-P0", post))
+    ]
+    lines += [
+        "",
+        " ".join(
+            f"M1 {label}: {episodes['closedEpisodes']} closed episodes against {episodes['rightCensoredStreaks']} "
+            f"right-censored streaks ({episodes['rightCensoredRedAttempts']} red attempts)"
+            + (
+                ", so its closed-episode percentiles are a lower-bound sample (long streaks are still open)."
+                if episodes["rightCensoredStreaks"] > episodes["closedEpisodes"]
+                else "."
+            )
+            for label, episodes in censoring
+        ),
+        "",
+        (
+            f"M4 method: {fingerprint['method']}. "
+            "M3 local runs come from verdict inner lanes and hosted runs from the Check runs created on or after "
+            f"{report['hosted']['cutoffDateUtc']}, so the union and post-P0 columns share one hosted join."
+        ),
+        "",
+    ]
+    lines += markdown_table(
+        ["M5 journaled termination reason", "attempts (union)"],
+        [[row["reason"], row["attempts"]] for row in terminations["reasonMix"]] or [["none journaled", 0]],
+    )
+    return lines
 
 
 def render_report(report: dict[str, Any]) -> str:
@@ -1944,17 +2534,23 @@ def corpus_receipts_from_report(report: dict[str, Any], label: str) -> list[dict
     return sorted(normalized, key=lambda row: (row["path"], str(row.get("kind"))))
 
 
+def baseline_json_path() -> Path:
+    """The ratified P0 report, which carries the frozen corpus receipts for every run."""
+    return ECONOMICS_JSON if RUN == BASELINE_RUN else OUTPUT_ROOT / "economics.json"
+
+
 def load_worktree_corpus_receipts() -> list[dict[str, Any]]:
-    if not ECONOMICS_JSON.is_file():
-        raise SystemExit(f"missing {portable_path(ECONOMICS_JSON)} with frozen corpus receipts")
-    report = parse_json_file(ECONOMICS_JSON)
+    baseline = baseline_json_path()
+    if not baseline.is_file():
+        raise SystemExit(f"missing {portable_path(baseline)} with frozen corpus receipts")
+    report = parse_json_file(baseline)
     if not isinstance(report, dict):
-        raise SystemExit(f"malformed {portable_path(ECONOMICS_JSON)}")
-    return corpus_receipts_from_report(report, portable_path(ECONOMICS_JSON))
+        raise SystemExit(f"malformed {portable_path(baseline)}")
+    return corpus_receipts_from_report(report, portable_path(baseline))
 
 
 def load_committed_corpus_receipts() -> list[dict[str, Any]]:
-    relative = ECONOMICS_JSON.relative_to(REPO_ROOT).as_posix()
+    relative = baseline_json_path().relative_to(REPO_ROOT).as_posix()
     completed = subprocess.run(
         ["git", "show", f"HEAD:{relative}"],
         cwd=REPO_ROOT,
@@ -2105,13 +2701,35 @@ def expected_embedded_input_receipts() -> list[dict[str, Any]] | None:
     return normalized
 
 
+def write_input_receipts() -> None:
+    """Record the byte receipts of the two compact inputs beside them.
+
+    A capture writes this once; replay checks the committed inputs against it.
+    """
+    receipts = embedded_input_receipts()
+    if len(receipts) != 2:
+        raise SystemExit("cannot write input receipts until both compact inputs exist")
+    write_json(
+        INPUT_RECEIPTS,
+        {
+            "files": sorted(receipts, key=lambda row: row["path"]),
+            "schemaVersion": INPUT_RECEIPTS_SCHEMA,
+        },
+    )
+    print(f"wrote {portable_path(INPUT_RECEIPTS)}")
+
+
 def embedded_input_validation_error(paths: list[str]) -> str:
     rendered = "\n".join(f"  - {path}" for path in sorted(set(paths)))
     return f"embedded input validation failed; differing paths:\n{rendered}"
 
 
 def validate_embedded_inputs(allow_input_drift: bool) -> str:
-    evidence_paths = (HOSTED_SNAPSHOT, LIVE_SNAPSHOT, ECONOMICS_JSON, INPUT_RECEIPTS)
+    evidence_paths: tuple[Path, ...] = (HOSTED_SNAPSHOT, LIVE_SNAPSHOT, ECONOMICS_JSON, INPUT_RECEIPTS)
+    if RUN == CLOSE_RUN:
+        # The close report quotes the ratified baseline row by row, so the
+        # baseline it reads must be the committed one too.
+        evidence_paths = (*evidence_paths, baseline_json_path())
     differing_paths = git_blob_drift_paths(evidence_paths)
     expected_receipts = expected_embedded_input_receipts()
     if expected_receipts is None:
@@ -2182,7 +2800,11 @@ def build_report(
         raise SystemExit("compact live input has no embedded frozen facts")
     expected_corpus_receipts = load_worktree_corpus_receipts()
     corpus_validation = "embedded"
-    if corpus_root.is_dir():
+    # A corpus is validated only when `--corpus` names it. The repository copy
+    # was redacted after ratification (#1032, #1037, #1041: message text only),
+    # so its digests no longer match the ratified receipts and an implicit
+    # validation would fail every default replay closed.
+    if corpus_requested and corpus_root.is_dir():
         committed_receipts = load_committed_corpus_receipts()
         corpus_validation, payloads = validate_corpus(
             corpus_root,
@@ -2201,8 +2823,7 @@ def build_report(
     else:
         frozen_attempts, frozen_verdicts, admissions = embedded_frozen_payloads(live_snapshot)
         print(
-            f"repository corpus absent at {DEFAULT_CORPUS_RELATIVE.as_posix()}; "
-            "using frozen facts embedded in live-journals.json.gz",
+            f"no --corpus given; using frozen facts embedded in {portable_path(LIVE_SNAPSHOT)}",
             file=sys.stderr,
         )
     live_attempts, live_verdicts, states, rss = live_payloads(live_snapshot)
@@ -2266,11 +2887,58 @@ def build_report(
         },
         "unchangedFingerprint": fingerprint,
     }
+    if RUN == CLOSE_RUN:
+        add_close_sections(
+            report,
+            attempts=attempts,
+            starts=start_rows(all_attempt_sources),
+            states=states,
+            hosted_snapshot=hosted_snapshot,
+            hosted=hosted,
+        )
     if corpus_validation == "drifted":
         report["corpusValidation"] = "drifted"
     elif embedded_validation == "embedded-drifted":
         report["corpusValidation"] = "embedded-drifted"
     return redact(report)
+
+
+def add_close_sections(
+    report: dict[str, Any],
+    *,
+    attempts: list[dict[str, Any]],
+    starts: dict[tuple[str, str, str], dt.datetime | None],
+    states: list[dict[str, Any]],
+    hosted_snapshot: dict[str, Any],
+    hosted: dict[str, Any],
+) -> None:
+    """The close run's additive sections; the baseline document never carries them."""
+    baseline_path = baseline_json_path()
+    baseline = parse_json_file(baseline_path)
+    if not isinstance(baseline, dict) or baseline.get("schemaVersion") != REPORT_SCHEMA:
+        raise SystemExit(f"malformed baseline report {portable_path(baseline_path)}")
+    cut = parse_ts(baseline.get("dataQuality", {}).get("liveCapturedAt"))
+    if cut is None:
+        raise SystemExit(f"baseline report {portable_path(baseline_path)} has no liveCapturedAt")
+    inner_rows, inner_totals = inner_lane_metrics(attempts)
+    report["run"] = CLOSE_RUN
+    report["localInnerLanes"] = inner_rows
+    report["localInnerTotals"] = inner_totals
+    report["redToGreen"] = red_to_green(attempts, include_inner=True)
+    report["unchangedFingerprint"] = close_fingerprint_quality(attempts, states)
+    report["terminations"] = termination_metrics(attempts, starts)
+    report["dataQuality"]["innerLaneDurationLimitation"] = (
+        "post-A5 verdicts list inner lanes with durationMs and parentLaneId after their wrappers; "
+        "wrapper and inner lanes are separate populations (ruling 74) and are never summed; "
+        "pre-A5 verdicts carry wrappers only"
+    )
+    post_baseline = post_baseline_metrics(attempts, starts, hosted_snapshot, hosted, cut)
+    report["postBaseline"] = post_baseline
+    report["baselineComparison"] = {
+        "baseline": portable_path(baseline_path),
+        "baselineLiveCapturedAt": format_ts(cut),
+        "rows": baseline_comparison(baseline, report, post_baseline),
+    }
 
 
 def validate_public_hygiene(paths: list[Path]) -> None:
@@ -2289,8 +2957,37 @@ def validate_public_hygiene(paths: list[Path]) -> None:
             raise SystemExit(f"credential-shaped text leaked into {portable_path(path)}")
 
 
+def configure_run(run: str) -> None:
+    """Point the module's input and output paths at one run's files."""
+    global RUN, INPUT_ROOT, LIVE_SNAPSHOT, HOSTED_SNAPSHOT, INPUT_RECEIPTS, ECONOMICS_JSON, ECONOMICS_MD
+    if run not in RUN_NAMES:
+        raise SystemExit(f"unknown run {run!r}; expected one of {', '.join(RUN_NAMES)}")
+    RUN = run
+    close = run == CLOSE_RUN
+    INPUT_ROOT = OUTPUT_ROOT / "inputs" / CLOSE_INPUT_DIRECTORY if close else OUTPUT_ROOT / "inputs"
+    LIVE_SNAPSHOT = INPUT_ROOT / "live-journals.json.gz"
+    HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json.gz"
+    INPUT_RECEIPTS = INPUT_ROOT / "RECEIPTS.json"
+    ECONOMICS_JSON = OUTPUT_ROOT / (CLOSE_JSON_NAME if close else "economics.json")
+    ECONOMICS_MD = OUTPUT_ROOT / (CLOSE_MD_NAME if close else "economics.md")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--run",
+        choices=RUN_NAMES,
+        default=BASELINE_RUN,
+        help=(
+            "baseline (default): the ratified P0 inputs and economics.json/.md; close: the P4 close re-run, "
+            "inputs under inputs/close/ and economics-close.json/.md beside the baseline"
+        ),
+    )
+    parser.add_argument(
+        "--projects-root",
+        type=Path,
+        help="directory holding every clone and lane (default: derived from the repository root)",
+    )
     parser.add_argument("--capture-live", action="store_true", help="capture current mutable fleet journal inputs")
     parser.add_argument("--capture-hosted", action="store_true", help="capture the last 14 UTC dates of Check runs")
     parser.add_argument(
@@ -2318,12 +3015,21 @@ def main() -> None:
         parser.error("--allow-corpus-drift requires --corpus <dir>")
     if args.allow_input_drift and args.corpus is not None:
         parser.error("--allow-input-drift cannot be combined with --corpus")
+    global PROJECTS_ROOT
+    if args.projects_root is not None:
+        if not args.projects_root.is_dir():
+            parser.error(f"--projects-root is not a directory: {args.projects_root}")
+        PROJECTS_ROOT = args.projects_root.resolve()
+    if args.run != BASELINE_RUN:
+        configure_run(args.run)
     corpus_root = args.corpus if args.corpus is not None else DEFAULT_CORPUS
     if args.capture_live:
         capture_live(corpus_root)
     if args.capture_hosted:
         capture_hosted()
     if args.capture_live or args.capture_hosted:
+        if RUN == CLOSE_RUN and LIVE_SNAPSHOT.is_file() and HOSTED_SNAPSHOT.is_file():
+            write_input_receipts()
         return
 
     from_inputs = args.from_inputs or (LIVE_SNAPSHOT.is_file() and HOSTED_SNAPSHOT.is_file())

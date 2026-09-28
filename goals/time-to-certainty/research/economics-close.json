@@ -38,346 +38,567 @@
   "attempts": {
     "all": {
       "failureKindMix": {
-        "handler-error": 778,
-        "step-exit": 832
+        "handler-error": 969,
+        "step-exit": 1205,
+        "unknown": 707
       },
       "modeMix": {
-        "closeout": 268,
-        "monitor": 262,
-        "publish": 1002,
-        "repair": 245,
-        "verify": 965
+        "closeout": 431,
+        "monitor": 370,
+        "publish": 1738,
+        "repair": 332,
+        "unknown": 1,
+        "verify": 1382
       },
       "outcomeMix": {
-        "failure": 1610,
-        "success": 1132
+        "failure": 2174,
+        "success": 1373,
+        "unknown": 707
       }
     },
     "comparable": {
       "failureKindMix": {
-        "handler-error": 273,
-        "step-exit": 706
+        "handler-error": 386,
+        "step-exit": 1024,
+        "unknown": 659
       },
       "modeMix": {
-        "publish": 872,
-        "repair": 245,
-        "verify": 716
+        "publish": 1602,
+        "repair": 332,
+        "verify": 1121
       },
       "outcomeMix": {
-        "failure": 979,
-        "success": 854
+        "failure": 1410,
+        "success": 986,
+        "unknown": 659
       }
     }
   },
+  "baselineComparison": {
+    "baseline": "goals/time-to-certainty/research/economics.json",
+    "baselineLiveCapturedAt": "2026-09-03T06:29:33.572Z",
+    "rows": [
+      {
+        "baseline": 2597852,
+        "close": 2537181,
+        "closePostBaseline": 3671966,
+        "id": "M1",
+        "measure": "M1 P50 comparable <=24h",
+        "unit": "ms"
+      },
+      {
+        "baseline": 14224890,
+        "close": 15591302,
+        "closePostBaseline": 36741278,
+        "id": "M1",
+        "measure": "M1 P95 comparable <=24h",
+        "unit": "ms"
+      },
+      {
+        "baseline": 328,
+        "close": 440,
+        "closePostBaseline": 58,
+        "id": "M1",
+        "measure": "M1 closed episodes (<=24h)",
+        "unit": "count"
+      },
+      {
+        "baseline": 115,
+        "close": 261,
+        "closePostBaseline": 129,
+        "id": "M1",
+        "measure": "M1 right-censored streaks (<=24h)",
+        "unit": "count"
+      },
+      {
+        "baseline": 313,
+        "close": 1012,
+        "closePostBaseline": 614,
+        "id": "M1",
+        "measure": "M1 right-censored red attempts (<=24h)",
+        "unit": "count"
+      },
+      {
+        "baseline": 2614412,
+        "close": 2607070,
+        "closePostBaseline": 3998760,
+        "id": "M1",
+        "measure": "M1 P50 uncut",
+        "unit": "ms"
+      },
+      {
+        "baseline": 22022279,
+        "close": 25957422,
+        "closePostBaseline": 48593855,
+        "id": "M1",
+        "measure": "M1 P95 uncut",
+        "unit": "ms"
+      },
+      {
+        "baseline": 9742,
+        "close": 11412,
+        "closePostBaseline": 20481,
+        "id": "M2",
+        "measure": "M2 start offset P50",
+        "unit": "ms"
+      },
+      {
+        "baseline": 1135031,
+        "close": 1094118,
+        "closePostBaseline": 648511,
+        "id": "M2",
+        "measure": "M2 start offset P95",
+        "unit": "ms"
+      },
+      {
+        "baseline": 502984,
+        "close": 450976,
+        "closePostBaseline": 292335,
+        "id": "M2",
+        "measure": "M2 completion P50",
+        "unit": "ms"
+      },
+      {
+        "baseline": 1835532,
+        "close": 2060865,
+        "closePostBaseline": 3425534,
+        "id": "M2",
+        "measure": "M2 completion P95",
+        "unit": "ms"
+      },
+      {
+        "baseline": 832,
+        "close": 1205,
+        "closePostBaseline": 335,
+        "id": "M2",
+        "measure": "M2 reconstructable failures",
+        "unit": "count"
+      },
+      {
+        "baseline": 1.264,
+        "close": 1.119,
+        "closePostBaseline": 1.184,
+        "id": "M3",
+        "measure": "M3 Test Integration runs per attempt",
+        "unit": "count"
+      },
+      {
+        "baseline": 3,
+        "close": 3,
+        "closePostBaseline": 3,
+        "id": "M3",
+        "measure": "M3 Test Integration max runs in one attempt",
+        "unit": "count"
+      },
+      {
+        "baseline": 1.264,
+        "close": 1.129,
+        "closePostBaseline": 1.199,
+        "id": "M3",
+        "measure": "M3 Docgen runs per attempt",
+        "unit": "count"
+      },
+      {
+        "baseline": 3,
+        "close": 3,
+        "closePostBaseline": 3,
+        "id": "M3",
+        "measure": "M3 Docgen max runs in one attempt",
+        "unit": "count"
+      },
+      {
+        "baseline": "unmeasurable",
+        "close": "measured",
+        "closePostBaseline": "measured",
+        "id": "M4",
+        "measure": "M4 classification",
+        "unit": "label"
+      },
+      {
+        "baseline": null,
+        "close": 16,
+        "closePostBaseline": 16,
+        "id": "M4",
+        "measure": "M4 failed unchanged fingerprint then green",
+        "unit": "count"
+      },
+      {
+        "baseline": 0,
+        "close": 1060,
+        "closePostBaseline": 1060,
+        "id": "M4",
+        "measure": "M4 attempts with diff fingerprint",
+        "unit": "count"
+      },
+      {
+        "baseline": 327,
+        "close": 97,
+        "closePostBaseline": 23,
+        "id": "M5",
+        "measure": "M5 starts without finish",
+        "unit": "count"
+      },
+      {
+        "baseline": 3069,
+        "close": 4350,
+        "closePostBaseline": 1152,
+        "id": "M5",
+        "measure": "M5 starts",
+        "unit": "count"
+      },
+      {
+        "baseline": 10.65,
+        "close": 2.23,
+        "closePostBaseline": 2.0,
+        "id": "M5",
+        "measure": "M5 starts without finish pct",
+        "unit": "pct"
+      },
+      {
+        "baseline": null,
+        "close": 707,
+        "closePostBaseline": 446,
+        "id": "M5",
+        "measure": "M5 journaled terminations",
+        "unit": "count"
+      },
+      {
+        "baseline": null,
+        "close": 280,
+        "closePostBaseline": 19,
+        "id": "M5",
+        "measure": "M5 sweep-stamped terminations",
+        "unit": "count"
+      },
+      {
+        "baseline": 327,
+        "close": 377,
+        "closePostBaseline": 42,
+        "id": "M5",
+        "measure": "M5 starts without an attempt-written terminal row",
+        "unit": "count"
+      }
+    ]
+  },
+  "corpusValidation": "embedded-drifted",
   "dataQuality": {
-    "attemptWindowEndUtc": "2026-09-03T06:26:29.913Z",
+    "attemptWindowEndUtc": "2026-09-28T12:56:00.841Z",
     "attemptWindowStartUtc": "2026-08-04T12:22:57.623Z",
     "clockAssumption": "all ISO timestamps normalized to UTC; admission epoch milliseconds interpreted as UTC instants",
     "diagnostics": {
-      "compactionReceipts": 0,
-      "duplicateFinishedRowsDeduplicated": 2679,
-      "duplicateStartedRowsDeduplicated": 2998,
-      "finishedAttempts": 2742,
+      "compactionReceipts": 2,
+      "duplicateFinishedRowsDeduplicated": 2593,
+      "duplicateStartedRowsDeduplicated": 2907,
+      "finishedAttempts": 4254,
       "invalidRows": 0,
-      "leftCensoredJournals": 0,
+      "leftCensoredJournals": 2,
       "orphanVerdictFilesAdded": 0,
-      "starts": 3069,
-      "startsWithoutFinish": 327,
-      "unkeyedVerdictFiles": 484,
-      "verdictsWithoutStart": 0
+      "starts": 4350,
+      "startsWithoutFinish": 97,
+      "unkeyedVerdictFiles": 486,
+      "verdictsWithoutStart": 1
     },
-    "fingerprintStateFiles": 459,
-    "hostedCapturedAt": "2026-09-03T06:29:38.367Z",
-    "innerLaneDurationLimitation": "pre-push inner states have no durationMs; merged-preview ci:local inner states are absent entirely",
-    "liveCapturedAt": "2026-09-03T06:29:33.572Z",
+    "fingerprintStateFiles": 517,
+    "hostedCapturedAt": "2026-09-28T12:38:17.454Z",
+    "innerLaneDurationLimitation": "post-A5 verdicts list inner lanes with durationMs and parentLaneId after their wrappers; wrapper and inner lanes are separate populations (ruling 74) and are never summed; pre-A5 verdicts carry wrappers only",
+    "liveCapturedAt": "2026-09-28T12:57:53.988Z",
     "percentileEstimator": "true nearest-rank: sorted index ceil(p*n)-1",
     "ringBuffer": {
       "capAttemptsPerBranchJournal": 50,
       "exactLifetimeEvictionsMeasurable": false,
-      "journalsAtCap": 7,
-      "journalsComparedAcrossFrozenAndLive": 282,
-      "journalsObserved": 295,
+      "journalsAtCap": 9,
+      "journalsComparedAcrossFrozenAndLive": 269,
+      "journalsObserved": 465,
       "observedEvictedAttemptIdsSinceFrozenCapture": 0,
       "unknownHistoricalEvictionsLowerBound": 0
     },
-    "rssFiles": 34,
-    "rssFilesWithNumericPeak": 4,
-    "verdictV1OrOtherAttempts": 0,
-    "verdictV2Attempts": 2742,
+    "rssFiles": 256,
+    "rssFilesWithNumericPeak": 13,
+    "verdictV1OrOtherAttempts": 707,
+    "verdictV2Attempts": 3547,
     "wholeProofCacheHitRatio": {
       "measurable": false,
       "reason": "forbidden by ship-velocity C5; inputs contain no first-cold-lane task accounting"
     }
   },
   "executionAmplification": {
-    "hostedJobsMatched": 3387,
-    "hostedPrRunsMatchedToPublishAttempts": 206,
-    "hostedPrRunsUnmatched": 519,
+    "hostedJobsMatched": 1204,
+    "hostedPrRunsMatchedToPublishAttempts": 86,
+    "hostedPrRunsUnmatched": 891,
     "matchRule": "same headSha change and branch; any (headSha, workflow attempt, run id) within the publish window anchors every hosted rerun for that change to the nearest local publish interval",
-    "mergedPreviewFailedWrappersWithUnallocatedInnerRuns": 2,
+    "mergedPreviewFailedWrappersWithUnallocatedInnerRuns": 7,
     "rows": [
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Lint",
-        "executions": 496,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 277,
-        "logicalAttempts": 426,
+        "executions": 495,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 380,
+        "logicalAttempts": 461,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.164
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.074
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Heavy / Lint Policy",
-        "executions": 350,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 131,
-        "logicalAttempts": 280,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.25
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Heavy / Check",
-        "executions": 496,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 277,
-        "logicalAttempts": 426,
+        "executions": 437,
+        "hostedRunsMatchedToPublishAttempt": 49,
+        "localInnerRunsObserved": 357,
+        "logicalAttempts": 411,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.164
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.063
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Test Unit",
-        "executions": 318,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 99,
-        "logicalAttempts": 252,
+        "executions": 285,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 170,
+        "logicalAttempts": 256,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.262
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.113
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Heavy / Test Integration",
-        "executions": 316,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 97,
-        "logicalAttempts": 250,
+        "executions": 273,
+        "hostedRunsMatchedToPublishAttempt": 49,
+        "localInnerRunsObserved": 193,
+        "logicalAttempts": 244,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.264
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.119
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Heavy / Docgen",
-        "executions": 316,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 97,
-        "logicalAttempts": 250,
+        "executions": 281,
+        "hostedRunsMatchedToPublishAttempt": 49,
+        "localInnerRunsObserved": 201,
+        "logicalAttempts": 249,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.264
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.129
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Codegen Drift",
-        "executions": 233,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 14,
+        "executions": 255,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 140,
         "logicalAttempts": 213,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.094
+        "reusedLocalProofs": 2,
+        "runsPerAttempt": 1.197
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Repo Sanity",
-        "executions": 620,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 401,
-        "logicalAttempts": 540,
+        "executions": 653,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 538,
+        "logicalAttempts": 601,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.148
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Heavy / Coverage Regression",
-        "executions": 224,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 5,
-        "logicalAttempts": 206,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
+        "reusedLocalProofs": 2,
         "runsPerAttempt": 1.087
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Knip",
-        "executions": 931,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 712,
-        "logicalAttempts": 789,
-        "maxRunsInOneAttempt": 4,
-        "reusedLocalProofs": 13,
-        "runsPerAttempt": 1.18
+        "executions": 1021,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 906,
+        "logicalAttempts": 930,
+        "maxRunsInOneAttempt": 3,
+        "reusedLocalProofs": 14,
+        "runsPerAttempt": 1.098
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Commitlint",
-        "executions": 233,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 14,
-        "logicalAttempts": 213,
+        "executions": 257,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 142,
+        "logicalAttempts": 216,
         "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.094
+        "reusedLocalProofs": 2,
+        "runsPerAttempt": 1.19
       },
       {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
         "context": "Secret Scanning",
-        "executions": 610,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 391,
-        "logicalAttempts": 538,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.134
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Security",
-        "executions": 610,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 391,
-        "logicalAttempts": 538,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.134
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "SAST",
-        "executions": 609,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 390,
-        "logicalAttempts": 538,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.132
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Nix Shell",
-        "executions": 609,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 390,
-        "logicalAttempts": 538,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.132
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Professional Desktop IPC Stdio",
-        "executions": 224,
-        "hostedRunsMatchedToPublishAttempt": 206,
-        "localInnerRunsObserved": 5,
-        "logicalAttempts": 206,
-        "maxRunsInOneAttempt": 3,
-        "reusedLocalProofs": 1,
-        "runsPerAttempt": 1.087
-      },
-      {
-        "ciParityRunsInferredFromSuccessfulWrapper": 13,
-        "context": "Heavy / Doctest",
-        "executions": 104,
-        "hostedRunsMatchedToPublishAttempt": 91,
-        "localInnerRunsObserved": 0,
-        "logicalAttempts": 90,
+        "executions": 554,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 439,
+        "logicalAttempts": 537,
         "maxRunsInOneAttempt": 2,
         "reusedLocalProofs": 0,
-        "runsPerAttempt": 1.156
+        "runsPerAttempt": 1.032
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "Security",
+        "executions": 554,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 439,
+        "logicalAttempts": 537,
+        "maxRunsInOneAttempt": 2,
+        "reusedLocalProofs": 0,
+        "runsPerAttempt": 1.032
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "SAST",
+        "executions": 552,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 437,
+        "logicalAttempts": 536,
+        "maxRunsInOneAttempt": 2,
+        "reusedLocalProofs": 1,
+        "runsPerAttempt": 1.03
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "Nix Shell",
+        "executions": 552,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 437,
+        "logicalAttempts": 536,
+        "maxRunsInOneAttempt": 2,
+        "reusedLocalProofs": 1,
+        "runsPerAttempt": 1.03
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "Professional Desktop IPC Stdio",
+        "executions": 232,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 117,
+        "logicalAttempts": 192,
+        "maxRunsInOneAttempt": 3,
+        "reusedLocalProofs": 3,
+        "runsPerAttempt": 1.208
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "Heavy / Doctest",
+        "executions": 156,
+        "hostedRunsMatchedToPublishAttempt": 49,
+        "localInnerRunsObserved": 76,
+        "logicalAttempts": 136,
+        "maxRunsInOneAttempt": 3,
+        "reusedLocalProofs": 2,
+        "runsPerAttempt": 1.147
+      },
+      {
+        "ciParityRunsInferredFromSuccessfulWrapper": 31,
+        "context": "JSDoc Ratchet",
+        "executions": 115,
+        "hostedRunsMatchedToPublishAttempt": 84,
+        "localInnerRunsObserved": 0,
+        "logicalAttempts": 109,
+        "maxRunsInOneAttempt": 2,
+        "reusedLocalProofs": 0,
+        "runsPerAttempt": 1.055
       }
     ]
   },
   "firstFailure": {
     "actionableLaneMix": [
       {
-        "attempts": 349,
-        "lane": "publish:00-head-install-preflight"
-      },
-      {
-        "attempts": 237,
-        "lane": "monitor:02-pr-checks-watch"
-      },
-      {
-        "attempts": 207,
-        "lane": "commit:01-git-commit"
-      },
-      {
-        "attempts": 137,
-        "lane": "full:01-pre-push"
-      },
-      {
-        "attempts": 96,
+        "attempts": 806,
         "lane": "unlocated"
       },
       {
-        "attempts": 91,
+        "attempts": 370,
+        "lane": "publish:00-head-install-preflight"
+      },
+      {
+        "attempts": 305,
+        "lane": "monitor:02-pr-checks-watch"
+      },
+      {
+        "attempts": 296,
+        "lane": "commit:01-git-commit"
+      },
+      {
+        "attempts": 157,
+        "lane": "full:00-cheap-gates"
+      },
+      {
+        "attempts": 152,
+        "lane": "full:01-pre-push"
+      },
+      {
+        "attempts": 151,
         "lane": "closeout:01-pr-context"
       },
       {
-        "attempts": 67,
+        "attempts": 70,
         "lane": "quality:lint"
       },
       {
-        "attempts": 65,
+        "attempts": 67,
         "lane": "quality:build"
       },
       {
-        "attempts": 47,
+        "attempts": 53,
+        "lane": "quality:lint-policy"
+      },
+      {
+        "attempts": 48,
         "lane": "fallow:audit"
       },
       {
         "attempts": 38,
-        "lane": "full:00-cheap-gates"
-      },
-      {
-        "attempts": 35,
         "lane": "quality:changeset-status"
       },
       {
-        "attempts": 23,
+        "attempts": 24,
         "lane": "quality:check"
       },
       {
         "attempts": 23,
-        "lane": "quality:lint-policy"
+        "lane": "quality:coverage"
       },
       {
-        "attempts": 18,
+        "attempts": 21,
         "lane": "publish:01-git-push"
       },
       {
-        "attempts": 17,
-        "lane": "repo-sanity:fallow-boundaries-config"
-      },
-      {
-        "attempts": 15,
+        "attempts": 20,
         "lane": "cheap-gates:goals-index"
       },
       {
-        "attempts": 14,
+        "attempts": 18,
+        "lane": "repo-sanity:fallow-boundaries-config"
+      },
+      {
+        "attempts": 17,
+        "lane": "feedback:00-cheap-gates"
+      },
+      {
+        "attempts": 17,
         "lane": "feedback:04-test"
       },
       {
-        "attempts": 13,
+        "attempts": 14,
+        "lane": "publish:02-pr-create"
+      },
+      {
+        "attempts": 14,
         "lane": "repo-sanity:bun-audit"
+      },
+      {
+        "attempts": 13,
+        "lane": "quality:docgen"
+      },
+      {
+        "attempts": 13,
+        "lane": "quality:knip"
       },
       {
         "attempts": 12,
@@ -389,23 +610,39 @@
       },
       {
         "attempts": 11,
-        "lane": "quality:knip"
+        "lane": "cheap-gates:exploration-atlas"
+      },
+      {
+        "attempts": 10,
+        "lane": "cheap-gates:test-tsgo"
       },
       {
         "attempts": 10,
         "lane": "full:01-review-fix"
       },
       {
+        "attempts": 10,
+        "lane": "publish:03-pr-provenance-stamp"
+      },
+      {
+        "attempts": 9,
+        "lane": "quality:jsdoc-ratchet"
+      },
+      {
         "attempts": 9,
         "lane": "repo-sanity:tsconfig-sync"
       },
       {
-        "attempts": 6,
-        "lane": "cheap-gates:exploration-atlas"
+        "attempts": 7,
+        "lane": "full:02-ci-parity"
+      },
+      {
+        "attempts": 7,
+        "lane": "pre-push:security"
       },
       {
         "attempts": 6,
-        "lane": "cheap-gates:test-tsgo"
+        "lane": "cheap-gates:effect-imports"
       },
       {
         "attempts": 6,
@@ -417,15 +654,19 @@
       },
       {
         "attempts": 5,
-        "lane": "pre-push:security"
+        "lane": "cheap-gates:schema-first"
       },
       {
-        "attempts": 4,
-        "lane": "cheap-gates:effect-imports"
-      },
-      {
-        "attempts": 4,
+        "attempts": 5,
         "lane": "cheap-gates:tsgo-rules"
+      },
+      {
+        "attempts": 5,
+        "lane": "pre-push:secrets"
+      },
+      {
+        "attempts": 4,
+        "lane": "fallow:dead-code"
       },
       {
         "attempts": 4,
@@ -433,19 +674,23 @@
       },
       {
         "attempts": 4,
-        "lane": "pre-push:secrets"
-      },
-      {
-        "attempts": 3,
-        "lane": "cheap-gates:schema-first"
-      },
-      {
-        "attempts": 3,
-        "lane": "fallow:dead-code"
+        "lane": "monitor:01-pr-context"
       },
       {
         "attempts": 3,
         "lane": "prepare:04-lint-fix"
+      },
+      {
+        "attempts": 3,
+        "lane": "quality:commitlint"
+      },
+      {
+        "attempts": 3,
+        "lane": "quality:security"
+      },
+      {
+        "attempts": 3,
+        "lane": "quality:test-unit"
       },
       {
         "attempts": 2,
@@ -457,7 +702,7 @@
       },
       {
         "attempts": 2,
-        "lane": "full:02-ci-parity"
+        "lane": "quality:check:tsgo-tests"
       },
       {
         "attempts": 2,
@@ -469,272 +714,295 @@
       },
       {
         "attempts": 1,
-        "lane": "monitor:01-pr-context"
+        "lane": "doctest"
+      },
+      {
+        "attempts": 1,
+        "lane": "lint-policy"
+      },
+      {
+        "attempts": 1,
+        "lane": "pre-push:nix"
+      },
+      {
+        "attempts": 1,
+        "lane": "pre-push:sast"
+      },
+      {
+        "attempts": 1,
+        "lane": "prepare:01-effect-imports"
+      },
+      {
+        "attempts": 1,
+        "lane": "prepare:05-explore-atlas"
+      },
+      {
+        "attempts": 1,
+        "lane": "quality:nix"
+      },
+      {
+        "attempts": 1,
+        "lane": "quality:secrets"
+      },
+      {
+        "attempts": 1,
+        "lane": "quality:storybook"
+      },
+      {
+        "attempts": 1,
+        "lane": "quality:test-integration"
+      },
+      {
+        "attempts": 1,
+        "lane": "repo-sanity:syncpack"
       }
     ],
-    "attemptsWithReconstructableOuterFailure": 832,
-    "attemptsWithoutReconstructableOuterFailure": 778,
-    "completionOffsetP50Ms": 502984,
-    "completionOffsetP95Ms": 1835532,
+    "attemptsWithReconstructableOuterFailure": 1205,
+    "attemptsWithoutReconstructableOuterFailure": 1676,
+    "completionOffsetP50Ms": 450976,
+    "completionOffsetP95Ms": 2060865,
     "offsetMethod": "sum prior duration-bearing outer verdict lanes; inter-lane overhead is absent",
     "receiptProxyMix": [
       {
-        "attempts": 1116,
+        "attempts": 2303,
         "class": "unclassified"
       },
       {
-        "attempts": 379,
+        "attempts": 397,
         "class": "scheduler-lock-bounce"
       },
       {
-        "attempts": 63,
+        "attempts": 89,
         "class": "stale-workspace-or-projection"
       },
       {
-        "attempts": 48,
+        "attempts": 81,
         "class": "base-churn"
       },
       {
-        "attempts": 4,
+        "attempts": 11,
         "class": "scheduler-or-submitter"
       }
     ],
-    "redAttempts": 1610,
-    "startOffsetP50Ms": 9742,
-    "startOffsetP95Ms": 1135031
+    "redAttempts": 2881,
+    "startOffsetP50Ms": 11412,
+    "startOffsetP95Ms": 1094118
   },
   "hosted": {
-    "completedRuns": 896,
-    "cutoffDateUtc": "2026-08-20",
+    "completedRuns": 1132,
+    "cutoffDateUtc": "2026-09-14",
     "laneRows": [
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 175,
-          "success": 706
+          "failure": 227,
+          "success": 835
         },
         "context": "Lint",
-        "p50DurationMs": 267000,
-        "p95DurationMs": 1231000,
-        "shareOfHostedRequiredLaneTimePct": 12.99,
-        "totalDurationMs": 416268000
+        "p50DurationMs": 3000,
+        "p95DurationMs": 4000,
+        "shareOfHostedRequiredLaneTimePct": 0.09,
+        "totalDurationMs": 3441000
       },
       {
-        "attempts": 881,
+        "attempts": 710,
         "conclusionMix": {
-          "cancelled": 149,
-          "failure": 52,
-          "success": 680
-        },
-        "context": "Heavy / Lint Policy",
-        "p50DurationMs": 363000,
-        "p95DurationMs": 432000,
-        "shareOfHostedRequiredLaneTimePct": 9.73,
-        "totalDurationMs": 311607000
-      },
-      {
-        "attempts": 881,
-        "conclusionMix": {
-          "cancelled": 171,
-          "failure": 35,
-          "success": 675
+          "cancelled": 312,
+          "failure": 29,
+          "success": 369
         },
         "context": "Heavy / Check",
-        "p50DurationMs": 383000,
-        "p95DurationMs": 765000,
-        "shareOfHostedRequiredLaneTimePct": 12.27,
-        "totalDurationMs": 393038000
+        "p50DurationMs": 212000,
+        "p95DurationMs": 3032000,
+        "shareOfHostedRequiredLaneTimePct": 12.97,
+        "totalDurationMs": 473055000
       },
       {
-        "attempts": 881,
+        "attempts": 1061,
         "conclusionMix": {
-          "cancelled": 198,
-          "failure": 66,
-          "success": 617
+          "cancelled": 1,
+          "failure": 341,
+          "success": 719
         },
         "context": "Test Unit",
-        "p50DurationMs": 495000,
-        "p95DurationMs": 1410000,
-        "shareOfHostedRequiredLaneTimePct": 14.71,
-        "totalDurationMs": 471238000
+        "p50DurationMs": 3000,
+        "p95DurationMs": 4000,
+        "shareOfHostedRequiredLaneTimePct": 0.1,
+        "totalDurationMs": 3744000
       },
       {
-        "attempts": 881,
+        "attempts": 711,
         "conclusionMix": {
-          "cancelled": 93,
-          "success": 788
+          "cancelled": 294,
+          "failure": 1,
+          "success": 416
         },
         "context": "Heavy / Test Integration",
-        "p50DurationMs": 137000,
-        "p95DurationMs": 211000,
-        "shareOfHostedRequiredLaneTimePct": 4.16,
-        "totalDurationMs": 133332000
+        "p50DurationMs": 209000,
+        "p95DurationMs": 2838000,
+        "shareOfHostedRequiredLaneTimePct": 12.16,
+        "totalDurationMs": 443554000
       },
       {
-        "attempts": 881,
+        "attempts": 710,
         "conclusionMix": {
-          "cancelled": 102,
-          "failure": 26,
-          "success": 753
+          "cancelled": 323,
+          "failure": 6,
+          "success": 381
         },
         "context": "Heavy / Docgen",
-        "p50DurationMs": 115000,
-        "p95DurationMs": 439000,
-        "shareOfHostedRequiredLaneTimePct": 5.42,
-        "totalDurationMs": 173487000
+        "p50DurationMs": 296000,
+        "p95DurationMs": 2986000,
+        "shareOfHostedRequiredLaneTimePct": 13.26,
+        "totalDurationMs": 483692000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 70,
-          "success": 811
+          "cancelled": 139,
+          "success": 923
         },
         "context": "Codegen Drift",
-        "p50DurationMs": 107000,
-        "p95DurationMs": 283000,
-        "shareOfHostedRequiredLaneTimePct": 2.89,
-        "totalDurationMs": 92639000
+        "p50DurationMs": 136000,
+        "p95DurationMs": 342000,
+        "shareOfHostedRequiredLaneTimePct": 4.02,
+        "totalDurationMs": 146452000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 103,
-          "failure": 23,
-          "success": 755
+          "cancelled": 194,
+          "failure": 60,
+          "success": 808
         },
         "context": "Repo Sanity",
-        "p50DurationMs": 183000,
-        "p95DurationMs": 307000,
-        "shareOfHostedRequiredLaneTimePct": 5.14,
-        "totalDurationMs": 164775000
+        "p50DurationMs": 257000,
+        "p95DurationMs": 381000,
+        "shareOfHostedRequiredLaneTimePct": 7.64,
+        "totalDurationMs": 278517000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 189,
-          "failure": 221,
-          "success": 471
-        },
-        "context": "Heavy / Coverage Regression",
-        "p50DurationMs": 603000,
-        "p95DurationMs": 928000,
-        "shareOfHostedRequiredLaneTimePct": 15.14,
-        "totalDurationMs": 485045000
-      },
-      {
-        "attempts": 881,
-        "conclusionMix": {
-          "cancelled": 78,
-          "failure": 6,
-          "success": 797
+          "cancelled": 131,
+          "failure": 4,
+          "success": 927
         },
         "context": "Knip",
-        "p50DurationMs": 80000,
-        "p95DurationMs": 122000,
-        "shareOfHostedRequiredLaneTimePct": 2.49,
-        "totalDurationMs": 79812000
+        "p50DurationMs": 121000,
+        "p95DurationMs": 182000,
+        "shareOfHostedRequiredLaneTimePct": 4.04,
+        "totalDurationMs": 147323000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 75,
-          "failure": 15,
-          "success": 791
+          "cancelled": 130,
+          "failure": 16,
+          "success": 916
         },
         "context": "Commitlint",
-        "p50DurationMs": 63000,
-        "p95DurationMs": 107000,
-        "shareOfHostedRequiredLaneTimePct": 2.07,
-        "totalDurationMs": 66349000
+        "p50DurationMs": 92000,
+        "p95DurationMs": 168000,
+        "shareOfHostedRequiredLaneTimePct": 3.43,
+        "totalDurationMs": 124946000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 65,
-          "failure": 6,
-          "success": 810
+          "cancelled": 121,
+          "success": 941
         },
         "context": "Secret Scanning",
-        "p50DurationMs": 54000,
-        "p95DurationMs": 130000,
-        "shareOfHostedRequiredLaneTimePct": 1.89,
-        "totalDurationMs": 60694000
+        "p50DurationMs": 66000,
+        "p95DurationMs": 243000,
+        "shareOfHostedRequiredLaneTimePct": 2.89,
+        "totalDurationMs": 105495000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 68,
-          "failure": 4,
-          "success": 809
+          "cancelled": 108,
+          "failure": 6,
+          "success": 948
         },
         "context": "Security",
-        "p50DurationMs": 28000,
-        "p95DurationMs": 68000,
-        "shareOfHostedRequiredLaneTimePct": 1.23,
-        "totalDurationMs": 39272000
+        "p50DurationMs": 53000,
+        "p95DurationMs": 147000,
+        "shareOfHostedRequiredLaneTimePct": 2.32,
+        "totalDurationMs": 84680000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 78,
-          "success": 803
+          "cancelled": 138,
+          "success": 924
         },
         "context": "SAST",
-        "p50DurationMs": 82000,
-        "p95DurationMs": 141000,
-        "shareOfHostedRequiredLaneTimePct": 2.5,
-        "totalDurationMs": 80135000
+        "p50DurationMs": 115000,
+        "p95DurationMs": 273000,
+        "shareOfHostedRequiredLaneTimePct": 4.12,
+        "totalDurationMs": 150093000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 85,
-          "failure": 1,
-          "success": 795
+          "cancelled": 140,
+          "success": 922
         },
         "context": "Nix Shell",
-        "p50DurationMs": 102000,
-        "p95DurationMs": 141000,
-        "shareOfHostedRequiredLaneTimePct": 3.07,
-        "totalDurationMs": 98406000
+        "p50DurationMs": 131000,
+        "p95DurationMs": 214000,
+        "shareOfHostedRequiredLaneTimePct": 4.43,
+        "totalDurationMs": 161383000
       },
       {
-        "attempts": 881,
+        "attempts": 1062,
         "conclusionMix": {
-          "cancelled": 54,
-          "failure": 1,
-          "success": 826
+          "cancelled": 96,
+          "success": 966
         },
         "context": "Professional Desktop IPC Stdio",
-        "p50DurationMs": 69000,
-        "p95DurationMs": 111000,
-        "shareOfHostedRequiredLaneTimePct": 1.64,
-        "totalDurationMs": 52666000
+        "p50DurationMs": 35000,
+        "p95DurationMs": 245000,
+        "shareOfHostedRequiredLaneTimePct": 2.63,
+        "totalDurationMs": 95771000
       },
       {
-        "attempts": 661,
+        "attempts": 711,
         "conclusionMix": {
-          "cancelled": 77,
-          "failure": 3,
-          "success": 581
+          "cancelled": 292,
+          "failure": 2,
+          "success": 417
         },
         "context": "Heavy / Doctest",
-        "p50DurationMs": 82000,
-        "p95DurationMs": 219000,
-        "shareOfHostedRequiredLaneTimePct": 2.65,
-        "totalDurationMs": 84799000
+        "p50DurationMs": 250000,
+        "p95DurationMs": 2838000,
+        "shareOfHostedRequiredLaneTimePct": 11.96,
+        "totalDurationMs": 436150000
+      },
+      {
+        "attempts": 1062,
+        "conclusionMix": {
+          "cancelled": 313,
+          "failure": 22,
+          "success": 727
+        },
+        "context": "JSDoc Ratchet",
+        "p50DurationMs": 541000,
+        "p95DurationMs": 594000,
+        "shareOfHostedRequiredLaneTimePct": 13.94,
+        "totalDurationMs": 508150000
       }
     ],
     "requiredContexts": [
       "Lint",
-      "Heavy / Lint Policy",
       "Heavy / Check",
       "Test Unit",
       "Heavy / Test Integration",
       "Heavy / Docgen",
       "Codegen Drift",
       "Repo Sanity",
-      "Heavy / Coverage Regression",
       "Knip",
       "Commitlint",
       "Secret Scanning",
@@ -742,32 +1010,35 @@
       "SAST",
       "Nix Shell",
       "Professional Desktop IPC Stdio",
-      "Heavy / Doctest"
+      "Heavy / Doctest",
+      "JSDoc Ratchet"
     ],
-    "runsCaptured": 896,
-    "totalHostedRequiredLaneDurationMs": 3203562000,
+    "runsCaptured": 1134,
+    "totalHostedRequiredLaneDurationMs": 3646446000,
     "workflowRows": [
       {
         "event": "pull_request",
         "outcomeMix": {
-          "cancelled": 262,
-          "failure": 172,
-          "success": 291
+          "cancelled": 586,
+          "failure": 156,
+          "success": 234,
+          "unknown": 1
         },
-        "p50DurationMs": 780000,
-        "p95DurationMs": 1729000,
-        "runs": 725
+        "p50DurationMs": 1063000,
+        "p95DurationMs": 7066000,
+        "runs": 977
       },
       {
         "event": "main-push",
         "outcomeMix": {
-          "cancelled": 12,
-          "failure": 73,
-          "success": 86
+          "cancelled": 61,
+          "failure": 76,
+          "success": 19,
+          "unknown": 1
         },
-        "p50DurationMs": 992000,
-        "p95DurationMs": 2133000,
-        "runs": 171
+        "p50DurationMs": 2207000,
+        "p95DurationMs": 7945000,
+        "runs": 157
       }
     ]
   },
@@ -5547,16 +5818,16 @@
     "digestAlgorithm": "sha256 truncated to 12 lowercase hex characters",
     "sourceFiles": [
       {
-        "bytes": 236879,
+        "bytes": 343028,
         "kind": "replay-hosted-snapshot",
-        "path": "goals/time-to-certainty/research/inputs/hosted-runs.json.gz",
-        "sha256_12": "b5445a0a4e4d"
+        "path": "goals/time-to-certainty/research/inputs/close/hosted-runs.json.gz",
+        "sha256_12": "9dd13e381a7d"
       },
       {
-        "bytes": 1203750,
+        "bytes": 1568345,
         "kind": "replay-live-snapshot",
-        "path": "goals/time-to-certainty/research/inputs/live-journals.json.gz",
-        "sha256_12": "bb6c7387e24a"
+        "path": "goals/time-to-certainty/research/inputs/close/live-journals.json.gz",
+        "sha256_12": "f85bed2f9d32"
       },
       {
         "bytes": 134573,
@@ -5566,858 +5837,2392 @@
       }
     ]
   },
-  "localWrapperLanes": [
+  "localInnerLanes": [
     {
-      "attempts": 1046,
-      "executions": 1046,
-      "id": "full:01-pre-push",
-      "label": "full:pre-push",
-      "p50DurationMs": 836334,
-      "p95DurationMs": 1785508,
+      "attempts": 99,
+      "executions": 99,
+      "id": "quality:lint-policy",
+      "label": "quality:lint-policy",
+      "p50DurationMs": 212719,
+      "p95DurationMs": 709309,
       "phase": "full",
-      "shareOfMeasuredLocalLaneTimePct": 65.87,
-      "statusMix": {
-        "failed": 419,
-        "passed": 627
-      },
-      "totalDurationMs": 950656975
-    },
-    {
-      "attempts": 457,
-      "executions": 457,
-      "id": "monitor:02-pr-checks-watch",
-      "label": "monitor:pr-checks:watch",
-      "p50DurationMs": 242618,
-      "p95DurationMs": 2480280,
-      "phase": "monitor",
-      "shareOfMeasuredLocalLaneTimePct": 19.39,
-      "statusMix": {
-        "failed": 235,
-        "passed": 222
-      },
-      "totalDurationMs": 279891023
-    },
-    {
-      "attempts": 261,
-      "executions": 261,
-      "id": "full:00-cheap-gates",
-      "label": "full:cheap-gates",
-      "p50DurationMs": 96764,
-      "p95DurationMs": 321783,
-      "phase": "full",
-      "shareOfMeasuredLocalLaneTimePct": 3.02,
-      "statusMix": {
-        "failed": 52,
-        "passed": 209
-      },
-      "totalDurationMs": 43600735
-    },
-    {
-      "attempts": 201,
-      "executions": 201,
-      "id": "feedback:04-test",
-      "label": "feedback:test",
-      "p50DurationMs": 217302,
-      "p95DurationMs": 364671,
-      "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 2.6,
+      "shareOfMeasuredLocalLaneTimePct": 14.79,
       "statusMix": {
         "failed": 31,
-        "passed": 170
+        "passed": 68
       },
-      "totalDurationMs": 37507220
+      "totalDurationMs": 31872358
     },
     {
-      "attempts": 15,
-      "executions": 15,
-      "id": "full:02-ci-parity",
-      "label": "full:ci-parity",
-      "p50DurationMs": 1294405,
-      "p95DurationMs": 2763383,
+      "attempts": 107,
+      "executions": 107,
+      "id": "quality:jsdoc-ratchet",
+      "label": "quality:jsdoc-ratchet",
+      "p50DurationMs": 280502,
+      "p95DurationMs": 333781,
       "phase": "full",
-      "shareOfMeasuredLocalLaneTimePct": 1.45,
+      "shareOfMeasuredLocalLaneTimePct": 14.07,
+      "statusMix": {
+        "failed": 9,
+        "passed": 98
+      },
+      "totalDurationMs": 30321032
+    },
+    {
+      "attempts": 66,
+      "executions": 66,
+      "id": "quality:coverage",
+      "label": "quality:coverage",
+      "p50DurationMs": 438618,
+      "p95DurationMs": 726431,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 12.08,
+      "statusMix": {
+        "failed": 26,
+        "passed": 40
+      },
+      "totalDurationMs": 26040273
+    },
+    {
+      "attempts": 68,
+      "executions": 68,
+      "id": "quality:test-unit",
+      "label": "quality:test-unit",
+      "p50DurationMs": 16025,
+      "p95DurationMs": 811899,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 8.18,
+      "statusMix": {
+        "failed": 4,
+        "passed": 64
+      },
+      "totalDurationMs": 17627992
+    },
+    {
+      "attempts": 73,
+      "executions": 73,
+      "id": "quality:check",
+      "label": "quality:check",
+      "p50DurationMs": 125897,
+      "p95DurationMs": 541365,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 7.28,
+      "statusMix": {
+        "failed": 1,
+        "passed": 72
+      },
+      "totalDurationMs": 15682693
+    },
+    {
+      "attempts": 33,
+      "executions": 33,
+      "id": "quality:check:tsgo-tests",
+      "label": "quality:check:tsgo-tests",
+      "p50DurationMs": 444980,
+      "p95DurationMs": 626764,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 6.28,
       "statusMix": {
         "failed": 2,
-        "passed": 13
+        "passed": 31
       },
-      "totalDurationMs": 20869999
+      "totalDurationMs": 13526977
+    },
+    {
+      "attempts": 101,
+      "executions": 101,
+      "id": "quality:docgen",
+      "label": "quality:docgen",
+      "p50DurationMs": 7020,
+      "p95DurationMs": 329756,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 4.8,
+      "statusMix": {
+        "failed": 13,
+        "passed": 88
+      },
+      "totalDurationMs": 10356610
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "lint-policy",
+      "label": "ci:local:lint-policy",
+      "p50DurationMs": 235058,
+      "p95DurationMs": 678339,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.93,
+      "statusMix": {
+        "failed": 1,
+        "passed": 17
+      },
+      "totalDurationMs": 6325734
+    },
+    {
+      "attempts": 96,
+      "executions": 96,
+      "id": "quality:lint",
+      "label": "quality:lint",
+      "p50DurationMs": 5403,
+      "p95DurationMs": 283567,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.7,
+      "statusMix": {
+        "failed": 1,
+        "passed": 95
+      },
+      "totalDurationMs": 5810780
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "check",
+      "label": "ci:local:check",
+      "p50DurationMs": 205530,
+      "p95DurationMs": 717041,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.65,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 5701393
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "coverage",
+      "label": "ci:local:coverage",
+      "p50DurationMs": 400436,
+      "p95DurationMs": 771302,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.54,
+      "statusMix": {
+        "failed": 1,
+        "passed": 17
+      },
+      "totalDurationMs": 5472805
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "jsdoc-ratchet",
+      "label": "ci:local:jsdoc-ratchet",
+      "p50DurationMs": 276212,
+      "p95DurationMs": 329395,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.46,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 5296167
+    },
+    {
+      "attempts": 76,
+      "executions": 76,
+      "id": "quality:doctest",
+      "label": "quality:doctest",
+      "p50DurationMs": 39643,
+      "p95DurationMs": 128639,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 2.17,
+      "statusMix": {
+        "passed": 76
+      },
+      "totalDurationMs": 4686155
+    },
+    {
+      "attempts": 116,
+      "executions": 116,
+      "id": "quality:build",
+      "label": "quality:build",
+      "p50DurationMs": 20379,
+      "p95DurationMs": 83990,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 1.63,
+      "statusMix": {
+        "failed": 1,
+        "passed": 115
+      },
+      "totalDurationMs": 3518014
+    },
+    {
+      "attempts": 93,
+      "executions": 93,
+      "id": "quality:test-integration",
+      "label": "quality:test-integration",
+      "p50DurationMs": 19786,
+      "p95DurationMs": 113522,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 1.58,
+      "statusMix": {
+        "failed": 1,
+        "passed": 92
+      },
+      "totalDurationMs": 3398267
     },
     {
       "attempts": 39,
       "executions": 39,
+      "id": "quality:storybook",
+      "label": "quality:storybook",
+      "p50DurationMs": 1795,
+      "p95DurationMs": 259739,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 1.43,
+      "statusMix": {
+        "failed": 1,
+        "passed": 38
+      },
+      "totalDurationMs": 3091911
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "test-unit",
+      "label": "ci:local:test-unit",
+      "p50DurationMs": 3073,
+      "p95DurationMs": 665222,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 1.37,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 2958149
+    },
+    {
+      "attempts": 126,
+      "executions": 126,
+      "id": "quality:knip",
+      "label": "quality:knip",
+      "p50DurationMs": 17950,
+      "p95DurationMs": 31094,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 1.15,
+      "statusMix": {
+        "failed": 2,
+        "passed": 124
+      },
+      "totalDurationMs": 2472193
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "fallow",
+      "label": "ci:local:fallow",
+      "p50DurationMs": 105582,
+      "p95DurationMs": 138769,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.95,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 2054315
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "property",
+      "label": "ci:local:property",
+      "p50DurationMs": 3548,
+      "p95DurationMs": 401798,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.92,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 1974392
+    },
+    {
+      "attempts": 124,
+      "executions": 141,
+      "id": "repo-sanity:bun-audit",
+      "label": "repo-sanity:bun-audit",
+      "p50DurationMs": 1942,
+      "p95DurationMs": 73583,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.9,
+      "statusMix": {
+        "failed": 2,
+        "passed": 173
+      },
+      "totalDurationMs": 1939516
+    },
+    {
+      "attempts": 101,
+      "executions": 101,
+      "id": "fallow:audit",
+      "label": "fallow:audit",
+      "p50DurationMs": 9760,
+      "p95DurationMs": 14992,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.49,
+      "statusMix": {
+        "passed": 101
+      },
+      "totalDurationMs": 1048891
+    },
+    {
+      "attempts": 123,
+      "executions": 140,
+      "id": "repo-sanity:fallow-boundaries-config",
+      "label": "repo-sanity:fallow-boundaries-config",
+      "p50DurationMs": 6558,
+      "p95DurationMs": 11682,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.48,
+      "statusMix": {
+        "failed": 1,
+        "passed": 173
+      },
+      "totalDurationMs": 1030993
+    },
+    {
+      "attempts": 123,
+      "executions": 140,
+      "id": "repo-sanity:tsconfig-sync",
+      "label": "repo-sanity:tsconfig-sync",
+      "p50DurationMs": 7428,
+      "p95DurationMs": 12111,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.45,
+      "statusMix": {
+        "passed": 174
+      },
+      "totalDurationMs": 963138
+    },
+    {
+      "attempts": 111,
+      "executions": 111,
+      "id": "quality:desktop-ipc",
+      "label": "quality:desktop-ipc",
+      "p50DurationMs": 6802,
+      "p95DurationMs": 9694,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.38,
+      "statusMix": {
+        "passed": 111
+      },
+      "totalDurationMs": 818388
+    },
+    {
+      "attempts": 123,
+      "executions": 123,
+      "id": "quality:codegen",
+      "label": "quality:codegen",
+      "p50DurationMs": 6243,
+      "p95DurationMs": 8357,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.37,
+      "statusMix": {
+        "failed": 1,
+        "passed": 122
+      },
+      "totalDurationMs": 806886
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "labs",
+      "label": "ci:local:labs",
+      "p50DurationMs": 30550,
+      "p95DurationMs": 84042,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.36,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 773628
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "repo-sanity",
+      "label": "ci:local:repo-sanity",
+      "p50DurationMs": 29670,
+      "p95DurationMs": 139733,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.36,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 772395
+    },
+    {
+      "attempts": 84,
+      "executions": 84,
+      "id": "quality:sast",
+      "label": "quality:sast",
+      "p50DurationMs": 7148,
+      "p95DurationMs": 18806,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.33,
+      "statusMix": {
+        "passed": 84
+      },
+      "totalDurationMs": 702173
+    },
+    {
+      "attempts": 9,
+      "executions": 9,
+      "id": "storybook",
+      "label": "ci:local:storybook",
+      "p50DurationMs": 1659,
+      "p95DurationMs": 234941,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.32,
+      "statusMix": {
+        "passed": 9
+      },
+      "totalDurationMs": 693561
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "docgen",
+      "label": "ci:local:docgen",
+      "p50DurationMs": 3133,
+      "p95DurationMs": 274878,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.32,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 690164
+    },
+    {
+      "attempts": 101,
+      "executions": 101,
+      "id": "fallow:dead-code",
+      "label": "fallow:dead-code",
+      "p50DurationMs": 5352,
+      "p95DurationMs": 9933,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.27,
+      "statusMix": {
+        "passed": 101
+      },
+      "totalDurationMs": 587162
+    },
+    {
+      "attempts": 89,
+      "executions": 89,
+      "id": "quality:security",
+      "label": "quality:security",
+      "p50DurationMs": 5255,
+      "p95DurationMs": 13169,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.26,
+      "statusMix": {
+        "failed": 3,
+        "passed": 86
+      },
+      "totalDurationMs": 552603
+    },
+    {
+      "attempts": 98,
+      "executions": 98,
+      "id": "fallow:health",
+      "label": "fallow:health",
+      "p50DurationMs": 4520,
+      "p95DurationMs": 6254,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.24,
+      "statusMix": {
+        "passed": 98
+      },
+      "totalDurationMs": 514814
+    },
+    {
+      "attempts": 87,
+      "executions": 87,
+      "id": "quality:secrets",
+      "label": "quality:secrets",
+      "p50DurationMs": 5129,
+      "p95DurationMs": 9826,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.22,
+      "statusMix": {
+        "failed": 1,
+        "passed": 86
+      },
+      "totalDurationMs": 478365
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "build",
+      "label": "ci:local:build",
+      "p50DurationMs": 20465,
+      "p95DurationMs": 42037,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.19,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 413950
+    },
+    {
+      "attempts": 38,
+      "executions": 38,
+      "id": "pre-push:sast",
+      "label": "pre-push:sast",
+      "p50DurationMs": 7042,
+      "p95DurationMs": 25686,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.18,
+      "statusMix": {
+        "failed": 1,
+        "passed": 37
+      },
+      "totalDurationMs": 379392
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "test-integration",
+      "label": "ci:local:test-integration",
+      "p50DurationMs": 5596,
+      "p95DurationMs": 78550,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.16,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 354704
+    },
+    {
+      "attempts": 43,
+      "executions": 51,
+      "id": "quality:cache-policy",
+      "label": "quality:cache-policy",
+      "p50DurationMs": 5713,
+      "p95DurationMs": 11457,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.16,
+      "statusMix": {
+        "failed": 1,
+        "passed": 66
+      },
+      "totalDurationMs": 338517
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "doctest",
+      "label": "ci:local:doctest",
+      "p50DurationMs": 4112,
+      "p95DurationMs": 47119,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.15,
+      "statusMix": {
+        "failed": 2,
+        "passed": 16
+      },
+      "totalDurationMs": 323394
+    },
+    {
+      "attempts": 85,
+      "executions": 85,
+      "id": "quality:nix",
+      "label": "quality:nix",
+      "p50DurationMs": 2940,
+      "p95DurationMs": 4536,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.14,
+      "statusMix": {
+        "failed": 1,
+        "passed": 84
+      },
+      "totalDurationMs": 293262
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "lint",
+      "label": "ci:local:lint",
+      "p50DurationMs": 4071,
+      "p95DurationMs": 187931,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.13,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 285464
+    },
+    {
+      "attempts": 121,
+      "executions": 138,
+      "id": "repo-sanity:changeset-graph",
+      "label": "repo-sanity:changeset-graph",
+      "p50DurationMs": 1838,
+      "p95DurationMs": 2765,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.13,
+      "statusMix": {
+        "passed": 172
+      },
+      "totalDurationMs": 271851
+    },
+    {
+      "attempts": 121,
+      "executions": 138,
+      "id": "repo-sanity:versions",
+      "label": "repo-sanity:versions",
+      "p50DurationMs": 1787,
+      "p95DurationMs": 2364,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.12,
+      "statusMix": {
+        "passed": 172
+      },
+      "totalDurationMs": 260038
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "knip",
+      "label": "ci:local:knip",
+      "p50DurationMs": 12698,
+      "p95DurationMs": 17676,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.12,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 258362
+    },
+    {
+      "attempts": 39,
+      "executions": 39,
+      "id": "pre-push:security",
+      "label": "pre-push:security",
+      "p50DurationMs": 5271,
+      "p95DurationMs": 6370,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.1,
+      "statusMix": {
+        "failed": 2,
+        "passed": 37
+      },
+      "totalDurationMs": 208333
+    },
+    {
+      "attempts": 99,
+      "executions": 99,
+      "id": "quality:changeset-status",
+      "label": "quality:changeset-status",
+      "p50DurationMs": 1778,
+      "p95DurationMs": 2572,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.09,
+      "statusMix": {
+        "passed": 99
+      },
+      "totalDurationMs": 187386
+    },
+    {
+      "attempts": 125,
+      "executions": 125,
+      "id": "quality:commitlint",
+      "label": "quality:commitlint",
+      "p50DurationMs": 1423,
+      "p95DurationMs": 1794,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.09,
+      "statusMix": {
+        "failed": 2,
+        "passed": 123
+      },
+      "totalDurationMs": 183565
+    },
+    {
+      "attempts": 39,
+      "executions": 39,
+      "id": "pre-push:secrets",
+      "label": "pre-push:secrets",
+      "p50DurationMs": 3940,
+      "p95DurationMs": 4752,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.08,
+      "statusMix": {
+        "failed": 1,
+        "passed": 38
+      },
+      "totalDurationMs": 163442
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "sast",
+      "label": "ci:local:sast",
+      "p50DurationMs": 6338,
+      "p95DurationMs": 22329,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.07,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 161146
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "ecosystem",
+      "label": "ci:local:ecosystem",
+      "p50DurationMs": 7098,
+      "p95DurationMs": 8624,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.06,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 131081
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "codegen",
+      "label": "ci:local:codegen",
+      "p50DurationMs": 6173,
+      "p95DurationMs": 7257,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.06,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 118813
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "desktop-ipc",
+      "label": "ci:local:desktop-ipc",
+      "p50DurationMs": 6606,
+      "p95DurationMs": 7995,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.06,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 118780
+    },
+    {
+      "attempts": 38,
+      "executions": 38,
+      "id": "pre-push:nix",
+      "label": "pre-push:nix",
+      "p50DurationMs": 2899,
+      "p95DurationMs": 3799,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.05,
+      "statusMix": {
+        "failed": 1,
+        "passed": 37
+      },
+      "totalDurationMs": 110709
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "security",
+      "label": "ci:local:security",
+      "p50DurationMs": 5105,
+      "p95DurationMs": 12742,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.05,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 110398
+    },
+    {
+      "attempts": 19,
+      "executions": 19,
+      "id": "secrets",
+      "label": "ci:local:secrets",
+      "p50DurationMs": 4200,
+      "p95DurationMs": 9594,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.04,
+      "statusMix": {
+        "passed": 19
+      },
+      "totalDurationMs": 90864
+    },
+    {
+      "attempts": 29,
+      "executions": 29,
+      "id": "quality:check:tsgo-smoke",
+      "label": "quality:check:tsgo-smoke",
+      "p50DurationMs": 2030,
+      "p95DurationMs": 2367,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.03,
+      "statusMix": {
+        "passed": 29
+      },
+      "totalDurationMs": 59501
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "nix",
+      "label": "ci:local:nix",
+      "p50DurationMs": 2888,
+      "p95DurationMs": 3187,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.02,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 51790
+    },
+    {
+      "attempts": 78,
+      "executions": 88,
+      "id": "repo-sanity:config-typecheck",
+      "label": "repo-sanity:config-typecheck",
+      "p50DurationMs": 481,
+      "p95DurationMs": 893,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.02,
+      "statusMix": {
+        "passed": 108
+      },
+      "totalDurationMs": 46830
+    },
+    {
+      "attempts": 18,
+      "executions": 18,
+      "id": "commitlint",
+      "label": "ci:local:commitlint",
+      "p50DurationMs": 1427,
+      "p95DurationMs": 3448,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.01,
+      "statusMix": {
+        "passed": 18
+      },
+      "totalDurationMs": 28208
+    },
+    {
+      "attempts": 121,
+      "executions": 138,
+      "id": "repo-sanity:syncpack",
+      "label": "repo-sanity:syncpack",
+      "p50DurationMs": 160,
+      "p95DurationMs": 316,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.01,
+      "statusMix": {
+        "failed": 1,
+        "passed": 171
+      },
+      "totalDurationMs": 27386
+    },
+    {
+      "attempts": 120,
+      "executions": 137,
+      "id": "repo-sanity:sherif",
+      "label": "repo-sanity:sherif",
+      "p50DurationMs": 26,
+      "p95DurationMs": 45,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 0.0,
+      "statusMix": {
+        "passed": 171
+      },
+      "totalDurationMs": 4294
+    }
+  ],
+  "localInnerTotals": {
+    "accountedLaneTimeAsPctOfAttemptElapsed": 62.29,
+    "contributingAttempts": 139,
+    "denominator": "elapsed time of the attempts with at least one timed inner lane",
+    "measuredLaneExecutions": 3921,
+    "totalAttemptElapsedMs": 346008909,
+    "totalMeasuredLaneDurationMs": 215542350
+  },
+  "localWrapperLanes": [
+    {
+      "attempts": 1232,
+      "executions": 1232,
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "p50DurationMs": 873353,
+      "p95DurationMs": 2019059,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 63.55,
+      "statusMix": {
+        "failed": 541,
+        "passed": 691
+      },
+      "totalDurationMs": 1198239981
+    },
+    {
+      "attempts": 542,
+      "executions": 542,
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "p50DurationMs": 11158,
+      "p95DurationMs": 2048540,
+      "phase": "monitor",
+      "shareOfMeasuredLocalLaneTimePct": 15.83,
+      "statusMix": {
+        "failed": 307,
+        "passed": 235
+      },
+      "totalDurationMs": 298509293
+    },
+    {
+      "attempts": 614,
+      "executions": 614,
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "p50DurationMs": 149865,
+      "p95DurationMs": 579244,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 6.64,
+      "statusMix": {
+        "failed": 192,
+        "passed": 422
+      },
+      "totalDurationMs": 125142501
+    },
+    {
+      "attempts": 38,
+      "executions": 38,
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "p50DurationMs": 1337573,
+      "p95DurationMs": 3345791,
+      "phase": "full",
+      "shareOfMeasuredLocalLaneTimePct": 3.32,
+      "statusMix": {
+        "failed": 7,
+        "passed": 31
+      },
+      "totalDurationMs": 62545498
+    },
+    {
+      "attempts": 245,
+      "executions": 245,
+      "id": "feedback:04-test",
+      "label": "feedback:test",
+      "p50DurationMs": 225038,
+      "p95DurationMs": 432964,
+      "phase": "feedback",
+      "shareOfMeasuredLocalLaneTimePct": 2.74,
+      "statusMix": {
+        "failed": 40,
+        "passed": 205
+      },
+      "totalDurationMs": 51654579
+    },
+    {
+      "attempts": 121,
+      "executions": 121,
+      "id": "feedback:00-cheap-gates",
+      "label": "feedback:cheap-gates",
+      "p50DurationMs": 226773,
+      "p95DurationMs": 600928,
+      "phase": "feedback",
+      "shareOfMeasuredLocalLaneTimePct": 1.6,
+      "statusMix": {
+        "failed": 46,
+        "passed": 75
+      },
+      "totalDurationMs": 30242217
+    },
+    {
+      "attempts": 40,
+      "executions": 40,
       "id": "full:01-review-fix",
       "label": "full:review-fix",
       "p50DurationMs": 458910,
       "p95DurationMs": 1223492,
       "phase": "full",
-      "shareOfMeasuredLocalLaneTimePct": 1.38,
+      "shareOfMeasuredLocalLaneTimePct": 1.13,
       "statusMix": {
         "failed": 10,
-        "passed": 29
+        "passed": 30
       },
-      "totalDurationMs": 19888963
+      "totalDurationMs": 21248850
     },
     {
-      "attempts": 171,
-      "executions": 171,
+      "attempts": 174,
+      "executions": 174,
       "id": "prepare:05-docgen",
       "label": "prepare:docgen",
       "p50DurationMs": 36972,
       "p95DurationMs": 380668,
       "phase": "prepare",
-      "shareOfMeasuredLocalLaneTimePct": 1.32,
+      "shareOfMeasuredLocalLaneTimePct": 1.04,
       "statusMix": {
         "failed": 14,
-        "passed": 157
+        "passed": 160
       },
-      "totalDurationMs": 19113424
+      "totalDurationMs": 19662369
     },
     {
-      "attempts": 74,
-      "executions": 74,
-      "id": "feedback:00-cheap-gates",
-      "label": "feedback:cheap-gates",
-      "p50DurationMs": 94274,
-      "p95DurationMs": 366833,
-      "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.94,
-      "statusMix": {
-        "failed": 27,
-        "passed": 47
-      },
-      "totalDurationMs": 13559976
-    },
-    {
-      "attempts": 203,
-      "executions": 203,
+      "attempts": 246,
+      "executions": 246,
       "id": "feedback:03-lint",
       "label": "feedback:lint",
-      "p50DurationMs": 28129,
-      "p95DurationMs": 162467,
+      "p50DurationMs": 22841,
+      "p95DurationMs": 166947,
       "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.93,
+      "shareOfMeasuredLocalLaneTimePct": 0.85,
       "statusMix": {
-        "passed": 203
+        "passed": 246
       },
-      "totalDurationMs": 13392806
+      "totalDurationMs": 16025558
     },
     {
-      "attempts": 74,
-      "executions": 74,
+      "attempts": 121,
+      "executions": 121,
       "id": "feedback:00-heavy:02-docgen",
       "label": "feedback:docgen",
-      "p50DurationMs": 41252,
-      "p95DurationMs": 250771,
+      "p50DurationMs": 82703,
+      "p95DurationMs": 274405,
       "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.52,
+      "shareOfMeasuredLocalLaneTimePct": 0.73,
       "statusMix": {
-        "failed": 12,
-        "passed": 62
+        "failed": 16,
+        "passed": 105
       },
-      "totalDurationMs": 7553986
+      "totalDurationMs": 13759434
     },
     {
-      "attempts": 205,
-      "executions": 205,
+      "attempts": 249,
+      "executions": 249,
       "id": "feedback:02-check",
       "label": "feedback:check",
-      "p50DurationMs": 11617,
-      "p95DurationMs": 103938,
+      "p50DurationMs": 11601,
+      "p95DurationMs": 117784,
       "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.49,
+      "shareOfMeasuredLocalLaneTimePct": 0.48,
       "statusMix": {
-        "failed": 13,
-        "passed": 192
+        "failed": 16,
+        "passed": 233
       },
-      "totalDurationMs": 7082979
+      "totalDurationMs": 8990145
     },
     {
-      "attempts": 245,
-      "executions": 245,
+      "attempts": 297,
+      "executions": 297,
       "id": "prepare:02-terse-effect",
       "label": "prepare:laws:terse-effect",
-      "p50DurationMs": 23209,
-      "p95DurationMs": 40024,
+      "p50DurationMs": 23124,
+      "p95DurationMs": 40022,
       "phase": "prepare",
-      "shareOfMeasuredLocalLaneTimePct": 0.42,
-      "statusMix": {
-        "passed": 245
-      },
-      "totalDurationMs": 6099752
-    },
-    {
-      "attempts": 201,
-      "executions": 201,
-      "id": "feedback:01-build",
-      "label": "feedback:build",
-      "p50DurationMs": 14348,
-      "p95DurationMs": 83706,
-      "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.33,
-      "statusMix": {
-        "failed": 14,
-        "passed": 187
-      },
-      "totalDurationMs": 4790606
-    },
-    {
-      "attempts": 631,
-      "executions": 631,
-      "id": "publish:00-head-install-preflight",
-      "label": "publish:head-install-preflight",
-      "p50DurationMs": 5455,
-      "p95DurationMs": 12150,
-      "phase": "publish",
-      "shareOfMeasuredLocalLaneTimePct": 0.29,
-      "statusMix": {
-        "failed": 4,
-        "passed": 627
-      },
-      "totalDurationMs": 4197953
-    },
-    {
-      "attempts": 614,
-      "executions": 614,
-      "id": "publish:00-head-install-preflight",
-      "label": "publish:head-install-preflight",
-      "p50DurationMs": 5571,
-      "p95DurationMs": 12202,
-      "phase": "prepare",
-      "shareOfMeasuredLocalLaneTimePct": 0.28,
-      "statusMix": {
-        "failed": 6,
-        "passed": 608
-      },
-      "totalDurationMs": 3993649
-    },
-    {
-      "attempts": 1481,
-      "executions": 1481,
-      "id": "advisory:01-fallow-feedback",
-      "label": "fallow-advisory-feedback",
-      "p50DurationMs": 1863,
-      "p95DurationMs": 2978,
-      "phase": "feedback",
-      "shareOfMeasuredLocalLaneTimePct": 0.2,
+      "shareOfMeasuredLocalLaneTimePct": 0.39,
       "statusMix": {
         "failed": 1,
-        "passed": 1480
+        "passed": 296
       },
-      "totalDurationMs": 2945945
+      "totalDurationMs": 7316015
     },
     {
       "attempts": 245,
       "executions": 245,
+      "id": "feedback:01-build",
+      "label": "feedback:build",
+      "p50DurationMs": 14474,
+      "p95DurationMs": 83706,
+      "phase": "feedback",
+      "shareOfMeasuredLocalLaneTimePct": 0.31,
+      "statusMix": {
+        "failed": 16,
+        "passed": 229
+      },
+      "totalDurationMs": 5824964
+    },
+    {
+      "attempts": 743,
+      "executions": 743,
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "p50DurationMs": 6351,
+      "p95DurationMs": 15212,
+      "phase": "prepare",
+      "shareOfMeasuredLocalLaneTimePct": 0.3,
+      "statusMix": {
+        "failed": 6,
+        "passed": 737
+      },
+      "totalDurationMs": 5571650
+    },
+    {
+      "attempts": 698,
+      "executions": 698,
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "p50DurationMs": 5985,
+      "p95DurationMs": 13676,
+      "phase": "publish",
+      "shareOfMeasuredLocalLaneTimePct": 0.26,
+      "statusMix": {
+        "failed": 4,
+        "passed": 694
+      },
+      "totalDurationMs": 4953471
+    },
+    {
+      "attempts": 1976,
+      "executions": 1976,
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "p50DurationMs": 1848,
+      "p95DurationMs": 2967,
+      "phase": "feedback",
+      "shareOfMeasuredLocalLaneTimePct": 0.21,
+      "statusMix": {
+        "failed": 1,
+        "passed": 1975
+      },
+      "totalDurationMs": 3925009
+    },
+    {
+      "attempts": 297,
+      "executions": 297,
       "id": "prepare:01-effect-imports",
       "label": "prepare:laws:effect-imports",
-      "p50DurationMs": 8774,
-      "p95DurationMs": 17451,
-      "phase": "prepare",
-      "shareOfMeasuredLocalLaneTimePct": 0.17,
-      "statusMix": {
-        "passed": 245
-      },
-      "totalDurationMs": 2423467
-    },
-    {
-      "attempts": 245,
-      "executions": 245,
-      "id": "prepare:03-config-sync",
-      "label": "prepare:config-sync",
-      "p50DurationMs": 7376,
-      "p95DurationMs": 15025,
+      "p50DurationMs": 8328,
+      "p95DurationMs": 16545,
       "phase": "prepare",
       "shareOfMeasuredLocalLaneTimePct": 0.14,
       "statusMix": {
-        "passed": 245
+        "failed": 1,
+        "passed": 296
       },
-      "totalDurationMs": 2023658
+      "totalDurationMs": 2555857
     },
     {
-      "attempts": 398,
-      "executions": 398,
+      "attempts": 297,
+      "executions": 297,
+      "id": "prepare:03-config-sync",
+      "label": "prepare:config-sync",
+      "p50DurationMs": 7468,
+      "p95DurationMs": 15025,
+      "phase": "prepare",
+      "shareOfMeasuredLocalLaneTimePct": 0.13,
+      "statusMix": {
+        "passed": 297
+      },
+      "totalDurationMs": 2473555
+    },
+    {
+      "attempts": 204,
+      "executions": 204,
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "p50DurationMs": 9770,
+      "p95DurationMs": 20703,
+      "phase": "early-publish",
+      "shareOfMeasuredLocalLaneTimePct": 0.12,
+      "statusMix": {
+        "passed": 204
+      },
+      "totalDurationMs": 2307667
+    },
+    {
+      "attempts": 538,
+      "executions": 538,
       "id": "commit:01-git-commit",
       "label": "commit:git:commit",
-      "p50DurationMs": 2700,
-      "p95DurationMs": 4615,
+      "p50DurationMs": 2892,
+      "p95DurationMs": 5005,
       "phase": "commit",
       "shareOfMeasuredLocalLaneTimePct": 0.08,
       "statusMix": {
-        "failed": 8,
-        "passed": 390
+        "failed": 13,
+        "passed": 525
       },
-      "totalDurationMs": 1118854
+      "totalDurationMs": 1577357
     },
     {
-      "attempts": 472,
-      "executions": 472,
+      "attempts": 505,
+      "executions": 505,
       "id": "publish:01-git-push",
       "label": "publish:git:push",
       "p50DurationMs": 1644,
-      "p95DurationMs": 5491,
+      "p95DurationMs": 5160,
       "phase": "publish",
-      "shareOfMeasuredLocalLaneTimePct": 0.07,
+      "shareOfMeasuredLocalLaneTimePct": 0.05,
       "statusMix": {
-        "failed": 15,
-        "passed": 457
+        "failed": 16,
+        "passed": 489
       },
-      "totalDurationMs": 957046
+      "totalDurationMs": 1028803
     },
     {
-      "attempts": 171,
-      "executions": 171,
+      "attempts": 174,
+      "executions": 174,
       "id": "prepare:04-lint-fix",
       "label": "prepare:lint:fix",
       "p50DurationMs": 3523,
       "p95DurationMs": 5558,
       "phase": "prepare",
-      "shareOfMeasuredLocalLaneTimePct": 0.04,
-      "statusMix": {
-        "failed": 3,
-        "passed": 168
-      },
-      "totalDurationMs": 577885
-    },
-    {
-      "attempts": 56,
-      "executions": 56,
-      "id": "publish:00-head-install-preflight",
-      "label": "publish:head-install-preflight",
-      "p50DurationMs": 7033,
-      "p95DurationMs": 14192,
-      "phase": "early-publish",
       "shareOfMeasuredLocalLaneTimePct": 0.03,
       "statusMix": {
-        "passed": 56
+        "failed": 3,
+        "passed": 171
       },
-      "totalDurationMs": 437288
+      "totalDurationMs": 584986
     },
     {
-      "attempts": 74,
-      "executions": 74,
+      "attempts": 204,
+      "executions": 204,
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "p50DurationMs": 1653,
+      "p95DurationMs": 4138,
+      "phase": "early-publish",
+      "shareOfMeasuredLocalLaneTimePct": 0.02,
+      "statusMix": {
+        "failed": 2,
+        "passed": 202
+      },
+      "totalDurationMs": 419747
+    },
+    {
+      "attempts": 121,
+      "executions": 121,
       "id": "feedback:00-heavy:01-lint-fix",
       "label": "feedback:lint:fix",
-      "p50DurationMs": 3520,
-      "p95DurationMs": 4093,
+      "p50DurationMs": 3675,
+      "p95DurationMs": 5103,
       "phase": "feedback",
       "shareOfMeasuredLocalLaneTimePct": 0.02,
       "statusMix": {
-        "passed": 74
+        "failed": 1,
+        "passed": 120
       },
-      "totalDurationMs": 233513
+      "totalDurationMs": 414096
     },
     {
-      "attempts": 460,
-      "executions": 460,
+      "attempts": 547,
+      "executions": 547,
       "id": "monitor:01-pr-context",
       "label": "monitor:pr-context",
-      "p50DurationMs": 382,
-      "p95DurationMs": 547,
+      "p50DurationMs": 386,
+      "p95DurationMs": 550,
       "phase": "monitor",
       "shareOfMeasuredLocalLaneTimePct": 0.01,
       "statusMix": {
-        "failed": 1,
-        "passed": 459
+        "failed": 3,
+        "passed": 544
       },
-      "totalDurationMs": 193048
+      "totalDurationMs": 229960
     },
     {
-      "attempts": 47,
-      "executions": 47,
+      "attempts": 52,
+      "executions": 52,
       "id": "commit:01-git-commit",
       "label": "commit:git:commit:amend",
-      "p50DurationMs": 2608,
-      "p95DurationMs": 4373,
+      "p50DurationMs": 2691,
+      "p95DurationMs": 4406,
       "phase": "commit",
       "shareOfMeasuredLocalLaneTimePct": 0.01,
       "statusMix": {
         "failed": 1,
-        "passed": 46
+        "passed": 51
       },
-      "totalDurationMs": 121782
+      "totalDurationMs": 141191
     },
     {
-      "attempts": 56,
-      "executions": 56,
-      "id": "publish:01-git-push",
-      "label": "early-publish:git:push",
-      "p50DurationMs": 1624,
-      "p95DurationMs": 3281,
-      "phase": "early-publish",
-      "shareOfMeasuredLocalLaneTimePct": 0.01,
+      "attempts": 15,
+      "executions": 15,
+      "id": "prepare:04-goals-index",
+      "label": "prepare:goals:index",
+      "p50DurationMs": 1802,
+      "p95DurationMs": 4250,
+      "phase": "prepare",
+      "shareOfMeasuredLocalLaneTimePct": 0.0,
       "statusMix": {
-        "passed": 56
+        "passed": 15
       },
-      "totalDurationMs": 104750
+      "totalDurationMs": 33445
+    },
+    {
+      "attempts": 15,
+      "executions": 15,
+      "id": "prepare:05-explore-atlas",
+      "label": "prepare:explore:atlas",
+      "p50DurationMs": 1758,
+      "p95DurationMs": 3353,
+      "phase": "prepare",
+      "shareOfMeasuredLocalLaneTimePct": 0.0,
+      "statusMix": {
+        "failed": 1,
+        "passed": 14
+      },
+      "totalDurationMs": 29383
     }
   ],
   "localWrapperTotals": {
-    "accountedLaneTimeAsPctOfAttemptElapsed": 95.31,
-    "measuredLaneExecutions": 8142,
-    "totalAttemptElapsedMs": 1514335662,
-    "totalMeasuredLaneDurationMs": 1443337284
+    "accountedLaneTimeAsPctOfAttemptElapsed": 65.26,
+    "measuredLaneExecutions": 10550,
+    "totalAttemptElapsedMs": 2889045937,
+    "totalMeasuredLaneDurationMs": 1885407585
   },
-  "measurementAsOf": "2026-09-03T06:29:38.367Z",
+  "measurementAsOf": "2026-09-28T12:57:53.988Z",
+  "postBaseline": {
+    "attempts": {
+      "failureKindMix": {
+        "handler-error": 160,
+        "step-exit": 335,
+        "unknown": 446
+      },
+      "modeMix": {
+        "closeout": 148,
+        "monitor": 55,
+        "publish": 615,
+        "repair": 63,
+        "unknown": 1,
+        "verify": 248
+      },
+      "outcomeMix": {
+        "failure": 495,
+        "success": 189,
+        "unknown": 446
+      }
+    },
+    "cutUtc": "2026-09-03T06:29:33.572Z",
+    "executionAmplification": {
+      "hostedJobsMatched": 1204,
+      "hostedPrRunsMatchedToPublishAttempts": 86,
+      "hostedPrRunsUnmatched": 891,
+      "matchRule": "same headSha change and branch; any (headSha, workflow attempt, run id) within the publish window anchors every hosted rerun for that change to the nearest local publish interval",
+      "mergedPreviewFailedWrappersWithUnallocatedInnerRuns": 4,
+      "rows": [
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Lint",
+          "executions": 199,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 97,
+          "logicalAttempts": 169,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.178
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Heavy / Check",
+          "executions": 141,
+          "hostedRunsMatchedToPublishAttempt": 49,
+          "localInnerRunsObserved": 74,
+          "logicalAttempts": 119,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.185
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Test Unit",
+          "executions": 171,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 69,
+          "logicalAttempts": 146,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.171
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Heavy / Test Integration",
+          "executions": 161,
+          "hostedRunsMatchedToPublishAttempt": 49,
+          "localInnerRunsObserved": 94,
+          "logicalAttempts": 136,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.184
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Heavy / Docgen",
+          "executions": 169,
+          "hostedRunsMatchedToPublishAttempt": 49,
+          "localInnerRunsObserved": 102,
+          "logicalAttempts": 141,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.199
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Codegen Drift",
+          "executions": 226,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 124,
+          "logicalAttempts": 189,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.196
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Repo Sanity",
+          "executions": 230,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 128,
+          "logicalAttempts": 191,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.204
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Knip",
+          "executions": 252,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 150,
+          "logicalAttempts": 214,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 1,
+          "runsPerAttempt": 1.178
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Commitlint",
+          "executions": 228,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 126,
+          "logicalAttempts": 192,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.188
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Secret Scanning",
+          "executions": 142,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 40,
+          "logicalAttempts": 130,
+          "maxRunsInOneAttempt": 2,
+          "reusedLocalProofs": 0,
+          "runsPerAttempt": 1.092
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Security",
+          "executions": 142,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 40,
+          "logicalAttempts": 130,
+          "maxRunsInOneAttempt": 2,
+          "reusedLocalProofs": 0,
+          "runsPerAttempt": 1.092
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "SAST",
+          "executions": 141,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 39,
+          "logicalAttempts": 129,
+          "maxRunsInOneAttempt": 2,
+          "reusedLocalProofs": 0,
+          "runsPerAttempt": 1.093
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Nix Shell",
+          "executions": 141,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 39,
+          "logicalAttempts": 129,
+          "maxRunsInOneAttempt": 2,
+          "reusedLocalProofs": 0,
+          "runsPerAttempt": 1.093
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Professional Desktop IPC Stdio",
+          "executions": 214,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 112,
+          "logicalAttempts": 178,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.202
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "Heavy / Doctest",
+          "executions": 143,
+          "hostedRunsMatchedToPublishAttempt": 49,
+          "localInnerRunsObserved": 76,
+          "logicalAttempts": 123,
+          "maxRunsInOneAttempt": 3,
+          "reusedLocalProofs": 2,
+          "runsPerAttempt": 1.163
+        },
+        {
+          "ciParityRunsInferredFromSuccessfulWrapper": 18,
+          "context": "JSDoc Ratchet",
+          "executions": 102,
+          "hostedRunsMatchedToPublishAttempt": 84,
+          "localInnerRunsObserved": 0,
+          "logicalAttempts": 96,
+          "maxRunsInOneAttempt": 2,
+          "reusedLocalProofs": 0,
+          "runsPerAttempt": 1.062
+        }
+      ]
+    },
+    "finishedAttempts": 1130,
+    "firstFailure": {
+      "actionableLaneMix": [
+        {
+          "attempts": 446,
+          "lane": "unlocated"
+        },
+        {
+          "attempts": 118,
+          "lane": "full:00-cheap-gates"
+        },
+        {
+          "attempts": 84,
+          "lane": "commit:01-git-commit"
+        },
+        {
+          "attempts": 58,
+          "lane": "monitor:02-pr-checks-watch"
+        },
+        {
+          "attempts": 56,
+          "lane": "closeout:01-pr-context"
+        },
+        {
+          "attempts": 29,
+          "lane": "quality:lint-policy"
+        },
+        {
+          "attempts": 23,
+          "lane": "quality:coverage"
+        },
+        {
+          "attempts": 17,
+          "lane": "feedback:00-cheap-gates"
+        },
+        {
+          "attempts": 14,
+          "lane": "publish:02-pr-create"
+        },
+        {
+          "attempts": 13,
+          "lane": "quality:docgen"
+        },
+        {
+          "attempts": 10,
+          "lane": "publish:03-pr-provenance-stamp"
+        },
+        {
+          "attempts": 9,
+          "lane": "quality:jsdoc-ratchet"
+        },
+        {
+          "attempts": 8,
+          "lane": "full:01-pre-push"
+        },
+        {
+          "attempts": 4,
+          "lane": "cheap-gates:goals-index"
+        },
+        {
+          "attempts": 4,
+          "lane": "full:02-ci-parity"
+        },
+        {
+          "attempts": 3,
+          "lane": "cheap-gates:test-tsgo"
+        },
+        {
+          "attempts": 3,
+          "lane": "feedback:04-test"
+        },
+        {
+          "attempts": 3,
+          "lane": "monitor:01-pr-context"
+        },
+        {
+          "attempts": 3,
+          "lane": "publish:00-head-install-preflight"
+        },
+        {
+          "attempts": 3,
+          "lane": "quality:security"
+        },
+        {
+          "attempts": 3,
+          "lane": "quality:test-unit"
+        },
+        {
+          "attempts": 2,
+          "lane": "cheap-gates:exploration-atlas"
+        },
+        {
+          "attempts": 2,
+          "lane": "pre-push:security"
+        },
+        {
+          "attempts": 2,
+          "lane": "publish:01-git-push"
+        },
+        {
+          "attempts": 2,
+          "lane": "quality:check:tsgo-tests"
+        },
+        {
+          "attempts": 2,
+          "lane": "quality:commitlint"
+        },
+        {
+          "attempts": 2,
+          "lane": "quality:knip"
+        },
+        {
+          "attempts": 1,
+          "lane": "cheap-gates:tsgo-rules"
+        },
+        {
+          "attempts": 1,
+          "lane": "doctest"
+        },
+        {
+          "attempts": 1,
+          "lane": "lint-policy"
+        },
+        {
+          "attempts": 1,
+          "lane": "pre-push:nix"
+        },
+        {
+          "attempts": 1,
+          "lane": "pre-push:sast"
+        },
+        {
+          "attempts": 1,
+          "lane": "pre-push:secrets"
+        },
+        {
+          "attempts": 1,
+          "lane": "prepare:01-effect-imports"
+        },
+        {
+          "attempts": 1,
+          "lane": "prepare:05-explore-atlas"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:build"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:check"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:lint"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:nix"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:secrets"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:storybook"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:test-integration"
+        },
+        {
+          "attempts": 1,
+          "lane": "repo-sanity:bun-audit"
+        },
+        {
+          "attempts": 1,
+          "lane": "repo-sanity:fallow-boundaries-config"
+        },
+        {
+          "attempts": 1,
+          "lane": "repo-sanity:syncpack"
+        }
+      ],
+      "attemptsWithReconstructableOuterFailure": 335,
+      "attemptsWithoutReconstructableOuterFailure": 606,
+      "completionOffsetP50Ms": 292335,
+      "completionOffsetP95Ms": 3425534,
+      "offsetMethod": "sum prior duration-bearing outer verdict lanes; inter-lane overhead is absent",
+      "receiptProxyMix": [
+        {
+          "attempts": 882,
+          "class": "unclassified"
+        },
+        {
+          "attempts": 33,
+          "class": "base-churn"
+        },
+        {
+          "attempts": 19,
+          "class": "stale-workspace-or-projection"
+        },
+        {
+          "attempts": 7,
+          "class": "scheduler-or-submitter"
+        }
+      ],
+      "redAttempts": 941,
+      "startOffsetP50Ms": 20481,
+      "startOffsetP95Ms": 648511
+    },
+    "population": "attempts whose startedAt (else endedAt) is after the P0 live capture; starts filtered the same way",
+    "redToGreen": {
+      "articleComparison": {
+        "articleAttempts": 2433,
+        "articleP50Ms": 2478000,
+        "articleP95Ms": 11160000,
+        "currentComparableAttempts": 926,
+        "currentRawAttempts": 1130,
+        "p50DeltaMs": 1193966,
+        "p50Moved": "up",
+        "p95DeltaMs": 25581278,
+        "p95Moved": "up"
+      },
+      "comparable24h": {
+        "closedEpisodes": 58,
+        "closedEpisodesOver24hExcluded": 3,
+        "label": "article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h",
+        "leftCensoredEpisodesExcluded": 0,
+        "leftCensoredObservedAttempts": 0,
+        "measuredAttemptMachineMinutes": 3832.06,
+        "measuredInnerLaneMachineMinutes": 1110.06,
+        "measuredLaneMachineMinutes": 2188.53,
+        "p50Ms": 3671966,
+        "p95Ms": 36741278,
+        "rightCensoredRedAttempts": 614,
+        "rightCensoredStreaks": 129,
+        "totalEpisodeSpanMinutes": 7491.49
+      },
+      "uncut": {
+        "closedEpisodes": 61,
+        "label": "uncut tail: same modes/bounce/censor rule; no duration ceiling",
+        "leftCensoredEpisodesExcluded": 0,
+        "leftCensoredObservedAttempts": 0,
+        "measuredAttemptMachineMinutes": 4428.1,
+        "measuredInnerLaneMachineMinutes": 1301.76,
+        "measuredLaneMachineMinutes": 2534.36,
+        "p50Ms": 3998760,
+        "p95Ms": 48593855,
+        "rightCensoredRedAttempts": 614,
+        "rightCensoredStreaks": 129,
+        "totalEpisodeSpanMinutes": 22961.47
+      }
+    },
+    "terminations": {
+      "journaledTerminations": 446,
+      "reasonMix": [
+        {
+          "attempts": 410,
+          "reason": "interrupted"
+        },
+        {
+          "attempts": 14,
+          "reason": "legacy-unowned-start"
+        },
+        {
+          "attempts": 8,
+          "reason": "lease-eviction"
+        },
+        {
+          "attempts": 5,
+          "reason": "owner-dead"
+        },
+        {
+          "attempts": 5,
+          "reason": "unrecorded-failure"
+        },
+        {
+          "attempts": 4,
+          "reason": "queued-submitter-death"
+        }
+      ],
+      "starts": 1152,
+      "startsWithoutAttemptWrittenTerminal": 42,
+      "startsWithoutFinish": 23,
+      "startsWithoutFinishPct": 2.0,
+      "sweepStampedTerminations": 19
+    },
+    "unchangedFingerprint": {
+      "attemptsWithFingerprint": 1060,
+      "byActionableLane": [
+        {
+          "attempts": 8,
+          "lane": "commit:01-git-commit"
+        },
+        {
+          "attempts": 2,
+          "lane": "feedback:00-cheap-gates"
+        },
+        {
+          "attempts": 2,
+          "lane": "quality:lint-policy"
+        },
+        {
+          "attempts": 1,
+          "lane": "feedback:04-test"
+        },
+        {
+          "attempts": 1,
+          "lane": "full:00-cheap-gates"
+        },
+        {
+          "attempts": 1,
+          "lane": "pre-push:sast"
+        },
+        {
+          "attempts": 1,
+          "lane": "quality:coverage"
+        }
+      ],
+      "byReceiptProxy": [
+        {
+          "attempts": 15,
+          "class": "unclassified"
+        },
+        {
+          "attempts": 1,
+          "class": "stale-workspace-or-projection"
+        }
+      ],
+      "classification": "measured",
+      "failedUnchangedFingerprintThenGreen": 16,
+      "method": "ruling 75 fingerprint-repeat proxy over the M1 comparable sequence per (checkout, branch): verdict-bearing red followed by green on the same diffFingerprint; the ack-resolution join is absent"
+    }
+  },
   "redToGreen": {
     "articleComparison": {
       "articleAttempts": 2433,
       "articleP50Ms": 2478000,
       "articleP95Ms": 11160000,
-      "currentComparableAttempts": 1833,
-      "currentRawAttempts": 2742,
-      "p50DeltaMs": 119852,
+      "currentComparableAttempts": 3055,
+      "currentRawAttempts": 4254,
+      "p50DeltaMs": 59181,
       "p50Moved": "up",
-      "p95DeltaMs": 3064890,
+      "p95DeltaMs": 4431302,
       "p95Moved": "up"
     },
     "comparable24h": {
-      "closedEpisodes": 328,
-      "closedEpisodesOver24hExcluded": 7,
+      "closedEpisodes": 440,
+      "closedEpisodesOver24hExcluded": 12,
       "label": "article-comparable: modes verify/repair/publish; lock bounces and left-censored episodes excluded; <=24h",
       "leftCensoredEpisodesExcluded": 0,
       "leftCensoredObservedAttempts": 0,
-      "measuredAttemptMachineMinutes": 11353.8,
-      "measuredLaneMachineMinutes": 11066.43,
-      "p50Ms": 2597852,
-      "p95Ms": 14224890,
-      "rightCensoredRedAttempts": 313,
-      "rightCensoredStreaks": 115,
-      "totalEpisodeSpanMinutes": 26242.81
+      "measuredAttemptMachineMinutes": 16123.71,
+      "measuredInnerLaneMachineMinutes": 1110.06,
+      "measuredLaneMachineMinutes": 14147.62,
+      "p50Ms": 2537181,
+      "p95Ms": 15591302,
+      "rightCensoredRedAttempts": 1012,
+      "rightCensoredStreaks": 261,
+      "totalEpisodeSpanMinutes": 36692.49
     },
     "uncut": {
-      "closedEpisodes": 335,
+      "closedEpisodes": 452,
       "label": "uncut tail: same modes/bounce/censor rule; no duration ceiling",
       "leftCensoredEpisodesExcluded": 0,
       "leftCensoredObservedAttempts": 0,
-      "measuredAttemptMachineMinutes": 11785.91,
-      "measuredLaneMachineMinutes": 11498.26,
-      "p50Ms": 2614412,
-      "p95Ms": 22022279,
-      "rightCensoredRedAttempts": 313,
-      "rightCensoredStreaks": 115,
-      "totalEpisodeSpanMinutes": 43440.31
+      "measuredAttemptMachineMinutes": 17167.59,
+      "measuredInnerLaneMachineMinutes": 1301.76,
+      "measuredLaneMachineMinutes": 14941.01,
+      "p50Ms": 2607070,
+      "p95Ms": 25957422,
+      "rightCensoredRedAttempts": 1012,
+      "rightCensoredStreaks": 261,
+      "totalEpisodeSpanMinutes": 75833.4
     }
   },
   "requiredContextRows": [
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 175,
-        "success": 706
+        "failure": 227,
+        "success": 835
       },
       "context": "Lint",
-      "executions": 496,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 277,
+      "executions": 495,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 380,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 426,
+      "logicalAttempts": 461,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 267000,
-      "p95DurationMs": 1231000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.164,
-      "shareOfHostedRequiredLaneTimePct": 12.99,
-      "totalDurationMs": 416268000
+      "p50DurationMs": 3000,
+      "p95DurationMs": 4000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.074,
+      "shareOfHostedRequiredLaneTimePct": 0.09,
+      "totalDurationMs": 3441000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 710,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 149,
-        "failure": 52,
-        "success": 680
-      },
-      "context": "Heavy / Lint Policy",
-      "executions": 350,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 131,
-      "localP50DurationMs": null,
-      "localP95DurationMs": null,
-      "logicalAttempts": 280,
-      "maxRunsInOneAttempt": 3,
-      "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 363000,
-      "p95DurationMs": 432000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.25,
-      "shareOfHostedRequiredLaneTimePct": 9.73,
-      "totalDurationMs": 311607000
-    },
-    {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
-      "conclusionMix": {
-        "cancelled": 171,
-        "failure": 35,
-        "success": 675
+        "cancelled": 312,
+        "failure": 29,
+        "success": 369
       },
       "context": "Heavy / Check",
-      "executions": 496,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 277,
+      "executions": 437,
+      "hostedRunsMatchedToPublishAttempt": 49,
+      "localInnerRunsObserved": 357,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 426,
+      "logicalAttempts": 411,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 383000,
-      "p95DurationMs": 765000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.164,
-      "shareOfHostedRequiredLaneTimePct": 12.27,
-      "totalDurationMs": 393038000
+      "p50DurationMs": 212000,
+      "p95DurationMs": 3032000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.063,
+      "shareOfHostedRequiredLaneTimePct": 12.97,
+      "totalDurationMs": 473055000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1061,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 198,
-        "failure": 66,
-        "success": 617
+        "cancelled": 1,
+        "failure": 341,
+        "success": 719
       },
       "context": "Test Unit",
-      "executions": 318,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 99,
+      "executions": 285,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 170,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 252,
+      "logicalAttempts": 256,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 495000,
-      "p95DurationMs": 1410000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.262,
-      "shareOfHostedRequiredLaneTimePct": 14.71,
-      "totalDurationMs": 471238000
+      "p50DurationMs": 3000,
+      "p95DurationMs": 4000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.113,
+      "shareOfHostedRequiredLaneTimePct": 0.1,
+      "totalDurationMs": 3744000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 711,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 93,
-        "success": 788
+        "cancelled": 294,
+        "failure": 1,
+        "success": 416
       },
       "context": "Heavy / Test Integration",
-      "executions": 316,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 97,
+      "executions": 273,
+      "hostedRunsMatchedToPublishAttempt": 49,
+      "localInnerRunsObserved": 193,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 250,
+      "logicalAttempts": 244,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 137000,
-      "p95DurationMs": 211000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.264,
-      "shareOfHostedRequiredLaneTimePct": 4.16,
-      "totalDurationMs": 133332000
+      "p50DurationMs": 209000,
+      "p95DurationMs": 2838000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.119,
+      "shareOfHostedRequiredLaneTimePct": 12.16,
+      "totalDurationMs": 443554000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 710,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 102,
-        "failure": 26,
-        "success": 753
+        "cancelled": 323,
+        "failure": 6,
+        "success": 381
       },
       "context": "Heavy / Docgen",
-      "executions": 316,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 97,
+      "executions": 281,
+      "hostedRunsMatchedToPublishAttempt": 49,
+      "localInnerRunsObserved": 201,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 250,
+      "logicalAttempts": 249,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 115000,
-      "p95DurationMs": 439000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.264,
-      "shareOfHostedRequiredLaneTimePct": 5.42,
-      "totalDurationMs": 173487000
+      "p50DurationMs": 296000,
+      "p95DurationMs": 2986000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.129,
+      "shareOfHostedRequiredLaneTimePct": 13.26,
+      "totalDurationMs": 483692000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 70,
-        "success": 811
+        "cancelled": 139,
+        "success": 923
       },
       "context": "Codegen Drift",
-      "executions": 233,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 14,
+      "executions": 255,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 140,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
       "logicalAttempts": 213,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 107000,
-      "p95DurationMs": 283000,
-      "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.094,
-      "shareOfHostedRequiredLaneTimePct": 2.89,
-      "totalDurationMs": 92639000
+      "p50DurationMs": 136000,
+      "p95DurationMs": 342000,
+      "reusedLocalProofs": 2,
+      "runsPerAttempt": 1.197,
+      "shareOfHostedRequiredLaneTimePct": 4.02,
+      "totalDurationMs": 146452000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 103,
-        "failure": 23,
-        "success": 755
+        "cancelled": 194,
+        "failure": 60,
+        "success": 808
       },
       "context": "Repo Sanity",
-      "executions": 620,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 401,
+      "executions": 653,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 538,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 540,
+      "logicalAttempts": 601,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 183000,
-      "p95DurationMs": 307000,
-      "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.148,
-      "shareOfHostedRequiredLaneTimePct": 5.14,
-      "totalDurationMs": 164775000
-    },
-    {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
-      "conclusionMix": {
-        "cancelled": 189,
-        "failure": 221,
-        "success": 471
-      },
-      "context": "Heavy / Coverage Regression",
-      "executions": 224,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 5,
-      "localP50DurationMs": null,
-      "localP95DurationMs": null,
-      "logicalAttempts": 206,
-      "maxRunsInOneAttempt": 3,
-      "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 603000,
-      "p95DurationMs": 928000,
-      "reusedLocalProofs": 1,
+      "p50DurationMs": 257000,
+      "p95DurationMs": 381000,
+      "reusedLocalProofs": 2,
       "runsPerAttempt": 1.087,
-      "shareOfHostedRequiredLaneTimePct": 15.14,
-      "totalDurationMs": 485045000
+      "shareOfHostedRequiredLaneTimePct": 7.64,
+      "totalDurationMs": 278517000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 78,
-        "failure": 6,
-        "success": 797
+        "cancelled": 131,
+        "failure": 4,
+        "success": 927
       },
       "context": "Knip",
-      "executions": 931,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 712,
+      "executions": 1021,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 906,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 789,
-      "maxRunsInOneAttempt": 4,
+      "logicalAttempts": 930,
+      "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 80000,
-      "p95DurationMs": 122000,
-      "reusedLocalProofs": 13,
-      "runsPerAttempt": 1.18,
-      "shareOfHostedRequiredLaneTimePct": 2.49,
-      "totalDurationMs": 79812000
+      "p50DurationMs": 121000,
+      "p95DurationMs": 182000,
+      "reusedLocalProofs": 14,
+      "runsPerAttempt": 1.098,
+      "shareOfHostedRequiredLaneTimePct": 4.04,
+      "totalDurationMs": 147323000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 75,
-        "failure": 15,
-        "success": 791
+        "cancelled": 130,
+        "failure": 16,
+        "success": 916
       },
       "context": "Commitlint",
-      "executions": 233,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 14,
+      "executions": 257,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 142,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 213,
+      "logicalAttempts": 216,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 63000,
-      "p95DurationMs": 107000,
-      "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.094,
-      "shareOfHostedRequiredLaneTimePct": 2.07,
-      "totalDurationMs": 66349000
+      "p50DurationMs": 92000,
+      "p95DurationMs": 168000,
+      "reusedLocalProofs": 2,
+      "runsPerAttempt": 1.19,
+      "shareOfHostedRequiredLaneTimePct": 3.43,
+      "totalDurationMs": 124946000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 65,
-        "failure": 6,
-        "success": 810
+        "cancelled": 121,
+        "success": 941
       },
       "context": "Secret Scanning",
-      "executions": 610,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 391,
+      "executions": 554,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 439,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 538,
-      "maxRunsInOneAttempt": 3,
+      "logicalAttempts": 537,
+      "maxRunsInOneAttempt": 2,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 54000,
-      "p95DurationMs": 130000,
+      "p50DurationMs": 66000,
+      "p95DurationMs": 243000,
       "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.134,
-      "shareOfHostedRequiredLaneTimePct": 1.89,
-      "totalDurationMs": 60694000
+      "runsPerAttempt": 1.032,
+      "shareOfHostedRequiredLaneTimePct": 2.89,
+      "totalDurationMs": 105495000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 68,
-        "failure": 4,
-        "success": 809
+        "cancelled": 108,
+        "failure": 6,
+        "success": 948
       },
       "context": "Security",
-      "executions": 610,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 391,
+      "executions": 554,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 439,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 538,
-      "maxRunsInOneAttempt": 3,
+      "logicalAttempts": 537,
+      "maxRunsInOneAttempt": 2,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 28000,
-      "p95DurationMs": 68000,
+      "p50DurationMs": 53000,
+      "p95DurationMs": 147000,
       "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.134,
-      "shareOfHostedRequiredLaneTimePct": 1.23,
-      "totalDurationMs": 39272000
+      "runsPerAttempt": 1.032,
+      "shareOfHostedRequiredLaneTimePct": 2.32,
+      "totalDurationMs": 84680000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 78,
-        "success": 803
+        "cancelled": 138,
+        "success": 924
       },
       "context": "SAST",
-      "executions": 609,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 390,
+      "executions": 552,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 437,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 538,
-      "maxRunsInOneAttempt": 3,
+      "logicalAttempts": 536,
+      "maxRunsInOneAttempt": 2,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 82000,
-      "p95DurationMs": 141000,
+      "p50DurationMs": 115000,
+      "p95DurationMs": 273000,
       "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.132,
-      "shareOfHostedRequiredLaneTimePct": 2.5,
-      "totalDurationMs": 80135000
+      "runsPerAttempt": 1.03,
+      "shareOfHostedRequiredLaneTimePct": 4.12,
+      "totalDurationMs": 150093000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 85,
-        "failure": 1,
-        "success": 795
+        "cancelled": 140,
+        "success": 922
       },
       "context": "Nix Shell",
-      "executions": 609,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 390,
+      "executions": 552,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 437,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 538,
-      "maxRunsInOneAttempt": 3,
+      "logicalAttempts": 536,
+      "maxRunsInOneAttempt": 2,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 102000,
-      "p95DurationMs": 141000,
+      "p50DurationMs": 131000,
+      "p95DurationMs": 214000,
       "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.132,
-      "shareOfHostedRequiredLaneTimePct": 3.07,
-      "totalDurationMs": 98406000
+      "runsPerAttempt": 1.03,
+      "shareOfHostedRequiredLaneTimePct": 4.43,
+      "totalDurationMs": 161383000
     },
     {
-      "attempts": 881,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 54,
-        "failure": 1,
-        "success": 826
+        "cancelled": 96,
+        "success": 966
       },
       "context": "Professional Desktop IPC Stdio",
-      "executions": 224,
-      "hostedRunsMatchedToPublishAttempt": 206,
-      "localInnerRunsObserved": 5,
+      "executions": 232,
+      "hostedRunsMatchedToPublishAttempt": 84,
+      "localInnerRunsObserved": 117,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 206,
+      "logicalAttempts": 192,
       "maxRunsInOneAttempt": 3,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 69000,
-      "p95DurationMs": 111000,
-      "reusedLocalProofs": 1,
-      "runsPerAttempt": 1.087,
-      "shareOfHostedRequiredLaneTimePct": 1.64,
-      "totalDurationMs": 52666000
+      "p50DurationMs": 35000,
+      "p95DurationMs": 245000,
+      "reusedLocalProofs": 3,
+      "runsPerAttempt": 1.208,
+      "shareOfHostedRequiredLaneTimePct": 2.63,
+      "totalDurationMs": 95771000
     },
     {
-      "attempts": 661,
-      "ciParityRunsInferredFromSuccessfulWrapper": 13,
+      "attempts": 711,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
       "conclusionMix": {
-        "cancelled": 77,
-        "failure": 3,
-        "success": 581
+        "cancelled": 292,
+        "failure": 2,
+        "success": 417
       },
       "context": "Heavy / Doctest",
-      "executions": 104,
-      "hostedRunsMatchedToPublishAttempt": 91,
+      "executions": 156,
+      "hostedRunsMatchedToPublishAttempt": 49,
+      "localInnerRunsObserved": 76,
+      "localP50DurationMs": null,
+      "localP95DurationMs": null,
+      "logicalAttempts": 136,
+      "maxRunsInOneAttempt": 3,
+      "measuredDurationPopulation": "hosted jobs only",
+      "p50DurationMs": 250000,
+      "p95DurationMs": 2838000,
+      "reusedLocalProofs": 2,
+      "runsPerAttempt": 1.147,
+      "shareOfHostedRequiredLaneTimePct": 11.96,
+      "totalDurationMs": 436150000
+    },
+    {
+      "attempts": 1062,
+      "ciParityRunsInferredFromSuccessfulWrapper": 31,
+      "conclusionMix": {
+        "cancelled": 313,
+        "failure": 22,
+        "success": 727
+      },
+      "context": "JSDoc Ratchet",
+      "executions": 115,
+      "hostedRunsMatchedToPublishAttempt": 84,
       "localInnerRunsObserved": 0,
       "localP50DurationMs": null,
       "localP95DurationMs": null,
-      "logicalAttempts": 90,
+      "logicalAttempts": 109,
       "maxRunsInOneAttempt": 2,
       "measuredDurationPopulation": "hosted jobs only",
-      "p50DurationMs": 82000,
-      "p95DurationMs": 219000,
+      "p50DurationMs": 541000,
+      "p95DurationMs": 594000,
       "reusedLocalProofs": 0,
-      "runsPerAttempt": 1.156,
-      "shareOfHostedRequiredLaneTimePct": 2.65,
-      "totalDurationMs": 84799000
+      "runsPerAttempt": 1.055,
+      "shareOfHostedRequiredLaneTimePct": 13.94,
+      "totalDurationMs": 508150000
     }
   ],
+  "run": "close",
   "schemaVersion": "verification-economics/v1",
   "sources": {
     "frozenCaptureAt": "2026-09-03T02:27:19.384Z",
     "frozenCorpus": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet",
-    "hostedSnapshot": "goals/time-to-certainty/research/inputs/hosted-runs.json.gz",
-    "liveSnapshot": "goals/time-to-certainty/research/inputs/live-journals.json.gz"
+    "hostedSnapshot": "goals/time-to-certainty/research/inputs/close/hosted-runs.json.gz",
+    "liveSnapshot": "goals/time-to-certainty/research/inputs/close/live-journals.json.gz"
+  },
+  "terminations": {
+    "journaledTerminations": 707,
+    "reasonMix": [
+      {
+        "attempts": 410,
+        "reason": "interrupted"
+      },
+      {
+        "attempts": 275,
+        "reason": "legacy-unowned-start"
+      },
+      {
+        "attempts": 8,
+        "reason": "lease-eviction"
+      },
+      {
+        "attempts": 5,
+        "reason": "owner-dead"
+      },
+      {
+        "attempts": 5,
+        "reason": "unrecorded-failure"
+      },
+      {
+        "attempts": 4,
+        "reason": "queued-submitter-death"
+      }
+    ],
+    "starts": 4350,
+    "startsWithoutAttemptWrittenTerminal": 377,
+    "startsWithoutFinish": 97,
+    "startsWithoutFinishPct": 2.23,
+    "sweepStampedTerminations": 280
   },
   "unchangedFingerprint": {
-    "attemptsWithPerAttemptFingerprint": 0,
-    "classification": "unmeasurable",
-    "failedUnchangedFingerprintThenGreen": null,
-    "latestStateFilesWithFingerprint": 459,
-    "latestStateLaneProofs": 535,
-    "reason": "attempt rows carry head=HEAD and no diffFingerprint; state.json is one overwritten latest-green snapshot per run directory",
+    "attemptsWithFingerprint": 1060,
+    "attemptsWithPerAttemptFingerprint": 1060,
+    "byActionableLane": [
+      {
+        "attempts": 8,
+        "lane": "commit:01-git-commit"
+      },
+      {
+        "attempts": 2,
+        "lane": "feedback:00-cheap-gates"
+      },
+      {
+        "attempts": 2,
+        "lane": "quality:lint-policy"
+      },
+      {
+        "attempts": 1,
+        "lane": "feedback:04-test"
+      },
+      {
+        "attempts": 1,
+        "lane": "full:00-cheap-gates"
+      },
+      {
+        "attempts": 1,
+        "lane": "pre-push:sast"
+      },
+      {
+        "attempts": 1,
+        "lane": "quality:coverage"
+      }
+    ],
+    "byReceiptProxy": [
+      {
+        "attempts": 15,
+        "class": "unclassified"
+      },
+      {
+        "attempts": 1,
+        "class": "stale-workspace-or-projection"
+      }
+    ],
+    "classification": "measured",
+    "failedUnchangedFingerprintThenGreen": 16,
+    "latestStateFilesWithFingerprint": 517,
+    "latestStateLaneProofs": 590,
+    "method": "ruling 75 fingerprint-repeat proxy over the M1 comparable sequence per (checkout, branch): verdict-bearing red followed by green on the same diffFingerprint; the ack-resolution join is absent",
+    "reason": "measured only over attempts whose journal rows carry diffFingerprint (A5 and later); pre-A5 rows carry head=HEAD and stay outside the proxy",
     "receiptAnchors": [
       "staging arrangement invalidated a byte-identical proof (2026-08-16 B5)",
       "TS2589 native compiler flake",
