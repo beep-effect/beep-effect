@@ -47,5 +47,10 @@ verification remains pending.
 Native filesystem decisions, withProcessPath and the existing retry-loop
 judgment remain open. The disappearance of a wrapper detector row after moving
 registrations inside the fixture does not prove that helper canonical. Historical
-runtime lineage matched 93 of 97 ledger rows; the other four require separate
-upstream-history reconciliation and are not closed by this migration.
+runtime lineage matched 93 of 97 ledger rows; those 93 are marked fixed by
+source commit a1de26d035. The other four require separate upstream-history
+reconciliation and remain open. Historical provider, property and live-test
+judgments still need row-level reconciliation; this proof does not silently
+close those rows. The CLI ledger has 3,473 unique schema-valid rows: 1,449 fixed,
+12 exceptions and 2,012 open. Full package verification is running for source
+a1de26d035; its terminal result is not yet available.
