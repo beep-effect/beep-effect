@@ -411,7 +411,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
           const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
           // The engine resolves the env interpreter from the host PATH; pin it to the standard roots so a
           // workstation shell with a non-standard bash first on PATH (e.g. a nix-store bash) cannot leak in.
-          // The whole suite runs sequentially so no sibling that needs the host PATH observes the pin.
+          // The test opts out of `concurrent` so no concurrent sibling observes the pinned PATH.
           yield* Effect.acquireRelease(
             Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
             () => Effect.sync(() => vi.unstubAllEnvs())
