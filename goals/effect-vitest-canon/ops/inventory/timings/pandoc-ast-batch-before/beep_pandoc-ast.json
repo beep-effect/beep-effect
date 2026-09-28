@@ -1,0 +1,106 @@
+{
+  "package": "@beep/pandoc-ast",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T14:39:44.053000+00:00",
+  "totalMs": 4232.6455078125,
+  "testCount": 97,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
+      "ms": 14.91357421875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "ms": 90.6455078125,
+      "tests": 48
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+      "ms": 12.144287109375,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "ms": 3.4833984375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "ms": 54.7001953125,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "ms": 18.26220703125,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
+      "ms": 1.192138671875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
+      "ms": 0.814208984375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "ms": 12.096435546875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping records DOCX-origin compatibility gaps while producing partial Md output",
+      "ms": 54.700143999999455
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping maps md-core Pandoc JSON to @beep/md with a supported report",
+      "ms": 54.1616640000002
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec decodes committed Pandoc JSON fixtures without a pandoc executable",
+      "ms": 53.64541999999983
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec round-trips supported wire objects through the internal model",
+      "ms": 53.320660000000316
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec preserves representative encoded wire shapes for attrs, targets, and API versions",
+      "ms": 38.10114000000067
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec keeps schema-derived semantic documents closed under encode and strict decode",
+      "ms": 37.48259700000017
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec preserves arbitrary future JSON through the public lossless profile",
+      "ms": 37.467233999999735
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping projects current inline and block constructors through definition-list plaintext",
+      "ms": 16.625904999999875
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping round-trips an Md math block through a Pandoc display-math paragraph",
+      "ms": 16.617271999999502
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping exhaustively distinguishes inline and display Pandoc math projections",
+      "ms": 16.607496000000538
+    }
+  ]
+}

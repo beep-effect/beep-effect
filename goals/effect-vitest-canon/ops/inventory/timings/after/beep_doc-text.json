@@ -1,0 +1,66 @@
+{
+  "package": "@beep/doc-text",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T12:01:53.730000+00:00",
+  "totalMs": 2913.765380859375,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
+      "ms": 1.046142578125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "ms": 85.765380859375,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text extracts text from a generated DOCX",
+      "ms": 85.76532300000008
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text leaves the caller's PDF bytes intact after extraction",
+      "ms": 71.55985099999998
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text extracts text from a generated PDF text layer",
+      "ms": 69.4717740000001
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text rejects unsupported formats",
+      "ms": 49.00232300000016
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text round-trips document text driver schemas",
+      "ms": 45.751896999999644
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text maps corrupt document bytes to an extraction failure",
+      "ms": 11.464900999999827
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text reports an explicit empty text-layer outcome when OCR would be required",
+      "ms": 6.302247999999963
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.service.test.ts",
+      "testName": "@beep/doc-text rejects an over-cap document before parsing",
+      "ms": 5.760522999999921
+    },
+    {
+      "file": "packages/drivers/doc-text/test/DocText.equivalence.test.ts",
+      "testName": "DocText declared-field equivalence treats field-equal DocTextError instances as equivalent and field-different ones as distinct",
+      "ms": 1.0461809999997058
+    }
+  ]
+}

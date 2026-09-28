@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/trustgraph-workbench",
+  "sourceHead": "3472ecf83bf7fbbde25b0724834cd618c8449f4c",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.3210717260080855,
+  "bunWholeCommandSeconds": 2.417455722010345,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.94189453125, 4.79736328125, 4.3134765625],
+  "loadAfter": [6.02685546875, 4.833984375, 4.328125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.15 avg60=0.24 avg300=0.16 total=765593669\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186214128\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178138184\n",
+    "io": "some avg10=0.06 avg60=0.35 avg300=0.16 total=836032803\nfull avg10=0.04 avg60=0.25 avg300=0.12 total=731379984\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.08 avg60=0.22 avg300=0.15 total=765600785\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186214128\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178138184\n",
+    "io": "some avg10=0.03 avg60=0.32 avg300=0.16 total=836032923\nfull avg10=0.02 avg60=0.23 avg300=0.12 total=731380094\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/labs/trustgraph-workbench/AGENTS.md",
+      "sha256": "2e65524dd7d7ac5d7a23ea032c45d30b4a4c20ea370a5fb426182eab6c240dfa"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/CLAUDE.md",
+      "sha256": "2e65524dd7d7ac5d7a23ea032c45d30b4a4c20ea370a5fb426182eab6c240dfa"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/README.md",
+      "sha256": "db70c564fb1c691c87c48be68273aa818ac379fe71446339affcec81af39cea0"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/index.html",
+      "sha256": "8f7daeffa715187677b3e38a9cdca74fd5ebe1fa8550ffb4cef33002dba8f1ed"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/lab.manifest.json",
+      "sha256": "febe09fbc7dbbc1ac4844376aa6f6a4db20a61e21e84985bdd6fa9a72c34ff07"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/package.json",
+      "sha256": "b64132b76f915ade372843474bbdf185a224ee576bc8051c8a79bcef5920d902"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/postcss.config.mjs",
+      "sha256": "2ee9434af4fb47623ea9254b1b710f9110ec3befbf449591dadba2e5500344ea"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/src/App.tsx",
+      "sha256": "38ac46f82a0ac07e30bbb142f87e42cb189bd33715f421915aa15128824b80bc"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/src/main.tsx",
+      "sha256": "b66bc25c27dc4646c1acb9ddf8792ff22aa19eb7577c062e5d73771de9350d25"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/src/styles/globals.css",
+      "sha256": "2b0e041a1402df8eeff7e26b4bf830590fdf139906d7e6fd1f6fe86aec27f7d9"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
+      "sha256": "752f58b3cf1c2b75d033aac4631f86661f607c92055df6aee70d1ae1d01917bf"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/tsconfig.check.json",
+      "sha256": "174074cc004b19f9d911e67af2e1c4a1a4659d766e2838780d611bd96fa58386"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/tsconfig.json",
+      "sha256": "d1929376129ec92dec794fb04d3fbf93958287c472a379e88e698b60414ce839"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/vite.config.ts",
+      "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7"
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/vitest.config.ts",
+      "sha256": "d4610ca2db119c0bef631c505699c15298fac70a133965a0ffb13b526fba8f3b"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "5fc67704904d92a5283484634d41e240b85bd14a9797ba96af307cf4b4452ed1"
+    }
+  ],
+  "environmentMode": "Configured TrustGraph workbench jsdom branding and document-head tests. No live browser gesture or visual proof claimed. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 2,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [6.02685546875, 4.833984375, 4.328125],
+    "loadAfter": [6.02685546875, 4.833984375, 4.328125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.08 avg60=0.22 avg300=0.15 total=765600829\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186214128\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178138184\n",
+      "io": "some avg10=0.03 avg60=0.32 avg300=0.16 total=836032923\nfull avg10=0.02 avg60=0.23 avg300=0.12 total=731380094\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.06 avg60=0.21 avg300=0.15 total=765605880\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186214128\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178138184\n",
+      "io": "some avg10=0.02 avg60=0.31 avg300=0.16 total=836033085\nfull avg10=0.01 avg60=0.22 avg300=0.12 total=731380180\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 2,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both original jsdom cases pass before and after under Node and Bun, with no skips. Baselines overlap an early publisher; after runs overlap lightweight policy checks only. The public test configuration remains concurrent. Separate private ordered cleanup controls are not included in these timing counts. No browser gesture or visual proof is claimed."
+}

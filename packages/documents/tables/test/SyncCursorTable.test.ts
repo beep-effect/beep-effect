@@ -6,8 +6,10 @@ import {
   toSyncCursorInsert,
 } from "@beep/documents-tables/entities/SyncCursor";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
@@ -33,7 +35,7 @@ const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A
 
 const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
   expect(error._tag).toBe(tag);
-  expect(Str.isNonEmpty(error.message)).toBe(true);
+  pipe(Str.isNonEmpty(error.message), assertTrue);
 };
 
 const indexConfigNamed = (name: string) =>
@@ -59,25 +61,25 @@ describe("SyncCursor table", () => {
     expect(getTableConfig(syncCursorTable).name).toBe("documents_sync_cursor");
     expect(SYNC_CURSOR_TABLE_NAME).toBe("documents_sync_cursor");
     expect(DomainSyncCursor.SyncCursor.sql.tableName).toBe("documents_sync_cursor");
-    expect(columns.id.primary).toBe(true);
+    pipe(columns.id.primary, assertTrue);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.lastError.name).toBe("last_error");
-    expect(columns.lastError.notNull).toBe(false);
+    pipe(columns.lastError.notNull, assertFalse);
     expect(columns.lastEventId.name).toBe("last_event_id");
-    expect(columns.lastEventId.notNull).toBe(false);
+    pipe(columns.lastEventId.notNull, assertFalse);
     expect(columns.provider.columnType).toBe("PgText");
     expect(columns.streamPosition.name).toBe("stream_position");
-    expect(columns.streamPosition.notNull).toBe(true);
+    pipe(columns.streamPosition.notNull, assertTrue);
     expect(columns.workspaceId.name).toBe("workspace_id");
     expect(columns.workspaceId.columnType).toBe("PgInteger");
-    expect(columns.workspaceId.notNull).toBe(true);
+    pipe(columns.workspaceId.notNull, assertTrue);
   });
 
   it("builds the SyncCursor indexes from schema-first hints", () => {
     const publicIdUnique = indexConfigNamed("documents_sync_cursor_public_id_unique_idx");
     const workspaceIdBtree = indexConfigNamed("documents_sync_cursor_workspace_id_btree_idx");
 
-    expect(O.getOrThrow(publicIdUnique).config.unique).toBe(true);
+    pipe(O.getOrThrow(publicIdUnique).config.unique, assertTrue);
     expect(O.getOrThrow(workspaceIdBtree).config.columns[0]).toMatchObject({ name: "workspace_id" });
   });
 
@@ -87,7 +89,7 @@ describe("SyncCursor table", () => {
       const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
       const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
 
-      expect("id" in insert).toBe(false);
+      pipe("id" in insert, assertFalse);
       expect(insert.status).toBe("active");
       expect(insert.streamPosition).toBe("now");
       expect(insert.entityType).toBe("DocumentsSyncCursor");
@@ -104,9 +106,9 @@ describe("SyncCursor table", () => {
         })
       );
 
-      expect(roundTripped.lastError).toEqual(O.none());
-      expect(roundTripped.lastEventId).toEqual(O.some("evt-1"));
-      expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
+      assertNone(roundTripped.lastError);
+      assertSome<string>(roundTripped.lastEventId, "evt-1");
+      pipe(SyncCursorEquivalence(roundTripped, syncCursor), assertTrue);
     })
   );
 
@@ -115,7 +117,7 @@ describe("SyncCursor table", () => {
     [S.toType(DomainSyncCursor.SyncCursor)],
     ([syncCursor]) => {
       const insert = toSyncCursorInsert(syncCursor);
-      expect(Result.isSuccess(insert)).toBe(true);
+      pipe(insert, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(insert)) {
         return;
       }
@@ -125,12 +127,12 @@ describe("SyncCursor table", () => {
         lastError: insert.success.lastError ?? null,
         lastEventId: insert.success.lastEventId ?? null,
       });
-      expect(Result.isSuccess(decoded)).toBe(true);
+      pipe(decoded, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(decoded)) {
         return;
       }
 
-      expect(SyncCursorEquivalence(decoded.success, syncCursor)).toBe(true);
+      pipe(SyncCursorEquivalence(decoded.success, syncCursor), assertTrue);
     },
     { arbitrary: fcRuns(50) }
   );

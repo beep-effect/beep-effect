@@ -1,49 +1,52 @@
 import { inspectSourceSizeList, SourceSizeAnalysis, SourceSizeIssue } from "@beep/html/Html.source-size";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertSuccess, strictEqual } from "@effect/vitest/utils";
+import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const isSourceSizeAnalysis = S.is(SourceSizeAnalysis);
 const isSourceSizeIssue = S.is(SourceSizeIssue);
+const sourceSizeResultEquivalence = S.toEquivalence(S.Result(SourceSizeAnalysis, S.Array(SourceSizeIssue)));
 
 type IssueCode = SourceSizeIssue["code"];
 
 const expectValid = (value: string, usesAuto = false): void => {
-  const result = inspectSourceSizeList(value);
-  expect(Result.isSuccess(result), value).toBe(true);
-  if (Result.isSuccess(result)) {
-    expect(result.success.usesAuto, value).toBe(usesAuto);
-    expect(result.success.entryCount, value).toBeGreaterThan(0);
-  }
+  assertSuccess(
+    Result.map(inspectSourceSizeList(value), (analysis) => ({
+      usesAuto: analysis.usesAuto,
+      hasEntries: analysis.entryCount > 0,
+    })),
+    { usesAuto, hasEntries: true }
+  );
 };
 
-const expectInvalid = (value: string, code?: IssueCode): void => {
-  const result = inspectSourceSizeList(value);
-  expect(Result.isFailure(result), value).toBe(true);
-  if (Result.isFailure(result) && code !== undefined) {
-    expect(result.failure[0]?.code, value).toBe(code);
-  }
+const expectInvalid = (value: string, code: IssueCode): void => {
+  assertFailure(
+    Result.mapError(inspectSourceSizeList(value), (issues) => issues[0]?.code),
+    code
+  );
 };
 
 describe("@beep/html source-size author conformance", () => {
   it("returns schema-owned analyses and diagnostics", () => {
     const valid = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw");
-    expect(Result.isSuccess(valid)).toBe(true);
-    if (Result.isSuccess(valid)) {
-      expect(isSourceSizeAnalysis(valid.success)).toBe(true);
-      expect(valid.success.entryCount).toBe(2);
-      expect(valid.success.usesAuto).toBe(false);
-    }
+    assertSuccess(valid, SourceSizeAnalysis.make({ entryCount: 2, usesAuto: false }));
+    expect(isSourceSizeAnalysis(valid.success)).toBe(true);
+    expect(valid.success.entryCount).toBe(2);
+    expect(valid.success.usesAuto).toBe(false);
 
     const invalid = inspectSourceSizeList("10%");
-    expect(Result.isFailure(invalid)).toBe(true);
-    if (Result.isFailure(invalid)) {
-      expect(isSourceSizeIssue(invalid.failure[0])).toBe(true);
-      expect(invalid.failure[0]?.code).toBe("invalidSourceSize");
-    }
+    assertFailure(
+      Result.mapError(invalid, (issues) => ({
+        schemaOwned: isSourceSizeIssue(issues[0]),
+        code: issues[0]?.code,
+      })),
+      { schemaOwned: true, code: "invalidSourceSize" }
+    );
   });
 
   it("accepts every current CSS length-unit family and literal unitless zero", () => {
@@ -309,59 +312,48 @@ describe("@beep/html source-size author conformance", () => {
     expectValid(`min(${arguments_})`);
   });
 
-  it("accepts generated nonnegative literal lengths", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1_000_000))),
-            Arbitrary.schema(S.Literals(["px", "rem", "vw", "cqw"])),
-          ]),
-          ([value, unit]) => {
-            expectValid(`${value}${unit}`);
+  it.prop(
+    "accepts generated nonnegative literal lengths",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1_000_000))),
+      Arbitrary.schema(S.Literals(["px", "rem", "vw", "cqw"])),
+    ],
+    ([value, unit]) => {
+      expectValid(`${value}${unit}`);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("rejects generated negative literal lengths", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(1_000_000))),
-            Arbitrary.schema(S.Literals(["px", "rem", "vw"])),
-          ]),
-          ([value, unit]) => {
-            expectInvalid(`-${value}${unit}`, "invalidSourceSize");
+  it.prop(
+    "rejects generated negative literal lengths",
+    [
+      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(1_000_000))),
+      Arbitrary.schema(S.Literals(["px", "rem", "vw"])),
+    ],
+    ([value, unit]) => {
+      expectInvalid(`-${value}${unit}`, "invalidSourceSize");
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
-  it("is deterministic and total for arbitrary Unicode and UTF-16 input", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.String.check(S.isMaxLength(256)))]),
-          ([input]) => {
-            const first = inspectSourceSizeList(input);
-            const second = inspectSourceSizeList(input);
-            expect(Result.isSuccess(first)).toBe(Result.isSuccess(second));
-            if (Result.isFailure(first) && Result.isFailure(second)) {
-              expect(first.failure[0]?.code).toBe(second.failure[0]?.code);
-            }
+  it.prop(
+    "is deterministic and total for arbitrary Unicode and UTF-16 input",
+    [Arbitrary.schema(S.String.check(S.isMaxLength(256)))],
+    ([input]) => {
+      const first = inspectSourceSizeList(input);
+      const second = inspectSourceSizeList(input);
+      strictEqual(Result.isSuccess(first), Result.isSuccess(second));
+      expect(sourceSizeResultEquivalence(first, second)).toBe(true);
+      if (Result.isFailure(first) && Result.isFailure(second)) {
+        expect(first.failure[0]?.code).toBe(second.failure[0]?.code);
+      }
 
-            return true;
-          },
-          fcRuns(250)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(250) }
+  );
 });

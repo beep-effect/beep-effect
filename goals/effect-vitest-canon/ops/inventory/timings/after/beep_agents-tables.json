@@ -1,0 +1,46 @@
+{
+  "package": "@beep/agents-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T06:21:41.362000+00:00",
+  "totalMs": 3872.318115234375,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "ms": 25.318115234375,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table materializes ProviderInstance metadata without executing a live database",
+      "ms": 23.954749999999876
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table persists only the exact token-free ProviderInstance column set",
+      "ms": 23.734851000000162
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table round-trips ProviderInstance rows through the converters",
+      "ms": 23.72151100000019
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table exports the metadata aggregate and entity namespaces",
+      "ms": 23.71940799999993
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table round-trips schema-derived ProviderInstances through the row converters",
+      "ms": 23.718906999999945
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "testName": "ProviderInstance table reports a typed converter failure on both sides of the ProviderInstance boundary",
+      "ms": 1.3180780000002414
+    }
+  ]
+}

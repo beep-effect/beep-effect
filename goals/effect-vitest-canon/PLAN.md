@@ -23,8 +23,9 @@ Check each selected finding against the current file and installed Effect API
 before editing. Preserve the frozen census, timing receipts and review history.
 Apply reviewed corrections only where relevant to the selected work; defer the
 remaining census delta until the existing backlog is exhausted. Keep dependency
-order, lens order, package verification, timing and PR gates. Benjamin retains
-merge authority. The first remediation slice is the identity registry resource
+order, lens order, package verification, timing and PR gates. Benjamin temporarily authorized the goal executor on 2026-09-26 to merge its
+own goal PRs after complete exact-head checks and review closure. This authority
+does not waive ratification gates or authorize unrelated PR merges. The first remediation slice is the identity registry resource
 finding in foundation/modeling; keep this family in its own PR.
 
 

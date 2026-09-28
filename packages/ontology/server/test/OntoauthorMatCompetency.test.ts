@@ -21,9 +21,10 @@ import {
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { makeDataset } from "@beep/rdf/Rdf";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
@@ -48,12 +49,6 @@ const TestLayer = Layer.mergeAll(
   OxigraphSparqlQueryServiceLive,
   NodeServices.layer
 );
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const taskFixtures: ReadonlyArray<TaskFixture> = [
   {
     id: "t1-subsumption",
@@ -189,24 +184,26 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
 });
 
 describe("OntoAuthor-Mat competency fixtures", () => {
-  it.effect(
-    "executes t1-t6 through Turtle, Oxigraph ASK, structural inference, and SHACL validation",
-    Effect.fnUntraced(function* () {
-      const results = yield* Effect.forEach(taskFixtures, runTask);
+  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "executes t1-t6 through Turtle, Oxigraph ASK, structural inference, and SHACL validation",
+      Effect.fnUntraced(function* () {
+        const results = yield* Effect.forEach(taskFixtures, runTask);
 
-      expect(results).toEqual(
-        taskFixtures.map((fixture, index) => ({
-          id: fixture.id,
-          taskTitle: results[index]?.taskTitle,
-          shaclConforms: true,
-          shapeCount: expect.any(Number),
-          askValues: fixture.expectedAskValues,
-          disjointnessViolationCount: fixture.expectedDisjointnessViolationCount,
-          competencyPass: fixture.expectedCompetencyPass,
-          reason: fixture.reason,
-        }))
-      );
-    }, provideScopedLayer(TestLayer)),
-    { timeout: 120_000 }
-  );
+        expect(results).toEqual(
+          taskFixtures.map((fixture, index) => ({
+            id: fixture.id,
+            taskTitle: results[index]?.taskTitle,
+            shaclConforms: true,
+            shapeCount: expect.any(Number),
+            askValues: fixture.expectedAskValues,
+            disjointnessViolationCount: fixture.expectedDisjointnessViolationCount,
+            competencyPass: fixture.expectedCompetencyPass,
+            reason: fixture.reason,
+          }))
+        );
+      }),
+      { timeout: 120_000 }
+    );
+  });
 });

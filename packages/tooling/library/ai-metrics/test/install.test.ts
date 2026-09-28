@@ -10,9 +10,11 @@ import {
   makeAiMetricsInstallSpec,
 } from "@beep/repo-ai-metrics/install";
 import { AiMetricsDeployTarget, AiMetricsPrivacyMode, AiMetricsTool } from "@beep/repo-ai-metrics/models";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -25,16 +27,14 @@ const decodeInstallDoctorCheck = S.decodeUnknownEffect(AiMetricsInstallDoctorChe
 const decodeInstallPlanJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallPlan));
 
 describe("@beep/repo-ai-metrics install contracts", () => {
-  it("generates plan steps accepted by their domain schema", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AiMetricsInstallPlanStep)]),
-          (values) => isAiMetricsInstallPlanStep(...values),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates plan steps accepted by their domain schema",
+    [Arbitrary.schema(AiMetricsInstallPlanStep)],
+    (values) => {
+      assertTrue(isAiMetricsInstallPlanStep(...values));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect("applies plan-step and doctor metadata defaults during construction and decoding", () =>
     Effect.gen(function* () {
@@ -61,8 +61,8 @@ describe("@beep/repo-ai-metrics install contracts", () => {
         status: "passed",
       });
 
-      expect(madeStep.required).toBe(true);
-      expect(decodedStep.required).toBe(true);
+      pipe(madeStep.required, assertTrue);
+      pipe(decodedStep.required, assertTrue);
       expect(madeCheck.metadata).toEqual({});
       expect(decodedCheck.metadata).toEqual({});
     })
@@ -96,7 +96,7 @@ describe("@beep/repo-ai-metrics install contracts", () => {
       expect(defaultService.publicUrl).toBe("https://metrics.example.test/ai-metrics/opik");
       expect(specCommands).toHaveLength(3);
       expect(planCommands).toHaveLength(3);
-      expect(A.every(A.appendAll(specCommands, planCommands), Str.includes(expectedFlag))).toBe(true);
+      pipe(A.every(A.appendAll(specCommands, planCommands), Str.includes(expectedFlag)), assertTrue);
     })
   );
 
@@ -115,7 +115,7 @@ describe("@beep/repo-ai-metrics install contracts", () => {
       const encoded = yield* aiMetricsInstallPlanToJson(plan);
       const decoded = yield* decodeInstallPlanJson(encoded);
 
-      expect(apply.dryRun).toBe(true);
+      pipe(apply.dryRun, assertTrue);
       expect(decoded).toEqual(plan);
     })
   );

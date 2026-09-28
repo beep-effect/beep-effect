@@ -1,9 +1,10 @@
 import { EvidenceSourcePanel } from "@beep/epistemic-ui";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownContradictionTriageEvidenceSourceHighlightResult = S.decodeUnknownResult(
   ContradictionTriage.EvidenceSourceHighlight

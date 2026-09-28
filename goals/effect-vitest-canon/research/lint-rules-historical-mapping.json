@@ -1,0 +1,146 @@
+[
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:11:runPromise@2#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 101
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:103:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 110
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:12:runPromise@2#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 33
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:9:runPromise@2#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 20
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:24:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:47:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:74:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV003:packages/tooling/policy-pack/lint-rules/test/harness.ts:31:provideScopedLayer@2#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 76
+  },
+  {
+    "id": "EV003:packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts:150:withOxlintFixture@71#1",
+    "phase": "observability",
+    "fixSha": "8b6a41b5e74843e5b2c932e08001f325fb862392",
+    "currentLine": 148
+  },
+  {
+    "id": "EV006:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:62:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "d4f2d64721b7467e3470dda9247c3b467913c71f",
+    "currentLine": 70
+  },
+  {
+    "id": "EV006:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:63:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "d4f2d64721b7467e3470dda9247c3b467913c71f",
+    "currentLine": 71
+  },
+  {
+    "id": "EV007:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:104:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 110
+  },
+  {
+    "id": "EV007:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:25:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV007:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:48:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV007:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:75:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 26
+  },
+  {
+    "id": "EV010:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:2:@effect/platform-node@0#1",
+    "phase": "runner",
+    "fixSha": "d33de6f79010f3b72e5b0ffc49535f7cd3e67547",
+    "currentLine": 3
+  },
+  {
+    "id": "EV010:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:3:@effect/platform-node@0#1",
+    "phase": "runner",
+    "fixSha": "d33de6f79010f3b72e5b0ffc49535f7cd3e67547",
+    "currentLine": 5
+  },
+  {
+    "id": "EV010:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:2:@effect/platform-node@0#1",
+    "phase": "runner",
+    "fixSha": "d33de6f79010f3b72e5b0ffc49535f7cd3e67547",
+    "currentLine": 3
+  },
+  {
+    "id": "EV011:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:5:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 4
+  },
+  {
+    "id": "EV011:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:8:vitest-import@0#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 6
+  },
+  {
+    "id": "EV011:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:4:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 4
+  },
+  {
+    "id": "EV011:packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts:6:vitest-import@0#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "currentLine": 4
+  },
+  {
+    "id": "EV001:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:12:runPromise@2#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 101
+  },
+  {
+    "id": "EV011:packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts:6:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "6dcfaba18413aa86ee7f7017262c103f49da3d14",
+    "currentLine": 4
+  }
+]

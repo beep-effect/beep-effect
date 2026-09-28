@@ -1,4 +1,5 @@
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import {
   ThreadStoreConflict,
   ThreadStoreNotFound,
@@ -9,7 +10,7 @@ import {
   WorkspaceVaultRootInvalid,
   WorkspaceVaultStoreUnavailable,
 } from "@beep/workspace-use-cases/public";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {

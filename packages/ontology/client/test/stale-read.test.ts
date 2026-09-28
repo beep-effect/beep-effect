@@ -16,8 +16,10 @@ import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Ses
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { NonNegativeInt } from "@beep/schema";
 import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
-import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Deferred, Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 
@@ -68,11 +70,16 @@ describe("ontology reads never publish a result for a session that has moved", (
             })
           : Effect.die(`unexpected ontology RPC: ${tag}`)) as unknown as OntologyClient["Service"]);
 
-      const registry = AtomRegistry.make({
-        initialValues: [
-          [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
-        ],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            initialValues: [
+              [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
+            ],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.set(ontologySessionAtom, O.some(openSession));
 
       // Start the query. It parks inside the stub until we release it.
@@ -87,8 +94,8 @@ describe("ontology reads never publish a result for a session that has moved", (
       yield* AtomRegistry.getResult(registry, runOntologySparqlAtom);
 
       // The stale rows must NOT be on screen as the current answer.
-      expect(registry.get(ontologySparqlResultAtom)).toStrictEqual(O.none());
-      expect(O.isSome(registry.get(ontologySparqlErrorAtom))).toBe(true);
+      assertNone(registry.get(ontologySparqlResultAtom));
+      pipe(registry.get(ontologySparqlErrorAtom), O.isSome, assertTrue);
     })
   );
 });

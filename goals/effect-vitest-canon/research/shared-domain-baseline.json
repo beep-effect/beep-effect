@@ -1,0 +1,135 @@
+{
+  "package": "@beep/shared-domain",
+  "baseSha": "4f1489f57d5525ef7bc76ef1b60e59989a9c981f",
+  "frozenCensusSha": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "admittedFiles": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "frozenSha256": "e2e6fe7b670908b750387277e939c524ed3089b68ac75f1cc3f0267322454fd8",
+      "currentSha256": "05427f5933ba87403fc0f69d7ab9e4c1dea805fd8ffca8a9c14e5671204eb5b6",
+      "changedSinceFrozen": true,
+      "lines": 409
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "frozenSha256": "7221a6819d41c08fdf243065347b1e9e971064e27b710002ffe861b1ea09f63f",
+      "currentSha256": "9731bb06e7a685766a2889a4f22158cb93889ad1c60c258600322945ba8db5f6",
+      "changedSinceFrozen": true,
+      "lines": 497
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "frozenSha256": "0a8da3086ed315c8d33790346d41f0c58ae8a6ce555cd3e0f90b660e50948850",
+      "currentSha256": "0f300de663c0a055d442cb004f2bd8eec0fa4964104d2f0e3a16346cbe00321b",
+      "changedSinceFrozen": true,
+      "lines": 316
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "frozenSha256": "b7a6c37b91549d962c0e9b4c299e4c59c65f275382c8f2a4dc5b1a97e586dfc5",
+      "currentSha256": "b7a6c37b91549d962c0e9b4c299e4c59c65f275382c8f2a4dc5b1a97e586dfc5",
+      "changedSinceFrozen": false,
+      "lines": 36
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "frozenSha256": "1ae4557ffcf0d751beefbeb9c43894f1aabe08800ab57233821487e01744abd8",
+      "currentSha256": "7dcfaa2b9391f5ea205273206bfa91c114f3b5da9a5aebd7365a9af294a271e6",
+      "changedSinceFrozen": true,
+      "lines": 186
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "frozenSha256": "85afda84994c88d2eb1cac983be904303c73616e8f0bc934eab1e84e30ef4f43",
+      "currentSha256": "79e8bb3f27dec92fe145f283cc34c2b20c360821b91fd1caaa10cb0209cb668d",
+      "changedSinceFrozen": true,
+      "lines": 211
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "frozenSha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da",
+      "currentSha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da",
+      "changedSinceFrozen": false,
+      "lines": 21
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "frozenSha256": "5efc4b7008b3030e7521851b8db0c7097375ce62ef3da9b991f79278415e4b51",
+      "currentSha256": "5efc4b7008b3030e7521851b8db0c7097375ce62ef3da9b991f79278415e4b51",
+      "changedSinceFrozen": false,
+      "lines": 52
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "frozenSha256": "4dc2d545f3f702a4e86d1b30f0c004948e1f19d0c7c0728b6b530a10c776646a",
+      "currentSha256": "4dc2d545f3f702a4e86d1b30f0c004948e1f19d0c7c0728b6b530a10c776646a",
+      "changedSinceFrozen": false,
+      "lines": 70
+    }
+  ],
+  "packageVerify": {
+    "exit": 0,
+    "auditSeconds": 7.0,
+    "docgenSeconds": 3.9
+  },
+  "runtimeResults": {
+    "node": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [3.86865234375, 4.55419921875, 5.3916015625],
+      "loadAfter": [4.60009765625, 4.69482421875, 5.4326171875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.00 avg60=0.00 avg300=0.03 total=223089351\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87737732\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85150814\n",
+        "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=694441513\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=629114555\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.00 avg60=0.00 avg300=0.03 total=223102883\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87737743\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85150824\n",
+        "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=694444155\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=629116362\n"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "wholeCommandSeconds": 4.571546064995346,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "bun": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [4.60009765625, 4.69482421875, 5.4326171875],
+      "loadAfter": [4.87255859375, 4.75, 5.44677734375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.00 avg60=0.00 avg300=0.03 total=223102910\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87737743\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85150824\n",
+        "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=694444162\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=629116369\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.00 avg60=0.00 avg300=0.03 total=223110013\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87738053\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85151133\n",
+        "io": "some avg10=0.00 avg60=0.03 avg300=0.07 total=694444253\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=629116438\n"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "wholeCommandSeconds": 2.267550119999214,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}

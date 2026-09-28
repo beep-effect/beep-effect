@@ -1,0 +1,51 @@
+{
+  "package": "@beep/rdf-canonize",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T22:47:17.744000+00:00",
+  "totalMs": 3601.3564453125,
+  "testCount": 7,
+  "files": [
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "ms": 21.3564453125,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening passes explicit resource controls to rdf-canonize for semantic canonicalization",
+      "ms": 8.004171000000042
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening round-trips schema-derived canonical dataset results through encoded form",
+      "ms": 4.787319999999909
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening derives canonicalization requests from the source schema and proves an encode/decode round-trip",
+      "ms": 3.3564970000002177
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening maps semantic resource-budget failures to work-limit errors",
+      "ms": 1.7930700000001707
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening canonicalizes lexical requests without changing result encoded shape",
+      "ms": 1.4369520000000193
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening maps abort-signal budget failures to work-limit errors",
+      "ms": 0.9388659999999618
+    },
+    {
+      "file": "packages/drivers/rdf-canonize/test/CanonicalizationSecurity.test.ts",
+      "testName": "Canonicalization security hardening maps timeout-style budget failures to work-limit errors",
+      "ms": 0.8753679999999804
+    }
+  ]
+}

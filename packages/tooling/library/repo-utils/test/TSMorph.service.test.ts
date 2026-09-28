@@ -15,9 +15,11 @@ import {
   TsMorphSymbolSourceRequest,
   TsMorphUnsupportedFileError,
 } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -86,34 +88,29 @@ const lateFileScopeRequest = (mode: "syntax" | "semantic" = "syntax") =>
 const TSMORPH_TIMEOUT = 40_000;
 
 describe("SymbolId schema arbitrary", () => {
-  it.effect(
+  it.effect.prop(
     "only generates decodable, round-tripping symbol ids",
-    Effect.fnUntraced(function* () {
-      const symbolIdArbitrary = Arbitrary.schema(SymbolId);
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([symbolIdArbitrary]),
-        ([symbolId]) =>
-          Effect.gen(function* () {
-            const decoded = yield* decodeUnknownSymbolId(symbolId);
-            expect(yield* encodeUnknownSymbolId(decoded)).toBe(symbolId);
+    [Arbitrary.schema(SymbolId)],
+    ([symbolId]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeUnknownSymbolId(symbolId);
+        expect(yield* encodeUnknownSymbolId(decoded)).toBe(symbolId);
 
-            return true;
-          }),
-        fcRuns(50)
-      );
-
-      expect(result._tag).toBe("Passed");
-    })
+        return true;
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });
 
-layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
+it.layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
   describe("resolveProjectScope", () => {
     it.effect(
       "resolves a workspace tsconfig into a stable scope",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
+        yield* Effect.logInfo("repo-utils.tsmorph.resolve.start");
         const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
+        yield* Effect.logInfo("repo-utils.tsmorph.resolve.complete");
 
         expect(scope.scopeId).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
         expect(scope.cacheKey).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
@@ -347,7 +344,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           A.findFirst((symbol) => symbol.name === "TsMorphProjectScope" && symbol.kind === "ClassDeclaration")
         );
 
-        expect(O.isSome(targetSymbol)).toBe(true);
+        targetSymbol.pipe(O.isSome, assertTrue);
         if (O.isNone(targetSymbol)) {
           return;
         }
@@ -402,7 +399,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           O.map((symbol) => symbol.filePath)
         );
 
-        expect(O.isSome(filePath)).toBe(true);
+        filePath.pipe(O.isSome, assertTrue);
         if (O.isNone(filePath)) {
           return;
         }
@@ -540,7 +537,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         expect(initialSearch.total).toBeGreaterThan(0);
         expect(A.some(initialSearch.symbols, (symbol) => symbol.filePath === LATE_FILE_INCLUDED_FILE_PATH)).toBe(true);
         expect(outline.filePath).toBe(LATE_FILE_EXTRA_FILE_PATH);
-        expect(O.isSome(targetSymbol)).toBe(true);
+        targetSymbol.pipe(O.isSome, assertTrue);
         if (O.isNone(targetSymbol)) {
           return;
         }
@@ -593,7 +590,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
 
         expect(diagnostics.filePath).toBe(FIXTURE_BROKEN_FILE_PATH);
         expect(diagnostics.diagnostics.length).toBeGreaterThan(0);
-        expect(O.isSome(firstDiagnostic)).toBe(true);
+        firstDiagnostic.pipe(O.isSome, assertTrue);
         if (O.isNone(firstDiagnostic)) {
           return;
         }

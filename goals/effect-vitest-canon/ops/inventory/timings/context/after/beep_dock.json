@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/dock",
+  "sourceHead": "40ffaf0d436747423d12e014fe238971a53d2cca",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 3.870516526993015,
+  "bunWholeCommandSeconds": 1.9169254190055653,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [9.28173828125, 4.5966796875, 3.12939453125],
+  "loadAfter": [8.7783203125, 4.56982421875, 3.12841796875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.88 avg60=0.41 avg300=0.18 total=740219101\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186201166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178127188\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=815964246\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=714096142\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.59 avg60=0.38 avg300=0.18 total=740227940\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186201166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178127188\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=815964526\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=714096236\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "2f4267214f01986a1e4d4f85dd0fc683d8bf9199b232181df2792c154cc8ad1a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/AGENTS.md",
+      "sha256": "9a92c9e7cd44583d9558218d5d21b2251301c3adbb1db9f1ce2a76446582f4ea"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/CLAUDE.md",
+      "sha256": "9a92c9e7cd44583d9558218d5d21b2251301c3adbb1db9f1ce2a76446582f4ea"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/README.md",
+      "sha256": "e726aa3a75f428bf17cff0562990490595ae8a2b1f4f1a721d821a736aa543ba"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/docgen.json",
+      "sha256": "93fd3f084a196f88e78cfb4bef2080ee65ebd78b2ee0eb23ca19e049a40d4662"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/package.json",
+      "sha256": "59970fc383146818b895bf8a600dec2bdbd1c4516d5c71234c3ada670f230470"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/AnchoredBox.ts",
+      "sha256": "9a4b6e4aa544c3040f00c7896d01f74fa8199f6661059f1a96f99c04793e160c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.atoms.ts",
+      "sha256": "401a74423ec48237a9819875f8d6a7e4fcce2e94a19d4cdedab0f061c60e2c44"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.commands.ts",
+      "sha256": "4d0c17052386c747a5a1837480462c8ad8716ce2fff18143a2910f7dcefdfb06"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.errors.ts",
+      "sha256": "c0c89352f93249578b135ad4288d5e8a04bd59a04be3c06e313ae464aeda7771"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.events.ts",
+      "sha256": "a5d8135697ad55a4f02cd72afcad9e2134e786382be4ba58a4053dffff52b00a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.geometry.ts",
+      "sha256": "fd2a6cc18f450aab29cadbb7fc2c0df8d3bba1c9a9b147aeb0e754bf3568744d"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.ids.ts",
+      "sha256": "db29ff4cad9d9b56e8c4017664871ba530829c6ebd6afe1a9d525520b2623c25"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "sha256": "4070036c04d14954f6c2067bd40742b71aea1626340d323f90071437afc2df41"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models.ts",
+      "sha256": "69c6eee95bfc579e2ded597c239a24a41167e23b7abc3d9c2e24dc193663ad09"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.outcomes.ts",
+      "sha256": "1e0de48a45af13675bb4946764a206175339b8ff217513b0974d731b458ac211"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
+      "sha256": "32cd33077174cd04f417cb5e2e69ce008714b5759acd22636c3315df65be2a11"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
+      "sha256": "8e439ece25c0de5284c0f3824b312fbfcfe3f3be5a0ccd57907b142a14046383"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.reducer.ts",
+      "sha256": "4c366bc923a1fa92018171da5bdf0ca71b8dbf3dd60a67b4df8cbbf32904d6e6"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.tree.ts",
+      "sha256": "a48a8f38844526181033ef41047a041efa3501b7388ee89e238d61f0c500a348"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
+      "sha256": "d3c1c49a91310c8119b1f410768a9140fdd7cb6ff69894beaf58edfd20c8f2db"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockPolicy.ts",
+      "sha256": "a7d3fdc9222f9798b4a25233660290b41c84bf4c01abdd441410455ee75929e6"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
+      "sha256": "1b1aa501322bda2fa21046f3d38bd7c161e1a6659451a15a2951c8f9ed7f4eb7"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Minima.ts",
+      "sha256": "fd92bf692c9c8c13216a0ba65a14dd53e53f7d54db0d9178ac7524743ce87abb"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Recency.ts",
+      "sha256": "e453b01540597adea1a7324ee90d9c18e17303a1b2142ffdad30942d1caf2181"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/index.ts",
+      "sha256": "327c450ccee1527b67065a8be6b317fdbcb6efddb71bb5f84d05cdd9e70633ed"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/DockAtoms.session.ts",
+      "sha256": "9295f8430a672f7fd18c6bf01c5b84dab871dd2abf1462f98e8c522c779ad841"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Dual.ts",
+      "sha256": "35a71f4239ab35efa20606a7bca51c2259b259c1b51e8686e94df3797548cc70"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Geometry.projection.ts",
+      "sha256": "7f9e5300dfdecc1751a1126ad5b354e3f327aed715c1549a2a2e3dbaa4b671ea"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/internal/Reducer.ts",
+      "sha256": "e4a7bed43b71bc1a2bde8180f027b59c553d80c9c5fad075d0de785296360f1a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "sha256": "f21f172b2d434461660e5d7663c150f015fae27e4454c9976ddf1b4397a9acde"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "sha256": "19cc6366f128dfd57ce2ca8d76dc12f3402d26b65c1a5c42664d326570ca7e5c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "sha256": "ca6c23f035be642f233bc5899a84157c053e514a78f8345658e4a502e00cb558"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Fixtures.ts",
+      "sha256": "72fea15c100af705dd0ca255aa6344e687a9052b191a5ae939e522268279560c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "sha256": "f9490edf5119a068018b6c553ae304792721a7db2c3de540d41e6506f024a4c7"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "sha256": "87d761b4e2c44d8845ef755d293d91bea92c74f6ccdc6b0f2a055db02a1e415c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "sha256": "aa3ebb3b5c618c1ad210e749c3ce42e1959236e0a55b1a9d7f2f5e3470d982ad"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "sha256": "95261f8f2d6b410e37e9a005bc1435f5b48e4b0f6547f4634abd4f5ec6a5b8b9"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "sha256": "1d9c539ceb3fd677d27ca2ba832fdd014065bdb8590e2162b2347c8dd489d937"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "sha256": "aa41eb13345ef7c6cf23b00ff0b032be660592b6cccc3b0fe4ca180723bb624c"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
+      "sha256": "10a3ce0d9ecce7754b43af7b1a49dd8122a610215e9a0c570e0a71a52812ff90"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "064ad2fe575f7e7e707d00625b6a8386d6a169d5a9a892ea1106fe608023236a"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
+      "sha256": "61fd6699f8e5f0ff0373f39f35de747fdc426f770b06b999da0d845bd5f3a234"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/fixtures/pre-m1-snapshot.ts",
+      "sha256": "89971108522ef65229532c65f3ca0f0e4102082a20ac2b1a4fd43ca5bc10e847"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/tsconfig.check.json",
+      "sha256": "7a5cf0cc263b673fbd41fbf89b1b3dfe81677fa1818de4cde71c863e399ee5b1"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/tsconfig.json",
+      "sha256": "1c08209d42ead00feea70d1fda571b3b3b849cee2b8a2dfd81eca02359b45f85"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/tsconfig.test.json",
+      "sha256": "7effabb63acc2851a3ad260446d2d931c2c2be2aadd433163fff830b181c6ca1"
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/vitest.config.ts",
+      "sha256": "b2105d17a31fce82631de4c40bb8fcb050e5aa4746c66f3f8668eb40372fd93e"
+    }
+  ],
+  "environmentMode": "Actual headless Dock engine and Atom registries, configured Pretext capture fixtures and instrumented registrations. Original geometry/recency/codec assertions remain; scoped disposal and actual capture-fiber completion replace unclosed registries and fixed scheduler yields. No React/DOM or native font capture claimed.",
+  "bunProof": {
+    "passedTests": 112,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [8.7783203125, 4.56982421875, 3.12841796875],
+    "loadAfter": [9.19677734375, 4.7265625, 3.18701171875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.59 avg60=0.38 avg300=0.18 total=740228071\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186201166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178127188\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=815964526\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=714096236\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.48 avg60=0.37 avg300=0.18 total=740240002\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186201166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178127188\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=815964588\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=714096277\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 112,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 112 test cases before and after with zero skips. Two native properties preserve original generators, codec laws and 24/100 floors, with the configured run-count and replay seed. Timing differences are not causal speedup evidence."
+}

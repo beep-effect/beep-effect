@@ -9,11 +9,13 @@ import {
   makeAiMetricsConfigSnapshot,
 } from "@beep/repo-ai-metrics/config-snapshot";
 import { ConfigSnapshot } from "@beep/repo-ai-metrics/models";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Path, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -62,12 +64,6 @@ const legacyLatest = {
     snapshotId: "config-legacy",
   },
 };
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
     Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),
@@ -112,272 +108,299 @@ const snapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>):
   A.map(files, (file) => file.relativePath);
 
 describe("@beep/repo-ai-metrics bounded config snapshots", () => {
-  it("generates only canonical truncation reasons", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AiMetricsConfigSnapshotTruncationReason)]),
-          (values) => isAiMetricsConfigSnapshotTruncationReason(...values),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it.effect("stops at every nested git root and records it instead of walking into it", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
-
-        const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-        const paths = snapshotPaths(result.files);
-
-        expect(A.some(paths, (path) => pipe(path, Str.startsWith(".claude/worktrees/")))).toBe(false);
-        expect(A.some(paths, (path) => pipe(path, Str.startsWith("vendor/sub")))).toBe(false);
-        expect(result.bounds.excludedNestedRootPaths).toContain(".claude/worktrees/wt1");
-        expect(result.bounds.excludedNestedRootPaths).toContain("vendor/sub");
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
+  it.prop(
+    "generates only canonical truncation reasons",
+    [Arbitrary.schema(AiMetricsConfigSnapshotTruncationReason)],
+    (values) => {
+      assertTrue(isAiMetricsConfigSnapshotTruncationReason(...values));
+    },
+    { arbitrary: fcRuns(25) }
   );
 
-  it.effect("includes exactly the legitimate agent-configuration surface", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("stops at every nested git root and records it instead of walking into it", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const paths = snapshotPaths(result.files);
 
-        expect(snapshotPaths(result.files)).toEqual(legitimatePaths);
-        expect(result.fileCount).toBe(A.length(legitimatePaths));
-        expect(result.bounds.truncated).toBe(false);
-        expect(O.isNone(result.bounds.truncationReason)).toBe(true);
-        expect(result.bounds.skippedOversizeFileCount).toBe(0);
-        expect(result.bounds.totalBytes).toBeGreaterThan(0);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          pipe(
+            A.some(paths, (path) => pipe(path, Str.startsWith(".claude/worktrees/"))),
+            assertFalse
+          );
+          pipe(
+            A.some(paths, (path) => pipe(path, Str.startsWith("vendor/sub"))),
+            assertFalse
+          );
+          expect(result.bounds.excludedNestedRootPaths).toContain(".claude/worktrees/wt1");
+          expect(result.bounds.excludedNestedRootPaths).toContain("vendor/sub");
+        })
+      )
+    );
+  });
 
-  it.effect("tags the session-effective files and leaves everything else baseline", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("includes exactly the legitimate agent-configuration surface", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-        const sessionPaths = pipe(
-          A.filter(result.files, (file) => file.scope === AiMetricsConfigScope.Enum.session),
-          snapshotPaths
-        );
-        const baselinePaths = pipe(
-          A.filter(result.files, (file) => file.scope === AiMetricsConfigScope.Enum.baseline),
-          snapshotPaths
-        );
+          const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
 
-        expect(sessionPaths).toEqual([".claude/settings.json", ".codex/config.toml", "AGENTS.md", "CLAUDE.md"]);
-        expect(baselinePaths).toEqual([".claude/skills/a/SKILL.md", "packages/p/AGENTS.md"]);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(snapshotPaths(result.files)).toEqual(legitimatePaths);
+          expect(result.fileCount).toBe(A.length(legitimatePaths));
+          pipe(result.bounds.truncated, assertFalse);
+          assertNone(result.bounds.truncationReason);
+          expect(result.bounds.skippedOversizeFileCount).toBe(0);
+          expect(result.bounds.totalBytes).toBeGreaterThan(0);
+        })
+      )
+    );
+  });
 
-  it.effect("moves the session hash only for session files and the baseline hash only for baseline files", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("tags the session-effective files and leaves everything else baseline", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const before = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const sessionPaths = pipe(
+            A.filter(result.files, (file) => file.scope === AiMetricsConfigScope.Enum.session),
+            snapshotPaths
+          );
+          const baselinePaths = pipe(
+            A.filter(result.files, (file) => file.scope === AiMetricsConfigScope.Enum.baseline),
+            snapshotPaths
+          );
 
-        yield* writeText(pathApi.join(repoRoot, "AGENTS.md"), "root agents changed\n");
-        const afterSession = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-        expect(afterSession.sessionHash).not.toBe(before.sessionHash);
-        expect(afterSession.baselineHash).toBe(before.baselineHash);
+          expect(sessionPaths).toEqual([".claude/settings.json", ".codex/config.toml", "AGENTS.md", "CLAUDE.md"]);
+          expect(baselinePaths).toEqual([".claude/skills/a/SKILL.md", "packages/p/AGENTS.md"]);
+        })
+      )
+    );
+  });
 
-        yield* writeText(pathApi.join(repoRoot, ".claude/skills/a/SKILL.md"), "skill a changed\n");
-        const afterBaseline = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-        expect(afterBaseline.baselineHash).not.toBe(afterSession.baselineHash);
-        expect(afterBaseline.sessionHash).toBe(afterSession.sessionHash);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("moves the session hash only for session files and the baseline hash only for baseline files", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-  it.effect("produces a stable config hash across two runs on an unchanged tree", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+          const before = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
 
-        const first = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
-        const second = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          yield* writeText(pathApi.join(repoRoot, "AGENTS.md"), "root agents changed\n");
+          const afterSession = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          expect(afterSession.sessionHash).not.toBe(before.sessionHash);
+          expect(afterSession.baselineHash).toBe(before.baselineHash);
 
-        expect(second.snapshot.configHash).toBe(first.snapshot.configHash);
-        expect(second.snapshot.snapshotId).toBe(first.snapshot.snapshotId);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          yield* writeText(pathApi.join(repoRoot, ".claude/skills/a/SKILL.md"), "skill a changed\n");
+          const afterBaseline = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          expect(afterBaseline.baselineHash).not.toBe(afterSession.baselineHash);
+          expect(afterBaseline.sessionHash).toBe(afterSession.sessionHash);
+        })
+      )
+    );
+  });
 
-  it.effect("truncates deterministically at the file-count budget", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
-        const input = AiMetricsConfigSnapshotInput.make({
-          budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 3 }),
-          repoRoot,
-        });
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("produces a stable config hash across two runs on an unchanged tree", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const first = yield* makeAiMetricsConfigSnapshot(input);
-        const second = yield* makeAiMetricsConfigSnapshot(input);
+          const first = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const second = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
 
-        expect(first.bounds.truncated).toBe(true);
-        expect(first.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-        );
-        expect(first.fileCount).toBe(3);
-        expect(snapshotPaths(second.files)).toEqual(snapshotPaths(first.files));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(second.snapshot.configHash).toBe(first.snapshot.configHash);
+          expect(second.snapshot.snapshotId).toBe(first.snapshot.snapshotId);
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("truncates deterministically at the file-count budget", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
+          const input = AiMetricsConfigSnapshotInput.make({
+            budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 3 }),
+            repoRoot,
+          });
+
+          const first = yield* makeAiMetricsConfigSnapshot(input);
+          const second = yield* makeAiMetricsConfigSnapshot(input);
+
+          pipe(first.bounds.truncated, assertTrue);
+          assertSome(first.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
+          expect(first.fileCount).toBe(3);
+          expect(snapshotPaths(second.files)).toEqual(snapshotPaths(first.files));
+        })
+      )
+    );
+  });
 
   // A bulky non-git directory under a config root must not be able to spend the whole file budget
   // before the repo-root agent docs are reached. Losing `AGENTS.md`/`CLAUDE.md` is not ordinary
   // truncation: they are session-scope, so their absence silently moves `sessionHash`.
-  it.effect("never starves the root agent docs when a config root exhausts the file budget", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
-        yield* Effect.forEach(
-          A.range(1, 20),
-          (index) => writeText(pathApi.join(repoRoot, `.claude/leftover/note-${index}.md`), `leftover ${index}\n`),
-          { discard: true }
-        );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("never starves the root agent docs when a config root exhausts the file budget", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
+          yield* Effect.forEach(
+            A.range(1, 20),
+            (index) => writeText(pathApi.join(repoRoot, `.claude/leftover/note-${index}.md`), `leftover ${index}\n`),
+            { discard: true }
+          );
 
-        const result = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({
-            budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 4 }),
-            repoRoot,
-          })
-        );
-        const paths = snapshotPaths(result.files);
+          const result = yield* makeAiMetricsConfigSnapshot(
+            AiMetricsConfigSnapshotInput.make({
+              budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 4 }),
+              repoRoot,
+            })
+          );
+          const paths = snapshotPaths(result.files);
 
-        expect(paths).toContain("AGENTS.md");
-        expect(paths).toContain("CLAUDE.md");
-        expect(result.bounds.truncated).toBe(true);
-        expect(result.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(paths).toContain("AGENTS.md");
+          expect(paths).toContain("CLAUDE.md");
+          pipe(result.bounds.truncated, assertTrue);
+          assertSome(result.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
+        })
+      )
+    );
+  });
 
-  it.effect("reports the byte and depth budgets with their own reasons", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("reports the byte and depth budgets with their own reasons", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const byBytes = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({
-            budget: AiMetricsConfigSnapshotBudget.make({ maxTotalBytes: 20 }),
-            repoRoot,
-          })
-        );
-        expect(byBytes.bounds.truncated).toBe(true);
-        expect(byBytes.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"])
-        );
+          const byBytes = yield* makeAiMetricsConfigSnapshot(
+            AiMetricsConfigSnapshotInput.make({
+              budget: AiMetricsConfigSnapshotBudget.make({ maxTotalBytes: 20 }),
+              repoRoot,
+            })
+          );
+          pipe(byBytes.bounds.truncated, assertTrue);
+          assertSome(byBytes.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-total-bytes"]);
 
-        const byDepth = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({
-            budget: AiMetricsConfigSnapshotBudget.make({ maxDepth: 1 }),
-            repoRoot,
-          })
-        );
-        expect(byDepth.bounds.truncated).toBe(true);
-        expect(byDepth.bounds.truncationReason).toEqual(
-          O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"])
-        );
-        expect(snapshotPaths(byDepth.files)).not.toContain(".claude/skills/a/SKILL.md");
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          const byDepth = yield* makeAiMetricsConfigSnapshot(
+            AiMetricsConfigSnapshotInput.make({
+              budget: AiMetricsConfigSnapshotBudget.make({ maxDepth: 1 }),
+              repoRoot,
+            })
+          );
+          pipe(byDepth.bounds.truncated, assertTrue);
+          assertSome(byDepth.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]);
+          expect(snapshotPaths(byDepth.files)).not.toContain(".claude/skills/a/SKILL.md");
+        })
+      )
+    );
+  });
 
-  it.effect("skips and counts a file above the per-file byte budget", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
-        yield* writeText(pathApi.join(repoRoot, ".claude/skills/a/SKILL.md"), pipe("x", Str.repeat(4096)));
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("skips and counts a file above the per-file byte budget", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
+          yield* writeText(pathApi.join(repoRoot, ".claude/skills/a/SKILL.md"), pipe("x", Str.repeat(4096)));
 
-        const result = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({
-            budget: AiMetricsConfigSnapshotBudget.make({ maxFileBytes: 1024 }),
-            repoRoot,
-          })
-        );
+          const result = yield* makeAiMetricsConfigSnapshot(
+            AiMetricsConfigSnapshotInput.make({
+              budget: AiMetricsConfigSnapshotBudget.make({ maxFileBytes: 1024 }),
+              repoRoot,
+            })
+          );
 
-        expect(result.bounds.skippedOversizeFileCount).toBe(1);
-        expect(snapshotPaths(result.files)).not.toContain(".claude/skills/a/SKILL.md");
-        expect(result.bounds.truncated).toBe(false);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(result.bounds.skippedOversizeFileCount).toBe(1);
+          expect(snapshotPaths(result.files)).not.toContain(".claude/skills/a/SKILL.md");
+          pipe(result.bounds.truncated, assertFalse);
+        })
+      )
+    );
+  });
 
-  it.effect("emits one timing per measured pipeline stage and none for the write it does not perform", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("emits one timing per measured pipeline stage and none for the write it does not perform", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot);
 
-        const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
+          const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot }));
 
-        expect(A.map(result.stageTimings, (timing) => timing.stage)).toEqual([
-          AiMetricsConfigSnapshotStage.Enum.enumerate,
-          AiMetricsConfigSnapshotStage.Enum.read,
-          AiMetricsConfigSnapshotStage.Enum.hash,
-          AiMetricsConfigSnapshotStage.Enum.diff,
-        ]);
-        expect(A.every(result.stageTimings, (timing) => timing.durationMillis >= 0)).toBe(true);
-        expect(A.every(result.stageTimings, (timing) => timing.byteCount >= 0)).toBe(true);
-        expect(A.every(result.stageTimings, (timing) => timing.fileCount === result.fileCount)).toBe(true);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(A.map(result.stageTimings, (timing) => timing.stage)).toEqual([
+            AiMetricsConfigSnapshotStage.Enum.enumerate,
+            AiMetricsConfigSnapshotStage.Enum.read,
+            AiMetricsConfigSnapshotStage.Enum.hash,
+            AiMetricsConfigSnapshotStage.Enum.diff,
+          ]);
+          pipe(
+            A.every(result.stageTimings, (timing) => timing.durationMillis >= 0),
+            assertTrue
+          );
+          pipe(
+            A.every(result.stageTimings, (timing) => timing.byteCount >= 0),
+            assertTrue
+          );
+          pipe(
+            A.every(result.stageTimings, (timing) => timing.fileCount === result.fileCount),
+            assertTrue
+          );
+        })
+      )
+    );
+  });
 
-  it.effect("decodes a pre-bounding latest.json and diffs against it", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        const previousSnapshotPath = pathApi.join(tmpDir, "store/config-snapshots/latest.json");
-        yield* makeFixtureRepo(repoRoot);
-        yield* writeText(previousSnapshotPath, yield* encodeUnknownJson(legacyLatest));
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("decodes a pre-bounding latest.json and diffs against it", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          const previousSnapshotPath = pathApi.join(tmpDir, "store/config-snapshots/latest.json");
+          yield* makeFixtureRepo(repoRoot);
+          yield* writeText(previousSnapshotPath, yield* encodeUnknownJson(legacyLatest));
 
-        const result = yield* makeAiMetricsConfigSnapshot(
-          AiMetricsConfigSnapshotInput.make({
-            previousSnapshotPath: O.some(previousSnapshotPath),
-            repoRoot,
-          })
-        );
+          const result = yield* makeAiMetricsConfigSnapshot(
+            AiMetricsConfigSnapshotInput.make({
+              previousSnapshotPath: O.some(previousSnapshotPath),
+              repoRoot,
+            })
+          );
 
-        expect(result.previousSnapshotId).toEqual(O.some("config-legacy"));
-        expect(result.diff.modifiedPaths).toContain("AGENTS.md");
-        expect(result.diff.removedPaths).toContain(".claude/worktrees/wt1/AGENTS.md");
-        expect(result.diff.addedPaths).toContain(".claude/skills/a/SKILL.md");
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          assertSome(result.previousSnapshotId, "config-legacy");
+          expect(result.diff.modifiedPaths).toContain("AGENTS.md");
+          expect(result.diff.removedPaths).toContain(".claude/worktrees/wt1/AGENTS.md");
+          expect(result.diff.addedPaths).toContain(".claude/skills/a/SKILL.md");
+        })
+      )
+    );
+  });
 
   it.effect("preserves optional-key encoding while carrying absence as Option", () =>
     Effect.gen(function* () {
@@ -434,27 +457,44 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     })
   );
 
-  it.effect("never stats the contents of a nested worktree", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const pathApi = yield* Path.Path;
-        const repoRoot = pathApi.join(tmpDir, "repo");
-        yield* makeFixtureRepo(repoRoot, { nestedWorktreeFileCount: 400 });
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("never stats the contents of a nested worktree", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const pathApi = yield* Path.Path;
+          const repoRoot = pathApi.join(tmpDir, "repo");
+          yield* makeFixtureRepo(repoRoot, { nestedWorktreeFileCount: 400 });
 
-        const statCount = yield* Ref.make(0);
-        const countingFs: FileSystem.FileSystem = {
-          ...fs,
-          stat: (path: string) => Ref.update(statCount, (count) => count + 1).pipe(Effect.flatMap(() => fs.stat(path))),
-        };
+          const statCount = yield* Ref.make(0);
+          const statPaths = yield* Ref.make<ReadonlyArray<string>>([]);
+          const countingFs: FileSystem.FileSystem = {
+            ...fs,
+            stat: (path: string) =>
+              Ref.update(statCount, (count) => count + 1).pipe(
+                Effect.andThen(Ref.update(statPaths, A.append(path))),
+                Effect.andThen(fs.stat(path))
+              ),
+          };
 
-        const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot })).pipe(
-          Effect.provideService(FileSystem.FileSystem, countingFs)
-        );
+          const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot })).pipe(
+            Effect.provideService(FileSystem.FileSystem, countingFs)
+          );
 
-        expect(result.fileCount).toBe(A.length(legitimatePaths));
-        expect(yield* Ref.get(statCount)).toBeLessThan(100);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(result.fileCount).toBe(A.length(legitimatePaths));
+          expect(yield* Ref.get(statCount)).toBeLessThan(100);
+          const observedPaths = yield* Ref.get(statPaths);
+          expect(observedPaths).toContain(pathApi.join(repoRoot, "AGENTS.md"));
+          const forbiddenPaths = A.map(A.range(1, 400), (index) =>
+            pathApi.join(repoRoot, `.claude/worktrees/wt1/pkg-${index}`)
+          );
+          expect(
+            A.filter(observedPaths, (observed) =>
+              A.some(forbiddenPaths, (forbidden) => observed === forbidden || Str.startsWith(`${forbidden}/`)(observed))
+            )
+          ).toEqual([]);
+        })
+      )
+    );
+  });
 });

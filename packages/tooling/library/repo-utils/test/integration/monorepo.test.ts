@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 /**
  * Integration tests that exercise @beep/repo-utils against the real
  * beep-effect monorepo on disk.
@@ -16,14 +17,14 @@ import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { A, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, HashMap, HashSet, Layer, Order } from "effect";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 const MONOREPO_INTEGRATION_TIMEOUT = 600_000;
 
-layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (real monorepo)", (it) => {
+it.layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (real monorepo)", (it) => {
   // ── findRepoRoot ─────────────────────────────────────────────────────
   describe("findRepoRoot", () => {
     it.effect(

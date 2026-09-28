@@ -1,0 +1,11 @@
+{
+  "originalAssertions": 9,
+  "preservedOriginalAssertions": true,
+  "addedAssertions": 1,
+  "unchangedSkipConditions": true,
+  "navigatorMutation": "One synchronous Effect.sync try/finally; property descriptor restored before yielding, including when detection throws. No asynchronous shared global lifetime.",
+  "node": 3.921372547993087,
+  "bun": 1.5668901919998461,
+  "packageVerify": "Full audit and docgen pass",
+  "nativeBrowserProof": "Not established: default Vite optimizer throws; no-discovery probe exits 1 with zero cases. No browser coverage credit."
+}

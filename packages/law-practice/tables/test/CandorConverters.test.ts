@@ -26,12 +26,13 @@ import {
   fromPatentCitationEventRow,
   toPatentCitationEventInsert,
 } from "@beep/law-practice-tables/entities/PatentCitationEvent";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Order, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -169,7 +170,7 @@ describe("PatentCitationEvent converters", () => {
 
       // The load-bearing surface first, so a drift reads as the field that
       // moved rather than as one opaque inequality.
-      expect(returned.reference.number).toEqual(O.some("7654321"));
+      assertSome<string>(returned.reference.number, "7654321");
       expect(DateTime.toEpochMillis(returned.observedAt)).toBe(1);
       expect(returned.actor).toBe("Applicant");
       expect(returned.discovery.kind).toBe("AiDiscovered");
@@ -182,10 +183,10 @@ describe("PatentCitationEvent converters", () => {
   it("rejects a row carrying no recorded observation, and one missing its grounding", () => {
     const { grounding: _grounding, ...ungrounded } = eventInput;
 
-    expect(Result.isFailure(fromPatentCitationEventRow({}))).toBe(true);
+    pipe(fromPatentCitationEventRow({}), Result.isFailure, assertTrue);
     // An event without grounding is the dangerous near-miss: every audit column
     // is present, so only the entity schema can refuse it.
-    expect(Result.isFailure(fromPatentCitationEventRow(ungrounded))).toBe(true);
+    pipe(fromPatentCitationEventRow(ungrounded), Result.isFailure, assertTrue);
   });
 });
 
@@ -221,7 +222,7 @@ describe("CandorDisposition converters", () => {
       // a disposition that lost its digest would cover the wrong event.
       expect(returned.disposes.eventId).toBe(1);
       expect(returned.disposes.textDigest).toBe(digest);
-      expect(returned.rule56Judgment).toEqual(O.some("Submit"));
+      assertSome(returned.rule56Judgment, "Submit");
       expect(DateTime.toEpochMillis(returned.decidedAt)).toBe(2);
       expect(returned.lifecycle).toBe("active");
       expect(sameDisposition(returned, disposition)).toBe(true);
@@ -231,8 +232,8 @@ describe("CandorDisposition converters", () => {
   it("rejects a row carrying no recorded judgment, and one missing what it disposes", () => {
     const { disposes: _disposes, ...undisposing } = dispositionInput;
 
-    expect(Result.isFailure(fromCandorDispositionRow({}))).toBe(true);
-    expect(Result.isFailure(fromCandorDispositionRow(undisposing))).toBe(true);
+    pipe(fromCandorDispositionRow({}), Result.isFailure, assertTrue);
+    pipe(fromCandorDispositionRow(undisposing), Result.isFailure, assertTrue);
   });
 });
 
@@ -268,7 +269,7 @@ describe("IdsSubmissionFact converters", () => {
 
       expect(returned.submissionKind).toBe("initial");
       expect(DateTime.toEpochMillis(returned.operativeDate)).toBe(3);
-      expect(returned.statement.statementType).toEqual(O.some("e2-no-prior-knowledge"));
+      assertSome(returned.statement.statementType, "e2-no-prior-knowledge");
       expect(returned.fees.timingFeePresent).toBe(true);
       expect(returned.candidateWindow.candidateWindow).toBe("indeterminate");
       expect(sameSubmissionFact(returned, fact)).toBe(true);
@@ -278,7 +279,7 @@ describe("IdsSubmissionFact converters", () => {
   it("rejects a row carrying no recorded submission facts, and one missing its timing window", () => {
     const { candidateWindow: _candidateWindow, ...untimed } = submissionFactInput;
 
-    expect(Result.isFailure(fromIdsSubmissionFactRow({}))).toBe(true);
-    expect(Result.isFailure(fromIdsSubmissionFactRow(untimed))).toBe(true);
+    pipe(fromIdsSubmissionFactRow({}), Result.isFailure, assertTrue);
+    pipe(fromIdsSubmissionFactRow(untimed), Result.isFailure, assertTrue);
   });
 });

@@ -5,8 +5,10 @@ import {
   ExecutionLedgerOperation,
   ExecutionLedgerUnavailable,
 } from "@beep/epistemic-use-cases/ExecutionLedger";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -32,7 +34,7 @@ describe("ExecutionLedger", () => {
       expect(violation._tag).toBe("ExecutionLedgerConstraintViolation");
       expect(violation.constraintName).toBe("epistemic_execution_decision_pk");
       expect(violation.operation).toBe("appendDecision");
-      expect(ExecutionLedgerConstraintViolation.is(violation)).toBe(true);
+      pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
     });
   });
 
@@ -42,11 +44,11 @@ describe("ExecutionLedger", () => {
       const caused = ExecutionLedgerUnavailable.during("appendOutcome", "write failed", new Error("ECONNRESET"));
 
       expect(bare._tag).toBe("ExecutionLedgerUnavailable");
-      expect(O.isNone(bare.cause)).toBe(true);
+      assertNone(bare.cause);
       expect(bare.reason).toBe("read failed");
-      expect(O.isSome(caused.cause)).toBe(true);
+      pipe(caused.cause, O.isSome, assertTrue);
       expect(caused.operation).toBe("appendOutcome");
-      expect(ExecutionLedgerUnavailable.is(caused)).toBe(true);
+      pipe(ExecutionLedgerUnavailable.is(caused), assertTrue);
     });
 
     it("rejects an empty reason at construction", () => {
@@ -59,10 +61,10 @@ describe("ExecutionLedger", () => {
       const violation = ExecutionLedgerConstraintViolation.on("appendDecision", "epistemic_execution_outcome_pk");
       const unavailable = ExecutionLedgerUnavailable.during("readUnsettledAllowed", "read failed");
 
-      expect(ExecutionLedgerError.is(violation)).toBe(true);
-      expect(ExecutionLedgerError.is(unavailable)).toBe(true);
-      expect(ExecutionLedgerError.is({ _tag: "SomethingElse" })).toBe(false);
-      expect(isExecutionLedgerError(new Error("plain"))).toBe(false);
+      pipe(ExecutionLedgerError.is(violation), assertTrue);
+      pipe(ExecutionLedgerError.is(unavailable), assertTrue);
+      pipe(ExecutionLedgerError.is({ _tag: "SomethingElse" }), assertFalse);
+      pipe(isExecutionLedgerError(new Error("plain")), assertFalse);
     });
   });
 

@@ -20,8 +20,10 @@ import {
 } from "@beep/govinfo";
 import { $GovinfoId } from "@beep/identity";
 import { PosInt, URLStr } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
@@ -90,25 +92,6 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 
   expect(reencoded).toEqual(encoded);
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
 };
 
 const searchBodyEncoded = {
@@ -232,7 +215,7 @@ describe("@beep/govinfo", () => {
       expect(encode(GovinfoConfigInput, GovinfoConfigInput.make({}))).toEqual({
         apiUrl: GOVINFO_API_URL,
       });
-      expect(O.isNone(GovinfoConfigInput.make({}).apiKey)).toBe(true);
+      assertNone(GovinfoConfigInput.make({}).apiKey);
       expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({}))).toEqual({});
       expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({ status: O.some(429) }))).toEqual({
         status: 429,
@@ -310,40 +293,50 @@ describe("@beep/govinfo", () => {
     })
   );
 
-  it("round-trips hand-authored schema-derived values through encoded form", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(GovinfoHttpStatus)]),
-          ([status]) => {
-            expectRoundTrip(GovinfoHttpStatus, status);
+  it.prop(
+    "round-trips hand-authored schema-derived values through encoded form",
+    {
+      GovinfoHttpStatus: Arbitrary.schema(GovinfoHttpStatus),
+      GovinfoConfigInput: GovinfoConfigInputArbitrary,
+      GovinfoErrorReason: Arbitrary.schema(GovinfoErrorReason),
+      GovinfoErrorOptions: GovinfoErrorOptionsArbitrary,
+      GovinfoError: GovinfoErrorArbitrary,
+      Sort: Arbitrary.schema(Sort),
+      SearchBody: Arbitrary.schema(SearchBody),
+      SearchPayload: Arbitrary.schema(Search.Payload),
+      SearchSuccess: Arbitrary.schema(Search.Success),
+      SearchFailure: SearchFailureArbitrary,
+      SearchResult: Arbitrary.schema(SearchResult),
+      GranuleMetadata: Arbitrary.schema(GranuleMetadata),
+      PackageInfo: Arbitrary.schema(PackageInfo),
+      SummaryItem: Arbitrary.schema(SummaryItem),
+      CollectionSummary: Arbitrary.schema(CollectionSummary),
+      GranuleContainer: Arbitrary.schema(GranuleContainer),
+      CollectionContainer: Arbitrary.schema(CollectionContainer),
+    },
+    (values) => {
+      expectRoundTrip(GovinfoHttpStatus, values.GovinfoHttpStatus);
+      expectRoundTrip(GovinfoConfigInput, values.GovinfoConfigInput);
+      expectRoundTrip(GovinfoErrorReason, values.GovinfoErrorReason);
+      expectRoundTrip(GovinfoErrorOptions, values.GovinfoErrorOptions);
+      expectRoundTrip(GovinfoError, values.GovinfoError);
+      expectRoundTrip(Sort, values.Sort);
+      expectRoundTrip(SearchBody, values.SearchBody);
+      expectRoundTrip(Search.Payload, values.SearchPayload);
+      expectRoundTrip(Search.Success, values.SearchSuccess);
+      expectRoundTrip(Search.Failure, values.SearchFailure);
+      expectRoundTrip(SearchResult, values.SearchResult);
+      expectRoundTrip(GranuleMetadata, values.GranuleMetadata);
+      expectRoundTrip(PackageInfo, values.PackageInfo);
+      expectRoundTrip(SummaryItem, values.SummaryItem);
+      expectRoundTrip(CollectionSummary, values.CollectionSummary);
+      expectRoundTrip(GranuleContainer, values.GranuleContainer);
+      expectRoundTrip(CollectionContainer, values.CollectionContainer);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-
-    assertSchemaRoundTrip(GovinfoConfigInput, GovinfoConfigInputArbitrary);
-    assertSchemaRoundTrip(GovinfoErrorReason);
-    assertSchemaRoundTrip(GovinfoErrorOptions, GovinfoErrorOptionsArbitrary);
-    assertSchemaRoundTrip(GovinfoError, GovinfoErrorArbitrary);
-    assertSchemaRoundTrip(Sort);
-    assertSchemaRoundTrip(SearchBody);
-    assertSchemaRoundTrip(Search.Payload);
-    assertSchemaRoundTrip(Search.Success);
-    assertSchemaRoundTrip(Search.Failure, SearchFailureArbitrary);
-    assertSchemaRoundTrip(SearchResult);
-    assertSchemaRoundTrip(GranuleMetadata);
-    assertSchemaRoundTrip(PackageInfo);
-    assertSchemaRoundTrip(SummaryItem);
-    assertSchemaRoundTrip(CollectionSummary);
-    assertSchemaRoundTrip(GranuleContainer);
-    assertSchemaRoundTrip(CollectionContainer);
-  });
-
-  layer(makeGovinfoUnitLayer(keyedConfig))((it) =>
+  it.layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "attaches api.data.gov api_key and parses X-RateLimit-* headers offline",
       Effect.fnUntraced(function* () {
@@ -368,7 +361,7 @@ describe("@beep/govinfo", () => {
         expect(result.count).toBe(0);
         expect(captures).toHaveLength(1);
         expect(captures[0]?.url).toContain("api_key=test-key");
-        expect(O.isSome(snapshot)).toBe(true);
+        snapshot.pipe(O.isSome, assertTrue);
         expect(snap.limit).toBe(1000);
         expect(snap.remaining).toBe(42);
         expect(snap.reset).toBe(60);
@@ -376,7 +369,7 @@ describe("@beep/govinfo", () => {
     )
   );
 
-  layer(makeGovinfoUnitLayer(keyedConfig))((it) =>
+  it.layer(makeGovinfoUnitLayer(keyedConfig), { timeout: "10 seconds" })((it) =>
     it.effect(
       "serves a repeat identical search from cache (transport call-count == 1)",
       Effect.fnUntraced(function* () {
@@ -384,16 +377,22 @@ describe("@beep/govinfo", () => {
         const govinfo = yield* Govinfo;
         yield* testHttp.reset;
 
-        yield* govinfo.search(makePayload());
-        yield* govinfo.search(makePayload());
+        const encoded = { count: 1, offsetMark: "cached-next", results: [searchResultEncoded] };
+        const expected = yield* decodeSearchSuccess(encoded);
+        yield* testHttp.respondWith(() => Effect.succeed(Response.json(encoded)));
 
+        const first = yield* govinfo.search(makePayload());
+        const second = yield* govinfo.search(makePayload());
+
+        expect(first).toStrictEqual(expected);
+        expect(second).toStrictEqual(expected);
         const captures = yield* testHttp.captures;
         expect(captures).toHaveLength(1);
       })
     )
   );
 
-  layer(makeGovinfoUnitLayer())((it) =>
+  it.layer(makeGovinfoUnitLayer(), { timeout: "10 seconds" })((it) =>
     it.effect(
       "omits auth gracefully when no API key is configured (keyless-safe)",
       Effect.fnUntraced(function* () {

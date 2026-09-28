@@ -1,0 +1,96 @@
+{
+  "package": "@beep/langextract",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T11:32:06.625000+00:00",
+  "totalMs": 4689.794189453125,
+  "testCount": 98,
+  "files": [
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "ms": 334.912353515625,
+      "tests": 40
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
+      "ms": 47.015625,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
+      "ms": 2.99951171875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+      "ms": 18.51123046875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/TaggedError.equivalence.test.ts",
+      "ms": 1.58740234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
+      "ms": 41.1455078125,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "ms": 1710.794189453125,
+      "tests": 27
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract stops repetitive-source enumeration after ambiguity is established",
+      "ms": 1537.7498179999998
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract retains prefix fallback state until a unique exact match",
+      "ms": 1537.6710169999997
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract skips rejected compatibility clusters without repeatedly slicing the remaining source",
+      "ms": 1309.7992279999994
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract reconstructs an explicit page separator once and locates across the boundary",
+      "ms": 1309.6152350000002
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract fails malformed reconstruction without inventing a separator",
+      "ms": 1309.5884930000002
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "testName": "alignCandidate shares the minimal-fold transition ceiling across a batch and suppresses fuzzy fallback",
+      "ms": 267.6174020000003
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract normalizes long combining-mark clusters from retained raw boundaries",
+      "ms": 148.2114489999999
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "testName": "verified-span hostile-text contract preserves an exact raw locator that ends inside a normalization cluster",
+      "ms": 148.18022100000007
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "testName": "alignCandidate honors maxExtractions for schema-derived candidates",
+      "ms": 47.91237000000001
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
+      "testName": "parseModelOutput round-trips schema-derived candidates from both accepted wire shapes",
+      "ms": 47.015707999999904
+    }
+  ]
+}

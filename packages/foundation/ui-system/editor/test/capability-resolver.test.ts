@@ -14,9 +14,11 @@ import {
   ProfileId,
   ResolvedEditorProfile,
 } from "@beep/editor/capability/schemas";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import type { CapabilityDisposition, ProfileKind } from "@beep/editor/capability/schemas";
 
@@ -181,12 +183,14 @@ describe("capability resolver", () => {
       });
       const second = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, reordered));
       const third = yield* Effect.fromResult(resolveEditorProfile(editorCapabilityCatalog, referenceProfiles.minimal));
-      expect(
-        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(second))
-      ).toBe(true);
-      expect(
-        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(third))
-      ).toBe(true);
+      pipe(
+        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(second)),
+        assertTrue
+      );
+      pipe(
+        Equal.equals(yield* encodeResolvedEditorProfile(original), yield* encodeResolvedEditorProfile(third)),
+        assertTrue
+      );
     })
   );
 });

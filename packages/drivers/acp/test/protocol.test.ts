@@ -5,11 +5,13 @@ import {
   Protocol as AcpProtocol,
   Schema as AcpSchema,
 } from "@beep/acp";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -88,7 +90,7 @@ const assertEncodedRoundTrip = <Codec extends Schema.Codec<unknown, unknown>>(
   const encoded = encode(schema, value);
   const decoded = decode(schema, encoded);
   if (options.compareDecoded !== false) {
-    assert.isTrue(Schema.toEquivalence(schema)(decoded, value));
+    assertTrue(Schema.toEquivalence(schema)(decoded, value));
   }
   assert.deepEqual(encode(schema, decoded), encoded);
 };
@@ -108,18 +110,18 @@ const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Reco
   return yield* spawner.spawn(command);
 });
 
-it.prop(
+it.effect.prop(
   "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
   [SessionCancelNotificationArbitrary, RequestPermissionResponseArbitrary],
-  ([cancelNotification, permissionResponse]) => {
-    const encodedCancelNotification = Effect.runSync(encodeSessionCancelNotification(cancelNotification));
-    const decodedCancelNotification = Effect.runSync(decodeSessionCancelNotification(encodedCancelNotification));
-    assert.equal(Effect.runSync(encodeSessionCancelNotification(decodedCancelNotification)), encodedCancelNotification);
+  Effect.fnUntraced(function* ([cancelNotification, permissionResponse]) {
+    const encodedCancelNotification = yield* encodeSessionCancelNotification(cancelNotification);
+    const decodedCancelNotification = yield* decodeSessionCancelNotification(encodedCancelNotification);
+    assert.equal(yield* encodeSessionCancelNotification(decodedCancelNotification), encodedCancelNotification);
 
-    const encodedPermissionResponse = Effect.runSync(encodeRequestPermissionResponse(permissionResponse));
-    const decodedPermissionResponse = Effect.runSync(decodeRequestPermissionResponse(encodedPermissionResponse));
-    assert.equal(Effect.runSync(encodeRequestPermissionResponse(decodedPermissionResponse)), encodedPermissionResponse);
-  },
+    const encodedPermissionResponse = yield* encodeRequestPermissionResponse(permissionResponse);
+    const decodedPermissionResponse = yield* decodeRequestPermissionResponse(encodedPermissionResponse);
+    assert.equal(yield* encodeRequestPermissionResponse(decodedPermissionResponse), encodedPermissionResponse);
+  }),
   { arbitrary: fcRuns(25) }
 );
 
@@ -241,7 +243,7 @@ it.prop(
   { arbitrary: fcRuns(25) }
 );
 
-it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (it) => {
   it.effect(
     "emits exact JSON-RPC notifications and decodes inbound session/update and elicitation completion",
     Effect.fnUntraced(function* () {
@@ -591,9 +593,11 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
   it.effect(
     "propagates the real child exit code when the input stream ends",
     Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "waiting" });
       const handle = yield* makeHandle({
         ACP_MOCK_EXIT_IMMEDIATELY_CODE: "7",
       });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "completed" });
       assert.isDefined(AcpClient.layerChildProcess({ handle }));
       const firstMessage = yield* Deferred.make<unknown>();
       const termination = yield* Deferred.make<AcpError.AcpError>();
@@ -608,10 +612,14 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "waiting" });
       const message = yield* Deferred.await(firstMessage);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "waiting" });
       const exitError = yield* Deferred.await(termination);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "completed" });
       assert.instanceOf(exitError, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow((exitError as AcpError.AcpProcessExitedError).code), 7);
+      assertSome((exitError as AcpError.AcpProcessExitedError).code, 7);
       assert.equal(
         (
           message as {
@@ -632,7 +640,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       };
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow((defect.cause as AcpError.AcpProcessExitedError).code), 7);
+      assertSome((defect.cause as AcpError.AcpProcessExitedError).code, 7);
     }),
     childProcessProtocolTestTimeout
   );
@@ -640,24 +648,35 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
   it.effect(
     "does not emit a second process-exit error after a decode failure",
     Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "waiting" });
       const handle = yield* makeHandle({
         ACP_MOCK_MALFORMED_OUTPUT: "1",
         ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE: "23",
       });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.spawn", state: "completed" });
       const terminationCalls = yield* Ref.make(0);
+      const terminationObserved = yield* Deferred.make<void>();
       const firstMessage = yield* Deferred.make<unknown>();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio: makeChildStdio(handle),
         terminationError: makeTerminationError(handle),
         serverRequestMethods: HashSet.empty(),
-        onTermination: () => Ref.update(terminationCalls, (count) => count + 1),
+        onTermination: () =>
+          Ref.update(terminationCalls, (count) => count + 1).pipe(
+            Effect.andThen(Deferred.succeed(terminationObserved, undefined))
+          ),
       });
 
       yield* transport.clientProtocol
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "waiting" });
       const message = yield* Deferred.await(firstMessage);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.first-message", state: "completed" });
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "waiting" });
+      yield* Deferred.await(terminationObserved);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.termination", state: "completed" });
       assert.equal(yield* Ref.get(terminationCalls), 1);
       assert.equal(
         (
@@ -679,6 +698,11 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       };
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProtocolParseError);
+
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.native-exit", state: "waiting" });
+      assert.equal(yield* handle.exitCode, 23);
+      yield* Effect.logInfo("ACP test phase", { phase: "protocol.native-exit", state: "completed" });
+      assert.equal(yield* Ref.get(terminationCalls), 1);
     }),
     childProcessProtocolTestTimeout
   );
@@ -704,7 +728,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
         })
       );
       assert.instanceOf(error, AcpError.AcpProcessExitedError);
-      assert.equal(O.getOrThrow(error.code), 0);
+      assertSome(error.code, 0);
     })
   );
 });
@@ -729,7 +753,7 @@ const stringifyWireIds = (message: unknown): unknown => {
 
 const oracle = (line: string): ReadonlyArray<unknown> => A.map(effectFrameParser.decode(`${line}\n`), stringifyWireIds);
 
-it.layer(NodeServices.layer)("effect-acp frame decoder parity", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decoder parity", (it) => {
   it.effect(
     "routes every JSON-RPC frame kind exactly like effect's ndjson serializer",
     Effect.fnUntraced(function* () {
@@ -843,7 +867,7 @@ const expectParseTermination = (error: AcpError.AcpError): unknown =>
     AcpTransportError: () => assert.fail("expected a protocol parse error"),
   });
 
-it.layer(NodeServices.layer)("effect-acp frame decoder edge cases", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decoder edge cases", (it) => {
   it.effect(
     "routes the remaining control frames, cause shapes, and params-less requests",
     Effect.fnUntraced(function* () {

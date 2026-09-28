@@ -11,10 +11,12 @@ import {
   WaitReason,
   weakestEvidenceTier,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Result } from "effect";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -73,7 +75,7 @@ const singleSummary = (status: "read" | "tombstoned" | "unreachable" | "skipped"
   unemittableCount: status === "unemittable" ? 1 : 0,
 });
 
-layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
+it.layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
   it.effect("round-trips the hand-written real-session flight record", () =>
     Effect.gen(function* () {
       const raw = yield* readFixture("flight-record.json");
@@ -81,7 +83,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       const encoded = yield* FlightRecord.encodeJsonEffect(decoded);
       const roundTripped = yield* FlightRecord.decodeJsonEffect(encoded);
 
-      expect(flightRecordEquivalent(decoded, roundTripped)).toBe(true);
+      pipe(flightRecordEquivalent(decoded, roundTripped), assertTrue);
       expect(decoded.mechanical.observedEventCount).toBe(37);
       expect(decoded.mechanical.turnCount).toBe(1);
       expect(decoded.mechanical.toolCallCount).toBe(17);
@@ -101,8 +103,8 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       const roundTrippedEnumeration = yield* IngestEnumeration.decodeJsonEffect(encodedEnumeration);
       const roundTrippedManifest = yield* IngestManifest.decodeJsonEffect(encodedManifest);
 
-      expect(ingestEnumerationEquivalent(enumeration, roundTrippedEnumeration)).toBe(true);
-      expect(ingestManifestEquivalent(manifest, roundTrippedManifest)).toBe(true);
+      pipe(ingestEnumerationEquivalent(enumeration, roundTrippedEnumeration), assertTrue);
+      pipe(ingestManifestEquivalent(manifest, roundTrippedManifest), assertTrue);
       expect(enumeration.enumeratedCount).toBe(6);
       expect(manifest.summary.accountedCount).toBe(6);
       expect(manifest.summary.skippedCount).toBe(6);
@@ -145,7 +147,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       singleSummary("skipped")
     );
 
-    expect(Result.isFailure(IngestManifest.decodeResult(invalid))).toBe(true);
+    pipe(IngestManifest.decodeResult(invalid), Result.isFailure, assertTrue);
   });
 
   it("strips skip-only fields from a read disposition", () => {
@@ -167,7 +169,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
     const encoded = Result.getOrThrow(IngestManifest.encodeResult(decoded));
     const firstDisposition = O.getOrThrow(A.head(encoded.dispositions));
 
-    expect("reason" in firstDisposition).toBe(false);
+    pipe("reason" in firstDisposition, assertFalse);
   });
 
   it("retains an unemittable source in the accounted denominator", () => {
@@ -225,8 +227,8 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       enumeratedCount: 2,
     };
 
-    expect(Result.isFailure(IngestManifest.decodeResult(duplicate))).toBe(true);
-    expect(Result.isFailure(IngestManifest.decodeResult(omitted))).toBe(true);
+    pipe(IngestManifest.decodeResult(duplicate), Result.isFailure, assertTrue);
+    pipe(IngestManifest.decodeResult(omitted), Result.isFailure, assertTrue);
   });
 
   it("propagates the weakest evidence tier, including reconstruction", () => {
@@ -235,22 +237,16 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
     expect(weakestEvidenceTier(["heuristic", "unknown", "reconstructed"])).toBe(EvidenceTier.Enum.unknown);
   });
 
-  it("keeps weakest-link propagation stable for schema-derived tier collections", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EvidenceTier.pipe(S.Array, Arbitrary.schema)]),
-          ([tiers]) => {
-            expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
-            expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
+  it.prop(
+    "keeps weakest-link propagation stable for schema-derived tier collections",
+    [EvidenceTier.pipe(S.Array, Arbitrary.schema)],
+    ([tiers]) => {
+      expect(weakestEvidenceTier(tiers)).toBe(weakestEvidenceTier(A.reverse(tiers)));
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      expect(weakestEvidenceTier(A.append(tiers, EvidenceTier.Enum.unknown))).toBe(EvidenceTier.Enum.unknown);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("preserves hook-pulse/v1 literal compatibility without accepting P2-only cases", () => {
     expect(HookPulseInstrumentClass.Options).toEqual(InstrumentClass.Options);
@@ -262,7 +258,7 @@ layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
       WaitReason.Enum.none,
       WaitReason.Enum.unknown,
     ]);
-    expect(isHookPulseEvidenceTier(EvidenceTier.Enum.reconstructed)).toBe(false);
-    expect(isHookPulseWaitReason(WaitReason.Enum.scheduler)).toBe(false);
+    pipe(isHookPulseEvidenceTier(EvidenceTier.Enum.reconstructed), assertFalse);
+    pipe(isHookPulseWaitReason(WaitReason.Enum.scheduler), assertFalse);
   });
 });

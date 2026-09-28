@@ -14,14 +14,14 @@ import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Equal, HashMap, HashSet, Layer, Option, Order, Result } from "effect";
+import { Effect, Equal, HashMap, HashSet, Option, Order, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { canonicalJson } from "@/corpus/Canonical";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { F1FixtureId, FixtureDegradedKind, FixtureMediaType } from "@/fixtures/F1";
@@ -149,30 +149,25 @@ const isProvenanceEvent = S.is(ProvenanceEvent);
 const isProviderCacheEntry = S.is(ProviderCacheEntry);
 const isSourceDocument = S.is(SourceDocument);
 
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import type { CanonicalText, ChunkKind as ChunkKindValue, ParseOutcome as ParseOutcomeValue } from "@/schema/Text";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+  pipe(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), assertTrue);
 };
 
-const roundTripGoldFile = (value: GoldFileValue): void => {
+const roundTripGoldFile = Effect.fn("SchemaTest.roundTripGoldFile")(function* (value: GoldFileValue) {
   const encoded = Result.getOrThrow(encodeGoldFileResult(value));
-  const decoded = Effect.runSync(
-    decodeGoldFile(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"))
-  );
+  const decoded = yield* decodeGoldFile(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"));
 
-  expect(S.toEquivalence(S.toType(GoldFile))(decoded, value)).toBe(true);
-};
+  pipe(S.toEquivalence(S.toType(GoldFile))(decoded, value), assertTrue);
+});
 
 const rejects = <Schema extends S.Codec<unknown>>(schema: Schema, value: unknown): boolean =>
   Result.isFailure(S.decodeUnknownResult(schema)(value));
@@ -585,31 +580,26 @@ describe("C0 schema exports", () => {
       isCanonicalText(canonicalText),
     ]).toEqual([true, true, true, true, true, true, true]);
     expect(MediaType.Options).toEqual(FixtureMediaType.Options);
-    expect(ProviderFamily.is.anthropic("anthropic")).toBe(true);
-    expect(TaskType.is.extraction("extraction")).toBe(true);
-    expect(RequestKind.is["generate-text"]("generate-text")).toBe(true);
-    expect(ExtractionLane.is.hosted("hosted")).toBe(true);
-    expect(ExtractionMethod.is["pattern-wink"]("pattern-wink")).toBe(true);
-    expect(StructureRole.is.title("title")).toBe(true);
-    expect(LossDeclaration.is["structure-not-supported"]("structure-not-supported")).toBe(true);
-    expect(ConflictBasis.is["same-anchor-different-label"]("same-anchor-different-label")).toBe(true);
-    expect(ChunkKind.is.sentence("sentence")).toBe(true);
-    expect(MetricName.is["b-cubed"]("b-cubed")).toBe(true);
-    expect(MetricSubset.is.all("all")).toBe(true);
-    expect(MetricStatus.is.scored("scored")).toBe(true);
+    pipe(ProviderFamily.is.anthropic("anthropic"), assertTrue);
+    pipe(TaskType.is.extraction("extraction"), assertTrue);
+    pipe(RequestKind.is["generate-text"]("generate-text"), assertTrue);
+    pipe(ExtractionLane.is.hosted("hosted"), assertTrue);
+    pipe(ExtractionMethod.is["pattern-wink"]("pattern-wink"), assertTrue);
+    pipe(StructureRole.is.title("title"), assertTrue);
+    pipe(LossDeclaration.is["structure-not-supported"]("structure-not-supported"), assertTrue);
+    pipe(ConflictBasis.is["same-anchor-different-label"]("same-anchor-different-label"), assertTrue);
+    pipe(ChunkKind.is.sentence("sentence"), assertTrue);
+    pipe(MetricName.is["b-cubed"]("b-cubed"), assertTrue);
+    pipe(MetricSubset.is.all("all"), assertTrue);
+    pipe(MetricStatus.is.scored("scored"), assertTrue);
   });
 
-  it("derives fast-check values from representative source schemas", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(DocumentId), Arbitrary.schema(DegradedKind), Arbitrary.schema(MetricName)]),
-          ([id, kind, metric]) => isDocumentId(id) && isDegradedKind(kind) && isMetricName(metric),
-          { runs: 25 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "derives fast-check values from representative source schemas",
+    [Arbitrary.schema(DocumentId), Arbitrary.schema(DegradedKind), Arbitrary.schema(MetricName)],
+    ([id, kind, metric]) => assertTrue(isDocumentId(id) && isDegradedKind(kind) && isMetricName(metric)),
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("C0 schema round trips", () => {
@@ -689,156 +679,160 @@ describe("C0 schema round trips", () => {
     roundTrip(EvalRunTelemetry, telemetry);
   });
 
-  it("encodes gold labels without corpus text and hydrates exact document slices", () => {
-    const text = "Effect uses Schema";
-    const structure = GoldFile.make({
-      labels: [
-        GoldStructureLabel.make({
-          depth: NonNegativeInt.make(0),
-          endChar: NonNegativeInt.make(6),
-          quote: "Effect",
-          role: "title",
-          startChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "structure",
-      version: "gold/v1",
-    });
-    const entity = GoldFile.make({
-      labels: [
-        GoldEntityLabel.make({
-          cluster: "software-effect",
-          endChar: NonNegativeInt.make(6),
-          entityType: "software",
-          label: "Effect",
-          quote: "Effect",
-          startChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "entity",
-      version: "gold/v1",
-    });
-    const relation = GoldFile.make({
-      labels: [
-        GoldRelationLabel.make({
-          endChar: NonNegativeInt.make(18),
-          object: "Schema",
-          objectEndChar: NonNegativeInt.make(18),
-          objectStartChar: NonNegativeInt.make(12),
-          predicate: "uses",
-          quote: text,
-          startChar: NonNegativeInt.make(0),
-          subject: "Effect",
-          subjectEndChar: NonNegativeInt.make(6),
-          subjectStartChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "relation",
-      version: "gold/v1",
-    });
-    const encodedStructure = Result.getOrThrow(encodeGoldFileResult(structure));
-    const encodedEntity = Result.getOrThrow(encodeGoldFileResult(entity));
-    const encodedRelation = Result.getOrThrow(encodeGoldFileResult(relation));
+  it.effect("encodes gold labels without corpus text and hydrates exact document slices", () =>
+    Effect.gen(function* () {
+      const text = "Effect uses Schema";
+      const structure = GoldFile.make({
+        labels: [
+          GoldStructureLabel.make({
+            depth: NonNegativeInt.make(0),
+            endChar: NonNegativeInt.make(6),
+            quote: "Effect",
+            role: "title",
+            startChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "structure",
+        version: "gold/v1",
+      });
+      const entity = GoldFile.make({
+        labels: [
+          GoldEntityLabel.make({
+            cluster: "software-effect",
+            endChar: NonNegativeInt.make(6),
+            entityType: "software",
+            label: "Effect",
+            quote: "Effect",
+            startChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "entity",
+        version: "gold/v1",
+      });
+      const relation = GoldFile.make({
+        labels: [
+          GoldRelationLabel.make({
+            endChar: NonNegativeInt.make(18),
+            object: "Schema",
+            objectEndChar: NonNegativeInt.make(18),
+            objectStartChar: NonNegativeInt.make(12),
+            predicate: "uses",
+            quote: text,
+            startChar: NonNegativeInt.make(0),
+            subject: "Effect",
+            subjectEndChar: NonNegativeInt.make(6),
+            subjectStartChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "relation",
+        version: "gold/v1",
+      });
+      const encodedStructure = Result.getOrThrow(encodeGoldFileResult(structure));
+      const encodedEntity = Result.getOrThrow(encodeGoldFileResult(entity));
+      const encodedRelation = Result.getOrThrow(encodeGoldFileResult(relation));
 
-    expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
-    expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
-    expect(encodedEntity.labels[0]).not.toHaveProperty("label");
-    expect(encodedEntity.labels[0]).not.toHaveProperty("quote");
-    expect(encodedEntity.labels[0]).toHaveProperty("labelSha256");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("object");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("quote");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("subject");
-    expect(encodedRelation.labels[0]).toHaveProperty("objectSha256");
-    expect(encodedRelation.labels[0]).toHaveProperty("quoteSha256");
-    expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
+      expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
+      expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
+      expect(encodedEntity.labels[0]).not.toHaveProperty("label");
+      expect(encodedEntity.labels[0]).not.toHaveProperty("quote");
+      expect(encodedEntity.labels[0]).toHaveProperty("labelSha256");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("object");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("quote");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("subject");
+      expect(encodedRelation.labels[0]).toHaveProperty("objectSha256");
+      expect(encodedRelation.labels[0]).toHaveProperty("quoteSha256");
+      expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
 
-    const hydrated = Effect.runSync(
-      decodeGoldFile(encodedRelation).pipe(Effect.provideService(CurrentGoldDocumentText, text))
-    );
-    expect(hydrated).toEqual(relation);
-  });
+      const hydrated = yield* decodeGoldFile(encodedRelation).pipe(
+        Effect.provideService(CurrentGoldDocumentText, text)
+      );
+      expect(hydrated).toEqual(relation);
+    })
+  );
 
-  it("round-trips every tagged-union member", () => {
-    const parsed = ParseOutcome.cases.Parsed.make({
-      outcome: "Parsed",
-      document: documentId,
-      text: "Effect data",
-      extractor: extractorIdentity,
-    });
-    const degradedParse = ParseOutcome.cases.Degraded.make({
-      outcome: "Degraded",
-      document: documentId,
-      kind: "invalid-utf8",
-      detail: "Input was not valid UTF-8.",
-    });
-    roundTrip(Origin, fixtureOrigin);
-    roundTrip(Origin, w1Origin);
-    roundTrip(ParseOutcome, parsed);
-    roundTrip(ParseOutcome, degradedParse);
-    roundTrip(ClaimBody, entityBody);
-    roundTrip(ClaimBody, relationBody);
-    roundTrip(ClaimBody, structureBody);
-    roundTrip(ExtractOutcome, ExtractOutcome.cases.Extracted.make({ outcome: "Extracted", batch: evidenceBatch }));
-    roundTrip(
-      ExtractOutcome,
-      ExtractOutcome.cases.Degraded.make({
+  it.effect("round-trips every tagged-union member", () =>
+    Effect.gen(function* () {
+      const parsed = ParseOutcome.cases.Parsed.make({
+        outcome: "Parsed",
+        document: documentId,
+        text: "Effect data",
+        extractor: extractorIdentity,
+      });
+      const degradedParse = ParseOutcome.cases.Degraded.make({
         outcome: "Degraded",
         document: documentId,
-        lane: "hosted",
-        kind: "provider-unavailable",
-        detail: "Provider cache miss.",
-      })
-    );
+        kind: "invalid-utf8",
+        detail: "Input was not valid UTF-8.",
+      });
+      roundTrip(Origin, fixtureOrigin);
+      roundTrip(Origin, w1Origin);
+      roundTrip(ParseOutcome, parsed);
+      roundTrip(ParseOutcome, degradedParse);
+      roundTrip(ClaimBody, entityBody);
+      roundTrip(ClaimBody, relationBody);
+      roundTrip(ClaimBody, structureBody);
+      roundTrip(ExtractOutcome, ExtractOutcome.cases.Extracted.make({ outcome: "Extracted", batch: evidenceBatch }));
+      roundTrip(
+        ExtractOutcome,
+        ExtractOutcome.cases.Degraded.make({
+          outcome: "Degraded",
+          document: documentId,
+          lane: "hosted",
+          kind: "provider-unavailable",
+          detail: "Provider cache miss.",
+        })
+      );
 
-    const eventBodies = [
-      EventBody.cases.Ingested.make({ kind: "Ingested", document: documentId }),
-      EventBody.cases.Parsed.make({
-        kind: "Parsed",
-        document: documentId,
-        outcome: "parsed",
-        extractor: extractorIdentity,
-      }),
-      EventBody.cases.Chunked.make({ kind: "Chunked", document: documentId, chunks: [chunkId] }),
-      EventBody.cases.Extracted.make({ kind: "Extracted", batch: batchId, model: hostedModel }),
-      EventBody.cases.Asserted.make({ kind: "Asserted", claims: [claimId] }),
-      EventBody.cases.Invalidated.make({ kind: "Invalidated", claim: claimId, reason: "superseded" }),
-    ];
-    A.forEach(eventBodies, (body) => roundTrip(EventBody, body));
+      const eventBodies = [
+        EventBody.cases.Ingested.make({ kind: "Ingested", document: documentId }),
+        EventBody.cases.Parsed.make({
+          kind: "Parsed",
+          document: documentId,
+          outcome: "parsed",
+          extractor: extractorIdentity,
+        }),
+        EventBody.cases.Chunked.make({ kind: "Chunked", document: documentId, chunks: [chunkId] }),
+        EventBody.cases.Extracted.make({ kind: "Extracted", batch: batchId, model: hostedModel }),
+        EventBody.cases.Asserted.make({ kind: "Asserted", claims: [claimId] }),
+        EventBody.cases.Invalidated.make({ kind: "Invalidated", claim: claimId, reason: "superseded" }),
+      ];
+      A.forEach(eventBodies, (body) => roundTrip(EventBody, body));
 
-    const structureFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "structure",
-      labels: [],
-      proposer: proposerModel,
-    });
-    const entityFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "entity",
-      labels: [],
-      proposer: proposerModel,
-    });
-    const relationFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "relation",
-      labels: [],
-      proposer: proposerModel,
-    });
-    roundTripGoldFile(structureFile);
-    roundTripGoldFile(entityFile);
-    roundTripGoldFile(relationFile);
-  });
+      const structureFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "structure",
+        labels: [],
+        proposer: proposerModel,
+      });
+      const entityFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "entity",
+        labels: [],
+        proposer: proposerModel,
+      });
+      const relationFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "relation",
+        labels: [],
+        proposer: proposerModel,
+      });
+      yield* roundTripGoldFile(structureFile);
+      yield* roundTripGoldFile(entityFile);
+      yield* roundTripGoldFile(relationFile);
+    })
+  );
 
   it("round-trips every typed error", () => {
     roundTrip(DocumentUnavailable, DocumentUnavailable.make({ message: "Document unavailable." }));
@@ -871,93 +865,92 @@ describe("C0 schema round trips", () => {
 
 describe("document and text refinements", () => {
   it("accepts matching byte identities and rejects a different sha256", () => {
-    expect(isSourceDocument(sourceDocument)).toBe(true);
-    expect(rejects(SourceDocument, { ...sourceDocument, sha256: sha("0") })).toBe(true);
+    pipe(isSourceDocument(sourceDocument), assertTrue);
+    pipe(rejects(SourceDocument, { ...sourceDocument, sha256: sha("0") }), assertTrue);
   });
 
   it("accepts coherent fixture declarations and rejects mismatched degraded-kind presence", () => {
-    expect(isFixtureDeclaration(parsingFixtureDeclaration)).toBe(true);
-    expect(
+    pipe(isFixtureDeclaration(parsingFixtureDeclaration), assertTrue);
+    pipe(
       rejects(FixtureDeclaration, {
         expectation: "parses",
         degradedKind: "invalid-utf8",
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("builds and verifies chunk content ids from the canonical encoded preimage", () => {
-    expect(isChunk(chunk)).toBe(true);
-    expect(Result.isSuccess(chunkIdPreimage(chunk))).toBe(true);
+    pipe(isChunk(chunk), assertTrue);
+    pipe(chunkIdPreimage(chunk), Result.isSuccess, assertTrue);
     expect(Result.getOrThrow(makeChunkId(chunk))).toBe(chunk.id);
-    expect(rejects(Chunk, { ...chunk, id: sha("0") })).toBe(true);
+    pipe(rejects(Chunk, { ...chunk, id: sha("0") }), assertTrue);
   });
 
   it("accepts matching chunk receipts and rejects another anchor or source document", () => {
-    expect(rejects(Chunk, { ...chunk, receipt: otherReceipt })).toBe(true);
+    pipe(rejects(Chunk, { ...chunk, receipt: otherReceipt }), assertTrue);
     const otherSource = SourceTextIdentity.make({ ...sourceIdentity, sourceRef: secondDocumentId });
     const otherSourceReceipt = TextAnchorVerificationReceipt.make({ anchor, source: otherSource });
     const otherSourceId = Result.getOrThrow(makeChunkId({ document: documentId, anchor, receipt: otherSourceReceipt }));
-    expect(rejects(Chunk, { ...chunk, id: otherSourceId, receipt: otherSourceReceipt })).toBe(true);
+    pipe(rejects(Chunk, { ...chunk, id: otherSourceId, receipt: otherSourceReceipt }), assertTrue);
   });
 
   it("accepts each claim-body width and rejects each inconsistent width", () => {
-    expect([entityBody, relationBody, structureBody].every(isClaimBody)).toBe(true);
-    expect(
+    pipe([entityBody, relationBody, structureBody].every(isClaimBody), assertTrue);
+    pipe(
       [
         { ...entityBody, endChar: 5 },
         { ...relationBody, endChar: 5 },
         { ...structureBody, endChar: 5 },
-      ].every((body) => rejects(ClaimBody, body))
-    ).toBe(true);
+      ].every((body) => rejects(ClaimBody, body)),
+      assertTrue
+    );
   });
 });
 
 describe("digest and provider-cache refinements", () => {
-  it("keeps canonical digests stable across key insertion order and supports field omission", () =>
-    Effect.runPromise(
-      provideBunCrypto(
-        Effect.gen(function* () {
-          const Ordered = S.Struct({ a: S.Finite, b: S.Finite });
-          const ReportShape = S.Struct({ a: S.Finite, digest: S.String });
-          const left = yield* contentDigest(Ordered)({ a: 1, b: 2 });
-          const right = yield* contentDigest(Ordered)({ b: 2, a: 1 });
-          const omitted = yield* digestOmitting(ReportShape, "digest")({ a: 1, digest: "left" });
-          const omittedOther = yield* digestOmitting(ReportShape, "digest")({ a: 1, digest: "right" });
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("keeps canonical digests stable across key insertion order and supports field omission", () =>
+      Effect.gen(function* () {
+        const Ordered = S.Struct({ a: S.Finite, b: S.Finite });
+        const ReportShape = S.Struct({ a: S.Finite, digest: S.String });
+        const left = yield* contentDigest(Ordered)({ a: 1, b: 2 });
+        const right = yield* contentDigest(Ordered)({ b: 2, a: 1 });
+        const omitted = yield* digestOmitting(ReportShape, "digest")({ a: 1, digest: "left" });
+        const omittedOther = yield* digestOmitting(ReportShape, "digest")({ a: 1, digest: "right" });
 
-          expect(left).toBe(right);
-          expect(omitted).toBe(omittedOther);
-          expect(Result.getOrThrow(contentDigestSync(Ordered)({ b: 2, a: 1 }))).toBe(left);
-          expect(Result.getOrThrow(digestOmittingSync(ReportShape, "digest")({ a: 1, digest: "ignored" }))).toBe(
-            omitted
-          );
-        })
-      )
-    ));
+        expect(left).toBe(right);
+        expect(omitted).toBe(omittedOther);
+        expect(Result.getOrThrow(contentDigestSync(Ordered)({ b: 2, a: 1 }))).toBe(left);
+        expect(Result.getOrThrow(digestOmittingSync(ReportShape, "digest")({ a: 1, digest: "ignored" }))).toBe(omitted);
+      })
+    );
+  });
 
   it("accepts both cache digests and rejects either mismatched digest", () => {
-    expect(isProviderCacheEntry(providerEntry)).toBe(true);
-    expect(rejects(ProviderCacheEntry, { ...providerEntry, cacheKey: sha("0") })).toBe(true);
-    expect(rejects(ProviderCacheEntry, { ...providerEntry, responseDigest: sha("0") })).toBe(true);
+    pipe(isProviderCacheEntry(providerEntry), assertTrue);
+    pipe(rejects(ProviderCacheEntry, { ...providerEntry, cacheKey: sha("0") }), assertTrue);
+    pipe(rejects(ProviderCacheEntry, { ...providerEntry, responseDigest: sha("0") }), assertTrue);
   });
 });
 
 describe("evidence refinements", () => {
   it("builds and verifies claim ids from schema-encoded body and model preimages", () => {
-    expect(isEvidenceClaim(evidenceClaim)).toBe(true);
-    expect(Result.isSuccess(claimIdPreimage(evidenceClaim))).toBe(true);
+    pipe(isEvidenceClaim(evidenceClaim), assertTrue);
+    pipe(claimIdPreimage(evidenceClaim), Result.isSuccess, assertTrue);
     expect(Result.getOrThrow(makeClaimId(evidenceClaim))).toBe(evidenceClaim.id);
-    expect(rejects(EvidenceClaim, { ...evidenceClaim, id: sha("0") })).toBe(true);
+    pipe(rejects(EvidenceClaim, { ...evidenceClaim, id: sha("0") }), assertTrue);
   });
 
   it("accepts a matching claim receipt and rejects a receipt for another anchor", () => {
-    expect(rejects(EvidenceClaim, { ...evidenceClaim, receipt: otherReceipt })).toBe(true);
+    pipe(rejects(EvidenceClaim, { ...evidenceClaim, receipt: otherReceipt }), assertTrue);
   });
 
   it("builds and verifies batch ids from the ordered input preimage", () => {
-    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
-    expect(Result.isSuccess(batchIdPreimage(evidenceBatch))).toBe(true);
+    pipe(isEvidenceBatch(evidenceBatch), assertTrue);
+    pipe(batchIdPreimage(evidenceBatch), Result.isSuccess, assertTrue);
     expect(Result.getOrThrow(makeBatchId(evidenceBatch))).toBe(evidenceBatch.id);
-    expect(rejects(EvidenceBatch, { ...evidenceBatch, id: sha("0") })).toBe(true);
+    pipe(rejects(EvidenceBatch, { ...evidenceBatch, id: sha("0") }), assertTrue);
   });
 
   it("binds every claim and degraded claim chunk to the batch inputs", () => {
@@ -976,14 +969,15 @@ describe("evidence refinements", () => {
       chunk: unlistedChunkId,
     });
 
-    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
-    expect(rejects(EvidenceBatch, { ...evidenceBatch, claims: [unlistedClaim] })).toBe(true);
-    expect(
+    pipe(isEvidenceBatch(evidenceBatch), assertTrue);
+    pipe(rejects(EvidenceBatch, { ...evidenceBatch, claims: [unlistedClaim] }), assertTrue);
+    pipe(
       rejects(EvidenceBatch, {
         ...evidenceBatch,
         degraded: [{ ...degradedClaim, chunk: unlistedChunkId }],
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("requires every relation endpoint to identify a same-batch entity claim", () => {
@@ -1013,23 +1007,25 @@ describe("evidence refinements", () => {
     );
     const unresolvedRelation = EvidenceClaim.make({ ...relationClaim, id: unresolvedId, body: unresolvedBody });
 
-    expect(isEvidenceBatch(relationBatch)).toBe(true);
-    expect(
+    pipe(isEvidenceBatch(relationBatch), assertTrue);
+    pipe(
       rejects(EvidenceBatch, {
         ...relationBatch,
         claims: [evidenceClaim, secondEvidenceClaim, unresolvedRelation],
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("derives exact order-insensitive loss declarations from the extraction method", () => {
     const patternLosses = Option.getOrThrow(HashMap.get(declaredLosses, "pattern-wink"));
-    expect(
+    pipe(
       Equal.equals(
         patternLosses,
         HashSet.fromIterable<LossDeclarationValue>(["relations-not-supported", "structure-not-supported"])
-      )
-    ).toBe(true);
+      ),
+      assertTrue
+    );
 
     const patternBatchId = Result.getOrThrow(
       makeBatchId({ document: documentId, method: "pattern-wink", model: patternModel, inputs: [chunkId] })
@@ -1045,53 +1041,58 @@ describe("evidence refinements", () => {
       lossy: ["structure-not-supported", "relations-not-supported"],
     });
 
-    expect(isEvidenceBatch(patternBatch)).toBe(true);
-    expect(rejects(EvidenceBatch, { ...patternBatch, lossy: ["relations-not-supported"] })).toBe(true);
-    expect(rejects(EvidenceBatch, { ...evidenceBatch, lossy: ["relations-not-supported"] })).toBe(true);
+    pipe(isEvidenceBatch(patternBatch), assertTrue);
+    pipe(rejects(EvidenceBatch, { ...patternBatch, lossy: ["relations-not-supported"] }), assertTrue);
+    pipe(rejects(EvidenceBatch, { ...evidenceBatch, lossy: ["relations-not-supported"] }), assertTrue);
   });
 
   it("accepts coherent unique claims and rejects duplicate ids or mismatched batch fields", () => {
-    expect(isEvidenceBatch(evidenceBatch)).toBe(true);
-    expect(rejects(EvidenceBatch, { ...evidenceBatch, claims: [evidenceClaim, evidenceClaim] })).toBe(true);
-    expect(
+    pipe(isEvidenceBatch(evidenceBatch), assertTrue);
+    pipe(rejects(EvidenceBatch, { ...evidenceBatch, claims: [evidenceClaim, evidenceClaim] }), assertTrue);
+    pipe(
       rejects(EvidenceBatch, {
         ...evidenceBatch,
         claims: [{ ...evidenceClaim, document: DocumentId.make(Str.repeat(64)("f")) }],
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(EvidenceBatch, {
         ...evidenceBatch,
         claims: [{ ...evidenceClaim, method: "pattern-wink" }],
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(EvidenceBatch, {
         ...evidenceBatch,
         claims: [{ ...evidenceClaim, model: patternModel }],
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("requires conflict witnesses to use distinct ordered endpoints and their canonical digest", () => {
-    expect(isConflictWitness(conflictWitness)).toBe(true);
-    expect(
+    pipe(isConflictWitness(conflictWitness), assertTrue);
+    pipe(
       rejects(ConflictWitness, {
         id: canonicalDigest({ left: claimId, right: claimId, basis: conflictBasis }),
         left: claimId,
         right: claimId,
         basis: conflictBasis,
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(ConflictWitness, {
         id: canonicalDigest({ left: conflictRight, right: conflictLeft, basis: conflictBasis }),
         left: conflictRight,
         right: conflictLeft,
         basis: conflictBasis,
-      })
-    ).toBe(true);
-    expect(rejects(ConflictWitness, { ...conflictWitness, id: sha("0") })).toBe(true);
+      }),
+      assertTrue
+    );
+    pipe(rejects(ConflictWitness, { ...conflictWitness, id: sha("0") }), assertTrue);
   });
 });
 
@@ -1106,64 +1107,69 @@ describe("provenance refinements", () => {
   });
 
   it("accepts the timestamp-free hash-chain id and rejects a wrong id", () => {
-    expect(isProvenanceEvent(event)).toBe(true);
-    expect(rejects(ProvenanceEvent, { ...event, id: acquired })).toBe(true);
+    pipe(isProvenanceEvent(event), assertTrue);
+    pipe(rejects(ProvenanceEvent, { ...event, id: acquired }), assertTrue);
     roundTrip(ProvenanceEvent, event);
-    expect(Object.hasOwn(Result.getOrThrow(encodeProvenanceEventResult(event)), "timestamp")).toBe(false);
+    pipe(Object.hasOwn(Result.getOrThrow(encodeProvenanceEventResult(event)), "timestamp"), assertFalse);
   });
 });
 
 describe("gold refinements", () => {
   it("accepts exact 10/5/3 subsets and rejects smaller or larger protocol selections", () => {
-    expect(isGoldSubset(goldSubset)).toBe(true);
-    expect(
+    pipe(isGoldSubset(goldSubset), assertTrue);
+    pipe(
       rejects(GoldSubset, {
         structure: A.dropRight(goldPapers, 1),
         entity: A.take(goldPapers, 5),
         relation: A.take(goldPapers, 3),
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
     const paper11 = CorpusPaperId.make("00000000000b");
-    expect(
+    pipe(
       rejects(GoldSubset, {
         structure: [...goldPapers, paper11],
         entity: A.take(goldPapers, 5),
         relation: A.take(goldPapers, 3),
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("rejects duplicate ids and broken strict containment at the exact protocol sizes", () => {
     const paper4 = A.getUnsafe(goldPapers, 3);
     const paper11 = CorpusPaperId.make("00000000000b");
-    expect(
+    pipe(
       rejects(GoldSubset, {
         structure: [...A.dropRight(goldPapers, 1), paper1],
         entity: A.take(goldPapers, 5),
         relation: A.take(goldPapers, 3),
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(GoldSubset, {
         structure: goldPapers,
         entity: [paper1, paper2, paper3, paper4, paper11],
         relation: [paper1, paper2, paper3],
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("accepts gold-proposal identities and rejects extraction identities in refs and files", () => {
-    expect(isGoldRef(goldRef)).toBe(true);
-    expect(rejects(GoldRef, { ...goldRef, proposer: hostedModel })).toBe(true);
-    expect(
+    pipe(isGoldRef(goldRef), assertTrue);
+    pipe(rejects(GoldRef, { ...goldRef, proposer: hostedModel }), assertTrue);
+    pipe(
       rejects(GoldFileEncoded, {
         version: "gold/v1",
         paperId: paper1,
         subset: "entity",
         labels: [],
         proposer: hostedModel,
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("accepts anchored gold labels and rejects inconsistent widths in every label family", () => {
@@ -1173,11 +1179,12 @@ describe("gold refinements", () => {
       quote: anchor.quote,
       verified: true,
     };
-    expect(rejects(GoldStructureLabel, { ...shared, role: "title", depth: NonNegativeInt.make(0) })).toBe(false);
-    expect(
-      rejects(GoldEntityLabel, { ...shared, cluster: "software-effect", label: "Effect", entityType: "software" })
-    ).toBe(false);
-    expect(
+    pipe(rejects(GoldStructureLabel, { ...shared, role: "title", depth: NonNegativeInt.make(0) }), assertFalse);
+    pipe(
+      rejects(GoldEntityLabel, { ...shared, cluster: "software-effect", label: "Effect", entityType: "software" }),
+      assertFalse
+    );
+    pipe(
       rejects(GoldRelationLabel, {
         ...shared,
         object: "Schema",
@@ -1187,19 +1194,21 @@ describe("gold refinements", () => {
         subject: "Effect",
         subjectEndChar: anchor.endChar,
         subjectStartChar: anchor.startChar,
-      })
-    ).toBe(false);
-    expect(rejects(GoldStructureLabel, { ...shared, endChar: 5, role: "title", depth: 0 })).toBe(true);
-    expect(
+      }),
+      assertFalse
+    );
+    pipe(rejects(GoldStructureLabel, { ...shared, endChar: 5, role: "title", depth: 0 }), assertTrue);
+    pipe(
       rejects(GoldEntityLabel, {
         ...shared,
         cluster: "software-effect",
         endChar: 5,
         label: "Effect",
         entityType: "software",
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(GoldRelationLabel, {
         ...shared,
         endChar: 5,
@@ -1210,8 +1219,9 @@ describe("gold refinements", () => {
         subjectEndChar: anchor.endChar,
         subjectStartChar: anchor.startChar,
         object: "Schema",
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 });
 
@@ -1222,41 +1232,43 @@ describe("evaluation refinements", () => {
   };
 
   it("accepts unique run selections and rejects duplicate W1 or F1 identities", () => {
-    expect(isEvalSelection(runBody.selection)).toBe(true);
-    expect(
+    pipe(isEvalSelection(runBody.selection), assertTrue);
+    pipe(
       rejects(EvalSelection, {
         w1: [paper1, paper1],
         f1: [fixtureOrigin.fixtureId],
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(EvalSelection, {
         w1: [paper1],
         f1: [fixtureOrigin.fixtureId, fixtureOrigin.fixtureId],
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("accepts independent extraction and gold providers and rejects every EvalRun invariant", () => {
-    expect(isEvalRun(evalRun)).toBe(true);
+    pipe(isEvalRun(evalRun), assertTrue);
     const sameFamilyProposer = ModelIdentity.make({ ...proposerModel, provider: "anthropic" });
     const sameFamilyGold = GoldRef.make({ ...goldRef, proposer: sameFamilyProposer });
-    expect(rejects(EvalRun, runWith({ gold: sameFamilyGold }))).toBe(true);
+    pipe(rejects(EvalRun, runWith({ gold: sameFamilyGold })), assertTrue);
 
     const wrongTaskExtractor = ModelIdentity.make({ ...hostedModel, provider: "anthropic", taskType: "gold-proposal" });
-    expect(rejects(EvalRun, runWith({ extractor: wrongTaskExtractor }))).toBe(true);
+    pipe(rejects(EvalRun, runWith({ extractor: wrongTaskExtractor })), assertTrue);
 
     const wrongPatternProvider = ModelIdentity.make({ ...patternModel, provider: "anthropic" });
-    expect(rejects(EvalRun, runWith({ patternLane: wrongPatternProvider }))).toBe(true);
+    pipe(rejects(EvalRun, runWith({ patternLane: wrongPatternProvider })), assertTrue);
 
     const wrongPatternTask = ModelIdentity.make({ ...patternModel, taskType: "gold-proposal" });
-    expect(rejects(EvalRun, runWith({ patternLane: wrongPatternTask }))).toBe(true);
-    expect(rejects(EvalRun, { ...evalRun, id: RunId.make(Str.repeat(64)("0")) })).toBe(true);
+    pipe(rejects(EvalRun, runWith({ patternLane: wrongPatternTask })), assertTrue);
+    pipe(rejects(EvalRun, { ...evalRun, id: RunId.make(Str.repeat(64)("0")) }), assertTrue);
   });
 
   it("requires support for scored metrics and allows zero support for unsupported relation metrics", () => {
-    expect(isMetricScore(A.getUnsafe(metricScores, 0))).toBe(true);
-    expect(
+    pipe(isMetricScore(A.getUnsafe(metricScores, 0)), assertTrue);
+    pipe(
       rejects(MetricScore, {
         name: "entity-span-f1",
         subset: "entity",
@@ -1264,9 +1276,10 @@ describe("evaluation refinements", () => {
         status: "scored",
         value: 0,
         support: 0,
-      })
-    ).toBe(true);
-    expect(
+      }),
+      assertTrue
+    );
+    pipe(
       rejects(MetricScore, {
         name: "rebel-end-to-end-triple-f1",
         subset: "relation",
@@ -1274,9 +1287,10 @@ describe("evaluation refinements", () => {
         status: "unsupported",
         value: 0,
         support: 0,
-      })
-    ).toBe(false);
-    expect(
+      }),
+      assertFalse
+    );
+    pipe(
       rejects(MetricScore, {
         name: "rebel-end-to-end-triple-f1",
         subset: "relation",
@@ -1284,8 +1298,9 @@ describe("evaluation refinements", () => {
         status: "unsupported",
         value: 0.5,
         support: 1,
-      })
-    ).toBe(true);
+      }),
+      assertTrue
+    );
   });
 
   it("accepts unique exact document coverage and rejects duplicate ids, omissions, and extras", () => {
@@ -1305,19 +1320,21 @@ describe("evaluation refinements", () => {
       documents: [documentOutcome, secondOutcome],
     };
 
-    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
-    expect(
+    pipe(rejects(EvalReport, withReportDigest(body)), assertFalse);
+    pipe(
       rejects(
         EvalReport,
         withReportDigest({
           ...body,
           documents: [documentOutcome, DocumentOutcome.make({ ...secondOutcome, document: documentId })],
         })
-      )
-    ).toBe(true);
-    expect(rejects(EvalReport, withReportDigest({ ...body, documents: [documentOutcome] }))).toBe(true);
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, documents: [documentOutcome, secondOutcome] }))).toBe(
-      true
+      ),
+      assertTrue
+    );
+    pipe(rejects(EvalReport, withReportDigest({ ...body, documents: [documentOutcome] })), assertTrue);
+    pipe(
+      rejects(EvalReport, withReportDigest({ ...reportBody, documents: [documentOutcome, secondOutcome] })),
+      assertTrue
     );
   });
 
@@ -1338,16 +1355,17 @@ describe("evaluation refinements", () => {
     });
     const body: typeof EvalReportBodySchema.Type = { ...reportBody, run, documents: [futureOutcome] };
 
-    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
-    expect(
+    pipe(rejects(EvalReport, withReportDigest(body)), assertFalse);
+    pipe(
       rejects(
         EvalReport,
         withReportDigest({
           ...body,
           documents: [DocumentOutcome.make({ ...futureOutcome, parse: "truncated" })],
         })
-      )
-    ).toBe(true);
+      ),
+      assertTrue
+    );
   });
 
   it("requires hosted relation claims for every selected relation-gold paper", () => {
@@ -1368,8 +1386,8 @@ describe("evaluation refinements", () => {
       documents: [relationOutcome, documentOutcome],
     };
 
-    expect(rejects(EvalReport, withReportDigest(body))).toBe(false);
-    expect(
+    pipe(rejects(EvalReport, withReportDigest(body)), assertFalse);
+    pipe(
       rejects(
         EvalReport,
         withReportDigest({
@@ -1385,18 +1403,19 @@ describe("evaluation refinements", () => {
             documentOutcome,
           ],
         })
-      )
-    ).toBe(true);
+      ),
+      assertTrue
+    );
   });
 
   it("rejects missing or duplicate metric coordinates", () => {
     const missingMetrics = A.drop(metricScores, 1) as [MetricScore, ...Array<MetricScore>];
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: missingMetrics }))).toBe(true);
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: missingMetrics })), assertTrue);
 
     const duplicateMetrics = Option.getOrThrow(
       A.replace(metricScores, A.length(metricScores) - 1, A.getUnsafe(metricScores, 0))
     ) as [MetricScore, ...Array<MetricScore>];
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: duplicateMetrics }))).toBe(true);
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: duplicateMetrics })), assertTrue);
   });
 
   it("rejects unsupported hosted entries and unsupported undeclared pattern entries", () => {
@@ -1413,7 +1432,7 @@ describe("evaluation refinements", () => {
         })
       )
     ) as [MetricScore, ...Array<MetricScore>];
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: hostedUnsupported }))).toBe(true);
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: hostedUnsupported })), assertTrue);
 
     const patternEntityIndex = A.findFirstIndex(
       metricScores,
@@ -1431,23 +1450,24 @@ describe("evaluation refinements", () => {
         })
       )
     ) as [MetricScore, ...Array<MetricScore>];
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: undeclaredUnsupported }))).toBe(true);
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, metrics: undeclaredUnsupported })), assertTrue);
   });
 
   it("rejects wrong degradation arithmetic, failed anchors, and a wrong report digest", () => {
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, unexpectedDegraded: NonNegativeInt.make(1) }))).toBe(
-      true
+    pipe(
+      rejects(EvalReport, withReportDigest({ ...reportBody, unexpectedDegraded: NonNegativeInt.make(1) })),
+      assertTrue
     );
 
     const failedDocument = DocumentOutcome.make({ ...documentOutcome, anchorsFailed: NonNegativeInt.make(1) });
-    expect(rejects(EvalReport, withReportDigest({ ...reportBody, documents: [failedDocument] }))).toBe(true);
-    expect(rejects(EvalReport, { ...evalReport, reportDigest: sha("0") })).toBe(true);
+    pipe(rejects(EvalReport, withReportDigest({ ...reportBody, documents: [failedDocument] })), assertTrue);
+    pipe(rejects(EvalReport, { ...evalReport, reportDigest: sha("0") }), assertTrue);
   });
 });
 
 describe("F1 degraded-kind subset", () => {
   it("decodes every fixture degraded kind through the shared C0 DegradedKind", () => {
     expect(FixtureDegradedKind.Options).toEqual(["invalid-utf8", "truncated", "extraction-failed"]);
-    expect(A.every(FixtureDegradedKind.Options, isDegradedKind)).toBe(true);
+    pipe(A.every(FixtureDegradedKind.Options, isDegradedKind), assertTrue);
   });
 });

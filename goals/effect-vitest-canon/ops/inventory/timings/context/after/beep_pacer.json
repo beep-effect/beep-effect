@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/pacer",
+  "sourceHead": "5ba90014c8c9cb06d2d0f48f1d125d7775ee89b9",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.019567629991798,
+  "bunWholeCommandSeconds": 1.5159419029951096,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.8115234375, 1.17529296875, 1.59375],
+  "loadAfter": [2.54736328125, 1.3388671875, 1.64453125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.02 avg60=0.42 avg300=0.18 total=821190136\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225805\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148758\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=867015920\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=758559309\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.39 avg300=0.17 total=821193237\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225805\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148758\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=867016019\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=758559406\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "786662da0492862dabd458bd4db0c7e254570e9b8459c0f5e638ebd8cdcdb96b"
+    },
+    {
+      "file": "packages/drivers/pacer/AGENTS.md",
+      "sha256": "b922b9348e64c3f3e353927248a02cc8473fa74a0580eb0caa6f665583fbc0bf"
+    },
+    {
+      "file": "packages/drivers/pacer/CLAUDE.md",
+      "sha256": "b922b9348e64c3f3e353927248a02cc8473fa74a0580eb0caa6f665583fbc0bf"
+    },
+    {
+      "file": "packages/drivers/pacer/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/pacer/README.md",
+      "sha256": "31453b804aa19f3f463d9155d8710f168cc204a29e7000b2484c4a7b1866e56b"
+    },
+    {
+      "file": "packages/drivers/pacer/docgen.json",
+      "sha256": "df1d47df8808aaafde5efe78d5daf6613912fce3eed2949509089a71208019af"
+    },
+    {
+      "file": "packages/drivers/pacer/package.json",
+      "sha256": "1065c3ee4403867e88a23eb168167c4c14a89a020980e09f50e943bb1c8c2481"
+    },
+    {
+      "file": "packages/drivers/pacer/src/CsoAuth.models.ts",
+      "sha256": "c53b087eb9ef479ed77e5db20f45bd8b39e79311ae0115f97aa43b89c43a5683"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.config.ts",
+      "sha256": "56037e9876ece56ac24904248b1a9bc6cdeb23fb9266e427453e008bd77cbc54"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.errors.ts",
+      "sha256": "85aeefec25ab33ce9aaa9d0d8cdb3a7b3c6b34be56b0c050272ea95c200d0d4b"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.http.ts",
+      "sha256": "4ab794b2da02387fab68278e5da9a2434eafe3fdb4f742e6aa969879c43cec7f"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.layer.ts",
+      "sha256": "d36ccb951d5df05e4aca36cf371bbae63ba5eb598728bf3763c58de72be91b6b"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.mock-data.ts",
+      "sha256": "3cf19e8721ee86e8386a9f0cf5026ce86db944ff399eec023dabdde161bac77e"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.mock.ts",
+      "sha256": "9b5f075b0b37c1568a27dadb6b77c9d69e9dba72c296662c3358a096cf18eaa2"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pacer.tokens.ts",
+      "sha256": "85cd39f3a2a49d939e159c3d3de0b1e41b54f328da95fdea9b4e850cc6f4f483"
+    },
+    {
+      "file": "packages/drivers/pacer/src/PacerAuth.service.ts",
+      "sha256": "e96f100d2179533e1e17e9142715433ade69b49700b8c1fbc8b94edca70edc09"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pcl.api.ts",
+      "sha256": "380ecca4bc92974777096fe7235a52431641c82ede1795323f2c12b55e2b5f59"
+    },
+    {
+      "file": "packages/drivers/pacer/src/Pcl.models.ts",
+      "sha256": "64696d135b14b304fb95d8708b17772f24b3928e78c77f41c1ffcc999ed11647"
+    },
+    {
+      "file": "packages/drivers/pacer/src/PclClient.service.ts",
+      "sha256": "e99a388eb39c40323c5c2301998531d132aa20fd79feada36be94cd1dc0a6b38"
+    },
+    {
+      "file": "packages/drivers/pacer/src/index.ts",
+      "sha256": "d972e1f80a79d48e62d8bb40aba4fef32a7a7c4f04221cd65df593ec444940d4"
+    },
+    {
+      "file": "packages/drivers/pacer/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
+      "sha256": "fdc678ea6fbdbdc6665311a3e8a1327fb7bf053948060bb72408a9f38c6eb226"
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "sha256": "c2d3ae178c1b52c5714f67cbce14d9a0fbbda26b0d0a954de232cd6cdd794a1f"
+    },
+    {
+      "file": "packages/drivers/pacer/tsconfig.check.json",
+      "sha256": "85a1482a0febe0c2f40792f4153173d931d99b2ca4acdc5fe966c516ed7754a6"
+    },
+    {
+      "file": "packages/drivers/pacer/tsconfig.json",
+      "sha256": "7d39a615798c1690981aebd6e047b1f4e08b1f7b9da802269bfbd3b0a814011d"
+    },
+    {
+      "file": "packages/drivers/pacer/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/pacer/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured Pacer schema, authentication, session, report and batch tests use deterministic mocked HTTP service boundaries. No external PACER account or provider endpoint is used. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 26,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.54736328125, 1.3388671875, 1.64453125],
+    "loadAfter": [2.54736328125, 1.3388671875, 1.64453125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.01 avg60=0.39 avg300=0.17 total=821193253\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225805\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148758\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=867016019\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=758559406\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.01 avg60=0.39 avg300=0.17 total=821195312\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225805\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148758\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=867017557\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=758560691\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 26,
+    "skipped": 0
+  },
+  "interpretation": "All23before and26after configured tests pass on Node and Bun with zero skips and stable sources. All51original assertions and23titles remain. Four24-value fixed sample sets preserve seeds1001-1004. Three laws retain exact domains and floors with replay/shrinking controls. Mock HTTP witnesses prove deletion on interruption/defects, not actual PACER operation. Host load and pressure are recorded; these are observations, not causal speedup claims."
+}

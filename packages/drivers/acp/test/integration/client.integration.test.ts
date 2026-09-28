@@ -1,11 +1,11 @@
 import { Client as AcpClient, Errors as AcpError, Schema as AcpSchema } from "@beep/acp";
+import { it } from "@beep/test-runner";
 import { currentHostPlatform } from "@beep/utils/HostProcess";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, it } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
@@ -13,7 +13,6 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
-import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import { encodeJsonl, jsonRpcRequest, jsonRpcResponse, makeInMemoryStdio } from "../helpers.ts";
 
@@ -31,7 +30,7 @@ const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "../fixtures/acp-mock-peer.ts")
 );
 
-it.layer(NodeServices.layer)("effect-acp client", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp client", (it) => {
   const makeHandle = Effect.fn("AcpClientIntegrationTest.makeHandle")(function* (env?: Record<string, string>) {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const path = yield* Path.Path;
@@ -47,19 +46,16 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
     return yield* spawner.spawn(command);
   });
 
-  it.effect(
-    "initializes, prompts, receives updates, and handles permission requests",
-    Effect.fnUntraced(function* () {
-      const updates = yield* Ref.make<Array<unknown>>([]);
-      const elicitationCompletions = yield* Ref.make<Array<unknown>>([]);
-      const typedRequests = yield* Ref.make<Array<unknown>>([]);
-      const typedNotifications = yield* Ref.make<Array<unknown>>([]);
-      const handle = yield* makeHandle();
-      const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess({ handle });
-      const context = yield* Layer.buildWithScope(acpLayer, scope);
-
-      const ext = yield* Effect.gen(function* () {
+  it.layer(Layer.unwrap(Effect.map(makeHandle(), (handle) => AcpClient.layerChildProcess({ handle }))), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "initializes, prompts, receives updates, and handles permission requests",
+      Effect.fnUntraced(function* () {
+        const updates = yield* Ref.make<Array<unknown>>([]);
+        const elicitationCompletions = yield* Ref.make<Array<unknown>>([]);
+        const typedRequests = yield* Ref.make<Array<unknown>>([]);
+        const typedNotifications = yield* Ref.make<Array<unknown>>([]);
         const acp = yield* AcpClient.AcpClient;
 
         yield* acp.handleRequestPermission(() =>
@@ -96,6 +92,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
           Ref.update(typedNotifications, (current) => [...current, payload])
         );
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         const init = yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -107,6 +104,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         assert.equal(init.protocolVersion, 1);
 
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
@@ -117,13 +115,17 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
         });
         assert.equal(session.sessionId, "mock-session-1");
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         const prompt = yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
         assert.equal(prompt.stopReason, "end_turn");
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.notifications", state: "waiting" });
         const streamed = yield* Stream.runCollect(Stream.take(acp.raw.notifications, 2));
+        yield* Effect.logInfo("ACP test phase", { phase: "client.notifications", state: "completed" });
         assert.equal(streamed.length, 2);
         assert.equal(streamed[0]?._tag, "SessionUpdate");
         assert.equal(streamed[1]?._tag, "ElicitationComplete");
@@ -132,29 +134,29 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
         assert.deepEqual(yield* Ref.get(typedRequests), [{ message: "hello from typed request" }]);
         assert.deepEqual(yield* Ref.get(typedNotifications), [{ count: 2 }]);
 
-        return yield* acp.raw.request("x/echo", {
+        const ext = yield* acp.raw.request("x/echo", {
           hello: "world",
         });
-      }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
 
-      assert.deepEqual(ext, {
-        echoedMethod: "x/echo",
-        echoedParams: {
-          hello: "world",
-        },
-      });
-    })
-  );
+        assert.deepEqual(ext, {
+          echoedMethod: "x/echo",
+          echoedParams: {
+            hello: "world",
+          },
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "returns formatted invalid params when a typed extension request payload is wrong",
-    Effect.fnUntraced(function* () {
-      const handle = yield* makeHandle({ ACP_MOCK_BAD_TYPED_REQUEST: "1" });
-      const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess({ handle });
-      const context = yield* Layer.buildWithScope(acpLayer, scope);
-
-      const result = yield* Effect.gen(function* () {
+  it.layer(
+    Layer.unwrap(
+      Effect.map(makeHandle({ ACP_MOCK_BAD_TYPED_REQUEST: "1" }), (handle) => AcpClient.layerChildProcess({ handle }))
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "returns formatted invalid params when a typed extension request payload is wrong",
+      Effect.fnUntraced(function* () {
         const acp = yield* AcpClient.AcpClient;
 
         yield* acp.handleRequestPermission(() =>
@@ -177,6 +179,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
         );
         yield* acp.handleExtRequest("x/typed_request", TypedRequestPayload, () => Effect.succeed({ ok: true }));
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -188,6 +191,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
 
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
@@ -196,36 +200,35 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
           mcpServers: [],
         });
 
-        return yield* Effect.exit(
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
+        const result = yield* Effect.exit(
           acp.agent.prompt({
             sessionId: session.sessionId,
             prompt: [{ type: "text", text: "hello" }],
           })
         );
-      }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
-      if (result._tag !== "Failure") {
-        assert.fail("Expected prompt to fail for invalid typed extension payload");
-      }
-      const rendered = Cause.pretty(result.cause);
-      assert.include(rendered, "Invalid x/typed_request payload:");
-      assert.include(rendered, "Expected string");
-    })
-  );
+        if (result._tag !== "Failure") {
+          assert.fail("Expected prompt to fail for invalid typed extension payload");
+        }
+        const rendered = Cause.pretty(result.cause);
+        assert.include(rendered, "Invalid x/typed_request payload:");
+        assert.include(rendered, "Expected string");
+      })
+    );
+  });
 
-  it.effect(
-    "replays buffered notifications to handlers registered after they arrive",
-    Effect.fnUntraced(function* () {
-      const updates = yield* Ref.make<Array<unknown>>([]);
-      const elicitationCompletions = yield* Ref.make<Array<unknown>>([]);
-      const typedRequests = yield* Ref.make<Array<unknown>>([]);
-      const typedNotifications = yield* Ref.make<Array<unknown>>([]);
-      const handle = yield* makeHandle();
-      const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess({ handle });
-      const context = yield* Layer.buildWithScope(acpLayer, scope);
-
-      yield* Effect.gen(function* () {
+  it.layer(Layer.unwrap(Effect.map(makeHandle(), (handle) => AcpClient.layerChildProcess({ handle }))), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "replays buffered notifications to handlers registered after they arrive",
+      Effect.fnUntraced(function* () {
+        const updates = yield* Ref.make<Array<unknown>>([]);
+        const elicitationCompletions = yield* Ref.make<Array<unknown>>([]);
+        const typedRequests = yield* Ref.make<Array<unknown>>([]);
+        const typedNotifications = yield* Ref.make<Array<unknown>>([]);
         const acp = yield* AcpClient.AcpClient;
 
         yield* acp.handleRequestPermission(() =>
@@ -258,6 +261,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
           Ref.update(typedNotifications, (current) => [...current, payload])
         );
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -269,16 +273,19 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
         const session = yield* acp.agent.createSession({
           cwd: process.cwd(),
           mcpServers: [],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
         yield* acp.handleSessionUpdate((notification) => Ref.update(updates, (current) => [...current, notification]));
         yield* acp.handleElicitationComplete((notification) =>
@@ -289,20 +296,17 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
         assert.equal((yield* Ref.get(elicitationCompletions)).length, 1);
         assert.deepEqual(yield* Ref.get(typedRequests), [{ message: "hello from typed request" }]);
         assert.deepEqual(yield* Ref.get(typedNotifications), [{ count: 2 }]);
-      }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
-    })
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "continues dispatching session updates after one handler fails",
-    Effect.fnUntraced(function* () {
-      const successfulHandlers = yield* Ref.make(0);
-      const handle = yield* makeHandle();
-      const scope = yield* Scope.make();
-      const acpLayer = AcpClient.layerChildProcess({ handle });
-      const context = yield* Layer.buildWithScope(acpLayer, scope);
-
-      yield* Effect.gen(function* () {
+  it.layer(Layer.unwrap(Effect.map(makeHandle(), (handle) => AcpClient.layerChildProcess({ handle }))), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "continues dispatching session updates after one handler fails",
+      Effect.fnUntraced(function* () {
+        const successfulHandlers = yield* Ref.make(0);
         const acp = yield* AcpClient.AcpClient;
 
         yield* acp.handleRequestPermission(() =>
@@ -330,6 +334,7 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
         );
         yield* acp.handleSessionUpdate(() => Ref.update(successfulHandlers, (count) => count + 1));
 
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "waiting" });
         yield* acp.agent.initialize({
           protocolVersion: 1,
           clientCapabilities: {
@@ -341,28 +346,30 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
             version: "0.0.0",
           },
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.initialize", state: "completed" });
         yield* acp.agent.authenticate({ methodId: "cursor_login" });
 
         const session = yield* acp.agent.createSession({
           cwd: process.cwd(),
           mcpServers: [],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "waiting" });
         yield* acp.agent.prompt({
           sessionId: session.sessionId,
           prompt: [{ type: "text", text: "hello" }],
         });
+        yield* Effect.logInfo("ACP test phase", { phase: "client.prompt", state: "completed" });
 
         assert.equal(yield* Ref.get(successfulHandlers), 1);
-      }).pipe(Effect.provide(context), Effect.ensuring(Scope.close(scope, Exit.void)));
-    })
-  );
+      })
+    );
+  });
 
   it.effect(
     "uses distinct ids for RPC calls and extension requests",
     Effect.fnUntraced(function* () {
       const { stdio, input, output } = yield* makeInMemoryStdio();
-      const scope = yield* Scope.make();
-      const acp = yield* AcpClient.make(stdio).pipe(Effect.provideService(Scope.Scope, scope));
+      const acp = yield* AcpClient.make(stdio);
 
       const initializeFiber = yield* acp.agent
         .initialize({
@@ -424,7 +431,6 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
 
       yield* Fiber.join(initializeFiber);
       assert.deepEqual(yield* Fiber.join(extFiber), { ok: true });
-      yield* Scope.close(scope, Exit.void);
     })
   );
 });

@@ -5,8 +5,10 @@ import {
   OpenAiLanguageModelOptions,
 } from "@beep/openai";
 import { PosInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
@@ -52,11 +54,23 @@ describe("@beep/openai", () => {
   });
 
   it("rejects empty model identifiers and non-positive embedding dimensions", () => {
-    expect(Result.isFailure(decodeLanguageModelOptions({ model: "" }))).toBe(true);
-    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: 1536, model: "" }))).toBe(true);
-    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: 0 }))).toBe(true);
-    expect(Result.isFailure(decodeEmbeddingModelOptions({ dimensions: -1 }))).toBe(true);
-    expect(Result.isFailure(decodeEmbeddingModelOptions({}))).toBe(true);
+    assertFailure(
+      decodeLanguageModelOptions({ model: "" }).pipe(Result.mapError((error) => error._tag)),
+      "SchemaError"
+    );
+    assertFailure(
+      decodeEmbeddingModelOptions({ dimensions: 1536, model: "" }).pipe(Result.mapError((error) => error._tag)),
+      "SchemaError"
+    );
+    assertFailure(
+      decodeEmbeddingModelOptions({ dimensions: 0 }).pipe(Result.mapError((error) => error._tag)),
+      "SchemaError"
+    );
+    assertFailure(
+      decodeEmbeddingModelOptions({ dimensions: -1 }).pipe(Result.mapError((error) => error._tag)),
+      "SchemaError"
+    );
+    assertFailure(decodeEmbeddingModelOptions({}).pipe(Result.mapError((error) => error._tag)), "SchemaError");
   });
 
   it.prop(

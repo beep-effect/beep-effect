@@ -1,0 +1,302 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 22,
+  "numPassedTests": 22,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790400308022,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "@beep/provenance tagged-error declared equivalence"
+          ],
+          "fullName": "@beep/provenance tagged-error declared equivalence compares verified text-anchor errors by declared fields",
+          "status": "passed",
+          "title": "compares verified text-anchor errors by declared fields",
+          "duration": 2.5594710000000305,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790400309296,
+      "endTime": 1790400309298.5596,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor exposes TextAnchor from the public subpath",
+          "status": "passed",
+          "title": "exposes TextAnchor from the public subpath",
+          "duration": 7.854716000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor decodes a well-formed anchor and re-slices the source text to the quote",
+          "status": "passed",
+          "title": "decodes a well-formed anchor and re-slices the source text to the quote",
+          "duration": 7.496163999999908,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor flags an out-of-order anchor via isWellOrdered",
+          "status": "passed",
+          "title": "flags an out-of-order anchor via isWellOrdered",
+          "duration": 7.4502930000001015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor recognizes zero, end, BMP, and whole-pair UTF-16 boundaries",
+          "status": "passed",
+          "title": "recognizes zero, end, BMP, and whole-pair UTF-16 boundaries",
+          "duration": 7.441700000000083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor rejects empty quotes and inconsistent widths at construction and decode",
+          "status": "passed",
+          "title": "rejects empty quotes and inconsistent widths at construction and decode",
+          "duration": 7.432354999999916,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor round-trips schema-derived anchors through the encoded wire shape",
+          "status": "passed",
+          "title": "round-trips schema-derived anchors through the encoded wire shape",
+          "duration": 8.627715999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance TextAnchor"],
+          "fullName": "@beep/provenance TextAnchor colocated well-ordered predicate agrees with ordered offset pairs",
+          "status": "passed",
+          "title": "colocated well-ordered predicate agrees with ordered offset pairs",
+          "duration": 8.59382400000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790400309317,
+      "endTime": 1790400309333.6277,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/provenance/test/TextAnchor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor verifies a source manifestation independently of any anchor",
+          "status": "passed",
+          "title": "verifies a source manifestation independently of any anchor",
+          "duration": 12.750925999999936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor snapshots source authority before the asynchronous digest boundary",
+          "status": "passed",
+          "title": "snapshots source authority before the asynchronous digest boundary",
+          "duration": 36.609345000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor reuses one verified source proof across exact anchors",
+          "status": "passed",
+          "title": "reuses one verified source proof across exact anchors",
+          "duration": 12.4022980000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor rejects proofs constructed through recovered constructors",
+          "status": "passed",
+          "title": "rejects proofs constructed through recovered constructors",
+          "duration": 12.393755000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor binds an exact raw UTF-16 slice to its source identity",
+          "status": "passed",
+          "title": "binds an exact raw UTF-16 slice to its source identity",
+          "duration": 12.387165000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor fails cross-scope identities before considering them stale",
+          "status": "passed",
+          "title": "fails cross-scope identities before considering them stale",
+          "duration": 3.13111200000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor fails digest and extractor-version drift without rewriting the expected identity",
+          "status": "passed",
+          "title": "fails digest and extractor-version drift without rewriting the expected identity",
+          "duration": 3.0910200000000714,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor rejects raw source text whose digest differs from the resolved identity",
+          "status": "passed",
+          "title": "rejects raw source text whose digest differs from the resolved identity",
+          "duration": 3.079533000000083,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor rejects lone UTF-16 surrogates without conflating them with the replacement character",
+          "status": "passed",
+          "title": "rejects lone UTF-16 surrogates without conflating them with the replacement character",
+          "duration": 3.0730919999998605,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor sanitizes source-text digest failures",
+          "status": "passed",
+          "title": "sanitizes source-text digest failures",
+          "duration": 3.699867999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor rejects offsets that split a surrogate pair",
+          "status": "passed",
+          "title": "rejects offsets that split a surrogate pair",
+          "duration": 3.6721839999997883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor rejects a quote that differs from the exact raw slice",
+          "status": "passed",
+          "title": "rejects a quote that differs from the exact raw slice",
+          "duration": 3.6642530000001443,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor converts runtime proof to a round-trippable receipt without granting proof on decode",
+          "status": "passed",
+          "title": "converts runtime proof to a round-trippable receipt without granting proof on decode",
+          "duration": 3.6555389999998624,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/provenance VerifiedTextAnchor"],
+          "fullName": "@beep/provenance VerifiedTextAnchor derives constructive arbitrary source identities from the schema",
+          "status": "passed",
+          "title": "derives constructive arbitrary source identities from the schema",
+          "duration": 11.566110999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790400309323,
+      "endTime": 1790400309359.6094,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "rows": 57,
+  "statuses": {
+    "fixed": 44,
+    "exception": 3,
+    "open": 10
+  },
+  "historicalDetectorIdsRetained": 42,
+  "upstreamAttributedDetectorIds": 3,
+  "currentDetectorExceptions": 3,
+  "admittedFiles": 3,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7702,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 690,
+  "sourceHashes": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "sha256": "99f197124bb9a20bf8bbdc9fc9692b7a731c979925753ed2be4b3351a6595f3c"
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "sha256": "bbb2a60ed7ddee85ec5f7e73e6c73e150837cd0f9d0c4bf77131b64ff660f2d5"
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "sha256": "ef62ce777f8544e8de4d38c910ec07685794b7bd8536b4be3868388a47553ca1"
+    }
+  ]
+}

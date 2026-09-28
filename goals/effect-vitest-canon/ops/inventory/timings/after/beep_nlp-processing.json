@@ -1,0 +1,106 @@
+{
+  "package": "@beep/nlp-processing",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T10:39:00.910000+00:00",
+  "totalMs": 4058.4716796875,
+  "testCount": 84,
+  "files": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
+      "ms": 3.4716796875,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "ms": 25.758056640625,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
+      "ms": 20.445556640625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "ms": 32.99658203125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "ms": 28.842041015625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "ms": 64.53125,
+      "tests": 23
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
+      "ms": 5.95458984375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
+      "ms": 16.00390625,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "ms": 90.963134765625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool success schemas round-trips schema-derived success payloads",
+      "ms": 89.96315000000004
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool shared schemas round-trips schema-derived shared result models",
+      "ms": 86.03796499999999
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "OperationCost round-trips schema-derived operation costs through encode/decode",
+      "ms": 64.14937499999996
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws round-trips schema-derived metrics through encode/decode",
+      "ms": 63.502498999999716
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionId round-trips schema-derived ids through encode/decode",
+      "ms": 37.531160999999884
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction round-trips schema-derived annotated nodes",
+      "ms": 32.996677999999974
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "testName": "EffectGraph construction round-trips schema-derived node ids and metadata",
+      "ms": 28.842119999999795
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
+      "ms": 26.924074999999903
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies right identity: x ⊕ empty = x",
+      "ms": 26.91440999999986
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies left identity: empty ⊕ x = x",
+      "ms": 26.889001000000007
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/database-drivers-drizzle-before-bun.json"
+  ],
+  "phase": "before",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/drizzle/package.json",
+      "sha256": "b125679ddd75e9953d7e4950b07be85674b0a59ac07bbc66f19084127089540f"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "sha256": "bf6e42ce0496312d20a27142fac4d507be77a85abe7cf5da4d28ffcc2e20f794"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+      "sha256": "ce67444a06b26e3c32f35c45912c09f9406b0bdd5e72b6bfd470dfc1d48e3637"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/index.ts",
+      "sha256": "3231b604692a16d7b0cdc7257528c2344dbdfab3ced9323768f9450f975fd222"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "sha256": "aa9585671ad975045b8773afd162ccccc262a42f56859f4b5ab35cf661adb4d8"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "sha256": "360e366a91095d26beb8cdc21f690826ad3cf7d9ef19d9aa40a8e8221a42f4b0"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "sha256": "258dd8d144ee6fd3260d0db14ef5f348dd35ae5cdf72221ba415254cf01dfb55"
+    }
+  ],
+  "loadBefore": [59.5673828125, 53.98583984375, 46.81591796875],
+  "pressureBefore": {
+    "cpu": "some avg10=7.35 avg60=9.41 avg300=7.99 total=2804227581\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.14 avg60=0.39 avg300=0.22 total=233585550\nfull avg10=0.09 avg60=0.29 avg300=0.15 total=203241057\n",
+    "io": "some avg10=6.60 avg60=5.08 avg300=3.67 total=1052165389\nfull avg10=4.06 avg60=2.95 avg300=2.14 total=711057016\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "BEEP_TEST_DATABASE_URL empty; BEEP_TEST_DATABASE_DRIVER=pglite-inprocess; no external database or container selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 10.49212321700179,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/drizzle/package.json",
+      "sha256": "b125679ddd75e9953d7e4950b07be85674b0a59ac07bbc66f19084127089540f"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "sha256": "bf6e42ce0496312d20a27142fac4d507be77a85abe7cf5da4d28ffcc2e20f794"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+      "sha256": "ce67444a06b26e3c32f35c45912c09f9406b0bdd5e72b6bfd470dfc1d48e3637"
+    },
+    {
+      "file": "packages/drivers/drizzle/src/index.ts",
+      "sha256": "3231b604692a16d7b0cdc7257528c2344dbdfab3ced9323768f9450f975fd222"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "sha256": "aa9585671ad975045b8773afd162ccccc262a42f56859f4b5ab35cf661adb4d8"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "sha256": "360e366a91095d26beb8cdc21f690826ad3cf7d9ef19d9aa40a8e8221a42f4b0"
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "sha256": "258dd8d144ee6fd3260d0db14ef5f348dd35ae5cdf72221ba415254cf01dfb55"
+    }
+  ],
+  "loadAfter": [60.07275390625, 54.26904296875, 46.98486328125],
+  "pressureAfter": {
+    "cpu": "some avg10=11.12 avg60=9.92 avg300=8.15 total=2805934358\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.05 avg60=0.33 avg300=0.21 total=233609970\nfull avg10=0.03 avg60=0.24 avg300=0.14 total=203246229\n",
+    "io": "some avg10=4.92 avg60=5.01 avg300=3.71 total=1052582407\nfull avg10=2.56 avg60=2.85 avg300=2.15 total=711263301\n"
+  },
+  "sourceStable": true
+}

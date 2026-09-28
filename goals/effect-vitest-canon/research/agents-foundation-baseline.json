@@ -1,0 +1,115 @@
+{
+  "admittedFiles": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "package": "@beep/agents-domain",
+      "sha256": "db3729c065d17fa607635abec7e5b09f39c8802e7fe5289740e9a89d6bbc21df",
+      "bytes": 16436,
+      "lines": 405,
+      "sourceHead": "7c1a9a5de050832a5b51dcf8bef0b645569ff16c"
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "package": "@beep/agents-domain",
+      "sha256": "8a6721383978fe2d6c27f735762e038bfb23a0d5f4aab5857bdd190271a8fdb0",
+      "bytes": 9210,
+      "lines": 234,
+      "sourceHead": "7c1a9a5de050832a5b51dcf8bef0b645569ff16c"
+    },
+    {
+      "file": "packages/agents/tables/test/ProviderInstanceTable.test.ts",
+      "package": "@beep/agents-tables",
+      "sha256": "f76a24d0d671de32186d7b9b8cef94428a5b32d04c5a7cbca8ccf4f0cbf5ba46",
+      "bytes": 7374,
+      "lines": 190,
+      "sourceHead": "7c1a9a5de050832a5b51dcf8bef0b645569ff16c"
+    }
+  ],
+  "baseline": [
+    {
+      "package": "@beep/agents-domain",
+      "runtime": "node",
+      "registered": 22,
+      "passed": 22,
+      "skipped": 0,
+      "wholeCommandSeconds": 5.976320638990728,
+      "sourceStable": true,
+      "loadBefore": [17.2880859375, 18.40625, 19.66796875],
+      "loadAfter": [17.82568359375, 18.49951171875, 19.69140625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.25 avg60=0.10 avg300=1.83 total=335884145\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.93 avg60=0.30 avg300=0.23 total=125322925\nfull avg10=0.93 avg60=0.30 avg300=0.19 total=121095427\n",
+        "io": "some avg10=0.02 avg60=0.19 avg300=0.19 total=734304390\nfull avg10=0.01 avg60=0.14 avg300=0.06 total=657906172\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.59 avg60=0.19 avg300=1.81 total=335966658\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.41 avg60=0.46 avg300=0.26 total=125487213\nfull avg10=1.41 avg60=0.46 avg300=0.22 total=121259069\n",
+        "io": "some avg10=0.01 avg60=0.17 avg300=0.18 total=734314595\nfull avg10=0.00 avg60=0.13 avg300=0.06 total=657912399\n"
+      }
+    },
+    {
+      "package": "@beep/agents-domain",
+      "runtime": "bun",
+      "registered": 22,
+      "passed": 22,
+      "skipped": 0,
+      "wholeCommandSeconds": 3.925391798999044,
+      "sourceStable": true,
+      "loadBefore": [17.82568359375, 18.49951171875, 19.69140625],
+      "loadAfter": [18.640625, 18.65771484375, 19.736328125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.59 avg60=0.19 avg300=1.81 total=335966671\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.41 avg60=0.46 avg300=0.26 total=125488222\nfull avg10=1.41 avg60=0.46 avg300=0.22 total=121260077\n",
+        "io": "some avg10=0.01 avg60=0.17 avg300=0.18 total=734314600\nfull avg10=0.00 avg60=0.13 avg300=0.06 total=657912401\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.75 avg60=0.24 avg300=1.80 total=336030863\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.75 avg60=0.60 avg300=0.29 total=125582836\nfull avg10=1.75 avg60=0.60 avg300=0.25 total=121354246\n",
+        "io": "some avg10=0.00 avg60=0.16 avg300=0.18 total=734324998\nfull avg10=0.00 avg60=0.12 avg300=0.06 total=657920836\n"
+      }
+    },
+    {
+      "package": "@beep/agents-tables",
+      "runtime": "node",
+      "registered": 6,
+      "passed": 6,
+      "skipped": 0,
+      "wholeCommandSeconds": 6.427816041003098,
+      "sourceStable": true,
+      "loadBefore": [18.640625, 18.65771484375, 19.736328125],
+      "loadAfter": [19.87060546875, 18.91259765625, 19.81298828125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.75 avg60=0.24 avg300=1.80 total=336030961\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.75 avg60=0.60 avg300=0.29 total=125583813\nfull avg10=1.75 avg60=0.60 avg300=0.25 total=121355212\n",
+        "io": "some avg10=0.00 avg60=0.16 avg300=0.18 total=734325071\nfull avg10=0.00 avg60=0.12 avg300=0.06 total=657920899\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=4.36 avg60=0.98 avg300=1.91 total=336550733\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.56 avg60=0.71 avg300=0.33 total=125723486\nfull avg10=1.56 avg60=0.71 avg300=0.29 total=121490513\n",
+        "io": "some avg10=0.29 avg60=0.20 avg300=0.19 total=734403101\nfull avg10=0.00 avg60=0.10 avg300=0.05 total=657944826\n"
+      }
+    },
+    {
+      "package": "@beep/agents-tables",
+      "runtime": "bun",
+      "registered": 6,
+      "passed": 6,
+      "skipped": 0,
+      "wholeCommandSeconds": 2.768987174000358,
+      "sourceStable": true,
+      "loadBefore": [19.87060546875, 18.91259765625, 19.81298828125],
+      "loadAfter": [19.720703125, 18.89697265625, 19.80322265625],
+      "pressureBefore": {
+        "cpu": "some avg10=4.36 avg60=0.98 avg300=1.91 total=336551009\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.56 avg60=0.71 avg300=0.33 total=125723487\nfull avg10=1.56 avg60=0.71 avg300=0.29 total=121490514\n",
+        "io": "some avg10=0.29 avg60=0.20 avg300=0.19 total=734403571\nfull avg10=0.00 avg60=0.10 avg300=0.05 total=657945213\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=3.57 avg60=0.95 avg300=1.90 total=336569218\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=1.27 avg60=0.68 avg300=0.32 total=125747043\nfull avg10=1.27 avg60=0.68 avg300=0.29 total=121513592\n",
+        "io": "some avg10=0.24 avg60=0.19 avg300=0.19 total=734410337\nfull avg10=0.00 avg60=0.10 avg300=0.05 total=657950165\n"
+      }
+    }
+  ],
+  "upstreamAttribution": "All three files changed after frozen census: Effect Arbitrary relocation, Effect/Result codec migration, table converter Result API, native50-run converter property and typed failure regression added upstream. Retain current source; do not restore frozen bodies."
+}

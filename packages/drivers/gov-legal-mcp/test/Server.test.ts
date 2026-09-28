@@ -41,10 +41,11 @@ import {
 import { Govinfo, GovinfoConfigInput, GovinfoError, GovinfoErrorOptions, Search } from "@beep/govinfo";
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -314,7 +315,7 @@ const assertCollision = (
 };
 
 describe("gov-legal MCP frozen contract", () => {
-  layer(buildEcfrOnlyLayer())("with only the keyless eCFR source composed", (it) => {
+  it.layer(buildEcfrOnlyLayer())("with only the keyless eCFR source composed", (it) => {
     it.effect(
       "mounts and calls all three eCFR tools without credentials",
       Effect.fnUntraced(function* () {
@@ -338,7 +339,7 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
-  layer(buildFixtureLayer({}))("without the GovInfo hard-gate key", (it) => {
+  it.layer(buildFixtureLayer({}))("without the GovInfo hard-gate key", (it) => {
     it.effect(
       "vanishes govinfo_search from listing and direct lookup",
       Effect.fnUntraced(function* () {
@@ -360,7 +361,7 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
-  layer(buildFixtureLayer({ GOVINFO_API_KEY: "fixture-secret" }))("with the GovInfo hard-gate key", (it) => {
+  it.layer(buildFixtureLayer({ GOVINFO_API_KEY: "fixture-secret" }))("with the GovInfo hard-gate key", (it) => {
     it.effect(
       "mounts govinfo_search and decodes its fixture result as Search.Success",
       Effect.fnUntraced(function* () {
@@ -488,7 +489,7 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
-  layer(buildFailingGovinfoLayer())("when GovInfo returns a raw transport failure", (it) => {
+  it.layer(buildFailingGovinfoLayer())("when GovInfo returns a raw transport failure", (it) => {
     it.effect(
       "returns only the package-local sanitized failure envelope",
       Effect.fnUntraced(function* () {
@@ -632,44 +633,38 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 describe("tool-name report determinism", () => {
-  it.effect(
+  it.effect.prop(
     "projects arbitrary candidates deterministically under the frozen cap and digest contract",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([ToolNameCandidateArbitrary]),
-        ([candidate]) =>
-          withToolNameCrypto(
-            Effect.gen(function* () {
-              expectRoundTrip(ToolNameCandidate, candidate);
+    [ToolNameCandidateArbitrary],
+    ([candidate]) =>
+      withToolNameCrypto(
+        Effect.gen(function* () {
+          expectRoundTrip(ToolNameCandidate, candidate);
 
-              const first = yield* Effect.result(projectToolNameCandidate(candidate));
-              const second = yield* Effect.result(projectToolNameCandidate(candidate));
-              assert.deepEqual(second, first);
-              if (Result.isFailure(first)) {
-                return true;
-              }
+          const first = yield* Effect.result(projectToolNameCandidate(candidate));
+          const second = yield* Effect.result(projectToolNameCandidate(candidate));
+          assert.deepEqual(second, first);
+          if (Result.isFailure(first)) {
+            return true;
+          }
 
-              const row = first.success;
-              expectRoundTrip(ToolNameCollisionRow, row);
-              assert.isAtMost(Str.length(row.finalWireName), 64);
-              if (row.truncated) {
-                assert.strictEqual(Str.length(row.finalWireName), 64);
-                assert.isTrue(P.isNotNull(row.digest));
-              } else {
-                assert.strictEqual(row.finalWireName, row.normalized);
-                assert.isTrue(P.isNull(row.digest));
-              }
-              return true;
-            })
-          ),
-        fcRuns(50)
-      );
-
-      assert.strictEqual(result._tag, "Passed");
-    })
+          const row = first.success;
+          expectRoundTrip(ToolNameCollisionRow, row);
+          assert.isAtMost(Str.length(row.finalWireName), 64);
+          if (row.truncated) {
+            assert.strictEqual(Str.length(row.finalWireName), 64);
+            assert.isTrue(P.isNotNull(row.digest));
+          } else {
+            assert.strictEqual(row.finalWireName, row.normalized);
+            assert.isTrue(P.isNull(row.digest));
+          }
+          return true;
+        })
+      ),
+    { arbitrary: fcRuns(50) }
   );
 
-  layer(NodeServices.layer)("with platform filesystem services", (it) => {
+  it.layer(NodeServices.layer)("with platform filesystem services", (it) => {
     it.effect(
       "renders identical temporary bytes matching the checked-in sorted artifact",
       Effect.fnUntraced(function* () {

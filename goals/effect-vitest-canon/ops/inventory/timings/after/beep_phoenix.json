@@ -1,0 +1,71 @@
+{
+  "package": "@beep/phoenix",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T04:50:07.351000+00:00",
+  "totalMs": 3826.525390625,
+  "testCount": 30,
+  "files": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "ms": 1.423583984375,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "ms": 31.525390625,
+      "tests": 28
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix keeps Phoenix config encoded shape stable while normalizing base URLs",
+      "ms": 12.057580000000144
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix delegates dataset, prompt, and doctor operations through the Effect service",
+      "ms": 12.005048999999872
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix writes annotations through the injected SDK adapter",
+      "ms": 11.975233000000117
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix maps SDK promise failures into PhoenixError",
+      "ms": 11.966499999999996
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes PhoenixAnnotationInput",
+      "ms": 11.651906000000054
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix reads back dataset, prompt, and experiment summaries",
+      "ms": 7.086685000000216
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes PhoenixConfigInput",
+      "ms": 7.056757999999718
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes PhoenixDatasetAppendInput",
+      "ms": 7.046553000000131
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes PhoenixAnnotationValue",
+      "ms": 7.036117000000104
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes PhoenixAnnotationWriteResult",
+      "ms": 7.016185999999834
+    }
+  ]
+}

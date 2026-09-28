@@ -1,0 +1,136 @@
+{
+  "package": "@beep/semantica",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:56:30.752000+00:00",
+  "totalMs": 12247.96240234375,
+  "testCount": 131,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/App.test.tsx",
+      "ms": 51.9892578125,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "ms": 154.72119140625,
+      "tests": 13
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "ms": 2799.928466796875,
+      "tests": 2
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "ms": 33.78955078125,
+      "tests": 8
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "ms": 20.14697265625,
+      "tests": 5
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "ms": 37.945556640625,
+      "tests": 10
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "ms": 55.35302734375,
+      "tests": 10
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "ms": 102.902587890625,
+      "tests": 13
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "ms": 23.25390625,
+      "tests": 5
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "ms": 1515.271728515625,
+      "tests": 2
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "ms": 54.88427734375,
+      "tests": 4
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "ms": 4.83642578125,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "ms": 453.71923828125,
+      "tests": 18
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "ms": 6944.96240234375,
+      "tests": 3
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "ms": 42.038818359375,
+      "tests": 36
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "testName": "C2 declarative reasoner recovers projection-relevant state committed before SIGKILL",
+      "ms": 6943.962302
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "testName": "C0 F1 live-to-replay slice runs real F1-only sources without a corpus root and replays to an equal report digest",
+      "ms": 2798.9285630000004
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "testName": "C0 ledger is idempotent for byte-identical content-addressed rows",
+      "ms": 1515.271745
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "testName": "C0 ledger rejects a reused primary key whose canonical payload digest differs",
+      "ms": 1514.6783210000003
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "testName": "C2 declarative reasoner matches every committed conclusion and bounded restricted EYE proof",
+      "ms": 851.7676369999999
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "testName": "C0 provider cache and language-model boundary is write-once, caches misses, replays hits, and keeps offline misses typed",
+      "ms": 453.71912299999985
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services chunks every parsed F1 text with exact global UTF-16 anchors",
+      "ms": 151.72113999999965
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services matches all nine declared parse outcomes and verifies every parsed anchor",
+      "ms": 150.14328899999964
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services acquires ParserRetryLive and preserves both F1 PDF outcomes",
+      "ms": 112.35415999999987
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "testName": "C0 gold proposer removes gold.json when a complete set is followed by a partial rerun",
+      "ms": 93.42665899999974
+    }
+  ]
+}

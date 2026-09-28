@@ -27,7 +27,7 @@
       "path": "../../../packages/tooling/library/qa-capture/tsconfig.json"
     },
     {
-      "path": "../../../packages/tooling/test-kit/test-utils/tsconfig.json"
+      "path": "../../../packages/tooling/test-kit/test-runner/tsconfig.json"
     }
   ],
   "compilerOptions": {

@@ -1,0 +1,81 @@
+{
+  "package": "@beep/epistemic-ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:16:12.673000+00:00",
+  "totalMs": 6241.954345703125,
+  "testCount": 19,
+  "files": [
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "ms": 71.19775390625,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
+      "ms": 12.861328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "ms": 459.954345703125,
+      "tests": 11
+    },
+    {
+      "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
+      "ms": 13.34619140625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView renders symmetric exact beliefs, persisted proposals, and verified source text",
+      "ms": 119.7400689999995
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView forwards controlled filters, selections, tabs, review draft, and confirmation",
+      "ms": 81.4786210000002
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "testName": "ClaimEvidenceReviewPanel never presents extraction confidence as human approval",
+      "ms": 69.920752
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "testName": "ClaimEvidenceReviewPanel disables approval while the host checks evidence and displays its error",
+      "ms": 69.6664809999993
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "testName": "ClaimEvidenceReviewPanel shows the current human receipt and prevents duplicate approval",
+      "ms": 69.65836799999943
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "testName": "ClaimEvidenceReviewPanel shows the exact evidence and keeps verification separate from human approval",
+      "ms": 69.65347999999994
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "testName": "ClaimEvidenceReviewPanel retains a previous approval after a changed basis and allows another review",
+      "ms": 69.65129700000034
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView makes loading, empty, stale, failure, and resolved states explicit",
+      "ms": 60.868962999999894
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView blocks review reasons over the persisted schema limit",
+      "ms": 47.75146399999994
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView treats a successful review as authoritative at or after its resolution time",
+      "ms": 40.078817999999956
+    }
+  ]
+}

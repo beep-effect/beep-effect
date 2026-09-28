@@ -1,0 +1,181 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 12,
+  "numPassedTests": 12,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790409505247,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service keeps encoded schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded schema wire shapes byte-identical",
+          "duration": 47.16153000000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service round-trips schema-derived m365 models through their encoded shape",
+          "status": "passed",
+          "title": "round-trips schema-derived m365 models through their encoded shape",
+          "duration": 47.46812099999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service decodes Graph fixtures for each read verb and sends bearer auth to Graph",
+          "status": "passed",
+          "title": "decodes Graph fixtures for each read verb and sends bearer auth to Graph",
+          "duration": 49.920296999999664,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service preserves auth failures before HTTP execution",
+          "status": "passed",
+          "title": "preserves auth failures before HTTP execution",
+          "duration": 48.928861000000325,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service rejects untrusted deltaLink values before sending signed continuation requests",
+          "status": "passed",
+          "title": "rejects untrusted deltaLink values before sending signed continuation requests",
+          "duration": 49.29150899999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service rejects path-segment injection in Graph identifier request fields before HTTP",
+          "status": "passed",
+          "title": "rejects path-segment injection in Graph identifier request fields before HTTP",
+          "duration": 6.8639469999998255,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service downloads file content from the preauthenticated URL without forwarding Authorization",
+          "status": "passed",
+          "title": "downloads file content from the preauthenticated URL without forwarding Authorization",
+          "duration": 6.46057699999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service skips protected/encrypted items by extension without fetching content",
+          "status": "passed",
+          "title": "skips protected/encrypted items by extension without fetching content",
+          "duration": 6.664230000000316,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service maps Retry-After throttles to typed driver errors",
+          "status": "passed",
+          "title": "maps Retry-After throttles to typed driver errors",
+          "duration": 6.628005000000485,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service retries throttled requests after Retry-After within the configured budget",
+          "status": "passed",
+          "title": "retries throttled requests after Retry-After within the configured budget",
+          "duration": 6.266588000000411,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/m365 service"],
+          "fullName": "@beep/m365 service retries throttled requests with a default delay when Retry-After is absent",
+          "status": "passed",
+          "title": "retries throttled requests with a default delay when Retry-After is absent",
+          "duration": 2.3551159999997253,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409511025,
+      "endTime": 1790409511083.3552,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/m365/test/M365.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/m365 live integration (M365_*)"],
+          "fullName": "@beep/m365 live integration (M365_*) skips live Graph calls when required M365_* env or token cache settings are absent",
+          "status": "passed",
+          "title": "skips live Graph calls when required M365_* env or token cache settings are absent",
+          "duration": 0.7325279999995473,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409510982,
+      "endTime": 1790409510982.7324,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/m365/test/integration/M365.live.test.ts"
+    }
+  ]
+}

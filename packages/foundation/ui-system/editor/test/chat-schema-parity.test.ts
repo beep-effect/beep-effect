@@ -14,8 +14,11 @@ import {
   SlashItem,
   SlashItems,
 } from "@beep/editor/chat/config";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -82,82 +85,67 @@ describe("@beep/editor schema crispening parity", () => {
     })
   );
 
-  it.effect("round-trips pure chat schemas with schema-derived arbitraries", () =>
-    Effect.gen(function* () {
-      const sendOn = yield* Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(SendOn)]), ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeSendOn(value);
+  it.effect.prop(
+    "round-trips pure chat schemas with schema-derived arbitraries",
+    [
+      Arbitrary.schema(SendOn),
+      Arbitrary.schema(ImageAttachmentMimeType),
+      Arbitrary.schema(ComposerFeatures),
+      Arbitrary.schema(AttachmentRejection),
+    ],
+    ([sendOn, mimeTypes, features, rejections]) =>
+      Effect.gen(function* () {
+        {
+          const encoded = yield* encodeSendOn(sendOn);
           const decoded = yield* decodeSendOn(encoded);
-          expect(sendOnEquivalence(decoded, value)).toBe(true);
-
-          return true;
-        })
-      );
-      expect(sendOn._tag).toBe("Passed");
-      const mimeTypes = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(ImageAttachmentMimeType)]),
-        ([value]) =>
-          Effect.gen(function* () {
-            const encoded = yield* encodeImageAttachmentMimeType(value);
-            const decoded = yield* decodeImageAttachmentMimeType(encoded);
-            expect(imageAttachmentMimeTypeEquivalence(decoded, value)).toBe(true);
-
-            return true;
-          })
-      );
-      expect(mimeTypes._tag).toBe("Passed");
-      const features = yield* Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(ComposerFeatures)]), ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeComposerFeatures(value);
+          pipe(sendOnEquivalence(decoded, sendOn), assertTrue);
+        }
+        {
+          const encoded = yield* encodeImageAttachmentMimeType(mimeTypes);
+          const decoded = yield* decodeImageAttachmentMimeType(encoded);
+          pipe(imageAttachmentMimeTypeEquivalence(decoded, mimeTypes), assertTrue);
+        }
+        {
+          const encoded = yield* encodeComposerFeatures(features);
           const decoded = yield* decodeComposerFeatures(encoded);
-          expect(composerFeaturesEquivalence(decoded, value)).toBe(true);
-
-          return true;
-        })
-      );
-      expect(features._tag).toBe("Passed");
-      const rejections = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(AttachmentRejection)]),
-        ([value]) =>
-          Effect.gen(function* () {
-            const encoded = yield* encodeAttachmentRejection(value);
-            const decoded = yield* decodeAttachmentRejection(encoded);
-            expect(attachmentRejectionEquivalence(decoded, value)).toBe(true);
-
-            return true;
-          })
-      );
-      expect(rejections._tag).toBe("Passed");
-    })
+          pipe(composerFeaturesEquivalence(decoded, features), assertTrue);
+        }
+        {
+          const encoded = yield* encodeAttachmentRejection(rejections);
+          const decoded = yield* decodeAttachmentRejection(encoded);
+          pipe(attachmentRejectionEquivalence(decoded, rejections), assertTrue);
+        }
+      }),
+    { arbitrary: fcRuns(100) }
   );
 
   it("rejects empty menu identity and display fields at the schema boundary", () => {
-    expect(
-      Result.isFailure(
-        decodeSlashItemResult({
-          key: "",
-          label: "Heading",
-          onSelect: () => undefined,
-        })
-      )
-    ).toBe(true);
-    expect(Result.isFailure(decodeMentionOptionResult({ id: "", label: "Ada" }))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeSlashItemsResult([
-          { key: "paragraph", label: "Paragraph", onSelect: () => undefined },
-          { key: "", label: "Broken", onSelect: () => undefined },
-        ])
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeMentionOptionsResult([
-          { id: "ada", label: "Ada" },
-          { id: "", label: "Broken" },
-        ])
-      )
-    ).toBe(true);
+    pipe(
+      decodeSlashItemResult({
+        key: "",
+        label: "Heading",
+        onSelect: () => undefined,
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(decodeMentionOptionResult({ id: "", label: "Ada" }), Result.isFailure, assertTrue);
+    pipe(
+      decodeSlashItemsResult([
+        { key: "paragraph", label: "Paragraph", onSelect: () => undefined },
+        { key: "", label: "Broken", onSelect: () => undefined },
+      ]),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeMentionOptionsResult([
+        { id: "ada", label: "Ada" },
+        { id: "", label: "Broken" },
+      ]),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("rejects duplicate collection identities at their exact field paths", () => {
@@ -170,8 +158,8 @@ describe("@beep/editor schema crispening parity", () => {
       { id: "same", label: "Second" },
     ]);
 
-    expect(Result.isFailure(duplicateSlashItems)).toBe(true);
-    expect(Result.isFailure(duplicateMentions)).toBe(true);
+    pipe(duplicateSlashItems, Result.isFailure, assertTrue);
+    pipe(duplicateMentions, Result.isFailure, assertTrue);
     if (Result.isFailure(duplicateSlashItems)) {
       expect(String(duplicateSlashItems.failure)).toContain('at [1]["key"]');
       expect(String(duplicateSlashItems.failure)).toContain("Duplicate slash-command key");

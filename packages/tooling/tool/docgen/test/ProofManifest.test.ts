@@ -2,9 +2,11 @@ import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
 import * as ProofManifest from "@beep/repo-docgen/ProofManifest";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { expect, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, FileSystem, Layer, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -54,7 +56,7 @@ const makeFixturePackage = Effect.fn("makeFixturePackage")(function* () {
   return packagePath;
 });
 
-layer(testLayer)("ProofManifest", (it) => {
+it.layer(testLayer)("ProofManifest", (it) => {
   it.effect("writes a manifest whose fingerprint verifies as current", () =>
     Effect.gen(function* () {
       const packagePath = yield* makeFixturePackage();
@@ -175,7 +177,7 @@ layer(testLayer)("ProofManifest", (it) => {
         Effect.exit
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(isDocgenError(failure)).toBe(true);

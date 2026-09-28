@@ -22,11 +22,13 @@ import {
   planWindows,
   videoSecondsToEpochMs,
 } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { ActionEvent, ExtractionPlan } from "@beep/qa-capture";
 
@@ -139,7 +141,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(window?.priority).toBe("P1");
     expect(window?.startEpochMs).toBe(T0 - 100);
     expect(window?.endEpochMs).toBe(T0 + 1000 + 300);
-    expect(O.isSome(window?.gif ?? O.none())).toBe(true);
+    pipe(window?.gif ?? O.none(), O.isSome, assertTrue);
     expect(A.length(window?.frameTimesEpochMs ?? [])).toBe(3);
   });
 
@@ -190,7 +192,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(windows)).toBe(1);
     expect(windows[0]?.ruleKind).toBe("click");
     expect(windows[0]?.priority).toBe("P2");
-    expect(O.isNone(windows[0]?.gif ?? O.none())).toBe(true);
+    assertNone(windows[0]?.gif ?? O.none());
   });
 
   it("ignores hovers dwelling under the rule threshold", () => {
@@ -204,88 +206,61 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(windows[0]?.frameTimesEpochMs).toEqual([T0 - 50, T0 + 150, T0 + 400 + 50]);
   });
 
-  it("merge law: no two same-kind windows closer than the merge gap survive", () => {
-    const kinds = ["animation", "click", "drag", "hover", "marker", "transition"] as const;
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary]),
-          ([events]) => {
-            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-            A.forEach(kinds, (kind) => {
-              const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
-              A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
-                expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
-              });
-            });
+  it.prop(
+    "merge law: no two same-kind windows closer than the merge gap survive",
+    { events: eventsArbitrary },
+    ({ events }) => {
+      const kinds = ["animation", "click", "drag", "hover", "marker", "transition"] as const;
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+      A.forEach(kinds, (kind) => {
+        const windows = A.filter(merged.windows, (window) => window.ruleKind === kind);
+        A.forEach(A.zip(windows, A.drop(windows, 1)), ([previous, next]) => {
+          expect(next.startEpochMs - previous.endEpochMs).toBeGreaterThanOrEqual(OVERLAP_MERGE_GAP_MS);
+        });
+      });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("merge law: every absorbed window is recorded in dropped", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary]),
-          ([events]) => {
-            const planned = planWindows(events, defaultExtractionRules);
-            const merged = mergeOverlappingWindows(planned);
-            expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
-            A.forEach(merged.dropped, (dropped) => {
-              expect(dropped.reason).toBe("overlap-merged");
-            });
+  it.prop(
+    "merge law: every absorbed window is recorded in dropped",
+    { events: eventsArbitrary },
+    ({ events }) => {
+      const planned = planWindows(events, defaultExtractionRules);
+      const merged = mergeOverlappingWindows(planned);
+      expect(A.length(planned)).toBe(A.length(merged.windows) + A.length(merged.dropped));
+      A.forEach(merged.dropped, (dropped) => {
+        expect(dropped.reason).toBe("overlap-merged");
+      });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "budget law: the fitted estimate never exceeds the budget",
+    { events: eventsArbitrary, budget: budgetArbitrary },
+    ({ events, budget }) => {
+      const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
+      expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("budget law: the fitted estimate never exceeds the budget", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
-          ([events, budget]) => {
-            const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ budget, events }));
-            expect(plan.estimatedTotalBytes).toBeLessThanOrEqual(budget.maxTotalBytes);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("budget law: dropped windows are always recorded", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([eventsArbitrary, budgetArbitrary]),
-          ([events, budget]) => {
-            const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
-            const fitted = applyBudget(merged.windows, budget);
-            const droppedWindows = A.filter(
-              fitted.dropped,
-              (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
-            );
-            expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "budget law: dropped windows are always recorded",
+    { events: eventsArbitrary, budget: budgetArbitrary },
+    ({ events, budget }) => {
+      const merged = mergeOverlappingWindows(planWindows(events, defaultExtractionRules));
+      const fitted = applyBudget(merged.windows, budget);
+      const droppedWindows = A.filter(
+        fitted.dropped,
+        (dropped) => dropped.reason === "budget-priority-dropped" || dropped.reason === "budget-dropped"
+      );
+      expect(A.length(merged.windows)).toBe(A.length(fitted.windows) + A.length(droppedWindows));
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("materializes driver requests with clamped video timestamps plus one contact sheet", () => {
     const events = [
@@ -318,7 +293,7 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(strips)).toBe(A.length(plan.windows));
     A.forEach(strips, (strip) => {
       if (strip.kind === "extract-frames-at") {
-        expect(strip.request.maxWidth).toEqual(O.some(FRAME_MAX_WIDTH));
+        assertSome(strip.request.maxWidth, FRAME_MAX_WIDTH);
         A.forEach(strip.request.timestampsSeconds, (timestamp) => {
           expect(timestamp).toBeGreaterThanOrEqual(0);
           expect(timestamp).toBeLessThanOrEqual(10 - END_SEEK_GUARD_SECONDS);
@@ -327,6 +302,15 @@ describe("@beep/qa-capture extraction planner", () => {
     });
 
     const gifs = A.filter(requests, (request) => request.kind === "render-gif");
+    // Both the drag and marker rules request GIFs for this two-window fixture.
+    expect(A.map(gifs, (gif) => gif.request.outPath)).toEqual([
+      "/round/clips/drag-w0.gif",
+      "/round/clips/marker-w1.gif",
+    ]);
+    expect(A.map(gifs, (gif) => gif.request.videoPath)).toEqual([
+      "/round/video/capture.webm",
+      "/round/video/capture.webm",
+    ]);
     A.forEach(gifs, (gif) => {
       if (gif.kind === "render-gif") {
         expect(gif.request.durationSeconds).toBeGreaterThan(0);
@@ -363,6 +347,9 @@ describe("@beep/qa-capture extraction planner", () => {
     );
 
     const guarded = videoDurationSeconds - END_SEEK_GUARD_SECONDS;
+    const gifs = A.filter(requests, (request) => request.kind === "render-gif");
+    expect(A.map(gifs, (gif) => gif.request.outPath)).toEqual(["/round/clips/drag-w0.gif"]);
+    expect(A.map(gifs, (gif) => gif.request.videoPath)).toEqual(["/round/video/capture.webm"]);
     const strips = A.filter(requests, (request) => request.kind === "extract-frames-at");
     expect(A.length(strips)).toBeGreaterThan(0);
     A.forEach(strips, (strip) => {

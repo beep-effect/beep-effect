@@ -1,7 +1,9 @@
 import { URLStr } from "@beep/schema/URL";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { VENICE_API_URL, VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Layer, pipe, Redacted } from "effect";
 import { FetchHttpClient } from "effect/http";
 import * as O from "effect/Option";
@@ -27,13 +29,13 @@ pipe(
   O.match({
     onNone: () =>
       describe("VeniceAI live integration (AI_VENICE_API_KEY)", () => {
-        it("skips live API calls when AI_VENICE_API_KEY is absent", () => {
-          expect(O.isNone(apiKey)).toBe(true);
+        it.skip("skips live API calls when AI_VENICE_API_KEY is absent", () => {
+          assertNone(apiKey);
         });
       }),
     onSome: (key) =>
       describe.concurrent("VeniceAI live integration", () => {
-        layer(makeLiveLayer(key), { timeout: "30 seconds" })((it) => {
+        it.layer(makeLiveLayer(key), { timeout: "30 seconds" })((it) => {
           it.effect(
             "lists models through the live Venice API",
             Effect.fnUntraced(function* () {

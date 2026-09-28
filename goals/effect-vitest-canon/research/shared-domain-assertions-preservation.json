@@ -1,0 +1,115 @@
+{
+  "beforeSha": "12851319b74e44ce7745e9cd6b9191efa4e1f145",
+  "preservation": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "assertionReplacements": 29,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "1194b6879623816725812170f51b1d781a6d57f312a2323ae669d507af78ed96"
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "assertionReplacements": 7,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "9c40c3e9d7feea5c24cebd99ee8b28308e6d8d86243cb556e5930b32c953ccc8"
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "assertionReplacements": 28,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "3db61693d1cf8808c3f75fea4feef4810f2ff61ccf9ca307cdb9c5e7a84060de"
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "assertionReplacements": 3,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "433765d07897657cbc19ca18b725572a9df7dc0b2fff9e82b5bcdaacf25a8d50"
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "assertionReplacements": 18,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "de17cb737ec945e55c694ab8a9630863f6cb5a4ce75ba5cd909233f4a888f0a1"
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "assertionReplacements": 13,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "d0077ff6457c7cec9eb9b7770770cd380cebd8e0d5245749fcd8240d142f1c7a"
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "assertionReplacements": 0,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da"
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "assertionReplacements": 4,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "517d8603e77ba4d367214c6ad6c20e79f6c3476d3bc2cf3afda3aa57bf048fa8"
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "assertionReplacements": 2,
+      "bodyMatchesOnlyReviewedReplacements": true,
+      "afterSha": "3eb9e84e7ec6835940b338ea28e598d9671dff51d4bd6d45e7d06cc65a08a96d"
+    }
+  ],
+  "replacementCounts": {
+    "assertTrue": 64,
+    "assertFalse": 30,
+    "assertNone": 10
+  },
+  "equivalentPipeForms": 9,
+  "packageAuditSeconds": 6.6,
+  "docgenSeconds": 3.9,
+  "runtimes": [
+    {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "wholeCommandSeconds": 3.770975637999072,
+      "exit": 0,
+      "sourceStable": true,
+      "loadBefore": [6.15380859375, 6.208984375, 5.64013671875],
+      "loadAfter": [6.9423828125, 6.37158203125, 5.69580078125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.00 avg60=0.02 avg300=0.07 total=226024708\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87845552\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85253140\n",
+        "io": "some avg10=0.00 avg60=0.04 avg300=0.03 total=694967688\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=629504747\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.00 avg60=0.02 avg300=0.07 total=226046231\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87845553\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85253142\n",
+        "io": "some avg10=0.00 avg60=0.04 avg300=0.02 total=694968660\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=629505322\n"
+      },
+      "passedTests": 62,
+      "failedTests": 0
+    },
+    {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "wholeCommandSeconds": 1.6171632510013296,
+      "exit": 0,
+      "sourceStable": true,
+      "loadBefore": [6.9423828125, 6.37158203125, 5.69580078125],
+      "loadAfter": [6.9423828125, 6.37158203125, 5.69580078125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.00 avg60=0.02 avg300=0.07 total=226046797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87845553\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85253142\n",
+        "io": "some avg10=0.00 avg60=0.04 avg300=0.02 total=694968660\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=629505322\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.18 avg60=0.05 avg300=0.07 total=226063372\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87845681\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85253263\n",
+        "io": "some avg10=0.00 avg60=0.03 avg300=0.02 total=694969492\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=629505994\n"
+      },
+      "passedTests": 62,
+      "failedTests": 0
+    }
+  ]
+}

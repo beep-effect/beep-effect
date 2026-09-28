@@ -1,0 +1,128 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/media-drivers-exiftool-before-bun.json"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/exiftool/package.json",
+      "sha256": "e40ae5977d5c66439b05052a6f186b4d5ecb81e28bfba1d40c298788e8655232"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.errors.ts",
+      "sha256": "1e2bc1de8612d6bdc2293545daba333f9fa289d56818d677d9f30576c63b46da"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.models.ts",
+      "sha256": "a2cc98464dd070dce40f0f062b7490e01afaff6f5f2beef2f9a31865d13cc0a8"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.service.ts",
+      "sha256": "48186b655f8cc2ef5921fcf0fe7118b6d7200f300dabcf67a39c6e908581aade"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
+      "sha256": "5d3e46740e07d33744433e7d5c2d8b18f23707c2f9af2c6bd966e3455173bd5d"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/index.ts",
+      "sha256": "b0f6fba652050d05b6db526153259a9952c756aaf66086048b2544c68c52ce44"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts",
+      "sha256": "887d881749c128e1079526c33957ae14c7cace37360c7de2a089d47f56650f19"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "sha256": "704605cb65ac9312cb11fde57de98d8c2242c7318fc5292d805cf3b74bbf6c51"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "sha256": "bb00189cdfc40eaa3adfdd6cceba82026f5d489b3912093aaa3bee7b4c2137e0"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "sha256": "95a5b7197a30fc6d749e0f6efe6e9579a0736e811cc3a3f2dc4add8d5babb37d"
+    }
+  ],
+  "loadBefore": [14.57666015625, 11.74462890625, 12.9638671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.10 avg60=0.06 avg300=0.24 total=2632781970\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.03 avg300=0.01 total=224888109\nfull avg10=0.00 avg60=0.03 avg300=0.01 total=195593573\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.11 total=1017186322\nfull avg10=0.00 avg60=0.03 avg300=0.06 total=690779962\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 2.4226738889992703,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/exiftool/package.json",
+      "sha256": "e40ae5977d5c66439b05052a6f186b4d5ecb81e28bfba1d40c298788e8655232"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.errors.ts",
+      "sha256": "1e2bc1de8612d6bdc2293545daba333f9fa289d56818d677d9f30576c63b46da"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.models.ts",
+      "sha256": "a2cc98464dd070dce40f0f062b7490e01afaff6f5f2beef2f9a31865d13cc0a8"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/Exiftool.service.ts",
+      "sha256": "48186b655f8cc2ef5921fcf0fe7118b6d7200f300dabcf67a39c6e908581aade"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/ExiftoolConfig.ts",
+      "sha256": "5d3e46740e07d33744433e7d5c2d8b18f23707c2f9af2c6bd966e3455173bd5d"
+    },
+    {
+      "file": "packages/drivers/exiftool/src/index.ts",
+      "sha256": "b0f6fba652050d05b6db526153259a9952c756aaf66086048b2544c68c52ce44"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts",
+      "sha256": "887d881749c128e1079526c33957ae14c7cace37360c7de2a089d47f56650f19"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "sha256": "704605cb65ac9312cb11fde57de98d8c2242c7318fc5292d805cf3b74bbf6c51"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "sha256": "bb00189cdfc40eaa3adfdd6cceba82026f5d489b3912093aaa3bee7b4c2137e0"
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "sha256": "95a5b7197a30fc6d749e0f6efe6e9579a0736e811cc3a3f2dc4add8d5babb37d"
+    }
+  ],
+  "loadAfter": [14.57666015625, 11.74462890625, 12.9638671875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.08 avg60=0.06 avg300=0.23 total=2632796429\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.03 avg300=0.01 total=224888112\nfull avg10=0.00 avg60=0.03 avg300=0.01 total=195593576\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.11 total=1017186467\nfull avg10=0.00 avg60=0.03 avg300=0.06 total=690780083\n"
+  },
+  "sourceStable": true
+}

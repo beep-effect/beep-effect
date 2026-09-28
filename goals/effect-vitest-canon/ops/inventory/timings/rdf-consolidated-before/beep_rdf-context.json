@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/rdf",
+  "sourceHead": "07e73b672b0a0b10f1f0335411f8688c5aca1749",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.521611677992041,
+  "bunWholeCommandSeconds": 2.3679628210084047,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.3564453125, 3.26416015625, 3.00634765625],
+  "loadAfter": [3.728515625, 3.34326171875, 3.033203125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.18 avg60=0.29 avg300=0.13 total=773115257\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215895\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139856\n",
+    "io": "some avg10=0.03 avg60=0.26 avg300=0.11 total=840043377\nfull avg10=0.03 avg60=0.21 avg300=0.08 total=734826460\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.12 avg60=0.27 avg300=0.13 total=773126502\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215895\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139856\n",
+    "io": "some avg10=0.02 avg60=0.24 avg300=0.11 total=840043482\nfull avg10=0.02 avg60=0.20 avg300=0.08 total=734826541\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "98c8690ffcb5eef66ee6fb0ed0af5655b05146e53d672d78edfd54d10cd08b52"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/AGENTS.md",
+      "sha256": "841e985379a25207dcfd9b500c27f75238015b8111759089f8c54ce69d1d34b3"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/CLAUDE.md",
+      "sha256": "841e985379a25207dcfd9b500c27f75238015b8111759089f8c54ce69d1d34b3"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/README.md",
+      "sha256": "6c64e423907dc903c57696dd2d94cec9724d083c7d49c4b8a6274f94aa007c70"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/docgen.json",
+      "sha256": "e1cda04594cc21f1a04fe3e538e342c8a3b8d64eb81248e69507d81ecefc6f33"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/package.json",
+      "sha256": "85b0c9d878ac59e361ebe343d5ab89572a67ab45d539fd6a7be0669ae0514116"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
+      "sha256": "0ff959bde4112e5b862400d44b90444c4834cc89373300174a122f5cdaa97841"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Evidence.ts",
+      "sha256": "eb94d80d006711ff410f5b72c7b237d56cccca6ee776f5116b43660b28e45168"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Iri.ts",
+      "sha256": "cca65c2d0212564cbc3c27b0bd82631edf1372ef51e43a7ddebcf3731bb5167f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+      "sha256": "f8bffa891d006c2301ced3d753ca18ea4eb323f1e581ab754608323c6469e815"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Prov.ts",
+      "sha256": "d3d8926eb907bdc9b9069c23ddf325298118777e2a41f2046793e6c005b13fc5"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+      "sha256": "4402765e2aee018d159e3942f08cd3e934cae7546d36b982aa872d66b98ef4d6"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+      "sha256": "d95c8c87ea2b5311a3135678b5e87654b650a4a2cba88ae074756e3298949288"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts",
+      "sha256": "b50963b25ce525604ca30a08da133157269f06c054a6d0efbcf037af9a4f77b3"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
+      "sha256": "dcafc17928649d28aac040c645bad32cc0d78c01b198aae46355c9621e0e6edc"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "sha256": "9c478dbf1106e7d59c946eef56c9fe8bc1ca6fe4f672cc658e3bb9405d2a5fba"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/index.ts",
+      "sha256": "89e4bfbf5eedc754b511305776cbb20ef22dfeda701738f809d79eb1d16b2521"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Uri.ts",
+      "sha256": "6989c0c82f1b0adcced2313a2bf0ab554cb5d05657583765525ee35c0e722f1f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Version.ts",
+      "sha256": "0af5745de976cd639dc1b222e9862e78cab8774ea4f57c5fa4322d3c4d836d2c"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Dcterms.ts",
+      "sha256": "39389f4a1329126672fd64f00a72b2c30a6c39651a16fd301fabdeabb5ab3ffd"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Oa.ts",
+      "sha256": "49622398e4063700adb0d267fcb00947b1efb8fb05ee8ca0df2c52ba5e213ba5"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Owl.ts",
+      "sha256": "026c0feb279825c0f46ee7c0678e7a6ed15b4ce4d542aa524216663d52814487"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Prov.ts",
+      "sha256": "cd64e3a452e22c250c74afdca9491ec0ebd7d5cd530d95c43af1d6b5bcc34d2f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Rdf.ts",
+      "sha256": "27fcba81e42d5b12099afe9e3d93b725c569dabcdc2eade7256c01d215168a3a"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Rdfs.ts",
+      "sha256": "b400de4973322cc2d6643f8d7cdcb1c670eab8aad5169aa14f468f022e12813b"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/SchemaOrg.ts",
+      "sha256": "375beb9cab7b202fbd358497ef6962a9989e0f39dbfb68b88e0ffa6500acf29b"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Skos.ts",
+      "sha256": "b7ffa62b6907bb9bde370c4ceaa3326ea87a326519be10e87f9624249418262c"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/Xsd.ts",
+      "sha256": "bba84b725c9157bd960da9a38e1d07be01943b47c68f8f4135f97cac9b461287"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/Dcterms.terms.ts",
+      "sha256": "b37fddd81c49d632b64d01c8e18f48bc5074267b232587ffabe465e5db8bae5e"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/Owl.terms.ts",
+      "sha256": "eccfff966423bfd315bfb40dd86ae90b6aa2d79dc6a9fec1a05b0b285c4398ca"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/Rdf.terms.ts",
+      "sha256": "c879d67a450155dc0ad166225fce33527e323071019d4a83a7b5b2c9282941eb"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/Rdfs.terms.ts",
+      "sha256": "5527ee62ed34549858279fe8f49e2dd587861832b533b7285c9ad4eb5c168ad8"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/SchemaOrg.terms.ts",
+      "sha256": "2cc3bfea99fd99e3d700d32466301492bd49a2b11468f38f9364d65e0f89ca28"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/Skos.terms.ts",
+      "sha256": "74bec17698924cde3d7b836f1c6397daded188db8efd3e46fab4994275c5978c"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Vocab/generated/vocab-terms.data.json",
+      "sha256": "424bedaeffcadbe26924737cefc5ef9b59370b3a3e4cda85e852b51d1776b03f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/index.ts",
+      "sha256": "35869cb5efb804c335ef6670f93d5f78d0a7311bd52023c2e250156cf450cf2f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "sha256": "51888dfb2835cff67a0427c7202b494bfe43a749eb130567e201795308e71ff3"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
+      "sha256": "1775efa2a9917e5eabdb566b66000db1fcbc969a11d4f911699e0b71d1554f5c"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
+      "sha256": "26b5ec93b3210466ff660dfec59cb15335494d34155656d1854909f71d2173bd"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "sha256": "ba920ba106fb690076e69f04a786aabdede57627c347adf98676c46e95d1ad5f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "sha256": "51045568fcc9fa26b83ed36a79b9f6074a0cc9661f5f626383a7f5624c293a82"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+      "sha256": "5fdc876c2d3ef8fba8f6ef68bf7a26b09ce8b4ef234c436efa9cdd1651923eef"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
+      "sha256": "2e348ca32e8c216613c5c99d690edca58595b161468535c7824b3018f03cdd5e"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
+      "sha256": "74cf414f0efc2b805c3767f099e529733067ec6e3e82d291556a23e77d87999f"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
+      "sha256": "166142cf45034f924924ce5fc8461e18cddd44206f18a8cd995b3a8cac3148c0"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/tsconfig.check.json",
+      "sha256": "97af83ffe65e74360ab18c780be0b412933a8535e96635950baf133c2c044d23"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/tsconfig.json",
+      "sha256": "561f57c2034d071643fcb0197daf3fa3f4402ecb8a35cf4ba1c4c97bcaf1b0e6"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/tsconfig.test.json",
+      "sha256": "a75fb483faa0db9c1e828904eb6e863ea775d0412c9bbc6a90c035a7ced02a46"
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/vitest.config.ts",
+      "sha256": "0ad238f5673e67bb72600927d586e82a847e031fd8e4fe78321ce8a249644fd4"
+    }
+  ],
+  "environmentMode": "Configured RDF schema, RDF/JS term and PROV codec Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 90,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.728515625, 3.34326171875, 3.033203125],
+    "loadAfter": [3.728515625, 3.34326171875, 3.033203125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.12 avg60=0.27 avg300=0.13 total=773126527\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215895\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139856\n",
+      "io": "some avg10=0.02 avg60=0.24 avg300=0.11 total=840043482\nfull avg10=0.02 avg60=0.20 avg300=0.08 total=734826541\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.10 avg60=0.26 avg300=0.12 total=773134875\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215895\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139856\n",
+      "io": "some avg10=0.02 avg60=0.23 avg300=0.11 total=840043569\nfull avg10=0.01 avg60=0.19 avg300=0.08 total=734826612\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 90,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured RDF suites pass90 cases before and103 after, with no skips.351 original assertions and90 registrations remain;11 formerly grouped laws now register separately, plus the new core law and two timestamp boundaries.21original schema laws retain domains and floors25/50/100. The after phase overlaps an early publisher. No external endpoint is contacted."
+}

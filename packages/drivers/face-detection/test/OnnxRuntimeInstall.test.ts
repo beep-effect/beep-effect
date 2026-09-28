@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { createRequire } from "node:module";
 import { Script } from "node:vm";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Cause, Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Stream from "effect/Stream";
@@ -83,7 +84,7 @@ const fixture = Effect.gen(function* () {
   return { fs, path, root, temp, destination, install, installerRequire };
 }).pipe(Effect.withSpan("OnnxRuntimeInstall.fixture"));
 
-it.layer(NodeServices.layer)("ONNX Runtime's patched NuGet installer", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched NuGet installer", (it) => {
   it.effect(
     "loads fflate through the narrowly scoped installer dependency",
     Effect.fnUntraced(function* () {

@@ -1,15 +1,16 @@
 import plugin from "@beep/lint-rules/oxlint";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import { describe, expect, it } from "vitest";
-import { provideScopedLayer } from "./harness.ts";
+import * as S from "effect/Schema";
 import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
 import { OXLINT_SOURCES } from "./oxlint-sources.ts";
 
-const run = <A2, E>(program: Effect.Effect<A2, E, NodeServices.NodeServices>): Promise<A2> =>
-  Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
+const ReportedNode = S.Struct({ node: S.Unknown });
+const decodeReportedNode = S.decodeUnknownResult(ReportedNode);
 
 describe("oxlint rules", () => {
   it("runs the global process rule in-process", () => {
@@ -77,13 +78,19 @@ describe("oxlint rules", () => {
       type: "ImportDeclaration",
     } as never);
     visitors.FunctionDeclaration!({} as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("Models"), "User")]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [schemaCall("Array", [identifier("rowSchema")])]) as never);
-    visitors.CallExpression!(schemaCall("decodeSync", [member(identifier("input"), "schema")]) as never);
+    const staticArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]);
+    const staticMember = schemaCall("decodeSync", [member(identifier("Models"), "User")]);
+    const runtimeArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("rowSchema")])]);
+    const runtimeMember = schemaCall("decodeSync", [member(identifier("input"), "schema")]);
+    visitors.CallExpression!(staticArray as never);
+    visitors.CallExpression!(staticMember as never);
+    visitors.CallExpression!(runtimeArray as never);
+    visitors.CallExpression!(runtimeMember as never);
     visitors["FunctionDeclaration:exit"]!({} as never);
 
     expect(reports).toHaveLength(2);
+    expect(Result.getOrThrow(decodeReportedNode(reports[0])).node).toBe(staticArray.callee);
+    expect(Result.getOrThrow(decodeReportedNode(reports[1])).node).toBe(staticMember.callee);
   });
 
   for (const rule of OXLINT_RULES) {
@@ -91,8 +98,8 @@ describe("oxlint rules", () => {
 
     describe(rule, () => {
       invalid.forEach((testCase, index) => {
-        it(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
-          run(
+        it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+          it.effect(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(testCase.count);
@@ -108,17 +115,19 @@ describe("oxlint rules", () => {
                 expect(fixedSource).toBe(`${testCase.fixedSource}\n`);
               }
             })
-          ));
+          )
+        );
       });
 
       valid.forEach((testCase, index) => {
-        it(`ignores valid case #${index}`, () =>
-          run(
+        it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+          it.effect(`ignores valid case #${index}`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(0);
             })
-          ));
+          )
+        );
       });
     });
   }

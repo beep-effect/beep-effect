@@ -1,0 +1,228 @@
+{
+  "baselineCommit": "044c194af9",
+  "converted": 9,
+  "cases": 80,
+  "existingNativeProperties": 2,
+  "registrations": [
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "title": "round-trips schema-derived redaction options",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "title": "honors generated redaction bounds and channel rules",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "title": "round-trips schema-derived reporter options",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "title": "round-trips schema-derived reporter layer options",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "title": "round-trips schema-derived HTTP status codes",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "title": "round-trips schema-derived pretty logger configs",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "title": "round-trips schema-derived banner options",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "title": "round-trips schema-derived track duration options",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "title": "round-trips schema-derived phase profiles",
+      "inputsIdentical": true,
+      "callbackIdentical": true,
+      "optionsIdentical": true
+    }
+  ],
+  "sources": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "sha256": "d9ae03d06d90d9780acbeab82f00e974d1f375420927b980607883d52ce95ab6"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "sha256": "ce52fccf8ca7189803841c803bdce1ff2241cb2f40c86779256d2e1003851478"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "sha256": "c8f070ae4ff4a50f5d8d32230629e0491a664ee20d2193fd089e1d129f822096"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "sha256": "3bd35baab98354cac65a96c75387fe098ee8f86da50956eac23497f865ae495b"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "sha256": "5cb6aff56b2566087a9666375974ca43f3d98b0599f5e93328a1cc370106b5e7"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "sha256": "93d42e99d5b0a842aba5461bacc9524a4bafbfec715e341e055d5d17978781bb"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "sha256": "325eeb38c95962d21089ea210c4f180117da5f1cb86b32ca01c3720468533ad6"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "sha256": "8047d04f8acb4d905256c43237672c2ee383d7ca0c2b44431b925410131a1fc5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "sha256": "8ba65ede8a47250bcddc7954f46ae4dd5f1a51ba754e4b26e8ce720569c039ff"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "sha256": "107420bd90bf8724fa7010502a9c88c4c4a78132759d9b9f4e4deb51be55c15f"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "sha256": "5e31cb856716ddc888216d5c614a9c53b0fe920d3a68e1bec8e0150cc73b36c2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "sha256": "60855691f45745f1a649923ef861514932981e896777a3f387546fbfb99c97cc"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "sha256": "dc66c8b1777283e5c3c055ca6c89b9b6f684906d8fcfbd42659e72b3af5b3eef"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "sha256": "9404a124ad2c559a69a199e7abcfe80ebb31b3b40261e73892a2200b34d6a141"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "sha256": "8b39cbdb678a0b6419d3fe34ca7b6e30f146928cd664866a2bb2249d6233b7ea"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "a27953f074770b5ae5644ed0d03cdb1913cf999c3e90f403a08dcb358b5ceee5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "sha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "sha256": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "sha256": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146"
+    }
+  ],
+  "propertyProof": {
+    "runsFloor": 400,
+    "seed": 20260708,
+    "passed": 11,
+    "failed": 0,
+    "names": [
+      "CauseRedaction round-trips schema-derived redaction options",
+      "CauseRedaction honors generated redaction bounds and channel rules",
+      "ErrorReporting round-trips schema-derived reporter options",
+      "ErrorReporting round-trips schema-derived reporter layer options",
+      "HttpApiTelemetry round-trips schema-derived HTTP status codes",
+      "Logging round-trips schema-derived pretty logger configs",
+      "Logging round-trips schema-derived banner options",
+      "Metric round-trips schema-derived track duration options",
+      "Observed schema-derived arbitrary values are members of ObservedCause",
+      "Observed schema-derived arbitrary values are members of ObservedExit",
+      "PhaseProfiler round-trips schema-derived phase profiles"
+    ]
+  },
+  "timings": [
+    {
+      "runtime": "node",
+      "seconds": 6.1759941179989255,
+      "passed": 80,
+      "failed": 0,
+      "pending": 0,
+      "loadBefore": [4.59619140625, 9.28271484375, 10.70263671875],
+      "loadAfter": [6.390625, 9.5771484375, 10.79052734375],
+      "pressureBefore": {
+        "cpu": "some avg10=0.32 avg60=0.33 avg300=0.40 total=210669544\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.05 avg60=0.05 avg300=0.12 total=86589738\nfull avg10=0.05 avg60=0.05 avg300=0.12 total=84029056\n",
+        "io": "some avg10=0.01 avg60=0.02 avg300=0.07 total=690951598\nfull avg10=0.01 avg60=0.02 avg300=0.05 total=626243019\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.17 avg60=0.30 avg300=0.39 total=210698543\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.02 avg60=0.04 avg300=0.12 total=86589739\nfull avg10=0.02 avg60=0.04 avg300=0.12 total=84029057\n",
+        "io": "some avg10=0.00 avg60=0.02 avg300=0.07 total=690952036\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=626243368\n"
+      },
+      "runtimeVersions": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "sourceStable": true
+    },
+    {
+      "runtime": "bun",
+      "seconds": 3.4197825029987143,
+      "passed": 80,
+      "failed": 0,
+      "pending": 0,
+      "loadBefore": [6.390625, 9.5771484375, 10.79052734375],
+      "loadAfter": [6.03857421875, 9.451171875, 10.7431640625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.17 avg60=0.30 avg300=0.39 total=210698575\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.02 avg60=0.04 avg300=0.12 total=86589739\nfull avg10=0.02 avg60=0.04 avg300=0.12 total=84029057\n",
+        "io": "some avg10=0.00 avg60=0.02 avg300=0.07 total=690952059\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=626243379\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.30 avg60=0.31 avg300=0.39 total=210726798\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.01 avg60=0.04 avg300=0.12 total=86589958\nfull avg10=0.01 avg60=0.04 avg300=0.12 total=84029270\n",
+        "io": "some avg10=0.00 avg60=0.02 avg300=0.07 total=690955192\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=626246009\n"
+      },
+      "runtimeVersions": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "limits": {
+        "RLIMIT_NOFILE": [1048576, 1048576],
+        "RLIMIT_AS": [-1, -1],
+        "RLIMIT_CPU": [-1, -1]
+      },
+      "sourceStable": true
+    }
+  ]
+}

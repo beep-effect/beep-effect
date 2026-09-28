@@ -1,0 +1,106 @@
+{
+  "package": "@beep/nlp-processing",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T10:29:57.178000+00:00",
+  "totalMs": 4175.302978515625,
+  "testCount": 84,
+  "files": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
+      "ms": 3.48486328125,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "ms": 17.43505859375,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
+      "ms": 11.6728515625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "ms": 27.28564453125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "ms": 18.949951171875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "ms": 36.078369140625,
+      "tests": 23
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
+      "ms": 4.40283203125,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
+      "ms": 10.4208984375,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "ms": 60.302978515625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool success schemas round-trips schema-derived success payloads",
+      "ms": 60.302971000000525
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool shared schemas round-trips schema-derived shared result models",
+      "ms": 47.0866759999999
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction round-trips schema-derived annotated nodes",
+      "ms": 27.285562000000027
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction fromDocumentAnnotated builds doc + sentences + annotations",
+      "ms": 22.686729000000014
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph annotation passes are idempotent re-running addPOSAnnotations does not duplicate",
+      "ms": 22.678547000000435
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction empty has no nodes",
+      "ms": 22.674459999999726
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph annotation passes are idempotent re-running addEntityAnnotations does not duplicate",
+      "ms": 22.671515999999883
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws round-trips schema-derived metrics through encode/decode",
+      "ms": 22.633777999999893
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies right identity: x ⊕ empty = x",
+      "ms": 22.350171000000046
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "OperationCost round-trips schema-derived operation costs through encode/decode",
+      "ms": 22.342388999999912
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { A } from "@beep/utils";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { act, cleanup, render, waitFor, within } from "@testing-library/react";
 import { Effect } from "effect";
-import { afterEach, describe, expect, vi } from "vitest";
+import { vi } from "vitest";
 
 interface PendingRender {
   readonly id: string;
@@ -50,6 +50,9 @@ vi.mock("mermaid", () => ({
 }));
 
 import { MermaidView } from "@beep/editor/mermaid-view";
+import { it } from "@beep/test-runner";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 
 describe("Mermaid async ownership", { concurrent: false }, () => {
   afterEach(() => {
@@ -58,7 +61,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     vi.clearAllMocks();
   });
 
-  it.effect(
+  it.live(
     "does not let an obsolete same-prefix, same-length render overwrite the current source",
     Effect.fnUntraced(function* () {
       const prefix = `graph TD\n${"A".repeat(80)}`;
@@ -67,12 +70,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       expect(first.length).toBe(second.length);
 
       const view = render(<MermaidView renderKey="replacement-race" source={first} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(first)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(first), assertTrue)));
       const firstRender = mermaidStub.pending.get(first);
       expect(firstRender).toBeDefined();
 
       view.rerender(<MermaidView renderKey="replacement-race" source={second} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(second)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(second), assertTrue)));
       const secondRender = mermaidStub.pending.get(second);
       expect(secondRender).toBeDefined();
       expect(firstRender?.id).not.toBe(secondRender?.id);
@@ -104,12 +107,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "leaves no sink behind when an obsolete render resolves after unmount",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nUnmount-->Done";
       const view = render(<MermaidView renderKey="unmount-race" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = mermaidStub.pending.get(source);
 
       view.unmount();
@@ -122,12 +125,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects active or foreign renderer output before the HTML sink",
     Effect.fnUntraced(function* () {
       const source = `graph TD\nA["<img src=x onerror=alert(1)>"] --> B`;
       const view = render(<MermaidView renderKey="unsafe-renderer-output" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
 
       expect(mermaidStub.initialize).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -163,12 +166,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "sanitizes the XML-versus-HTML parser differential before the HTML sink",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nXML-->HTML";
       const view = render(<MermaidView renderKey="parser-differential" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
 
       yield* Effect.sync(() => {
         const pending = getPendingRender(source);
@@ -191,7 +194,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects escaped external CSS URLs in SVG presentation attributes",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -204,7 +207,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       for (const [attribute, value] of attacks) {
         const source = `graph TD\nPresentation-->${attribute}`;
         const view = render(<MermaidView renderKey={`presentation-${attribute}`} source={source} />);
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -226,12 +229,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "retains CSS and URL fragments with unique targets inside the exact SVG",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nLocal-->Fragment";
       const view = render(<MermaidView renderKey="local-fragment-presentation" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -268,12 +271,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rewrites every admitted SVG ARIA IDREF to an internal scoped target",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nARIA-->Internal";
       const view = render(<MermaidView renderKey="safe-aria-idrefs" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
       const attributes = [
         "aria-activedescendant",
@@ -311,7 +314,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects missing and external same-document SVG ARIA IDREF targets",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -327,7 +330,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
             <MermaidView renderKey={`aria-${key}`} source={source} />
           </>
         );
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -350,7 +353,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects missing fragment targets and unsafe links across every admitted URL surface",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -365,7 +368,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       for (const [index, contents] of attacks.entries()) {
         const source = `graph TD\nMissing-->Fragment${index}`;
         const view = render(<MermaidView renderKey={`missing-fragment-${index}`} source={source} />);
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -383,12 +386,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rewrites prefix IDs independently without changing hex-color declarations",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nPrefix-->Hex";
       const view = render(<MermaidView renderKey="prefix-and-hex" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -415,12 +418,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects unsupported descendant ID selectors instead of rewriting CSS text",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nSelector-->Id";
       const view = render(<MermaidView renderKey="descendant-id-selector" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -443,7 +446,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "scopes internal fragment targets away from external same-document IDs",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nFragment-->ExternalCollision";
@@ -457,7 +460,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           <MermaidView renderKey="external-collision" source={source} />
         </>
       );
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -485,12 +488,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects duplicate internal fragment targets before rewriting",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nFragment-->Duplicate";
       const view = render(<MermaidView renderKey="duplicate-fragment" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -513,7 +516,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "keeps same-page diagrams with identical internal IDs isolated",
     Effect.fnUntraced(function* () {
       const first = "graph TD\nFirst-->Paint";
@@ -523,7 +526,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           <MermaidView renderKey="multi-first" source={first} />
         </div>
       );
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(first)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(first), assertTrue)));
 
       yield* Effect.sync(() => {
         const firstRender = getPendingRender(first);
@@ -546,7 +549,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
           <MermaidView renderKey="multi-second" source={second} />
         </div>
       );
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(second)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(second), assertTrue)));
 
       yield* Effect.sync(() => {
         const secondRender = getPendingRender(second);
@@ -574,13 +577,13 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "adds an escaped programmatic text alternative without interpolating diagram source",
     Effect.fnUntraced(function* () {
       const source = `graph TD\nA["</desc><script data-diagram-xss='no'>alert(1)</script>&done"]`;
       const view = render(<MermaidView renderKey="fallback-accessibility-escaping" source={source} />);
       // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag -- Intentional hostile Mermaid fixture; mermaidStub is a local test double and assertions prove the source becomes text only.
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -599,7 +602,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects string URL image functions in inline styles and stylesheets",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -619,7 +622,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
         for (const placement of ["inline", "stylesheet"] as const) {
           const source = `graph TD\nImageResource-->${placement}-${key}`;
           const view = render(<MermaidView renderKey={`${placement}-${key}`} source={source} />);
-          yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+          yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
           const pending = getPendingRender(source);
 
           yield* Effect.sync(() => {
@@ -642,7 +645,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects image resource functions hidden behind CSS custom properties",
     Effect.fnUntraced(function* () {
       const resource = 'image-set("https://attacker.invalid/custom-property")';
@@ -650,7 +653,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       for (const placement of ["inline", "stylesheet"] as const) {
         const source = `graph TD\nCustomProperty-->${placement}`;
         const view = render(<MermaidView renderKey={`custom-property-${placement}`} source={source} />);
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -673,12 +676,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "retains fragment paint references and image-free stylesheet rules",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nSafe-->CSS";
       const view = render(<MermaidView renderKey="safe-css-controls" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -705,12 +708,12 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "retains stylesheet filter references to namespaced internal fragments",
     Effect.fnUntraced(function* () {
       const source = "graph TD\nNeo-->Shadow";
       const view = render(<MermaidView renderKey="stylesheet-fragment" source={source} />);
-      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
       const pending = getPendingRender(source);
 
       yield* Effect.sync(() => {
@@ -736,7 +739,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects stylesheet url() references without a unique internal fragment target",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -748,7 +751,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       for (const [key, value] of attacks) {
         const source = `graph TD\nStylesheetUrl-->${key}`;
         const view = render(<MermaidView renderKey={`stylesheet-url-${key}`} source={source} />);
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -773,7 +776,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects stylesheet rules that can affect the containing document",
     Effect.fnUntraced(function* () {
       const attacks = [
@@ -810,7 +813,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
             <MermaidView renderKey={attack.key} source={source} />
           </>
         );
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -834,7 +837,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects root stylesheet and inline-style layout escape declarations",
     Effect.fnUntraced(function* () {
       const declarations = [
@@ -863,7 +866,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
       for (const attack of attacks) {
         const source = `graph TD\nLayout-->${attack.key}`;
         const view = render(<MermaidView renderKey={attack.key} source={source} />);
-        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        yield* Effect.promise(() => waitFor(() => pipe(mermaidStub.pending.has(source), assertTrue)));
         const pending = getPendingRender(source);
 
         yield* Effect.sync(() => {
@@ -881,7 +884,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "renders parse and render rejections through the typed async failure branch",
     Effect.fnUntraced(function* () {
       mermaidStub.parse.mockRejectedValueOnce(new Error("private parser detail"));
@@ -901,7 +904,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rejects oversized source through the typed async failure branch before Mermaid loads",
     Effect.fnUntraced(function* () {
       const source = "A".repeat(20_001);

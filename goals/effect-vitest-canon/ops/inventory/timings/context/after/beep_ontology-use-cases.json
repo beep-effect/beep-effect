@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ontology-use-cases",
+  "sourceHead": "fd21be26a9d8ca6daa3f2f11ae83ba55c1ba98bf",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.872503908991348,
+  "bunWholeCommandSeconds": 1.8668288000044413,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.78173828125, 4.0185546875, 3.29736328125],
+  "loadAfter": [7.23828125, 3.96826171875, 3.28466796875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.14 avg60=0.24 avg300=0.11 total=790574792\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217721\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141615\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850091574\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=743588246\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.10 avg60=0.22 avg300=0.10 total=790581179\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217721\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141615\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850091574\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=743588246\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "b7328644da83201f992c749cddb6d59d599d9ff37dc54dbc1c4e7bfea97f0284"
+    },
+    {
+      "file": "packages/ontology/use-cases/AGENTS.md",
+      "sha256": "cd7c6e54c0c83ee357209d8696a6277eaf16cc1a8efed1a2bdf90b480890ec07"
+    },
+    {
+      "file": "packages/ontology/use-cases/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/ontology/use-cases/README.md",
+      "sha256": "03f6749a4b932d92415ba9ec6544fbc2f7ccddf249d5776d0c03f6b3b841cce6"
+    },
+    {
+      "file": "packages/ontology/use-cases/docgen.json",
+      "sha256": "4fdf429b717631ea6923ac249736928bcda843c407696e516bf9afd73364de66"
+    },
+    {
+      "file": "packages/ontology/use-cases/package.json",
+      "sha256": "2be9106d5ba2848eefeded1f9472739dc8c9e6d98e49820d575b906b49449fa8"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "sha256": "bf9b94a33d657892119fa190fad5be56837f46e269f9d8ed174ca64d5892ada1"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.errors.ts",
+      "sha256": "77ba3a563d9da142b133e0d55005b9d44d1cb553a319e6b526334a98d54c5806"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.pizza-tutorial.ts",
+      "sha256": "4dc118a417bb115a76da5366c9b6d322dc0b26ca91557a2bcaab99191aee6860"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "sha256": "90c20f82c69eba1b7d141e62dcc204edca5acc9d519c6ec53f82449e77d556f4"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "sha256": "9151272cc641fdc4a1e20d82f15c1852878bccedcb1792640e2e76c0b9505c39"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "sha256": "26732b77fff2af56b049b6ada0a2d5f957a97871ae0b093a72a68168fffe147e"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "sha256": "cb6d56fb87bba64eb15728745bc7807ea8b4fbacc537c61c723c9940ace82612"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
+      "sha256": "6bcf344c0b1e2c3e589514ec4b33ea48c0568a9ad579a99d347ae343f32cdf80"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "sha256": "817333718f05b96bb3a6fedc14a561c3e30a885bb86b72413484c3596876da30"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.use-cases.ts",
+      "sha256": "33321fafde5fba3306f580815d943c0935fdaabe8d048b6c73efc1d61af9830e"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "sha256": "a4e9690fb9127e5b37dc8cf43ef733603ca869ceb0b8ceea11efa1739530a0c9"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "sha256": "fcbab87fc2d88fc6c20f562377f7aaaf51a1a8bd811974a8e57bc30618f482f2"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
+      "sha256": "14e5329f371d385b5c8502a5809d65ce6860edfa7d054320126eb296d8d72ba8"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
+      "sha256": "887a1b2d14c7c986f2297fb646f7a235c23a3f17d78079b261f08ac780d92a7a"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/server.ts",
+      "sha256": "670fed461627a8790113147a8bba4e3387575057ad08fd3cc5e16a53a674c1c1"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/worker.ts",
+      "sha256": "a06d6f3efc412251a641fbb74d9dd2a3bb2ca7be78d9ba1c77f5684b95f39452"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/index.ts",
+      "sha256": "f8f73fef9a675de7228e9014b052b5418cc546ef1212ca9ee14c15f5aec506fd"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/public.ts",
+      "sha256": "5f9119835d6505ec709a0922b915804e8365cd89df8cce89acb91a34e7298c23"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/server.ts",
+      "sha256": "473bebf0c203bc3ef50fcba32c16fbdbd1ea3f3888226b888ea436f16933bc46"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolService.ts",
+      "sha256": "82e631a40ee1ae8c12f02d83deb4ca10cd6e02eba50a0ee61730a0e1e6b27cfd"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "sha256": "7f81be5359417702a6e473b80f9d955bcfa4a4c0f5dd2a821f3f8064e8d1771e"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/index.ts",
+      "sha256": "969ff481ea4179732205cc3d2b80829286f38cd4753303ed7d443e7c916d821b"
+    },
+    {
+      "file": "packages/ontology/use-cases/src/worker.ts",
+      "sha256": "996c25d2f8109efc79f743bacaaa7ddcdaec59f28bdd220ca4ee2492c0f2d376"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
+      "sha256": "4ca62c891ead3dd5ab41a48c3f0f905cc87e9c3f40c0d0f2de9d50c045e3c6e3"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/GraphLayout.test.ts",
+      "sha256": "a03f73d70159d3fbaa30e9b9927e310eb8df99683ef5310f7c354c98caeb0250"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/PizzaTutorial.e2e.test.ts",
+      "sha256": "82843bb853896df19157673a1a385d5eff45a8cd8905f109a6a480c33cfcb881"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "sha256": "f8fedb89b7ca7cb8b541bd8289204fb63381fe6e5590731461d97c4b61232bb2"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.test.ts",
+      "sha256": "8ecab5f96558d367dccfd8ddb46b21583f0f13babb8e11b9618d4d6f82c1c614"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "sha256": "927cececebd462275501fc4f357e3f7d084839d05c93f938297e2b7d64e36fde"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "afcdce4f5046a55b8d6f0d66dc9edd8d83c818549238bb1825152d70e740b445"
+    },
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "sha256": "bfda72a30ee73b58eca187ffa96601cb2ab46bb16e9450ec4a8ad21f5edc56d4"
+    },
+    {
+      "file": "packages/ontology/use-cases/tsconfig.check.json",
+      "sha256": "a20f9d5b29041b12f61351e5f8012213d328279105967b7505c13058cc1f0532"
+    },
+    {
+      "file": "packages/ontology/use-cases/tsconfig.json",
+      "sha256": "e6dc66a668f97ceea449bf8e96d2af9de36bbdeb7ca17b1b0968584a0cdfbf3d"
+    },
+    {
+      "file": "packages/ontology/use-cases/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/ontology/use-cases/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured ontology-use-cases local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 61,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [7.23828125, 3.96826171875, 3.28466796875],
+    "loadAfter": [6.978515625, 3.96923828125, 3.28857421875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.10 avg60=0.22 avg300=0.10 total=790581189\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217721\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141615\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850091574\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=743588246\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.08 avg60=0.21 avg300=0.10 total=790588127\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186217721\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141615\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=850092543\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=743588698\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 61,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured suites pass60before and61after with zero skips and stable source. All120original assertions remain with32public helper conversions;19native laws retain source domains, floors10/25 and original discard multipliers. Three aggregate Passed assertions retire; two grouped session laws now have separate registrations. Twelve public layer fixtures retain actual reasoner, SHACL and module-loader subjects with30second acquisition and original body limits. Pure port stubs remain qualified as stubs. Baseline overlaps an early publisher; after overlaps package proof and root policies."
+}

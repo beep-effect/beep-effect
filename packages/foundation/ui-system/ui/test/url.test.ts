@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { sanitizeAnchorHref } from "@beep/ui/lib/url";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("sanitizeAnchorHref", () => {
   it("preserves safe absolute and relative navigation", () => {

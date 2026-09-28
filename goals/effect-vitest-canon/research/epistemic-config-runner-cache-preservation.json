@@ -1,0 +1,74 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/epistemic-config#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/epistemic-config#audit",
+      "addedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/epistemic-config#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#build",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#check",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#coverage",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#lint:deprecated-apis",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#package-test-typecheck",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#test",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/epistemic-config#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/epistemic-config#test:integration",
+      "addedDependency": "@beep/test-utils#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "a251bcde9c05de4c788135e14a3582f332ea6dddc045deafb71055d271513871"
+}

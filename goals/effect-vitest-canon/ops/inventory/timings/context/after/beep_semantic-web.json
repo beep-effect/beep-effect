@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/semantic-web",
+  "sourceHead": "19229c94259daf30952503e3b10b86acf29bfe6e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.120843341006548,
+  "bunWholeCommandSeconds": 1.3660686120128958,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [0.572265625, 1.92822265625, 2.60791015625],
+  "loadAfter": [0.92724609375, 1.9794921875, 2.62109375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.06 avg300=0.06 total=778906020\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216422\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140378\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=843713726\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738055865\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.05 avg300=0.06 total=778912861\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216422\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140378\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=843715775\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738057834\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "c16319d0992f9d77eb81f53a6a05110685326959d765fcff9db0975946b18df3"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/CHANGELOG.md",
+      "sha256": "f881b1fdb8c26acc2b0d65b405a2af216b61727de6c1749998c352b480bc8cb1"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/README.md",
+      "sha256": "2e7fec4d9e558b7d6cf7ce052a33433e422cfffbaaa6b7da00e91ac033b03c47"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/docgen.json",
+      "sha256": "1f1bd2eb7f4b7db81bf5a568d0d7d2214e9b5f19ac97d41ac65224a3d049445c"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/package.json",
+      "sha256": "9bb7aecfb982647785b5f53bc734f970c682cc01a728231defeade29a64e476a"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "sha256": "3baa2e40eaac28b8b744d08b11a3fedcb30fc82870244a935775d9ac41fd006c"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRegistryDataset.ts",
+      "sha256": "9beeb038d7f6d08e0436dbe4cf4a42823b357a6e90f87ce5cc8310e1c9bc94be"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityShaclProjection.ts",
+      "sha256": "c7b6a47222d4895b4410949ad49492a8b6a3c26c2c580cd22724c6b19001206f"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/index.ts",
+      "sha256": "c6cd0c3d5317d253f126ae8afff7ba52858eca49d460aadae0b2290c4fe5c2be"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/index.ts",
+      "sha256": "148d2dd441544ae7b028b10c3f879cf1b1f5b4cf3707a15308aa46e40d9bbabb"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
+      "sha256": "1b948fecaa005e1d207cc2e54fc48da39b7f2830bdd29396d361692ad3807287"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "sha256": "713a63c9ee288a60dd86385a88a0e297719cf80cef784cdb91b99f2b8956e47d"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+      "sha256": "dcccbeb5f82446c9d84ef5c877b2c1340ad062c023469695fbe7e7085c4e187d"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBinding.test.ts",
+      "sha256": "a854d0fc983e020c0ea8c7e74cba7bad3021857b1f57343ad86fad1943e9feac"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/IdentityRdfBindingCoverage.test.ts",
+      "sha256": "0177fb1e06d65191f120955bc2f3d9e627a370056a9c0f5a2522d49dcdcff463"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts",
+      "sha256": "612c3f2f4de10b01d52889099fd1d01ee92cc7ee7b3fb899b530cfa3d3bd609b"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/test/TaggedError.equivalence.test.ts",
+      "sha256": "10d2b3056d04412876d6ba1b534c941510057c945d52d70dc72183cc6b4dc2cb"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/tsconfig.check.json",
+      "sha256": "89523b98dc87b97e90733fd7bc188910007b0ec8b9d4be889b0166ed617359f0"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/tsconfig.json",
+      "sha256": "9668b72afa471958a899b38c81d4e11a3711b5f590d9cdaa8657b0392845b0d2"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/tsconfig.test.json",
+      "sha256": "edf5553d2a4003e81172bc66d3cbf7df10a551350ee6c0a7063d0c00aebfda49"
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/vitest.config.ts",
+      "sha256": "6abd4595bbe3a5d0e47001ef8b2e689f12c543d394b54593281881e209f9be32"
+    }
+  ],
+  "environmentMode": "Configured semantic-web contract, codec, identity registry and local canonicalization Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 31,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [0.92724609375, 1.9794921875, 2.62109375],
+    "loadAfter": [0.92724609375, 1.9794921875, 2.62109375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.05 avg300=0.06 total=778912918\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216422\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140378\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=843715775\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738057834\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.05 avg300=0.06 total=778916277\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216422\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140378\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=843716166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738058044\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 31,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark.31 configured cases pass before and after with no skips and stable source.74 original assertions and31registrations remain;four aggregate Passed wrappers become native property failures. Five native properties retain original domains and floors40/40/40/50/5. Seven original predicates have replay controls; three new initial-encoding success checks reject equal Failure results. Generation-link setup now occurs per sample. Both phases overlap an early publisher or its termination. No external endpoint is contacted."
+}

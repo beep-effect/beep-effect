@@ -12,9 +12,12 @@ import {
   ResolvedCapability,
   ResolvedEditorProfile,
 } from "@beep/editor/capability/schemas";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Exit } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import type { NodeRegistrationKey } from "@beep/editor/capability/schemas";
@@ -76,7 +79,7 @@ describe("capability schemas", () => {
       const decodedDescriptor = yield* decodeCapabilityDescriptor(descriptorInput);
       const descriptorEncoded = yield* encodeCapabilityDescriptor(decodedDescriptor);
       const descriptorRoundTrip = yield* decodeCapabilityDescriptor(descriptorEncoded);
-      expect(Equal.equals(decodedDescriptor, descriptorRoundTrip)).toBe(true);
+      pipe(Equal.equals(decodedDescriptor, descriptorRoundTrip), assertTrue);
 
       const profile = EditorProfile.make({
         id: ProfileId.make("editor.schema-test"),
@@ -84,7 +87,7 @@ describe("capability schemas", () => {
       });
       const profileEncoded = yield* encodeEditorProfile(profile);
       const profileRoundTrip = yield* decodeEditorProfile(profileEncoded);
-      expect(Equal.equals(profile, profileRoundTrip)).toBe(true);
+      pipe(Equal.equals(profile, profileRoundTrip), assertTrue);
 
       const resolved = ResolvedEditorProfile.make({
         profileId: profile.id,
@@ -96,7 +99,7 @@ describe("capability schemas", () => {
       });
       const resolvedEncoded = yield* encodeResolvedEditorProfile(resolved);
       const resolvedRoundTrip = yield* decodeResolvedEditorProfile(resolvedEncoded);
-      expect(Equal.equals(resolved, resolvedRoundTrip)).toBe(true);
+      pipe(Equal.equals(resolved, resolvedRoundTrip), assertTrue);
     })
   );
 
@@ -111,7 +114,7 @@ describe("capability schemas", () => {
 
       for (const malformed of ["", "Ctrl+", "Hyper+K", "Ctrl+Hyper+K"]) {
         const exit = yield* Effect.exit(decodeKeyChordFromString(malformed));
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
       }
     })
   );
@@ -122,12 +125,12 @@ describe("capability schemas", () => {
       const duplicateIds = yield* Effect.exit(
         decodeCapabilityCatalog([descriptor("node.one", "command.one"), descriptor("node.one", "command.two")])
       );
-      expect(Exit.isFailure(duplicateIds)).toBe(true);
+      pipe(duplicateIds, Exit.isFailure, assertTrue);
 
       const duplicateCommands = yield* Effect.exit(
         decodeCapabilityCatalog([descriptor("node.one", "command.same"), descriptor("node.two", "command.same")])
       );
-      expect(Exit.isFailure(duplicateCommands)).toBe(true);
+      pipe(duplicateCommands, Exit.isFailure, assertTrue);
 
       const duplicateRegistrations = yield* Effect.exit(
         decodeCapabilityCatalog([
@@ -135,7 +138,7 @@ describe("capability schemas", () => {
           descriptor("node.two", "command.two", ["TextNode"]),
         ])
       );
-      expect(Exit.isFailure(duplicateRegistrations)).toBe(true);
+      pipe(duplicateRegistrations, Exit.isFailure, assertTrue);
 
       const valid = yield* decodeCapabilityCatalog([
         descriptor("node.one", "command.one", ["TextNode"]),
@@ -153,21 +156,23 @@ describe("capability schemas", () => {
 describe("capability schema arbitraries", () => {
   // Schema-derived property coverage: every generated value survives an
   // encode → decode round trip structurally (S.Class instances are Equal).
-  const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>) {
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.all([Arbitrary.schema(schema)]),
-      ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* S.encodeEffect(schema)(value);
-          const decoded = yield* S.decodeEffect(schema)(encoded);
-          return Equal.equals(decoded, value);
-        }),
-      { runs: 25 }
-    );
-    expect(result._tag).toBe("Passed");
+  const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+    const encoded = yield* S.encodeEffect(schema)(value);
+    const decoded = yield* S.decodeEffect(schema)(encoded);
+    pipe(Equal.equals(decoded, value), assertTrue);
   });
 
-  it.effect("round-trips generated classifications", () => roundTrips(CapabilityClassification));
+  it.effect.prop(
+    "round-trips generated classifications",
+    [Arbitrary.schema(CapabilityClassification)],
+    ([value]) => roundTrips(CapabilityClassification, value),
+    { arbitrary: fcRuns(25) }
+  );
 
-  it.effect("round-trips generated resolved capabilities", () => roundTrips(ResolvedCapability));
+  it.effect.prop(
+    "round-trips generated resolved capabilities",
+    [Arbitrary.schema(ResolvedCapability)],
+    ([value]) => roundTrips(ResolvedCapability, value),
+    { arbitrary: fcRuns(25) }
+  );
 });

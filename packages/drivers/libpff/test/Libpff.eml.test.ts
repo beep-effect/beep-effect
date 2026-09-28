@@ -5,8 +5,10 @@ import {
   stripMimeStructuralHeaders,
   synthesizeEmlHeaderBlock,
 } from "@beep/libpff";
+import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Result } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 
@@ -88,7 +90,7 @@ describe("rfc5322DateFromOutlookTimestamp", () => {
 
   it("declines anything that is not a recognized UTC timestamp", () => {
     for (const value of ["Foo 26, 2020 22:18:29 UTC", "26 Nov 2020 22:18:29 +0000", "Nov 26, 2020 22:18 UTC", ""]) {
-      expect(O.isNone(rfc5322DateFromOutlookTimestamp(value))).toBe(true);
+      assertNone(rfc5322DateFromOutlookTimestamp(value));
     }
   });
 
@@ -102,17 +104,17 @@ describe("rfc5322DateFromOutlookTimestamp", () => {
       "Nov 00, 2020 22:18:29.000000000 UTC",
       "Nov 31, 2020 22:18:29.000000000 UTC",
     ]) {
-      expect(O.isNone(rfc5322DateFromOutlookTimestamp(value))).toBe(true);
+      assertNone(rfc5322DateFromOutlookTimestamp(value));
     }
   });
 
   it("applies the right February length for the year", () => {
-    expect(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 2021 00:00:00.000000000 UTC"))).toBe(true);
+    assertNone(rfc5322DateFromOutlookTimestamp("Feb 29, 2021 00:00:00.000000000 UTC"));
     expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2020 00:00:00.000000000 UTC"), () => "")).toBe(
       "29 Feb 2020 00:00:00 +0000"
     );
     // Century rule: 1900 is not a leap year, 2000 is.
-    expect(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 1900 00:00:00.000000000 UTC"))).toBe(true);
+    assertNone(rfc5322DateFromOutlookTimestamp("Feb 29, 1900 00:00:00.000000000 UTC"));
     expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2000 00:00:00.000000000 UTC"), () => "")).toBe(
       "29 Feb 2000 00:00:00 +0000"
     );

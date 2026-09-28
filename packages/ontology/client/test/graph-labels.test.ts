@@ -4,7 +4,8 @@ import {
   OntologyGraphProjection,
   OntologyGraphProjectionStats,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const node = (id: number, label: string) =>
   OntologyGraphNode.make({

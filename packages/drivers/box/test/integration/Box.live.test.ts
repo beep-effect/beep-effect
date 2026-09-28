@@ -1,5 +1,7 @@
 import * as B from "@beep/box";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -23,12 +25,12 @@ pipe(
     onNone: () =>
       describe("@beep/box live integration (CLOUD_BOX_TOKEN)", () => {
         it("skips live API calls when CLOUD_BOX_TOKEN is absent", () => {
-          expect(O.isNone(boxToken)).toBe(true);
+          assertNone(boxToken);
         });
       }),
     onSome: () =>
       describe.concurrent("@beep/box live integration", () => {
-        layer(B.Box.layer, { timeout: "30 seconds" })((it) => {
+        it.layer(B.Box.layer, { timeout: "30 seconds" })((it) => {
           it.effect(
             "reads the authenticated user through the live Box API",
             Effect.fnUntraced(function* () {

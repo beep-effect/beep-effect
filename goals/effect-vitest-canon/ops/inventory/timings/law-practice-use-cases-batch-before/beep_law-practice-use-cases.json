@@ -1,0 +1,86 @@
+{
+  "package": "@beep/law-practice-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:26:16.561000+00:00",
+  "totalMs": 5012.339111328125,
+  "testCount": 60,
+  "files": [
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "ms": 34.56005859375,
+      "tests": 27
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "ms": 14.56298828125,
+      "tests": 18
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/PatentClaimCandidate.test.ts",
+      "ms": 8.443115234375,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "ms": 29.339111328125,
+      "tests": 6
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.631103515625,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas",
+      "ms": 29.240859999999884
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity preserves the IrToLawExtractionError encoded wire shape",
+      "ms": 29.010395000000244
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity preserves the spike EntityInput encoded audit envelope",
+      "ms": 29.002112000000125
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity uses OfficeActionReviewError codec statics for boundary error guards",
+      "ms": 28.995081000000027
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity composes the nine-tool practice KG surface with a typed claims not-loaded branch",
+      "ms": 28.993478999999752
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one releases only once every current event is disposed",
+      "ms": 16.866063999999824
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one stays blocked when only one of the two references is disposed",
+      "ms": 16.452376000000186
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one gates on both current events when neither is disposed",
+      "ms": 15.382218000000648
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — one AI-discovered event stops blocking once a disposition covers the exact observation version",
+      "ms": 11.68505499999992
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — one AI-discovered event blocks promotion while the event carries no disposition",
+      "ms": 10.427617999999711
+    }
+  ]
+}

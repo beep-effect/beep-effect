@@ -37,9 +37,11 @@ import {
 } from "@beep/documents-use-cases/public";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -53,25 +55,13 @@ const decodeVaultSyncStatus = S.decodeEffect(VaultSyncStatus);
 const decodeVaultSyncStatusInput = S.decodeEffect(VaultSyncStatusInput);
 const encodeVaultSyncStatus = S.encodeEffect(VaultSyncStatus);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const zero = NonNegativeInt.make(0);
@@ -99,29 +89,29 @@ describe("DmsMirror port models", () => {
       name: "matters",
       remoteId: RemoteItemId.make("9000"),
     });
-    expect(O.isNone(item.parentRemoteId)).toBe(true);
+    assertNone(item.parentRemoteId);
 
     const event = DmsRemoteEvent.make({
       eventId: "evt-1",
       eventType: "edited",
       payload: { eventType: "ITEM_MODIFY" },
     });
-    expect(O.isNone(event.remoteId)).toBe(true);
-    expect(O.isNone(event.itemKind)).toBe(true);
+    assertNone(event.remoteId);
+    assertNone(event.itemKind);
 
-    expect(O.isNone(PollEventsInput.make({}).streamPosition)).toBe(true);
-    expect(O.isNone(EnsureFolderInput.make({ name: "matters" }).parentRemoteId)).toBe(true);
+    assertNone(PollEventsInput.make({}).streamPosition);
+    assertNone(EnsureFolderInput.make({ name: "matters" }).parentRemoteId);
   });
 
   it.effect(
     "exposes the DmsEventType literal family",
     Effect.fnUntraced(function* () {
-      expect(DmsEventType.is.created("created")).toBe(true);
-      expect(DmsEventType.is.deleted("created")).toBe(false);
+      pipe(DmsEventType.is.created("created"), assertTrue);
+      pipe(DmsEventType.is.deleted("created"), assertFalse);
       expect(DmsEventType.Enum.unknown).toBe("unknown");
 
       const exit = yield* Effect.exit(decodeUnknownDmsEventType("uploaded"));
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -155,59 +145,87 @@ describe("DmsMirror port models", () => {
           refresh: connectedProbe,
         })
       );
-      expect(probe.connected).toBe(true);
+      pipe(probe.connected, assertTrue);
     })
   );
 
-  it("round-trips schema-derived mirror models and inputs", () => {
-    assertSchemaArbitraryRoundTrip(DmsRemoteItem);
-    assertSchemaArbitraryRoundTrip(DmsRemoteEvent);
-    assertSchemaArbitraryRoundTrip(DmsEventPage);
-    assertSchemaArbitraryRoundTrip(EnsureFolderInput);
-    assertSchemaArbitraryRoundTrip(UploadFileInput);
-    assertSchemaArbitraryRoundTrip(UploadFileVersionInput);
-    assertSchemaArbitraryRoundTrip(MoveItemInput);
-    assertSchemaArbitraryRoundTrip(RenameItemInput);
-    assertSchemaArbitraryRoundTrip(PollEventsInput);
-  });
+  it.prop(
+    "round-trips schema-derived mirror models and inputs",
+    [
+      Arbitrary.schema(DmsRemoteItem),
+      Arbitrary.schema(DmsRemoteEvent),
+      Arbitrary.schema(DmsEventPage),
+      Arbitrary.schema(EnsureFolderInput),
+      Arbitrary.schema(UploadFileInput),
+      Arbitrary.schema(UploadFileVersionInput),
+      Arbitrary.schema(MoveItemInput),
+      Arbitrary.schema(RenameItemInput),
+      Arbitrary.schema(PollEventsInput),
+    ],
+    ([
+      dmsRemoteItem,
+      dmsRemoteEvent,
+      dmsEventPage,
+      ensureFolderInput,
+      uploadFileInput,
+      uploadFileVersionInput,
+      moveItemInput,
+      renameItemInput,
+      pollEventsInput,
+    ]) => {
+      assertSchemaRoundTrip(DmsRemoteItem, dmsRemoteItem);
+      assertSchemaRoundTrip(DmsRemoteEvent, dmsRemoteEvent);
+      assertSchemaRoundTrip(DmsEventPage, dmsEventPage);
+      assertSchemaRoundTrip(EnsureFolderInput, ensureFolderInput);
+      assertSchemaRoundTrip(UploadFileInput, uploadFileInput);
+      assertSchemaRoundTrip(UploadFileVersionInput, uploadFileVersionInput);
+      assertSchemaRoundTrip(MoveItemInput, moveItemInput);
+      assertSchemaRoundTrip(RenameItemInput, renameItemInput);
+      assertSchemaRoundTrip(PollEventsInput, pollEventsInput);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });
 
 describe("VaultSyncEngine port", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips the vault sync status read model",
-    Effect.fnUntraced(function* () {
-      const decoded = yield* decodeVaultSyncStatus({
-        conflictItems: 0,
-        connected: false,
-        cursorPosition: null,
-        currentItems: 0,
-        disconnectReason: "credentials-missing",
-        errorItems: 0,
-        failedOperations: 0,
-        openConflicts: 0,
-        pendingItems: 0,
-        probedAt: null,
-        provider: "box",
-        queuedOperations: 0,
-      });
+    [Arbitrary.schema(VaultSyncStatus)],
+    ([vaultSyncStatus]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeVaultSyncStatus({
+          conflictItems: 0,
+          connected: false,
+          cursorPosition: null,
+          currentItems: 0,
+          disconnectReason: "credentials-missing",
+          errorItems: 0,
+          failedOperations: 0,
+          openConflicts: 0,
+          pendingItems: 0,
+          probedAt: null,
+          provider: "box",
+          queuedOperations: 0,
+        });
 
-      expect(O.isNone(decoded.cursorPosition)).toBe(true);
-      expect(yield* encodeVaultSyncStatus(decoded)).toStrictEqual({
-        conflictItems: 0,
-        connected: false,
-        cursorPosition: null,
-        currentItems: 0,
-        disconnectReason: "credentials-missing",
-        errorItems: 0,
-        failedOperations: 0,
-        openConflicts: 0,
-        pendingItems: 0,
-        probedAt: null,
-        provider: "box",
-        queuedOperations: 0,
-      });
-      assertSchemaArbitraryRoundTrip(VaultSyncStatus);
-    })
+        assertNone(decoded.cursorPosition);
+        expect(yield* encodeVaultSyncStatus(decoded)).toStrictEqual({
+          conflictItems: 0,
+          connected: false,
+          cursorPosition: null,
+          currentItems: 0,
+          disconnectReason: "credentials-missing",
+          errorItems: 0,
+          failedOperations: 0,
+          openConflicts: 0,
+          pendingItems: 0,
+          probedAt: null,
+          provider: "box",
+          queuedOperations: 0,
+        });
+        assertSchemaRoundTrip(VaultSyncStatus, vaultSyncStatus);
+      }),
+    { arbitrary: fcRuns(10) }
   );
 
   it.effect(
@@ -232,8 +250,8 @@ describe("VaultSyncEngine port", () => {
       );
       expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");
 
-      expect(VaultSyncError.is(VaultScanFailed.make({ reason: "vault root missing" }))).toBe(true);
-      expect(VaultSyncError.is(VaultSyncActionError.new("client-safe failure"))).toBe(false);
+      pipe(VaultSyncError.is(VaultScanFailed.make({ reason: "vault root missing" })), assertTrue);
+      pipe(VaultSyncError.is(VaultSyncActionError.new("client-safe failure")), assertFalse);
     })
   );
 
@@ -252,7 +270,7 @@ describe("VaultSyncEngine port", () => {
         return yield* service.status(VaultSyncStatusInput.make({ workspaceId }));
       }).pipe(Effect.provideService(VaultSyncEngine, engine));
 
-      expect(status.connected).toBe(false);
+      pipe(status.connected, assertFalse);
     })
   );
 
@@ -261,22 +279,39 @@ describe("VaultSyncEngine port", () => {
     Effect.fnUntraced(function* () {
       // Both construction and missing-key decoding must stay wire-compatible
       // with pre-forceProbe callers, which never bypass the probe cache.
-      expect(VaultSyncStatusInput.make({ workspaceId }).forceProbe).toBe(false);
+      pipe(VaultSyncStatusInput.make({ workspaceId }).forceProbe, assertFalse);
       const decodedInput = yield* decodeVaultSyncStatusInput({ workspaceId: 1 });
-      expect(decodedInput.forceProbe).toBe(false);
+      pipe(decodedInput.forceProbe, assertFalse);
       const decodedPayload = yield* decodeGetVaultSyncStatusPayload({ workspaceId: 1 });
-      expect(decodedPayload.forceProbe).toBe(false);
-      expect(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe).toBe(true);
+      pipe(decodedPayload.forceProbe, assertFalse);
+      pipe(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe, assertTrue);
     })
   );
 
-  it("round-trips schema-derived engine inputs", () => {
-    assertSchemaArbitraryRoundTrip(SyncOnceInput);
-    assertSchemaArbitraryRoundTrip(VaultSyncStatusInput);
-    assertSchemaArbitraryRoundTrip(ListOpenConflictsInput);
-    assertSchemaArbitraryRoundTrip(MarkConflictReviewedInput);
-    assertSchemaArbitraryRoundTrip(GetVaultSyncStatusPayload);
-  });
+  it.prop(
+    "round-trips schema-derived engine inputs",
+    [
+      Arbitrary.schema(SyncOnceInput),
+      Arbitrary.schema(VaultSyncStatusInput),
+      Arbitrary.schema(ListOpenConflictsInput),
+      Arbitrary.schema(MarkConflictReviewedInput),
+      Arbitrary.schema(GetVaultSyncStatusPayload),
+    ],
+    ([
+      syncOnceInput,
+      vaultSyncStatusInput,
+      listOpenConflictsInput,
+      markConflictReviewedInput,
+      getVaultSyncStatusPayload,
+    ]) => {
+      assertSchemaRoundTrip(SyncOnceInput, syncOnceInput);
+      assertSchemaRoundTrip(VaultSyncStatusInput, vaultSyncStatusInput);
+      assertSchemaRoundTrip(ListOpenConflictsInput, listOpenConflictsInput);
+      assertSchemaRoundTrip(MarkConflictReviewedInput, markConflictReviewedInput);
+      assertSchemaRoundTrip(GetVaultSyncStatusPayload, getVaultSyncStatusPayload);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });
 
 describe("VaultSyncRpcs group", () => {
@@ -297,8 +332,13 @@ describe("VaultSyncRpcs group", () => {
     })
   );
 
-  it("round-trips schema-derived RPC payloads", () => {
-    assertSchemaArbitraryRoundTrip(VaultSyncWorkspacePayload);
-    assertSchemaArbitraryRoundTrip(MarkVaultSyncConflictReviewedPayload);
-  });
+  it.prop(
+    "round-trips schema-derived RPC payloads",
+    [Arbitrary.schema(VaultSyncWorkspacePayload), Arbitrary.schema(MarkVaultSyncConflictReviewedPayload)],
+    ([vaultSyncWorkspacePayload, markVaultSyncConflictReviewedPayload]) => {
+      assertSchemaRoundTrip(VaultSyncWorkspacePayload, vaultSyncWorkspacePayload);
+      assertSchemaRoundTrip(MarkVaultSyncConflictReviewedPayload, markVaultSyncConflictReviewedPayload);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

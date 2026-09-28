@@ -1,11 +1,13 @@
 import {
   appendChange,
+  appendChanges,
   applyChangeOperationsWithDelta,
   ChangeOperation,
   CreateSessionInput,
   createSession,
   deriveNamedGraphs,
   deriveSessionGraphPartitions,
+  GraphPartition,
   graphPartitionIri,
   isExcludedFromReasoning,
   SessionId,
@@ -13,8 +15,11 @@ import {
 import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as SchemaIssue from "effect/SchemaIssue";
 
@@ -108,21 +113,36 @@ describe("Ontology Session aggregate", () => {
   });
 
   it("applies remove operations without mutating other partitions", () => {
-    const session = appendChange(
-      createSession(
-        CreateSessionInput.make({
-          id: sessionId,
-          baseDataset: makeDataset([nameQuad, knowsQuad]),
+    const untouched = A.filter(GraphPartition.Options, (partition) => partition !== "asserted");
+    const seeded = appendChanges(
+      createSession(CreateSessionInput.make({ id: sessionId, baseDataset: makeDataset([nameQuad, knowsQuad]) })),
+      A.map(untouched, (partition) =>
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition,
+          quad: makeQuad(makeNamedNode(`https://example.test/${partition}`), RDF_TYPE, {
+            object: makeNamedNode("https://example.test/Untouched"),
+            graph: makeNamedNode(graphPartitionIri(partition)),
+          }),
         })
-      ),
+      )
+    );
+    const before = deriveSessionGraphPartitions(seeded);
+    for (const partition of untouched) expect(before[partition].quads).toHaveLength(1);
+    const session = appendChange(
+      seeded,
       ChangeOperation.make({
         kind: "removeQuad",
         partition: "asserted",
         quad: knowsQuad,
       })
     );
-
+    const after = deriveSessionGraphPartitions(session);
     expect(deriveSessionGraphPartitions(session).asserted.quads).toHaveLength(1);
+    expect(A.map(after.asserted.quads, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+    for (const partition of untouched) {
+      expect(A.map(after[partition].quads, serializeQuad)).toEqual(A.map(before[partition].quads, serializeQuad));
+    }
   });
 
   it("accepts default-graph quads for non-asserted partitions", () => {
@@ -156,11 +176,11 @@ describe("Ontology Session aggregate", () => {
     );
     const namedGraphs = deriveNamedGraphs(session);
 
-    expect(isExcludedFromReasoning("asserted")).toBe(false);
-    expect(isExcludedFromReasoning("ontologies")).toBe(false);
-    expect(isExcludedFromReasoning("inferred")).toBe(true);
-    expect(isExcludedFromReasoning("shapes")).toBe(true);
-    expect(isExcludedFromReasoning("provenance")).toBe(true);
+    pipe(isExcludedFromReasoning("asserted"), assertFalse);
+    pipe(isExcludedFromReasoning("ontologies"), assertFalse);
+    pipe(isExcludedFromReasoning("inferred"), assertTrue);
+    pipe(isExcludedFromReasoning("shapes"), assertTrue);
+    pipe(isExcludedFromReasoning("provenance"), assertTrue);
     expect(namedGraphs).toHaveLength(5);
   });
 
@@ -189,6 +209,11 @@ describe("Ontology Session aggregate", () => {
       expect(applied.delta.added).toHaveLength(1);
       expect(applied.delta.removed).toHaveLength(1);
       expect(deriveSessionGraphPartitions(applied.session).asserted.quads).toHaveLength(1);
+      expect(A.map(applied.delta.added, serializeQuad)).toEqual([serializeQuad(knowsQuad)]);
+      expect(A.map(applied.delta.removed, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+      expect(A.map(deriveSessionGraphPartitions(applied.session).asserted.quads, serializeQuad)).toEqual([
+        serializeQuad(knowsQuad),
+      ]);
       yield* Effect.void;
     })
   );

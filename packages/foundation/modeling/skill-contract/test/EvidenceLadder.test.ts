@@ -16,8 +16,9 @@ import {
   SemanticallyApplied,
   transportCompleted,
 } from "@beep/skill-contract";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -84,6 +85,15 @@ describe("@beep/skill-contract EvidenceLadder", () => {
     expect(isLadder(delivered)).toBe(true);
     expect(isLadder(applied)).toBe(true);
     expect(isLadder(mismatched)).toBe(false);
+    expect(isLadder(Accepted.make({ ...accepted, accepted: reference(persistedType) }))).toBe(false);
+    expect(isLadder(Persisted.make({ ...persisted, accepted: reference(persistedType) }))).toBe(false);
+    expect(isLadder(Persisted.make({ ...persisted, persisted: reference(acceptedType) }))).toBe(false);
+    expect(isLadder(Delivered.make({ ...delivered, accepted: reference(persistedType) }))).toBe(false);
+    expect(isLadder(Delivered.make({ ...delivered, persisted: reference(acceptedType) }))).toBe(false);
+    expect(isLadder(Delivered.make({ ...delivered, delivered: reference(acceptedType) }))).toBe(false);
+    expect(isLadder(SemanticallyApplied.make({ ...applied, accepted: reference(persistedType) }))).toBe(false);
+    expect(isLadder(SemanticallyApplied.make({ ...applied, persisted: reference(acceptedType) }))).toBe(false);
+    expect(isLadder(SemanticallyApplied.make({ ...applied, delivered: reference(acceptedType) }))).toBe(false);
   });
 
   it("gives each contract-bound ladder schema a distinct identity", () => {
@@ -93,21 +103,16 @@ describe("@beep/skill-contract EvidenceLadder", () => {
     expect(S.resolveAnnotations(Ladder)?.identifier).not.toBe(S.resolveAnnotations(OtherLadder)?.identifier);
   });
 
-  it("round-trips schema-derived arbitrary structural ladder states", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(EvidenceLadderState)]),
-          ([candidate]) => {
-            const encoded = Result.getOrThrow(encodeUnknownEvidenceLadderStateResult(candidate));
-            const decoded = Result.getOrThrow(decodeEvidenceLadderStateResult(encoded));
+  it.effect.prop(
+    "round-trips schema-derived arbitrary structural ladder states",
+    [Arbitrary.schema(EvidenceLadderState)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const encoded = Result.getOrThrow(encodeUnknownEvidenceLadderStateResult(candidate));
+        const decoded = Result.getOrThrow(decodeEvidenceLadderStateResult(encoded));
 
-            expect(S.toEquivalence(EvidenceLadderState)(decoded, candidate)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(S.toEquivalence(EvidenceLadderState)(decoded, candidate)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

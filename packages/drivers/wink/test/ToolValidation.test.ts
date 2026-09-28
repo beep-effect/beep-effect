@@ -6,6 +6,7 @@ import { ExtractKeywords } from "@beep/nlp-processing/Tools/ExtractKeywords";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity";
 import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   CorpusManagerError,
@@ -22,8 +23,9 @@ import {
   WinkError,
   WinkNlpToolkitLive,
 } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Equal, Exit, Layer, Schema, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Equal, Exit, pipe, Schema, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 
@@ -40,33 +42,16 @@ const encodeEntityGroupName = Schema.encodeEffect(EntityGroupName);
 const encodeInstanceId = Schema.encodeEffect(InstanceId);
 const encodeSentenceSpanFailure = Schema.encodeEffect(SentenceSpanFailure);
 const encodeVectorizerError = Schema.encodeEffect(VectorizerError);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <
   SchemaT extends Schema.ConstraintCodec<unknown, unknown, never, never>,
->(schema: SchemaT) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* Schema.encodeEffect(schema)(value);
-        const decoded = yield* Schema.decodeEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+>(schema: SchemaT, value: SchemaT["Type"]) {
+  const encoded = yield* Schema.encodeEffect(schema)(value);
+  const decoded = yield* Schema.decodeEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(decode: Effect.Effect<A, E>) {
-  expect(Exit.isFailure(yield* Effect.exit(decode))).toBe(true);
+  pipe(yield* Effect.exit(decode), Exit.isFailure, assertTrue);
 });
 
 describe("Tool validation", () => {
@@ -126,19 +111,39 @@ describe("Tool validation", () => {
     })
   );
 
-  it.effect("round-trips Tversky success payloads derived from the source schema", () =>
-    assertRoundTrip(TverskySimilarity.successSchema)
+  it.effect.prop(
+    "round-trips Tversky success payloads derived from the source schema",
+    { value: Arbitrary.schema(TverskySimilarity.successSchema) },
+    ({ value }) => assertRoundTrip(TverskySimilarity.successSchema, value),
+    { arbitrary: fcRuns(25) }
   );
 
-  it.effect("round-trips wink schema models derived from the source schemas", () =>
-    Effect.gen(function* () {
-      yield* assertRoundTrip(EntityGroupName);
-      yield* assertRoundTrip(InstanceId);
-      yield* assertRoundTrip(CustomEntityExample);
-      yield* assertRoundTrip(WinkEngineCustomEntities);
-      yield* assertRoundTrip(WinkEngineState);
-      yield* assertRoundTrip(SentenceSpanFailure);
-    })
+  it.effect.prop(
+    "round-trips wink schema models derived from the source schemas",
+    {
+      entityGroupName: Arbitrary.schema(EntityGroupName),
+      instanceId: Arbitrary.schema(InstanceId),
+      customEntityExample: Arbitrary.schema(CustomEntityExample),
+      customEntities: Arbitrary.schema(WinkEngineCustomEntities),
+      engineState: Arbitrary.schema(WinkEngineState),
+      sentenceSpanFailure: Arbitrary.schema(SentenceSpanFailure),
+    },
+    Effect.fnUntraced(function* ({
+      entityGroupName,
+      instanceId,
+      customEntityExample,
+      customEntities,
+      engineState,
+      sentenceSpanFailure,
+    }) {
+      yield* assertRoundTrip(EntityGroupName, entityGroupName);
+      yield* assertRoundTrip(InstanceId, instanceId);
+      yield* assertRoundTrip(CustomEntityExample, customEntityExample);
+      yield* assertRoundTrip(WinkEngineCustomEntities, customEntities);
+      yield* assertRoundTrip(WinkEngineState, engineState);
+      yield* assertRoundTrip(SentenceSpanFailure, sentenceSpanFailure);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("keeps absorbed wink schema invariants byte-stable at the wire boundary", () =>
@@ -186,39 +191,41 @@ describe("Tool validation", () => {
     })
   );
 
-  it.effect("rejects invalid custom-entity bracket patterns during engine learning", () =>
-    Effect.gen(function* () {
-      const brokenEntities = WinkEngineCustomEntities.make({
-        name: EntityGroupName.make("custom-entities"),
-        patterns: [
-          CustomEntityExample.make({
-            mark: O.none(),
-            name: "BROKEN_ENTITY",
-            patterns: ["[NOT_A_TAG]"],
-          }),
-        ],
-      });
+  it.layer(WinkEngineLive)("rejects invalid custom-entity bracket patterns during engine learning", (it) => {
+    it.effect("rejects invalid custom-entity bracket patterns during engine learning", () =>
+      Effect.gen(function* () {
+        const brokenEntities = WinkEngineCustomEntities.make({
+          name: EntityGroupName.make("custom-entities"),
+          patterns: [
+            CustomEntityExample.make({
+              mark: O.none(),
+              name: "BROKEN_ENTITY",
+              patterns: ["[NOT_A_TAG]"],
+            }),
+          ],
+        });
 
-      const program = Effect.gen(function* () {
-        const engine = yield* WinkEngine;
-        yield* engine.learnCustomEntities(brokenEntities);
-      }).pipe(provideScopedLayer(WinkEngineLive));
-      const exitedProgram = Effect.exit(program);
-      const result = yield* exitedProgram;
-      const rendered = Exit.match(result, {
-        onFailure: Cause.pretty,
-        onSuccess: () => "",
-      });
+        const program = Effect.gen(function* () {
+          const engine = yield* WinkEngine;
+          yield* engine.learnCustomEntities(brokenEntities);
+        });
+        const exitedProgram = Effect.exit(program);
+        const result = yield* exitedProgram;
+        const rendered = Exit.match(result, {
+          onFailure: Cause.pretty,
+          onSuccess: () => "",
+        });
 
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(rendered).toContain("learnCustomEntities");
-      expect(rendered).toContain('incorrect token "not_a_tag"');
-    })
-  );
+        pipe(result, Exit.isFailure, assertTrue);
+        expect(rendered).toContain("learnCustomEntities");
+        expect(rendered).toContain('incorrect token "not_a_tag"');
+      })
+    );
+  });
 
-  it.effect("returns structured tool failures for expected toolkit errors", () =>
-    Effect.gen(function* () {
-      const result = yield* Effect.gen(function* () {
+  it.layer(WinkNlpToolkitLive)("returns structured tool failures for expected toolkit errors", (it) => {
+    it.effect("returns structured tool failures for expected toolkit errors", () =>
+      Effect.gen(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("QueryCorpus", {
           corpusId: "missing-corpus",
@@ -226,22 +233,22 @@ describe("Tool validation", () => {
         });
         const results = yield* Stream.runCollect(stream);
 
-        return results[0];
-      }).pipe(provideScopedLayer(WinkNlpToolkitLive));
+        const result = results[0];
 
-      expect(result?.isFailure).toBe(true);
-      expect(result?.result).toMatchObject({
-        operation: "corpus.query",
-        reason: "CorpusManagerError",
-        retryable: false,
-        toolName: "QueryCorpus",
-      });
-      expect(result?.encodedResult).toMatchObject({
-        operation: "corpus.query",
-        reason: "CorpusManagerError",
-        retryable: false,
-        toolName: "QueryCorpus",
-      });
-    })
-  );
+        expect(result?.isFailure).toBe(true);
+        expect(result?.result).toMatchObject({
+          operation: "corpus.query",
+          reason: "CorpusManagerError",
+          retryable: false,
+          toolName: "QueryCorpus",
+        });
+        expect(result?.encodedResult).toMatchObject({
+          operation: "corpus.query",
+          reason: "CorpusManagerError",
+          retryable: false,
+          toolName: "QueryCorpus",
+        });
+      })
+    );
+  });
 });

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/agents-domain",
+  "sourceHead": "cbf8b62cf17f3a6316b44bb39b908d6e6a1363c3",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.173680659994716,
+  "bunWholeCommandSeconds": 2.367898326003342,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [10.5, 12.9150390625, 17.19287109375],
+  "loadAfter": [10.4599609375, 12.8662109375, 17.15380859375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.23 avg300=0.71 total=422133961\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.09 total=136102657\nfull avg10=0.00 avg60=0.01 avg300=0.09 total=130734575\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.08 total=744546419\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=663520399\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.26 avg60=0.43 avg300=0.74 total=422297018\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.09 total=136113550\nfull avg10=0.00 avg60=0.00 avg300=0.09 total=130745187\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.07 total=744550454\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=663522229\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "c2acf66b42448efea67739fd63cb9c38eb305be7b2d78fd360fe3ea989fb79dc"
+    },
+    {
+      "file": "packages/agents/domain/package.json",
+      "sha256": "3be0b0858430befcb3b99ce7920ac6d978f461a726e50622011d7c8eb4086889"
+    },
+    {
+      "file": "packages/agents/domain/src/index.ts",
+      "sha256": "99c05a0d5e50345f8cb10876d0f30e73ab1ffb3dcbe99502c837084409618fd7"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Fixture.values.ts",
+      "sha256": "a00eb23d5f0272363658f4ee35d1a7dcb413fad43188fdb914015ec297425447"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/index.ts",
+      "sha256": "772a054f63215a63db4d7c889e7f7c2621bcafdc0f3acddd172c8de7048aee3c"
+    },
+    {
+      "file": "packages/agents/domain/src/values/index.ts",
+      "sha256": "84816592eff49b8c04d2b5e382d7831db7b32d8d5f55a30312cb820e96478615"
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
+      "sha256": "16ff5ec1c6b538be9f8786876b046df8689b45df33ab1f0484ebee713dd12d33"
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "sha256": "2cce3dc0e2f31c3a5cdb91f2ec84573998c29b855dff67320a571b36bd81d1bc"
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/index.ts",
+      "sha256": "0a7bec7caba7f2cc8dfb6f42a092a858ce00195ef754133fdf33f7f149186a4d"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
+      "sha256": "e1a0721729b284806692ceea80b667b28f5dbeb9d1ef06f7df71a4db452448c6"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Agent/Agent.values.ts",
+      "sha256": "6fc435f7ea52d247f28d92daadba445aa6c6fca6910e956d4b1dde2613a7a292"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Agent/index.ts",
+      "sha256": "2e7a86d04183eccb67bd5e93450fb58386979eba5215d73d6154948486893b04"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.behavior.ts",
+      "sha256": "dbb1a22af00ddab8028bc6cd80191512217d0842a3a411d532015d720072bfe4"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.model.ts",
+      "sha256": "e1a940975bb853fefc31548c8dce2d8f04d5769457d92c548ca3da2fad70bb9a"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "sha256": "c1cfa49f01c0c39f16f4875f4c1fc89d0344adc446f8cb24212899211e8fceee"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/index.ts",
+      "sha256": "c0bb5158d96b302b5d7d0fad586f573176bc7b18cb876d13d9b62d262fcf228b"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Skill/Skill.model.ts",
+      "sha256": "2f6dd59bf797943c47654498cbe75c74d2a1926042812ad2f648dd62cfd07246"
+    },
+    {
+      "file": "packages/agents/domain/src/entities/Skill/index.ts",
+      "sha256": "31527b68aeb1b0ba8437e6c2daeaf10e6bb06496e0e7907d5e24847898038441"
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "sha256": "99f197124bb9a20bf8bbdc9fc9692b7a731c979925753ed2be4b3351a6595f3c"
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "sha256": "bbb2a60ed7ddee85ec5f7e73e6c73e150837cd0f9d0c4bf77131b64ff660f2d5"
+    }
+  ],
+  "rawReporterSha256": "8e25125655342e827b0571f5831f73b0c0caf11cc1625fda81fa4f17ef0cc6c9",
+  "rawLogSha256": "5ee074d8633cd7eade3ea612f1d10c0ca2bbd342c6580a8861ac806ae8f25f5e",
+  "acceptance": "One configured Node and Bun final-source observation each: 22 passed,2 suites. Load and pressure are retained without normalization or best-of selection; no causal speedup claim. These source hashes were verified unchanged after the main merge."
+}

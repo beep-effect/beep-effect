@@ -872,6 +872,7 @@
           "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -880,6 +881,7 @@
           "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -895,6 +897,7 @@
           "@beep/observability",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-use-cases"
@@ -908,6 +911,7 @@
           "@beep/observability",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-use-cases"
@@ -921,6 +925,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -929,6 +934,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -946,6 +952,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -961,6 +968,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -971,13 +979,15 @@
           "@beep/agents-domain",
           "@beep/agents-tables",
           "@beep/effect-drizzle",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-tables",
           "@beep/effect-drizzle",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ]
       },
       {
@@ -990,6 +1000,7 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1003,6 +1014,7 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1015,6 +1027,7 @@
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1022,6 +1035,7 @@
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1032,6 +1046,7 @@
           "@beep/ai-sync",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1039,6 +1054,7 @@
           "@beep/ai-sync",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1049,12 +1065,14 @@
           "@beep/anthropic",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1069,7 +1087,7 @@
           "@beep/pacer",
           "@beep/qa-capture",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1081,7 +1099,7 @@
           "@beep/pacer",
           "@beep/qa-capture",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1091,6 +1109,7 @@
           "@beep/api-transport",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1098,6 +1117,7 @@
           "@beep/api-transport",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1108,13 +1128,15 @@
           "@beep/architecture-lab-client",
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-client",
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-use-cases",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner"
         ]
       },
       {
@@ -1123,12 +1145,14 @@
           "@beep/architecture-lab-config",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-config",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1139,14 +1163,18 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1158,6 +1186,7 @@
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
           "@beep/architecture-lab-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1167,6 +1196,7 @@
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
           "@beep/architecture-lab-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1182,6 +1212,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1195,6 +1226,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1206,6 +1238,7 @@
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1213,6 +1246,7 @@
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1225,6 +1259,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1235,6 +1270,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1247,6 +1283,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1256,6 +1293,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1266,12 +1304,14 @@
           "@beep/box",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/box",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1282,6 +1322,7 @@
           "@beep/box-provisioning",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1289,6 +1330,7 @@
           "@beep/box-provisioning",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1298,6 +1340,7 @@
           "@beep/brand",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1305,6 +1348,7 @@
           "@beep/brand",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1315,6 +1359,7 @@
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1322,6 +1367,7 @@
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1332,12 +1378,14 @@
           "@beep/ciops",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/ciops",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1418,6 +1466,7 @@
           "@beep/epistemic-tables",
           "@beep/law-practice-tables",
           "@beep/postgres",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-tables"
@@ -1429,6 +1478,7 @@
           "@beep/epistemic-tables",
           "@beep/law-practice-tables",
           "@beep/postgres",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-tables"
@@ -1440,12 +1490,14 @@
           "@beep/discord",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/discord",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1456,6 +1508,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1464,6 +1517,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1472,16 +1526,20 @@
         "from": "@beep/dock",
         "allow": [
           "@beep/dock",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/dock",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1492,14 +1550,16 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/dock",
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-runner"
         ]
       },
       {
@@ -1511,6 +1571,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1521,6 +1582,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1564,6 +1626,7 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1572,6 +1635,7 @@
           "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1583,6 +1647,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1591,6 +1656,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1600,6 +1666,7 @@
           "@beep/drizzle",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1607,6 +1674,7 @@
           "@beep/drizzle",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1617,6 +1685,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1624,6 +1693,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1636,6 +1706,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1645,6 +1716,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1657,6 +1729,8 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ],
@@ -1666,6 +1740,8 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ]
@@ -1693,6 +1769,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1701,6 +1778,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -1709,12 +1787,16 @@
         "allow": [
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1726,6 +1808,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1736,6 +1819,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1792,6 +1876,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1799,6 +1884,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1812,6 +1898,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui"
         ],
@@ -1823,6 +1910,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui"
         ]
@@ -1839,6 +1927,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1851,6 +1940,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1860,6 +1950,7 @@
           "@beep/exiftool",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1867,6 +1958,7 @@
           "@beep/exiftool",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1877,6 +1969,7 @@
           "@beep/face-detection",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1884,6 +1977,7 @@
           "@beep/face-detection",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1904,6 +1998,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1912,6 +2007,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1923,6 +2019,7 @@
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1931,6 +2028,7 @@
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1941,6 +2039,7 @@
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1948,6 +2047,7 @@
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1958,6 +2058,7 @@
           "@beep/freshbooks",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1965,6 +2066,7 @@
           "@beep/freshbooks",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1978,6 +2080,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1987,6 +2090,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -1998,6 +2102,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2007,6 +2112,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2034,6 +2140,7 @@
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2041,6 +2148,7 @@
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2051,6 +2159,7 @@
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2058,6 +2167,7 @@
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2085,6 +2195,7 @@
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2094,6 +2205,7 @@
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2106,6 +2218,7 @@
           "@beep/nlp",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2115,6 +2228,7 @@
           "@beep/nlp",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2128,6 +2242,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2137,6 +2252,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2198,6 +2314,7 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2205,6 +2322,7 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2222,6 +2340,7 @@
           "@beep/nlp",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2236,6 +2355,7 @@
           "@beep/nlp",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2256,6 +2376,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/venice-ai"
@@ -2275,6 +2396,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/venice-ai"
@@ -2287,6 +2409,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2295,6 +2418,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2306,6 +2430,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2314,6 +2439,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2323,12 +2449,16 @@
         "allow": [
           "@beep/identity",
           "@beep/lint-rules",
+          "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/lint-rules",
+          "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2339,6 +2469,7 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2346,6 +2477,7 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2358,6 +2490,7 @@
           "@beep/m365-mcp",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2366,6 +2499,7 @@
           "@beep/m365-mcp",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2375,12 +2509,14 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2391,6 +2527,7 @@
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2399,6 +2536,7 @@
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2410,6 +2548,7 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2417,6 +2556,7 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -2426,6 +2566,7 @@
           "@beep/identity",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2433,6 +2574,7 @@
           "@beep/identity",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2446,6 +2588,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
@@ -2457,6 +2600,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
@@ -2470,6 +2614,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2479,6 +2624,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2507,6 +2653,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2515,6 +2662,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2529,6 +2677,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
@@ -2541,6 +2690,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
@@ -2553,6 +2703,7 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2561,6 +2712,7 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2572,6 +2724,7 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2580,6 +2733,7 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2595,6 +2749,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2607,6 +2762,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2631,6 +2787,7 @@
           "@beep/ontology-domain",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2638,6 +2795,7 @@
           "@beep/ontology-domain",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -2655,6 +2813,7 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2670,6 +2829,7 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2682,6 +2842,7 @@
           "@beep/ontology-ui",
           "@beep/ontology-use-cases",
           "@beep/rdf",
+          "@beep/test-runner",
           "@beep/ui",
           "@beep/utils"
         ],
@@ -2691,6 +2852,7 @@
           "@beep/ontology-ui",
           "@beep/ontology-use-cases",
           "@beep/rdf",
+          "@beep/test-runner",
           "@beep/ui",
           "@beep/utils"
         ]
@@ -2706,6 +2868,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2718,6 +2881,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2728,12 +2892,14 @@
           "@beep/identity",
           "@beep/openai",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -2743,6 +2909,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2750,6 +2917,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2760,6 +2928,7 @@
           "@beep/identity",
           "@beep/openclaw",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2767,6 +2936,7 @@
           "@beep/identity",
           "@beep/openclaw",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2779,6 +2949,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2787,6 +2958,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -2796,12 +2968,16 @@
           "@beep/identity",
           "@beep/pacer",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/pacer",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2812,6 +2988,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2820,6 +2997,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2849,6 +3027,7 @@
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2856,6 +3035,7 @@
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2867,6 +3047,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2875,6 +3056,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2910,14 +3092,14 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3026,12 +3208,14 @@
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/provenance",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -3042,6 +3226,7 @@
           "@beep/identity",
           "@beep/qa-capture",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3050,6 +3235,7 @@
           "@beep/identity",
           "@beep/qa-capture",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3060,6 +3246,7 @@
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3067,6 +3254,7 @@
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3078,6 +3266,7 @@
           "@beep/rdf-canonize",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3086,6 +3275,7 @@
           "@beep/rdf-canonize",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3100,6 +3290,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3111,6 +3302,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3182,6 +3374,7 @@
           "@beep/identity",
           "@beep/repo-configs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3189,6 +3382,7 @@
           "@beep/identity",
           "@beep/repo-configs",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3202,6 +3396,8 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3211,6 +3407,8 @@
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3220,6 +3418,7 @@
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3227,6 +3426,7 @@
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3238,6 +3438,7 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3245,6 +3446,7 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3254,6 +3456,7 @@
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3261,6 +3464,7 @@
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3352,6 +3556,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3360,6 +3565,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3384,6 +3590,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/wink",
           "@beep/xai"
         ],
@@ -3405,6 +3613,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/wink",
           "@beep/xai"
         ]
@@ -3417,6 +3627,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3425,6 +3636,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3435,6 +3647,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3443,6 +3656,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3453,12 +3667,14 @@
           "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/shared-domain",
           "@beep/shared-tables",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3484,6 +3700,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -3491,6 +3708,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
@@ -3562,6 +3780,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -3570,6 +3789,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -3592,11 +3812,13 @@
         "from": "@beep/trustgraph-workbench",
         "allow": [
           "@beep/brand",
+          "@beep/test-runner",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ],
         "allowTypeOnly": [
           "@beep/brand",
+          "@beep/test-runner",
           "@beep/trustgraph-workbench",
           "@beep/ui"
         ]
@@ -3623,12 +3845,14 @@
         "from": "@beep/ui",
         "allow": [
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
@@ -3639,6 +3863,7 @@
         "allow": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/utils"
@@ -3646,6 +3871,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/utils"
@@ -3657,6 +3883,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/uspto-mcp"
@@ -3665,6 +3892,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/uspto-mcp"
@@ -3693,6 +3921,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
@@ -3701,6 +3930,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
@@ -3714,6 +3944,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
@@ -3724,6 +3955,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
@@ -3737,6 +3969,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain"
         ],
@@ -3746,6 +3979,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain"
         ]
@@ -3761,6 +3995,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -3777,6 +4012,7 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -3790,6 +4026,7 @@
         "allow": [
           "@beep/effect-drizzle",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"
@@ -3797,6 +4034,7 @@
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"
@@ -3809,6 +4047,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
@@ -3818,6 +4057,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
@@ -3829,6 +4069,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
@@ -3837,6 +4078,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"

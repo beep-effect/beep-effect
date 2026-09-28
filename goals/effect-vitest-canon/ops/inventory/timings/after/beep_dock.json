@@ -1,0 +1,121 @@
+{
+  "package": "@beep/dock",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T17:08:47.492000+00:00",
+  "totalMs": 3536.49951171875,
+  "testCount": 112,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "ms": 30.68115234375,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "ms": 255.49951171875,
+      "tests": 19
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "ms": 21.411376953125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "ms": 32.47265625,
+      "tests": 18
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "ms": 13.416015625,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "ms": 20.002197265625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "ms": 20.1455078125,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "ms": 17.348876953125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "ms": 19.443603515625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
+      "ms": 6.23974609375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
+      "ms": 2.43115234375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
+      "ms": 2.50830078125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "dock snapshot codec properties round-trips arbitrary snapshots through the JSON codec",
+      "ms": 253.49948700000004
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms owns one registry lifetime and refreshes service-backed persistence",
+      "ms": 29.57832499999995
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "DockEngine owns discriminants, defaults, and pure queries on model companions",
+      "ms": 29.566106000000218
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms serializes rapid typed and unknown commands without cancellation or stale writes",
+      "ms": 29.354929999999968
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms publishes every rapid completion to the ordered host feed",
+      "ms": 29.3345690000001
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms does not publish live state for an explicit unchanged outcome",
+      "ms": 29.324372999999923
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms keeps state unchanged for malformed input and a missing snapshot",
+      "ms": 29.31587000000036
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "testName": "DockPolicy supports data-last use while remaining assignable to the policy contract",
+      "ms": 21.090829000000213
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology clamps anchored boxes to a sensible minimum inside the container",
+      "ms": 20.6484089999999
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology schema-rejects duplicate identities across docked and floating roots",
+      "ms": 20.43601099999978
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "package": "@beep/law-practice-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:39:12.309000+00:00",
+  "totalMs": 5105.21826171875,
+  "testCount": 69,
+  "files": [
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "ms": 170.43017578125,
+      "tests": 15
+    },
+    {
+      "file": "packages/law-practice/domain/test/Footnote.test.ts",
+      "ms": 2.262939453125,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "ms": 88.21826171875,
+      "tests": 22
+    },
+    {
+      "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "ms": 21.543701171875,
+      "tests": 20
+    },
+    {
+      "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
+      "ms": 22.590087890625,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary accepts future nested artifact headers before classifying contract drift",
+      "ms": 164.44860100000005
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary classifies nested header drift and rejects incoherent nested artifact identities",
+      "ms": 164.38489299999947
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary classifies every ratified lifecycle and incompatibility change",
+      "ms": 164.31676799999968
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary reports an unchanged artifact as compatible with no drift",
+      "ms": 164.30525099999977
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary rejects retained identities whose semantic fields or range boundaries drift",
+      "ms": 164.28501999999935
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain round-trips schema-owned law-practice invariants through encoded form",
+      "ms": 36.27334300000075
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain round-trips law-practice entity schemas through encoded form",
+      "ms": 36.23876999999993
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain decodes and constructs a Matter row",
+      "ms": 36.22054200000002
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain wires Matter to the law-practice product-entity identity",
+      "ms": 36.216825999999855
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain decodes an OfficeAction row",
+      "ms": 36.204187000000275
+    }
+  ]
+}

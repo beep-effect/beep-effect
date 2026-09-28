@@ -3,10 +3,10 @@ import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Config, Effect, FileSystem, Layer, Option as O, Path, Result } from "effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as S from "effect/Schema";
@@ -30,15 +30,10 @@ const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
 const BEEP_TEST_TIKA_URL_ENV = "BEEP_TEST_TIKA_URL";
 const liveMarker = "hello live tika corpus";
 
-// Snapshot the opt-in lane key once, treating absent and blank values as "not
-// configured" so the whole suite no-ops instead of dialing a phantom server.
+// Resolve the opt-in lane key through Config. Absent and empty values produce
+// explicit skipped registrations; configured values retain real HTTP execution.
 const liveTikaUrl = Config.String(BEEP_TEST_TIKA_URL_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
-
-const provideLive = provideScopedLayer(Layer.merge(FetchHttpClient.layer, NodeServices.layer));
-
-const skipNotice = Effect.logInfo(
-  `Skipping the live Tika Server lane because ${BEEP_TEST_TIKA_URL_ENV} is not configured.`
-);
+const skipNotice = `Live Tika Server requires ${BEEP_TEST_TIKA_URL_ENV}.`;
 
 const liveEngine = Effect.fn("TikaLive.engine")(function* (baseUrl: string) {
   return yield* makeTikaServerFileProcessingEngine(
@@ -68,6 +63,7 @@ const liveOperation = Effect.fn("TikaLive.operation")(function* (
     operationKind: "extract",
     preference: { engine: "tika" },
     source: SourceArtifact.make({
+      bytes,
       digest,
       extension,
       id: artifactId,
@@ -95,34 +91,31 @@ const textFixtures: ReadonlyArray<{
   { bytes: makeLiveDocx(), extension: "docx", format: "docx" },
 ];
 
-describe("@beep/tika live Tika Server", () => {
-  it.live(
-    "reports a runtime Apache Tika version from the live server",
-    Effect.fnUntraced(
-      function* () {
+it.layer(Layer.merge(FetchHttpClient.layer, NodeServices.layer), { excludeTestServices: true })(
+  "@beep/tika live Tika Server",
+  (it) => {
+    it.effect(
+      "reports a runtime Apache Tika version from the live server",
+      Effect.fnUntraced(function* (context) {
         const baseUrl = yield* liveTikaUrl;
         if (O.isNone(baseUrl)) {
-          return yield* skipNotice;
+          return yield* Effect.sync(() => context.skip(skipNotice));
         }
 
         const engine = yield* liveEngine(baseUrl.value);
 
         expect(engine.descriptor.version).toBeDefined();
         expect(engine.descriptor.version).toContain("Tika");
-      },
-      Effect.scoped,
-      provideLive
-    )
-  );
+      })
+    );
 
-  for (const { bytes, extension, format } of textFixtures) {
-    it.live(
-      `extracts live text and metadata for ${format}`,
-      Effect.fnUntraced(
-        function* () {
+    for (const { bytes, extension, format } of textFixtures) {
+      it.effect(
+        `extracts live text and metadata for ${format}`,
+        Effect.fnUntraced(function* (context) {
           const baseUrl = yield* liveTikaUrl;
           if (O.isNone(baseUrl)) {
-            return yield* skipNotice;
+            return yield* Effect.sync(() => context.skip(skipNotice));
           }
 
           const engine = yield* liveEngine(baseUrl.value);
@@ -131,20 +124,16 @@ describe("@beep/tika live Tika Server", () => {
           expect(result.engine).toBe("apache-tika");
           expect(result.text).toContain(liveMarker);
           expect(result.metadata["Content-Type"]).toBeDefined();
-        },
-        Effect.scoped,
-        provideLive
-      )
-    );
-  }
+        })
+      );
+    }
 
-  it.live(
-    "extracts live text-layer content from a generated PDF",
-    Effect.fnUntraced(
-      function* () {
+    it.effect(
+      "extracts live text-layer content from a generated PDF",
+      Effect.fnUntraced(function* (context) {
         const baseUrl = yield* liveTikaUrl;
         if (O.isNone(baseUrl)) {
-          return yield* skipNotice;
+          return yield* Effect.sync(() => context.skip(skipNotice));
         }
 
         const engine = yield* liveEngine(baseUrl.value);
@@ -152,19 +141,16 @@ describe("@beep/tika live Tika Server", () => {
 
         expect(result.metadata["Content-Type"]).toContain("pdf");
         expect(Str.isNonEmpty(result.text ?? "")).toBe(true);
-      },
-      Effect.scoped,
-      provideLive
-    )
-  );
+        expect(result.text).toContain(liveMarker);
+      })
+    );
 
-  it.live(
-    "returns live metadata only for a generated PNG",
-    Effect.fnUntraced(
-      function* () {
+    it.effect(
+      "returns live metadata only for a generated PNG",
+      Effect.fnUntraced(function* (context) {
         const baseUrl = yield* liveTikaUrl;
         if (O.isNone(baseUrl)) {
-          return yield* skipNotice;
+          return yield* Effect.sync(() => context.skip(skipNotice));
         }
 
         const engine = yield* liveEngine(baseUrl.value);
@@ -172,19 +158,15 @@ describe("@beep/tika live Tika Server", () => {
 
         expect(result.text).toBeUndefined();
         expect(result.metadata["Content-Type"]).toContain("png");
-      },
-      Effect.scoped,
-      provideLive
-    )
-  );
+      })
+    );
 
-  it.live(
-    "keeps an unparseable live payload inside the operation error contract",
-    Effect.fnUntraced(
-      function* () {
+    it.effect(
+      "keeps an unparseable live payload inside the operation error contract",
+      Effect.fnUntraced(function* (context) {
         const baseUrl = yield* liveTikaUrl;
         if (O.isNone(baseUrl)) {
-          return yield* skipNotice;
+          return yield* Effect.sync(() => context.skip(skipNotice));
         }
 
         const engine = yield* liveEngine(baseUrl.value);
@@ -196,9 +178,7 @@ describe("@beep/tika live Tika Server", () => {
         if (Result.isFailure(outcome)) {
           expect(outcome.failure._tag).toBe("FileProcessingOperationError");
         }
-      },
-      Effect.scoped,
-      provideLive
-    )
-  );
-});
+      })
+    );
+  }
+);

@@ -9,6 +9,10 @@ import { defineConfig } from "vitest/config";
 // prefix rewrite would turn into a doubled, nonexistent path) is gone here and
 // in the professional-desktop vite config alike.
 export default defineConfig({
+  // Rolldown deconflicts effect/schema and effect/Schema as case-colliding
+  // entry names, but Vite indexes them by their original names. Keep the
+  // lowercase namespace as native ESM so both public modules remain distinct.
+  optimizeDeps: { exclude: ["effect/schema"] },
   test: {
     name: "ontology-client-browser",
     include: ["test/browser/**/*.test.{ts,tsx}"],

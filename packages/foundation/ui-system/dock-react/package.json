@@ -77,6 +77,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-runner": "workspace:^",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",

@@ -5,10 +5,11 @@ import {
   makeClaimGateOutcomeResolver,
 } from "@beep/epistemic-use-cases/ClaimDisposition";
 import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -99,7 +100,7 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
   });
 
   // The stub repository is the only dependency the resolver does not build itself.
-  it.layer(inMemoryClaimDispositions)("resolving a claim gate verdict", (it) => {
+  it.layer(inMemoryClaimDispositions, { timeout: "10 seconds" })("resolving a claim gate verdict", (it) => {
     it.effect(
       "records a durable rejection carrying the violations and returns the claim unchanged",
       Effect.fnUntraced(function* () {
@@ -113,7 +114,7 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
         expect(outcome.claim.lifecycle).toBe("candidate");
         expect(outcome.claim.fixtureKey).toBe(rejectedInput.claim.fixtureKey);
 
-        expect(O.isSome(outcome.disposition)).toBe(true);
+        pipe(outcome.disposition, O.isSome, assertTrue);
 
         const persisted = yield* dispositions.listByClaim(rejectedInput.claim.id);
         expect(persisted.length).toBe(1);
@@ -135,7 +136,7 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
         const outcome = yield* resolver.resolve(admittedInput);
 
         expect(outcome.claim.lifecycle).toBe("shape_valid");
-        expect(O.isNone(outcome.disposition)).toBe(true);
+        assertNone(outcome.disposition);
 
         const persisted = yield* dispositions.listByClaim(admittedInput.claim.id);
         expect(persisted.length).toBe(0);

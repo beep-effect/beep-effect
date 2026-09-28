@@ -4,7 +4,8 @@ import {
   NO_NATIVE_RUNTIME_ERROR_FILES,
   NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS,
 } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("NoNativeRuntimeHotspots", () => {
   it("keeps ontology files and explicit legacy files in blocking scope", () => {

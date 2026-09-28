@@ -1,13 +1,9 @@
 import { DuckDb } from "@beep/duckdb";
 import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+import { describe, expect } from "@effect/vitest";
+import { Effect, FileSystem, Path } from "effect";
 
 const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -32,37 +28,41 @@ describe("@beep/repo-ai-metrics duckdb helpers", () => {
     );
   });
 
-  it.effect("provides a scoped DuckDb connection to the wrapped effect (data-first)", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const dbPath = yield* makeDerivedDuckDbPath(tmpDir);
-        const rows = yield* withAiMetricsDuckDb(
-          Effect.gen(function* () {
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("provides a scoped DuckDb connection to the wrapped effect (data-first)", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const dbPath = yield* makeDerivedDuckDbPath(tmpDir);
+          const rows = yield* withAiMetricsDuckDb(
+            Effect.gen(function* () {
+              const duckdb = yield* DuckDb;
+              yield* duckdb.run("CREATE TABLE metrics_probe (n INTEGER)");
+              yield* duckdb.run("INSERT INTO metrics_probe VALUES (1), (2)");
+              return yield* duckdb.query("SELECT n FROM metrics_probe ORDER BY n ASC");
+            }),
+            dbPath
+          );
+
+          expect(rows).toHaveLength(2);
+          expect(rows.map((row) => row.n)).toEqual([1, 2]);
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("provides a scoped DuckDb connection to the wrapped effect (data-last)", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const dbPath = yield* makeDerivedDuckDbPath(tmpDir);
+          const rows = yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            yield* duckdb.run("CREATE TABLE metrics_probe (n INTEGER)");
-            yield* duckdb.run("INSERT INTO metrics_probe VALUES (1), (2)");
-            return yield* duckdb.query("SELECT n FROM metrics_probe ORDER BY n ASC");
-          }),
-          dbPath
-        );
+            return yield* duckdb.query("SELECT 7 AS n");
+          }).pipe(withAiMetricsDuckDb(dbPath));
 
-        expect(rows).toHaveLength(2);
-        expect(rows.map((row) => row.n)).toEqual([1, 2]);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("provides a scoped DuckDb connection to the wrapped effect (data-last)", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const dbPath = yield* makeDerivedDuckDbPath(tmpDir);
-        const rows = yield* Effect.gen(function* () {
-          const duckdb = yield* DuckDb;
-          return yield* duckdb.query("SELECT 7 AS n");
-        }).pipe(withAiMetricsDuckDb(dbPath));
-
-        expect(rows[0]?.n).toBe(7);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          expect(rows[0]?.n).toBe(7);
+        })
+      )
+    );
+  });
 });

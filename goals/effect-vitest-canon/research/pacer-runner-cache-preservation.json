@@ -1,0 +1,82 @@
+{
+  "reviewedNodes": 14,
+  "changedDependencyLists": 9,
+  "edges": [
+    {
+      "computation": "@beep/pacer#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/pacer#audit",
+      "addedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/pacer#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pacer#build",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pacer#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pacer#check",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pacer#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pacer#coverage",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pacer#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pacer#lint:deprecated-apis",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pacer#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pacer#package-test-typecheck",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pacer#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pacer#test",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pacer#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pacer#test:integration",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pacer#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pacer#test:property",
+      "addedDependency": "@beep/test-utils#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "150fe5f28f6cfbef91de4e443d458b760e0582b3ac8dfe5d60c5bf397fd385c2"
+}

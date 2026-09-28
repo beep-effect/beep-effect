@@ -17,18 +17,14 @@
 
 import { SinkAudience } from "@beep/epistemic-domain/values/ExecutionGrant";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant";
 
 const loopbackHosts: ReadonlyArray<string> = ["localhost", "127.0.0.1", "[::1]", "::1", "0.0.0.0"];
 
-const hostOf = (destination: string): string => {
-  try {
-    return new URL(destination).hostname;
-  } catch {
-    return Str.toLowerCase(Str.trim(destination));
-  }
-};
+const decodeUrl = S.decodeOption(S.URLFromString);
 
 /**
  * Classify a destination's audience.
@@ -56,6 +52,6 @@ const hostOf = (destination: string): string => {
  * @since 0.0.0
  */
 export const resolveSinkAudience = (destination: SinkDestination): SinkAudience =>
-  A.contains(loopbackHosts, Str.toLowerCase(hostOf(destination)))
+  O.exists(decodeUrl(destination), (url) => A.contains(loopbackHosts, Str.toLowerCase(url.hostname)))
     ? SinkAudience.Enum["local-workspace"]
     : SinkAudience.Enum["external-network"];

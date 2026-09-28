@@ -58,3 +58,14 @@ Recovery provenance: the original supervisor exited 143 despite an inner complet
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The original inventory above is historical. Saved actionable findings are fixed;
+the plain projection reasons-array assertion remains a reviewed D5 exception.
+All 47 tests pass Node/Bun, the full package audit/docgen passes, and native
+properties pass with 400 runs and seed 20260708. Exact digest and cumulative
+receipt checks strengthen the original controls without production edits.
+See history/2026-09-27-skill-contract-reconciliation.md for final evidence.
+Full consolidated PR readiness remains outstanding.

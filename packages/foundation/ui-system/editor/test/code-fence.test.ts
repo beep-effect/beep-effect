@@ -1,9 +1,12 @@
 import { sendKeyBindingAtom } from "@beep/editor/chat/atoms";
 import { SEND_MESSAGE_COMMAND } from "@beep/editor/chat/commands";
 import { editorNodes } from "@beep/editor/nodes";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { $isCodeNode } from "@lexical/code";
 import { createHeadlessEditor } from "@lexical/headless";
+import { pipe } from "effect";
 import { AtomRegistry } from "effect/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, KEY_ENTER_COMMAND } from "lexical";
 import type { LexicalEditor } from "lexical";
@@ -37,42 +40,51 @@ const typeParagraph = (editor: LexicalEditor, text: string): void =>
  */
 const pressEnter = (editor: LexicalEditor, modifiers: Partial<KeyboardEvent> = {}): boolean => {
   const registry = AtomRegistry.make();
-  const unmount = registry.mount(sendKeyBindingAtom(editor));
+  try {
+    const unmount = registry.mount(sendKeyBindingAtom(editor));
+    try {
+      let sent = false;
+      const unregister = editor.registerCommand(
+        SEND_MESSAGE_COMMAND,
+        () => {
+          sent = true;
+          return true;
+        },
+        COMMAND_PRIORITY_LOW
+      );
 
-  let sent = false;
-  const unregister = editor.registerCommand(
-    SEND_MESSAGE_COMMAND,
-    () => {
-      sent = true;
-      return true;
-    },
-    COMMAND_PRIORITY_LOW
-  );
+      try {
+        const event = {
+          altKey: false,
+          ctrlKey: false,
+          isComposing: false,
+          keyCode: 13,
+          metaKey: false,
+          preventDefault: () => undefined,
+          shiftKey: false,
+          ...modifiers,
+        } as unknown as KeyboardEvent;
 
-  const event = {
-    altKey: false,
-    ctrlKey: false,
-    isComposing: false,
-    keyCode: 13,
-    metaKey: false,
-    preventDefault: () => undefined,
-    shiftKey: false,
-    ...modifiers,
-  } as unknown as KeyboardEvent;
+        // Dispatched inside a discrete update: on its own, `dispatchCommand` commits the
+        // state the handler produced asynchronously, and a read straight afterwards still
+        // sees the editor as it was before the keystroke.
+        editor.update(
+          () => {
+            editor.dispatchCommand(KEY_ENTER_COMMAND, event);
+          },
+          { discrete: true }
+        );
 
-  // Dispatched inside a discrete update: on its own, `dispatchCommand` commits the
-  // state the handler produced asynchronously, and a read straight afterwards still
-  // sees the editor as it was before the keystroke.
-  editor.update(
-    () => {
-      editor.dispatchCommand(KEY_ENTER_COMMAND, event);
-    },
-    { discrete: true }
-  );
-
-  unregister();
-  unmount();
-  return sent;
+        return sent;
+      } finally {
+        unregister();
+      }
+    } finally {
+      unmount();
+    }
+  } finally {
+    registry.dispose();
+  }
 };
 
 const firstChildIsCode = (editor: LexicalEditor): boolean =>
@@ -94,8 +106,8 @@ describe("the code fence in a composer where Enter sends", () => {
     const editor = makeEditor();
     typeParagraph(editor, "```ts");
 
-    expect(pressEnter(editor)).toBe(false);
-    expect(firstChildIsCode(editor)).toBe(true);
+    pipe(pressEnter(editor), assertFalse);
+    pipe(firstChildIsCode(editor), assertTrue);
     expect(codeLanguage(editor)).toBe("ts");
   });
 
@@ -106,8 +118,8 @@ describe("the code fence in a composer where Enter sends", () => {
     const editor = makeEditor();
     typeParagraph(editor, "```");
 
-    expect(pressEnter(editor, { shiftKey: true })).toBe(false);
-    expect(firstChildIsCode(editor)).toBe(true);
+    pipe(pressEnter(editor, { shiftKey: true }), assertFalse);
+    pipe(firstChildIsCode(editor), assertTrue);
   });
 
   it("leaves Enter alone when the caret is not at the end of the opener", () => {
@@ -123,23 +135,23 @@ describe("the code fence in a composer where Enter sends", () => {
       { discrete: true }
     );
 
-    expect(pressEnter(editor)).toBe(true);
-    expect(firstChildIsCode(editor)).toBe(false);
+    pipe(pressEnter(editor), assertTrue);
+    pipe(firstChildIsCode(editor), assertFalse);
   });
 
   it("does not mistake prose that merely starts with backticks for a fence", () => {
     const editor = makeEditor();
     typeParagraph(editor, "```ts is how you open a code block");
 
-    expect(pressEnter(editor)).toBe(true);
-    expect(firstChildIsCode(editor)).toBe(false);
+    pipe(pressEnter(editor), assertTrue);
+    pipe(firstChildIsCode(editor), assertFalse);
   });
 
   it("still sends an ordinary message", () => {
     const editor = makeEditor();
     typeParagraph(editor, "hello");
 
-    expect(pressEnter(editor)).toBe(true);
+    pipe(pressEnter(editor), assertTrue);
   });
 });
 
@@ -151,7 +163,7 @@ describe("Enter inside a code block", () => {
     typeParagraph(editor, "```ts");
     pressEnter(editor);
 
-    expect(pressEnter(editor)).toBe(false);
+    pipe(pressEnter(editor), assertFalse);
   });
 
   it("still sends on Cmd/Ctrl+Enter, so the block is not a trap", () => {
@@ -159,6 +171,6 @@ describe("Enter inside a code block", () => {
     typeParagraph(editor, "```ts");
     pressEnter(editor);
 
-    expect(pressEnter(editor, { metaKey: true })).toBe(true);
+    pipe(pressEnter(editor, { metaKey: true }), assertTrue);
   });
 });

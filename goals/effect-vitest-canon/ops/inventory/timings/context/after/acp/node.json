@@ -1,0 +1,235 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/acp-acp-after-node.json"
+  ],
+  "phase": "after",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "f77cbd179a0e54cb85c16a278c6460ece9971a14e8f94b93bd040e836ba3af4e"
+    },
+    {
+      "file": "packages/drivers/acp/package.json",
+      "sha256": "b80dac9186ad998e4f1efb3d1aaab2b8dd151d7aa59ef7f77efd55048d4d645e"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.errors.ts",
+      "sha256": "475cbf4c70f9772e13281716286a2e1158d654277effce28f8a1418011f84440"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.models.ts",
+      "sha256": "ad57df30cbfe8f4397055e98450e19d7b8ae41ebe097df56c696dbd40613301e"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "74c9e3108b9b32e28beb8ac00654d873f7a0de5b0a50dd8ae34e4e8449ac351f"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "101e25eb095fe59a7a40cecc3ccec9831d3d653e4307979044c3fc988f99446a"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpJson.codec.ts",
+      "sha256": "380a44020d7b95819c5e22a037da1c9305e7fde4c5d18f63c3216ab9dc6c8865"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "458923152edfa03f9cd8742911530a20922e96adaf65685c29d0da598fc6e868"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpRpc.models.ts",
+      "sha256": "ddb776909825754b7216ae85bb74fd2cf2168038dfbad1aadbb9ac7821a2eccb"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "sha256": "5ce37354b78326d1df67fdb6ada024124a17b2e497926fc9830fa176f753b41f"
+    },
+    {
+      "file": "packages/drivers/acp/src/index.ts",
+      "sha256": "0f17886f7c0f693a41a05402b28ecd42c5ab1c0fa361d92b2f0f6628299a0c9f"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/meta.gen.ts",
+      "sha256": "f76025e0ebd1bea3016f7df3eca8f2cd675aa20413f2c30ba9d3a5fe41f71091"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/schema.gen.ts",
+      "sha256": "636b173345c7e0fe22a96c5e97783e00bd7a21e260b208b1d4b1201395920d0b"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/jsonrpc.ts",
+      "sha256": "6fba07cefdaf1082716a3bb1ae9771601574964bafcf24fa0ea986f7eec92852"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/shared.ts",
+      "sha256": "a9b3ebd8f2fe8d6911a59d45251509ca063f1e15a5cb4c0def60c4b304332a70"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/stdio.ts",
+      "sha256": "1baf13db1ecbdffafda1955a3dd93b60c657ed176775cfab75186e083b3770d2"
+    },
+    {
+      "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
+      "sha256": "fa54236a65e5b0f28b668b41d0a8f760d970a8707494f899efaad8b8fb4d8dc3"
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "sha256": "5669d1b8e15dd8d9f05076ba510af2000f558b9ceda2b704d1245b3b6b264cce"
+    },
+    {
+      "file": "packages/drivers/acp/test/helpers.ts",
+      "sha256": "2d9a62cb8bdc47fd46ff6cf48a5518d4df2fe9a3bb254032d0379df603f3eeaf"
+    },
+    {
+      "file": "packages/drivers/acp/test/json.test.ts",
+      "sha256": "271e7da87cd4240f7788e8c9f5654487d4781f512740ec5a989a74d4ab64c956"
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "sha256": "44fc22babb3afe1c0ab331b7169cd2f13977f3928b2e3621ae0e128253c0c1c8"
+    },
+    {
+      "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
+      "sha256": "ca61ed1323f4ef3481cacc57df8e163e152fb6ad81bdbe6ede903beed1e58631"
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "sha256": "88ab2fea3ccef0827647e50f54368299b0e5dbc4c780b1a8c829ecb72a43d277"
+    }
+  ],
+  "loadBefore": [5.70458984375, 6.009765625, 5.65087890625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.32 avg60=0.26 avg300=0.18 total=66386209\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.04 total=64638699\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=63386419\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.31 total=658319813\nfull avg10=0.00 avg60=0.01 avg300=0.25 total=603233320\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Configured ACP mock-peer subprocess suites; no external endpoint selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 4.52176503699593,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "f77cbd179a0e54cb85c16a278c6460ece9971a14e8f94b93bd040e836ba3af4e"
+    },
+    {
+      "file": "packages/drivers/acp/package.json",
+      "sha256": "b80dac9186ad998e4f1efb3d1aaab2b8dd151d7aa59ef7f77efd55048d4d645e"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.errors.ts",
+      "sha256": "475cbf4c70f9772e13281716286a2e1158d654277effce28f8a1418011f84440"
+    },
+    {
+      "file": "packages/drivers/acp/src/Acp.models.ts",
+      "sha256": "ad57df30cbfe8f4397055e98450e19d7b8ae41ebe097df56c696dbd40613301e"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+      "sha256": "74c9e3108b9b32e28beb8ac00654d873f7a0de5b0a50dd8ae34e4e8449ac351f"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpClient.service.ts",
+      "sha256": "101e25eb095fe59a7a40cecc3ccec9831d3d653e4307979044c3fc988f99446a"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpJson.codec.ts",
+      "sha256": "380a44020d7b95819c5e22a037da1c9305e7fde4c5d18f63c3216ab9dc6c8865"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "sha256": "458923152edfa03f9cd8742911530a20922e96adaf65685c29d0da598fc6e868"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpRpc.models.ts",
+      "sha256": "ddb776909825754b7216ae85bb74fd2cf2168038dfbad1aadbb9ac7821a2eccb"
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "sha256": "5ce37354b78326d1df67fdb6ada024124a17b2e497926fc9830fa176f753b41f"
+    },
+    {
+      "file": "packages/drivers/acp/src/index.ts",
+      "sha256": "0f17886f7c0f693a41a05402b28ecd42c5ab1c0fa361d92b2f0f6628299a0c9f"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/meta.gen.ts",
+      "sha256": "f76025e0ebd1bea3016f7df3eca8f2cd675aa20413f2c30ba9d3a5fe41f71091"
+    },
+    {
+      "file": "packages/drivers/acp/src/_generated/schema.gen.ts",
+      "sha256": "636b173345c7e0fe22a96c5e97783e00bd7a21e260b208b1d4b1201395920d0b"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/jsonrpc.ts",
+      "sha256": "6fba07cefdaf1082716a3bb1ae9771601574964bafcf24fa0ea986f7eec92852"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/shared.ts",
+      "sha256": "a9b3ebd8f2fe8d6911a59d45251509ca063f1e15a5cb4c0def60c4b304332a70"
+    },
+    {
+      "file": "packages/drivers/acp/src/internal/stdio.ts",
+      "sha256": "1baf13db1ecbdffafda1955a3dd93b60c657ed176775cfab75186e083b3770d2"
+    },
+    {
+      "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
+      "sha256": "fa54236a65e5b0f28b668b41d0a8f760d970a8707494f899efaad8b8fb4d8dc3"
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "sha256": "5669d1b8e15dd8d9f05076ba510af2000f558b9ceda2b704d1245b3b6b264cce"
+    },
+    {
+      "file": "packages/drivers/acp/test/helpers.ts",
+      "sha256": "2d9a62cb8bdc47fd46ff6cf48a5518d4df2fe9a3bb254032d0379df603f3eeaf"
+    },
+    {
+      "file": "packages/drivers/acp/test/json.test.ts",
+      "sha256": "271e7da87cd4240f7788e8c9f5654487d4781f512740ec5a989a74d4ab64c956"
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "sha256": "44fc22babb3afe1c0ab331b7169cd2f13977f3928b2e3621ae0e128253c0c1c8"
+    },
+    {
+      "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
+      "sha256": "ca61ed1323f4ef3481cacc57df8e163e152fb6ad81bdbe6ede903beed1e58631"
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "sha256": "88ab2fea3ccef0827647e50f54368299b0e5dbc4c780b1a8c829ecb72a43d277"
+    }
+  ],
+  "loadAfter": [6.048828125, 6.076171875, 5.67431640625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.22 avg60=0.24 avg300=0.17 total=66394468\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.04 total=64638701\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=63386421\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.31 total=658320181\nfull avg10=0.00 avg60=0.01 avg300=0.25 total=603233596\n"
+  },
+  "sourceStable": true,
+  "fixtureSwitches": {
+    "ambientAbsent": [
+      "ACP_MOCK_MALFORMED_OUTPUT",
+      "ACP_MOCK_MALFORMED_OUTPUT_EXIT_CODE",
+      "ACP_MOCK_EXIT_IMMEDIATELY_CODE",
+      "ACP_MOCK_BAD_TYPED_REQUEST"
+    ],
+    "propertyOverridesAbsent": true,
+    "traceOverrideAbsent": true
+  }
+}

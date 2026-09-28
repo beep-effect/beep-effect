@@ -1,0 +1,51 @@
+{
+  "upstreamSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+  "files": [
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "beforeRunSync": 5,
+      "afterRunSync": 0
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "beforeRunSync": 3,
+      "afterRunSync": 0
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "beforeRunSync": 1,
+      "afterRunSync": 0
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "beforeRunSync": 4,
+      "afterRunSync": 1
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "beforeRunSync": 2,
+      "afterRunSync": 1
+    }
+  ],
+  "historicalIds": [
+    "EV001:packages/tooling/library/repo-utils/test/JSDoc.model.test.ts:108:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/JSDoc.model.test.ts:33:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/JSDoc.model.test.ts:52:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/JSDoc.model.test.ts:71:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/JSDoc.model.test.ts:92:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/TSMorph.model.test.ts:240:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/TSMorph.model.test.ts:260:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/TSMorph.model.test.ts:322:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/TSMorph.service.test.ts:92:runSync@6#1",
+    "EV001:packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts:114:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts:76:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts:95:runSync@8#1",
+    "EV001:packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts:39:runSync@8#1"
+  ],
+  "method": "Only commit matching Effect.runSync in frozen-to-main history for these five files; before/after wrapper counts and saved diffs confirm 13 removals. PackageJsonName and TSConfig jsonParse adapters remain current."
+}

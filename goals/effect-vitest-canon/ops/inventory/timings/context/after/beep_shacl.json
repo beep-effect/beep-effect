@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/shacl",
+  "sourceHead": "a058d8d2f69009bb452a044a1fca58e70e148fd7",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.020342280011391,
+  "bunWholeCommandSeconds": 1.4161704020079924,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.03076171875, 3.97802734375, 3.21142578125],
+  "loadAfter": [5.02783203125, 3.9951171875, 3.22119140625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.15 avg60=0.20 avg300=0.13 total=781371817\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216615\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140569\n",
+    "io": "some avg10=0.00 avg60=0.09 avg300=0.25 total=846256507\nfull avg10=0.00 avg60=0.09 avg300=0.24 total=740393229\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.10 avg60=0.19 avg300=0.13 total=781376133\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216615\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140569\n",
+    "io": "some avg10=0.00 avg60=0.09 avg300=0.24 total=846256517\nfull avg10=0.00 avg60=0.08 avg300=0.23 total=740393239\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "fcda53047e2428fdbbf1e3b003b89c2c6c31259c74e030bba831afe5b05a85e7"
+    },
+    {
+      "file": "packages/drivers/shacl/AGENTS.md",
+      "sha256": "3e903c8521ee8610fa224dc580f289210f77b90e5a2354dbffc4dbbef7a26f43"
+    },
+    {
+      "file": "packages/drivers/shacl/docgen.json",
+      "sha256": "ce9e330673a15ccd8096d03ecd9c5e203a46a9f6707a2620650823ffca1842a3"
+    },
+    {
+      "file": "packages/drivers/shacl/package.json",
+      "sha256": "d02fb48199e701359682b832a96172e5353fc234b56098bdd942075069ba8355"
+    },
+    {
+      "file": "packages/drivers/shacl/src/Shacl.errors.ts",
+      "sha256": "8b41ab6013b839fa324ae7db48a5a3d446e0753a19d7e358fe683e3a82245f8c"
+    },
+    {
+      "file": "packages/drivers/shacl/src/Shacl.validation.ts",
+      "sha256": "eb664e17a72135024cfcca42d08b3e39be10568c6edf90d3c2e9592ecba4112c"
+    },
+    {
+      "file": "packages/drivers/shacl/src/index.ts",
+      "sha256": "c85cd026e3420b64f6054c6cf519936c273c607627adf35145d5a64940f4e784"
+    },
+    {
+      "file": "packages/drivers/shacl/src/vendor.d.ts",
+      "sha256": "c9e48f4704f30f93b6cd6c69a53746f70fe147398532b7a457cd5f0c8b529feb"
+    },
+    {
+      "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
+      "sha256": "1e0074e81e2847d918c1c85b58bfc089f4fdf57541b8d6db2091450fc3c7e68e"
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "sha256": "af1fc1396240329cb439baeae630da9fd89bf25d9f2ce1cd273754bc09814c76"
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclLazyImport.test.ts",
+      "sha256": "078519662bb86e89aef80fc67b3646405050528cc13d4044eb3cb29ba6885e61"
+    },
+    {
+      "file": "packages/drivers/shacl/tsconfig.check.json",
+      "sha256": "0dba4fd0598319dbe6a227a080011d461f6d60138fee99434ac5e20ba59a5faf"
+    },
+    {
+      "file": "packages/drivers/shacl/tsconfig.json",
+      "sha256": "565a394edbbe48e566374598a8e6e36b72fdca71884f6af5563a95924d7c8b6d"
+    },
+    {
+      "file": "packages/drivers/shacl/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/shacl/vitest.config.ts",
+      "sha256": "914944acbd412375dc446448e4ce64dcfc5d8bad89b69ab995baf2073e17bef8"
+    }
+  ],
+  "environmentMode": "Configured shacl local-engine Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 4,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.02783203125, 3.9951171875, 3.22119140625],
+    "loadAfter": [5.02783203125, 3.9951171875, 3.22119140625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.10 avg60=0.19 avg300=0.13 total=781376171\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216615\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140569\n",
+      "io": "some avg10=0.00 avg60=0.09 avg300=0.24 total=846256517\nfull avg10=0.00 avg60=0.08 avg300=0.23 total=740393239\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.10 avg60=0.19 avg300=0.13 total=781380020\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216615\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140569\n",
+      "io": "some avg10=0.00 avg60=0.09 avg300=0.24 total=846256553\nfull avg10=0.00 avg60=0.08 avg300=0.23 total=740393267\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 4,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All four configured cases pass before and after without skips and with stable source. Eleven original assertions and four registrations remain. The real SHACL engine handles the original conforming and violating datasets and a new empty-dataset calibration. Two independent source mutation controls detect eager engine import and eager validation. Neither timing phase overlaps this lane early publisher; package verification and policy checks can overlap the after sample. No external endpoint is contacted."
+}

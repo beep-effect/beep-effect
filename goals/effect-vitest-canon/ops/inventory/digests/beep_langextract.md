@@ -36,3 +36,24 @@ Exact Effect/adapter rc113 pin d3b837aee836f35d625d55205f7d6e61305fc198; the ado
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## Consolidated P2 completion (2026-09-27)
+
+All saved actionable rows are reconciled. Preserve the real WebCrypto subject,
+test-local counters, in-memory persistence semantics and independent deterministic
+deadline fixtures. Twenty-one native assertion conversions retain original values;
+three independent Handoff Option relations remain explicit exceptions.
+Five registered properties preserve all original generators, laws and 25/50-run
+floors. Capped output now requires exact length and candidate prefix order; policy
+denial requires zero model calls, with a separate allowed-call recorder control.
+All twenty history tamper inputs remain and now report their invariant names.
+
+Three paired regressions fail the new oracles but pass the old bounds/denial
+checks. Four additional property inversions fail. Twenty isolated valid-history
+substitutions each fail with the correct label. All source bytes are restored.
+Full audit and docgen pass; all seven files use the instrumented runner.
+Node/Bun final runs pass 98 cases, and elevated property mode passes 87 tests in
+four files with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708. Public timing context
+records stable source hashes, runtime and workstation pressure; no causal speedup
+is claimed. Eleven current detector findings are reviewed exceptions. See the
+2026-09-27 completion history and before/after timing artifacts.

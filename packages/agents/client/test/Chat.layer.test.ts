@@ -1,5 +1,6 @@
 import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const runtimeAt = (origin: string) => ({ location: { origin } });
 

@@ -8,17 +8,14 @@ import {
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encoder = new TextEncoder();
 
@@ -90,50 +87,39 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
   );
 
 const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
-  Exiftool.makeLayer().pipe(Layer.provide(makeFakeSpawnerLayer(commands, exitCode)), Layer.provide(NodeServices.layer));
-
-const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, {
-          recursive: true,
-          force: true,
-        });
-      })
+  Exiftool.makeLayer().pipe(
+    Layer.provide(makeFakeSpawnerLayer(commands, exitCode)),
+    Layer.provideMerge(Layer.merge(MemoryFileSystem.layer, Path.layer))
   );
 
 describe("@beep/exiftool service", () => {
-  it.effect(
-    "reports the exiftool version through the fake child-process layer",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
+  describe("reports the exiftool version through the fake child-process layer", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "reports the exiftool version through the fake child-process layer",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
+          const exiftool = yield* Exiftool;
+          const version = yield* exiftool.version;
 
-      const version = yield* Effect.gen(function* () {
-        const exiftool = yield* Exiftool;
-        return yield* exiftool.version;
-      }).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
+          expect(version).toBe("13.55");
+          expect(commands[0]?.command).toBe("exiftool");
+          expect(commands[0]?.args).toEqual(["-ver"]);
+        })
+      );
+    });
+  });
 
-      expect(version).toBe("13.55");
-      expect(commands[0]?.command).toBe("exiftool");
-      expect(commands[0]?.args).toEqual(["-ver"]);
-    })
-  );
-
-  it.effect(
-    "reads tags into cleaned metadata with the -config file first",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
+  describe("reads tags into cleaned metadata with the -config file first", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "reads tags into cleaned metadata with the -config file first",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
           const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
           const path = yield* Path.Path;
           const filePath = path.join(tmpDir, "frame.png");
           yield* fs.writeFileString(filePath, "png bytes");
@@ -141,30 +127,10 @@ describe("@beep/exiftool service", () => {
           const exiftool = yield* Exiftool;
           const result = yield* exiftool.readTags(ReadTagsRequest.make({ filePath }));
 
-          expect(
-            pipe(
-              result.metadata.fileType,
-              O.getOrElse(() => "")
-            )
-          ).toBe("PNG");
-          expect(
-            pipe(
-              result.metadata.fileName,
-              O.getOrElse(() => "")
-            )
-          ).toBe("frame.png");
-          expect(
-            pipe(
-              result.metadata.imageWidth,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(8);
-          expect(
-            pipe(
-              result.metadata.imageHeight,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(8);
+          assertSome(result.metadata.fileType, "PNG");
+          assertSome(result.metadata.fileName, "frame.png");
+          assertSome(result.metadata.imageWidth, 8);
+          assertSome(result.metadata.imageHeight, 8);
           expect(result.metadata.raw["XMP-beepQA:SessionId"]).toBe("sess-1");
 
           const args = commands[0]?.args ?? [];
@@ -172,29 +138,25 @@ describe("@beep/exiftool service", () => {
           expect(A.contains(args, "-j")).toBe(true);
           expect(A.contains(args, "-G1")).toBe(true);
           expect(A.contains(args, "-n")).toBe(false);
-          expect(
-            pipe(
-              A.last(args),
-              O.getOrElse(() => "")
-            )
-          ).toBe(filePath);
+          assertSome(A.last(args), filePath);
 
           const numericRequest = yield* exiftool.readTags(ReadTagsRequest.make({ filePath, numeric: true }));
           expect(numericRequest.filePath).toBe(filePath);
           expect(A.contains(commands[1]?.args ?? [], "-n")).toBe(true);
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+      );
+    });
+  });
 
-  it.effect(
-    "writes tags temp-then-commit without leaving staging behind",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
+  describe("writes tags temp-then-commit without leaving staging behind", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "writes tags temp-then-commit without leaving staging behind",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
           const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
           const path = yield* Path.Path;
           const filePath = path.join(tmpDir, "frame.png");
           yield* fs.writeFileString(filePath, "original bytes");
@@ -215,25 +177,21 @@ describe("@beep/exiftool service", () => {
           expect(args[0]).toBe("-config");
           expect(A.contains(args, "-XMP-beepQA:sessionId=sess-1")).toBe(true);
           expect(A.contains(args, "-o")).toBe(true);
-          expect(
-            pipe(
-              A.last(args),
-              O.getOrElse(() => "")
-            )
-          ).toBe(filePath);
+          assertSome(A.last(args), filePath);
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+      );
+    });
+  });
 
-  it.effect(
-    "embeds provenance packets through the write-tags path",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
+  describe("embeds provenance packets through the write-tags path", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "embeds provenance packets through the write-tags path",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
           const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
           const path = yield* Path.Path;
           const filePath = path.join(tmpDir, "frame.gif");
           yield* fs.writeFileString(filePath, "gif bytes");
@@ -258,18 +216,19 @@ describe("@beep/exiftool service", () => {
           expect(A.contains(args, "-XMP-beepQA:sessionId=sess-1")).toBe(true);
           expect(A.contains(args, "-XMP-beepQA:capturedAtEpochMs=1753900000000")).toBe(true);
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+      );
+    });
+  });
 
-  it.effect(
-    "refuses unwritable extensions before spawning and points at FFmpeg",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
+  describe("refuses unwritable extensions before spawning and points at FFmpeg", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "refuses unwritable extensions before spawning and points at FFmpeg",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
           const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
           const path = yield* Path.Path;
           const filePath = path.join(tmpDir, "capture.webm");
           yield* fs.writeFileString(filePath, "webm bytes");
@@ -296,18 +255,19 @@ describe("@beep/exiftool service", () => {
           expect(pipe(emptyError.message, Str.includes("at least one tag assignment"))).toBe(true);
           expect(A.length(commands)).toBe(0);
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
-    })
-  );
+      );
+    });
+  });
 
-  it.effect(
-    "normalizes failed exiftool exits into ExiftoolError",
-    Effect.fnUntraced(function* () {
-      const commands: Array<ChildProcess.StandardCommand> = [];
-
-      yield* withTempDirectory((tmpDir) =>
-        Effect.gen(function* () {
+  describe("normalizes failed exiftool exits into ExiftoolError", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands, 7), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "normalizes failed exiftool exits into ExiftoolError",
+        Effect.fnUntraced(function* () {
+          commands.length = 0;
           const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
           const path = yield* Path.Path;
           const filePath = path.join(tmpDir, "frame.png");
           yield* fs.writeFileString(filePath, "original bytes");
@@ -324,16 +284,11 @@ describe("@beep/exiftool service", () => {
 
           expect(error).toBeInstanceOf(ExiftoolError);
           expect(pipe(error.message, Str.includes("could not write tags"))).toBe(true);
-          expect(
-            pipe(
-              error.exitCode,
-              O.getOrElse(() => 0)
-            )
-          ).toBe(7);
+          assertSome(error.exitCode, 7);
           expect(yield* fs.readFileString(filePath)).toBe("original bytes");
           expect(yield* fs.readDirectory(tmpDir)).toEqual(["frame.png"]);
         })
-      ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands, 7))));
-    })
-  );
+      );
+    });
+  });
 });

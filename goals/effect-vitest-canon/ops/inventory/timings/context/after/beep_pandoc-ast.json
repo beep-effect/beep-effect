@@ -1,0 +1,220 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/pandoc-ast",
+  "sourceHead": "745ffd1fa0eb6edc458627ad7907d50413f452cf",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.321002495998982,
+  "bunWholeCommandSeconds": 1.5663307829963742,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.01123046875, 3.18603515625, 3.1044921875],
+  "loadAfter": [1.93017578125, 3.1494140625, 3.0927734375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.81 avg60=0.28 avg300=0.12 total=723508502\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186197327\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123674\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.08 total=807113960\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=706377050\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.54 avg60=0.26 avg300=0.12 total=723512105\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186197327\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123674\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.07 total=807114106\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=706377184\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "e1064f613562ecb4c210fd025478dd71933ab9457ba80c056590773808c84682"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/AGENTS.md",
+      "sha256": "f9f43ea54f881ea9a5efd7e71c283a95f169b6453595e21ba1c995f10e9797d1"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/CLAUDE.md",
+      "sha256": "f9f43ea54f881ea9a5efd7e71c283a95f169b6453595e21ba1c995f10e9797d1"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/README.md",
+      "sha256": "945af54c37ddc3f868ec535b4175954257a0b2508cba8fd4485df99535fadd40"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/data/conformance/SOURCES.md",
+      "sha256": "b331de9e1eff6589967c3f6a87b7cce60e9520579698e9d9520dc286cf9e0499"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/data/conformance/coverage.json",
+      "sha256": "c594eac7e160462971deda8be631dbf4d327f96fbf56ed3bc893d7f70ddd37fc"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/data/conformance/invariants.json",
+      "sha256": "3d5debdfdd38afb63c48b147516a25c445d1f14f0cd5922bb1a33a3365d4590b"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/data/conformance/inventory.json",
+      "sha256": "7f4588b8eb2483dc4a69e0a02bc7657fbd3a49bbb4dd45a372e8193492448eea"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/data/conformance/sources.json",
+      "sha256": "5d45dced9f221910caa6acfbe060536f5e6d187e29f9fc8d962aec13205ed7d8"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/docgen.json",
+      "sha256": "aa0712aff430612e21e86835e3324d26496b24ddb2d5ba02fc242523d9e87efe"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/package.json",
+      "sha256": "f367bbfb5b56f5b6f8f60f828a8287463e4233307663873165321e5203952df1"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "sha256": "9b20ee1b45ba8ad6b77becf135ba6450ec809850db5ceed7a45861cd645236b3"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
+      "sha256": "299d1c7e88a2744b3777186ecfa2a6e35972dabfcf085ab47c39a74fb152a08e"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "sha256": "370b9be702b0dea978f941f07290155d2fafb9708f35e0f0e54b4a5183843116"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "sha256": "3688ed86a1bfcea7433e1ba5c770b649996b432a11e03eb0f0fe853c12a6c785"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+      "sha256": "fa52134f6b91e898ee2e30863bdcd7cd26f656b427ef68e245af6397a974cc7f"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Version.ts",
+      "sha256": "7e065c31b861c5fd3d2ae2450d5e842ad4e53edfef47a6e54a37a35ad8296484"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/index.ts",
+      "sha256": "7dd2f8f49b04df038647b589ba44429e7fe2e5c001dd3fccef3e2b163b54d589"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
+      "sha256": "6eb5ab120b1e04dd0ecbdec0fa9c64fcddc40f15f2ea0e1960ea9a9ba77d026f"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.table-caption.ts",
+      "sha256": "9a119cadc138e5a5335173b7e63d3b168279690df5ec34012117b9f4b14d0fb2"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/internal/conformance/Pandoc.conformance-registry.ts",
+      "sha256": "796ea5aa9aed4f05d87c0f310d9cd3c6acebd1a48d2390c38e96586942052df9"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
+      "sha256": "8800c14316270c1196958a01fab41de38d43baf6083b7e73cf39ff93a0ed8f16"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "sha256": "4500ef905e65ede0d444985bdd474555a5177651ef275c84ab020fab98af88a4"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+      "sha256": "bbc455c37dc9e84ffd82a1d8c3b2c9b50466f5dd3e5143fac442167dbc7333fa"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "sha256": "17a187c8fb81906199b38bf443494a161ed3dbff82487f98a9a242c0c3584b95"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "sha256": "c5867c16556bb12e0d2ee7b905f9e7867e300bc8d288bc95e9479de65347ebf9"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "sha256": "58026bb1d7ce01454bea847184631286117ceca67fc65b50045c6f72bd741892"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
+      "sha256": "6185de859fd6207cbab60524653477880c6b4a89b29ba7b278864abd91ae1682"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
+      "sha256": "a4eb06015dc78babc3dd443c177e526285c9e596554986157623235b7bf8b5e3"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/fixtures/PROVENANCE.md",
+      "sha256": "f593a1d39b757b185600fedf99ed10a08583e3817b17996fc6c5f1d7494ac255"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/fixtures/gap-docx-styles.pandoc.json",
+      "sha256": "1fdc48e4cd91fce6a2d14033bfc9a1edda5d7d9ce2760a78b8b4e9a6ce0430fc"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/fixtures/green-core.pandoc.json",
+      "sha256": "93ef96a5eb85e751f4c6d5cf86085c89540565ce3d0f5dbd127c9274ec01fde3"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "sha256": "eb0393f660e5befdc4d8b57efc8c142cc825a0dbc49a80eb1fef51f98af29cea"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/tsconfig.check.json",
+      "sha256": "c7ab76cca78354c96f1baef1d247797179f45bbe7b076865a7b5317750156d62"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/tsconfig.json",
+      "sha256": "22785eab827135728dc8fdf58c08c46554860f7d14cb44bc09835b6ee7dbc405"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/tsconfig.test.json",
+      "sha256": "a75fb483faa0db9c1e828904eb6e863ea775d0412c9bbc6a90c035a7ced02a46"
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/vitest.config.ts",
+      "sha256": "7534b05816813aff8337bd4633bd2414424f5e475f97f7732d5883b9b6f28d0c"
+    }
+  ],
+  "environmentMode": "Actual committed JSON fixtures and conformance artifact reads remain, with native fixture layers, effect/property adapters and instrumented registrations. The formerly empty warning test now executes real generation under a scoped warning observer. No production implementation changes or Pandoc executable run.",
+  "bunProof": {
+    "passedTests": 97,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.93017578125, 3.1494140625, 3.0927734375],
+    "loadAfter": [1.93017578125, 3.1494140625, 3.0927734375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.54 avg60=0.26 avg300=0.12 total=723512118\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186197327\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123674\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.07 total=807114106\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=706377184\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.44 avg60=0.26 avg300=0.12 total=723519715\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186197327\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123674\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.07 total=807114106\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=706377185\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 97,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all97registrations before and after with no skipped cases. The previously empty generation test now performs actual derivation and sampling; nested and semantic-equality witnesses are stronger. Eight properties preserve domains and floors25/50. Timing differences are not causal speedup evidence."
+}

@@ -12,13 +12,16 @@ import {
   VendorSliceUnvetted,
 } from "@beep/ontology";
 import { IRIReference } from "@beep/rdf";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  pipe(same(first, second), assertTrue);
+  pipe(same(first, different), assertFalse);
 };
 
 describe("ontology modeling tagged-error declared equivalence", () => {

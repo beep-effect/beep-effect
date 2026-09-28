@@ -20,8 +20,10 @@ import {
   TextPanelView,
 } from "@beep/dock";
 import { rows } from "@beep/dock/internal/Geometry.projection";
-import { describe, expect, it } from "@effect/vitest";
-import { Match } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Atom, AtomRegistry } from "effect/reactivity";
@@ -144,16 +146,21 @@ describe("dock geometry projection", () => {
     expect(projectWorkspace(context)(workspace)).toEqual(projectWorkspace(workspace, context));
   });
 
-  it("recomputes geometry atoms when the host container changes", () => {
-    const workspaceAtom = Atom.make<DockWorkspace>(PopulatedWorkspace.make({ root: tabsOne }));
-    const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 10, height: 20 }));
-    const atoms = makeDockGeometryAtoms({ workspaceAtom, containerAtom });
-    const registry = AtomRegistry.make();
+  it.layer(Layer.fresh(AtomRegistry.layer))((it) => {
+    it.effect(
+      "recomputes geometry atoms when the host container changes",
+      Effect.fnUntraced(function* () {
+        const workspaceAtom = Atom.make<DockWorkspace>(PopulatedWorkspace.make({ root: tabsOne }));
+        const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 10, height: 20 }));
+        const atoms = makeDockGeometryAtoms({ workspaceAtom, containerAtom });
+        const registry = yield* AtomRegistry.AtomRegistry;
 
-    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(10);
-    registry.set(containerAtom, DockBox.make({ left: 0, top: 0, width: 30, height: 40 }));
-    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(30);
-    expect(O.isNone(registry.get(atoms.groupBoxAtom(groupTwo)))).toBe(true);
+        expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(10);
+        registry.set(containerAtom, DockBox.make({ left: 0, top: 0, width: 30, height: 40 }));
+        expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(30);
+        assertNone(registry.get(atoms.groupBoxAtom(groupTwo)));
+      })
+    );
   });
 });
 
@@ -248,24 +255,29 @@ describe("per-group minimum lookup", () => {
     expect(three?.box.left).toBe(71);
   });
 
-  it("recomputes geometry when the reactive minima record changes", () => {
-    const workspaceAtom = Atom.make<DockWorkspace>(
-      PopulatedWorkspace.make({ root: split("horizontal", 9_000, tabsOne, tabsTwo) })
-    );
-    const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 101, height: 99 }));
-    const minimaAtom = Atom.make<GroupMinimaRecord>({});
-    const atoms = makeDockGeometryAtoms({
-      workspaceAtom,
-      containerAtom,
-      options: GeometryOptions.make({ gap: 3 }),
-      minimaAtom,
-    });
-    const registry = AtomRegistry.make();
+  it.layer(Layer.fresh(AtomRegistry.layer))((it) => {
+    it.effect(
+      "recomputes geometry when the reactive minima record changes",
+      Effect.fnUntraced(function* () {
+        const workspaceAtom = Atom.make<DockWorkspace>(
+          PopulatedWorkspace.make({ root: split("horizontal", 9_000, tabsOne, tabsTwo) })
+        );
+        const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 101, height: 99 }));
+        const minimaAtom = Atom.make<GroupMinimaRecord>({});
+        const atoms = makeDockGeometryAtoms({
+          workspaceAtom,
+          containerAtom,
+          options: GeometryOptions.make({ gap: 3 }),
+          minimaAtom,
+        });
+        const registry = yield* AtomRegistry.AtomRegistry;
 
-    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(10);
-    registry.set(minimaAtom, { [groupTwo]: 50 });
-    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(50);
-    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(48);
+        expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(10);
+        registry.set(minimaAtom, { [groupTwo]: 50 });
+        expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(50);
+        expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(48);
+      })
+    );
   });
 
   it("takes the maximum requirement across a cross-axis subtree", () => {

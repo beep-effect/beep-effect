@@ -1,8 +1,12 @@
 import { typeaheadOptionId } from "@beep/editor/chat/atoms";
 import { typeaheadMenuId } from "@beep/editor/chat/typeahead";
 import { editorNodes } from "@beep/editor/nodes";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
+import * as Arbitrary from "effect/Arbitrary";
+import * as S from "effect/Schema";
 
 const makeEditor = () =>
   createHeadlessEditor({
@@ -41,3 +45,26 @@ describe("typeahead ids", () => {
     expect(typeaheadMenuId(first)).not.toBe(typeaheadMenuId(second));
   });
 });
+
+it.prop(
+  "keeps generated option ids stable and unique across composers and indices",
+  [
+    Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 10000 }))),
+    Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))),
+  ],
+  ([index, offset]) => {
+    const first = makeEditor();
+    const second = makeEditor();
+    const ids = [
+      typeaheadOptionId(first, index),
+      typeaheadOptionId(first, index + offset),
+      typeaheadOptionId(second, index),
+      typeaheadOptionId(second, index + offset),
+    ];
+    expect(new Set(ids).size).toBe(4);
+    expect(typeaheadOptionId(first, index)).toBe(ids[0]);
+    expect(typeaheadOptionId(second, index + offset)).toBe(ids[3]);
+    for (const id of ids) expect(id).toMatch(/^\S+$/);
+  },
+  { arbitrary: fcRuns(100) }
+);

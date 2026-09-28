@@ -4,8 +4,11 @@ import {
   ExtractClipRequest,
   ExtractFramesAtRequest,
 } from "@beep/ffmpeg";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 
 describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
@@ -18,7 +21,7 @@ describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
     });
     expect(A.contains(args, "-t")).toBe(false);
     expect(args).toContain("libx264");
-    expect(A.last(args)).toEqual(O.some("./clips/full.mp4"));
+    assertSome(A.last(args), "./clips/full.mp4");
   });
 
   it("emits -t immediately after the input when a duration is supplied", () => {
@@ -30,7 +33,7 @@ describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
       videoPath: "./capture.webm",
     });
     const tIndex = A.findFirstIndex(args, (arg) => arg === "-t");
-    expect(tIndex).toEqual(O.some(7));
+    assertSome(tIndex, 7);
     expect(args[8]).toBe("2");
   });
 
@@ -40,7 +43,7 @@ describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
       startSeconds: 0,
       videoPath: "./video/capture.webm",
     });
-    expect(request.durationSeconds).toEqual(O.none());
+    assertNone(request.durationSeconds);
     expect(request.codec).toBe("h264");
   });
 
@@ -52,7 +55,7 @@ describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
       videoPath: "./capture.webm",
     });
     const vfIndex = A.findFirstIndex(args, (arg) => arg === "-vf");
-    expect(O.isSome(vfIndex)).toBe(true);
+    pipe(vfIndex, O.isSome, assertTrue);
     expect(args).toContain("scale='min(iw,960)':-2");
   });
 
@@ -71,6 +74,6 @@ describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {
       timestampsSeconds: [0.5],
       videoPath: "./capture.webm",
     });
-    expect(request.maxWidth).toEqual(O.none());
+    assertNone(request.maxWidth);
   });
 });

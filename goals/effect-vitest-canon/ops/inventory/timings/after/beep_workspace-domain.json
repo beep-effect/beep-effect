@@ -1,0 +1,71 @@
+{
+  "package": "@beep/workspace-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:37:58.834000+00:00",
+  "totalMs": 3117.975830078125,
+  "testCount": 26,
+  "files": [
+    {
+      "file": "packages/workspace/domain/test/EntityMaterialization.test.ts",
+      "ms": 4.76904296875,
+      "tests": 1
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "ms": 71.975830078125,
+      "tests": 25
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived message roles",
+      "ms": 70.97590899999977
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived Message",
+      "ms": 23.116861000000426
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived Turn",
+      "ms": 23.112334999999803
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived EmailArtifact",
+      "ms": 23.111073000000033
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived ContextPacket",
+      "ms": 23.078231999999844
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived TurnItem",
+      "ms": 16.003661000000193
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived TurnItems",
+      "ms": 15.997089999999844
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived Workspace",
+      "ms": 15.994405999999799
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain round-trips schema-derived Thread",
+      "ms": 15.95145999999977
+    },
+    {
+      "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
+      "testName": "@beep/workspace-domain exports value schemas from the package identity",
+      "ms": 11.319682999999714
+    }
+  ]
+}

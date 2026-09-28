@@ -1,0 +1,101 @@
+{
+  "package": "@beep/skill-contract",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T10:04:33.333000+00:00",
+  "totalMs": 4397.679443359375,
+  "testCount": 47,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "ms": 46.2470703125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "ms": 30.781982421875,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "ms": 18.306396484375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "ms": 24.507080078125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "ms": 17.5947265625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "ms": 22.546875,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "ms": 12.1357421875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "ms": 74.679443359375,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection allows every schema-derived contract after render and verification",
+      "ms": 57.67953300000045
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder round-trips schema-derived arbitrary structural ladder states",
+      "ms": 46.24701699999969
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection refuses allowed verdicts that lack both passed checks and denied verdicts without a failure",
+      "ms": 38.655163999999786
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder maps transport completion to Accepted and exposes only immediate monotonic transitions",
+      "ms": 35.02788800000053
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder enforces every rung's cumulative predicate-type demands",
+      "ms": 34.90784299999996
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder gives each contract-bound ladder schema a distinct identity",
+      "ms": 34.89515399999982
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt round-trips schema-derived arbitrary receipts",
+      "ms": 30.781949000000168
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "testName": "@beep/skill-contract GateSummary round-trips schema-derived arbitrary attestation resources",
+      "ms": 24.507074000000102
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "testName": "@beep/skill-contract GateSummary round-trips a VSA-shaped passing summary receipt with the canonical digest seam",
+      "ms": 19.172037999999702
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "testName": "@beep/skill-contract GateSummary rejects result and level fields that disagree with blocking outcomes",
+      "ms": 19.039834000000155
+    }
+  ]
+}

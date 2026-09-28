@@ -1,0 +1,101 @@
+{
+  "package": "@beep/epistemic-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:50:55.462000+00:00",
+  "totalMs": 5277.2177734375,
+  "testCount": 94,
+  "files": [
+    {
+      "file": "packages/epistemic/domain/test/ClaimEvidenceReview.test.ts",
+      "ms": 23.4892578125,
+      "tests": 12
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "ms": 127.2177734375,
+      "tests": 18
+    },
+    {
+      "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
+      "ms": 4.464111328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "ms": 39.28271484375,
+      "tests": 10
+    },
+    {
+      "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
+      "ms": 24.235595703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "ms": 33.835693359375,
+      "tests": 30
+    },
+    {
+      "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
+      "ms": 15.79638671875,
+      "tests": 15
+    },
+    {
+      "file": "packages/epistemic/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 2.803466796875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants derives only constructive unique collections and canonical pairs",
+      "ms": 117.21782099999928
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain rejects inconsistent evidence-span widths and derives only consistent spans",
+      "ms": 39.282703999999285
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants keys detector identities and versions independently",
+      "ms": 37.78460600000017
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants binds evidence partitions to beliefs while canonicalization remains reversal invariant",
+      "ms": 37.778706999999486
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants rejects proposal facts outside canonical JSON",
+      "ms": 37.77509199999986
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants bounds proposal fact bytes, node count, and nesting before digesting",
+      "ms": 37.7733589999998
+    },
+    {
+      "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
+      "testName": "EvidenceVerification round-trips schema-derived manifestations",
+      "ms": 24.235507999999754
+    },
+    {
+      "file": "packages/epistemic/domain/test/ClaimEvidenceReview.test.ts",
+      "testName": "claim evidence review applicability preserves arbitrary review history without transferring approval to changed assertions",
+      "ms": 23.489338999999745
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "testName": "ExecutionAuthority golden digest vectors pins freezeGrantSet over the empty draft at frozenAt=0, policyRevision 1.0.0",
+      "ms": 20.835802000000513
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "testName": "ExecutionAuthority schema arbitraries derives round-tripping arbitraries for execution authority schemas",
+      "ms": 20.832957999999962
+    }
+  ]
+}

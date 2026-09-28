@@ -16,9 +16,10 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
@@ -41,8 +42,6 @@ const encodeLibpffError = S.encodeEffect(LibpffError);
 const decodeLibpffError = S.decodeUnknownEffect(LibpffError);
 const encodePffexportMessageRecord = S.encodeEffect(PffexportMessageRecord);
 const decodePffexportMessageRecord = S.decodeUnknownEffect(PffexportMessageRecord);
-const providePlatform = provideScopedLayer(NodeServices.layer);
-
 const fixtureIds = Effect.all({
   artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
   digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
@@ -86,22 +85,22 @@ const operation = Effect.fn("LibpffTest.operation")(function* (ids: FixtureIds) 
 });
 
 describe("@beep/libpff", () => {
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived archive operation data through file-processing schemas",
     [SourceArtifactArbitrary, ExportArchiveOperationArbitrary],
-    ([sourceArtifact, exportOperation]) => {
-      const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
-      const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
-      expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
+    Effect.fnUntraced(function* ([sourceArtifact, exportOperation]) {
+      const encodedSourceArtifact = yield* encodeSourceArtifact(sourceArtifact);
+      const decodedSourceArtifact = yield* decodeSourceArtifact(encodedSourceArtifact);
+      expect(yield* encodeSourceArtifact(decodedSourceArtifact)).toEqual(encodedSourceArtifact);
 
-      const encodedExportOperation = Effect.runSync(encodeExportArchiveOperation(exportOperation));
-      const decodedExportOperation = Effect.runSync(decodeExportArchiveOperation(encodedExportOperation));
-      expect(Effect.runSync(encodeExportArchiveOperation(decodedExportOperation))).toEqual(encodedExportOperation);
-    },
+      const encodedExportOperation = yield* encodeExportArchiveOperation(exportOperation);
+      const decodedExportOperation = yield* decodeExportArchiveOperation(encodedExportOperation);
+      expect(yield* encodeExportArchiveOperation(decodedExportOperation)).toEqual(encodedExportOperation);
+    }),
     { arbitrary: fcRuns(25) }
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips libpff-owned schema-derived data through encoded shapes",
     [
       PffexportEngineConfigArbitrary,
@@ -109,80 +108,87 @@ describe("@beep/libpff", () => {
       LibpffErrorArbitrary,
       PffexportMessageRecordArbitrary,
     ],
-    ([config, options, error, record]) => {
-      const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
-      const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
-      expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
+    Effect.fnUntraced(function* ([config, options, error, record]) {
+      const encodedConfig = yield* encodePffexportEngineConfig(config);
+      const decodedConfig = yield* decodePffexportEngineConfig(encodedConfig);
+      expect(yield* encodePffexportEngineConfig(decodedConfig)).toEqual(encodedConfig);
 
-      const encodedOptions = Effect.runSync(encodeLibpffFileProcessingEngineOptions(options));
-      const decodedOptions = Effect.runSync(decodeLibpffFileProcessingEngineOptions(encodedOptions));
-      expect(Effect.runSync(encodeLibpffFileProcessingEngineOptions(decodedOptions))).toEqual(encodedOptions);
+      const encodedOptions = yield* encodeLibpffFileProcessingEngineOptions(options);
+      const decodedOptions = yield* decodeLibpffFileProcessingEngineOptions(encodedOptions);
+      expect(yield* encodeLibpffFileProcessingEngineOptions(decodedOptions)).toEqual(encodedOptions);
 
-      const encodedError = Effect.runSync(encodeLibpffError(error));
-      const decodedError = Effect.runSync(decodeLibpffError(encodedError));
-      expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
+      const encodedError = yield* encodeLibpffError(error);
+      const decodedError = yield* decodeLibpffError(encodedError);
+      expect(yield* encodeLibpffError(decodedError)).toEqual(encodedError);
 
-      const encodedRecord = Effect.runSync(encodePffexportMessageRecord(record));
-      const decodedRecord = Effect.runSync(decodePffexportMessageRecord(encodedRecord));
-      expect(Effect.runSync(encodePffexportMessageRecord(decodedRecord))).toEqual(encodedRecord);
-    },
+      const encodedRecord = yield* encodePffexportMessageRecord(record);
+      const decodedRecord = yield* decodePffexportMessageRecord(encodedRecord);
+      expect(yield* encodePffexportMessageRecord(decodedRecord)).toEqual(encodedRecord);
+    }),
     { arbitrary: fcRuns(25) }
   );
 
-  it("preserves encoded libpff shapes for schema-owned defaults and option fields", () => {
-    const config = PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" });
-    const errorWithoutContext = LibpffError.fromReason("timeout");
-    const errorWithContext = LibpffError.fromReason("process", {
-      cause: "pffexport failed",
-      exitCode: NonNegativeInt.make(2),
-    });
+  it.effect(
+    "preserves encoded libpff shapes for schema-owned defaults and option fields",
+    Effect.fnUntraced(function* () {
+      const config = PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" });
+      const errorWithoutContext = LibpffError.fromReason("timeout");
+      const errorWithContext = LibpffError.fromReason("process", {
+        cause: "pffexport failed",
+        exitCode: NonNegativeInt.make(2),
+      });
 
-    expect(Effect.runSync(encodePffexportEngineConfig(config))).toStrictEqual({
-      existingExportPolicy: "fail",
-      exportFormat: "text",
-      exportMode: "items",
-      exportRoot: "/tmp/pst-out",
-      pffexportPath: "pffexport",
-      systemdRunPath: "systemd-run",
-    });
-    expect(Effect.runSync(encodeLibpffError(errorWithoutContext))).toStrictEqual({
-      _tag: "LibpffError",
-      reason: "timeout",
-    });
-    expect(Effect.runSync(encodeLibpffError(errorWithContext))).toStrictEqual({
-      _tag: "LibpffError",
-      cause: "pffexport failed",
-      exitCode: 2,
-      reason: "process",
-    });
+      expect(yield* encodePffexportEngineConfig(config)).toStrictEqual({
+        existingExportPolicy: "fail",
+        exportFormat: "text",
+        exportMode: "items",
+        exportRoot: "/tmp/pst-out",
+        pffexportPath: "pffexport",
+        systemdRunPath: "systemd-run",
+      });
+      expect(yield* encodeLibpffError(errorWithoutContext)).toStrictEqual({
+        _tag: "LibpffError",
+        reason: "timeout",
+      });
+      expect(yield* encodeLibpffError(errorWithContext)).toStrictEqual({
+        _tag: "LibpffError",
+        cause: "pffexport failed",
+        exitCode: 2,
+        reason: "process",
+      });
+    })
+  );
+
+  it.layer(NodeServices.layer)("maps unavailable libpff runtime to an operation-level deferral", (it) => {
+    it.effect(
+      "maps unavailable libpff runtime to an operation-level deferral",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
+
+        return yield* Effect.sync(() => {
+          expect(error._tag).toBe("FileProcessingOperationError");
+          expect(error.reason).toBe("engine-unavailable");
+        });
+      })
+    );
   });
 
-  it.effect(
-    "maps unavailable libpff runtime to an operation-level deferral",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
+  it.layer(NodeServices.layer)("can emit synthetic child artifacts for proof fixtures", (it) => {
+    it.effect(
+      "can emit synthetic child artifacts for proof fixtures",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
+          yield* operation(ids)
+        );
 
-      return yield* Effect.sync(() => {
-        expect(error._tag).toBe("FileProcessingOperationError");
-        expect(error.reason).toBe("engine-unavailable");
-      });
-    }, providePlatform)
-  );
-
-  it.effect(
-    "can emit synthetic child artifacts for proof fixtures",
-    Effect.fnUntraced(function* () {
-      const ids = yield* fixtureIds;
-      const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
-        yield* operation(ids)
-      );
-
-      return yield* Effect.sync(() => {
-        expect(result.children).toHaveLength(1);
-        expect(result.children[0]?.id).not.toBe(ids.artifactId);
-        expect(result.engine).toBe("libpff");
-      });
-    }, providePlatform)
-  );
+        return yield* Effect.sync(() => {
+          expect(result.children).toHaveLength(1);
+          expect(result.children[0]?.id).not.toBe(ids.artifactId);
+          expect(result.engine).toBe("libpff");
+        });
+      })
+    );
+  });
 });

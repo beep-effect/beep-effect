@@ -1,11 +1,13 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/public";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { beforeEach, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError } from "effect/ai";
 import * as O from "effect/Option";
-import { beforeEach, vi } from "vitest";
+import { vi } from "vitest";
 import type { Response } from "effect/ai";
 
 const providerState = vi.hoisted(
@@ -118,7 +120,9 @@ beforeEach(() => {
 });
 
 describe("AnthropicTurnKernel", () => {
-  it.layer(AnthropicTurnKernel)("with a deterministic provider stream", (it) => {
+  // This module mock owns one scenario record; deferred provider and repair
+  // reads must finish before the next case resets or mutates that record.
+  it.layer(AnthropicTurnKernel, { concurrent: false })("with a deterministic provider stream", (it) => {
     it.effect(
       "captures finish usage and response metadata, then finalizes after every block",
       Effect.fnUntraced(function* () {
@@ -149,9 +153,7 @@ describe("AnthropicTurnKernel", () => {
             provider: "anthropic",
           },
         });
-        expect(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none()).toEqual(
-          O.some("tool-calls")
-        );
+        assertSome(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none(), "tool-calls");
       })
     );
 

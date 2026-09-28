@@ -1,0 +1,16 @@
+{
+  "beforeSha": "6289b8a34af5c81c6a722903b3de44f897b18a4b",
+  "layerRegistrations": 7,
+  "onlyReviewedScopeReplacements": true,
+  "originalSkipConditionsPreserved": true,
+  "files": [
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "sha256": "da42617565784d2cf5093025ef86a5aeb6ae7594f4a1af6935b45aa54aa71172"
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "sha256": "1cc9402a91a138b0cbc541b4ef70851cf0df8b184e9e85eb019356724d704ecc"
+    }
+  ]
+}

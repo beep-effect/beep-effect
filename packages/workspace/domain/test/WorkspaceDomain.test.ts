@@ -1,5 +1,6 @@
 import { Document, P, Text } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
   ApprovalDecision,
@@ -20,11 +21,11 @@ import {
   Workspace as WorkspaceEntity,
   WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
-import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
@@ -74,23 +75,6 @@ const baseEntityInput = (entityType: string, id: number) => ({
   source: "System",
   updatedAt: id + 1,
   updatedByPrincipal: systemPrincipal,
-});
-
-const assertSchemaArbitraryRoundTrips = Effect.fn("WorkspaceDomainTest.assertSchemaArbitraryRoundTrips")(function* <
-  Schema extends S.Codec<unknown>,
->(schema: Schema) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        return equivalent(decoded, value);
-      }),
-    fcRuns(10)
-  );
-  expect(result._tag).toBe("Passed");
 });
 
 describe("@beep/workspace-domain", () => {
@@ -154,10 +138,10 @@ describe("@beep/workspace-domain", () => {
       const relativeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:relative-vault"));
       const tildeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("~/Vault"));
       const blankExit = yield* Effect.exit(decodeWorkspaceVaultRootPath(" "));
-      expect(Exit.isFailure(vaultExit)).toBe(true);
-      expect(Exit.isFailure(relativeExit)).toBe(true);
-      expect(Exit.isFailure(tildeExit)).toBe(true);
-      expect(Exit.isFailure(blankExit)).toBe(true);
+      pipe(vaultExit, Exit.isFailure, assertTrue);
+      pipe(relativeExit, Exit.isFailure, assertTrue);
+      pipe(tildeExit, Exit.isFailure, assertTrue);
+      pipe(blankExit, Exit.isFailure, assertTrue);
       expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault")).toBe("C:\\Vault");
     })
   );
@@ -170,8 +154,8 @@ describe("@beep/workspace-domain", () => {
       expect(yield* decodeWorkspaceVaultRootPath("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
       const rootExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("/"));
       const driveExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:\\"));
-      expect(Exit.isFailure(rootExit)).toBe(true);
-      expect(Exit.isFailure(driveExit)).toBe(true);
+      pipe(rootExit, Exit.isFailure, assertTrue);
+      pipe(driveExit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -251,8 +235,8 @@ describe("@beep/workspace-domain", () => {
       expect(message.content).toEqual(
         Document.make({ children: [P.make({ children: [Text.make({ value: "Hello thread" })] })] })
       );
-      expect(rootTurn.parentTurnId).toEqual(O.none());
-      expect(branchTurn.parentTurnId).toEqual(O.some(12));
+      assertNone(rootTurn.parentTurnId);
+      assertSome<number>(branchTurn.parentTurnId, 12);
       expect(rootTurn.items).toEqual([MessageItem.make({ messageId: WorkspaceIdentity.MessageId.make(11) })]);
     })
   );
@@ -270,18 +254,25 @@ describe("@beep/workspace-domain", () => {
       const { parentTurnId: _parentTurnId, ...turnInput } = decoded;
       const constructed = Turn.make(turnInput);
 
-      expect(constructed.parentTurnId).toEqual(O.none());
+      assertNone(constructed.parentTurnId);
       expect(yield* encodeTurn(constructed)).toStrictEqual(turnWire);
       const emptyItemsExit = yield* Effect.exit(decodeUnknownTurnItems([]));
-      expect(Exit.isFailure(emptyItemsExit)).toBe(true);
+      pipe(emptyItemsExit, Exit.isFailure, assertTrue);
     })
   );
 
-  it.effect("round-trips schema-derived exported workspace domain schemas", () =>
-    Effect.gen(function* () {
-      for (const [, schema] of schemaLawCases) {
-        yield* assertSchemaArbitraryRoundTrips(schema);
-      }
-    })
-  );
+  for (const [name, schema] of schemaLawCases) {
+    const equivalent = S.toEquivalence(schema);
+    it.effect.prop(
+      `round-trips schema-derived ${name}`,
+      [schema],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(schema)(value);
+          const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+          expect(equivalent(decoded, value)).toBe(true);
+        }),
+      { arbitrary: fcRuns(10) }
+    );
+  }
 });

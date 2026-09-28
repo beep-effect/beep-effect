@@ -1,0 +1,211 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/agents-use-cases",
+  "sourceHead": "d01f5ea63d618b08b7aa7a0ad17fa24156910ae4",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.721606833001715,
+  "bunWholeCommandSeconds": 2.6683314310066635,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.35693359375, 4.81787109375, 5.6279296875],
+  "loadAfter": [3.96923828125, 4.9208984375, 5.6572265625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.02 avg300=0.13 total=669581899\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=168413828\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160648649\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.06 total=782007863\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=684872588\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.02 avg300=0.13 total=669586524\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=168413848\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160648668\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.06 total=782008539\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=684873023\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "36014928e93218db21312aa068f7732898e0351b2fb2e61c86ffe2ef023a3129"
+    },
+    {
+      "file": "packages/agents/use-cases/package.json",
+      "sha256": "49a7f346130c392170e3100d63f28fe77cce22e2e06e88733f71eba9e7992c3e"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.commands.ts",
+      "sha256": "d0c5b5f26469752140581218654664a590385fdf6070443f35b6f2b447c82529"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.errors.ts",
+      "sha256": "6a37423eaafe59ccc21b1c488aa34e8845df0e65eaf1abe0a3ed28b4648c043e"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.repository.ts",
+      "sha256": "222b55befd15cb521e4f354fd51e25358e9b51757f9fa237097328eeb2ec81d9"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.rpc.ts",
+      "sha256": "4dd96ddf79a6f6659a8130c2c1c6a93ae8296ead498c3a746460203f6b832153"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.service.ts",
+      "sha256": "ed18e69144924e624c58bbd00c3c049f8d10a9a20304e84dd5631f67dbe640b6"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.use-cases.ts",
+      "sha256": "25e49f85ce4621f49777baa1c29c940eead8edda3fccb851cf9e9c54da0e1641"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/index.ts",
+      "sha256": "41d42ae2dc3ad5694289088610f4816f8ede639f05ec917337032b60303f2b02"
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/server.ts",
+      "sha256": "4db123c681e631dd360716996d0d83fe51ee2aa33ae36d2472c3d18ddfc8a903"
+    },
+    {
+      "file": "packages/agents/use-cases/src/index.ts",
+      "sha256": "1f09b769a5ac342d4d8f05e3fb5d60f0b158f1f618765c82760989bfafbe6a9e"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts",
+      "sha256": "b134b3e04908eacf5f1f6c3bd98c6a990825c450e9e98984fb10a52e6aaccf31"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.errors.ts",
+      "sha256": "b1dfea5266c5d21e4ffd6fc3d1285a9197b4726e6b0d732d8f54ac281acd33bd"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.fixture.ts",
+      "sha256": "bdb60942c8fcf12be6aebbf89344674e62c5d5dcb3e60ad320f024ac435a7af6"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
+      "sha256": "b3533182b444da3c6454dab1dbef422d1c485e37a624f0e93abdbe3df097c5e8"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.repair-errors.ts",
+      "sha256": "523c430a839d0b1bb84e158ad6b3f5859cb079af760275721b26a91a24b26f59"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/index.ts",
+      "sha256": "dafe661c5fd23f9d8ad550466096fd014175b644991bf3f500543ef53b3735ca"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/AssistantTurn/server.ts",
+      "sha256": "f36af08e4fc918860144f06b20e91296d5f6eddbbe06239b35b873dcfd91dcc6"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/Chat/Chat.errors.ts",
+      "sha256": "05ab3a846a6553ccbf751a3ba85a85265ebec1368a817e21ed6cd8babcc12815"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts",
+      "sha256": "59d7aa29a1bef0cef4b6446b5f73b44891e40a4854e4804829107b3b83a6b5b6"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/Chat/index.ts",
+      "sha256": "4c8c60bf91da0082ddd0c258105fff74bbffd2e3be10ae4f7102e423b1060da0"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.commands.ts",
+      "sha256": "e0e76198e7265b871a4da14a7e810f72fb90697edea69d2b23860655499fe4f6"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts",
+      "sha256": "1a09dda5bd0ba25d33547cbdd664b5d05fcf171ee5338c850e4f2ef89ac065d7"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts",
+      "sha256": "a548f31266a6d7d3a558c3cdd2786443ccdfff9678104787466538bfeeb8129f"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts",
+      "sha256": "2d40321f190b1c975d1d50779dc40fd20ffaee3ceafae1567612d6e6dd1bc11b"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts",
+      "sha256": "cbb9daa7e8467da299b987a31349cc95a1d9e490bfefef694b0a6970595a2105"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.queries.ts",
+      "sha256": "5bdf8d9a5cc07b70bf2c77b0bda1c980bf2870d6a0cd8f6d07ad7aeec5b569b7"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.service.ts",
+      "sha256": "f25e64acb39db52d6157d9bde7d3c5e1c50bf7ad249915db1f2aedd7f6fd0d30"
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts",
+      "sha256": "134d8134b0fba0f643666b7ba04cd84357f120d4cb97e41913dbb798663aef90"
+    },
+    {
+      "file": "packages/agents/use-cases/src/proof.ts",
+      "sha256": "9d26a711dba0b116e52108c44917eea6dfd16f7c11dcb88084f71ac506fb6fb3"
+    },
+    {
+      "file": "packages/agents/use-cases/src/public.ts",
+      "sha256": "8f453678197ae6873ba93a8f112b443c45452ef3f3a74a17b2da865665875835"
+    },
+    {
+      "file": "packages/agents/use-cases/src/server.ts",
+      "sha256": "c3c72cb96f7524e04053c1e9398bc970ceef0b4f4827fa9f0db82960ce997287"
+    },
+    {
+      "file": "packages/agents/use-cases/src/test.ts",
+      "sha256": "13b9551965fe1c7680a743da8fd88638b4521aeafd54ce8d177eae214acdbda9"
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "sha256": "88e059dae510fb72d619449ca839aa24961b1bc3cc86dfe52310f6737aa79117"
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "sha256": "9881d593758aacfaf170d35be2da4e52ba9fa4df94e8b6138a74458c8565d509"
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "sha256": "2f2f261a3f2c1b4cbe6f512e4f10184eed2f2c25da06fdea0d544fb2b99ab8e1"
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "sha256": "a687dd4db2553d2e442b5a440796377ddd57b7c5ed9c7458a8381ae5c971b7bf"
+    },
+    {
+      "file": "packages/agents/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "705965906eacfe0425325581a4678d391fd434f5a292be93201b2e38b1a59dde"
+    }
+  ],
+  "environmentMode": "Synthetic provider/MCP services with real scoped temporary-file comparison for the generated artifact; no provider process, credential lookup or live HTTP.",
+  "bunProof": {
+    "passedTests": 33,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.96923828125, 4.9208984375, 5.6572265625],
+    "loadAfter": [5.09326171875, 5.13818359375, 5.7236328125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.02 avg300=0.13 total=669586529\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=168413848\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160648668\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.06 total=782008539\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=684873023\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.01 avg300=0.12 total=669593071\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=168413869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=160648689\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.06 total=782008750\nfull avg10=0.00 avg60=0.01 avg300=0.04 total=684873145\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

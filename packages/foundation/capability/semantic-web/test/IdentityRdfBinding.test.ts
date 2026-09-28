@@ -18,7 +18,9 @@ import {
   ShaclValidationResult,
   ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -51,6 +53,9 @@ const entry = IdentityEntry.fromComposer(entryComposer, {
   label: "Registry test entry",
   route: "/identity/registry-test-entry",
 });
+const RegistryTestLayer = Layer.unwrap(
+  entriesToDataset(binding)([entry]).pipe(Effect.map((dataset) => layerDataset(binding, dataset)))
+);
 const EntrySeed = S.Struct({
   identity: S.String,
   curie: S.String,
@@ -88,18 +93,12 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 };
 
 const expectIdentityEntryIriError = (error: unknown, identity: string, iri: string): void => {
-  assert.isTrue(isIdentityEntryIriError2(error));
+  pipe(isIdentityEntryIriError2(error), assertTrue);
   if (isIdentityEntryIriError2(error)) {
     assert.strictEqual(error.identity, identity);
     assert.strictEqual(error.iri, iri);
   }
 };
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(provided).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("identity RDF binding", () => {
   it("rejects predicate collisions during construction and decoding", () => {
     expectSchemaMakeToFail(
@@ -108,7 +107,7 @@ describe("identity RDF binding", () => {
     );
 
     const decoded = decodeIdentityRdfBindingResult(collidingBindingInput);
-    assert.isTrue(Result.isFailure(decoded));
+    pipe(Result.isFailure(decoded), assertTrue);
     if (Result.isFailure(decoded)) {
       assert.include(
         SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
@@ -124,7 +123,7 @@ describe("identity RDF binding", () => {
     );
 
     const decoded = decodeIdentityShapePolicyResult(duplicatePolicyInput);
-    assert.isTrue(Result.isFailure(decoded));
+    pipe(Result.isFailure(decoded), assertTrue);
     if (Result.isFailure(decoded)) {
       assert.include(
         SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
@@ -133,42 +132,32 @@ describe("identity RDF binding", () => {
     }
   });
 
-  it("derives only pairwise-distinct predicate bindings", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(IdentityRdfBinding)]),
-          ([generated]) => {
-            const predicates = bindingPredicateValues(generated);
+  it.prop(
+    "derives only pairwise-distinct predicate bindings",
+    [Arbitrary.schema(IdentityRdfBinding)],
+    ([generated]) => {
+      const predicates = bindingPredicateValues(generated);
 
-            assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
+      assert.strictEqual(HashSet.size(HashSet.fromIterable(predicates)), A.length(predicates));
 
-            return true;
-          },
-          { runs: 40 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(40) }
+  );
 
-  it("derives only unique required-fiber policies", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(IdentityShapePolicy)]),
-          ([generated]) => {
-            assert.strictEqual(
-              HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
-              A.length(generated.requiredFibers)
-            );
+  it.prop(
+    "derives only unique required-fiber policies",
+    [Arbitrary.schema(IdentityShapePolicy)],
+    ([generated]) => {
+      assert.strictEqual(
+        HashSet.size(HashSet.fromIterable(generated.requiredFibers)),
+        A.length(generated.requiredFibers)
+      );
 
-            return true;
-          },
-          { runs: 40 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(40) }
+  );
 
   it.effect(
     "round-trips exact identity entries through an RDF dataset",
@@ -195,7 +184,7 @@ describe("identity RDF binding", () => {
 
       assert.deepStrictEqual(decoded, [generated]);
     }),
-    { arbitrary: { runs: 40 } }
+    { arbitrary: fcRuns(40) }
   );
 
   it.effect(
@@ -206,11 +195,11 @@ describe("identity RDF binding", () => {
         DefaultIdentityRdfBinding,
         IdentityShapePolicy.make({ requiredFibers: ["label"] })
       )([entry]).pipe(Effect.flip);
-      assert.isTrue(isIdentityFiberPathError(encodingError));
+      pipe(isIdentityFiberPathError(encodingError), assertTrue);
       if (isIdentityFiberPathError(encodingError)) {
         assert.strictEqual(encodingError.fiber, "label");
       }
-      assert.isTrue(isIdentityFiberPathError(projectionError));
+      pipe(isIdentityFiberPathError(projectionError), assertTrue);
       if (isIdentityFiberPathError(projectionError)) {
         assert.strictEqual(projectionError.fiber, "label");
       }
@@ -238,29 +227,30 @@ describe("identity RDF binding", () => {
     })
   );
 
-  it.effect(
-    "builds a dataset registry with exact three-address lookup and typed misses",
-    Effect.fnUntraced(function* () {
-      const dataset = yield* entriesToDataset(binding)([entry]);
-      const result = yield* IdentityRegistry.use(
-        Effect.fnUntraced(function* (registry) {
-          const byIdentity = yield* registry.resolve({ _tag: "identity", value: entry.identity });
-          const byIri = yield* registry.resolve({ _tag: "iri", value: entry.iri });
-          const byCurie = yield* registry.resolve({ _tag: "curie", value: entry.curie });
-          const missing = yield* registry
-            .resolve({ _tag: "identity", value: "@beep/semantic-web/Missing" })
-            .pipe(Effect.flip);
+  it.layer(RegistryTestLayer, { timeout: "30 seconds" })("dataset registry fixture", (it) => {
+    it.effect(
+      "builds a dataset registry with exact three-address lookup and typed misses",
+      Effect.fnUntraced(function* () {
+        const result = yield* IdentityRegistry.use(
+          Effect.fnUntraced(function* (registry) {
+            const byIdentity = yield* registry.resolve({ _tag: "identity", value: entry.identity });
+            const byIri = yield* registry.resolve({ _tag: "iri", value: entry.iri });
+            const byCurie = yield* registry.resolve({ _tag: "curie", value: entry.curie });
+            const missing = yield* registry
+              .resolve({ _tag: "identity", value: "@beep/semantic-web/Missing" })
+              .pipe(Effect.flip);
 
-          return { byIdentity, byIri, byCurie, missing };
-        })
-      ).pipe(provideScopedLayer(layerDataset(binding, dataset)));
+            return { byIdentity, byIri, byCurie, missing };
+          })
+        );
 
-      assert.strictEqual(result.byIdentity, result.byIri);
-      assert.strictEqual(result.byIdentity, result.byCurie);
-      assert.deepStrictEqual(result.byIdentity, entry);
-      assert.strictEqual(result.missing._tag, "IdentityNotFoundError");
-    })
-  );
+        assert.strictEqual(result.byIdentity, result.byIri);
+        assert.strictEqual(result.byIdentity, result.byCurie);
+        assert.deepStrictEqual(result.byIdentity, entry);
+        assert.strictEqual(result.missing._tag, "IdentityNotFoundError");
+      })
+    );
+  });
 
   it.effect(
     "decodes projected shapes through the request contract and reaches a mock service",
@@ -283,7 +273,7 @@ describe("identity RDF binding", () => {
         Effect.provideService(ShaclValidationService, mock)
       );
 
-      assert.isTrue(result.conforms);
+      pipe(result.conforms, assertTrue);
       assert.deepStrictEqual(yield* Ref.get(receivedShapes), shapes);
       assert.deepStrictEqual(request.shapes, shapes);
       const shape = request.shapes[0];
@@ -299,7 +289,10 @@ describe("identity RDF binding", () => {
         )
       );
       assert.lengthOf(addressProperties, 4);
-      assert.isTrue(A.every(addressProperties, (property) => O.isSome(property.minCount)));
+      pipe(
+        A.every(addressProperties, (property) => O.isSome(property.minCount)),
+        assertTrue
+      );
       assert.lengthOf(
         A.filter(addressProperties, (property) => O.isSome(property.maxCount) && O.isNone(property.hasValue)),
         2
@@ -313,27 +306,23 @@ describe("identity RDF binding", () => {
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes IdentityRdfBinding through its generation link", () =>
-  Effect.gen(function* () {
-    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
-      IdentityRdfBinding.ast
-    ).annotations;
-    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
-    if (link === undefined || link.transformation._tag !== "Transformation")
-      throw new Error("Missing generation transformation");
-    const codec = S.make<S.Codec<IdentityRdfBinding, unknown>>(
-      SchemaAST.decodeTo(link.to, SchemaAST.toType(IdentityRdfBinding.ast), link.transformation)
-    );
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(IdentityRdfBinding),
-      (value) =>
-        Effect.gen(function* () {
-          const encoded = yield* S.encodeEffect(codec)(value);
-          expect(encoded).toEqual(Object.keys(value.fiberPaths));
-          return true;
-        }),
-      fcRuns(50)
-    );
-    expect(result._tag).toBe("Passed");
-  })
+it.effect.prop(
+  "encodes IdentityRdfBinding through its generation link",
+  [Arbitrary.schema(IdentityRdfBinding)],
+  ([value]) =>
+    Effect.gen(function* () {
+      const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
+        IdentityRdfBinding.ast
+      ).annotations;
+      const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
+      if (link === undefined || link.transformation._tag !== "Transformation")
+        throw new Error("Missing generation transformation");
+      const codec = S.make<S.Codec<IdentityRdfBinding, unknown>>(
+        SchemaAST.decodeTo(link.to, SchemaAST.toType(IdentityRdfBinding.ast), link.transformation)
+      );
+      const encoded = yield* S.encodeEffect(codec)(value);
+      expect(encoded).toEqual(Object.keys(value.fiberPaths));
+      return true;
+    }),
+  { arbitrary: fcRuns(50) }
 );

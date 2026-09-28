@@ -23,9 +23,11 @@ import {
   WriteTagsRequest,
   WriteXmpPacketRequest,
 } from "@beep/exiftool";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Equal, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -39,22 +41,12 @@ const encodeExifMetadata = S.encodeEffect(ExifMetadata);
 const encodeExiftoolErrorFromUnknownOptions = S.encodeEffect(ExiftoolErrorFromUnknownOptions);
 
 const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
-  schema: Schema
+  schema: Schema,
+  value: Schema["Type"]
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeEffect(schema)(encoded);
-        expect(Equal.equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(25)
-  );
-
-  expect(result).toMatchObject({ _tag: "Passed" });
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(Equal.equals(decoded, value)).toBe(true);
 });
 
 const fullProvenance = BeepQaProvenance.make({
@@ -69,41 +61,107 @@ const fullProvenance = BeepQaProvenance.make({
 });
 
 describe("@beep/exiftool models", () => {
-  it.effect(
-    "round-trips schema-modeled public payloads",
-    Effect.fnUntraced(function* () {
-      yield* assertRoundTrip(PositiveMilliseconds);
-      yield* assertRoundTrip(EpochMilliseconds);
-      yield* assertRoundTrip(TagCount);
-      yield* assertRoundTrip(SafeTagName);
-      yield* assertRoundTrip(ProcessExitCode);
-      yield* assertRoundTrip(ExiftoolWritableExtension);
-      yield* assertRoundTrip(BeepQaTagName);
-      yield* assertRoundTrip(ReadTagsRequest);
-      yield* assertRoundTrip(TagAssignment);
-      yield* assertRoundTrip(WriteTagsRequest);
-      yield* assertRoundTrip(BeepQaProvenance);
-      yield* assertRoundTrip(WriteXmpPacketRequest);
-      yield* assertRoundTrip(ExiftoolErrorContext);
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([
-          Arbitrary.schema(ExiftoolErrorFromUnknownOptions).pipe(
-            Arbitrary.filter((options) => O.isNone(options.cause))
-          ),
-        ]),
-        ([options]) =>
-          Effect.gen(function* () {
-            const encoded = yield* encodeExiftoolErrorFromUnknownOptions(options);
-            const decoded = yield* decodeUnknownExiftoolErrorFromUnknownOptions(encoded);
-            expect(Equal.equals(decoded, options)).toBe(true);
+  it.effect.prop(
+    "round-trips PositiveMilliseconds through encoded form",
+    [PositiveMilliseconds],
+    ([value]) => assertRoundTrip(PositiveMilliseconds, value),
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          }),
-        fcRuns(25)
-      );
+  it.effect.prop(
+    "round-trips EpochMilliseconds through encoded form",
+    [EpochMilliseconds],
+    ([value]) => assertRoundTrip(EpochMilliseconds, value),
+    { arbitrary: fcRuns(25) }
+  );
 
-      expect(result).toMatchObject({ _tag: "Passed" });
-    })
+  it.effect.prop(
+    "round-trips TagCount through encoded form",
+    [TagCount],
+    ([value]) => assertRoundTrip(TagCount, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips SafeTagName through encoded form",
+    [SafeTagName],
+    ([value]) => assertRoundTrip(SafeTagName, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips ProcessExitCode through encoded form",
+    [ProcessExitCode],
+    ([value]) => assertRoundTrip(ProcessExitCode, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips ExiftoolWritableExtension through encoded form",
+    [ExiftoolWritableExtension],
+    ([value]) => assertRoundTrip(ExiftoolWritableExtension, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips BeepQaTagName through encoded form",
+    [BeepQaTagName],
+    ([value]) => assertRoundTrip(BeepQaTagName, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips ReadTagsRequest through encoded form",
+    [ReadTagsRequest],
+    ([value]) => assertRoundTrip(ReadTagsRequest, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips TagAssignment through encoded form",
+    [TagAssignment],
+    ([value]) => assertRoundTrip(TagAssignment, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips WriteTagsRequest through encoded form",
+    [WriteTagsRequest],
+    ([value]) => assertRoundTrip(WriteTagsRequest, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips BeepQaProvenance through encoded form",
+    [BeepQaProvenance],
+    ([value]) => assertRoundTrip(BeepQaProvenance, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips WriteXmpPacketRequest through encoded form",
+    [WriteXmpPacketRequest],
+    ([value]) => assertRoundTrip(WriteXmpPacketRequest, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips ExiftoolErrorContext through encoded form",
+    [ExiftoolErrorContext],
+    ([value]) => assertRoundTrip(ExiftoolErrorContext, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips ExiftoolErrorFromUnknownOptions through encoded form",
+    [Arbitrary.schema(ExiftoolErrorFromUnknownOptions).pipe(Arbitrary.filter((options) => O.isNone(options.cause)))],
+    ([options]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeExiftoolErrorFromUnknownOptions(options);
+        const decoded = yield* decodeUnknownExiftoolErrorFromUnknownOptions(encoded);
+        expect(Equal.equals(decoded, options)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect(
@@ -153,11 +211,11 @@ describe("@beep/exiftool models", () => {
   );
 
   it("rejects tag names that could smuggle extra arguments", () => {
-    expect(O.isSome(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption(""))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag name"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag=value"))).toBe(true);
-    expect(O.isNone(decodeUnknownSafeTagNameOption("tag<file"))).toBe(true);
+    pipe(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"), O.isSome, assertTrue);
+    assertNone(decodeUnknownSafeTagNameOption(""));
+    assertNone(decodeUnknownSafeTagNameOption("tag name"));
+    assertNone(decodeUnknownSafeTagNameOption("tag=value"));
+    assertNone(decodeUnknownSafeTagNameOption("tag<file"));
   });
 
   it("builds read, write, and version arguments with -config first", () => {
@@ -263,7 +321,7 @@ describe("@beep/exiftool models", () => {
         "XMP-beepQA:ToolVersions": '{"exiftool":"13.55"}',
       });
 
-      expect(O.isSome(decoded)).toBe(true);
+      pipe(decoded, O.isSome, assertTrue);
       expect(
         yield* pipe(
           decoded,
@@ -272,15 +330,13 @@ describe("@beep/exiftool models", () => {
         )
       ).toEqual(yield* encodeBeepQaProvenance(fullProvenance));
 
-      expect(
-        O.isNone(
-          provenanceFromRawTags({
-            "XMP-beepQA:ActionId": "act-9",
-            "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
-            "XMP-beepQA:ScenarioName": "sash-drag",
-          })
-        )
-      ).toBe(true);
+      assertNone(
+        provenanceFromRawTags({
+          "XMP-beepQA:ActionId": "act-9",
+          "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
+          "XMP-beepQA:ScenarioName": "sash-drag",
+        })
+      );
     })
   );
 });

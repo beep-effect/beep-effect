@@ -2,9 +2,11 @@ import { Buffer } from "node:buffer";
 import { text as readableText } from "node:stream/consumers";
 import * as B from "@beep/box";
 import { HttpsUrl, NonNegativeInt } from "@beep/schema";
-import { fcRuns } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -13,12 +15,15 @@ import {
   Equal,
   Exit,
   Fiber,
+  pipe,
   Redacted,
   Result,
   Stream,
 } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import { constVoid } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -81,27 +86,33 @@ type FakeEventListener = (payload?: unknown) => void;
 
 class FakeEventStream {
   readonly emissions: ReadonlyArray<unknown>;
+  readonly keepOpen: boolean;
+  readonly onRead: () => void;
   wasClosed = false;
   readableEnded = false;
   closed = false;
   private index = 0;
+  private readonly onceListeners = MutableHashMap.empty<FakeEventListener, FakeEventListener>();
   private readonly listeners: {
     readonly end: Array<FakeEventListener>;
     readonly error: Array<FakeEventListener>;
     readonly readable: Array<FakeEventListener>;
   } = { end: [], error: [], readable: [] };
 
-  constructor(emissions: ReadonlyArray<unknown>) {
+  constructor(emissions: ReadonlyArray<unknown>, keepOpen = false, onRead: () => void = constVoid) {
     this.emissions = emissions;
+    this.keepOpen = keepOpen;
+    this.onRead = onRead;
   }
 
   read(): unknown {
+    this.onRead();
     if (this.index < this.emissions.length) {
       const emission = this.emissions[this.index];
       this.index += 1;
       return emission;
     }
-    if (!this.readableEnded) {
+    if (!this.keepOpen && !this.readableEnded) {
       this.readableEnded = true;
       this.emit("end");
     }
@@ -118,13 +129,23 @@ class FakeEventStream {
       this.off(event, wrapped);
       listener(payload);
     };
+    MutableHashMap.set(this.onceListeners, listener, wrapped);
     return this.on(event, wrapped);
   }
 
   off(event: "end" | "error" | "readable", listener: FakeEventListener): this {
-    const retained = this.listeners[event].filter((candidate) => candidate !== listener);
+    const wrapped = MutableHashMap.get(this.onceListeners, listener);
+    const retained = A.filter(
+      this.listeners[event],
+      (candidate) => candidate !== listener && !O.contains(wrapped, candidate)
+    );
+    MutableHashMap.remove(this.onceListeners, listener);
     this.listeners[event].splice(0, this.listeners[event].length, ...retained);
     return this;
+  }
+
+  listenerCount(event: "end" | "error" | "readable"): number {
+    return A.length(this.listeners[event]);
   }
 
   pipe(): this {
@@ -276,42 +297,7 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
   const reencoded = encode(schema, decoded);
 
   expect(reencoded).toEqual(encoded);
-  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
-
-const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary: Arbitrary.Arbitrary<Codec["Type"]>
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
+  pipe(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), assertTrue);
 };
 
 const UploadBigFilePayloadArbitrary = Arbitrary.schema(NonNegativeInt).pipe(
@@ -326,6 +312,34 @@ const UploadBigFilePayloadArbitrary = Arbitrary.schema(NonNegativeInt).pipe(
 );
 
 describe("@beep/box", () => {
+  it.layer(
+    B.Box.makeLayerFromClient({
+      chunkedUploads: {
+        getCachedUploadPart: (...args: ReadonlyArray<unknown>) => {
+          expect(args).toEqual(["https://box.example/plan", 0, 42, "part-sha512"]);
+          return Promise.resolve(undefined);
+        },
+      },
+    }),
+    { timeout: "10 seconds" }
+  )("generated methods without cancellation parameters", (it) => {
+    it.effect(
+      "forwards cached-part arguments and preserves an absent cache result",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+        const part = yield* box.chunkedUploads.getCachedUploadPart(
+          B.ChunkedUploadsGetCachedUploadPartPayload.make({
+            planUrl: "https://box.example/plan",
+            offset: 0,
+            size: 42,
+            sha512: "part-sha512",
+          })
+        );
+        expect(part).toBeUndefined();
+      })
+    );
+  });
+
   it.effect(
     "accepts future Box enum values generated as open unions",
     Effect.fnUntraced(function* () {
@@ -354,29 +368,59 @@ describe("@beep/box", () => {
     })
   );
 
-  it("round-trips handwritten schema values without encoded-shape drift", () => {
-    assertSchemaRoundTrip(B.BoxCcgConfig);
-    assertSchemaRoundTrip(B.BoxErrorOptions);
-    assertSchemaRoundTrip(B.BoxErrorDiagnostic);
-    assertSchemaRoundTripWithArbitrary(
-      B.BoxError,
-      Arbitrary.schema(B.BoxError).pipe(Arbitrary.map((value) => B.BoxError.make({ ...value })))
-    );
-    assertSchemaRoundTrip(B.BoxPartAccumulator);
-    assertSchemaRoundTripWithArbitrary(B.BoxUploadBigFilePayload, UploadBigFilePayloadArbitrary);
+  it.prop(
+    "round-trips BoxCcgConfig without encoded-shape drift",
+    { value: Arbitrary.schema(B.BoxCcgConfig) },
+    ({ value }) => expectRoundTrip(B.BoxCcgConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
 
+  it.prop(
+    "round-trips BoxErrorOptions without encoded-shape drift",
+    { value: Arbitrary.schema(B.BoxErrorOptions) },
+    ({ value }) => expectRoundTrip(B.BoxErrorOptions, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "round-trips BoxErrorDiagnostic without encoded-shape drift",
+    { value: Arbitrary.schema(B.BoxErrorDiagnostic) },
+    ({ value }) => expectRoundTrip(B.BoxErrorDiagnostic, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "round-trips BoxError without encoded-shape drift",
+    { value: Arbitrary.schema(B.BoxError).pipe(Arbitrary.map((value) => B.BoxError.make({ ...value }))) },
+    ({ value }) => expectRoundTrip(B.BoxError, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "round-trips BoxPartAccumulator without encoded-shape drift",
+    { value: Arbitrary.schema(B.BoxPartAccumulator) },
+    ({ value }) => expectRoundTrip(B.BoxPartAccumulator, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.prop(
+    "round-trips BoxUploadBigFilePayload without encoded-shape drift",
+    { value: UploadBigFilePayloadArbitrary },
+    ({ value }) => expectRoundTrip(B.BoxUploadBigFilePayload, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it("round-trips handwritten schema values without encoded-shape drift", () => {
     const zipPayload = B.BoxGetZipDownloadContentPayload.make({
       downloadUrl: HttpsUrl.make("https://example.com/content"),
     });
 
     expectRoundTrip(B.BoxGetZipDownloadContentPayload, zipPayload);
-    expect(
-      O.isNone(
-        decodeBBoxGetZipDownloadContentPayloadOption({
-          downloadUrl: "http://example.com/content",
-        })
-      )
-    ).toBe(true);
+    assertNone(
+      decodeBBoxGetZipDownloadContentPayloadOption({
+        downloadUrl: "http://example.com/content",
+      })
+    );
   });
 
   it("keeps only the strict conflict projection from API failure context", () => {
@@ -409,17 +453,16 @@ describe("@beep/box", () => {
       },
     });
 
-    expect(conflict.context).toEqual(
-      O.some(
-        B.BoxApiFailureContext.make({
-          values: {
-            conflictCount: NonNegativeInt.make(1),
-            conflicts: [{ id: "456", type: "file" }],
-          },
-        })
-      )
+    assertSome(
+      conflict.context,
+      B.BoxApiFailureContext.make({
+        values: {
+          conflictCount: NonNegativeInt.make(1),
+          conflicts: [{ id: "456", type: "file" }],
+        },
+      })
     );
-    expect(conflict.status).toEqual(O.some(409));
+    assertSome(conflict.status, 409);
   });
 
   it("retains only the schema error class without issue text", () => {
@@ -430,7 +473,7 @@ describe("@beep/box", () => {
 
     const error = B.BoxError.fromUnknown("folders.getFolderItems", schemaFailure);
 
-    expect(error.cause).toEqual(O.some("SchemaError"));
+    assertSome(error.cause, "SchemaError");
   });
 
   it("excludes confidential sentinels from encoded and rendered Box errors", () => {
@@ -468,18 +511,17 @@ describe("@beep/box", () => {
       message: `Rejected ${resourceName}; ${login}; ${callbackUrl}; ${bearerToken}`,
     });
 
-    expect(sdkFailure.context).toEqual(
-      O.some(
-        B.BoxApiFailureContext.make({
-          values: {
-            conflictCount: NonNegativeInt.make(1),
-            conflicts: [{ id: "987654321", type: "folder" }],
-          },
-        })
-      )
+    assertSome(
+      sdkFailure.context,
+      B.BoxApiFailureContext.make({
+        values: {
+          conflictCount: NonNegativeInt.make(1),
+          conflicts: [{ id: "987654321", type: "folder" }],
+        },
+      })
     );
-    expect(sdkFailure.helpUrl).toEqual(O.none());
-    expect(schemaFailure.cause).toEqual(O.some("SchemaError"));
+    assertNone(sdkFailure.helpUrl);
+    assertSome(schemaFailure.cause, "SchemaError");
     expect(B.BoxError.toDiagnostic(sdkFailure).provider).toBe("box");
 
     for (const error of [sdkFailure, schemaFailure]) {
@@ -511,8 +553,8 @@ describe("@beep/box", () => {
       },
     });
 
-    expect(error.status).toEqual(O.none());
-    expect(outOfRange.status).toEqual(O.none());
+    assertNone(error.status);
+    assertNone(outOfRange.status);
     expect(error.sdkVersion).toBe("10.14.0");
   });
 
@@ -520,7 +562,7 @@ describe("@beep/box", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", "Bearer secret-token");
 
     expect(error.reason).toBe("sdk thrown");
-    expect(error.cause).toEqual(O.some("String"));
+    assertSome(error.cause, "String");
   });
 
   it("survives SDK throwables whose property access throws", () => {
@@ -533,24 +575,24 @@ describe("@beep/box", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", hostile);
 
     expect(error.reason).toBe("sdk thrown");
-    expect(error.cause).toEqual(O.some("Unknown"));
+    assertSome(error.cause, "Unknown");
   });
 
   it.effect(
     "maps developer-token config failures into BoxError",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
-        Effect.scoped(
-          EffectLayer.build(
+        B.BoxConfig.pipe(
+          provideScopedLayer(
             B.BoxConfigLayer.pipe(EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))))
-          ).pipe(Effect.flatMap((context) => B.BoxConfig.pipe(Effect.provide(context))))
+          )
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
+        pipe(error, O.isSome, assertTrue);
         if (O.isSome(error)) {
           expect(error.value).toBeInstanceOf(B.BoxError);
           expect(error.value.reason).toBe("config");
@@ -570,7 +612,7 @@ describe("@beep/box", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -586,7 +628,7 @@ describe("@beep/box", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
     })
   );
 
@@ -594,7 +636,7 @@ describe("@beep/box", () => {
   // undefined keys. Exact-optional schema keys reject those, which silently
   // broke every real Box call whose response omitted an optional field (the
   // mirror-root probe read it as "disconnected" rather than a decode failure).
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         users: {
@@ -602,7 +644,8 @@ describe("@beep/box", () => {
             Promise.resolve({ ...userFull, jobTitle: undefined, phone: undefined }),
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect(
       "decodes responses whose absent optional fields are present-but-undefined keys",
@@ -620,7 +663,7 @@ describe("@beep/box", () => {
   // writes keys with `defineProperty` so the legacy prototype setter is never
   // invoked; that hardening is not otherwise observable here, because schema
   // decoding ignores the unknown key either way.)
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         users: {
@@ -628,7 +671,8 @@ describe("@beep/box", () => {
             Promise.resolve(JSON.parse(`{"id":"user-id","type":"user","__proto__":{"polluted":true}}`)),
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect(
       "decodes responses carrying a raw __proto__ key",
@@ -641,7 +685,7 @@ describe("@beep/box", () => {
     );
   });
 
-  layer(B.Box.makeLayerFromClient(makeFakeClient()))((it) => {
+  it.layer(B.Box.makeLayerFromClient(makeFakeClient()), { timeout: "10 seconds" })((it) => {
     it.effect(
       "wraps SDK JSON operations in decoded success schemas",
       Effect.fnUntraced(function* () {
@@ -661,8 +705,8 @@ describe("@beep/box", () => {
           B.DownloadsGetDownloadFileUrlPayload.make({ fileId: "file-id" })
         );
 
-        expect(B.BoxMethodName.is["downloads.downloadFile"]("downloads.downloadFile")).toBe(true);
-        expect(B.BoxMethodName.is["downloads.getDownloadFileUrl"]("downloads.getDownloadFileUrl")).toBe(true);
+        pipe(B.BoxMethodName.is["downloads.downloadFile"]("downloads.downloadFile"), assertTrue);
+        pipe(B.BoxMethodName.is["downloads.getDownloadFileUrl"]("downloads.getDownloadFileUrl"), assertTrue);
         expect(url).toBe("https://box.example/files/file-id/download");
       })
     );
@@ -678,7 +722,7 @@ describe("@beep/box", () => {
     );
   });
 
-  layer(B.Box.makeLayerFromClient(provisioningClient))((it) => {
+  it.layer(B.Box.makeLayerFromClient(provisioningClient), { timeout: "10 seconds" })((it) => {
     it.effect(
       "decodes every Box provisioning discovery surface",
       Effect.fnUntraced(function* () {
@@ -760,43 +804,44 @@ describe("@beep/box", () => {
       Effect.fnUntraced(function* () {
         const box = yield* B.Box;
 
-        expect(P.isFunction(box.userCollaborations.createCollaboration)).toBe(true);
-        expect(P.isFunction(box.userCollaborations.updateCollaborationById)).toBe(true);
-        expect(P.isFunction(box.userCollaborations.deleteCollaborationById)).toBe(true);
-        expect(P.isFunction(box.webhooks.createWebhook)).toBe(true);
-        expect(P.isFunction(box.webhooks.updateWebhookById)).toBe(true);
-        expect(P.isFunction(box.webhooks.deleteWebhookById)).toBe(true);
-        expect(P.isFunction(box.signRequests.createSignRequest)).toBe(true);
-        expect(P.isFunction(box.signRequests.cancelSignRequest)).toBe(true);
-        expect(P.isFunction(box.signRequests.resendSignRequest)).toBe(true);
+        pipe(P.isFunction(box.userCollaborations.createCollaboration), assertTrue);
+        pipe(P.isFunction(box.userCollaborations.updateCollaborationById), assertTrue);
+        pipe(P.isFunction(box.userCollaborations.deleteCollaborationById), assertTrue);
+        pipe(P.isFunction(box.webhooks.createWebhook), assertTrue);
+        pipe(P.isFunction(box.webhooks.updateWebhookById), assertTrue);
+        pipe(P.isFunction(box.webhooks.deleteWebhookById), assertTrue);
+        pipe(P.isFunction(box.signRequests.createSignRequest), assertTrue);
+        pipe(P.isFunction(box.signRequests.cancelSignRequest), assertTrue);
+        pipe(P.isFunction(box.signRequests.resendSignRequest), assertTrue);
       })
     );
   });
 
-  layer(B.Box.makeLayerFromClient(makeFakeClient({ downloads: { downloadFile: () => Promise.resolve(undefined) } })))(
-    (it) => {
-      it.effect(
-        "fails byte downloads when the SDK returns no stream",
-        Effect.fnUntraced(function* () {
-          const box = yield* B.Box;
-          const exit = yield* Effect.exit(box.downloads.downloadFile({ fileId: "file-id" }).pipe(Stream.runCollect));
+  it.layer(
+    B.Box.makeLayerFromClient(makeFakeClient({ downloads: { downloadFile: () => Promise.resolve(undefined) } })),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "fails byte downloads when the SDK returns no stream",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+        const exit = yield* Effect.exit(box.downloads.downloadFile({ fileId: "file-id" }).pipe(Stream.runCollect));
 
-          expect(Exit.isFailure(exit)).toBe(true);
-          if (Exit.isFailure(exit)) {
-            const error = Cause.findErrorOption(exit.cause);
-            expect(O.isSome(error)).toBe(true);
-            if (O.isSome(error)) {
-              expect(error.value).toBeInstanceOf(B.BoxError);
-              expect(error.value.reason).toBe("stream");
-              expect(error.value.method).toEqual(O.some("downloads.downloadFile"));
-            }
+        pipe(exit, Exit.isFailure, assertTrue);
+        if (Exit.isFailure(exit)) {
+          const error = Cause.findErrorOption(exit.cause);
+          pipe(error, O.isSome, assertTrue);
+          if (O.isSome(error)) {
+            expect(error.value).toBeInstanceOf(B.BoxError);
+            expect(error.value.reason).toBe("stream");
+            assertSome(error.value.method, "downloads.downloadFile");
           }
-        })
-      );
-    }
-  );
+        }
+      })
+    );
+  });
 
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         downloads: {
@@ -815,7 +860,8 @@ describe("@beep/box", () => {
           },
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect(
       "aborts byte download setup when interrupted before the SDK returns",
@@ -836,7 +882,7 @@ describe("@beep/box", () => {
     );
   });
 
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         users: {
@@ -855,7 +901,8 @@ describe("@beep/box", () => {
             }),
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect(
       "translates SDK throws into sanitized BoxError values",
@@ -863,21 +910,21 @@ describe("@beep/box", () => {
         const box = yield* B.Box;
         const exit = yield* Effect.exit(box.users.getUserMe(B.UsersGetUserMePayload.make({})));
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
           const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
+          pipe(error, O.isSome, assertTrue);
           if (O.isSome(error)) {
             expect(error.value).toBeInstanceOf(B.BoxError);
             expect(error.value.reason).toBe("response status");
-            expect(error.value.method).toEqual(O.some("users.getUserMe"));
-            expect(error.value.status).toEqual(O.some(429));
-            expect(error.value.code).toEqual(O.some("rate_limit"));
-            expect(error.value.requestId).toEqual(O.some("request-id"));
-            expect(error.value.context).toEqual(O.none());
-            expect(error.value.helpUrl).toEqual(O.none());
+            assertSome(error.value.method, "users.getUserMe");
+            assertSome(error.value.status, 429);
+            assertSome(error.value.code, "rate_limit");
+            assertSome(error.value.requestId, "request-id");
+            assertNone(error.value.context);
+            assertNone(error.value.helpUrl);
             expect(error.value.sdkVersion).toBe("10.14.0");
-            expect(error.value.cause).toEqual(O.some("Unknown"));
+            assertSome(error.value.cause, "Unknown");
           }
         }
       })
@@ -886,7 +933,7 @@ describe("@beep/box", () => {
 
   const uploaded: { content: string | undefined } = { content: undefined };
 
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         uploads: {
@@ -897,7 +944,8 @@ describe("@beep/box", () => {
             }),
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect(
       "bridges Effect byte streams into SDK upload readables",
@@ -931,7 +979,7 @@ describe("@beep/box", () => {
     received: undefined,
   };
 
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         users: {
@@ -945,7 +993,8 @@ describe("@beep/box", () => {
           },
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect("preserves direct caller cancellation tokens for generated methods", () => {
       // The controller is the caller's, which is the whole point of the test:
@@ -982,7 +1031,7 @@ describe("@beep/box", () => {
     received: undefined,
   };
 
-  layer(
+  it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
         downloads: {
@@ -1002,7 +1051,8 @@ describe("@beep/box", () => {
           },
         },
       })
-    )
+    ),
+    { timeout: "10 seconds" }
   )((it) => {
     it.effect("preserves optionalsInput caller cancellation tokens for generated methods", () => {
       // Caller-supplied on purpose, as above.
@@ -1037,7 +1087,9 @@ describe("@beep/box", () => {
     },
   ]);
 
-  layer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => eventStream } })))((it) => {
+  it.layer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => eventStream } })), {
+    timeout: "10 seconds",
+  })((it) => {
     it.effect(
       "streams SDK event objects and closes the SDK readable",
       Effect.fnUntraced(function* () {
@@ -1046,10 +1098,55 @@ describe("@beep/box", () => {
         const values = A.fromIterable(events);
 
         expect(A.map(values, (event) => event.eventType)).toEqual(["FUTURE_BOX_EVENT"]);
-        expect(eventStream.wasClosed).toBe(true);
+        pipe(eventStream.wasClosed, assertTrue);
       })
     );
   });
+
+  it.effect(
+    "closes a still-open SDK event readable when the consumer takes one event",
+    Effect.fnUntraced(function* () {
+      const source = new FakeEventStream(
+        [{ eventId: "early-event", eventType: "FUTURE_BOX_EVENT", type: "event" }],
+        true
+      );
+      const events = yield* B.Box.use((box) =>
+        box.events.getEventStream({}).pipe(Stream.take(1), Stream.runCollect)
+      ).pipe(
+        provideScopedLayer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => source } })))
+      );
+
+      expect(A.map(A.fromIterable(events), (event) => event.eventId)).toEqual(["early-event"]);
+      pipe(source.readableEnded, assertFalse);
+      pipe(source.wasClosed, assertTrue);
+      expect(source.listenerCount("readable")).toBe(0);
+      expect(source.listenerCount("end")).toBe(0);
+      expect(source.listenerCount("error")).toBe(0);
+    })
+  );
+
+  it.effect(
+    "closes a still-open SDK event readable and removes listeners on interruption",
+    Effect.fnUntraced(function* () {
+      const entered = Promise.withResolvers<void>();
+      const source = new FakeEventStream([], true, entered.resolve);
+      const fiber = yield* B.Box.use((box) => box.events.getEventStream({}).pipe(Stream.runCollect)).pipe(
+        provideScopedLayer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => source } }))),
+        Effect.forkChild
+      );
+      yield* Effect.promise(() => entered.promise);
+      pipe(source.wasClosed, assertFalse);
+      expect(source.listenerCount("readable")).toBeGreaterThan(0);
+      yield* Fiber.interrupt(fiber);
+      const exit = yield* Fiber.await(fiber);
+      pipe(exit, Exit.isFailure, assertTrue);
+      pipe(source.readableEnded, assertFalse);
+      pipe(source.wasClosed, assertTrue);
+      expect(source.listenerCount("readable")).toBe(0);
+      expect(source.listenerCount("end")).toBe(0);
+      expect(source.listenerCount("error")).toBe(0);
+    })
+  );
 
   const invalidEventStream = new FakeEventStream([
     { createdAt: 123 },
@@ -1060,22 +1157,24 @@ describe("@beep/box", () => {
     },
   ]);
 
-  layer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => invalidEventStream } })))((it) => {
+  it.layer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => invalidEventStream } })), {
+    timeout: "10 seconds",
+  })((it) => {
     it.effect(
       "fails event streams and closes the SDK readable when payloads cannot decode",
       Effect.fnUntraced(function* () {
         const box = yield* B.Box;
         const exit = yield* Effect.exit(box.events.getEventStream({}).pipe(Stream.runCollect));
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        expect(invalidEventStream.wasClosed).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
+        pipe(invalidEventStream.wasClosed, assertTrue);
         if (Exit.isFailure(exit)) {
           const error = Cause.findErrorOption(exit.cause);
-          expect(O.isSome(error)).toBe(true);
+          pipe(error, O.isSome, assertTrue);
           if (O.isSome(error)) {
             expect(error.value).toBeInstanceOf(B.BoxError);
             expect(error.value.reason).toBe("response decoding");
-            expect(error.value.method).toEqual(O.some("events.getEventStream"));
+            assertSome(error.value.method, "events.getEventStream");
           }
         }
       })
@@ -1084,50 +1183,53 @@ describe("@beep/box", () => {
 });
 
 describe("Box layer constructors", () => {
-  const buildBox = <E>(layerToBuild: EffectLayer.Layer<B.Box, E>) =>
-    Effect.scoped(
-      EffectLayer.build(layerToBuild).pipe(Effect.flatMap((context) => B.Box.pipe(Effect.provide(context))))
+  it.layer(B.Box.makeLayer(B.BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") })), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "builds a developer-token layer from explicit configuration",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+
+        pipe(P.isFunction(box.users.getUserMe), assertTrue);
+        pipe(P.isFunction(box.downloads.downloadFile), assertTrue);
+      })
     );
+  });
 
-  it.effect(
-    "builds a developer-token layer from explicit configuration",
-    Effect.fnUntraced(function* () {
-      const box = yield* buildBox(
-        B.Box.makeLayer(B.BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") }))
-      );
+  it.layer(
+    B.Box.makeCcgLayer(
+      B.BoxCcgConfig.make({
+        clientId: "client-id",
+        clientSecret: Redacted.make("client-secret"),
+        enterpriseId: O.some("enterprise-id"),
+      })
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "builds a client-credentials layer from explicit configuration",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
 
-      expect(P.isFunction(box.users.getUserMe)).toBe(true);
-      expect(P.isFunction(box.downloads.downloadFile)).toBe(true);
-    })
-  );
+        pipe(P.isFunction(box.users.getUserMe), assertTrue);
+      })
+    );
+  });
 
-  it.effect(
-    "builds a client-credentials layer from explicit configuration",
-    Effect.fnUntraced(function* () {
-      const box = yield* buildBox(
-        B.Box.makeCcgLayer(
-          B.BoxCcgConfig.make({
-            clientId: "client-id",
-            clientSecret: Redacted.make("client-secret"),
-            enterpriseId: O.some("enterprise-id"),
-          })
-        )
-      );
+  it.layer(
+    B.Box.layer.pipe(
+      EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLOUD_BOX_TOKEN: "box-token" })))
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "builds the live developer-token layer from CLOUD_BOX_TOKEN",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
 
-      expect(P.isFunction(box.users.getUserMe)).toBe(true);
-    })
-  );
-
-  it.effect(
-    "builds the live developer-token layer from CLOUD_BOX_TOKEN",
-    Effect.fnUntraced(function* () {
-      const box = yield* buildBox(
-        B.Box.layer.pipe(
-          EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLOUD_BOX_TOKEN: "box-token" })))
-        )
-      );
-
-      expect(P.isFunction(box.users.getUserMe)).toBe(true);
-    })
-  );
+        pipe(P.isFunction(box.users.getUserMe), assertTrue);
+      })
+    );
+  });
 });

@@ -1,0 +1,135 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/cli-config-architecture-lab-config-before-node.json"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/architecture-lab/config/package.json",
+      "sha256": "27e225dea16daff047107272fac98c33f2ef5e67bea452853dcfae11ad8fa1d5"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/index.ts",
+      "sha256": "8ff70a59860fbcc71086a0afc73ed23bc7d27a88688594e7011105665c4cccb0"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/layer.ts",
+      "sha256": "e08ddf0db5eefcc6e06919d100238d5a939ec9f8b7961bc68f09a238d539b1f7"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/public.ts",
+      "sha256": "6b4debcf06794acfd4d9eb03dcc18cd263efe53cd29e503384ef8a9d8b1c385c"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/secrets.ts",
+      "sha256": "0086960bc43fe5ce52c1be4fa0f32185de33213bba94c1be6de3f7ae011fb98f"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/server.ts",
+      "sha256": "272a8eb9010cdea181640c21c0597afa187a71f8f8f4e49b7e9d030d871a878d"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/test.ts",
+      "sha256": "c4d92614a3b8312f5be079cb4c7268a8090f4541849ac6fef3eedd7f188e4987"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+      "sha256": "ad4565eac6da5a92fbf1101cf23aaf86e8916b3526c76db427bd658ef9a30f4f"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.layer.ts",
+      "sha256": "758c6d294d7e2423805cb4bd9290c92820fa25eb2167e0949c9b327c56c0a032"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/index.ts",
+      "sha256": "9b8b051596e6edc11ed926f76b427e5f84e1d97450372796a063551e27ebdf7e"
+    },
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "sha256": "ca36ab896234880b4833c67a8d934f3dbaf82087ae913b5e80be2c59c93585d3"
+    }
+  ],
+  "loadBefore": [5.6826171875, 14.37890625, 20.79638671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.03 avg300=1.63 total=2618236243\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=222144905\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=192937922\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.25 total=1013121225\nfull avg10=0.00 avg60=0.03 avg300=0.08 total=687797017\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 3.916011837005499,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/architecture-lab/config/package.json",
+      "sha256": "27e225dea16daff047107272fac98c33f2ef5e67bea452853dcfae11ad8fa1d5"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/index.ts",
+      "sha256": "8ff70a59860fbcc71086a0afc73ed23bc7d27a88688594e7011105665c4cccb0"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/layer.ts",
+      "sha256": "e08ddf0db5eefcc6e06919d100238d5a939ec9f8b7961bc68f09a238d539b1f7"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/public.ts",
+      "sha256": "6b4debcf06794acfd4d9eb03dcc18cd263efe53cd29e503384ef8a9d8b1c385c"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/secrets.ts",
+      "sha256": "0086960bc43fe5ce52c1be4fa0f32185de33213bba94c1be6de3f7ae011fb98f"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/server.ts",
+      "sha256": "272a8eb9010cdea181640c21c0597afa187a71f8f8f4e49b7e9d030d871a878d"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/test.ts",
+      "sha256": "c4d92614a3b8312f5be079cb4c7268a8090f4541849ac6fef3eedd7f188e4987"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+      "sha256": "ad4565eac6da5a92fbf1101cf23aaf86e8916b3526c76db427bd658ef9a30f4f"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.layer.ts",
+      "sha256": "758c6d294d7e2423805cb4bd9290c92820fa25eb2167e0949c9b327c56c0a032"
+    },
+    {
+      "file": "packages/architecture-lab/config/src/aggregates/WorkItem/index.ts",
+      "sha256": "9b8b051596e6edc11ed926f76b427e5f84e1d97450372796a063551e27ebdf7e"
+    },
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "sha256": "ca36ab896234880b4833c67a8d934f3dbaf82087ae913b5e80be2c59c93585d3"
+    }
+  ],
+  "loadAfter": [5.6826171875, 14.37890625, 20.79638671875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.03 avg300=1.61 total=2618253826\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.06 total=222144919\nfull avg10=0.00 avg60=0.00 avg300=0.05 total=192937936\n",
+    "io": "some avg10=0.00 avg60=0.04 avg300=0.25 total=1013135858\nfull avg10=0.00 avg60=0.03 avg300=0.08 total=687808002\n"
+  },
+  "sourceStable": true
+}

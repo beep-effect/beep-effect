@@ -5,7 +5,10 @@ import {
 } from "@beep/editor/chat/attachment-model";
 import { MentionLookupError } from "@beep/editor/chat/typeahead";
 import { MermaidRenderError } from "@beep/editor/mermaid-view";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const sameAttachmentTooLarge = S.toEquivalence(AttachmentTooLarge);
@@ -20,8 +23,8 @@ describe("Editor tagged-error declared equivalence", () => {
     const b = AttachmentTooLarge.make({ filename: "brief.pdf", size: 20, maxBytes: 10 });
     const c = AttachmentTooLarge.make({ filename: "brief.pdf", size: 21, maxBytes: 10 });
 
-    expect(sameAttachmentTooLarge(a, b)).toBe(true);
-    expect(sameAttachmentTooLarge(a, c)).toBe(false);
+    pipe(sameAttachmentTooLarge(a, b), assertTrue);
+    pipe(sameAttachmentTooLarge(a, c), assertFalse);
   });
 
   it("compares AttachmentInvalidMimeType by declared fields", () => {
@@ -29,8 +32,8 @@ describe("Editor tagged-error declared equivalence", () => {
     const b = AttachmentInvalidMimeType.make({ filename: "payload.bin", mimeType: "" });
     const c = AttachmentInvalidMimeType.make({ filename: "payload.bin", mimeType: "application/x-invalid" });
 
-    expect(sameAttachmentInvalidMimeType(a, b)).toBe(true);
-    expect(sameAttachmentInvalidMimeType(a, c)).toBe(false);
+    pipe(sameAttachmentInvalidMimeType(a, b), assertTrue);
+    pipe(sameAttachmentInvalidMimeType(a, c), assertFalse);
   });
 
   it("excludes AttachmentPortFailed cause from diagnostic identity", () => {
@@ -38,8 +41,8 @@ describe("Editor tagged-error declared equivalence", () => {
     const b = AttachmentPortFailed.make({ message: "Files could not be attached.", cause: new Error("second") });
     const c = AttachmentPortFailed.make({ message: "Attachment failed.", cause: new Error("first") });
 
-    expect(sameAttachmentPortFailed(a, b)).toBe(true);
-    expect(sameAttachmentPortFailed(a, c)).toBe(false);
+    pipe(sameAttachmentPortFailed(a, b), assertTrue);
+    pipe(sameAttachmentPortFailed(a, c), assertFalse);
   });
 
   it("excludes MentionLookupError cause from diagnostic identity", () => {
@@ -59,8 +62,8 @@ describe("Editor tagged-error declared equivalence", () => {
       cause: new Error("first"),
     });
 
-    expect(sameMentionLookupError(a, b)).toBe(true);
-    expect(sameMentionLookupError(a, c)).toBe(false);
+    pipe(sameMentionLookupError(a, b), assertTrue);
+    pipe(sameMentionLookupError(a, c), assertFalse);
   });
 
   it("excludes MermaidRenderError cause from diagnostic identity", () => {
@@ -68,7 +71,7 @@ describe("Editor tagged-error declared equivalence", () => {
     const b = MermaidRenderError.make({ message: "Unable to render diagram.", cause: new Error("second") });
     const c = MermaidRenderError.make({ message: "Diagram could not be parsed.", cause: new Error("first") });
 
-    expect(sameMermaidRenderError(a, b)).toBe(true);
-    expect(sameMermaidRenderError(a, c)).toBe(false);
+    pipe(sameMermaidRenderError(a, b), assertTrue);
+    pipe(sameMermaidRenderError(a, c), assertFalse);
   });
 });

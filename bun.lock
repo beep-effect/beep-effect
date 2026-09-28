@@ -56,6 +56,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -77,7 +78,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-utils": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "typescript": "catalog:",
@@ -93,6 +94,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -126,6 +128,7 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
@@ -169,6 +172,9 @@
         "unpdf": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@tauri-apps/cli": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",
@@ -195,6 +201,8 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",
         "@types/node": "catalog:",
@@ -235,7 +243,9 @@
       },
       "devDependencies": {
         "@beep/repo-utils": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@mdx-js/loader": "catalog:",
         "@tailwindcss/postcss": "catalog:",
         "@testing-library/dom": "catalog:",
@@ -432,6 +442,7 @@
         "@pulumiverse/vercel": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/platform-node-shared": "catalog:",
@@ -457,6 +468,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
@@ -482,6 +494,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -499,6 +512,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -525,6 +539,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -543,6 +558,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -563,6 +579,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -579,6 +596,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -592,6 +610,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -608,6 +627,8 @@
       },
       "devDependencies": {
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "drizzle-orm": "catalog:",
@@ -630,6 +651,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
@@ -647,6 +669,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -665,6 +688,7 @@
       },
       "devDependencies": {
         "@beep/shared-domain": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -682,6 +706,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -700,6 +725,7 @@
       },
       "devDependencies": {
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -746,6 +772,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -763,6 +790,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -780,6 +808,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -797,6 +826,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -813,6 +843,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -830,6 +861,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -849,6 +881,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -886,6 +919,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -905,6 +939,7 @@
         "unpdf": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -923,6 +958,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -940,6 +976,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -960,6 +997,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -976,6 +1014,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -995,6 +1034,7 @@
         "sharp": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/platform-node-shared": "catalog:",
@@ -1015,6 +1055,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1033,6 +1074,7 @@
         "firecrawl": "^4.25.2",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1049,6 +1091,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1067,6 +1110,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1087,6 +1131,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1130,6 +1175,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1147,6 +1193,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1165,6 +1212,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1189,6 +1237,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1207,6 +1256,7 @@
         "n3": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/n3": "catalog:",
         "@types/node": "catalog:",
@@ -1229,6 +1279,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1263,6 +1314,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1279,6 +1331,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1295,6 +1348,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1311,6 +1365,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/platform-node-shared": "catalog:",
@@ -1331,6 +1386,7 @@
         "oxigraph": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1347,6 +1403,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1383,6 +1441,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1403,6 +1462,7 @@
         "sql-formatter": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1421,7 +1481,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-utils": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1440,6 +1500,7 @@
         "rdf-canonize": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1457,6 +1518,7 @@
       },
       "devDependencies": {
         "@beep/codegen-kit": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@effect/openapi-generator": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1473,6 +1535,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1494,6 +1557,7 @@
         "shacl-engine": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1526,6 +1590,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1543,6 +1608,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1561,6 +1627,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1578,6 +1645,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1600,6 +1668,7 @@
         "wink-nlp-utils": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1618,6 +1687,7 @@
         "ws": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1664,6 +1734,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1678,6 +1749,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1697,6 +1770,7 @@
       },
       "devDependencies": {
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1749,6 +1823,7 @@
       },
       "devDependencies": {
         "@beep/shared-domain": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1770,8 +1845,10 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-browser": "catalog:",
+        "@effect/vitest": "catalog:",
         "@storybook/react-vite": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
@@ -1798,6 +1875,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1815,6 +1893,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1831,6 +1910,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1863,6 +1943,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1882,6 +1963,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1897,6 +1979,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1915,6 +1998,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
@@ -1942,7 +2026,9 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1959,6 +2045,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1979,6 +2066,7 @@
         "whatwg-url": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2013,6 +2101,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@lexical/list": "catalog:",
@@ -2034,6 +2123,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2051,6 +2141,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
@@ -2068,6 +2159,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2086,6 +2178,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2102,6 +2195,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2119,6 +2213,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2163,6 +2258,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2219,6 +2315,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2250,6 +2347,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -2268,6 +2367,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@storybook/react-vite": "catalog:",
         "@testing-library/react": "catalog:",
@@ -2311,6 +2411,8 @@
       },
       "devDependencies": {
         "@beep/md": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@lexical/headless": "catalog:",
         "@lexical/html": "catalog:",
@@ -2383,6 +2485,7 @@
         "vaul": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@storybook/react-vite": "catalog:",
@@ -2412,6 +2515,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2465,6 +2569,7 @@
         "drizzle-orm": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2488,6 +2593,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2509,6 +2615,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2541,6 +2648,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -2564,6 +2672,7 @@
       },
       "devDependencies": {
         "@beep/semantic-web": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2586,6 +2695,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
@@ -2611,6 +2721,7 @@
       },
       "devDependencies": {
         "@beep/shacl": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2631,6 +2742,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2647,6 +2759,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2688,6 +2801,7 @@
       },
       "devDependencies": {
         "@beep/fc-runs": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2705,6 +2819,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2743,6 +2858,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -2764,6 +2880,7 @@
         "ts-morph": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2775,6 +2892,8 @@
       "version": "0.1.0",
       "devDependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@biomejs/biome": "catalog:",
@@ -2802,6 +2921,7 @@
         "jsonc-parser": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@next/bundle-analyzer": "catalog:",
@@ -2945,6 +3065,8 @@
         "ts-morph": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/babel__code-frame": "catalog:",
         "@types/doctrine": "catalog:",
@@ -2963,6 +3085,7 @@
       },
       "devDependencies": {
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -2990,6 +3113,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -3010,6 +3134,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -3028,6 +3153,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",

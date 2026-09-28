@@ -1,8 +1,10 @@
 import * as B from "@beep/box";
 import { BoxProvisioningInventory } from "@beep/box-provisioning";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import { desiredFixture } from "./fixtures.ts";
 
@@ -129,7 +131,7 @@ describe("@beep/box-provisioning inventory", () => {
         provideScopedLayer(InventoryTestLayer)
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       expect(receivedQuery).toEqual({ fields: ["id", "enterprise"] });
     })
   );

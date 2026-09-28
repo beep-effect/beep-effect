@@ -1,0 +1,648 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/semantica",
+  "sourceHead": "f1ccfc9a2c677c4c1851d4bfa60dc901eeec7212",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 12.186573969986057,
+  "bunWholeCommandSeconds": 8.729047972999979,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.99267578125, 3.3974609375, 2.986328125],
+  "loadAfter": [10.0537109375, 4.75732421875, 3.43603515625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.17 avg60=0.17 avg300=0.14 total=817925654\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224719\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147698\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865086743\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756858398\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=2.36 avg60=1.06 avg300=0.35 total=818624156\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865090971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756860661\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/labs/semantica/AGENTS.md",
+      "sha256": "bb1b43ef5177dac54ddc0be2da739a5988adf8adcf0b07a33626657ebdb714eb"
+    },
+    {
+      "file": "apps/labs/semantica/CLAUDE.md",
+      "sha256": "bb1b43ef5177dac54ddc0be2da739a5988adf8adcf0b07a33626657ebdb714eb"
+    },
+    {
+      "file": "apps/labs/semantica/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/labs/semantica/README.md",
+      "sha256": "5c893d406ffb1ef44218b4fb572707933b0926cc99a7df17d79cfacb52247508"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/.gitattributes",
+      "sha256": "7965a31545fba4186c5178ba3f3a92c64cd025274406040be90ac1721acc9cb2"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/html-article.html",
+      "sha256": "c81d571f80b02e976bf57e2cfeccb60bf3518ff48aad48b7fecd2787d0aad62a"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/html-entities-tables.html",
+      "sha256": "7208c33fa2e8e5898d09854df0910fae314f050fab56a77e1662636bd0a879a4"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/html-truncated.html",
+      "sha256": "c106fce0a6387dd9539bc26f6a7b8ada744d17fa4bd329eddbf6e9c9b3aebeaf"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/md-invalid-utf8.md",
+      "sha256": "8a0833e9681404c635c494091f2a58e5fb90b9ac3f94876422c1ba290c5e88f9"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/md-structure.md",
+      "sha256": "ccf4725c350d720d6c391d5e2396c86f0fafb78ea175cbf4ce79649fb1dd8491"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/md-unicode.md",
+      "sha256": "a40ded8122757c518d81fe556717fdfd1407fd9b1841d5f0fd4784828569efeb"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/pdf-multipage.pdf",
+      "sha256": "a65434d8f21da004ab8793f75507a0109c772e5ad127cfc137243ddf0f56b8be"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/pdf-truncated.pdf",
+      "sha256": "d6402d6f7cdd4a60fdaadbf0d26ae7ba4c235126d801bb446ccf2aec00991201"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/documents/pdf-two-column.pdf",
+      "sha256": "8f268f20326b9ef07c9c996dd1986733955f12c6c654af0f22b3df0cfc5cedcd"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/f1/index.json",
+      "sha256": "ed40d7d5ae347e3b03486fa411aea3317eeb0f9dd9acf5702afbde80c21d8c05"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/057e356e94f8.entity.json",
+      "sha256": "4da0f7f672c805d6cd1900d7883ae0831d8e1f800d20e45455eaa9628e3ac901"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/057e356e94f8.relation.json",
+      "sha256": "adf26fa89a135fbba9bbbddbd5c5e60281170493d3de79d0c3f317e59dcace13"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/057e356e94f8.structure.json",
+      "sha256": "bab01491bc71973c49932f1d300ed7db52ca8927c1c4bc45ee9cf9d377928f06"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/05afbbf3e1e9.entity.json",
+      "sha256": "07172b702ec6d22dbd31a868cfb74fd68fdabd5c14bbc0e2e9b7e36a85ef1105"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/05afbbf3e1e9.relation.json",
+      "sha256": "4a9e90c58ace7eca53eb2f3f463f3c51529b3ca91e941273fe3e05d7267aefb7"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/05afbbf3e1e9.structure.json",
+      "sha256": "0a8fbbc51319e855761c3a89ab15860f60eaa27fb65daffe7680363b99e419f1"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/06c93f91ef3d.entity.json",
+      "sha256": "1a2d7f4a5e22343f1196cb5c961ba9f97b3a4b34fb5851ff76722e15f3569abe"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/06c93f91ef3d.relation.json",
+      "sha256": "5a5d26a0b22a5be988ec436bb1ee55e41e55cf51de134510d482f19f79199e59"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/06c93f91ef3d.structure.json",
+      "sha256": "1bd6f70ba0e955337dec657993c66fab3d407caa8803f53d81b489efb9d60e92"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/06df406f321e.entity.json",
+      "sha256": "4a7d8053892a3805516e7ee180c068b281b1f8c19833118352a121568e28d1ec"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/06df406f321e.structure.json",
+      "sha256": "0382bb9718e8b5c41d87459d6e3c9d365cf381c92befdf0732c6ef161f1834a7"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/08e376be5ed2.entity.json",
+      "sha256": "2a77fe6c823dc92bb7cfa4a0baaa752310c43a178c883d9f68e7a2d455239764"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/08e376be5ed2.structure.json",
+      "sha256": "c8cb079c37a0dff640013200e6771957afb6ca1fc6f5831d78a8112507e25ab6"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/0a4ab229f341.structure.json",
+      "sha256": "bfa45989508d0848ea856b2c7df28f24e97ec0adbc2b284beee089a1aab0b88e"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/0a8de1437753.structure.json",
+      "sha256": "0b18bdc80f4d6dfd9c66994be35caf5eed97f1b5fa41c3d6cae86c73ae46bbf8"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/0d06c1a2189a.structure.json",
+      "sha256": "3a9714e9a1645e7a40861df0dd27bc2785cf6f78548b2aee96ef105358bfddec"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/0f75da2dbb9f.structure.json",
+      "sha256": "6af6fd37979438b9dafc7176345e3b7497b4d81a48408a7e5d5341866a4489d3"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/10828be135bf.structure.json",
+      "sha256": "ecf6ebb4ceaf5bdd0816be94811a367cfd924a2aba25450f322f15ada2e3899f"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/g-entailment-rdfs.json",
+      "sha256": "bbc016303352a0a365dd41a46317386ac47315a6e5d58e240b368b1f6e1c1ce6"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/g-entailment-rdfs.n3",
+      "sha256": "ec59d1e900e7ec3c0863fd17ef40efe1ca84ae598c48c3f631792ca8f175e1a9"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/g-projection.json",
+      "sha256": "3e9e3fa8530391e74fed372829e5390767a4dba9be4f9d5b14d2ab35c8620bba"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/gold/v1/gold.json",
+      "sha256": "6e8d9cac3539fc6fc29526573d3f9805074bc35607e4195b4236e52ea895c163"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/relation-preview.json",
+      "sha256": "ef5c0bc946ef659c1421e9215f217a75b6406f932a0c613fa7dd570a0c3510f5"
+    },
+    {
+      "file": "apps/labs/semantica/fixtures/w1.manifest.json",
+      "sha256": "99768818411b5ac78309e685a6b76d2ffc2743689a24022e71c992c85d1d7275"
+    },
+    {
+      "file": "apps/labs/semantica/index.html",
+      "sha256": "dcea53891f65aeb750433896d29ee1f20b57b540435abe5d4a93f0e00e584928"
+    },
+    {
+      "file": "apps/labs/semantica/lab.manifest.json",
+      "sha256": "f7ba35cc455e1737f5e3d90e36d871fe8ae840709d3eb0757e925ac85754e949"
+    },
+    {
+      "file": "apps/labs/semantica/package.json",
+      "sha256": "ca12d248fb57c89432c06c1d8b5b4ec7117cdd924202b38ebe695665012ccebe"
+    },
+    {
+      "file": "apps/labs/semantica/scripts/generate-f1-index.ts",
+      "sha256": "3dd423bd51f3225011142de085612115c8867fdfbd183c71620a9fde82da27f8"
+    },
+    {
+      "file": "apps/labs/semantica/scripts/generate-f1-pdfs.ts",
+      "sha256": "f8488dba4e01b4e514ad8389d0130b443d18e498a9611a9e24b93f605a8b87b1"
+    },
+    {
+      "file": "apps/labs/semantica/scripts/generate-f1-text.ts",
+      "sha256": "3682a487b5ef7c7a438d4baa591f87a3a3a9402c3ad15428a77a5a78adabf326"
+    },
+    {
+      "file": "apps/labs/semantica/scripts/generate-g-entailment.ts",
+      "sha256": "3bc069e02fbbeade9dca20c003823b66b4c4627a7189e2dfd791ffa03cecedc7"
+    },
+    {
+      "file": "apps/labs/semantica/server/main.ts",
+      "sha256": "de919a86a50d503a7abc9809a6b06e71f83dc4942a19cc496e33dc456fed290c"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/Cargo.lock",
+      "sha256": "f54c5d2468d27a2e4984b22c8741703c77a932c20067760176c13b5204b402c6"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/Cargo.toml",
+      "sha256": "a21ca7205f10cad93ca5663986737c2f9a338d36be06c2aa1837777bb72fe640"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/build.rs",
+      "sha256": "b01bb80b64916f502a3033afdb4567227ef2abcc3b938889f02283aefa780fbe"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/capabilities/default.json",
+      "sha256": "09af8956ac5ac2c73b2ac061b05685dd6127699fdce7175698c69ae87d8738e4"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/icons/icon.png",
+      "sha256": "4dc033db61b65b578c9d583b0097b7aafbdd9236f5b2a2f24b4b26347042ef47"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/src/lib.rs",
+      "sha256": "804a9dee766ae6352fa8896da7780304fd77a722189235a596da945b32b9e71b"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/src/main.rs",
+      "sha256": "5a1000f638a24c57b2499f44975b64e1795f4bcca0561f3c028fd7c22b58b847"
+    },
+    {
+      "file": "apps/labs/semantica/src-tauri/tauri.conf.json",
+      "sha256": "3afbd158c57686e71526b45cd9e77d964669b36ad0f42b3fbf498124c9b7956f"
+    },
+    {
+      "file": "apps/labs/semantica/src/App.tsx",
+      "sha256": "4413340b0efc640c3ed87d8dffa9b9bf2b5217f6a2548b070405a20d12e6c0aa"
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/Artifact.ts",
+      "sha256": "09d6a4e3ee90b5a870d7e027854feaae33cb6166806729a31076dece93287877"
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/Command.ts",
+      "sha256": "6e10c12a0488948c976ef8e3b3e46e2cd011df6d864da1a16d936991306c3e43"
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/Gold.ts",
+      "sha256": "55bb9cc490e4279edf614a5e33bf8d5aabf8604c6263e485d58654127b3869d4"
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/RelationPreview.ts",
+      "sha256": "74f9c7e9e0d691703c2d4158c2e5ef4ebd50edc47e48fb03d59f46965a29ab92"
+    },
+    {
+      "file": "apps/labs/semantica/src/canary/RuntimeProbeChild.ts",
+      "sha256": "36a3a33fe606f9d0ce91d4624b30724c5e6198a9ff0d0803c24e1ba078325a78"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/ByteWitness.ts",
+      "sha256": "738248f6d01db68f301e56404dc5dff01c9d981c91cc30cbe7f0b045fc0dd344"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Canonical.ts",
+      "sha256": "2e9424c9afe5fda70ad7c80dfa8ce33c6afd89ba6203af64a3f7ed90f2e337e6"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/Manifest.ts",
+      "sha256": "78e89d78ecd8a891dcee83c74e42ad0e4fe0183058900b803ca045588a347d16"
+    },
+    {
+      "file": "apps/labs/semantica/src/corpus/ManifestBuilder.ts",
+      "sha256": "25af386d23efd35f8db2163016cee7a2c4428b2269041457b3cdcafa225e6e25"
+    },
+    {
+      "file": "apps/labs/semantica/src/fixtures/F1.ts",
+      "sha256": "42fa27229921f5bce566fa0f58450b16819999d313969adc418abedaf79464e1"
+    },
+    {
+      "file": "apps/labs/semantica/src/gold/Prompts.ts",
+      "sha256": "bac9f80d7cac4fdcc43afb26813526c04011849d6e0ca3c3df4aa0ecb4f0b83f"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/CanaryC0Live.ts",
+      "sha256": "57e5f3b2088b2c9a8b615c967e5a864e43e615d052bce1cfbbc43295aa399d67"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/CanaryC1Live.ts",
+      "sha256": "1390c0bd9033946bd3c4b7217b419f9e536d799a0f830ae5158e761b865ca33e"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/CanaryC2Live.ts",
+      "sha256": "614cf10ec9f3de159b18bd47375e8545b7412d9386661f9e2fb7c0bc7ef71294"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/CanonicalizerLive.ts",
+      "sha256": "d3350237fa6066238186e006b7e927ebd5b0559266fa575c9ee1ba852e900aa9"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/ChunkerLive.ts",
+      "sha256": "93dadd7c0a7452c9d1c3f656550768ebeb528b64738dcc026a597605cd1dd385"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/DocumentSourceLive.ts",
+      "sha256": "d3ae34ed2ee0256679c7e70b70b65ba0de829e139b30a0db16ffb69e602c061f"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/EmbedderLive.ts",
+      "sha256": "b1758b721bb8bf9a90416e1ed5a5c39e16c2b4c8b3bb65ab7d6ea470d2c4b39e"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/EvaluatorLive.ts",
+      "sha256": "fde3ada4dce2349144ba6279452424ac0751d16d8b501b88d0618edbed4d29a0"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/ExtractorLive.ts",
+      "sha256": "d4d6ca68fc8da46a89f5bd35a0da690d8b0b4924cf0b9419b9d2d7b6a03346e2"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/GoldSourceLive.ts",
+      "sha256": "b00ac1ac08249fffc81a70da09e65618a9fd9c8cc15889992daff1b7bb95cd5d"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/LanguageModelLive.ts",
+      "sha256": "436884990f62a7a5bc581ab07dd35c9b848443f71476203812f4bec9066b7a3f"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/LedgerLive.ts",
+      "sha256": "6c11fc83a3fe6a746b0bf414121ce10ea6db5bfbab0da939d201a01b95c02858"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/ParserLive.ts",
+      "sha256": "84b5407858e6384a19fdf54fd8e46725cd5a37d6e14491a52cf983c46a8f680a"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/ProviderCacheLive.ts",
+      "sha256": "07285194ea547771251c58466699af3aff3990a7287c455cb1f3c832ff81e310"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/RdfProjectionLive.ts",
+      "sha256": "46a14cd43c218c466517eb41d49e6c6272c7dfba0d5518be58d8b927a25dc091"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/ReasonerLive.ts",
+      "sha256": "0124bc0eec18f81714bf01e24f0d0f9cadb82d7201127c89f8fa1dcbf280026a"
+    },
+    {
+      "file": "apps/labs/semantica/src/layers/VectorProjectionLive.ts",
+      "sha256": "6acef803705aa80a04577171d6fdbd4347cdcd415d9760620d8484c862ca23d2"
+    },
+    {
+      "file": "apps/labs/semantica/src/main.tsx",
+      "sha256": "2f7505f0df3560bff0c325f3d77f4080f10a8213b96ba99883a615408c82029b"
+    },
+    {
+      "file": "apps/labs/semantica/src/parse/Html.ts",
+      "sha256": "7759e41184a0310e11b6b65258344d1796c81eb2724c7431e18fcb69f2063b15"
+    },
+    {
+      "file": "apps/labs/semantica/src/runtime/Config.ts",
+      "sha256": "7ca4a1033de68d140425382a716cd8e130f30106ca4a05c136a6938d8163cd54"
+    },
+    {
+      "file": "apps/labs/semantica/src/runtime/Layer.ts",
+      "sha256": "8753b6518753a3d612e5cbcf844e4eb99481fa85819b0f9760d0a1314df183a0"
+    },
+    {
+      "file": "apps/labs/semantica/src/runtime/Version.ts",
+      "sha256": "db4d47377e618714d978d077ba3986d8470e411bce962f8b381141141ce0e42e"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Degraded.ts",
+      "sha256": "ba5583c81a0c08d62fa98876aace2c078b9d4378e94f5f6861c2b8eb3de49c58"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Digest.ts",
+      "sha256": "99c0610a1bc15ad79dd6aa8c2c0101dcd7efe072a48c9e34d8b0eb210e45af90"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Document.ts",
+      "sha256": "c5d64cc28959ebc1ad08ac7b3b2fea1dca8b9d925e4b7ef5f64b51e833730792"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Errors.ts",
+      "sha256": "6d4b03f2cb4e0ec24e58b02a2649910f549c45794c5a17e396afde813aa8513b"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Eval.ts",
+      "sha256": "35f487de992d118824efdb106449b884aa4441ac541df26a0055c416f75f082c"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Evidence.ts",
+      "sha256": "378288ba799b31ada7792eabc9ffe1956f7be551e7eabdb715a6664f9412eeb3"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Execution.ts",
+      "sha256": "9aea3c499079000cdbde18252cdcf322ba2443974d5d143805ba4d0c04bbc832"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Gold.ts",
+      "sha256": "b52241234dc5b73bc688f7cee65a3f34a4ca00fa38e03d4eb77b1e6640fc37ca"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ids.ts",
+      "sha256": "719ab752b58fb53f9ee04c784809a5daaf43c41cc8206e7a8450f69281e0d6e3"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Ledger.ts",
+      "sha256": "313134fb4d0490d2523c81841a271013bd86c2572d953637586316406733ac09"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/MediaType.ts",
+      "sha256": "3cfc6dd140db423d9b8be642bc153b1bfbf72a5bf45d6a8d1cfbe91ba9771edf"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Model.ts",
+      "sha256": "44972af34e7908b515a9d4fb1f53a590bf4da12a67f87b445a9dd379b69059f9"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Projection.ts",
+      "sha256": "10203216179c1a021b9741d05b379cbb264b259fcd484023bf364c177a1406fb"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Provenance.ts",
+      "sha256": "d6b70c7c27c960bffa42e2857661f5cd577fe08688de64bb2a5b417feb4dc780"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/ProviderCache.ts",
+      "sha256": "d0b6db7ccbe12d8a83874e84f24715f298967212736db9928b3c0c7200860830"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Reasoning.ts",
+      "sha256": "cba7face04e79b0392b6da99271acc30edc41777b54ff55c446e612bdd32760c"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Telemetry.ts",
+      "sha256": "28187e82229a2ed5a1d4fda13b2e716ce9b584c7cac8b7c275166ba0d557c8ff"
+    },
+    {
+      "file": "apps/labs/semantica/src/schema/Text.ts",
+      "sha256": "10c54ac5d18662a8973ca2d9caed1e86bffece3bc551a56239f806ae0cde25ae"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/CanaryC0.ts",
+      "sha256": "eb480926b02f3d514e2d4d8c40f0cd2674907c40edcd3130cdc9895fcec5d2ff"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/CanaryC1.ts",
+      "sha256": "52fbe4a18aff3973da3b3229ea7226ddd00f45cb868b92973a161ac797b60aa0"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/CanaryC2.ts",
+      "sha256": "9d603b06a2e9b2be5c43bac22ec9da4708ed2ecae2cf46c8a43934441e4cddbc"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Canonicalizer.ts",
+      "sha256": "f84ba00f7ea49df2f0a667fd5ea89a454b8d39af7b537da437ffc8cec05c4ebf"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Chunker.ts",
+      "sha256": "8d2024c8c429d796a2ad84852fb2c6a0c265328c0678d6a58a08e057980c81d1"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/DocumentSource.ts",
+      "sha256": "0617fa588bf15cc2f3c65e5de8cef40c330be2d23dd84170a5423f4b8c80d221"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Embedder.ts",
+      "sha256": "5640985dba725bc8ed6ae52fbddf98fe5a1f536a14bb1c469138265ca1a6d88f"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Evaluator.ts",
+      "sha256": "7689f4717e30e632e73945dcae5949b81f00f78247e96f1bf98ac7cf878278e7"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Extractor.ts",
+      "sha256": "3e91d8055a5434ff569cd376944c30117d1bdc94c8bb0c47712ac592130478eb"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/GoldSource.ts",
+      "sha256": "7e3946a88adff9c7aee63759bb64abbba3835c58e6c75e9a6c5f3c34feae4d47"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/LanguageModel.ts",
+      "sha256": "e16b56dcd77881badce560f25ea22013da1945e7c5abd8d6ba787b46a13143f8"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Ledger.ts",
+      "sha256": "02153f6e048d54dc49a94b2340469e5775a84fe555abdc136c19d0d92d1316a4"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Parser.ts",
+      "sha256": "ef5412cad3e97e3ebd84bdb988ba480d466158e783078c2d5d18c7fb17814ed1"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/ProviderCache.ts",
+      "sha256": "5ae9c2f90ecb6e674c1fa337a8c42a55d6eb90fdf5c2eaa030d755a89a638136"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/RdfProjection.ts",
+      "sha256": "d796653041389886b93506b9e0b2b17c940d61c2fe55c0d2efbdcd2c39de4578"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/Reasoner.ts",
+      "sha256": "1589dcb49162a95b536177e05dab5866ba35644af083b72eb481c266aa6de985"
+    },
+    {
+      "file": "apps/labs/semantica/src/services/VectorProjection.ts",
+      "sha256": "402ad8efc6927819e11504252b607aa130d0db4d887817354c6b7fbb9ec90f41"
+    },
+    {
+      "file": "apps/labs/semantica/test/App.test.tsx",
+      "sha256": "444c59d5298a789a2af7740aa8e98a7a0e11ac9e0e3c340516a68a6b351de703"
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "sha256": "cb9183cbeb5f6de28de7bed547c0a159b78e11dcbbedd28cfa8479f2f1356fc8"
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "sha256": "14016f80dc9f7b19c3c03bd02bbf9108257abc4f7268681891649aafc44ee55f"
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "sha256": "74158ce206ed664809256ec41a7efe977cf220e6ffd385a54986240ae2350cc7"
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "sha256": "cf6a0b6ab63bfb28c04544b505d05b1fc163bf4912f37b13ea815fb6dbaa066c"
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "sha256": "1695fd639d1e351e729e53009bb91bc84a8f99db49c733f694fa4171542053ff"
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "sha256": "738e5e8703c59fb30b2887bb51e45edd9c4b24babc8db7d46b5e623e3af95c03"
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "sha256": "f9cd7d90975322bc3ec56a0c117ce0896139d0f9b6d6ed720ced461cf5c72d9d"
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "sha256": "504b3f68d5cc3e20e727095ab253a757b2f51c1d6966f0effa433daf13908725"
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "sha256": "a8c63490ae7a8eb4f0c9caf749224f75f14503c101f63a1bd1b29dd1f4031355"
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "sha256": "7849f38abadb2aae1d335bd8368fa39e22364292544f1362928bb9527a56b39d"
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "sha256": "db3d50958cfebf1d2fa4063bd907978fa9028bf6ebc03bdab6963e0654e6a52f"
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "sha256": "7a11dc15b1a7144cf74a36a8a562566aca0c003c4dd029adaaad93ef0a662f55"
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "sha256": "5a2ec4ee98fa57fbbcb473183792352f0418f59ca11e47a72d10d8658b7468dc"
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "sha256": "b2084b7208d46689a354a899596d823f173d09078286d32d501e631a0d009917"
+    },
+    {
+      "file": "apps/labs/semantica/test/helpers/CrashProbeChild.ts",
+      "sha256": "a4ce5e66e9fbd42bc8860725d71ff76a185e8860601b6259bf2fedc77004c96a"
+    },
+    {
+      "file": "apps/labs/semantica/test/helpers/EyeOracleChild.ts",
+      "sha256": "2ab2a45c7bd54b068d49e593d2f4114bd4655618f2773eb38ce88c6722c7485b"
+    },
+    {
+      "file": "apps/labs/semantica/tsconfig.check.json",
+      "sha256": "5087df96e76ab6fcef19066efec7376d8284d4c7f2751f964019b4efe866a6b6"
+    },
+    {
+      "file": "apps/labs/semantica/tsconfig.json",
+      "sha256": "45428b2b07894f1e563681b773a37ca3cfee9476d8d2b4cab6893215ad9a9df6"
+    },
+    {
+      "file": "apps/labs/semantica/vite.config.ts",
+      "sha256": "31368426b1e61d2ad50818c60a2ad949305c1928bfb774e8247419b0c53da2c7"
+    },
+    {
+      "file": "apps/labs/semantica/vitest.config.ts",
+      "sha256": "d4610ca2db119c0bef631c505699c15298fac70a133965a0ffb13b526fba8f3b"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "88684c3d47b3d574c910f8b7f497d69a665a8e221118f2b65464484834f68474"
+    }
+  ],
+  "environmentMode": "Configured semantica configured local fixture tests with native projection databases, filesystem and child-process recovery. No external provider endpoint is intended. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 133,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [10.0537109375, 4.75732421875, 3.43603515625],
+    "loadAfter": [9.208984375, 4.74951171875, 3.44775390625],
+    "pressureBefore": {
+      "cpu": "some avg10=2.36 avg60=1.06 avg300=0.35 total=818624185\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865090971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756860661\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.06 avg60=0.92 avg300=0.34 total=818652797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865097222\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756865025\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 133,
+    "skipped": 0
+  },
+  "interpretation": "All131before and133after configured tests pass on Node and Bun with zero skips and stable sources. Real fixtures, native databases and subprocesses remain subjects. All416original subject assertions and116static titles remain;7aggregatePassed checks become native properties and the old polling assertion becomes explicit completion, retry-budget and live-watchdog diagnostics. Native property inversions retain replay and shrinking. Node/Bun observations include host load and pressure and are not causal speedup or hosted-provider/browser evidence."
+}

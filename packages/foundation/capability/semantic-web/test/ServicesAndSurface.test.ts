@@ -24,9 +24,11 @@ import {
   SparqlQueryService,
   UnsupportedSparqlQueryServiceLive,
 } from "@beep/semantic-web/services/sparql-query";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -78,13 +80,16 @@ const FingerprintDatasetRequestArbitrary = Arbitrary.schema(
 const ServiceTestLayer = Layer.merge(CanonicalizationServiceLive, UnsupportedSparqlQueryServiceLive);
 
 describe("Services and Surface", () => {
-  it("publishes a canonical arbitrary for SHACL severity", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed })).every(
-        isShaclSeverity
-      )
-    ).toBe(true);
-  });
+  it.effect("publishes a canonical arbitrary for SHACL severity", () =>
+    Effect.gen(function* () {
+      pipe(
+        (yield* Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed })).every(
+          isShaclSeverity
+        ),
+        assertTrue
+      );
+    })
+  );
 
   it("models validation findings as a severity tagged union", () => {
     const finding = ShaclValidationViolation.cases.warning.make({
@@ -93,8 +98,8 @@ describe("Services and Surface", () => {
       path: makeNamedNode("https://schema.org/name"),
     });
 
-    expect(ShaclValidationViolation.guards.warning(finding)).toBe(true);
-    expect(ShaclValidationViolation.guards.violation(finding)).toBe(false);
+    pipe(ShaclValidationViolation.guards.warning(finding), assertTrue);
+    pipe(ShaclValidationViolation.guards.violation(finding), assertFalse);
   });
 
   it("keeps the package root surface curated to the service contracts", () => {
@@ -143,46 +148,41 @@ describe("Services and Surface", () => {
     }
   });
 
-  it(
+  it.prop(
     "round-trips schema-derived RDF datasets and canonicalization DTOs through boundary encoders",
-    {}, // Inherit the deep-sweep timeout from vitest.shared.ts.
-    () =>
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([DatasetArbitrary, CanonicalizeDatasetRequestArbitrary, FingerprintDatasetRequestArbitrary]),
-            ([generatedDataset, canonicalizeRequest, fingerprintRequest]) => {
-              const encodedDataset = encodeDatasetResult(generatedDataset);
-              const reencodedDataset = pipe(
-                encodedDataset,
-                Result.flatMap(decodeDatasetResult),
-                Result.flatMap(encodeDatasetResult)
-              );
+    [DatasetArbitrary, CanonicalizeDatasetRequestArbitrary, FingerprintDatasetRequestArbitrary],
+    ([generatedDataset, canonicalizeRequest, fingerprintRequest]) => {
+      const encodedDataset = encodeDatasetResult(generatedDataset);
+      const reencodedDataset = pipe(
+        encodedDataset,
+        Result.flatMap(decodeDatasetResult),
+        Result.flatMap(encodeDatasetResult)
+      );
 
-              const encodedCanonicalizeRequest = encodeCanonicalizeDatasetRequestResult(canonicalizeRequest);
-              const reencodedCanonicalizeRequest = pipe(
-                encodedCanonicalizeRequest,
-                Result.flatMap(decodeCanonicalizeDatasetRequestResult),
-                Result.flatMap(encodeCanonicalizeDatasetRequestResult)
-              );
+      const encodedCanonicalizeRequest = encodeCanonicalizeDatasetRequestResult(canonicalizeRequest);
+      const reencodedCanonicalizeRequest = pipe(
+        encodedCanonicalizeRequest,
+        Result.flatMap(decodeCanonicalizeDatasetRequestResult),
+        Result.flatMap(encodeCanonicalizeDatasetRequestResult)
+      );
 
-              const encodedFingerprintRequest = encodeFingerprintDatasetRequestResult(fingerprintRequest);
-              const reencodedFingerprintRequest = pipe(
-                encodedFingerprintRequest,
-                Result.flatMap(decodeFingerprintDatasetRequestResult),
-                Result.flatMap(encodeFingerprintDatasetRequestResult)
-              );
+      const encodedFingerprintRequest = encodeFingerprintDatasetRequestResult(fingerprintRequest);
+      const reencodedFingerprintRequest = pipe(
+        encodedFingerprintRequest,
+        Result.flatMap(decodeFingerprintDatasetRequestResult),
+        Result.flatMap(encodeFingerprintDatasetRequestResult)
+      );
 
-              expect(reencodedDataset).toEqual(encodedDataset);
-              expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
-              expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
+      pipe(encodedDataset, Result.isSuccess, assertTrue);
+      pipe(encodedCanonicalizeRequest, Result.isSuccess, assertTrue);
+      pipe(encodedFingerprintRequest, Result.isSuccess, assertTrue);
+      expect(reencodedDataset).toEqual(encodedDataset);
+      expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
+      expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
 
-              return true;
-            },
-            fcRuns(5)
-          )
-        )
-      ).toMatchObject({ _tag: "Passed" })
+      return true;
+    },
+    { arbitrary: fcRuns(5) }
   );
 
   it.effect(

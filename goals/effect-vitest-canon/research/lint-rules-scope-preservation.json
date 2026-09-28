@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "isolatedLayers": 2,
+      "allGeneratorBodiesPreserved": true,
+      "beforeSha256": "da7fd3e441cd5475ee9a02fe90641cbd7853d04ad4ba472291a7f3f904061aa3"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "isolatedLayers": 3,
+      "allGeneratorBodiesPreserved": true,
+      "beforeSha256": "7f5190a5529a1131fb848538db66e4f4766ed312e4c1756a941f4551431d81db"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "isolatedLayers": 2,
+      "allGeneratorBodiesPreserved": true,
+      "beforeSha256": "9e11309c93b957011a45758527ea0bcb9e21eb76550af2d7d7d6e470488e3775"
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+      "removedProvideScopedLayer": true,
+      "nativeFixtureAcquireUseReleasePreserved": true
+    }
+  ],
+  "withOxlintFixtureRetained": "Owns per-invocation native temporary files needed by the subprocess, including supporting files and cleanup. It is not a redundant service-provision wrapper.",
+  "tokenLevelGeneratorBodiesPreserved": 7
+}

@@ -1,0 +1,181 @@
+{
+  "numTotalTestSuites": 5,
+  "numPassedTestSuites": 5,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 12,
+  "numPassedTests": 12,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790409495034,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/freshbooks models"],
+          "fullName": "@beep/freshbooks models decodes wire keys into annotated S.Class models and re-encodes to the wire shape",
+          "status": "passed",
+          "title": "decodes wire keys into annotated S.Class models and re-encodes to the wire shape",
+          "duration": 10.329492999999957,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks read service"],
+          "fullName": "@beep/freshbooks read service resolves the identity with distinct account and business namespaces",
+          "status": "passed",
+          "title": "resolves the identity with distinct account and business namespaces",
+          "duration": 10.549150000000054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks read service"],
+          "fullName": "@beep/freshbooks read service lists clients and reshapes the pagination envelope",
+          "status": "passed",
+          "title": "lists clients and reshapes the pagination envelope",
+          "duration": 10.532785999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks read service"],
+          "fullName": "@beep/freshbooks read service fetches a single client and a single invoice by id",
+          "status": "passed",
+          "title": "fetches a single client and a single invoice by id",
+          "duration": 11.404658000000154,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks read service"],
+          "fullName": "@beep/freshbooks read service lists and fetches payments with page selection",
+          "status": "passed",
+          "title": "lists and fetches payments with page selection",
+          "duration": 11.399760000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks read service"],
+          "fullName": "@beep/freshbooks read service maps non-success responses to typed driver errors with resource context",
+          "status": "passed",
+          "title": "maps non-success responses to typed driver errors with resource context",
+          "duration": 1.74054000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409496750,
+      "endTime": 1790409496761.7405,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/freshbooks/test/Freshbooks.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation persists a consumed refresh token before honoring caller cancellation",
+          "status": "passed",
+          "title": "persists a consumed refresh token before honoring caller cancellation",
+          "duration": 12.769849999999906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation serializes concurrent refreshes to a single owner (one network refresh)",
+          "status": "passed",
+          "title": "serializes concurrent refreshes to a single owner (one network refresh)",
+          "duration": 11.427793999999949,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation persists the rotated single-use token before releasing",
+          "status": "passed",
+          "title": "persists the rotated single-use token before releasing",
+          "duration": 11.410356999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation reuses a still-fresh token without a network refresh",
+          "status": "passed",
+          "title": "reuses a still-fresh token without a network refresh",
+          "duration": 11.405508999999938,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation fails with a token-refresh error when no token has been granted",
+          "status": "passed",
+          "title": "fails with a token-refresh error when no token has been granted",
+          "duration": 9.047078000000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/freshbooks token rotation"],
+          "fullName": "@beep/freshbooks token rotation forces a rotation on explicit refresh even when the stored token is still fresh",
+          "status": "passed",
+          "title": "forces a rotation on explicit refresh even when the stored token is still fresh",
+          "duration": 1.1062429999999495,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790409496751,
+      "endTime": 1790409496763.7698,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/freshbooks/test/Freshbooks.token.test.ts"
+    }
+  ]
+}

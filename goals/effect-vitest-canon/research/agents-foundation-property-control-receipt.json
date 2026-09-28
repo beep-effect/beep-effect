@@ -1,0 +1,15 @@
+{
+  "expectedFailureExit": 1,
+  "failedCase": "@beep/agents-domain ProviderInstance round-trips schema-derived arbitraries",
+  "nativeDiagnosticFields": {
+    "Replay:": true,
+    "20260708": true,
+    "Shrunk input:": true,
+    "AuthSnapshot": true,
+    "ProviderKind": true,
+    "ProviderInstance": true
+  },
+  "restoredExactSource": true,
+  "restoredSha256": "9375ec8bccb93df3ca9b23e3385fbf9bcd9ba2d481c6af5ebd54e6991afa8806",
+  "probeValidationCorrection": "Native rc.117 uses Replay and Shrunk input labels, not literal seed and counterexample. Original counterexample probe was valid; receipt labels corrected without rerunning."
+}

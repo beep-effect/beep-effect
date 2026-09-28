@@ -1,15 +1,21 @@
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
+import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { provideScopedLayer } from "./harness.ts";
 
-const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Promise<A> =>
-  Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
+const BiomePluginSection = S.Struct({ plugins: S.Array(S.String).pipe(S.optionalKey) });
+const BiomePluginConfig = S.Struct({
+  ...BiomePluginSection.fields,
+  overrides: S.Array(BiomePluginSection).pipe(S.optionalKey),
+});
+const decodeBiomePluginConfig = decodeJsoncTextAs(BiomePluginConfig);
 
 const sortedRuleNames = [...RULE_NAMES].sort();
 const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
@@ -24,8 +30,8 @@ describe("rule registry", () => {
     expect(Object.keys(RULES).sort()).toEqual(sortedRuleNames);
   });
 
-  it("every registered rule has a non-empty .grit file declaring `language js`", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("every registered rule has a non-empty .grit file declaring `language js`", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         for (const name of RULE_NAMES) {
@@ -37,10 +43,11 @@ describe("rule registry", () => {
           expect(content.includes("register_diagnostic"), `${name}.grit must register a diagnostic`).toBe(true);
         }
       })
-    ));
+    )
+  );
 
-  it("has no orphan .grit files missing from the registry", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("has no orphan .grit files missing from the registry", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -51,7 +58,8 @@ describe("rule registry", () => {
           .sort();
         expect(gritFiles).toEqual(sortedRuleNames);
       })
-    ));
+    )
+  );
 
   it("every rule metadata entry is self-consistent", () => {
     for (const name of RULE_NAMES) {
@@ -59,8 +67,8 @@ describe("rule registry", () => {
       expect(["warn", "error"]).toContain(RULES[name].severity);
       expect(RULES[name].summary.length).toBeGreaterThan(0);
     }
-    expect(O.isSome(RULES["no-native-error"].replaces)).toBe(true);
-    expect(O.isNone(RULES["no-bigint-literals"].replaces)).toBe(true);
+    RULES["no-native-error"].replaces.pipe(O.isSome, assertTrue);
+    assertNone(RULES["no-bigint-literals"].replaces);
   });
 
   it.effect(
@@ -108,20 +116,21 @@ describe("rule registry", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  it("every rule is wired into the repo-root biome.jsonc lint pass", () =>
-    run(
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
+    it.effect("every rule is wired into the repo-root biome.jsonc lint pass", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // biome.jsonc is JSONC (comments); assert the plugin path substring is present —
-        // this covers both the top-level `plugins` array and any `overrides[].plugins`.
         const biomeConfig = yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"));
+        const config = yield* decodeBiomePluginConfig(biomeConfig);
+        const plugins = [
+          ...(config.plugins ?? []),
+          ...(config.overrides ?? []).flatMap((override) => override.plugins ?? []),
+        ].map((plugin) => path.resolve(repoRoot, plugin));
         for (const name of RULE_NAMES) {
-          const pluginRef = `rules/${name}.grit`;
-          expect(biomeConfig.includes(pluginRef), `${name} must be registered in biome.jsonc (${pluginRef})`).toBe(
-            true
-          );
+          expect(plugins, `${name} must be registered in biome.jsonc`).toContain(rulePath(name));
         }
       })
-    ));
+    )
+  );
 });

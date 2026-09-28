@@ -1,0 +1,454 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/oip-web",
+  "sourceHead": "8dec9f0b7931a39b3996492e52ae9afdf7dfac6e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--config=<private wrapper importing app config and appending network guard>",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.322700220000115,
+  "bunWholeCommandSeconds": 2.467775626006187,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [0.89013671875, 1.1083984375, 1.4404296875],
+  "loadAfter": [1.45556640625, 1.22119140625, 1.47412109375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.08 avg60=0.19 avg300=0.06 total=769674291\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215202\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139202\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=837666943\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=732859879\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.04 avg60=0.17 avg300=0.06 total=769687010\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215203\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139202\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=837704215\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=732882957\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/oip-web/.gitignore",
+      "sha256": "7150808567914a63ccc365341393a06aa7d2d346d76b940b2287cb5b7279dd73"
+    },
+    {
+      "file": "apps/oip-web/AGENTS.md",
+      "sha256": "f4da87a467c48d27f8ea4e013b50f46ce2b517c435215db8016013a1baff9543"
+    },
+    {
+      "file": "apps/oip-web/CHANGELOG.md",
+      "sha256": "9df0ff48243f0f68dabb368db9e97edcf3521074e8287afad6591f7f1b3db878"
+    },
+    {
+      "file": "apps/oip-web/CLAUDE.md",
+      "sha256": "f4da87a467c48d27f8ea4e013b50f46ce2b517c435215db8016013a1baff9543"
+    },
+    {
+      "file": "apps/oip-web/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/oip-web/README.md",
+      "sha256": "7cfa245c19772a1d87f66cbc76f38c7879ca8f7e106528113058690d651196dc"
+    },
+    {
+      "file": "apps/oip-web/ai-context.md",
+      "sha256": "b344203180d5d670dee86fca5c3f53912dbaa383c617a58f643263d49d177aff"
+    },
+    {
+      "file": "apps/oip-web/components.json",
+      "sha256": "85ef1e5f6309f897f1ed24f7f3b02d72315b6cb7dc4e1da7bfe2f7c93470c3dd"
+    },
+    {
+      "file": "apps/oip-web/next.config.ts",
+      "sha256": "6a62aaccefb30a7cadfb4e848f86e44b9edadaad84111afbde19029fd0bcb0f6"
+    },
+    {
+      "file": "apps/oip-web/package.json",
+      "sha256": "8722b37e3e6966b9c2d018c0aaadf6e031da3f7938c633ce4fc3736a7109ba62"
+    },
+    {
+      "file": "apps/oip-web/postcss.config.mjs",
+      "sha256": "2ee9434af4fb47623ea9254b1b710f9110ec3befbf449591dadba2e5500344ea"
+    },
+    {
+      "file": "apps/oip-web/public/next.svg",
+      "sha256": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc"
+    },
+    {
+      "file": "apps/oip-web/public/oip/about/engineering.jpg",
+      "sha256": "390cdd7fa07424ca0c60a8305c6c61a4737ed47e5a4c09895d45d49f49767a34"
+    },
+    {
+      "file": "apps/oip-web/public/oip/about/farm.jpg",
+      "sha256": "c7b5a33bc5925fb31a9b85af6646188e2096d43b4f12829c6428240890d28bbc"
+    },
+    {
+      "file": "apps/oip-web/public/oip/about/law.jpg",
+      "sha256": "01984c5383302e166348b358e41a242e665ad83b2bc20101aaf525b074e1336f"
+    },
+    {
+      "file": "apps/oip-web/public/oip/about/tom-portrait.png",
+      "sha256": "586ffff59214dbfe9f1181c6fcc46ca0d7cd4221aa0682beb3b6531dc9823fe8"
+    },
+    {
+      "file": "apps/oip-web/public/oip/apple-touch-icon-dark.png",
+      "sha256": "17fcb993b729efe3f3a9364fc4bbfbdd2ad1d97d08dda4b0b5b3932e8982fc2f"
+    },
+    {
+      "file": "apps/oip-web/public/oip/apple-touch-icon.png",
+      "sha256": "ed17e5032007a2b27b4c21ceab3d6bbc862725237444dd866a634f356902f46a"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/bioenergy-life.png",
+      "sha256": "09b3ac61eb0c05dc6f636c9791f492455eb0b6f8672e802c55159b20778a24c0"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/cray.svg",
+      "sha256": "458da064a8d9f0d8a1d33dd20b3e950ee536803ec15a86f6791018eed8ae8606"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/eastpoint-sports.png",
+      "sha256": "5c715786e9f3fab1a61015915e591188bb2a6c00a6d13fbf028478205508f186"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/genesis-attachments.svg",
+      "sha256": "a4a071ccf41b7bfc63aed457ce762a3ddf31541b2e6f2689dcfb71ae3e2ff54b"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/headsight.png",
+      "sha256": "ab696a4c400f7009b75c7cfef1980c10821874707f2bbf253ac4bdb381e2fd31"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/kingdom-ag-concepts.png",
+      "sha256": "1040b076b7a5000953b780f961641866e187c7dee4ef2e951d017ab439c774d7"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/par-aide.png",
+      "sha256": "abde069143e6db6215f115a16721452f16a24714e1cbdf4844759fe78e25a7af"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/precision-planting.svg",
+      "sha256": "69bb8b52694dcfba52358db072066df0b11346d20c6502132d0ef7c690db0948"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/skyline-displays.png",
+      "sha256": "6cc869b3e033100649827d88b06233169c5b7b5e330c58f15bc49cd4ff170333"
+    },
+    {
+      "file": "apps/oip-web/public/oip/clients/superior-industries.svg",
+      "sha256": "6bcbb99ca3a0190323992baf8bdce02503edd1b1460b5300168795ec34bde324"
+    },
+    {
+      "file": "apps/oip-web/public/oip/favicon.svg",
+      "sha256": "3fe97636125abc797729d28caf4c974b40528567c97cca6c9ebe8e18233b6009"
+    },
+    {
+      "file": "apps/oip-web/public/oip/hero-vid-poster.jpg",
+      "sha256": "b4ef0a8998734b3ca03410ddb5f1249b12759c7c22b4e755c48b05fc6c13bf02"
+    },
+    {
+      "file": "apps/oip-web/public/oip/hero-vid.mp4",
+      "sha256": "21ff6c418f243d3797650004874eec3f75b61920b56ac6f54381384ceeabb4bc"
+    },
+    {
+      "file": "apps/oip-web/public/oip/hero-vid.webm",
+      "sha256": "1a380d00f8498717fa6ae251b94eede270f001e1ce0a0f7ee789354bc45494b9"
+    },
+    {
+      "file": "apps/oip-web/public/oip/hero/portrait.png",
+      "sha256": "6d5c01d1c804f4749fa38fd6922765973c2fff5165e93d75e3a219592a0757a9"
+    },
+    {
+      "file": "apps/oip-web/public/oip/icon-192-dark.png",
+      "sha256": "1eff86784afb01fa526204b18e80eb8725d676615fda8d8ee8bdc2c6a2d7cf12"
+    },
+    {
+      "file": "apps/oip-web/public/oip/icon-192.png",
+      "sha256": "a4285c3708dad7c31d617560ba08a2b29a3adb04c3cbcd9a56207e88775160ea"
+    },
+    {
+      "file": "apps/oip-web/public/oip/icon-512-dark.png",
+      "sha256": "fa0c97dd2fae7d4605fa1f283e2e8452659052ed18f354cb424b1ec834a79cc6"
+    },
+    {
+      "file": "apps/oip-web/public/oip/icon-512.png",
+      "sha256": "3999ab6b1fdaba83f7b5041ae79da5044e96e4c013fa59942665a1ab2b58b5f2"
+    },
+    {
+      "file": "apps/oip-web/public/oip/matter-figs/gramm-deere.png",
+      "sha256": "93932ab8c6a4850551856b8c088a809fd5bd41eb41fa7e6bcf87c77093962fae"
+    },
+    {
+      "file": "apps/oip-web/public/oip/matter-figs/midwest-karavan.png",
+      "sha256": "d26242ba199a5db7dbbe679ff30fcb27afce044ce7355c29437c46df8a4410bb"
+    },
+    {
+      "file": "apps/oip-web/public/oip/matter-figs/precision-planting.png",
+      "sha256": "348da82b7bdc1eef1664f0685037b6394708f24e1d5b8b3a9d2702bf3aee123c"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-lockup-horizontal-dark.svg",
+      "sha256": "f0783019afc4e57e24416171b68cd1da3514e05000e489606d7abf4242058c43"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-lockup-horizontal.svg",
+      "sha256": "50cd52b7501f8889bcc735fc6096317b971aa7d45457d6acfad5574ee21708d3"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-mark-dark.svg",
+      "sha256": "dbd6d66bfacbf3b03063eb5f687b8e961f119526f00bf5f718fc182ae24b2dd6"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-mark.svg",
+      "sha256": "f3cefa71d9e0202e189138a32e846954e7e7eac7de538a830d2a625ae98835bc"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-og-dark.png",
+      "sha256": "d0c7eff135de02b2621bf3c6567435f43b77291ffcde183417078330a9c1a50a"
+    },
+    {
+      "file": "apps/oip-web/public/oip/oip-og.png",
+      "sha256": "6604a81910aa6fa08fdc35f392c6c3df1ade2a7f6bd20e74c08f5a982035a536"
+    },
+    {
+      "file": "apps/oip-web/public/vercel.svg",
+      "sha256": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4"
+    },
+    {
+      "file": "apps/oip-web/src/app/api/contact/ContactHttpApiRoute.ts",
+      "sha256": "3b9d42a053d3680720b94371529781bbab5a021d700f5bcae5bb11943f9207ca"
+    },
+    {
+      "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
+      "sha256": "3e27a6149ec1f62bfde84806b6c957b66c48c6f33a306465952f0ac6f8e0d830"
+    },
+    {
+      "file": "apps/oip-web/src/app/api/contact/route.ts",
+      "sha256": "02b3e100032caa82010089ec619f9d5770c6badd49bb582bde49d1c77f339cbe"
+    },
+    {
+      "file": "apps/oip-web/src/app/favicon.ico",
+      "sha256": "78dcd9b7b482937950a323fba1f50e6a43accf29204cf98a8eeab3b91b317282"
+    },
+    {
+      "file": "apps/oip-web/src/app/globals.css",
+      "sha256": "072a7bf153134e459e6534dcda622b5982cd96432a9f3b80d2100dcbd7a23bf5"
+    },
+    {
+      "file": "apps/oip-web/src/app/layout.tsx",
+      "sha256": "6787538a6409567747fa13c365f140aa525be6ae01187d1d24f34c4e7d7c7e0a"
+    },
+    {
+      "file": "apps/oip-web/src/app/llms.txt/route.ts",
+      "sha256": "a1ecb1677918720aa8dea5a64c32efbb8ea6758d12321f01fba281b43ca8412d"
+    },
+    {
+      "file": "apps/oip-web/src/app/manifest.ts",
+      "sha256": "f9665faff7940fb642984e5ffde3614ef56f38382f534e5a253f6a6265601195"
+    },
+    {
+      "file": "apps/oip-web/src/app/page.tsx",
+      "sha256": "813248c085ec42057e57c112f1518560291c5d3463dc5542630957a111950a5c"
+    },
+    {
+      "file": "apps/oip-web/src/app/robots.ts",
+      "sha256": "39f14603ea55b3a6055165db97c100ec7744bb7b32a73f838b786b3f5bcf8148"
+    },
+    {
+      "file": "apps/oip-web/src/app/sitemap.ts",
+      "sha256": "abda72547550e12e83d3f016f2d80fdf89561af800e4ac612a562ef8b4373cc9"
+    },
+    {
+      "file": "apps/oip-web/src/app/sw.ts",
+      "sha256": "dac6d0a33ee91601bcc59bd0b216121ffbfb14534c969790fe91ef35b1530e79"
+    },
+    {
+      "file": "apps/oip-web/src/components/BackToTop.tsx",
+      "sha256": "b5c34cb03721d9f798a2cd4f87e52c39808985553c43d91c07083d3df831e8bc"
+    },
+    {
+      "file": "apps/oip-web/src/components/ContactForm.tsx",
+      "sha256": "82e94a1b8d15c6f46e6af6b644d2a83f90b1cc18327b7e06d1c6399d5fefc24a"
+    },
+    {
+      "file": "apps/oip-web/src/components/HeroVideo.tsx",
+      "sha256": "d84728a768ca02ca4624e2618033a9fd29d81d792ea24162984cdc1f0de9daec"
+    },
+    {
+      "file": "apps/oip-web/src/components/MattersCarousel.tsx",
+      "sha256": "a7ab29f9d3aac319f492a1c7b7e80a65f238dd782725c276e5365711251a2605"
+    },
+    {
+      "file": "apps/oip-web/src/components/OipHomePage.tsx",
+      "sha256": "0f206bd0762ea1a65adeb4103c0436b2b7b3f450b7eb578c6989bfe040340b66"
+    },
+    {
+      "file": "apps/oip-web/src/components/OipThemeProvider.tsx",
+      "sha256": "40810e085b440e5d899a2963ce3377dd215b866be8323a71100fb244efb830f6"
+    },
+    {
+      "file": "apps/oip-web/src/components/ThemeModeToggle.tsx",
+      "sha256": "b0411513fe231a56ecc6735f6bd00bf45344e1e57842fc120e277ab83961a91e"
+    },
+    {
+      "file": "apps/oip-web/src/config/OipRedirects.ts",
+      "sha256": "fee171dd75dabf58a674d3dc98ad371297ba4c60ac8cf8e578d5f6a3a01c54dd"
+    },
+    {
+      "file": "apps/oip-web/src/contact/ContactSubmission.http.ts",
+      "sha256": "07205400ef1a07fa658a52f34657fc51aba1ee5bfbd309c91ccfd5e868846b9b"
+    },
+    {
+      "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+      "sha256": "91eb82893f6945802162cd2690503606152dcc4d7441aa688006375430c230e6"
+    },
+    {
+      "file": "apps/oip-web/src/contact/ContactSubmission.service.ts",
+      "sha256": "29ed0068e82e2175dde8f4d1d0b68750c39e2caa0f03372a34aa55e47b28c12e"
+    },
+    {
+      "file": "apps/oip-web/src/contact/index.ts",
+      "sha256": "c2b824534ae2b8fc4ec7fc97720f723b6e976184bf8b46533b16e873307fce68"
+    },
+    {
+      "file": "apps/oip-web/src/content/OipContent.data.ts",
+      "sha256": "6fa77a200601fe565123114c860823d03c88b287f0da0d86f8d16227746b09e6"
+    },
+    {
+      "file": "apps/oip-web/src/content/OipContent.model.ts",
+      "sha256": "561f28ad1687607e36839e04b9483ccc7331262686f01ba141728d1100083fd4"
+    },
+    {
+      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+      "sha256": "dfc3c3c8ca51d209978eb1b4ae69db1e6c11b42083484f593a16abe96161a954"
+    },
+    {
+      "file": "apps/oip-web/src/content/OipSeo.ts",
+      "sha256": "9cfe9f9836a97c524cb6a172be993c91008722e731087e1075ae55f986e5abef"
+    },
+    {
+      "file": "apps/oip-web/src/content/index.ts",
+      "sha256": "f4f6f5e6b5b84fac7a3ec8b6081b0d406806b3bbf8bad1e6de2eae1673c4da4c"
+    },
+    {
+      "file": "apps/oip-web/src/mdx-components.tsx",
+      "sha256": "97225b3d7fc96b33d0e55a1bc2d0733bd38b24f9d4c5a799aed987a7890d4cd5"
+    },
+    {
+      "file": "apps/oip-web/src/proxy.ts",
+      "sha256": "d3334a5a037376670c839581f697fe68057a74c0f7413d0ae0a95581dcac81a9"
+    },
+    {
+      "file": "apps/oip-web/src/runtime/OipAtomProvider.tsx",
+      "sha256": "08c44c95e11b5dc1fccdbab73929dbf82b6122ddfdeafd830f973a5b1bf6f90f"
+    },
+    {
+      "file": "apps/oip-web/src/runtime/OipAtomRuntime.ts",
+      "sha256": "d1c1f9a9f7569e171605626de6657855e57ecce078ad821e142101a92ea0e190"
+    },
+    {
+      "file": "apps/oip-web/src/runtime/OipRuntimeConfig.ts",
+      "sha256": "b2c7db7906201acab0f7f67757a87059cc16df04a188e9f2926150d8bf62e9ae"
+    },
+    {
+      "file": "apps/oip-web/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "6a7b1acf4098fe3ccf8b5e04a62866e579da4dda5944cf53efe6e650f5a1595f"
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "sha256": "fb6de9aa893e62b75f1c70b24301d2261af23281a69e3a84eb8d7bd6d2a06e32"
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "sha256": "3e169115c35ccfd4aeff59623aa3199000d7ddf2f8f1cecd5964bde4a539c91f"
+    },
+    {
+      "file": "apps/oip-web/test/setup.dom.ts",
+      "sha256": "6679cfbf459753c465311f216d944818ad631bad7497ba52a2f46d4658f10c7e"
+    },
+    {
+      "file": "apps/oip-web/tsconfig.check.json",
+      "sha256": "92a9a9eaa2c0cf3b4058d61ce22945b1b7617952c0de03201c6529e3e0cf67a2"
+    },
+    {
+      "file": "apps/oip-web/tsconfig.json",
+      "sha256": "c7f71ab255eb1898783b5e81630e168c4156b5be92df70683f685000d3fc5d14"
+    },
+    {
+      "file": "apps/oip-web/tsconfig.next.json",
+      "sha256": "669b6a6d4e2124a4663af6afd49a27abdebf6360bcfe8a71ae0616c284f6c5c1"
+    },
+    {
+      "file": "apps/oip-web/turbo.json",
+      "sha256": "1953fe5925beb5222f221c8c61ca163886d3b39ec5ec32b15e0a0db85bc849aa"
+    },
+    {
+      "file": "apps/oip-web/vercel.json",
+      "sha256": "e052162a7789cd73b87ee31760b34933fe1a4a455647df3e9fffb864cd4df08c"
+    },
+    {
+      "file": "apps/oip-web/vitest.config.ts",
+      "sha256": "4581bfa6854225343282728ff60e91dc4e2c659cdce66f687b56c83d38a8f23e"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "514981cfce33261cb0958bfbc968fc70f9593e628064e19711b0a2e718dd4cc4"
+    }
+  ],
+  "environmentMode": "Configured OIP web Vitest jsdom, schema, contact and route tests. Provider environment explicitly empty, unmocked fetch rejects at a private setup boundary. No live browser gesture or visual proof claimed. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 57,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.45556640625, 1.22119140625, 1.47412109375],
+    "loadAfter": [1.45556640625, 1.22119140625, 1.47412109375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.04 avg60=0.17 avg300=0.06 total=769688099\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215203\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139202\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=837708574\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=732885722\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.03 avg60=0.16 avg300=0.06 total=769712109\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215203\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139202\n",
+      "io": "some avg10=1.08 avg60=0.19 avg300=0.04 total=837813680\nfull avg10=0.72 avg60=0.13 avg300=0.02 total=732969695\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 57,
+    "skipped": 0
+  },
+  "providerEnvironment": {
+    "clearedKeys": [
+      "CRM_HUBSPOT_ACCOUNT_ID",
+      "HUBSPOT_ACCOUNT_ID",
+      "CRM_HUBSPOT_SERVICE_KEY",
+      "HUBSPOT_SERVICE_KEY",
+      "CRM_HUBSPOT_FORM_GUID",
+      "HUBSPOT_FORM_GUID",
+      "SANITY_PROJECT_ID",
+      "SANITY_DATASET",
+      "SANITY_API_HOST",
+      "SANITY_API_VERSION",
+      "SANITY_API_TOKEN"
+    ],
+    "networkGuardSha256": "b908811fbb689adde00e8ea84939e394e26d0bd1316473d7504cb45e3bd4f0a8",
+    "mode": "Synthetic provider spies only; unstubbed fetch rejects. No provider values read or recorded."
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. The same private wrapper appends an unstubbed-fetch rejection boundary and clears provider environment keys before and after. All57 cases pass with no skips.147 original assertions,57 registrations, schema arbitrary domains and four property floors remain. Before measurements overlap an early publisher. Timing context establishes configured jsdom and native Effect behavior, not browser visual acceptance."
+}

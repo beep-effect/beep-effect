@@ -33,8 +33,11 @@ import {
   TopLeftAnchoredBox,
   UpdateGroupCommand,
 } from "@beep/dock";
+import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
@@ -80,7 +83,7 @@ describe("floating dock topology", () => {
           )
         );
         expect(floated.events).toContainEqual(expect.objectContaining({ kind: "groupFloated", groupId: groupOne }));
-        expect(DockWorkspace.findTabs(floated.state, groupOne)).toEqual(O.some(tabsOne));
+        assertSome(DockWorkspace.findTabs(floated.state, groupOne), tabsOne);
         expect(floated.state.floating).toHaveLength(1);
         const last = changed(
           yield* engine.transition(
@@ -557,18 +560,13 @@ describe("floating dock topology", () => {
 });
 
 describe("anchored box codec properties", () => {
-  it.effect("round-trips arbitrary anchored boxes through their codec", () =>
-    Effect.sync(() =>
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(AnchoredBox)]), ([box]) => {
-            const decoded = O.flatMap(encodeAnchoredBoxOption(box), decodeUnknownAnchoredBoxOption);
-            expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
-
-            return true;
-          })
-        )._tag
-      ).toBe("Passed")
-    )
+  it.prop(
+    "round-trips arbitrary anchored boxes through their codec",
+    [Arbitrary.schema(AnchoredBox)],
+    ([box]) => {
+      const decoded = O.flatMap(encodeAnchoredBoxOption(box), decodeUnknownAnchoredBoxOption);
+      expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
+    },
+    { arbitrary: fcRuns(100) }
   );
 });

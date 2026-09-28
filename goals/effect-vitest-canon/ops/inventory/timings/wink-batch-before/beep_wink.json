@@ -1,0 +1,116 @@
+{
+  "package": "@beep/wink",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T15:07:47.499000+00:00",
+  "totalMs": 4514.9638671875,
+  "testCount": 47,
+  "files": [
+    {
+      "file": "packages/drivers/wink/test/Layers.test.ts",
+      "ms": 148.543212890625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/wink/test/NLPService.test.ts",
+      "ms": 174.450927734375,
+      "tests": 3
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "ms": 282.140625,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/wink/test/ToolValidation.test.ts",
+      "ms": 218.154296875,
+      "tests": 10
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.equivalence.test.ts",
+      "ms": 0.982177734375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.models.test.ts",
+      "ms": 3.299072265625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
+      "ms": 111.184814453125,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkTokenization.test.ts",
+      "ms": 174.655517578125,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/wink/test/Backend/WinkBackend.test.ts",
+      "ms": 287.9638671875,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "ms": 230.80615234375,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/TextGraph.test.ts",
+      "ms": 177.381591796875,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "testName": "Adjunct-parity NLP tools Stem returns a stem for each word token",
+      "ms": 282.1406500000003
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "testName": "Adjunct-parity NLP tools Paragraphize splits on blank-line boundaries",
+      "ms": 282.0403159999996
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "testName": "Adjunct-parity NLP tools WordCount counts word-like tokens",
+      "ms": 281.94777299999987
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "testName": "Adjunct-parity NLP tools RemoveStopWords drops at least one stop word",
+      "ms": 281.9129389999998
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "testName": "Catalog backend-backed operations sentencize produces a child node per sentence",
+      "ms": 228.8589239999992
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "testName": "Catalog backend-backed operations tokenize produces a child node per token",
+      "ms": 228.6441930000001
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "testName": "Catalog backend-backed operations posTag produces POS annotation nodes",
+      "ms": 228.62651600000027
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "testName": "Catalog backend-backed operations lemmatize produces lemma annotation nodes",
+      "ms": 228.61746200000016
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "testName": "Catalog backend-backed operations each backend op records its operation name on the produced nodes",
+      "ms": 228.61005000000023
+    },
+    {
+      "file": "packages/drivers/wink/test/Backend/WinkBackend.test.ts",
+      "testName": "WinkBackend tokenizes text into words",
+      "ms": 221.9563530000005
+    }
+  ]
+}

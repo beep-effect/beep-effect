@@ -8,9 +8,11 @@ import {
   ShaclValidationService,
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
@@ -146,7 +148,7 @@ describe("@beep/epistemic-use-cases", () => {
         },
         total: 3,
       });
-      expect(sameClaimProjectionView(view1, view2)).toBe(true);
+      pipe(sameClaimProjectionView(view1, view2), assertTrue);
     })
   );
 
@@ -162,7 +164,7 @@ describe("@beep/epistemic-use-cases", () => {
       for (const state of ClaimLifecycle.Options) {
         expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
       }
-      expect(sameClaimProjectionView(decoded, view)).toBe(true);
+      pipe(sameClaimProjectionView(decoded, view), assertTrue);
 
       return true;
     }),

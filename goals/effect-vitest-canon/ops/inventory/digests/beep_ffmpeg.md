@@ -33,3 +33,13 @@ Proposed P2 order: scope, assertions, property, flake, observability. Preserve a
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## P2 completion — 2026-09-27
+
+The saved findings and current owned detector rows are reconciled. Six files pass
+46 cases on Node and Bun, including actual ffmpeg/ffprobe integration. Independent
+named fixtures, native assertions and properties, a verified second-frame failure
+sequence and explicit missing-tool skips preserve the original native subjects,
+domains, floors and deadlines. See the
+[completion receipt](../../../history/2026-09-27-ffmpeg-complete.md) for regression
+controls, retained resource exceptions, strict validation and timing limitations.

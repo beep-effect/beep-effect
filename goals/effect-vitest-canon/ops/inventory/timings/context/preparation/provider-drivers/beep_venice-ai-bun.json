@@ -1,0 +1,103 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "before-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/venice-ai/package.json",
+      "sha256": "37478aee8c5232da50eb1344fa2b85395e5ad32f7d008c09e1907dc54b61f5e2"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sha256": "4c66eb5e68f4c97f856faa8538049d6f5a38ad6b9934ede67b97fea97552084e"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "sha256": "71a56ebb813c015bfa21a82c7e5672b288c5d3623f76d13fe0d66c14b75bfa60"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/index.ts",
+      "sha256": "1a80cfba61703695b2fe2ce0c3b433ce15fef9c21658dc012c42223a6c11e827"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "sha256": "e0314181c9b85bec5dbacb6b2373ff0307e67b48fa0a0fd545b4a87eb80a2626"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "sha256": "b7cd942dcdf93785d058235ef26b6a8aa89b80ae228bf233ece8345c6de8b1df"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "sha256": "22023f695e43ca59667d3a001836a2a58ba65641783af2fffbaf95b0f7b2bf79"
+    }
+  ],
+  "loadBefore": [32.9765625, 34.265625, 35.888671875],
+  "pressureBefore": {
+    "cpu": "some avg10=1.24 avg60=2.09 avg300=4.11 total=2281145597\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.49 avg60=1.33 avg300=0.82 total=197725489\nfull avg10=0.48 avg60=1.28 avg300=0.69 total=171438772\n",
+    "io": "some avg10=0.04 avg60=0.20 avg300=0.95 total=951480153\nfull avg10=0.00 avg60=0.05 avg300=0.41 total=649950123\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 3.0508631840057205,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/venice-ai/package.json",
+      "sha256": "37478aee8c5232da50eb1344fa2b85395e5ad32f7d008c09e1907dc54b61f5e2"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "sha256": "4c66eb5e68f4c97f856faa8538049d6f5a38ad6b9934ede67b97fea97552084e"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "sha256": "71a56ebb813c015bfa21a82c7e5672b288c5d3623f76d13fe0d66c14b75bfa60"
+    },
+    {
+      "file": "packages/drivers/venice-ai/src/index.ts",
+      "sha256": "1a80cfba61703695b2fe2ce0c3b433ce15fef9c21658dc012c42223a6c11e827"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "sha256": "e0314181c9b85bec5dbacb6b2373ff0307e67b48fa0a0fd545b4a87eb80a2626"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "sha256": "b7cd942dcdf93785d058235ef26b6a8aa89b80ae228bf233ece8345c6de8b1df"
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "sha256": "22023f695e43ca59667d3a001836a2a58ba65641783af2fffbaf95b0f7b2bf79"
+    }
+  ],
+  "loadAfter": [32.81787109375, 34.2109375, 35.8623046875],
+  "pressureAfter": {
+    "cpu": "some avg10=1.19 avg60=2.05 avg300=4.09 total=2281214485\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.40 avg60=1.28 avg300=0.81 total=197725750\nfull avg10=0.40 avg60=1.24 avg300=0.69 total=171439033\n",
+    "io": "some avg10=0.03 avg60=0.20 avg300=0.94 total=951487488\nfull avg10=0.00 avg60=0.05 avg300=0.41 total=649955147\n"
+  },
+  "sourceStable": true
+}

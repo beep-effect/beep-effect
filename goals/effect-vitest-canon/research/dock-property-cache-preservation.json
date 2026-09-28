@@ -1,0 +1,46 @@
+{
+  "reviewedNodes": 14,
+  "changedDependencyLists": 9,
+  "edges": [
+    {
+      "computation": "@beep/dock#audit",
+      "addedDependency": "@beep/fc-runs#audit"
+    },
+    {
+      "computation": "@beep/dock#build",
+      "addedDependency": "@beep/fc-runs#build"
+    },
+    {
+      "computation": "@beep/dock#check",
+      "addedDependency": "@beep/fc-runs#build"
+    },
+    {
+      "computation": "@beep/dock#coverage",
+      "addedDependency": "@beep/fc-runs#build"
+    },
+    {
+      "computation": "@beep/dock#doctest",
+      "addedDependency": "@beep/fc-runs#transit"
+    },
+    {
+      "computation": "@beep/dock#lint:deprecated-apis",
+      "addedDependency": "@beep/fc-runs#transit"
+    },
+    {
+      "computation": "@beep/dock#package-test-typecheck",
+      "addedDependency": "@beep/fc-runs#transit"
+    },
+    {
+      "computation": "@beep/dock#test",
+      "addedDependency": "@beep/fc-runs#transit"
+    },
+    {
+      "computation": "@beep/dock#test:integration",
+      "addedDependency": "@beep/fc-runs#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "ab8e61303b2a9a9c48d62b965cd9ace8c45abf1689d232e6aa652b8fb837c709"
+}

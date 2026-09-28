@@ -1,6 +1,8 @@
 import { makeResult } from "@beep/shared-domain/entity/EntityRef";
 import { OrganizationId } from "@beep/shared-domain/identity/Shared";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { identity } from "effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -38,15 +40,15 @@ describe("shared-domain tagged-error declared equivalence", () => {
     const b = captureInvariant("MismatchedEntity", otherOrganizationId);
     const c = captureInvariant("OtherMismatchedEntity", organizationId);
 
-    expect(P.isObject(a)).toBe(true);
+    assertTrue(P.isObject(a));
     const schema = P.isObject(a) ? Reflect.get(a, "constructor") : a;
-    expect(S.isSchema(schema)).toBe(true);
+    assertTrue(S.isSchema(schema));
 
     if (S.isSchema(schema)) {
       const sameInvariant = S.toEquivalence(schema);
 
-      expect(sameInvariant(a, b)).toBe(true);
-      expect(sameInvariant(a, c)).toBe(false);
+      assertTrue(sameInvariant(a, b));
+      assertFalse(sameInvariant(a, c));
     }
   });
 });

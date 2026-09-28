@@ -1,7 +1,7 @@
 {
   "name": "@beep/semantica",
   "version": "0.0.0",
-  "description": "Semantica port canary: headless Document→KG→eval chain over F1 + W1",
+  "description": "Semantica port canary: headless Document\u2192KG\u2192eval chain over F1 + W1",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -61,6 +61,9 @@
     "unpdf": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-runner": "workspace:^",
+    "@beep/test-utils": "workspace:^",
+    "@effect/vitest": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",

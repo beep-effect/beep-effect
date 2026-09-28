@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/govinfo",
+  "sourceHead": "7385833a21fe899dd15e49422fd5438ab6ebd651",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.127127903993824,
+  "bunWholeCommandSeconds": 2.518283370998688,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [72.865234375, 55.833984375, 34.64794921875],
+  "loadAfter": [68.3916015625, 55.18896484375, 34.552734375],
+  "pressureBefore": {
+    "cpu": "some avg10=7.78 avg60=13.93 avg300=11.07 total=488078087\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.37 avg60=0.62 avg300=0.47 total=142510415\nfull avg10=0.29 avg60=0.46 avg300=0.35 total=136397365\n",
+    "io": "some avg10=1.23 avg60=1.73 avg300=1.15 total=753015135\nfull avg10=0.30 avg60=0.46 avg300=0.17 total=666825141\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=7.93 avg60=13.53 avg300=11.02 total=488422432\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.25 avg60=0.58 avg300=0.46 total=142538048\nfull avg10=0.19 avg60=0.43 avg300=0.35 total=136424551\n",
+    "io": "some avg10=1.19 avg60=1.68 avg300=1.15 total=753065018\nfull avg10=0.20 avg60=0.43 avg300=0.17 total=666846920\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "719141fd357408178df96ebff4e0170ef435fe778f20abadb14d576ff2fa8623"
+    },
+    {
+      "file": "packages/drivers/govinfo/package.json",
+      "sha256": "678adbc8f3110d4fbee732f4503b528f2fd07f11ee608e277e69cdd82351892f"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/Govinfo.config.ts",
+      "sha256": "0d6e08decb27ef7b927814b4765d86fc14ec16d656e4496e4d3a9684cdb47bef"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
+      "sha256": "d73303559fc0218dde5aec9ab2596151a6cf92cd0151c9e96e04374732258b2c"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/Govinfo.service.ts",
+      "sha256": "f16a609c5debad77a221b2070f22b2b7b51b3d27b6f5132170c291f8b44a6a32"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/index.ts",
+      "sha256": "951ae7ee443d5966db871ca47e130f59edc8efcd715611823dd8ec480976aee6"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/_generated/Govinfo.gen.ts",
+      "sha256": "0d2307485c94e4b0e8f433be2416f9351fa603858edf5e4df3dca8469dc9cd06"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/index.ts",
+      "sha256": "2b70fc3c36cc1c91c9c30a42987cd621bf740af38d3deb98c7dbf23bf777371e"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/contracts/Api.ts",
+      "sha256": "3f0ba666ac7982c59cadc5db52423ff696b0f54c825ff77f72b341bf60a55cd3"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/contracts/index.ts",
+      "sha256": "29360b07a0470b41c95ed69685ee51d81d69745acff99903d4a33689d37edd4b"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/GovinfoNumeric.ts",
+      "sha256": "90405f1fb72998a59a5b276111130fd32a1f9913b7bdabbdb2af97ff49b634af"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/index.ts",
+      "sha256": "96897253c15a31c5a5070d8d3ae180566ab53484171f1935163d7965199a5372"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/CollectionContainer/CollectionContainer.model.ts",
+      "sha256": "33125b33809ac863f51f51533625c2ff2afeb6699d874b4cd978b2d5659c2869"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/CollectionContainer/index.ts",
+      "sha256": "6ad7234e12e2561fb2e539d1b86d514699d8e1558c942232cc7a39ef51edf464"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/CollectionSummary/CollectionSummary.model.ts",
+      "sha256": "f6dd021b57e40425d41aef6c35c504cab481aa4552b7e41b03deaccf136ed803"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/CollectionSummary/index.ts",
+      "sha256": "5bb9596db352a540ccee2a560595db39f939fc3b6e641598c7d2f3b37cb1db01"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/GranuleContainer/GranuleContainer.model.ts",
+      "sha256": "ed7d279830285812c0b7042c5719514c1e33c6a9ce401ae7a03b69a04ad53d3f"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/GranuleContainer/index.ts",
+      "sha256": "1a7f797a98d9876136525afffda8479dbffc9a99e080510e5b75871fdc37e8ac"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/GranuleMetadata/GranuleMetadata.model.ts",
+      "sha256": "db9062502c135283ceee202768a92fc3e7ac186ad03b3376c66665cbbf71fe7a"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/GranuleMetadata/index.ts",
+      "sha256": "8dae9736297f92d5df81e45a7d2d4f8ad814934611211a9afd664e479a4a4593"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/PackageInfo/PackageInfo.model.ts",
+      "sha256": "5097d6f0953f562079ee264eecb532d6f8c6587a9d1381b32f80774524d3d6ca"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/PackageInfo/index.ts",
+      "sha256": "8f8d9c1d83c891fb8d36250fdf0a0d9b9753a5ecfed74b3fe6d46d4001f72686"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts",
+      "sha256": "5e8d2206c0dcb0a56f2ef54f8f8676e64f3c848128bc38fbb36783869b922482"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchBody/index.ts",
+      "sha256": "6faf96765cd8f7662e13694c2a8b113c3dafc96b3eebec8b647fa71eff2a554a"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchResponse/SearchResponse.model.ts",
+      "sha256": "2aba7b4782eff9b7178fb0c4c96422d8f8cddd788b4379677b75940b1979df63"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchResponse/index.ts",
+      "sha256": "e7291aa766f2439a5bb335645179db3ffd8a10e64f8dea0a94801c96cd66bff6"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchResult/SearchResult.model.ts",
+      "sha256": "f8660d9c396227984c021fa21f1626d6ed9606e36d95d7f2ee08ebbae046fd91"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SearchResult/index.ts",
+      "sha256": "ec500d0c556127c1bee3d2f26958a340c8621e25372fe99c465400236e43cad2"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/Sort/Sort.model.ts",
+      "sha256": "0a84fd886fde8ccc1f2eca8cd95dc894b2ddfb5fb4c6fec486f7333dd3df3658"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/Sort/index.ts",
+      "sha256": "f95e755423907a841300e3b4cddfa666530599806ca721028dec4fbff8230f13"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SummaryItem/SummaryItem.model.ts",
+      "sha256": "9d8ea4a26c397b0c046b9458520a8e08a6133c2031f7c1c60a51e1ff73c376d1"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/values/SummaryItem/index.ts",
+      "sha256": "9c80e56d1bcaacdad01f9175a41c7b108d92a529467a62c49de61f04b7e92a8c"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
+      "sha256": "426e9278785282ecf2b96a79a945974d93a9f2b9801d5281ed14695fe026fd4b"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.http.ts",
+      "sha256": "4b9167b169ecdfab33c0e4d6fcfe7bc53db3516718392f8d060adb93d146a9a1"
+    },
+    {
+      "file": "packages/drivers/govinfo/src/domain/contracts/Search/index.ts",
+      "sha256": "cd33d6f471e11ca7702cc41a75e6b487b85c79470d0913c0fa00ea920f1e438e"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "sha256": "843dce1e46b2bf64d7e9bb226f61005ee9b1b1e137f983234780b5aab1997a1e"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "sha256": "134cbf9fa1eb579908942f1fbe05edd1d65afe9b260d277ec18406b9e7a46067"
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "sha256": "27f11967b6dd840f899926c523fbd6bf73da9111484f0cca12f8ca9f691a7095"
+    }
+  ],
+  "rawReporterSha256": "f9aa5bafa448f6b37621775a845b40b16702e329a7da431460f57d8f1994e267",
+  "rawLogSha256": "9051052e4521e2814b5565c66a2f0aed71966676720610021b789700ed9c632a",
+  "acceptance": "One configured Node and Bun final-source observation each: 8 passed,3 suites. Load and pressure are retained without normalization or best-of selection; no causal speedup claim. These source hashes were verified unchanged after the main merge."
+}

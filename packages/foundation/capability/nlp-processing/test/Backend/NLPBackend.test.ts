@@ -1,6 +1,7 @@
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -10,21 +11,10 @@ const encodeBackendBackendNotSupported = S.encodeEffect(Backend.BackendNotSuppor
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 const capabilities: Backend.BackendCapabilities = {
@@ -111,8 +101,12 @@ describe("Failure constructors", () => {
 });
 
 describe("Tagged errors are schema-decodable", () => {
-  it.effect("round-trips schema-derived backend not-supported errors", () =>
-    assertSchemaRoundTrip(Backend.BackendNotSupported)
+  it.effect.prop(
+    "round-trips schema-derived backend not-supported errors",
+    { BackendNotSupported: Arbitrary.schema(Backend.BackendNotSupported) },
+    (values) =>
+      assertSchemaRoundTrip(Backend.BackendNotSupported, values.BackendNotSupported, "Backend.BackendNotSupported"),
+    { arbitrary: fcRuns(50) }
   );
 
   it("recognizes constructed backend errors through the union statics", () => {

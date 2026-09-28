@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/documents-domain",
+  "sourceHead": "df434fc4ca4014d35654b7da2fd12cec3046a132",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.321452720003435,
+  "bunWholeCommandSeconds": 2.2176282459986396,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [6.83251953125, 4.11279296875, 3.306640625],
+  "loadAfter": [7.00634765625, 4.1943359375, 3.33740234375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.65 avg60=0.31 avg300=0.12 total=784380353\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140886\n",
+    "io": "some avg10=0.56 avg60=0.19 avg300=0.04 total=847864958\nfull avg10=0.40 avg60=0.14 avg300=0.03 total=741729078\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.43 avg60=0.29 avg300=0.12 total=784388166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140886\n",
+    "io": "some avg10=0.38 avg60=0.18 avg300=0.04 total=847866730\nfull avg10=0.27 avg60=0.13 avg300=0.03 total=741730085\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "6f2cffdc2594778869c5b4abbf9b838287c3914eb622658e7a4bf079d26ba6d0"
+    },
+    {
+      "file": "packages/documents/domain/AGENTS.md",
+      "sha256": "3fe7eab2d96fcf183cb591126fd9b337cf4ce6745e6bfb9d878219e417cd13cb"
+    },
+    {
+      "file": "packages/documents/domain/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/documents/domain/README.md",
+      "sha256": "d8067b4f0532257e80115a65634786948e420f0e4a6ecb2c6e269f78b262ee42"
+    },
+    {
+      "file": "packages/documents/domain/docgen.json",
+      "sha256": "4cc06189075a3d88ae21022676e81cb48108db943736c9b1d66b0c9bd940b720"
+    },
+    {
+      "file": "packages/documents/domain/package.json",
+      "sha256": "204fb35492c782e61e5b378fe4b88b615f665c88e9ac4005b0b8e3bedb2b28fc"
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+      "sha256": "ef4c00afcfc98b56a0061c2a5eec180eeee4bde01df990336e68faa13ae6be64"
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/Document/index.ts",
+      "sha256": "b50d4df0eac316484d607472835cfad6df2ff7d5e705d84a36d018b79cc2978f"
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/IntakeBatch/IntakeBatch.model.ts",
+      "sha256": "be3d001dc8cd8d27c85c9ceba511bcad66115adfa569c59621fb2ef7d5897432"
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/IntakeBatch/index.ts",
+      "sha256": "e40c1514fa9f15a8f55c52c0d151b12b222eb05a74af64a6e8a6c6478ee0e1d2"
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/index.ts",
+      "sha256": "7a3cc9eea2b7c081f6b25b9ab60bf683a9dff48ec8f553a2e29f6a05a01d2588"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.model.ts",
+      "sha256": "3437b5c95bf1274526fd9ddaa2d02e2163bded0d10f33066bbccabe133d2269a"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.values.ts",
+      "sha256": "7dbce229ac3d629eaab15545da0d4ce162868617bc14faecb1fbbb7da51cdb31"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/index.ts",
+      "sha256": "97bc01ad726764d5ce6676acec699f5472e97db7211f474569c032beeef27b46"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncCursor/SyncCursor.model.ts",
+      "sha256": "db2ffd43640f32191b396a0042552309cd84ca46426639c92235581839af8b91"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncCursor/SyncCursor.values.ts",
+      "sha256": "0ad3cdfc6a89fb7a310c5be871b0667cb160431000bea095e622d84d5a11a785"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncCursor/index.ts",
+      "sha256": "b96b12232eb5aa593700769f86a607a2df189efb4d3b1b9dc9554d2d9d6e379d"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncItem/SyncItem.model.ts",
+      "sha256": "7e6b3568f2cc9a20580bb784cd9df8448b7299e85e670ba083f4b61c2b444d9e"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncItem/SyncItem.values.ts",
+      "sha256": "d25f98879419603dbd8cb5733ced711a00777d9bf7734c416dd926424140d51d"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncItem/index.ts",
+      "sha256": "9ef84b1d0bb2b87c057e107b9d7d91e96c6cdaffb5af429a33d0de3e2cc08b5a"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts",
+      "sha256": "6d3b53dbd83f63f62e1f3e896c05b000f0e52b4cda75e2b617f35892f524658c"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.values.ts",
+      "sha256": "8860fab7736c919482fd90547177b155972041c3b3475182633fb4eb8f119cc4"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/index.ts",
+      "sha256": "20f28280f645ea0a3e9e101a7010b171f6b921d26757e7ed443514ac29e2c1ec"
+    },
+    {
+      "file": "packages/documents/domain/src/entities/index.ts",
+      "sha256": "a51d3354846e9e5b0ef9860fde82b087987d0a4db9ea4201e493d0626020b725"
+    },
+    {
+      "file": "packages/documents/domain/src/index.ts",
+      "sha256": "f55235498f8cff8a24ed651399c5d072c97b763ad53f5bdb119df73e8a08bb3d"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "sha256": "e1b7e2f38f55e295d834c15f8d27a17cc277a1fcd677906ed6ba36745fb19df6"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/index.ts",
+      "sha256": "40d5b53c38691f787999d88ce7f198d642dba0e1037459cc02b4dbcbcf480305"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "sha256": "d5e9652670511f24f142c571c5deb8ee3e8e1f88d7e31cd492acf514791cae50"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+      "sha256": "e66471711b30a6a58c26595fafec9b0e0f18a11de82e5ae88d6c0d05d5e9c7ed"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.seed.ts",
+      "sha256": "8fc43f3ae5211875ed87ea3e844fb310f4ca22a6606ccedc4d24f7bada06ad59"
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/index.ts",
+      "sha256": "9c19bb2432f95ca540d41dd8add1163167d8b0e06a2fed06e3470c9d2837a941"
+    },
+    {
+      "file": "packages/documents/domain/src/values/index.ts",
+      "sha256": "3ce81970bfd1b807196ab09d29e49aae5b126bcc2e8c70460be3d084dbcb50ef"
+    },
+    {
+      "file": "packages/documents/domain/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/documents/domain/test/EntityMaterialization.test.ts",
+      "sha256": "03459fc12decc58db3aeacada3921940129cc2b3febb948aae044e0fd34eb0e9"
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "sha256": "d4cefce7288a952f7141edfb7839f546a35aee3a9669152a861905c8f203702d"
+    },
+    {
+      "file": "packages/documents/domain/test/SyncCursor.test.ts",
+      "sha256": "b5a14a9f585ed7952621d8b6536b2acea0f3e49c623fcd1f8dfcb77289bff38e"
+    },
+    {
+      "file": "packages/documents/domain/test/SyncItem.test.ts",
+      "sha256": "a4b0ed6b984b983be06cdfe554964c259850c83fdd941b4520c017b85010a4ce"
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "sha256": "14fc9d9b51e8c91c39febbaf83c7e288521f8bee1f472d4e6acab874d403003f"
+    },
+    {
+      "file": "packages/documents/domain/test/TaggedError.equivalence.test.ts",
+      "sha256": "e196d7954f67379f6bfc76bf5882751e0d52a98a09ff03c24afc01adebd0d6bd"
+    },
+    {
+      "file": "packages/documents/domain/test/Taxonomy.test.ts",
+      "sha256": "27913110ab175bfbca43dff0a636469c967c242567f42242a5e13c30809a6e69"
+    },
+    {
+      "file": "packages/documents/domain/tsconfig.check.json",
+      "sha256": "9b878e440e0ba5ceeb66980931ed3611931f3404da537ff5e7ea0521622c765e"
+    },
+    {
+      "file": "packages/documents/domain/tsconfig.json",
+      "sha256": "750a2cff7965b52ff36f6b63286dec07a2e8523837fd0a69b66fd431e4b6c4a9"
+    },
+    {
+      "file": "packages/documents/domain/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/documents/domain/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured documents-domain local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 27,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [7.00634765625, 4.1943359375, 3.33740234375],
+    "loadAfter": [8.126953125, 4.4736328125, 3.4326171875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.35 avg60=0.28 avg300=0.12 total=784388175\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140886\n",
+      "io": "some avg10=0.31 avg60=0.18 avg300=0.04 total=847866730\nfull avg10=0.22 avg60=0.12 avg300=0.03 total=741730085\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.29 avg60=0.27 avg300=0.12 total=784392687\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140886\n",
+      "io": "some avg10=0.25 avg60=0.17 avg300=0.04 total=847868361\nfull avg10=0.18 avg60=0.12 avg300=0.03 total=741731301\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 27,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All27configured tests pass before and after without skips and with stable source.106original assertions and27registrations remain; five aggregate Passed checks become native property failures. Five native registrations retain all11original schema codec laws and ten trials per law, with repository floor andseed. Independent equivalence inversions demonstrate replay and shrunk input. Baseline overlaps an early publisher; the after sample can overlap package verification and policy checks. No external endpoint is contacted."
+}

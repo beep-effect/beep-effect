@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/wink",
+  "sourceHead": "fd9bff055fdc6c3edc9b196eff733c30a5a7c8d8",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.871298817000934,
+  "bunWholeCommandSeconds": 1.8669491489999928,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.22119140625, 2.130859375, 2.10791015625],
+  "loadAfter": [3.24462890625, 2.3447265625, 2.17724609375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.62 avg60=0.17 avg300=0.08 total=726417849\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199023\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125217\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=808580788\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707657825\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.41 avg60=0.15 avg300=0.08 total=726426236\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199023\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125217\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=808581340\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707658281\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "3f1edcd36c6e41d1e2796d20f6a9bf4930061efa4dbf7692c8950707a7e9da6f"
+    },
+    {
+      "file": "packages/drivers/wink/AGENTS.md",
+      "sha256": "d490e7a3a395cb4c07b9bc14693be1d178278b212b5b5607fde76605530825da"
+    },
+    {
+      "file": "packages/drivers/wink/CLAUDE.md",
+      "sha256": "d490e7a3a395cb4c07b9bc14693be1d178278b212b5b5607fde76605530825da"
+    },
+    {
+      "file": "packages/drivers/wink/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/wink/README.md",
+      "sha256": "e2de535b517ffcfd0481872c4d82d05e7e25516fea3599f3c65416938b1661c6"
+    },
+    {
+      "file": "packages/drivers/wink/docgen.json",
+      "sha256": "76f65996032f62c4526828403533942fd2b6937329e019a243421760eb9c2f72"
+    },
+    {
+      "file": "packages/drivers/wink/package.json",
+      "sha256": "c4db3be61ced7f6f816a702a83db72916b8543d07e731bc7f3001f5ddb2d0745"
+    },
+    {
+      "file": "packages/drivers/wink/src/Wink.errors.ts",
+      "sha256": "1f6359cb9102a39e69d5effb1ca80b8e2d4eae678e47946fefa3c932e7496417"
+    },
+    {
+      "file": "packages/drivers/wink/src/Wink.layer.ts",
+      "sha256": "89de16db086872b67f18e2ff4c616d1c504c69a1c9fc0cf4789ec80fed1eb8a0"
+    },
+    {
+      "file": "packages/drivers/wink/src/Wink.models.ts",
+      "sha256": "fdf6c4ded286d35d084050883219084b7e778d7396a92c369802bd13b4e86ece"
+    },
+    {
+      "file": "packages/drivers/wink/src/Wink.service.ts",
+      "sha256": "da3b31ce2bf0aad5f8e99150f555a78cb49382f1bf6588b4eaa8f9f306e7d165"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkBackend.service.ts",
+      "sha256": "1e1d4d5f77f35b75badf9585bb8fc0f91c9885121f2cbdbea929a9e65194f0cc"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+      "sha256": "a3b881a4a29bd022b006c21acad84807213bb864df15fe244a7beee0c823100a"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkEngineRef.service.ts",
+      "sha256": "110754549778b5448b12b52978ca7dc11667e878c44e90c22a083e2596131fe8"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkObservability.ts",
+      "sha256": "680a1efdaf28b4286cc8f0dc25d5a14694d6841c19e8c67c6cd50bb4e24230a4"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkSimilarity.service.ts",
+      "sha256": "1cba94e710204907ad156d94db2dfeaa0b40abb67faa754b039de6ae2b746004"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkTokenization.service.ts",
+      "sha256": "2c195810c476d049bbcbcd922ad2a269f3e7545e8ba735a86eec726eed230b5f"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkTools.service.ts",
+      "sha256": "8dd7643c3f778ee9b55d7b1749f44fb184f006b557baa338928bed7486a6c694"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkUtils.service.ts",
+      "sha256": "b5fa6233e91fcb02d05d3d65d73f93ba7a63e982fece1e332160bd37eb16dbca"
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+      "sha256": "8cc6fe63322724da964e1ddd0e73058a1847008716413dc9947a1042bf92b258"
+    },
+    {
+      "file": "packages/drivers/wink/src/index.ts",
+      "sha256": "3763db4372dfe510ce210e2c4b8e09cdadcdf6058737b3ea34e509169a45c7d7"
+    },
+    {
+      "file": "packages/drivers/wink/src/internal/bm25.ts",
+      "sha256": "34aabfd122fbb9f70b98b17d5f2fbbbb280b5853dfc99511f38e5316344fef44"
+    },
+    {
+      "file": "packages/drivers/wink/src/internal/order.ts",
+      "sha256": "14f3809e5bb72c488cf47b8f2232a0263fa467ab22d5a3f5560f6a387e69d225"
+    },
+    {
+      "file": "packages/drivers/wink/test/Backend/WinkBackend.test.ts",
+      "sha256": "edea362a4d37a86dacb0c5d79c1c8370533de4a93bc8fc5873d05ac17f032830"
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/GraphOperationsCatalog.test.ts",
+      "sha256": "e1ba30b824a338f6dcef66991428125bb6df6bbc5ee73a13633fe087328a632c"
+    },
+    {
+      "file": "packages/drivers/wink/test/Graph/TextGraph.test.ts",
+      "sha256": "8e458ecc0e342a89de7421eec90ac8825e352faf95acd68680916b044baf571a"
+    },
+    {
+      "file": "packages/drivers/wink/test/Layers.test.ts",
+      "sha256": "34666d3553dbd34f1abda2f4149a168c2090a6a68fc4b5b84cc057335ab61890"
+    },
+    {
+      "file": "packages/drivers/wink/test/NLPService.test.ts",
+      "sha256": "e2f397fb8d29119c25d0f618a32da9d511f3e02f670afaf928f66315290c7ed6"
+    },
+    {
+      "file": "packages/drivers/wink/test/ParityTools.test.ts",
+      "sha256": "0ab9dc2ddda80fb0c1beed63f4419b090eb5dc054c9c91332d17eb2def2a34ac"
+    },
+    {
+      "file": "packages/drivers/wink/test/ToolValidation.test.ts",
+      "sha256": "0ec23697c47e3e1cced0cb1ed22c49ae470c8a81addf30401403c3c392e0a29d"
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.equivalence.test.ts",
+      "sha256": "65dad5339a36d37220b5d2674e4ce5f5cbce4d36bbb7864bcfd74814b540e7a4"
+    },
+    {
+      "file": "packages/drivers/wink/test/Wink.models.test.ts",
+      "sha256": "91a28f66eaf96f9576b95fc00fe1ba5a3e6d910364ea597eef16941211b15031"
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkEngineRef.test.ts",
+      "sha256": "4d3932a16a8ebbed4edddb2447f1ad5ccf78823b64b576c0eccc2d85bf04bcab"
+    },
+    {
+      "file": "packages/drivers/wink/test/WinkTokenization.test.ts",
+      "sha256": "dd0142ae65680d99054d6a32f0c7f2ca1fb10161e39dd1ef79151613a55bdf83"
+    },
+    {
+      "file": "packages/drivers/wink/tsconfig.check.json",
+      "sha256": "ecea1447ce31d1a12fc5fff2e2a33a99bf8974ba97dd7fe040d820d006027167"
+    },
+    {
+      "file": "packages/drivers/wink/tsconfig.json",
+      "sha256": "005fede58677313a178c2b6b06f329df965f0075a8158560d99abdd6ef1eae04"
+    },
+    {
+      "file": "packages/drivers/wink/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/wink/vitest.config.ts",
+      "sha256": "29cbdda4cb9ba52dec73743e71d6878241862e10bdfee55569d3b76604b367be"
+    }
+  ],
+  "environmentMode": "Actual installed Wink engine and model, public toolkit, graph, backend and facade subjects remain. Independent native layer acquisitions, native properties and instrumented registrations replace wrappers. Stronger entity, stable graph and exact operation-value witnesses execute. No production implementation changes.",
+  "bunProof": {
+    "passedTests": 48,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.24462890625, 2.3447265625, 2.17724609375],
+    "loadAfter": [3.78564453125, 2.47216796875, 2.2197265625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.41 avg60=0.15 avg300=0.08 total=726426247\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199023\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125217\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=808581340\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707658281\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.34 avg60=0.15 avg300=0.08 total=726436073\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199023\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125217\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=808581341\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=707658282\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 48,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute 47 registrations before and 48 after with no skipped cases. The additional registration is a floor-bearing validity property alongside the preserved fixed-seed smoke. Seven round-trip domains retain their floors; stronger graph and entity witnesses remain. Timing differences are not causal speedup evidence."
+}

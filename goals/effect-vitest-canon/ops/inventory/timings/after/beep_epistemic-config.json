@@ -1,0 +1,66 @@
+{
+  "package": "@beep/epistemic-config",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T04:22:20.479000+00:00",
+  "totalMs": 5099.79248046875,
+  "testCount": 20,
+  "files": [
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "ms": 13.79248046875,
+      "tests": 20
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive defaults to the empty allowlist, which denies every destination",
+      "ms": 8.574439999999413
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive parses a comma-separated destination allowlist",
+      "ms": 8.349634000000151
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive reads an explicitly empty allowlist as deny-all rather than as an error",
+      "ms": 8.335653000000093
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive keeps malformed configuration in the typed failure channel",
+      "ms": 7.991551999999501
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience takes the stricter audience for malformed loopback-like input localhost",
+      "ms": 5.340769000000364
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience takes the stricter audience for malformed loopback-like input 127.0.0.1",
+      "ms": 2.364784000000327
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience takes the stricter audience for malformed loopback-like input ::1",
+      "ms": 2.191697000000204
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "grant fixtures produces a byte-stable digest across reconstructions",
+      "ms": 2.160327999999936
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience takes the stricter audience for malformed loopback-like input [::1]",
+      "ms": 2.1385950000003504
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "grant fixtures seals a verifiable grant set",
+      "ms": 2.0961999999999534
+    }
+  ]
+}

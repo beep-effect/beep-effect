@@ -1,0 +1,91 @@
+{
+  "package": "@beep/agents-client",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T17:52:31.549000+00:00",
+  "totalMs": 4889.34130859375,
+  "testCount": 23,
+  "files": [
+    {
+      "file": "packages/agents/client/test/Chat.layer.test.ts",
+      "ms": 2.026611328125,
+      "tests": 2
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "ms": 55.27392578125,
+      "tests": 2
+    },
+    {
+      "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
+      "ms": 10.327392578125,
+      "tests": 3
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "ms": 318.34130859375,
+      "tests": 1
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "ms": 223.094970703125,
+      "tests": 14
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "ms": 205.697998046875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "testName": "assistant turn defects clears the died turn and restores the prompt only when its receipt is provably not persisted",
+      "ms": 318.34128800000053
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "testName": "selected thread lifetime keeps the user's thread selection while the chat surface is unmounted",
+      "ms": 205.6980190000004
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation keeps interrupted prompts non-sendable while receipt evidence is uncertain",
+      "ms": 61.62354500000038
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "testName": "@beep/agents-client schema parity keeps client atom payload encoded shapes stable",
+      "ms": 55.27388599999995
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "testName": "@beep/agents-client schema parity round-trips touched schemas with schema-derived arbitraries",
+      "ms": 55.086647000000085
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation retains unreconciled per-thread replies across view unmounts",
+      "ms": 25.59311499999967
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation keeps accepted failed prompts non-sendable while receipt evidence is uncertain",
+      "ms": 25.451947999999902
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain",
+      "ms": 22.512249999999767
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation keeps transport-failed prompts non-sendable while receipt evidence is uncertain",
+      "ms": 21.175321000000622
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "testName": "assistant turn reconciliation restores a prompt only after polling recovers with explicit non-persistence",
+      "ms": 19.56027399999948
+    }
+  ]
+}

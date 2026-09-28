@@ -1,0 +1,59 @@
+{
+  "phase": "assertions",
+  "retainedComparisons": [
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(result.author).toEqual(O.some({ name: \"Beep Maintainer\", email: \"maintainer@example.com\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(result.bugs).toEqual(O.some({ email: \"bugs@example.com\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(result.funding).toEqual(\n        O.some([\"https://github.com/sponsors/beep\", { type: \"github\", url: \"https://github.com/sponsors/beep-effect\" }])\n      )",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(result.workspaces).toEqual(\n        O.some({\n          packages: [\"packages/*\"],\n          nohoist: [\"react\"],\n        })\n      )",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(driverResult.beep).toEqual(O.some({ family: \"drivers\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(foundationResult.beep).toEqual(O.some({ family: \"foundation\", kind: \"modeling\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(toolingResult.beep).toEqual(O.some({ family: \"tooling\", kind: \"library\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(ecosystemResult.beep).toEqual(O.some({ family: \"ecosystem\" }))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/PackageJson.test.ts",
+      "original": "expect(result.repository).toEqual(\n        O.some({\n          type: \"git\",\n          url: \"git@github.com:beep-effect/beep-effect.git\",\n          directory: \"packages/tooling/library/repo-utils\",\n        })\n      )",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    },
+    {
+      "file": "schemas/TSConfig.test.ts",
+      "original": "expect(result.references).toEqual(O.some([{ path: \"./packages/repo-utils\" }]))",
+      "reason": "Schema.Class payload (possibly nested) versus independent plain-object expected value. Preserve original toEqual semantics; assertSome deepStrictEqual adds prototype equality."
+    }
+  ],
+  "failurePredicateBoundary": {
+    "currentCalls": 50,
+    "reason": "Only failure branch and existing rendered error/path evidence are independently specified. Preserve all diagnostic checks; do not invent complete expected Causes or give duplicate fixed and exception credit."
+  }
+}
