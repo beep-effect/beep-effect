@@ -521,8 +521,8 @@
     "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2276,
-    "lines": 49
+    "bytes": 5437,
+    "lines": 112
   },
   {
     "file": "apps/professional-desktop/test/schema-parity.test.ts",

@@ -24,3 +24,9 @@ Node and 8.4297 seconds for Bun. Private receipts retain source hashes, runtime
 versions, process limits, host load and CPU/memory/I/O pressure. Integration tests
 are excluded from this baseline and require separate evidence. These measurements
 do not establish a causal performance comparison.
+
+The final canonical import and exact-response version passes Node's focused test
+and the full Desktop package audit (including Bun unit tests) and Docgen. The
+Effect/Vitest ratchet reports zero introduced findings. Strict ledger/census
+validation passes. This closes the saved epistemic authentication-observation
+row; the remaining Desktop findings are still tracked separately.
