@@ -5265,3 +5265,23 @@ channel names PlatformError and FlattenMediaSummary (the latter is the existing
 Effect.flip unexpected-success failure), and the key follows the deterministic
 package/test/declaration path. Run generated test diagnostics before recording
 final timing evidence for new fixture declarations.
+
+### Shared TSMorphService aliases independent repository roots
+
+While preparing the docgen harness migration, a single TSMorphService instance
+was used to inspect two scoped temporary repositories. Both had tsconfig.json
+and src/index.ts, with different exported marker values. The first inspection
+returned its source; the second returned an empty source list. Both scopes used
+the identical key `tsconfig.json::syntax#workspaceOnly`. The probe exits one and
+cleans both temporary roots. Receipt: tsmorph-cross-root-probe-before.log.
+
+The project pools and symbol-index pool use relative ProjectCacheKey values;
+resolvedScopes also overwrites entries keyed only by relative scopeId. Hoisting
+this stateful service without repair would introduce cross-test contamination.
+Repair must partition internal caches by repository root and address ambiguous
+scope-id lookup, not merely make the new test pass. Preserve the existing public
+scope-id contract unless the model is deliberately migrated, and add a regression
+covering two roots with the same relative config/file paths. Production repair
+is authorized by the operator's standing instruction. It is repaired in
+`f26bf72626`; see tsmorph-repository-isolation-proof.md for the three red/green
+regressions and full package proof.

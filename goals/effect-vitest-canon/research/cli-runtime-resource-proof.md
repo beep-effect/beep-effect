@@ -61,8 +61,8 @@ The CLI ledger now contains 1,187 fixed, 7 exception and 2,270 open records
 (3,464 total). The earlier 26 property-boundary fixes retain their upstream
 provenance in cli-files-property-lineage.md.
 
-Full CLI package verification for this source commit is pending. The preceding
-assertion batch passed audit 670.7 seconds and docgen 20.9 seconds; that result
-does not cover these resource changes. No hosted readiness or goal completion
+Full CLI package verification for source commit 0a7f1510c3 passed: audit
+705.1 seconds and docgen 19.6 seconds. Source remained unchanged during the
+proof; intervening edits updated packet documentation only. No hosted readiness or goal completion
 is claimed. Private receipts use cli-files-runtime, cli-files-resource,
 cli-files-scenario, cli-files-assertion-preservation and cli-files-shifted-lineage.
