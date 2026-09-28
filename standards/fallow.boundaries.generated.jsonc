@@ -2368,6 +2368,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/venice-ai"
@@ -2387,6 +2388,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/venice-ai"
