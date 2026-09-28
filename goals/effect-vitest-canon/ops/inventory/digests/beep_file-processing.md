@@ -42,3 +42,13 @@ security subjects and all original domains, floors and deadlines remain. Full
 package audit/docgen and isolated regression controls pass. See the
 [completion receipt](../../../history/2026-09-27-file-processing-complete.md)
 for proof scope, retained exceptions and timing limitations.
+
+## Piped outcome detector follow-up
+
+The EV005 pipe-recognition repair exposed 8 existing failure-only
+expectation(s) that were absent from the historical detector inventory.
+Commit `13cad3e1fa` replaces them with yielded Effect.flip while preserving
+all surrounding native filesystem assertions. Before/after Node/Bun
+registrations match, with no failures or skips; full package audit/docgen
+passes. The captured findings are recorded as fixed resource-ledger rows.
+See [the proof](../../../research/cli-policy-and-outcome-proof.md).

@@ -20,8 +20,8 @@ Three adversarial path strings in knowledge-semantic-delta tests are moved
 unchanged into named fixtures. This preserves every input byte and redaction
 assertion while removing apparent private home paths from generated inventory
 excerpts. The 64-test suite passes on Node and Bun. The refs gate reads HEAD,
-so its pre-commit retry still reports the historical snippets; post-commit
-verification is required.
+so its pre-commit retry still reported the historical snippets. The check
+passes after the implementation commit with zero live gated observations.
 
 ## Detector regression
 
@@ -66,8 +66,9 @@ still running and is not claimed complete.
 The final ratchet passes with 4,391 findings, zero introduced and 626 resolved
 baseline findings. The nine newly exposed findings are repaired without
 expanding the baseline. One changed shared-layer anchor in PathSafety is
-reconciled from actual before/after detector output. Their ledger rows will
-reference the implementation commit. The goal remains incomplete.
+reconciled from actual before/after detector output. Their nine new resource-ledger rows reference implementation commit
+`13cad3e1fa`; all three affected resource ledgers pass strict schema and
+unique-identity validation. The goal remains incomplete.
 
 Private receipts use the `console-followup-policy-*`,
 `console-followup-detector-*`, `console-followup-new-outcomes-*` and
