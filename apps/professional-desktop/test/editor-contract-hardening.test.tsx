@@ -284,11 +284,16 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const context = yield* Effect.context<never>();
       const runPromise = Effect.runPromiseWith(context);
       const runSync = Effect.runSyncWith(context);
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        scheduleTask,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            scheduleTask,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       let editor: ReturnType<typeof createEditor> | undefined;
       const firstRevoke = yield* Deferred.make<void>();
       vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:pending-unmount");
@@ -306,7 +311,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
           ) : null}
         </RegistryContext.Provider>
       );
-      const view = render(mounted(true));
+      const view = yield* Effect.acquireRelease(
+        Effect.sync(() => render(mounted(true))),
+        (view) => Effect.sync(view.unmount)
+      );
       fireEvent.click(screen.getByRole("button", { name: "Capture editor instance" }));
       const input = view.container.querySelector<HTMLInputElement>('input[type="file"]');
       expect(input).not.toBeNull();
@@ -346,12 +354,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const editor = createEditor({ namespace: "attachment-disposal-boundary" });
       const onAttach = vi.fn();
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        initialValues: [[onAttachAtom(editor), onAttach]],
-        scheduleTask,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            initialValues: [[onAttachAtom(editor), onAttach]],
+            scheduleTask,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const attachmentSizes: Array<number> = [];
       let disposed = false;
       let postDisposeGets = 0;
@@ -384,6 +397,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       registry.mount(captureAttachmentsFn);
       registry.mount(onAttachAtom(editor));
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       registry.mount(attachmentSweepBindingAtom(editor));
       registry.subscribe(
         attachmentsAtom(editor),
@@ -419,12 +433,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const onAttach = vi.fn((files: ReadonlyArray<File>): void | Promise<void> =>
         files[0]?.name === "rapid-remount.png" ? port.pipe(Deferred.await, runPromise) : undefined
       );
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        initialValues: [[onAttachAtom(editor), onAttach]],
-        scheduleTask: scheduler.schedule,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            initialValues: [[onAttachAtom(editor), onAttach]],
+            scheduleTask: scheduler.schedule,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const createObjectUrl = vi
         .spyOn(URL, "createObjectURL")
         .mockReturnValueOnce("blob:rapid-remount")
@@ -434,6 +453,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       registry.mount(onAttachAtom(editor));
       const binding = attachmentSweepBindingAtom(editor);
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       const releaseFirstMount = registry.mount(binding);
       registry.set(captureAttachmentsFn, {
         editor,
@@ -455,6 +475,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       });
 
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       const releaseSecondMount = registry.mount(binding);
       scheduler.flush();
       expect(createObjectUrl).toHaveBeenCalledTimes(1);
@@ -536,20 +557,31 @@ describe("editor contract hardening", { concurrent: false }, () => {
     })
   );
 
-  it("treats a mention failure notice as a visible typeahead surface even without options", () => {
-    const editor = createEditor({ namespace: "typeahead-failure-ownership" });
-    const root = document.createElement("div");
-    const notice = document.createElement("div");
-    notice.setAttribute(TYPEAHEAD_MENU_ATTRIBUTE, editor.getKey());
-    document.body.append(root, notice);
-    editor.setRootElement(root);
+  it.effect(
+    "treats a mention failure notice as a visible typeahead surface even without options",
+    Effect.fnUntraced(function* () {
+      const editor = createEditor({ namespace: "typeahead-failure-ownership" });
+      const root = document.createElement("div");
+      const notice = document.createElement("div");
+      notice.setAttribute(TYPEAHEAD_MENU_ATTRIBUTE, editor.getKey());
+      yield* Effect.acquireRelease(
+        Effect.sync(() => document.body.append(root, notice)),
+        () =>
+          Effect.sync(() => {
+            editor.setRootElement(null);
+            root.remove();
+            notice.remove();
+          })
+      );
+      editor.setRootElement(root);
 
-    expect(isTypeaheadMenuVisible(editor)).toBe(true);
+      expect(isTypeaheadMenuVisible(editor)).toBe(true);
 
-    editor.setRootElement(null);
-    root.remove();
-    notice.remove();
-  });
+      editor.setRootElement(null);
+      root.remove();
+      notice.remove();
+    })
+  );
 
   it.effect(
     "keeps Enter owned by a rejected mention lookup instead of sending",
@@ -1285,7 +1317,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
           }),
         ],
       });
-      const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 30_000 })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(unsafe);
       const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(unsafe);
       registry.mount(gateAtom);

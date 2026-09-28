@@ -4416,3 +4416,13 @@ fails with completion-only cleanup (an extra listener remains) and passes with t
 repair. Direct tests own and join the fiber; the real handler-closure test observes
 the unique turn subscription being released before disposing its registry.
 This production repair is covered by the operator's standing repair authorization.
+
+## Editor manual resources needed ordered fallback cleanup
+
+Four manual registries, directly attached Lexical roots and a standalone mention
+notice fixture depended on successful test flow. Failure controls reproduced two
+remaining DOM nodes and missing registry disposal. Scoped acquisitions/finalizers
+now own these resources while retaining early teardown and remount assertions.
+For React views backed by a manual registry, unmount the view before disposing
+that registry. Syntax-tree insertion made the failure probes independent of
+formatter line wrapping.

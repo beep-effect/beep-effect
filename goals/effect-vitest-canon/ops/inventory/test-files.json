@@ -339,8 +339,8 @@
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 57337,
-    "lines": 1351
+    "bytes": 58615,
+    "lines": 1386
   },
   {
     "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
