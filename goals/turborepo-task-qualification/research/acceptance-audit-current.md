@@ -572,3 +572,11 @@ now accepts 1,025 sources, 90 reviews and six artifacts, with 22 unresolved
 obligations. Its population is unchanged. It attributes the two changed
 source bindings to dependency remediation and does not renew runtime
 observations across that dependency change.
+
+The [stable](./current-config-controls-stable.json) and
+[exact canary](./current-config-controls-canary.json) configuration matrices
+now each pass nine reviewed outcomes: accepted child/root mutations invalidate,
+restoration recovers hits, stale generated-profile drift rejects before Turbo,
+and orchestration metadata preserves the hash. Profile rejection leaves the
+cache unchanged. These selected controls do not exhaust semantic input classes
+or renew the frozen profile after security dependency changes.

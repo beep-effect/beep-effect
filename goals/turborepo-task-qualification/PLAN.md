@@ -2526,3 +2526,18 @@ no native summary and leaves the cache unchanged. All successful archives
 contain matching task-log bytes. The exact canary control is still running.
 This does not establish complete semantic-input closure or remote/shadow
 acceptance and retains the frozen dependency profile.
+
+### Exact canary configuration control and packet checks
+
+The [canary configuration receipt](research/current-config-controls-canary.json)
+now independently passes the same nine expected outcomes as stable, retaining
+1,572 observation files. Native summary review confirms the exact canary
+version, changed child/root paths, supplied environment values and stable
+orchestration hash. Profile drift is rejected before Turbo and leaves cache
+bytes unchanged; restoring the profile recovers the baseline hit.
+
+[Packet verification](research/current-packet-verification.json) passes goals
+doctor with no new blocking findings, explore integrity checks, and reflection
+artifact validation with zero blocking or advisory findings. The launcher is
+2,755 characters. These checks establish packet consistency, not a completed
+reflection, runtime qualification or merge readiness.
