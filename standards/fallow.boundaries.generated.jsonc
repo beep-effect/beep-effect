@@ -2820,6 +2820,7 @@
           "@beep/ontology-ui",
           "@beep/ontology-use-cases",
           "@beep/rdf",
+          "@beep/test-runner",
           "@beep/ui",
           "@beep/utils"
         ],
@@ -2829,6 +2830,7 @@
           "@beep/ontology-ui",
           "@beep/ontology-use-cases",
           "@beep/rdf",
+          "@beep/test-runner",
           "@beep/ui",
           "@beep/utils"
         ]
