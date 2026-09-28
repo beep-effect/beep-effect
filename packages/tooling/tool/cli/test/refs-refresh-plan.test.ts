@@ -344,7 +344,7 @@ describe("reference planning and refresh", () => {
         expect(seen.length).toBe(2);
         for (const report of status.members) {
           assertNone(report.detail);
-          assertTrue(O.isSome(report.coverage));
+          report.coverage.pipe(O.isSome, assertTrue);
         }
         // The patch kit is checked once, before any member work, with the maintenance allowlist.
         expect(log.startsWith("patch-kit --check\n")).toBe(true);

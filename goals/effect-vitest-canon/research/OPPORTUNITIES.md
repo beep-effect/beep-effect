@@ -4748,3 +4748,14 @@ then checked release before error inspection. The current short scope passed;
 removing it failed. A dedicated permanent case for partial listener acquisition
 would protect this cleanup order more directly than the existing first-listener
 failure case. The probe was removed to preserve the original case and its input.
+
+## Assertion migration must retain pipeable helper form
+
+Hosted Heavy / Check on the property checkpoint reported TS377050 at
+refs-refresh-plan.test.ts:347. An earlier branch assertion migration changed
+expect(O.isSome(report.coverage)).toBe(true) to a nested assertTrue call;
+repo-cli's compiler plugin requires report.coverage.pipe(O.isSome, assertTrue).
+The repair preserves the same Boolean predicate and polarity. Desktop-only
+package proof could not catch this CLI test diagnostic; whole-branch hosted
+checks remain required. Job logs were retrievable directly through the jobs API
+while the workflow was active, although gh run view withheld the combined log.
