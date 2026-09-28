@@ -189,6 +189,7 @@ export const MemberRefreshOutcome = LiteralKit([
   "skipped-off-branch",
   "pull-failed",
   "build-failed",
+  "skipped-cooldown",
 ]).pipe($I.annoteSchema("MemberRefreshOutcome", { description: "Result of refreshing one upstream member." }));
 /**
  * Terminal member outcome.
@@ -199,21 +200,74 @@ export const MemberRefreshOutcome = LiteralKit([
 export type MemberRefreshOutcome = typeof MemberRefreshOutcome.Type;
 
 /**
- * A member receipt, retaining deep-build coverage when available.
+ * Longest failure detail a member receipt retains, in characters.
+ *
+ * **Example** (Read the detail bound)
+ * ```ts
+ * import { MEMBER_REFRESH_DETAIL_MAX_CHARS } from "@beep/repo-cli/commands/Refs"
+ * MEMBER_REFRESH_DETAIL_MAX_CHARS // => 2000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MEMBER_REFRESH_DETAIL_MAX_CHARS = 2000;
+
+/**
+ * Tail of the failing step's output, bounded so receipts stay small.
+ *
+ * **Details**
+ * Holds the last characters of a failed pull or build, or the cooldown
+ * preflight's status summary. It never carries a model response body or an
+ * API key.
+ *
+ * **Example** (Accept a bounded detail)
+ * ```ts
+ * import { MemberRefreshDetail } from "@beep/repo-cli/commands/Refs"
+ * import * as S from "effect/Schema"
+ * S.is(MemberRefreshDetail)("graft exited 8") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MemberRefreshDetail = S.String.check(S.isMaxLength(MEMBER_REFRESH_DETAIL_MAX_CHARS)).pipe(
+  $I.annoteSchema("MemberRefreshDetail", { description: "Bounded tail of a failed step's output." })
+);
+/**
+ * Bounded member failure detail.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MemberRefreshDetail = typeof MemberRefreshDetail.Type;
+
+/**
+ * A member receipt, retaining deep-build coverage and failure detail when available.
+ *
+ * **Details**
+ * `detail` is present for `pull-failed`, `build-failed`, and `skipped-cooldown`
+ * and absent otherwise. The key is optional, so older `beep-refs-refresh/v1`
+ * receipts still decode.
  *
  * **Example** (Record a skipped member)
  * ```ts
  * import { MemberRefreshReport } from "@beep/repo-cli/commands/Refs"
  * import * as O from "effect/Option"
- * MemberRefreshReport.make({ name: "effect", outcome: "skipped-dirty", coverage: O.none() }).outcome // => "skipped-dirty"
+ * MemberRefreshReport.make({ name: "effect", outcome: "skipped-dirty", coverage: O.none(), detail: O.none() }).outcome // => "skipped-dirty"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class MemberRefreshReport extends S.Class<MemberRefreshReport>($I`MemberRefreshReport`)(
-  { name: MemberName, outcome: MemberRefreshOutcome, coverage: S.OptionFromOptionalKey(GraftDeepCoverage) },
-  $I.annote("MemberRefreshReport", { description: "Member outcome and optional parsed deep coverage." })
+  {
+    name: MemberName,
+    outcome: MemberRefreshOutcome,
+    coverage: S.OptionFromOptionalKey(GraftDeepCoverage),
+    detail: S.OptionFromOptionalKey(MemberRefreshDetail),
+  },
+  $I.annote("MemberRefreshReport", { description: "Member outcome, optional deep coverage, and failure detail." })
 ) {}
 
 /**

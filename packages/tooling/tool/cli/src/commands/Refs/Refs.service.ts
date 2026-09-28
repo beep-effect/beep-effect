@@ -6,20 +6,23 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Config, Effect } from "effect";
+import { Config, Effect, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Headers from "effect/http/Headers";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CapturedStep, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
+import { CapturedStep, OutputBound, runCaptured, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readInstalledSystemdUnit,
   resolveOperatorPath,
@@ -30,6 +33,7 @@ import {
 import { parseDeepCoverage } from "../Graft/Graft.schemas.ts";
 import { ReferenceWorkspaceError } from "./Refs.errors.ts";
 import {
+  MEMBER_REFRESH_DETAIL_MAX_CHARS,
   MemberRefreshReport,
   ReferenceWorkspaceCheck,
   ReferenceWorkspaceManifest,
@@ -42,17 +46,17 @@ import type { ChildProcessSpawner } from "effect/process";
 import type { ReferenceMember } from "./Refs.schemas.ts";
 
 const isPositiveInteger = S.is(S.Int.check(S.isGreaterThan(0)));
+/** `Retry-After` in its delta-seconds form; the HTTP-date form is parsed separately. */
+const decodeRetryAfterSeconds = S.decodeUnknownOption(S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)));
 
 /** Untracked artifacts graft leaves in a member; excluded per clone, never via .gitignore (R3). */
 const GRAFT_EXCLUDE_ENTRIES: ReadonlyArray<string> = ["graft/", ".graft/", ".ignore"];
 
-/** Result of bringing one member to origin/main: skipped by policy, failed, or synced. */
+/** Result of bringing one member to origin/main: skipped by policy or synced; git failures fail. */
 type MemberSync =
   | { readonly _tag: "skipped"; readonly outcome: "skipped-dirty" | "skipped-off-branch" }
-  | { readonly _tag: "failed" }
   | { readonly _tag: "synced"; readonly changed: boolean };
 const MemberSync = {
-  failed: { _tag: "failed" } as const satisfies MemberSync,
   skipped: (outcome: "skipped-dirty" | "skipped-off-branch"): MemberSync => ({ _tag: "skipped", outcome }),
   synced: (changed: boolean): MemberSync => ({ _tag: "synced", changed }),
 };
@@ -77,11 +81,18 @@ export interface ReferenceWorkspaceShape {
     root: string
   ) => Effect.Effect<ReadonlyArray<string>, ReferenceWorkspaceError>;
   readonly plan: (home: string, root: string) => Effect.Effect<ReadonlyArray<string>, ReferenceWorkspaceError>;
+  /**
+   * Pulls and rebuilds every member, then writes the receipt.
+   *
+   * **Details**
+   * Needs an `HttpClient` only for the deep-member model cooldown preflight.
+   * The other operations never touch the network.
+   */
   readonly refresh: (
     home: string,
     root: string,
     jobs: number
-  ) => Effect.Effect<RefsRefreshStatus, ReferenceWorkspaceError>;
+  ) => Effect.Effect<RefsRefreshStatus, ReferenceWorkspaceError, HttpClient.HttpClient>;
   readonly refreshTimer: (
     home: string,
     bunPath: O.Option<string>
@@ -118,9 +129,9 @@ const unitPath = "%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/loca
 const outputBound = OutputBound.make({ maxChars: 8 * 1024 * 1024, truncatedNotice: "\n[beep refs] output truncated" });
 const ioError = (path: string, message: string) => (cause: unknown) =>
   ReferenceWorkspaceError.make({ path, message, cause });
-const buildArgs = (member: ReferenceMember, jobs: number): ReadonlyArray<string> => [
+const buildArgs = (member: ReferenceMember, jobs: number, tier = member.tier): ReadonlyArray<string> => [
   "build",
-  ...(member.tier === "deep" ? ["--deep", "--allow-partial", "-j", `${jobs}`] : []),
+  ...(tier === "deep" ? ["--deep", "--allow-partial", "-j", `${jobs}`] : []),
   ...A.flatMap(
     O.getOrElse(member.onlyDir, () => []),
     (directory) => ["--only-dir", directory]
@@ -155,6 +166,11 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     }
   );
 
+  const readAmbientPath = (cwd: string) =>
+    Config.String("PATH").pipe(
+      Config.withDefault("/usr/bin:/bin"),
+      Effect.mapError(ioError(cwd, "Cannot read process PATH."))
+    );
   // Maintenance commands receive no model/provider secrets. Only deep builds
   // and the desktop notifier inherit the unit environment (R4, R9).
   const step = Effect.fn("ReferenceWorkspace.step")(function* (
@@ -162,19 +178,15 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     cwd: string,
     command: string,
     args: ReadonlyArray<string>,
-    deep = false,
-    stdout = false
+    deep = false
   ) {
-    const ambientPath = yield* Config.String("PATH").pipe(
-      Config.withDefault("/usr/bin:/bin"),
-      Effect.mapError(ioError(cwd, "Cannot read process PATH."))
-    );
+    const ambientPath = yield* readAmbientPath(cwd);
     return yield* runCaptured({
       command,
       args,
       cwd,
       bound: outputBound,
-      source: stdout === true ? "stdout" : "merge",
+      source: "merge",
       trim: true,
       tee: false,
       extendEnv: deep === true || command === "notify-send" || command === "systemctl",
@@ -182,6 +194,25 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       timeout: deep === true ? "5 hours" : "15 minutes",
       forceKillAfter: "30 seconds",
     }).pipe(Effect.provide(context), Effect.mapError(ioError(cwd, `${command} failed to run.`)));
+  });
+  // Git keeps stdout and stderr apart: stdout is parsed, stderr explains a failure. Same
+  // environment allowlist, output bound, and deadline as a maintenance `step`.
+  const gitStep = Effect.fn("ReferenceWorkspace.gitStep")(function* (
+    home: string,
+    cwd: string,
+    args: ReadonlyArray<string>
+  ) {
+    const ambientPath = yield* readAmbientPath(cwd);
+    return yield* runCapturedStreams({
+      command: "git",
+      args,
+      cwd,
+      bound: outputBound,
+      trim: true,
+      extendEnv: false,
+      env: { HOME: home, PATH: ambientPath, CI: "true", GRAFT_NO_GITIGNORE: "1" },
+      forceKillAfter: "30 seconds",
+    }).pipe(Effect.timeout("15 minutes"), Effect.provide(context), Effect.mapError(ioError(cwd, "git failed to run.")));
   });
   const mustRun = Effect.fn("ReferenceWorkspace.mustRun")(function* (
     home: string,
@@ -199,6 +230,50 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   });
   const capturedFailure = (error: ReferenceWorkspaceError) =>
     Effect.succeed(CapturedStep.make({ exitCode: 1, output: error.message, truncated: false }));
+  // Receipts keep only the tail of a failing step: the last lines name the error.
+  const detailOf = (text: string) => O.some(Str.slice(-MEMBER_REFRESH_DETAIL_MAX_CHARS)(text));
+  const stepDetail = (command: string, result: CapturedStep) =>
+    detailOf(Str.isNonEmpty(result.output) ? result.output : `${command} exited ${result.exitCode}`);
+
+  // Deep builds route through the model proxy. When the proxy reports the model cooling down it
+  // answers 429 with a Retry-After that the provider SDK honours uncapped, so a deep build would
+  // sleep until the step timeout. Probe once with a 1-token request; only a 429 skips the deep
+  // build. Missing settings, other statuses, transport errors, and timeouts all fall through to
+  // the build. The key is sent but never logged, and the response body is never read.
+  const probeCooldown = Effect.fn("ReferenceWorkspace.probeCooldown")(function* () {
+    const settings = yield* Config.all({
+      provider: Config.String("GRAFT_PROVIDER"),
+      baseUrl: Config.String("GRAFT_BASE_URL"),
+      model: Config.String("GRAFT_MODEL"),
+      apiKey: Config.Redacted("GRAFT_API_KEY"),
+    }).pipe(Effect.option);
+    if (O.isNone(settings) || settings.value.provider !== "openai") return O.none<string>();
+    const { apiKey, model } = settings.value;
+    const baseUrl = Str.replace(/\/+$/u, "")(settings.value.baseUrl);
+    const request = HttpClientRequest.post(`${baseUrl}/chat/completions`).pipe(
+      HttpClientRequest.bodyJsonUnsafe({ model, max_tokens: 1, messages: [{ role: "user", content: "ping" }] }),
+      HttpClientRequest.setHeader("authorization", `Bearer ${Redacted.value(apiKey)}`)
+    );
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client.execute(request).pipe(Effect.timeout("15 seconds"), Effect.option);
+    if (O.isNone(response) || response.value.status !== 429) return O.none<string>();
+    const retryAfter = Headers.get(response.value.headers, "retry-after");
+    const now = yield* DateTime.now;
+    const until = O.orElse(
+      O.map(O.flatMap(retryAfter, decodeRetryAfterSeconds), (seconds) => DateTime.add(now, { seconds })),
+      () => O.flatMap(retryAfter, (value) => DateTime.make(value))
+    );
+    return O.some(
+      O.match(until, {
+        onNone: () => `HTTP 429 from ${baseUrl}/chat/completions for model ${model}`,
+        onSome: (instant) =>
+          `model ${model} cooling down at ${baseUrl}; retry-after ${Math.max(
+            0,
+            Math.ceil((DateTime.toEpochMillis(instant) - DateTime.toEpochMillis(now)) / 1000)
+          )}s (until ${DateTime.formatIso(instant)})`,
+      })
+    );
+  });
 
   const plan: ReferenceWorkspaceShape["plan"] = Effect.fn("ReferenceWorkspace.plan")(function* (_home, root) {
     const manifest = yield* readManifest();
@@ -297,57 +372,64 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       let reports = HashMap.empty<string, MemberRefreshReport>();
       for (const member of manifest.members) {
         const cwd = path.join(root, member.name);
-        const git = (args: ReadonlyArray<string>) => step(home, cwd, "git", args, false, true);
-        // A git call that either yields its trimmed stdout or none when it exited non-zero.
+        // A git call that yields its trimmed stdout, or fails the member with git's stderr.
         const gitOutput = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
-          const result = yield* git(args);
-          return result.exitCode === 0 ? O.some(result.output) : O.none<string>();
+          const result = yield* gitStep(home, cwd, args);
+          if (result.exitCode !== 0)
+            return yield* ReferenceWorkspaceError.make({
+              path: cwd,
+              message: `git ${A.join(args, " ")} exited ${result.exitCode}${Str.isNonEmpty(result.stderr) ? `: ${result.stderr}` : ""}`,
+            });
+          return result.stdout;
         });
         // Bring the member to origin/main without ever rewriting local state (R9): a dirty or
         // off-main member is skipped, a failing git call fails the member, else it is synced.
         const syncMember = Effect.fnUntraced(function* () {
           const dirty = yield* gitOutput(["status", "--porcelain", "--untracked-files=all"]);
-          if (O.isNone(dirty)) return MemberSync.failed;
-          if (Str.isNonEmpty(dirty.value)) return MemberSync.skipped("skipped-dirty");
+          if (Str.isNonEmpty(dirty)) return MemberSync.skipped("skipped-dirty");
           const branch = yield* gitOutput(["branch", "--show-current"]);
-          if (O.isNone(branch)) return MemberSync.failed;
-          if (branch.value !== "main") return MemberSync.skipped("skipped-off-branch");
+          if (branch !== "main") return MemberSync.skipped("skipped-off-branch");
           const before = yield* gitOutput(["rev-parse", "HEAD"]);
-          if (O.isNone(before)) return MemberSync.failed;
-          const pulled = yield* gitOutput(["pull", "--ff-only"]);
+          yield* gitOutput(["pull", "--ff-only"]);
           const after = yield* gitOutput(["rev-parse", "HEAD"]);
-          return O.isNone(pulled) || O.isNone(after)
-            ? MemberSync.failed
-            : MemberSync.synced(before.value !== after.value);
+          return MemberSync.synced(before !== after);
         });
+        const report = (
+          outcome: MemberRefreshReport["outcome"],
+          detail: O.Option<string> = O.none(),
+          coverage: MemberRefreshReport["coverage"] = O.none()
+        ) => MemberRefreshReport.make({ name: member.name, outcome, coverage, detail });
         const memberRun = Effect.fn("ReferenceWorkspace.refreshMember")(function* () {
-          const report = (outcome: MemberRefreshReport["outcome"]) =>
-            MemberRefreshReport.make({ name: member.name, outcome, coverage: O.none() });
           // A missing member must not let Git walk upward into a different checkout.
           const hasGit = yield* fs
             .exists(path.join(cwd, ".git"))
             .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata.")));
-          if (!hasGit) return report("pull-failed");
+          if (!hasGit) return report("pull-failed", detailOf(`No Git metadata at ${path.join(cwd, ".git")}.`));
           // graft writes graft/, .graft/ and .ignore into the member; keep them out of the
           // cleanliness check without touching the member's tracked .gitignore (R3).
           yield* ensureGraftExcludes(cwd);
           const sync = yield* syncMember();
-          if (sync._tag !== "synced") return report(sync._tag === "skipped" ? sync.outcome : "pull-failed");
-          const build = yield* step(home, cwd, "graft", buildArgs(member, jobs), member.tier === "deep").pipe(
+          if (sync._tag === "skipped") return report(sync.outcome);
+          const cooldown = member.tier === "deep" ? yield* probeCooldown() : O.none<string>();
+          // While the model cools down, keep the structural wiring fresh and skip the paid pass.
+          const tier = O.isSome(cooldown) ? "structural" : member.tier;
+          const build = yield* step(home, cwd, "graft", buildArgs(member, jobs, tier), tier === "deep").pipe(
             Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
           );
-          return MemberRefreshReport.make({
-            name: member.name,
-            outcome: build.exitCode !== 0 ? "build-failed" : sync.changed ? "pulled" : "unchanged",
-            coverage: member.tier === "deep" ? parseDeepCoverage(build.output) : O.none(),
-          });
+          if (build.exitCode !== 0) return report("build-failed", stepDetail("graft", build));
+          if (O.isSome(cooldown)) return report("skipped-cooldown", O.flatMap(cooldown, detailOf));
+          return report(
+            sync.changed ? "pulled" : "unchanged",
+            O.none(),
+            tier === "deep" ? parseDeepCoverage(build.output) : O.none()
+          );
         });
-        const report = yield* memberRun().pipe(
-          Effect.catchTag("ReferenceWorkspaceError", () =>
-            Effect.succeed(MemberRefreshReport.make({ name: member.name, outcome: "pull-failed", coverage: O.none() }))
+        const memberReport = yield* memberRun().pipe(
+          Effect.catchTag("ReferenceWorkspaceError", (error) =>
+            Effect.succeed(report("pull-failed", detailOf(error.message)))
           )
         );
-        reports = HashMap.set(reports, member.name, report);
+        reports = HashMap.set(reports, member.name, memberReport);
       }
       const build = yield* step(home, root, "graft", ["build"]).pipe(
         Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
@@ -375,7 +457,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       yield* fs.rename(temporary, statusPath);
       // Intentional skips (dirty or off-main members are never reset, R9) are recorded in the
       // status file but do not page: critical notification is reserved for pull/build failures,
-      // a deep member that built without coverage, and a failed workspace build or check.
+      // a model cooldown that skipped a deep pass, a deep member that built without coverage,
+      // and a failed workspace build or check.
       const reachedBuild = (report: MemberRefreshReport) =>
         report.outcome === "pulled" || report.outcome === "unchanged";
       const degraded = A.some(
@@ -383,6 +466,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
         (report) =>
           report.outcome === "pull-failed" ||
           report.outcome === "build-failed" ||
+          report.outcome === "skipped-cooldown" ||
           O.exists(report.coverage, (coverage) => coverage.covered < coverage.total || coverage.failedFiles > 0)
       );
       const missingCoverage = A.some(
