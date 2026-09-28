@@ -93924,12 +93924,12 @@
       "ruleId": "EV011",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 15,
-      "endLine": 15,
+      "line": 16,
+      "endLine": 16,
       "symbol": "vitest-import",
-      "occurrence": "v2:633157a25463737e4ffc2df28585951c5486b2a61ab0c6527f730e0484d7fcde",
+      "occurrence": "v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d",
       "class": "plain-vitest-with-effect",
-      "evidence": "import { beforeEach, describe, expect, vi } from \"vitest\";",
+      "evidence": "import { vi } from \"vitest\";",
       "replacement": {
         "primitive": "module.@effect/vitest",
         "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
@@ -93937,7 +93937,8 @@
       "severity": "minor",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/cli-runner-imports-proof.md. Native vi is retained solely for vi.hoisted and vi.mock transformer recognition. Test registration uses @beep/test-runner; ordinary helpers use @effect/vitest. The installed Vitest 5.0.1 hoister does not recognize the Effect re-export. The exact 1,004-test cohort passes on Node and Bun with unchanged registrations and non-import statements."
     },
     {
       "id": "EV011:packages/tooling/tool/cli/test/match-person-model-store.test.ts:10:vitest-import@0#1",

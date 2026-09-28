@@ -1,13 +1,14 @@
 import { syncTsconfigAtRoot, tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it as effectIt, it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, describe, it as effectIt, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";

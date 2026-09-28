@@ -1,10 +1,11 @@
 import { findRepoRoot } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
 import type { PlatformError } from "effect/PlatformError";
 
 // A package's build may write only its own package directory. `tsc -b` is a

@@ -14,9 +14,11 @@ import {
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as Exit from "effect/Exit";
@@ -24,7 +26,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 

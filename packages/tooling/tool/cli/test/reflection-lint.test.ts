@@ -2,12 +2,13 @@ import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import { Command } from "effect/cli";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });

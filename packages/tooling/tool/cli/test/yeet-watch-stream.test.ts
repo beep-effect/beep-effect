@@ -25,7 +25,9 @@ import {
   yeetWatchEndReason,
   yeetWatchThreadOutstanding,
 } from "@beep/repo-cli/test/Yeet";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -261,7 +263,7 @@ describe("yeetWatchEndReason", () => {
 
   it("continues while any check is pending", () => {
     const reason = yeetWatchEndReason(snapshot({ checks: [check("A", "pass"), check("B", "pending")] }));
-    expect(O.isNone(reason)).toBe(true);
+    assertNone(reason);
   });
 
   it("ends all-terminal when no check is pending", () => {

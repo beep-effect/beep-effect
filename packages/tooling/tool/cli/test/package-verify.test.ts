@@ -19,15 +19,16 @@ import {
 import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect, vi } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it, vi } from "vitest";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(

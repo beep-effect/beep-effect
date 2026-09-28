@@ -37,10 +37,11 @@ import {
   renderFilesProgressBar,
   runMatchPerson,
 } from "@beep/repo-cli/test/Files";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";

@@ -1,11 +1,12 @@
 import { renderCodexConfigWithSkills, runSkillsUpdate, skillsCommand } from "@beep/repo-cli/commands/Skills";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });
 const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, NodeCrypto.layer);

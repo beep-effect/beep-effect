@@ -268,9 +268,11 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
 
           yield* fs.makeDirectory(dataDir, { recursive: true });
           yield* fs.writeFileString(path.join(dataDir, "legacy.txt"), "legacy contents");
-          yield* fs.chmod(dataDir, 0);
-          const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
-          yield* fs.chmod(dataDir, 0o700).pipe(Effect.ignore);
+          const result = yield* Effect.acquireUseRelease(
+            fs.chmod(dataDir, 0),
+            () => ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit),
+            () => fs.chmod(dataDir, 0o700).pipe(Effect.ignore)
+          );
 
           pipe(result, Exit.isFailure, assertTrue);
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);

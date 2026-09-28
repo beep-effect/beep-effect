@@ -1,8 +1,10 @@
 import { ExtractFramesManifest, FFmpegError } from "@beep/ffmpeg";
 import { imageCommand } from "@beep/repo-cli";
 import { ImageCommandError } from "@beep/repo-cli/commands/Image";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -10,7 +12,6 @@ import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 

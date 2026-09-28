@@ -7,9 +7,9 @@ import {
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,
 } from "@beep/repo-cli/test/Files";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -182,16 +182,18 @@ describe("person-match backend portability", () => {
     )
   );
 
-  it.effect("writes automatic setup fallback evidence only to stderr", () =>
-    Effect.gen(function* () {
-      yield* PersonMatchWorkerPolicyForTest.writeAdaFaceSetupFallbackDiagnostic("simulated setup failure");
+  it.layer(TestConsole.layer, { timeout: "5 seconds" })((it) => {
+    it.effect("writes automatic setup fallback evidence only to stderr", () =>
+      Effect.gen(function* () {
+        yield* PersonMatchWorkerPolicyForTest.writeAdaFaceSetupFallbackDiagnostic("simulated setup failure");
 
-      expect(A.map(yield* TestConsole.logLines, String)).toEqual([]);
-      expect(A.map(yield* TestConsole.errorLines, String)).toEqual([
-        "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
-      ]);
-    }).pipe(provideScopedLayer(TestConsole.layer))
-  );
+        expect(A.map(yield* TestConsole.logLines, String)).toEqual([]);
+        expect(A.map(yield* TestConsole.errorLines, String)).toEqual([
+          "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
+        ]);
+      })
+    );
+  });
 
   it("removes ROCm loader paths only from the CPU attempt", () => {
     expect(PersonMatchWorkerPolicyForTest.workerLibraryEnvironment("primary", O.none())).toStrictEqual({});

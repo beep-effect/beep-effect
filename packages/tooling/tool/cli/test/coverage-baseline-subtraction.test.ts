@@ -2,15 +2,16 @@ import {
   coverageRegressionBaselinePath,
   subtractPackageFromCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, FileSystem, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
-import { describe, expect, it } from "vitest";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 

@@ -4809,3 +4809,82 @@ fixture; finding IDs, occurrences, statuses, and detector matching are unchanged
 The original excerpts remain available in the parent commit. A future refs
 classifier should distinguish quoted test data in generated inventories from
 actual external references without suppressing real workstation-path leaks.
+
+
+- Desktop test-name drift: while reviewing `apps/professional-desktop/test/dock-shell.test.tsx`, the case named "registers contradiction triage as the thirteenth direct shell panel" asserts `DESKTOP_PANELS` length14. The exact count remains deliberate evidence; the title is stale. Align the title with the current panel inventory in a later test-maintenance change. A title/count consistency review would have prevented this minor diagnostic mismatch.
+
+- Potential interruption cleanup gap to investigate: `integration/PgliteDataDirCompatibility.test.ts`, unreadable-data-dir case, sets chmod0 and restores permissions after yielding the inspected operation. The restoration is not a finalizer. A cancellation at that boundary may skip chmod restoration and obstruct scoped directory removal. This is source-level suspicion, not a reproduced leak; validate with an interruption control before choosing a repair.
+
+- Follow-up on the unreadable-directory cleanup concern: a test-owned native filesystem control reproduced `EACCES` when recursively removing a populated mode000 directory; restoring mode700 allowed cleanup. Receipt: `desktop-permission-cleanup-mechanism.json`. This verifies the filesystem mechanism only, not interruption of the actual Effect case or a production leak.
+
+## CLI directive policy test title drift
+
+The quality-tsgo-directives test says it declares exactly two exemptions while
+its expected path array correctly contains three: the Bun shim, shared Vitest
+configuration and filesystem conformance entrypoint. Preserve the expected
+array; a future wording-only cleanup should make the title match the subject.
+Observed during the existing detector backlog review; no policy behavior change
+is needed for this wording issue.
+
+## Controlled interruption reproduces unreadable-directory test residue
+
+The saved permission-cleanup concern now has an Effect lifecycle control. With
+the inspected operation held at an interruption barrier, the current chmod-zero
+then tail-restore pattern leaves its native temporary subtree behind after
+Fiber.interrupt completes. Replacing that lifetime with acquireUseRelease
+restores permissions before scoped directory cleanup, leaving no residue.
+The control cleaned its own old-pattern residue and confirmed both roots absent.
+This reproduces the test cleanup pattern, not a production database leak.
+The pending patch preserves both modes, the operation Exit and all assertions.
+
+## Early publication of an existing merge commit
+
+After resolving the main merge for PR #1312, Yeet refused publication while
+the merge was still staged because its base check reads committed HEAD. Once
+the merge was committed, `publish --start-pr-early --amend --no-edit` was also
+refused: early publication cannot combine with amend or no-edit. The operator
+had authorized pushing ready fixes before local proof; a normal push followed
+by detached full Yeet verification restored progress without bypassing hooks.
+A supported early-push path for an existing unproven commit, or a preflight
+that recognizes a resolved pending merge, would avoid this workflow dead end.
+The conflict resolution passed the Effect Vitest ratchet with zero introduced
+findings; full verification remains a separate requirement.
+
+## Timing harness must validate every requested test path
+
+The continuation's runner-import comparison exited successfully with 1,000
+tests instead of its 1,004-test baseline. Comparing exact registrations found
+that script preparation had accidentally replaced `baseline` inside the
+`coverage-baseline-subtraction.test.ts` filename while updating prose. Vitest
+accepted the unmatched filter alongside valid filters, silently omitting that
+file. The full package audit independently passed all 4,847 tests, including
+those four cases; the partial timing run is not a valid full-cohort comparison.
+The script path is corrected. Future comparison scripts should assert every
+requested path exists and compare normalized command selections before launch,
+as well as checking registration multiplicity after execution.
+
+## Resource migration must remove the inner wrapper as well as the runtime wrapper
+
+The first migration of `codex-findings-write.test.ts` replaced its custom
+`runPromise` helper with public `it.effect`, but retained the per-case
+`withTempWorkingDirectory` wrapper. The ratchet then exposed 17 EV003 rows.
+SPEC section 6.1 requires replacing that wrapper with scoped resources inside
+the test body, not recording it as an exception. A prepared follow-up yields
+a reusable scoped cwd acquisition from each test while retaining native
+filesystem staging, rename, symlink behavior, and every assertion operand.
+
+The existing helper also creates its directory and changes cwd before adding
+its cleanup finalizer. This is a source-level interruption gap; it has not yet
+been reproduced in a runtime control. Registering directory removal with
+`acquireRelease` and then cwd restoration with another acquisition would close
+that gap and preserve restore-before-remove finalizer order. Validate success,
+failure, interruption, and the legacy helper's shorter scope before adoption.
+
+The cwd acquisition gap now has a runtime reproduction. A control runs copies
+of the original and proposed helpers against the real NodeServices filesystem,
+with a barrier after allocation. Interruption leaves a directory with the old
+helper and none with the proposed scoped acquisition. Success, failure, ordinary
+interruption, and legacy-wrapper controls also restore cwd and remove the owned
+tree. The control removes its own old-pattern residue. Receipt:
+`cli-cwd-resource-control.json`. This proves the helper lifetime under controlled
+interruption; it is not yet proof of the installed package change.

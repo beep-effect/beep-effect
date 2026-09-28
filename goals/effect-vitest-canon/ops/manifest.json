@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Benjamin authorized backlog-first P2 after the progress PR merged: remediate existing legitimate inventory with per-file current-source checks, then inventory the remaining main delta. P1 remains incomplete for current-main coverage; frozen evidence is preserved. Modeling ships separately and Benjamin retains merge authority. Wave A is published in PR #1235: eight findings fixed, two reviewed exceptions, six baseline rows removed; package proofs and timing summaries complete. Hosted readiness and Benjamin merge remain pending."
+  "statusNote": "Backlog-first P2 remains active: finish the existing legitimate inventory, then reconcile the remaining main delta. PR #1312 is a checkpoint under hosted verification; its scheduler recovery repair is pushed. The continuation includes a verified 57-file CLI runner import batch, remaining MCP canonical idioms, and scoped cwd and directory-permission cleanup repairs. Source repairs still require committed-SHA ledger reconciliation and final package/hosted proof. P1 current-main coverage remains incomplete and P3 is pending. Benjamin authorized consolidated PRs, agent merges after all gates pass, and discovered production repairs with goal receipts. No phase or acceptance requirement is waived."
 }

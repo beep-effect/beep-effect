@@ -32,11 +32,12 @@ import {
   layerConformanceHttp,
   withStdioHost,
 } from "@beep/mcp-kit/test/Conformance";
-import { assert, describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect";
 import * as A from "effect/Array";
 import { HttpClient, HttpClientResponse } from "effect/http";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { RpcClient } from "effect/rpc";
 import * as S from "effect/Schema";
@@ -78,11 +79,11 @@ describe("wire helpers", () => {
 
   it("derives the routing name per method", () => {
     const message = (method: string, params: unknown) => JsonRpcMessage.make({ id: 1, method, params });
-    expect(routingName(message("tools/call", { name: "echo" }))).toEqual(O.some("echo"));
-    expect(routingName(message("prompts/get", { name: "p" }))).toEqual(O.some("p"));
-    expect(routingName(message("resources/read", { uri: "file:///x" }))).toEqual(O.some("file:///x"));
-    expect(routingName(message("tools/list", {}))).toEqual(O.none());
-    expect(routingName(message("tools/call", { name: 1 }))).toEqual(O.none());
+    assertSome(routingName(message("tools/call", { name: "echo" })), "echo");
+    assertSome(routingName(message("prompts/get", { name: "p" })), "p");
+    assertSome(routingName(message("resources/read", { uri: "file:///x" })), "file:///x");
+    assertNone(routingName(message("tools/list", {})));
+    assertNone(routingName(message("tools/call", { name: 1 })));
   });
 
   it("mirrors the frame into routing headers, taking the version from _meta", () => {
@@ -229,7 +230,7 @@ describe("layerProtocolHttp", () => {
     })
   );
 
-  layer(layerConformanceHttp(fixtureHost))("against the fixture host", (it) => {
+  it.layer(layerConformanceHttp(fixtureHost), { timeout: "5 seconds" })("against the fixture host", (it) => {
     it.effect("discovers, calls a tool, and reads structured content", () =>
       Effect.gen(function* () {
         // Explicit client options exercise the identity the connection

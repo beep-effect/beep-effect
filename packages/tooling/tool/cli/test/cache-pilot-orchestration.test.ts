@@ -36,9 +36,10 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { afterEach, expect, it, vi } from "@effect/vitest";
+import { afterEach, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";

@@ -3,16 +3,17 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { it } from "@effect/vitest";
+import { beforeEach, describe, expect } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { beforeEach, describe, expect, vi } from "vitest";
+import { vi } from "vitest";
 import type {
   canUseTurboCacheSecretSession,
   turboEnvironmentHealthWarnings,

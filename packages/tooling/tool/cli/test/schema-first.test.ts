@@ -19,8 +19,9 @@ import {
 } from "@beep/repo-cli/test/Lint";
 import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

@@ -10,15 +10,16 @@ import {
   packetEventFileName,
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);

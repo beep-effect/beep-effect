@@ -156,13 +156,14 @@ import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import {
   Cause,
@@ -192,7 +193,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { vi } from "vitest";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
