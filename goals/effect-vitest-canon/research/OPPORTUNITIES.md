@@ -4574,3 +4574,17 @@ probe confirmed fresh writer buffers on the shared Socket. Moving the actual
 writer or reader into a suite fixture would have changed that isolation contract.
 Theme and filesystem hook budgets were also made explicit using the existing
 normal/coverage/deep-sweep policy.
+
+## Mutable test services need isolated layer fixtures
+
+Chat contract tests repeatedly provided an effectful in-memory store inside test
+bodies. Grouping them under one shared suite layer would couple thread records,
+receipt state, and other mutable fixtures. One-test public layer suites retain
+separate memoization and teardown. A runtime identity probe confirmed fifteen
+distinct ThreadStore services after migration. Local pure history-capture stubs
+can remain inside the test without weakening D14 or hoisting their mutable Ref.
+
+The compiler's strictEffectProvide diagnostic also rejects a pure Layer.succeed
+stub passed to Effect.provide in a body. Supplying the same local kernel service
+with Effect.provideService avoids that diagnostic and preserves the test-owned
+capture Ref. No suppression or broader shared fixture was needed.

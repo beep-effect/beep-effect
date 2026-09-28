@@ -269,8 +269,8 @@
     "file": "apps/professional-desktop/test/chat-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 31689,
-    "lines": 679
+    "bytes": 33651,
+    "lines": 714
   },
   {
     "file": "apps/professional-desktop/test/chat-ui.test.tsx",
