@@ -6,8 +6,10 @@ import {
   toSyncConflictInsert,
 } from "@beep/documents-tables/entities/SyncConflict";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
@@ -33,7 +35,7 @@ const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A
 
 const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
   expect(error._tag).toBe(tag);
-  expect(Str.isNonEmpty(error.message)).toBe(true);
+  pipe(Str.isNonEmpty(error.message), assertTrue);
 };
 
 const indexConfigNamed = (name: string) =>
@@ -62,23 +64,23 @@ describe("SyncConflict table", () => {
     expect(getTableConfig(syncConflictTable).name).toBe("documents_sync_conflict");
     expect(SYNC_CONFLICT_TABLE_NAME).toBe("documents_sync_conflict");
     expect(DomainSyncConflict.SyncConflict.sql.tableName).toBe("documents_sync_conflict");
-    expect(columns.id.primary).toBe(true);
+    pipe(columns.id.primary, assertTrue);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.conflictKind.name).toBe("conflict_kind");
     expect(columns.conflictKind.columnType).toBe("PgText");
-    expect(columns.conflictKind.notNull).toBe(true);
+    pipe(columns.conflictKind.notNull, assertTrue);
     expect(columns.localRelPath.name).toBe("local_rel_path");
-    expect(columns.localRelPath.notNull).toBe(false);
+    pipe(columns.localRelPath.notNull, assertFalse);
     expect(columns.remoteEventId.name).toBe("remote_event_id");
-    expect(columns.remoteEventId.notNull).toBe(false);
+    pipe(columns.remoteEventId.notNull, assertFalse);
     expect(columns.remotePayload.name).toBe("remote_payload");
     expect(columns.remotePayload.columnType).toBe("PgJsonb");
-    expect(columns.remotePayload.notNull).toBe(true);
+    pipe(columns.remotePayload.notNull, assertTrue);
     expect(columns.resolutionStatus.name).toBe("resolution_status");
     expect(columns.syncItemId.name).toBe("sync_item_id");
-    expect(columns.syncItemId.notNull).toBe(false);
+    pipe(columns.syncItemId.notNull, assertFalse);
     expect(columns.workspaceId.name).toBe("workspace_id");
-    expect(columns.workspaceId.notNull).toBe(true);
+    pipe(columns.workspaceId.notNull, assertTrue);
   });
 
   it("builds the SyncConflict indexes from schema-first hints", () => {
@@ -88,7 +90,7 @@ describe("SyncConflict table", () => {
     const resolutionStatusLookup = indexConfigNamed("documents_sync_conflict_resolution_status_lookup_idx");
     const workspaceIdBtree = indexConfigNamed("documents_sync_conflict_workspace_id_btree_idx");
 
-    expect(O.getOrThrow(publicIdUnique).config.unique).toBe(true);
+    pipe(O.getOrThrow(publicIdUnique).config.unique, assertTrue);
     expect(O.getOrThrow(conflictKindLookup).config.columns[0]).toMatchObject({ name: "conflict_kind" });
     expect(O.getOrThrow(remoteEventIdLookup).config.columns[0]).toMatchObject({ name: "remote_event_id" });
     expect(O.getOrThrow(resolutionStatusLookup).config.columns[0]).toMatchObject({ name: "resolution_status" });
@@ -101,7 +103,7 @@ describe("SyncConflict table", () => {
       const syncConflict = yield* decodeUnknownSyncConflict(mappedDriftRow);
       const insert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
 
-      expect("id" in insert).toBe(false);
+      pipe("id" in insert, assertFalse);
       expect(insert.conflictKind).toBe("remoteEdit");
       expect(insert.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
       expect(insert.entityType).toBe("DocumentsSyncConflict");
@@ -120,9 +122,9 @@ describe("SyncConflict table", () => {
         })
       );
 
-      expect(roundTripped.syncItemId).toEqual(O.some(1));
-      expect(roundTripped.remoteId).toEqual(O.some("9001"));
-      expect(SyncConflictEquivalence(roundTripped, syncConflict)).toBe(true);
+      assertSome<number>(roundTripped.syncItemId, 1);
+      assertSome<string>(roundTripped.remoteId, "9001");
+      pipe(SyncConflictEquivalence(roundTripped, syncConflict), assertTrue);
     })
   );
 
@@ -131,7 +133,7 @@ describe("SyncConflict table", () => {
     [S.toType(DomainSyncConflict.SyncConflict)],
     ([syncConflict]) => {
       const insert = toSyncConflictInsert(syncConflict);
-      expect(Result.isSuccess(insert)).toBe(true);
+      pipe(insert, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(insert)) {
         return;
       }
@@ -143,12 +145,12 @@ describe("SyncConflict table", () => {
         remoteId: insert.success.remoteId ?? null,
         syncItemId: insert.success.syncItemId ?? null,
       });
-      expect(Result.isSuccess(decoded)).toBe(true);
+      pipe(decoded, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(decoded)) {
         return;
       }
 
-      expect(SyncConflictEquivalence(decoded.success, syncConflict)).toBe(true);
+      pipe(SyncConflictEquivalence(decoded.success, syncConflict), assertTrue);
     },
     { arbitrary: fcRuns(50) }
   );

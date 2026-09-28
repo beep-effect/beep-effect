@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-client",
+  "sourceHead": "29fcfb205c",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.370741710008588,
+  "bunWholeCommandSeconds": 2.4173016260028817,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.7451171875, 3.029296875, 2.775390625],
+  "loadAfter": [2.0859375, 3.0791015625, 2.79296875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.08 avg60=0.14 avg300=0.18 total=802077334\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219016\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142885\n",
+    "io": "some avg10=1.17 avg60=0.27 avg300=0.06 total=857481221\nfull avg10=0.90 avg60=0.21 avg300=0.04 total=750173149\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.05 avg60=0.13 avg300=0.17 total=802085455\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219016\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142885\n",
+    "io": "some avg10=0.78 avg60=0.25 avg300=0.06 total=857486167\nfull avg10=0.60 avg60=0.20 avg300=0.04 total=750176989\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "6f3d1cacb236cac449e4f6c89cfb2a3d851d877847f21a54b7ceeb173e2bcc9c"
+    },
+    {
+      "file": "packages/epistemic/client/AGENTS.md",
+      "sha256": "3b7c8dbe5573c69e2368f399ee95c07ea464e317392b892b87e4957a3eb51817"
+    },
+    {
+      "file": "packages/epistemic/client/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/epistemic/client/README.md",
+      "sha256": "bb3a7bf4100b9e659b014b8aa336d36306d2b1556f80565dddc48b597322a108"
+    },
+    {
+      "file": "packages/epistemic/client/docgen.json",
+      "sha256": "b3e794c1ed81efa7168ca6925be65cb94b5648f00357bd74054d02015b77a36a"
+    },
+    {
+      "file": "packages/epistemic/client/package.json",
+      "sha256": "437b72762140188240ff6d272fc1ae5d04693d43c4d9f52e197e103bc127cfdb"
+    },
+    {
+      "file": "packages/epistemic/client/src/ContradictionTriage/ContradictionTriage.atoms.ts",
+      "sha256": "f7cf82dea34406f87f1e0237fb987524cd0c40279e92bdee82813f12335ef41f"
+    },
+    {
+      "file": "packages/epistemic/client/src/ContradictionTriage/index.ts",
+      "sha256": "9d2a1d30b63f47534fd224fdc9cde0e78a297cdf098065c99b570f38e786ef75"
+    },
+    {
+      "file": "packages/epistemic/client/src/Protocol.ts",
+      "sha256": "433250f3174bad76412320a2b7ddbe4d06ea453c2d9e20ef5241b990c263824d"
+    },
+    {
+      "file": "packages/epistemic/client/src/index.ts",
+      "sha256": "a19af5b7399ebf5a153d1dfca895322faa69bb9f21c00f01ea9fffa5284a808f"
+    },
+    {
+      "file": "packages/epistemic/client/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "sha256": "8de2ea2b82af8697996200606aeef830bae36c6a8f652b99442e72cc41a61a7f"
+    },
+    {
+      "file": "packages/epistemic/client/test/Protocol.test.ts",
+      "sha256": "ea1da06e7501807129321dfe4105dcc449a1fe47c4a382575a0b21316875bc96"
+    },
+    {
+      "file": "packages/epistemic/client/tsconfig.check.json",
+      "sha256": "f6ecbb2cccd036bf2df3d9fdf4bca8732b76e8f7a51a65aeba47028cb6a0e69f"
+    },
+    {
+      "file": "packages/epistemic/client/tsconfig.json",
+      "sha256": "1a96f21d355c54d166423c0597ce6df65edc1ee60dc0df3ef8572ac4bb215eed"
+    },
+    {
+      "file": "packages/epistemic/client/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4"
+    },
+    {
+      "file": "packages/epistemic/client/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured epistemic-client local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 17,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.0859375, 3.0791015625, 2.79296875],
+    "loadAfter": [2.1591796875, 3.07763671875, 2.79443359375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.05 avg60=0.13 avg300=0.17 total=802085465\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219016\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142885\n",
+      "io": "some avg10=0.78 avg60=0.25 avg300=0.06 total=857486167\nfull avg10=0.60 avg60=0.20 avg300=0.04 total=750176989\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.03 avg60=0.12 avg300=0.17 total=802087832\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219016\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142885\n",
+      "io": "some avg10=0.52 avg60=0.24 avg300=0.05 total=857486305\nfull avg10=0.40 avg60=0.18 avg300=0.04 total=750177123\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 17,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded load, not causal benchmarks. All17expanded cases from14static registrations pass before and after with zero skips and stable hashes. All32original assertions remain with21helpers. One native joint property preserves both schema-derived inputs, both codec predicates and floor25; two independent inversions expose replay/shrink. All11registries and5mounts are scoped, with defect/interruption controls proving unmount-before-dispose. Seven yield-count delays become specific getResult waits. A50ms delayed-response control fails old and passes new; a12yield probe was inconclusive. No temporary delays remain. Baseline overlaps publication; after overlaps full package proof and machine scans."
+}

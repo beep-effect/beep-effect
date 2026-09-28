@@ -7,9 +7,11 @@ import {
   makeFreshbooksAuthLayer,
   resolveConfig,
 } from "@beep/freshbooks";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
-import { Cause, Context, Deferred, Effect, Fiber, Layer, Redacted, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Redacted, Ref } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
@@ -120,7 +122,7 @@ const AuthLayer = (
   );
 
 describe("@beep/freshbooks token rotation", () => {
-  layer(AuthLayer(expiredToken))((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect("persists a consumed refresh token before honoring caller cancellation", () =>
       Effect.gen(function* () {
         const server = yield* TokenServer;
@@ -170,7 +172,7 @@ describe("@beep/freshbooks token rotation", () => {
     );
   });
 
-  layer(AuthLayer(expiredToken))((it) => {
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "serializes concurrent refreshes to a single owner (one network refresh)",
       Effect.fnUntraced(function* () {
@@ -191,7 +193,9 @@ describe("@beep/freshbooks token rotation", () => {
         expect(A.every(values, (value) => value === "access-1")).toBe(true);
       })
     );
+  });
 
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "persists the rotated single-use token before releasing",
       Effect.fnUntraced(function* () {
@@ -203,19 +207,20 @@ describe("@beep/freshbooks token rotation", () => {
 
         const stored = yield* store.read;
         const currentRefresh = yield* server.currentRefresh;
-        expect(stored._tag).toBe("Some");
-        if (stored._tag === "Some") {
-          // The persisted refresh token matches the server's now-valid one:
-          // the old refresh token is consumed and gone.
-          expect(Redacted.value(stored.value.refreshToken)).toBe(currentRefresh);
-          expect(Redacted.value(stored.value.refreshToken)).not.toBe("refresh-0");
-          // Under the deterministic TestClock (now = 0), expiry is exactly
-          // now + expires_in(43200s) in millis.
-          expect(stored.value.expiresAt).toBe(43_200_000);
-        }
+        assertSome(
+          O.map(stored, (stored) => {
+            // The consumed refresh token must never be persisted again.
+            expect(Redacted.value(stored.refreshToken)).not.toBe("refresh-0");
+            return { refreshToken: Redacted.value(stored.refreshToken), expiresAt: stored.expiresAt };
+          }),
+          // TestClock starts at zero; expires_in is 43200 seconds.
+          { refreshToken: currentRefresh, expiresAt: 43_200_000 }
+        );
       })
     );
+  });
 
+  it.layer(AuthLayer(expiredToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "reuses a still-fresh token without a network refresh",
       Effect.fnUntraced(function* () {
@@ -240,26 +245,26 @@ describe("@beep/freshbooks token rotation", () => {
     Layer.provideMerge(TokenServerLayer("refresh-0"))
   );
 
-  layer(EmptyStoreAuthLayer)((it) => {
+  it.layer(EmptyStoreAuthLayer, { timeout: "5 seconds" })((it) => {
     it.effect(
       "fails with a token-refresh error when no token has been granted",
       Effect.fnUntraced(function* () {
         const auth = yield* FreshbooksAuth;
         const exit = yield* Effect.exit(auth.accessToken);
 
-        expect(exit._tag).toBe("Failure");
-        if (exit._tag === "Failure") {
-          const error = Cause.findErrorOption(exit.cause);
-          expect(error._tag).toBe("Some");
-          if (error._tag === "Some") {
-            expect(error.value.reason).toBe("token refresh");
-          }
-        }
+        const error = Exit.match(exit, {
+          onFailure: Cause.findErrorOption,
+          onSuccess: O.none,
+        });
+        assertSome(
+          O.map(error, (error) => error.reason),
+          "token refresh"
+        );
       })
     );
   });
 
-  layer(AuthLayer(freshToken))((it) => {
+  it.layer(AuthLayer(freshToken), { timeout: "5 seconds" })((it) => {
     it.effect(
       "forces a rotation on explicit refresh even when the stored token is still fresh",
       Effect.fnUntraced(function* () {

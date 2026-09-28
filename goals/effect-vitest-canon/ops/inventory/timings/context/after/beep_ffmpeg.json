@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ffmpeg",
+  "sourceHead": "c593c37cda910f84aee089f8f382fedef52bd080",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.069579061004333,
+  "bunWholeCommandSeconds": 2.0672686289908597,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.2548828125, 4.001953125, 3.12646484375],
+  "loadAfter": [5.2548828125, 4.001953125, 3.12646484375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.51 avg60=0.15 avg300=0.06 total=706620425\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014580\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797607951\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697882412\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.34 avg60=0.14 avg300=0.05 total=706625778\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014580\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797608247\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697882610\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "807aa59d805bbd05cd851a8f37f397f3f58c9dd56ee5dc1f35fd584dabcd2adc"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/package.json",
+      "sha256": "d304fd4bde28c5faec07df991ab073f2d68c7ec481fd64eb50ba1743e3ca3e63"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+      "sha256": "af8cdcf6ccbe0c7903878840aefd40fc346f407de20d14a40dc082ec90efdeaa"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
+      "sha256": "000393e7948adbfb883dee9bf557a9b034c5dac5508d35126736a94ee86ebf21"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+      "sha256": "9d72bcce20289f2d5cef078f6edd742903ab21d1a47751e707432e71eb748a11"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+      "sha256": "eecd8dc20fc8347b730fbc543bd021915bf82bd892eff9f13d45fab21b0738f1"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/index.ts",
+      "sha256": "8e68fff2896b2480806f8cc9a6de4ead4ac4f00994b3c6ef6985dacef9af9449"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "sha256": "83c21ee2749e07cbf096d6ec88964f25cf42f6fc98e457d743ff8e3bf1d5d06c"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "sha256": "9008119cc1dab5bf7fd22c83171bbc7937aa6a5847acf504b0d247ef241ade11"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
+      "sha256": "844f68a326e246e0aaa907398d06e6aabff2bdf838e1d69eee460a3db4b40dd2"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
+      "sha256": "bd4b7bb5425dd855ea5c6506d1cc8ffe168ec7f6edbcc59d44b4d83234807e52"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "sha256": "8640b5408fd9681cff62826d72e75671cfbcbbbea0d917e62bab6fb6c473481a"
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "sha256": "9c9942de8b642e7447893566472686cfd95fa8cbbb39e0e11bf92a8b2525a21f"
+    }
+  ],
+  "environmentMode": "Actual FFmpeg/ffprobe native media generation, timestamp/luma, artifact and container metadata integration; scripted spawners with real Node filesystem staging in unit suites; pure schema and argument laws. No external provider.",
+  "bunProof": {
+    "passedTests": 46,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.2548828125, 4.001953125, 3.12646484375],
+    "loadAfter": [5.39501953125, 4.0517578125, 3.1474609375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.34 avg60=0.14 avg300=0.05 total=706625783\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014580\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797608247\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697882610\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.27 avg60=0.13 avg300=0.05 total=706632970\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014581\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797609166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697883129\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

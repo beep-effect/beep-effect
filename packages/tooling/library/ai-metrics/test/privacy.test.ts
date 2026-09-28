@@ -5,9 +5,11 @@ import {
   redactAiMetricsSensitiveText,
 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -19,7 +21,7 @@ describe("AI metrics privacy boundaries", () => {
   it.effect("returns schema-valid SHA-256 digests", () =>
     Effect.gen(function* () {
       const hash = yield* hashPublicTextSha256("public identity");
-      expect(isSha256Hex(hash)).toBe(true);
+      pipe(isSha256Hex(hash), assertTrue);
     })
   );
 
@@ -35,21 +37,16 @@ describe("AI metrics privacy boundaries", () => {
     })
   );
 
-  it("redacts arbitrary bearer credentials without exposing the token", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([SecretTokenArbitrary]),
-          ([token]) => {
-            const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
+  it.prop(
+    "redacts arbitrary bearer credentials without exposing the token",
+    [SecretTokenArbitrary],
+    ([token]) => {
+      const redacted = redactAiMetricsSensitiveText(`Authorization: Bearer ${token}`);
 
-            expect(redacted).not.toContain(token);
-            expect(redacted).toContain("[REDACTED]");
+      expect(redacted).not.toContain(token);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(redacted).toContain("[REDACTED]");
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

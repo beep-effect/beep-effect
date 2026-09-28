@@ -1,0 +1,885 @@
+{
+  "numTotalTestSuites": 11,
+  "numPassedTestSuites": 11,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 73,
+  "numPassedTests": 73,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790461228964,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "validates the Markdown conformance ledger",
+          "status": "passed",
+          "title": "validates the Markdown conformance ledger",
+          "duration": 14.484813000000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461229582,
+      "endTime": 1790461229596.4849,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/md/test/ConformanceLedger.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/md conformance annotations"],
+          "fullName": "@beep/md conformance annotations collects the CommonMark profile from its strict document schema",
+          "status": "passed",
+          "title": "collects the CommonMark profile from its strict document schema",
+          "duration": 10.430992999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md conformance annotations"],
+          "fullName": "@beep/md conformance annotations collects the GFM profile from its strict document schema",
+          "status": "passed",
+          "title": "collects the GFM profile from its strict document schema",
+          "duration": 10.236022999999932,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md conformance annotations"],
+          "fullName": "@beep/md conformance annotations collects the Beep extension profile from the strict Markdown document schema",
+          "status": "passed",
+          "title": "collects the Beep extension profile from the strict Markdown document schema",
+          "duration": 10.220430000000306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md conformance annotations"],
+          "fullName": "@beep/md conformance annotations matches every strict Markdown annotation to exact ledger records and enforcement evidence",
+          "status": "passed",
+          "title": "matches every strict Markdown annotation to exact ledger records and enforcement evidence",
+          "duration": 21.52077199999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461232905,
+      "endTime": 1790461232926.5208,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance exposes six flat heading payload cases with exhaustive helpers",
+          "status": "passed",
+          "title": "exposes six flat heading payload cases with exhaustive helpers",
+          "duration": 9.244106000000102,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance exposes tagged-union helpers on migrated policy and safety unions",
+          "status": "passed",
+          "title": "exposes tagged-union helpers on migrated policy and safety unions",
+          "duration": 9.058911999999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects block children at the heading schema boundary",
+          "status": "passed",
+          "title": "rejects block children at the heading schema boundary",
+          "duration": 9.045039999999972,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance round-trips schema-derived headings through their codec",
+          "status": "passed",
+          "title": "round-trips schema-derived headings through their codec",
+          "duration": 9.059381999999914,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects unknown Markdown variant tags",
+          "status": "passed",
+          "title": "rejects unknown Markdown variant tags",
+          "duration": 9.029385999999704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects values outside the list item content grammar",
+          "status": "passed",
+          "title": "rejects values outside the list item content grammar",
+          "duration": 1.2770759999998518,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects non-boolean GFM task item state",
+          "status": "passed",
+          "title": "rejects non-boolean GFM task item state",
+          "duration": 1.2229330000000118,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects block children inside GFM strikethrough",
+          "status": "passed",
+          "title": "rejects block children inside GFM strikethrough",
+          "duration": 1.2098320000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects block children inside GFM table cells",
+          "status": "passed",
+          "title": "rejects block children inside GFM table cells",
+          "duration": 1.200336999999763,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance formats every conformance issue variant as a stable diagnostic",
+          "status": "passed",
+          "title": "formats every conformance issue variant as a stable diagnostic",
+          "duration": 1.185073999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance supports data-last inspection across headings and Beep block extensions",
+          "status": "passed",
+          "title": "supports data-last inspection across headings and Beep block extensions",
+          "duration": 3.8333200000001852,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance rejects nested links strictly while retaining the exact lossless tree",
+          "status": "passed",
+          "title": "rejects nested links strictly while retaining the exact lossless tree",
+          "duration": 3.815632999999707,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance keeps profile membership explicit for GFM and Beep extensions",
+          "status": "passed",
+          "title": "keeps profile membership explicit for GFM and Beep extensions",
+          "duration": 3.80858199999966,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance models zero ordered-list starts losslessly and enforces CommonMark's upper bound strictly",
+          "status": "passed",
+          "title": "models zero ordered-list starts losslessly and enforces CommonMark's upper bound strictly",
+          "duration": 3.8034939999997732,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance reports empty lists without narrowing the broad document schema",
+          "status": "passed",
+          "title": "reports empty lists without narrowing the broad document schema",
+          "duration": 3.7970839999998134,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance enforces GFM header, rectangularity, and alignment width as tree invariants",
+          "status": "passed",
+          "title": "enforces GFM header, rectangularity, and alignment width as tree invariants",
+          "duration": 1.2802099999998973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance applies the GFM raw-HTML filter without attributing it to CommonMark or Beep",
+          "status": "passed",
+          "title": "applies the GFM raw-HTML filter without attributing it to CommonMark or Beep",
+          "duration": 1.2619109999995999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance checks Beep footnote definition uniqueness and reference resolution recursively",
+          "status": "passed",
+          "title": "checks Beep footnote definition uniqueness and reference resolution recursively",
+          "duration": 1.2574549999999363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance accepts one recursively discovered definition for its matching footnote reference",
+          "status": "passed",
+          "title": "accepts one recursively discovered definition for its matching footnote reference",
+          "duration": 1.252487000000201,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance walks nested block children inside list items",
+          "status": "passed",
+          "title": "walks nested block children inside list items",
+          "duration": 1.246368000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance issues distinct strict brands for documents accepted by each profile",
+          "status": "passed",
+          "title": "issues distinct strict brands for documents accepted by each profile",
+          "duration": 0.9881410000002688,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance projects implemented checks into shared specification reports",
+          "status": "passed",
+          "title": "projects implemented checks into shared specification reports",
+          "duration": 0.978345999999874,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance retains must strength for required structural invariants in shared reports",
+          "status": "passed",
+          "title": "retains must strength for required structural invariants in shared reports",
+          "duration": 0.974228999999923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Markdown semantic conformance"],
+          "fullName": "Markdown semantic conformance keeps every runtime-checked invariant inside its published profile",
+          "status": "passed",
+          "title": "keeps every runtime-checked invariant inside its published profile",
+          "duration": 0.970904000000246,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461232956,
+      "endTime": 1790461232972.988,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/md/test/Md.conformance.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders the intended lowercase block-constructor document shape",
+          "status": "passed",
+          "title": "renders the intended lowercase block-constructor document shape",
+          "duration": 79.19817000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md projects SafeDocument directly through the conformant safe-HTML pipeline",
+          "status": "passed",
+          "title": "projects SafeDocument directly through the conformant safe-HTML pipeline",
+          "duration": 78.948805,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md projects Markdown nodes through schema-owned HTML statics",
+          "status": "passed",
+          "title": "projects Markdown nodes through schema-owned HTML statics",
+          "duration": 78.929666,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md normalizes nested Markdown links into conformant non-interactive descendants",
+          "status": "passed",
+          "title": "normalizes nested Markdown links into conformant non-interactive descendants",
+          "duration": 78.92038199999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md projects every remaining safe block and inline variant",
+          "status": "passed",
+          "title": "projects every remaining safe block and inline variant",
+          "duration": 78.91298099999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md escapes raw nodes even when a forged SafeDocument reaches the defensive projection",
+          "status": "passed",
+          "title": "escapes raw nodes even when a forged SafeDocument reaches the defensive projection",
+          "duration": 2.0319170000002487,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md keeps active HTML constructs outside the SafeDocument to SafeHtml path",
+          "status": "passed",
+          "title": "keeps active HTML constructs outside the SafeDocument to SafeHtml path",
+          "duration": 1.9844139999995605,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md rejects values that cannot complete the total SafeDocument to SafeHtml projection",
+          "status": "passed",
+          "title": "rejects values that cannot complete the total SafeDocument to SafeHtml projection",
+          "duration": 110.41690599999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md does not reject frontmatter that the safe HTML projection never reads",
+          "status": "passed",
+          "title": "does not reject frontmatter that the safe HTML projection never reads",
+          "duration": 110.39290900000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md rejects duplicate footnote definitions recursively at their exact paths",
+          "status": "passed",
+          "title": "rejects duplicate footnote definitions recursively at their exact paths",
+          "duration": 110.38587800000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md rejects every schema-derived duplicate footnote identifier",
+          "status": "passed",
+          "title": "rejects every schema-derived duplicate footnote identifier",
+          "duration": 97.16026399999964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md rejects a heading outline that the safe HTML projection cannot render",
+          "status": "passed",
+          "title": "rejects a heading outline that the safe HTML projection cannot render",
+          "duration": 97.08361600000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders every schema-derived SafeDocument without failing",
+          "status": "passed",
+          "title": "renders every schema-derived SafeDocument without failing",
+          "duration": 719.2725909999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md builds and validates schema-first AST nodes",
+          "status": "passed",
+          "title": "builds and validates schema-first AST nodes",
+          "duration": 81.93703399999958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md round-trips schema-derived Markdown AST nodes",
+          "status": "passed",
+          "title": "round-trips schema-derived Markdown AST nodes",
+          "duration": 715.2300699999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md bounds derived child-list arbitraries without constraining Markdown documents",
+          "status": "passed",
+          "title": "bounds derived child-list arbitraries without constraining Markdown documents",
+          "duration": 3.2749000000003434,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)",
+          "status": "passed",
+          "title": "encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)",
+          "duration": 3.2169910000002346,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md every encoded document survives a JSON boundary",
+          "status": "passed",
+          "title": "every encoded document survives a JSON boundary",
+          "duration": 7.829760999999962,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders inline Markdown and HTML variants with escaped text by default",
+          "status": "passed",
+          "title": "renders inline Markdown and HTML variants with escaped text by default",
+          "duration": 2.0553639999998268,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md supports template interpolation for inline and block containers",
+          "status": "passed",
+          "title": "supports template interpolation for inline and block containers",
+          "duration": 2.0270599999994374,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders every block variant to Markdown and HTML",
+          "status": "passed",
+          "title": "renders every block variant to Markdown and HTML",
+          "duration": 6.033175999999912,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md projects inline and block nodes to escaping-free plain text",
+          "status": "passed",
+          "title": "projects inline and block nodes to escaping-free plain text",
+          "duration": 5.202026999999362,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders core parity, rich extension, frontmatter, and URL policy additions",
+          "status": "passed",
+          "title": "renders core parity, rich extension, frontmatter, and URL policy additions",
+          "duration": 5.181354000000283,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md normalizes URL policy spec schemes at decode",
+          "status": "passed",
+          "title": "normalizes URL policy spec schemes at decode",
+          "duration": 2.175568000000567,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md applies a custom URL policy across every recursive render fold",
+          "status": "passed",
+          "title": "applies a custom URL policy across every recursive render fold",
+          "duration": 1.387775999999576,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders policy-denied top-level and nested YouTube blocks as inert text",
+          "status": "passed",
+          "title": "renders policy-denied top-level and nested YouTube blocks as inert text",
+          "duration": 1.3636880000003657,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md refines user-authored documents without changing their encoded wire",
+          "status": "passed",
+          "title": "refines user-authored documents without changing their encoded wire",
+          "duration": 550.7448799999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md rejects documents above the global AST-node budget before HTML projection",
+          "status": "passed",
+          "title": "rejects documents above the global AST-node budget before HTML projection",
+          "duration": 550.8243030000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md ignores forged scalar children and stops reading once the global AST-node budget is exceeded",
+          "status": "passed",
+          "title": "ignores forged scalar children and stops reading once the global AST-node budget is exceeded",
+          "duration": 547.4595529999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md keeps canonical URL-policy sanitization at a fixed point",
+          "status": "passed",
+          "title": "keeps canonical URL-policy sanitization at a fixed point",
+          "duration": 3.0005879999998797,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md renders later table rows when the first row has no cells",
+          "status": "passed",
+          "title": "renders later table rows when the first row has no cells",
+          "duration": 2.962848999999551,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md falls back to a closed heading tag for forged heading levels",
+          "status": "passed",
+          "title": "falls back to a closed heading tag for forged heading levels",
+          "duration": 0.5270819999996093,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md constructs YouTube embeds without throwing at validation boundaries",
+          "status": "passed",
+          "title": "constructs YouTube embeds without throwing at validation boundaries",
+          "duration": 4.187514999999621,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md exposes pure adapters for Markdown and HTML",
+          "status": "passed",
+          "title": "exposes pure adapters for Markdown and HTML",
+          "duration": 4.169737999999597,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md reports effect adapter failures",
+          "status": "passed",
+          "title": "reports effect adapter failures",
+          "duration": 4.164179000000331,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md reports pure adapter failures safely",
+          "status": "passed",
+          "title": "reports pure adapter failures safely",
+          "duration": 2.5055469999997513,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md"],
+          "fullName": "@beep/md provides focused rendering utilities",
+          "status": "passed",
+          "title": "provides focused rendering utilities",
+          "duration": 2.464762999999948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "@beep/md",
+            "colocated escape-schema guards agree with their schemas"
+          ],
+          "fullName": "@beep/md colocated escape-schema guards agree with their schemas recognizes every schema-derived string array",
+          "status": "passed",
+          "title": "recognizes every schema-derived string array",
+          "duration": 1.942098999999871,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "@beep/md",
+            "colocated escape-schema guards agree with their schemas"
+          ],
+          "fullName": "@beep/md colocated escape-schema guards agree with their schemas neutralizes every generated unsafe protocol destination",
+          "status": "passed",
+          "title": "neutralizes every generated unsafe protocol destination",
+          "duration": 1.027020999999877,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["render boundary shapes"],
+          "fullName": "render boundary shapes renders empty and aligned tables through direct and policy adapters",
+          "status": "passed",
+          "title": "renders empty and aligned tables through direct and policy adapters",
+          "duration": 4.020128000000113,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["render boundary shapes"],
+          "fullName": "render boundary shapes renders empty footnotes and admonitions and image embeds with a policy",
+          "status": "passed",
+          "title": "renders empty footnotes and admonitions and image embeds with a policy",
+          "duration": 3.972674999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["render boundary shapes"],
+          "fullName": "render boundary shapes escapes raw Markdown inside policy-rendered link labels",
+          "status": "passed",
+          "title": "escapes raw Markdown inside policy-rendered link labels",
+          "duration": 3.9594740000002275,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461232967,
+      "endTime": 1790461233879.2727,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/md/test/Md.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/md tagged-error declared equivalence"],
+          "fullName": "@beep/md tagged-error declared equivalence ignores RenderError cause while comparing stable diagnostics",
+          "status": "passed",
+          "title": "ignores RenderError cause while comparing stable diagnostics",
+          "duration": 2.4232700000002296,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/md tagged-error declared equivalence"],
+          "fullName": "@beep/md tagged-error declared equivalence compares scalar and duplicate-footnote violations by declared fields",
+          "status": "passed",
+          "title": "compares scalar and duplicate-footnote violations by declared fields",
+          "duration": 2.216751999999815,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790461232896,
+      "endTime": 1790461232898.4233,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "EV001:packages/drivers/phoenix/test/Phoenix.service.test.ts:178:runSync@8#1",
+    "phase": "properties",
+    "fixSha": "bb226a93c6b5260d2df5b94f987c47e4d9516425",
+    "currentLine": 173
+  },
+  {
+    "id": "EV002:packages/drivers/phoenix/test/Phoenix.service.test.ts:219:provideScopedLayer@6#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 185
+  },
+  {
+    "id": "EV002:packages/drivers/phoenix/test/Phoenix.service.test.ts:240:provideScopedLayer@6#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 214
+  },
+  {
+    "id": "EV002:packages/drivers/phoenix/test/Phoenix.service.test.ts:256:provideScopedLayer@6#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 234
+  },
+  {
+    "id": "EV002:packages/drivers/phoenix/test/Phoenix.service.test.ts:279:provideScopedLayer@6#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 249
+  },
+  {
+    "id": "EV002:packages/drivers/phoenix/test/Phoenix.service.test.ts:294:provideScopedLayer@6#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 280
+  },
+  {
+    "id": "EV003:packages/drivers/phoenix/test/Phoenix.service.test.ts:76:provideScopedLayer@2#1",
+    "phase": "scope",
+    "fixSha": "1551e9813969d4ba96097be9d75ed33e2c2f3158",
+    "currentLine": 185
+  },
+  {
+    "id": "EV007:packages/drivers/phoenix/test/Phoenix.service.test.ts:179:checkEffect@10#1",
+    "phase": "properties",
+    "fixSha": "bb226a93c6b5260d2df5b94f987c47e4d9516425",
+    "currentLine": 173
+  }
+]

@@ -1,0 +1,1286 @@
+{
+  "numTotalTestSuites": 43,
+  "numPassedTestSuites": 43,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 95,
+  "numPassedTests": 95,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790399795318,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "api_key_required envelope",
+            "when the credential is absent"
+          ],
+          "fullName": "api_key_required envelope when the credential is absent api_key_required stays a non-error result with the envelope mirrored into content[].text",
+          "status": "passed",
+          "title": "api_key_required stays a non-error result with the envelope mirrored into content[].text",
+          "duration": 11.2079319999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "api_key_required envelope",
+            "when the credential is present"
+          ],
+          "fullName": "api_key_required envelope when the credential is present stays registered and succeeds normally",
+          "status": "passed",
+          "title": "stays registered and succeeds normally",
+          "duration": 15.367569000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema parity laws"],
+          "fullName": "schema parity laws round-trips SourceAuthRegistration with schema-owned signupUrl defaults",
+          "status": "passed",
+          "title": "round-trips SourceAuthRegistration with schema-owned signupUrl defaults",
+          "duration": 15.806554000000233,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema parity laws"],
+          "fullName": "schema parity laws round-trips schema-derived SourceAuthRegistration values",
+          "status": "passed",
+          "title": "round-trips schema-derived SourceAuthRegistration values",
+          "duration": 32.368171000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema parity laws"],
+          "fullName": "schema parity laws round-trips ApiKeyRequiredFailure with the tag default owned by the schema",
+          "status": "passed",
+          "title": "round-trips ApiKeyRequiredFailure with the tag default owned by the schema",
+          "duration": 15.594237000000248,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["schema parity laws"],
+          "fullName": "schema parity laws round-trips schema-derived ApiKeyRequiredFailure values",
+          "status": "passed",
+          "title": "round-trips schema-derived ApiKeyRequiredFailure values",
+          "duration": 33.58778900000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798458,
+      "endTime": 1790399798491.588,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers builds request metadata from the client options",
+          "status": "passed",
+          "title": "builds request metadata from the client options",
+          "duration": 10.440439999999853,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers merges metadata under _meta and lets caller keys win",
+          "status": "passed",
+          "title": "merges metadata under _meta and lets caller keys win",
+          "duration": 10.169092000000092,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers derives the routing name per method",
+          "status": "passed",
+          "title": "derives the routing name per method",
+          "duration": 10.178245999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers mirrors the frame into routing headers, taking the version from _meta",
+          "status": "passed",
+          "title": "mirrors the frame into routing headers, taking the version from _meta",
+          "duration": 10.168490999999904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers splits server-sent events into data payloads",
+          "status": "passed",
+          "title": "splits server-sent events into data payloads",
+          "duration": 10.182962999999745,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["wire helpers"],
+          "fullName": "wire helpers decodes JSON and event-stream bodies",
+          "status": "passed",
+          "title": "decodes JSON and event-stream bodies",
+          "duration": 0.42178000000012617,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolHttp"],
+          "fullName": "layerProtocolHttp unwraps a text/event-stream tools/call response",
+          "status": "passed",
+          "title": "unwraps a text/event-stream tools/call response",
+          "duration": 11.162872000000334,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolHttp"],
+          "fullName": "layerProtocolHttp decodes a body with no content-type header and fails the call on a JSON-RPC error",
+          "status": "passed",
+          "title": "decodes a body with no content-type header and fails the call on a JSON-RPC error",
+          "duration": 23.382261999999628,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolHttp", "against the fixture host"],
+          "fullName": "layerProtocolHttp against the fixture host discovers, calls a tool, and reads structured content",
+          "status": "passed",
+          "title": "discovers, calls a tool, and reads structured content",
+          "duration": 16.794675000000097,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolHttp", "against the fixture host"],
+          "fullName": "layerProtocolHttp against the fixture host rejects a POST missing request metadata with 400",
+          "status": "passed",
+          "title": "rejects a POST missing request metadata with 400",
+          "duration": 0.8925450000001547,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolNdjson"],
+          "fullName": "layerProtocolNdjson sends server/discover then tools/call over stdio",
+          "status": "passed",
+          "title": "sends server/discover then tools/call over stdio",
+          "duration": 34.87718399999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolNdjson"],
+          "fullName": "layerProtocolNdjson ignores blank, undecodable and unmatched lines while still answering the pending request",
+          "status": "passed",
+          "title": "ignores blank, undecodable and unmatched lines while still answering the pending request",
+          "duration": 30.25474600000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolNdjson"],
+          "fullName": "layerProtocolNdjson releases the pending waiter and sends notifications/cancelled when a request is interrupted",
+          "status": "passed",
+          "title": "releases the pending waiter and sends notifications/cancelled when a request is interrupted",
+          "duration": 25.00434899999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["layerProtocolHttp headers"],
+          "fullName": "layerProtocolHttp headers keeps the routing mirrors above caller headers and content negotiation fixed",
+          "status": "passed",
+          "title": "keeps the routing mirrors above caller headers and content negotiation fixed",
+          "duration": 4.836950000000343,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798675,
+      "endTime": 1790399798720.8772,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/Client.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["layerProtocolStdioCommand"],
+          "fullName": "layerProtocolStdioCommand discovers and calls a tool through a spawned host's stdio",
+          "status": "passed",
+          "title": "discovers and calls a tool through a spawned host's stdio",
+          "duration": 24.127849999999853,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798603,
+      "endTime": 1790399798627.128,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/ClientNode.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP discovers the server without initialize or a session",
+          "status": "passed",
+          "title": "discovers the server without initialize or a session",
+          "duration": 7.676312000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP lists tools with object-rooted input schemas",
+          "status": "passed",
+          "title": "lists tools with object-rooted input schemas",
+          "duration": 4.644542999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP calls a tool and returns a non-error result",
+          "status": "passed",
+          "title": "calls a tool and returns a non-error result",
+          "duration": 25.98379799999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP projects invalid arguments as a tool error and malformed arguments as InvalidParams",
+          "status": "passed",
+          "title": "projects invalid arguments as a tool error and malformed arguments as InvalidParams",
+          "duration": 16.25722799999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP answers a legacy initialize with a 400 header mismatch",
+          "status": "passed",
+          "title": "answers a legacy initialize with a 400 header mismatch",
+          "duration": 0.9199969999999666,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP answers a 2026-framed initialize and ping with method not found",
+          "status": "passed",
+          "title": "answers a 2026-framed initialize and ping with method not found",
+          "duration": 1.1941699999997581,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP rejects a POST missing request metadata with 400",
+          "status": "passed",
+          "title": "rejects a POST missing request metadata with 400",
+          "duration": 1.576448000000255,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP rejects an unsupported protocol version with -32022 and the supported list",
+          "status": "passed",
+          "title": "rejects an unsupported protocol version with -32022 and the supported list",
+          "duration": 0.6572820000001229,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP rejects a method header that does not match the request",
+          "status": "passed",
+          "title": "rejects a method header that does not match the request",
+          "duration": 0.5287140000000363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over streamable HTTP"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over streamable HTTP advertises prompt titles and serves prompts/get",
+          "status": "passed",
+          "title": "advertises prompt titles and serves prompts/get",
+          "duration": 14.776879000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over newline-delimited stdio"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over newline-delimited stdio sends server/discover then tools/call over stdio",
+          "status": "passed",
+          "title": "sends server/discover then tools/call over stdio",
+          "duration": 59.23032199999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over newline-delimited stdio"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+          "status": "passed",
+          "title": "answers a legacy initialize with -32022 over stdio",
+          "duration": 34.6741420000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over newline-delimited stdio"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+          "status": "passed",
+          "title": "reconstructs a request whose bytes arrive in separate chunks",
+          "duration": 36.41858900000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over newline-delimited stdio"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over newline-delimited stdio emits one compact JSON-RPC message per line and processes requests independently",
+          "status": "passed",
+          "title": "emits one compact JSON-RPC message per line and processes requests independently",
+          "duration": 59.17030900000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "conformance 2026-07-28: mcp-kit-fixture",
+            "over newline-delimited stdio"
+          ],
+          "fullName": "conformance 2026-07-28: mcp-kit-fixture over newline-delimited stdio shuts down when the client closes stdin",
+          "status": "passed",
+          "title": "shuts down when the client closes stdin",
+          "duration": 19.4943430000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798624,
+      "endTime": 1790399798684.1704,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/Conformance.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector names minimal/balanced/complete as actual Schema.Struct variants",
+          "status": "passed",
+          "title": "names minimal/balanced/complete as actual Schema.Struct variants",
+          "duration": 12.800784999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector reduces a large documentBag-shaped fixture payload below a configured size budget",
+          "status": "passed",
+          "title": "reduces a large documentBag-shaped fixture payload below a configured size budget",
+          "duration": 12.704956999999922,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector projects a single named tier's field set",
+          "status": "passed",
+          "title": "projects a single named tier's field set",
+          "duration": 12.697825999999623,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector never returns an oversized payload inline when even the minimal tier exceeds the budget",
+          "status": "passed",
+          "title": "never returns an oversized payload inline when even the minimal tier exceeds the budget",
+          "duration": 12.69389000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector round-trips FetchableHandle through its encoded shape",
+          "status": "passed",
+          "title": "round-trips FetchableHandle through its encoded shape",
+          "duration": 39.39851799999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["field-tier projector"],
+          "fullName": "field-tier projector round-trips FieldProjectionOutcome through its encoded shape",
+          "status": "passed",
+          "title": "round-trips FieldProjectionOutcome through its encoded shape",
+          "duration": 31.95686700000033,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toColumnarEnvelope"],
+          "fullName": "toColumnarEnvelope unions column keys across all rows and never drops sparse fields",
+          "status": "passed",
+          "title": "unions column keys across all rows and never drops sparse fields",
+          "duration": 9.922181000000364,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["toColumnarEnvelope"],
+          "fullName": "toColumnarEnvelope round-trips the columnar envelope schema",
+          "status": "passed",
+          "title": "round-trips the columnar envelope schema",
+          "duration": 30.384365999999773,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798599,
+      "endTime": 1790399798643.9568,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/FieldTier.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["dispatch anchor"],
+          "fullName": "dispatch anchor is absent by default",
+          "status": "passed",
+          "title": "is absent by default",
+          "duration": 12.005679999999757,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatch anchor"],
+          "fullName": "dispatch anchor brands a non-empty string and rejects an empty one",
+          "status": "passed",
+          "title": "brands a non-empty string and rejects an empty one",
+          "duration": 11.831762999999683,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatch anchor", "through sanitized dispatch"],
+          "fullName": "dispatch anchor through sanitized dispatch dispatch anchor is absent unless provided",
+          "status": "passed",
+          "title": "dispatch anchor is absent unless provided",
+          "duration": 4.463583999999628,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatch anchor", "through sanitized dispatch"],
+          "fullName": "dispatch anchor through sanitized dispatch carries an anchor provided for the dispatch",
+          "status": "passed",
+          "title": "carries an anchor provided for the dispatch",
+          "duration": 4.547212999999829,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "dispatch anchor",
+            "with an anchor in the layer-build context"
+          ],
+          "fullName": "dispatch anchor with an anchor in the layer-build context does not leak a build-time anchor into a dispatch",
+          "status": "passed",
+          "title": "does not leak a build-time anchor into a dispatch",
+          "duration": 2.3474049999999806,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["McpCallerIdentity"],
+          "fullName": "McpCallerIdentity defaults sessionId to None",
+          "status": "passed",
+          "title": "defaults sessionId to None",
+          "duration": 4.4387259999998605,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798579,
+      "endTime": 1790399798593.3474,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/McpCaller.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "withSanitizedToolSpan",
+            "with the fixture toolkit mounted"
+          ],
+          "fullName": "withSanitizedToolSpan with the fixture toolkit mounted suppresses raw tool parameters from reaching span attributes",
+          "status": "passed",
+          "title": "suppresses raw tool parameters from reaching span attributes",
+          "duration": 2.7541009999999915,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["withSanitizedToolSpan"],
+          "fullName": "withSanitizedToolSpan passes non-redacted attributes through unchanged",
+          "status": "passed",
+          "title": "passes non-redacted attributes through unchanged",
+          "duration": 5.896531999999752,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "delegates span identity, relationships, and live attributes",
+          "status": "passed",
+          "title": "delegates span identity, relationships, and live attributes",
+          "duration": 7.7949550000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["withTopLevelObjectInputSchema guard arms"],
+          "fullName": "withTopLevelObjectInputSchema guard arms patches a non-null wildcard root with a top-level object type",
+          "status": "passed",
+          "title": "patches a non-null wildcard root with a top-level object type",
+          "duration": 1.4807209999999031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["withTopLevelObjectInputSchema guard arms"],
+          "fullName": "withTopLevelObjectInputSchema guard arms patches an anyOf root that has an object branch",
+          "status": "passed",
+          "title": "patches an anyOf root that has an object branch",
+          "duration": 1.443634000000202,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["withTopLevelObjectInputSchema guard arms"],
+          "fullName": "withTopLevelObjectInputSchema guard arms leaves an object root untouched",
+          "status": "passed",
+          "title": "leaves an object root untouched",
+          "duration": 1.4708849999997256,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["withTopLevelObjectInputSchema guard arms"],
+          "fullName": "withTopLevelObjectInputSchema guard arms leaves a non-object root untouched",
+          "status": "passed",
+          "title": "leaves a non-object root untouched",
+          "duration": 1.8278559999998834,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798610,
+      "endTime": 1790399798620.7542,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit suppresses raw tool parameters from reaching span attributes on real McpServer dispatch",
+          "status": "passed",
+          "title": "suppresses raw tool parameters from reaching span attributes on real McpServer dispatch",
+          "duration": 20.43954900000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit registers described tools with their wire description, _meta and outputSchema",
+          "status": "passed",
+          "title": "registers described tools with their wire description, _meta and outputSchema",
+          "duration": 21.571913000000222,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit still dispatches successfully and preserves the tool's real result",
+          "status": "passed",
+          "title": "still dispatches successfully and preserves the tool's real result",
+          "duration": 32.3791369999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit keeps typed failures other than api_key_required classified as tool errors",
+          "status": "passed",
+          "title": "keeps typed failures other than api_key_required classified as tool errors",
+          "duration": 11.457054999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit invalid arguments surface as InvalidParams",
+          "status": "passed",
+          "title": "invalid arguments surface as InvalidParams",
+          "duration": 1.6343770000003133,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit dispatches tools/call on a 2025 host through McpServerClient and reports no session id without an HTTP request",
+          "status": "passed",
+          "title": "dispatches tools/call on a 2025 host through McpServerClient and reports no session id without an HTTP request",
+          "duration": 7.972839999999906,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit surfaces the mcp-session-id header to the handler as the caller's session id",
+          "status": "passed",
+          "title": "surfaces the mcp-session-id header to the handler as the caller's session id",
+          "duration": 6.789076000000023,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the fixture toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the fixture toolkit registered via sanitizedToolkit treats an empty mcp-session-id header as absent",
+          "status": "passed",
+          "title": "treats an empty mcp-session-id header as absent",
+          "duration": 3.1818899999998393,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with a named schema parameter toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with a named schema parameter toolkit registered via sanitizedToolkit inlines a ref-backed input schema to an object root for strict MCP clients",
+          "status": "passed",
+          "title": "inlines a ref-backed input schema to an object root for strict MCP clients",
+          "duration": 0.4245139999998173,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with a named schema parameter toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with a named schema parameter toolkit registered via sanitizedToolkit adds a top-level object type to a no-argument tool's input schema",
+          "status": "passed",
+          "title": "adds a top-level object type to a no-argument tool's input schema",
+          "duration": 0.3500589999998738,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit answers a declared Error failure with its message",
+          "status": "passed",
+          "title": "answers a declared Error failure with its message",
+          "duration": 4.76553899999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit encodes a declared non-Error failure and scrubs an undeclared one",
+          "status": "passed",
+          "title": "encodes a declared non-Error failure and scrubs an undeclared one",
+          "duration": 27.95679700000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit scrubs a handler defect to the boundary text",
+          "status": "passed",
+          "title": "scrubs a handler defect to the boundary text",
+          "duration": 21.73547499999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit propagates interruption instead of reporting it as a tool failure",
+          "status": "passed",
+          "title": "propagates interruption instead of reporting it as a tool failure",
+          "duration": 14.757698999999775,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit classifies a returned parameter failure as InvalidParams",
+          "status": "passed",
+          "title": "classifies a returned parameter failure as InvalidParams",
+          "duration": 1.0199099999999817,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit answers a void-result tool with no content and no structured content",
+          "status": "passed",
+          "title": "answers a void-result tool with no content and no structured content",
+          "duration": 6.517648000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit rejects excess properties for a strict tool and advertises no additional properties",
+          "status": "passed",
+          "title": "rejects excess properties for a strict tool and advertises no additional properties",
+          "duration": 4.001813000000311,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "with the failure-classification toolkit registered via sanitizedToolkit"
+          ],
+          "fullName": "sanitizedToolkit with the failure-classification toolkit registered via sanitizedToolkit registers a dynamic tool's raw JSON Schema verbatim",
+          "status": "passed",
+          "title": "registers a dynamic tool's raw JSON Schema verbatim",
+          "duration": 3.4261670000000777,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["sanitizedToolkit"],
+          "fullName": "sanitizedToolkit refuses to register a strict dynamic tool",
+          "status": "passed",
+          "title": "refuses to register a strict dynamic tool",
+          "duration": 13.546804000000066,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "sanitizedToolkit",
+            "on a 2026-only host over streamable HTTP"
+          ],
+          "fullName": "sanitizedToolkit on a 2026-only host over streamable HTTP dispatches tools/call on a 2026-only host with McpRequestContext and no McpServerClient",
+          "status": "passed",
+          "title": "dispatches tools/call on a 2026-only host with McpRequestContext and no McpServerClient",
+          "duration": 21.014004000000114,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798527,
+      "endTime": 1790399798580.4263,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["dispatchWithTierGate"],
+          "fullName": "dispatchWithTierGate refuses fail-closed as a value for an unapproved destructive tool call",
+          "status": "passed",
+          "title": "refuses fail-closed as a value for an unapproved destructive tool call",
+          "duration": 7.049758000000111,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatchWithTierGate"],
+          "fullName": "dispatchWithTierGate dispatches an approved destructive tool call and produces both the handler result and a schema-valid audit record",
+          "status": "passed",
+          "title": "dispatches an approved destructive tool call and produces both the handler result and a schema-valid audit record",
+          "duration": 6.843730999999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatchWithTierGate"],
+          "fullName": "dispatchWithTierGate dispatches a read-only tool call without requiring approval and still audits it",
+          "status": "passed",
+          "title": "dispatches a read-only tool call without requiring approval and still audits it",
+          "duration": 6.827285000000302,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatchWithTierGate"],
+          "fullName": "dispatchWithTierGate refuses a non-destructive write without explicit read-only approval",
+          "status": "passed",
+          "title": "refuses a non-destructive write without explicit read-only approval",
+          "duration": 6.8112500000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["dispatchWithTierGate"],
+          "fullName": "dispatchWithTierGate refuses an unannotated tool fail-closed as a value, never a throw",
+          "status": "passed",
+          "title": "refuses an unannotated tool fail-closed as a value, never a throw",
+          "duration": 6.8031379999997625,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["recordOutcome settlement"],
+          "fullName": "recordOutcome settlement reports completed after an approved dispatch succeeds",
+          "status": "passed",
+          "title": "reports completed after an approved dispatch succeeds",
+          "duration": 2.7721189999997478,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["recordOutcome settlement"],
+          "fullName": "recordOutcome settlement reports failed after an approved dispatch fails, without widening the error channel",
+          "status": "passed",
+          "title": "reports failed after an approved dispatch fails, without widening the error channel",
+          "duration": 2.741831999999704,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["recordOutcome settlement"],
+          "fullName": "recordOutcome settlement reports interrupted when an approved dispatch is interrupted",
+          "status": "passed",
+          "title": "reports interrupted when an approved dispatch is interrupted",
+          "duration": 16.956433999999717,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["recordOutcome settlement"],
+          "fullName": "recordOutcome settlement reports no settlement for a refused dispatch \u2014 there was no execution to settle",
+          "status": "passed",
+          "title": "reports no settlement for a refused dispatch \u2014 there was no execution to settle",
+          "duration": 2.719919000000118,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["recordOutcome settlement"],
+          "fullName": "recordOutcome settlement fromApprovedToolsPolicy keeps no settlement record",
+          "status": "passed",
+          "title": "fromApprovedToolsPolicy keeps no settlement record",
+          "duration": 2.708741999999802,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws owns toolCallId absence on constructed TierGateAuditRecord values",
+          "status": "passed",
+          "title": "owns toolCallId absence on constructed TierGateAuditRecord values",
+          "duration": 7.913286999999855,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws rejects empty toolCallId while decoding TierGateAuditRecord",
+          "status": "passed",
+          "title": "rejects empty toolCallId while decoding TierGateAuditRecord",
+          "duration": 7.8261029999998755,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws round-trips schema-derived TierGateAuditRecord values",
+          "status": "passed",
+          "title": "round-trips schema-derived TierGateAuditRecord values",
+          "duration": 34.52653499999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws round-trips schema-derived TierGateSettlement values",
+          "status": "passed",
+          "title": "round-trips schema-derived TierGateSettlement values",
+          "duration": 35.350774999999885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws round-trips schema-derived TierGateVerdict values",
+          "status": "passed",
+          "title": "round-trips schema-derived TierGateVerdict values",
+          "duration": 28.877394000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["tier-gate schema parity laws"],
+          "fullName": "tier-gate schema parity laws round-trips schema-derived TierGatePolicy values",
+          "status": "passed",
+          "title": "round-trips schema-derived TierGatePolicy values",
+          "duration": 27.184236000000055,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798450,
+      "endTime": 1790399798498.1843,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/TierGate.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "composeGatedLayers (hard gate)",
+            "when the credential is absent"
+          ],
+          "fullName": "composeGatedLayers (hard gate) when the credential is absent vanishes the hard-gated source from composition",
+          "status": "passed",
+          "title": "vanishes the hard-gated source from composition",
+          "duration": 4.696842999999717,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "composeGatedLayers (hard gate)",
+            "when the credential is present"
+          ],
+          "fullName": "composeGatedLayers (hard gate) when the credential is present mounts the hard-gated source",
+          "status": "passed",
+          "title": "mounts the hard-gated source",
+          "duration": 5.82988800000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790399798650,
+      "endTime": 1790399798656.8298,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { resolveThemeMode, ThemeMode } from "@beep/ui/themes";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("@beep/ui themes", () => {
   describe("resolveThemeMode", () => {

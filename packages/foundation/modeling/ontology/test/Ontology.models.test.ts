@@ -10,9 +10,11 @@ import {
   OWLSearchResults,
   OWLSearchScore,
 } from "@beep/ontology/Ontology.models";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -42,7 +44,7 @@ const decode = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Encode
 const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): void => {
   const decoded = decode(schema, encode(schema, value));
 
-  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+  pipe(S.toEquivalence(schema)(decoded, value), assertTrue);
 };
 
 const expectWireRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Encoded"]): void => {
@@ -105,17 +107,20 @@ const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
 };
 
 describe("@beep/ontology models", () => {
-  it("owns constructive HTTP URL metadata and codec statics", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed })).every(isHttpUrl)
-    ).toBe(true);
-    expect(HttpUrl.decodeUnknownSync("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
-  });
+  it.effect("owns constructive HTTP URL metadata and codec statics", () =>
+    Effect.gen(function* () {
+      pipe(
+        (yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed })).every(isHttpUrl),
+        assertTrue
+      );
+      expect(HttpUrl.decodeUnknownSync("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
+    })
+  );
 
   it("accepts only HTTP and HTTPS URL schemes", () => {
-    expect(isHttpUrl("http://example.com/ontology.owl")).toBe(true);
-    expect(isHttpUrl("https://example.com/ontology.owl")).toBe(true);
-    expect(isHttpUrl("ftp://example.com/ontology.owl")).toBe(false);
+    pipe(isHttpUrl("http://example.com/ontology.owl"), assertTrue);
+    pipe(isHttpUrl("https://example.com/ontology.owl"), assertTrue);
+    pipe(isHttpUrl("ftp://example.com/ontology.owl"), assertFalse);
   });
 
   it("preserves representative OpenAPI encoded wire shapes", () => {
@@ -127,68 +132,56 @@ describe("@beep/ontology models", () => {
     expectWireRoundTrip(HTTPValidationError, httpValidationErrorWire);
   });
 
-  it("round-trips schema-derived ontology payloads", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            GraphInfoArbitrary,
-            HealthResponseArbitrary,
-            OWLClassArbitrary,
-            OWLObjectPropertyArbitrary,
-            OWLClassListArbitrary,
-            OWLObjectPropertyListArbitrary,
-            OWLSearchResultsArbitrary,
-            HTTPValidationErrorArbitrary,
-          ]),
-          ([
-            graphInfo,
-            healthResponse,
-            owlClass,
-            owlObjectProperty,
-            owlClassList,
-            owlObjectPropertyList,
-            searchResults,
-            error,
-          ]) => {
-            expectRoundTrip(GraphInfo, graphInfo);
-            expectRoundTrip(HealthResponse, healthResponse);
-            expectRoundTrip(OWLClass, owlClass);
-            expectRoundTrip(OWLObjectProperty, owlObjectProperty);
-            expectRoundTrip(OWLClassList, owlClassList);
-            expectRoundTrip(OWLObjectPropertyList, owlObjectPropertyList);
-            expectRoundTrip(OWLSearchResults, searchResults);
-            expectRoundTrip(HTTPValidationError, error);
+  it.prop(
+    "round-trips schema-derived ontology payloads",
+    [
+      GraphInfoArbitrary,
+      HealthResponseArbitrary,
+      OWLClassArbitrary,
+      OWLObjectPropertyArbitrary,
+      OWLClassListArbitrary,
+      OWLObjectPropertyListArbitrary,
+      OWLSearchResultsArbitrary,
+      HTTPValidationErrorArbitrary,
+    ],
+    ([
+      graphInfo,
+      healthResponse,
+      owlClass,
+      owlObjectProperty,
+      owlClassList,
+      owlObjectPropertyList,
+      searchResults,
+      error,
+    ]) => {
+      expectRoundTrip(GraphInfo, graphInfo);
+      expectRoundTrip(HealthResponse, healthResponse);
+      expectRoundTrip(OWLClass, owlClass);
+      expectRoundTrip(OWLObjectProperty, owlObjectProperty);
+      expectRoundTrip(OWLClassList, owlClassList);
+      expectRoundTrip(OWLObjectPropertyList, owlObjectPropertyList);
+      expectRoundTrip(OWLSearchResults, searchResults);
+      expectRoundTrip(HTTPValidationError, error);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
-
-  it("round-trips schema-derived URL and search-score primitives", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HttpUrlArbitrary, OWLSearchScoreArbitrary]),
-          ([url, score]) => {
-            expectRoundTrip(HttpUrl, url);
-            expectRoundTrip(OWLSearchScore, score);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "round-trips schema-derived URL and search-score primitives",
+    [HttpUrlArbitrary, OWLSearchScoreArbitrary],
+    ([url, score]) => {
+      expectRoundTrip(HttpUrl, url);
+      expectRoundTrip(OWLSearchScore, score);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("rejects malformed values for the absorbed precision invariants", () => {
-    expect(Result.isFailure(decodeHttpUrlResult("not a url"))).toBe(true);
-    expect(Result.isFailure(decodeOWLSearchScoreResult(Number.POSITIVE_INFINITY))).toBe(true);
-    expect(Result.isFailure(decodeOWLClassResult({ iri: "" }))).toBe(true);
-    expect(Result.isFailure(decodeOWLClassResult({ iri: "Rclass", sub_class_of: [""] }))).toBe(true);
-    expect(Result.isFailure(decodeOWLObjectPropertyResult({ iri: "", domain: ["Rdomain"] }))).toBe(true);
-    expect(Result.isFailure(decodeOWLObjectPropertyResult({ iri: "Rproperty", range: [""] }))).toBe(true);
+    pipe(decodeHttpUrlResult("not a url"), Result.isFailure, assertTrue);
+    pipe(decodeOWLSearchScoreResult(Number.POSITIVE_INFINITY), Result.isFailure, assertTrue);
+    pipe(decodeOWLClassResult({ iri: "" }), Result.isFailure, assertTrue);
+    pipe(decodeOWLClassResult({ iri: "Rclass", sub_class_of: [""] }), Result.isFailure, assertTrue);
+    pipe(decodeOWLObjectPropertyResult({ iri: "", domain: ["Rdomain"] }), Result.isFailure, assertTrue);
+    pipe(decodeOWLObjectPropertyResult({ iri: "Rproperty", range: [""] }), Result.isFailure, assertTrue);
   });
 });

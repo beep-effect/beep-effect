@@ -9,19 +9,20 @@ import {
   ScanState,
   scanChunk,
 } from "@beep/agents-server/AssistantTurn";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 
-const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"], label: string): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
 
-  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
 describe("@beep/agents-server schema parity", () => {
@@ -63,29 +64,25 @@ describe("@beep/agents-server schema parity", () => {
     expect(completed).toStrictEqual(['{"type":"paragraph"}']);
   });
 
-  it("round-trips touched schemas with schema-derived arbitraries", () => {
-    const schemas: ReadonlyArray<S.Codec<unknown>> = [
-      MermaidDiagramType,
-      ScanState,
-      ScanChunkInput,
-      ScanChunkResult,
-      IssueReport,
-      PatchOpSummary,
-    ];
-
-    for (const schema of schemas) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.schema(schema)]),
-            ([value]) => {
-              roundTrip(schema, value);
-              return true;
-            },
-            fcRuns(25)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+  it.effect.prop(
+    "round-trips touched schemas with schema-derived arbitraries",
+    {
+      MermaidDiagramType: Arbitrary.schema(MermaidDiagramType),
+      ScanState: Arbitrary.schema(ScanState),
+      ScanChunkInput: Arbitrary.schema(ScanChunkInput),
+      ScanChunkResult: Arbitrary.schema(ScanChunkResult),
+      IssueReport: Arbitrary.schema(IssueReport),
+      PatchOpSummary: Arbitrary.schema(PatchOpSummary),
+    },
+    (values) =>
+      Effect.sync(() => {
+        roundTrip(MermaidDiagramType, values.MermaidDiagramType, "MermaidDiagramType");
+        roundTrip(ScanState, values.ScanState, "ScanState");
+        roundTrip(ScanChunkInput, values.ScanChunkInput, "ScanChunkInput");
+        roundTrip(ScanChunkResult, values.ScanChunkResult, "ScanChunkResult");
+        roundTrip(IssueReport, values.IssueReport, "IssueReport");
+        roundTrip(PatchOpSummary, values.PatchOpSummary, "PatchOpSummary");
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

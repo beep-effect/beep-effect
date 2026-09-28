@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/workspace-server",
+  "sourceHead": "573406dab5d06d5c0128c4d68d33ebee5cb4624b",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.82244495699706,
+  "bunWholeCommandSeconds": 2.617806763999397,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.19482421875, 3.59033203125, 3.00927734375],
+  "loadAfter": [4.30078125, 3.81298828125, 3.08447265625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.63 avg60=0.21 avg300=0.12 total=733597314\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199458\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125577\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=811364617\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710077572\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.34 avg60=0.19 avg300=0.12 total=733606414\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199458\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125577\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=811365757\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710078220\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "75d3de0817e2c85227d93f04e303c29c23c5130a9fef222b50aa08e1932a2fae"
+    },
+    {
+      "file": "packages/workspace/server/CHANGELOG.md",
+      "sha256": "0f082e8307f16de140dfb48afc9487e01b866b3b332bac38b3d14e883dde3503"
+    },
+    {
+      "file": "packages/workspace/server/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/workspace/server/README.md",
+      "sha256": "fc8341e37453224aa044a01a8bb7168e5037aaa4e4e1cf02657b38973bb788e2"
+    },
+    {
+      "file": "packages/workspace/server/docgen.json",
+      "sha256": "c8b933ab4cb53d48e74075f993e8596cdd29b6ef6d47d2988b3e88a9a83fca5b"
+    },
+    {
+      "file": "packages/workspace/server/package.json",
+      "sha256": "cd749b4d79d07bb9498d74f45aededdd2bf9fc0c6434747dcf0f0ad3300b3d1d"
+    },
+    {
+      "file": "packages/workspace/server/src/Layer.ts",
+      "sha256": "6cbcb404e645001c44495881972a068e035cd6c4f6b3b0d19401dab6fc0924c1"
+    },
+    {
+      "file": "packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts",
+      "sha256": "6b9fe4c0c8a1b0aaf84c0d65abe6d368ceaeb22212711b0b3ed696edb8efff20"
+    },
+    {
+      "file": "packages/workspace/server/src/SourceText/index.ts",
+      "sha256": "aafaf9ef0299a1088123353e406bd070f73a82cfca203254b967994e8d096701"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
+      "sha256": "8b3dc5eff2e9b92bbb71e5b7b5acf451c704a723755c46cfe88e918b9615574e"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.internal.ts",
+      "sha256": "ff063a3125d5c5cf322f4d16daa9984ff284f51e480423893025d17737754a36"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+      "sha256": "66d541084eaac714a5d385c53520886ecc58c59830b8ecf5f1ce3bdcb260b222"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/index.ts",
+      "sha256": "2a5d5934ccf8f02f93d72ff335444fbf6ae1f8686b69c4d2db1896625c8636d3"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.layer.ts",
+      "sha256": "f92f2e01bdf1ede273189cc87810e66d0d1f01c0a4fc51fa8aeea20e75615dbd"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts",
+      "sha256": "90bb936c195ce57537bfc293e0dc5ece0aedf58d5ebe8a53df1e4ca0297ccb1e"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/index.ts",
+      "sha256": "8b235b34a21f40b4650e7942dbf629252c6d8c25b712f0f27b3a60d9c21f4e5c"
+    },
+    {
+      "file": "packages/workspace/server/src/index.ts",
+      "sha256": "54130c8edeb2c7e8e56cb056723953b39374c4b7396906a8d5c3451f4fc0e164"
+    },
+    {
+      "file": "packages/workspace/server/src/test.ts",
+      "sha256": "8dc27bace4ad481aeef97647510988464af85ad0eda39cc7263cbd1547548d43"
+    },
+    {
+      "file": "packages/workspace/server/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "sha256": "2e49243c8ac8230b449f2813d67347d2089de20601d48433df036eeec540d910"
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStoreDriverFailure.pglite.test.ts",
+      "sha256": "753360d8d54f568d2d6a4946abc84d5738c9eea1325c971dc154b7b41e9dddf4"
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "sha256": "c6c54becbb027eae45420a9ae248d1c3d1cc9ea0dd3daffd981aa5a5f7071ec6"
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "sha256": "ebc9f813673a871af218d22ffdecb9d7ba1947816146ed816b23fc81ca25c7d9"
+    },
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "sha256": "2b3fcda7b8fff67607e212e4e6004201976fb342b1a2b66f79a16f7de47288ea"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.check.json",
+      "sha256": "a19296f701c57f424dfa0047af85ff663dafc68f70e09809fcce253e9c9fc21f"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.json",
+      "sha256": "2dc61346604a77dd309cf09e51fff597b8dd0543895aabb4cb2f327eaf2d697b"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/workspace/server/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual native vault filesystem containment, symlink rejection, digests and DOCX extraction remain. Independent layers preserve per-test state; one counted resolver is retained through the cache witness. Real PGlite integration and unmigrated-driver failures remain in this full timing cohort. Original typed error and round-trip laws use instrumented native registrations. No production implementation change.",
+  "bunProof": {
+    "passedTests": 28,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.30078125, 3.81298828125, 3.08447265625],
+    "loadAfter": [4.51708984375, 3.8662109375, 3.10595703125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.34 avg60=0.19 avg300=0.12 total=733606750\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199458\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125577\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=811365757\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710078220\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.28 avg60=0.19 avg300=0.12 total=733614333\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199458\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125577\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=811368028\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=710079617\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 28,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 28 registrations before and after with zero skips. Six converted round-trip domains preserve the 25/10-run floors and laws; the set-title property makes its existing 100-run default explicit and honors the configured run-count and replay seed. Timing differences are not causal speedup evidence."
+}

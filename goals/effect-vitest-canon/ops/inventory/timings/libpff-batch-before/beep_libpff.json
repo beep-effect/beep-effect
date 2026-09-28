@@ -1,0 +1,86 @@
+{
+  "package": "@beep/libpff",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T14:19:06.769000+00:00",
+  "totalMs": 5870.213623046875,
+  "testCount": 69,
+  "files": [
+    {
+      "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
+      "ms": 8.5947265625,
+      "tests": 24
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.equivalence.test.ts",
+      "ms": 1.180419921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "ms": 1750.213623046875,
+      "tests": 36
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
+      "ms": 52.986083984375,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "ms": 22.619140625,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine maps a hung pffexport process to operation-timed-out",
+      "ms": 1516.2136420000006
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine maps filesystem failures at each export traversal boundary",
+      "ms": 229.22989899999993
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine uses a standard-root env interpreter without an additional runtime bind",
+      "ms": 103.40981600000032
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine binds an external shebang interpreter prefix into the sandbox",
+      "ms": 102.79731300000003
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine isolates a file-locator export inside bubblewrap when configured",
+      "ms": 99.33283700000084
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine exports directly from a file locator when the caller omits source bytes",
+      "ms": 95.44948600000043
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine invokes an env-selected interpreter through its canonical path-sensitive prefix",
+      "ms": 93.9840979999999
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine binds an external canonical target reached through a covered shebang symlink",
+      "ms": 87.93973899999946
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine publishes repeated validated quota handoffs after each sandbox exits",
+      "ms": 84.16255000000001
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "testName": "makePffexportFileProcessingEngine rejects malformed or unavailable sandbox shebang interpreters",
+      "ms": 78.21260700000039
+    }
+  ]
+}

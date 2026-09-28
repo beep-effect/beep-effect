@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ontology-client",
+  "sourceHead": "5cff50b32dac443123d30d3a2ace1751856e767a",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.823851569002727,
+  "bunWholeCommandSeconds": 2.367542449006578,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [11.349609375, 4.3232421875, 2.92041015625],
+  "loadAfter": [11.3212890625, 4.4345703125, 2.9638671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.49 avg60=0.23 avg300=0.05 total=793637637\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218096\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141974\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.03 total=853072353\nfull avg10=0.00 avg60=0.03 avg300=0.03 total=746371161\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.27 avg60=0.21 avg300=0.05 total=793668505\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218096\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141974\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.03 total=853074386\nfull avg10=0.00 avg60=0.02 avg300=0.03 total=746372233\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "7d611351b4500a6506d40b44534bf29da5962788ef678803670047d8b9b06581"
+    },
+    {
+      "file": "packages/ontology/client/.vitest-attachments/a5264bd0c33a20687fe6104a6becac4b2f2c4789.png",
+      "sha256": "c80a95cef7176906c010f2f4d4f87c5d1d0cd32c73665de05dff9ab09f2f36a3"
+    },
+    {
+      "file": "packages/ontology/client/.vitest-attachments/c0e6aee53cd1bea69fa3773abd801881a5cf777e.png",
+      "sha256": "e422351c5da5d6a2d72f47b41ae5c844879d5700dd7a211a9c51629f5a225225"
+    },
+    {
+      "file": "packages/ontology/client/AGENTS.md",
+      "sha256": "db1f78e1418f8a91a59294338b94cc3f3db750a9a1d7ea4fa1272996ce8a1168"
+    },
+    {
+      "file": "packages/ontology/client/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/ontology/client/README.md",
+      "sha256": "cbb24bdaf960f6d21806880dcf9cdad789f80e0d48532f7e1338f8e509ebf059"
+    },
+    {
+      "file": "packages/ontology/client/docgen.json",
+      "sha256": "f206de19d6543b6811178e8c396bcb466f1aededf7969ed786a1d037e4b7fc3d"
+    },
+    {
+      "file": "packages/ontology/client/package.json",
+      "sha256": "52046fb7f20b69f0af43814caebd3d578808f4ef56863fbe59386333fe763eb0"
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "sha256": "b5f7955414844fa4bdaf4ff07a048e2b39ac44ff70e410e38ef13b6371e1f211"
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.visualizer.worker.ts",
+      "sha256": "ff6e6663cf5bd361b716bf63fa2675af8249340a3f1982defb2e8544d498ec7c"
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/index.ts",
+      "sha256": "0b86bf17d5deb21094ff9df0c18fd04f7898bbcc6327467da6539c227a581a19"
+    },
+    {
+      "file": "packages/ontology/client/src/index.ts",
+      "sha256": "38deca215e9d7ed3e40d4ede2db129bb6f65f9c8f6edd7f4f8fec7a530d658a7"
+    },
+    {
+      "file": "packages/ontology/client/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "sha256": "6144718370c5bec8c3184dc745c4722cc949cf876df7e7e0f53e6c0f4c2a1a6d"
+    },
+    {
+      "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+      "sha256": "76291103810ecdaed4228c002584a6c3b2a3b7af43c77f37efc2c8b95e68e213"
+    },
+    {
+      "file": "packages/ontology/client/test/auto-open.test.ts",
+      "sha256": "61e0d296b370bb12db87271359942451257f461993f3a3c169d9a23219f1e7f6"
+    },
+    {
+      "file": "packages/ontology/client/test/browser/__screenshots__/graph-renderer-toggle.test.ts/workbench-graph-renderer-toggle-mounts-cosmos-by-default--swaps-to-3D-and-back--and-keeps-selection-flowing-1.png",
+      "sha256": "e422351c5da5d6a2d72f47b41ae5c844879d5700dd7a211a9c51629f5a225225"
+    },
+    {
+      "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+      "sha256": "160adaaaea7af81f8183937f4906690aed921ab1b44b4964aed951c9489a18f7"
+    },
+    {
+      "file": "packages/ontology/client/test/failure-messages.test.ts",
+      "sha256": "bf5d9743d9de0125a7a93ccc3e25ac9db60877f7d095899eb2304abb6cd6860b"
+    },
+    {
+      "file": "packages/ontology/client/test/graph-centrality.test.ts",
+      "sha256": "d588af5186854a4f9eda18052e42f1372d5a200eab574bb83c63a45b8168ded0"
+    },
+    {
+      "file": "packages/ontology/client/test/graph-labels.test.ts",
+      "sha256": "2e03b9d0d3303dabbc4b6bf22da614a5ad35dab7f56716cf39c9103bf71ac7de"
+    },
+    {
+      "file": "packages/ontology/client/test/inspector-actions.test.ts",
+      "sha256": "48f047732c5095a2d2d5573373ea1948fc6351540f00f74900416fe48629e4d5"
+    },
+    {
+      "file": "packages/ontology/client/test/stale-read.test.ts",
+      "sha256": "5d3703d127f479c0a98130539cbfc5a5360fe7f87dce734864876b7613636ca3"
+    },
+    {
+      "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+      "sha256": "6bf4d0b421cba1c7861c1c28b06662480255bf98506a28a880a8ddca4b576bf6"
+    },
+    {
+      "file": "packages/ontology/client/test/worker-command-encode-failure.test.ts",
+      "sha256": "3b38accd6f1701ff473f404b50652fe47bbcd5abe5150f554acc343506b426bd"
+    },
+    {
+      "file": "packages/ontology/client/test/worker-wire.test.ts",
+      "sha256": "3fbb27be9a0e48e158cb6db73faeeaeaa1d204a059243371f52983bc5c13533f"
+    },
+    {
+      "file": "packages/ontology/client/tsconfig.check.json",
+      "sha256": "4335f307c1e998f6151386253989d0f9ee05a8de25eb7ad35a825bb4e5425bac"
+    },
+    {
+      "file": "packages/ontology/client/tsconfig.json",
+      "sha256": "979bbd9546b04d0bf5e427dc32dee6cea160cfb136fbefff4ff673be352e7fc7"
+    },
+    {
+      "file": "packages/ontology/client/tsconfig.test.json",
+      "sha256": "a629c97631d4c876cbd2437877918ed4d56e98ce9bd81fda6144f2a5302f3992"
+    },
+    {
+      "file": "packages/ontology/client/vitest.browser.config.ts",
+      "sha256": "6c8062a9a055dd72e81f8021c55516e15166ffc6271d3e7bbff5bb3be41aa1a0"
+    },
+    {
+      "file": "packages/ontology/client/vitest.config.ts",
+      "sha256": "54f898113ffd43357f3453e1d4ea674a4cc7ee16eb5464c049b729f6b2e8f471"
+    }
+  ],
+  "environmentMode": "Configured ontology-client local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 29,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [11.3212890625, 4.4345703125, 2.9638671875],
+    "loadAfter": [11.3212890625, 4.4345703125, 2.9638671875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.27 avg60=0.21 avg300=0.05 total=793668515\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218096\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141974\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.03 total=853074386\nfull avg10=0.00 avg60=0.02 avg300=0.03 total=746372233\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.22 avg60=0.20 avg300=0.05 total=793680304\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218096\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178141974\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.03 total=853074426\nfull avg10=0.00 avg60=0.02 avg300=0.03 total=746372269\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 29,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Default suites pass27before and29after with zero skips and stable source. All124original assertions remain, with38public helper conversions and seven unchanged browser assertions. Three native schema laws retain floor10 and run-count-times100 discards, replacing one grouped registration. Native registry/worker lifetimes remain; actual Chromium tests pass separately with call-through renderer observers. Baseline overlaps an early publisher; after overlaps package and browser proof."
+}

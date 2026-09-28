@@ -1,0 +1,71 @@
+{
+  "package": "@beep/workspace-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:36:59.185000+00:00",
+  "totalMs": 5007.230712890625,
+  "testCount": 24,
+  "files": [
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.340087890625,
+      "tests": 6
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "ms": 31.230712890625,
+      "tests": 18
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline decodes a thread timeline with resolved message and tool-call items",
+      "ms": 14.388402999999926
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline keeps thread input and timeline encoded shapes stable",
+      "ms": 14.29555000000073
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline union-derived guards discriminate timeline items by kind",
+      "ms": 14.28849899999932
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.CreateThreadInput",
+      "ms": 14.285504000000401
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.AppendTurnInput",
+      "ms": 14.282148999999663
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived Thread.ThreadTimeline",
+      "ms": 8.530235999999604
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.ThreadStoreNotFound",
+      "ms": 8.523463999999876
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.ThreadStoreConflict",
+      "ms": 8.519888999999239
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.ThreadStoreUnavailable",
+      "ms": 8.518167000000176
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline round-trips schema-derived ServerThread.ThreadStoreError",
+      "ms": 8.515983999999662
+    }
+  ]
+}

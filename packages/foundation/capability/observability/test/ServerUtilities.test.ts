@@ -1,7 +1,8 @@
 import { layerLocalLgtmServer, ServerObservabilityConfig, sanitizePrometheusMetrics } from "@beep/observability/server";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
 import { Layer } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("ServerUtilities", () => {
   it("builds the local LGTM layer when optional layer options are omitted", () => {
@@ -26,6 +27,7 @@ describe("ServerUtilities", () => {
 
     const sanitized = sanitizePrometheusMetrics(input);
 
+    expect(sanitized).toContain('demo_bucket{le="10"} 1');
     expect(sanitized).not.toContain('le="Infinity"');
     expect(sanitized).toContain('le="+Inf"');
   });

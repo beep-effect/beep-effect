@@ -13,11 +13,14 @@ import {
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { describe, expect, it } from "@effect/vitest";
+import { describe } from "@effect/vitest";
 import { Result } from "effect";
 
 const isProjection = S.is(OntologyGraphProjection);
 
+import { it } from "@beep/test-runner";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -57,14 +60,17 @@ describe("ontology graph worker wire", () => {
     const command = WorkerCommand.make({ kind: "projectGraph", snapshot, options });
 
     const encoded = encodeWorkerCommand(command);
-    expect(Result.isSuccess(encoded)).toBe(true);
+    pipe(encoded, Result.isSuccess, assertTrue);
     if (!Result.isSuccess(encoded)) {
       return;
     }
     const onTheWire = structuredClone(encoded.success);
     const received = decodeWorkerCommand(onTheWire);
 
-    expect(Result.isSuccess(received)).toBe(true);
+    pipe(received, Result.isSuccess, assertTrue);
+    if (Result.isSuccess(received)) {
+      pipe(S.toEquivalence(WorkerCommand)(received.success, command), assertTrue);
+    }
   });
 
   it("a result comes back as a domain value, not a de-prototyped shape of one", () => {
@@ -80,20 +86,24 @@ describe("ontology graph worker wire", () => {
 
     // What the parent used to consume: the clone, used directly.
     const usedDirectly = structuredClone(result);
-    expect(isProjection(usedDirectly.result)).toBe(false);
+    pipe(isProjection(usedDirectly.result), assertFalse);
 
     // What it consumes now: decoded back into the domain.
     const encoded = encodeWorkerResult(result);
-    expect(Result.isSuccess(encoded)).toBe(true);
+    pipe(encoded, Result.isSuccess, assertTrue);
     if (!Result.isSuccess(encoded)) {
       return;
     }
     const received = decodeWorkerResult(structuredClone(encoded.success));
-    expect(Result.isSuccess(received)).toBe(true);
-    expect(
+    pipe(received, Result.isSuccess, assertTrue);
+    if (Result.isSuccess(received)) {
+      pipe(S.toEquivalence(WorkerResult)(received.success, result), assertTrue);
+    }
+    pipe(
       Result.isSuccess(received) && received.success.kind === "projectGraphSucceeded"
         ? isProjection(received.success.result)
-        : false
-    ).toBe(true);
+        : false,
+      assertTrue
+    );
   });
 });

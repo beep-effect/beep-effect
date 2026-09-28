@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/oxigraph",
+  "sourceHead": "19229c94259daf30952503e3b10b86acf29bfe6e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 3.8696931510057766,
+  "bunWholeCommandSeconds": 1.9665761249925708,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.65283203125, 2.61572265625, 2.822265625],
+  "loadAfter": [1.65283203125, 2.61572265625, 2.822265625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.02 avg300=0.07 total=779402655\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216587\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140543\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.02 total=844098999\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738354626\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.02 avg300=0.06 total=779405607\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216587\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140543\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=844102908\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738358343\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "c16319d0992f9d77eb81f53a6a05110685326959d765fcff9db0975946b18df3"
+    },
+    {
+      "file": "packages/drivers/oxigraph/AGENTS.md",
+      "sha256": "9a81dc1d4fc8014290aaddaaf9fe9c20b56d611074d325871bd619a39c7c88d0"
+    },
+    {
+      "file": "packages/drivers/oxigraph/README.md",
+      "sha256": "69e1b2f85a1fb27d346ad88e6b0de8963d5f54cfe557af09ed955d3f8ec7ff38"
+    },
+    {
+      "file": "packages/drivers/oxigraph/docgen.json",
+      "sha256": "dc7bce2608ff0e34fbd122abde30909c645da68abb718a1f51b5bf054ca465ec"
+    },
+    {
+      "file": "packages/drivers/oxigraph/package.json",
+      "sha256": "e31a12da8db23826afed55b13f30cdcd6cee9636222f466bdc2261e2ba405dc3"
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/Oxigraph.errors.ts",
+      "sha256": "49c1a03ead9d52e2a53ee7d71a2e72f92831efed2843e73edd6b21e9ab05f9ee"
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/Oxigraph.sparql.ts",
+      "sha256": "feff9bf857d3fe6d4ea6f69811f70a771511ee3adc8fb00a76adacdcf987287f"
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/index.ts",
+      "sha256": "7a49ec90ca51d5e81d5bb65893bfcad096c1e9ede1fcca7822f7b72f5b96fcc1"
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/vendor.d.ts",
+      "sha256": "e7acae7f38b057c890a2ab5a06ec4f434f895b080dc4e2a3e8a1ac76a9b68e3a"
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
+      "sha256": "684307d90e7b1147c683709c8554bc2e201e80d92716f0742391c5fd39e4d903"
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "sha256": "30e80c2b3a913662753da5901a1d8c65052c3d6d9a69438b1dbcdfbec4ef70cd"
+    },
+    {
+      "file": "packages/drivers/oxigraph/tsconfig.check.json",
+      "sha256": "fe45312b7d999e87bdb3791699a83cc388d49d76fde5f1a211901952e2fb87f7"
+    },
+    {
+      "file": "packages/drivers/oxigraph/tsconfig.json",
+      "sha256": "4c2d1769d4704111bab7d7efc8fbeb355901d35b5b72c4b4d59ada7e58c71f61"
+    },
+    {
+      "file": "packages/drivers/oxigraph/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/oxigraph/vitest.config.ts",
+      "sha256": "ee95dd0c62dc47993f78b05b20c2a13b9c55c6a8ddaf1e1aca116c7da2f99216"
+    }
+  ],
+  "environmentMode": "Configured oxigraph local-engine Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 3,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.65283203125, 2.61572265625, 2.822265625],
+    "loadAfter": [1.6806640625, 2.60546875, 2.8173828125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.02 avg300=0.06 total=779405632\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216587\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140543\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=844102908\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738358343\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.02 avg300=0.06 total=779407962\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216587\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140543\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.02 total=844103035\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=738358470\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 3,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. All three configured cases pass before and after with no skips and stable source. Six original assertions and three registrations remain. The real WASM engine receives both original queries and an added distinct-dataset control. Three independent source mutation controls verify cache reuse, lazy import and lazy construction. No early publisher overlaps these baseline or after observations; other workstation load is recorded. No external endpoint is contacted."
+}

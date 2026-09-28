@@ -2,8 +2,9 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { fromWorkItemRow, toWorkItemInsert, workItemTable } from "@beep/architecture-lab-tables/aggregates/WorkItem";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { DateTime, Effect, Option as O } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -64,27 +65,22 @@ describe("WorkItem table", () => {
     })
   );
 
-  it("round-trips schema-derived WorkItems through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WorkItemArbitrary]),
-          ([workItem]) => {
-            const insert = toWorkItemInsert(workItem);
-            const decoded = fromWorkItemRow({
-              ...insert,
-              assigneeId: insert.assigneeId ?? null,
-              priority: insert.priority ?? null,
-              createdAt: fixedTimestamp,
-              updatedAt: fixedTimestamp,
-            });
+  it.effect.prop(
+    "round-trips schema-derived WorkItems through the row converters",
+    [WorkItemArbitrary],
+    ([workItem]) =>
+      Effect.sync(() => {
+        const insert = toWorkItemInsert(workItem);
+        const decoded = fromWorkItemRow({
+          ...insert,
+          assigneeId: insert.assigneeId ?? null,
+          priority: insert.priority ?? null,
+          createdAt: fixedTimestamp,
+          updatedAt: fixedTimestamp,
+        });
 
-            expect(WorkItemEquivalence(decoded, workItem)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(WorkItemEquivalence(decoded, workItem)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 });

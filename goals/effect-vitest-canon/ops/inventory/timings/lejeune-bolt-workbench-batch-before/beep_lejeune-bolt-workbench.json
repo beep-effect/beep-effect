@@ -1,0 +1,76 @@
+{
+  "package": "@beep/lejeune-bolt-workbench",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:41:34.315000+00:00",
+  "totalMs": 10406.029052734375,
+  "testCount": 28,
+  "files": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/App.test.tsx",
+      "ms": 47.54248046875,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "ms": 6493.029052734375,
+      "tests": 14
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "ms": 3180.0595703125,
+      "tests": 13
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rebuilds identical query outputs from fresh PGlite, DuckDB, and Oxigraph stores",
+      "ms": 5848.971997000001
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rejects same-count corpus body corruption even when citations and the A490 result remain unchanged",
+      "ms": 3416.636966
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rejects persisted quote product variant corruption",
+      "ms": 3356.8972880000006
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rejects persisted rule human-review flag corruption",
+      "ms": 3354.8510049999995
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rejects a persisted citation identifier associated with the wrong source URL",
+      "ms": 3276.59792
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "testName": "LeJeune transactional bundle builder publishes durable byte-identical replay outputs across two fresh builds",
+      "ms": 3162.0596629999995
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle replays the same bundle identity with provider and network unavailable",
+      "ms": 3008.0290190000005
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle rejects table-driven persisted boundary corruption",
+      "ms": 2446.212877000001
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "testName": "LeJeune deterministic fixture bundle maps a reused projection store failure into the declared projection error",
+      "ms": 2442.8211929999998
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "testName": "LeJeune transactional bundle builder defers interruption after the atomic publication claim",
+      "ms": 2439.7777600000004
+    }
+  ]
+}

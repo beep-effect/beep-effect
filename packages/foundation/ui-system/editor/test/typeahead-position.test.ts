@@ -1,17 +1,20 @@
 import { shouldOpenUpward, typeaheadMenuPosition } from "@beep/editor/chat/typeahead";
-import { describe, expect, it } from "vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 
 describe("shouldOpenUpward", () => {
   it("opens downward when the full menu fits below the caret", () => {
-    expect(shouldOpenUpward({ caretBottom: 120, caretTop: 100, viewportHeight: 800 })).toBe(false);
+    pipe(shouldOpenUpward({ caretBottom: 120, caretTop: 100, viewportHeight: 800 }), assertFalse);
   });
 
   it("flips upward for a caret near the bottom of the viewport", () => {
-    expect(shouldOpenUpward({ caretBottom: 780, caretTop: 760, viewportHeight: 800 })).toBe(true);
+    pipe(shouldOpenUpward({ caretBottom: 780, caretTop: 760, viewportHeight: 800 }), assertTrue);
   });
 
   it("stays downward when there is no room in either direction", () => {
-    expect(shouldOpenUpward({ caretBottom: 60, caretTop: 40, viewportHeight: 100 })).toBe(false);
+    pipe(shouldOpenUpward({ caretBottom: 60, caretTop: 40, viewportHeight: 100 }), assertFalse);
   });
 });
 

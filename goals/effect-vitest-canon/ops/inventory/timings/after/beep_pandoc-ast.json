@@ -1,0 +1,106 @@
+{
+  "package": "@beep/pandoc-ast",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T14:59:41.833000+00:00",
+  "totalMs": 3965.0576171875,
+  "testCount": 97,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
+      "ms": 17.122802734375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "ms": 132.0576171875,
+      "tests": 48
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+      "ms": 14.91845703125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "ms": 6.917236328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "ms": 66.375732421875,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "ms": 23.7587890625,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
+      "ms": 1.224609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
+      "ms": 0.9677734375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "ms": 12.20654296875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping records DOCX-origin compatibility gaps while producing partial Md output records DOCX-origin compatibility gaps while producing partial Md output",
+      "ms": 49.37566000000015
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping maps md-core Pandoc JSON to @beep/md with a supported report maps md-core Pandoc JSON to @beep/md with a supported report",
+      "ms": 48.326354000000265
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping derives JSON pointer and default severity behavior from report schemas",
+      "ms": 45.348237000000154
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping preserves mapping report invariants for schema-derived documents",
+      "ms": 35.839734000000135
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec keeps schema-derived semantic documents closed under encode and strict decode",
+      "ms": 29.127796999999646
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec preserves arbitrary future JSON through the public lossless profile",
+      "ms": 19.721571999999924
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping exhaustively distinguishes inline and display Pandoc math projections",
+      "ms": 18.692547000000104
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping projects current inline and block constructors through definition-list plaintext",
+      "ms": 18.600425000000087
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping round-trips an Md math block through a Pandoc display-math paragraph",
+      "ms": 18.593464999999924
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec derives semantic documents without arbitrary warnings",
+      "ms": 17.25203799999963
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 import { Membership, User } from "@beep/shared-tables/entities";
 import * as Organization from "@beep/shared-tables/entities/Organization";
 import { DbSchema } from "@beep/shared-tables/Schema";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { pipe } from "effect/Function";
@@ -65,8 +67,8 @@ describe("OrganizationTable", () => {
     expect(O.getOrThrow(slugUnique).config.columns[0]).toMatchObject({ name: "slug" });
     expect(O.getOrThrow(licenseTierLookup).config.method).toBe("btree");
     expect(O.getOrThrow(licenseTierLookup).config.columns[0]).toMatchObject({ name: "license_tier" });
-    expect(O.isNone(entityTypeLookup)).toBe(true);
-    expect(O.isNone(orgIdLookup)).toBe(true);
-    expect(O.isNone(sourceLookup)).toBe(true);
+    assertNone(entityTypeLookup);
+    assertNone(orgIdLookup);
+    assertNone(sourceLookup);
   });
 });

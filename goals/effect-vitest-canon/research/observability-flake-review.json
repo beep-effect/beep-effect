@@ -1,0 +1,84 @@
+{
+  "checkpoint": "d61b0c6546a3dc323e56544a93c745871a96d6f0",
+  "pathsReviewed": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "sha256": "d9ae03d06d90d9780acbeab82f00e974d1f375420927b980607883d52ce95ab6"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "sha256": "8bcbeebdb48dfe5c864e1349a5069e93352ec84ccaaa511f7877f9ad8142289d"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "sha256": "c8f070ae4ff4a50f5d8d32230629e0491a664ee20d2193fd089e1d129f822096"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "sha256": "3bd35baab98354cac65a96c75387fe098ee8f86da50956eac23497f865ae495b"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "sha256": "8862a98a72e4cea2c6e9cd7571f36d0e8c35b03738568e5bbf460ff7818a71aa"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "sha256": "93d42e99d5b0a842aba5461bacc9524a4bafbfec715e341e055d5d17978781bb"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "sha256": "cecc0e5492f612435adc6715a662d211af9c2a71e8d9ce613c329b10ce6416d2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "sha256": "8047d04f8acb4d905256c43237672c2ee383d7ca0c2b44431b925410131a1fc5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "sha256": "8ba65ede8a47250bcddc7954f46ae4dd5f1a51ba754e4b26e8ce720569c039ff"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "sha256": "1ae67850fbf19f277dc05dd355b2fb31b2eef923dcc7d02f0eeb943a0ee1db7e"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "sha256": "5e31cb856716ddc888216d5c614a9c53b0fe920d3a68e1bec8e0150cc73b36c2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "sha256": "e6cacbdd2c7bb58997730adc14606133c906701960a8e7841cf57144afda6fc5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "sha256": "df2a2829e5f51753ad7b2abc4ed6de4598370c6382841bc8a7b7b5be64851a24"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "sha256": "ca8d68962c1233d77c28948bc9d1a27853f55a4bcb635860f986cf8ca5530921"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "sha256": "d11028602ccf5bce7f1c39b05277afe9485f9bbe4bb552686d758d0d7f735f09"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "a27953f074770b5ae5644ed0d03cdb1913cf999c3e90f403a08dcb358b5ceee5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "sha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "sha256": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "sha256": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146"
+    }
+  ],
+  "findingCount": 0,
+  "scope": "Existing nineteen admitted paths only; no global census refresh",
+  "limits": "Bounded static review and recorded configured runs, not proof that all possible flakes are absent"
+}

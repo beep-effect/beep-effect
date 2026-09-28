@@ -11,8 +11,11 @@ import {
   PriorityBasis,
   ValidatorReport,
 } from "@beep/law-practice-domain";
-import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assertSchemaArbitraryDecodesToSelf, fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -23,23 +26,12 @@ import * as S from "effect/Schema";
 const isActFrameElementRef = S.is(ActFrameElementRef);
 const isLegalVerdictFamily = S.is(LegalVerdictFamily);
 
-const assertSchemaEncodedRoundTrips = Effect.fn("LegalPositionTransitionsTest.assertSchemaEncodedRoundTrips")(
-  function* <Schema extends S.Codec<unknown>>(schema: Schema, runs = 10) {
-    const decode = S.decodeUnknownEffect(schema);
-    const encode = S.encodeEffect(schema);
-    const equivalent = S.toEquivalence(schema);
-    const result = yield* Arbitrary.checkEffect(
-      Arbitrary.schema(schema),
-      (value) =>
-        Effect.gen(function* () {
-          return equivalent(yield* decode(yield* encode(value)), value);
-        }),
-      { runs }
-    );
-
-    expect(result._tag).toBe("Passed");
-  }
-);
+const assertSchemaEncodedRoundTrip = Effect.fn("DomainTest.assertSchemaEncodedRoundTrip")(function* <
+  Schema extends S.Codec<unknown>,
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const decoded = yield* S.decodeUnknownEffect(schema)(yield* S.encodeEffect(schema)(value));
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
+});
 
 const norm = (designation: string, fragment: string | null) => ({ fragment, norm: { designation } });
 
@@ -149,7 +141,7 @@ describe("act frame transitions", () => {
     const frame = Result.getOrThrow(decodeActFrame(actFrameInput({})));
 
     expect(frame.preconditions[0]?.polarity).toBe("absent");
-    expect(O.isNone(frame.preconditions[0]?.source.fragment ?? O.none())).toBe(true);
+    assertNone(frame.preconditions[0]?.source.fragment ?? O.none());
   });
 
   it("carries a source reference on every element rather than one per record", () => {
@@ -164,19 +156,19 @@ describe("act frame transitions", () => {
   it("rejects a frame with no actor slot", () => {
     const rejected = decodeActFrame(actFrameInput({ slots: [slot("lessor", "recipient")] }));
 
-    expect(Result.isFailure(rejected)).toBe(true);
+    pipe(rejected, Result.isFailure, assertTrue);
   });
 
   it("rejects duplicate element labels within one part", () => {
     const rejected = decodeActFrame(actFrameInput({ slots: [slot("lessee", "actor"), slot("lessee", "recipient")] }));
 
-    expect(Result.isFailure(rejected)).toBe(true);
+    pipe(rejected, Result.isFailure, assertTrue);
   });
 
   it("rejects a frame that records no derivation kind", () => {
     const rejected = decodeActFrame(actFrameInput({ derivationKind: { kinds: [] } }));
 
-    expect(Result.isFailure(rejected)).toBe(true);
+    pipe(rejected, Result.isFailure, assertTrue);
   });
 });
 
@@ -194,7 +186,7 @@ describe("power exercise results", () => {
 
     expect(O.getOrThrow(exercise.result.constitution).outcome).toBe("not-constituted");
     expect(exercise.result.disposition.disposition).toBe("void");
-    expect(O.isNone(exercise.result.permission)).toBe(true);
+    assertNone(exercise.result.permission);
   });
 
   it("records an effective act that also breached a duty, on two independent axes", () => {
@@ -217,15 +209,15 @@ describe("power exercise results", () => {
     const exercise = Result.getOrThrow(decodePowerExercise(powerExerciseInput(undisposed)));
 
     expect(exercise.result.disposition.disposition).toBe("undetermined");
-    expect(O.isNone(exercise.result.constitution)).toBe(true);
-    expect(O.isNone(exercise.result.permission)).toBe(true);
+    assertNone(exercise.result.constitution);
+    assertNone(exercise.result.permission);
   });
 
   it("terminates the authority lineage at a norm-founded power", () => {
     const exercise = Result.getOrThrow(decodePowerExercise(powerExerciseInput(undisposed)));
 
-    expect(O.isNone(exercise.authorityBasis.exercisedPower)).toBe(true);
-    expect(O.isNone(exercise.authorityBasis.foundingExercise)).toBe(true);
+    assertNone(exercise.authorityBasis.exercisedPower);
+    assertNone(exercise.authorityBasis.foundingExercise);
     expect(exercise.authorityBasis.claimedRole.name).toBe("lessee");
   });
 });
@@ -248,7 +240,7 @@ describe("correction deltas", () => {
   it("rejects a correction that touches no element", () => {
     const rejected = decodeCorrectionDelta(correctionDeltaInput({ correctedElements: [] }));
 
-    expect(Result.isFailure(rejected)).toBe(true);
+    pipe(rejected, Result.isFailure, assertTrue);
   });
 
   it("routes an unresolved difference into candidate inputs by default", () => {
@@ -275,10 +267,10 @@ describe("priority basis inputs", () => {
     });
 
     expect(O.getOrThrow(basis.sourcePrecedence)).toBe("lease clause over the parties' course of dealing");
-    expect(O.isNone(basis.specificity)).toBe(true);
-    expect(O.isNone(basis.forum)).toBe(true);
-    expect(O.isNone(basis.proofStandard)).toBe(true);
-    expect(O.isNone(basis.viewpoint)).toBe(true);
+    assertNone(basis.specificity);
+    assertNone(basis.forum);
+    assertNone(basis.proofStandard);
+    assertNone(basis.viewpoint);
   });
 
   it("carries the four legal verdict families as law-side vocabulary", () => {
@@ -298,21 +290,28 @@ describe("priority basis inputs", () => {
 });
 
 describe("transition value schemas", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips every generated transition value through its encoded form",
-    Effect.fnUntraced(function* () {
-      for (const schema of [
-        ActFrameElementRef,
-        CorrectedElement,
-        ExerciseResult,
-        NormSourceReference,
-        PositionTransition,
-        PriorityBasis,
-        ValidatorReport,
-      ]) {
-        yield* assertSchemaEncodedRoundTrips(schema, 10);
-      }
-    })
+    {
+      ActFrameElementRef: Arbitrary.schema(ActFrameElementRef),
+      CorrectedElement: Arbitrary.schema(CorrectedElement),
+      ExerciseResult: Arbitrary.schema(ExerciseResult),
+      NormSourceReference: Arbitrary.schema(NormSourceReference),
+      PositionTransition: Arbitrary.schema(PositionTransition),
+      PriorityBasis: Arbitrary.schema(PriorityBasis),
+      ValidatorReport: Arbitrary.schema(ValidatorReport),
+    },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaEncodedRoundTrip(ActFrameElementRef, values.ActFrameElementRef, "ActFrameElementRef");
+        yield* assertSchemaEncodedRoundTrip(CorrectedElement, values.CorrectedElement, "CorrectedElement");
+        yield* assertSchemaEncodedRoundTrip(ExerciseResult, values.ExerciseResult, "ExerciseResult");
+        yield* assertSchemaEncodedRoundTrip(NormSourceReference, values.NormSourceReference, "NormSourceReference");
+        yield* assertSchemaEncodedRoundTrip(PositionTransition, values.PositionTransition, "PositionTransition");
+        yield* assertSchemaEncodedRoundTrip(PriorityBasis, values.PriorityBasis, "PriorityBasis");
+        yield* assertSchemaEncodedRoundTrip(ValidatorReport, values.ValidatorReport, "ValidatorReport");
+      }),
+    { arbitrary: fcRuns(10) }
   );
 
   it("decodes every generated element pointer to itself", () => {

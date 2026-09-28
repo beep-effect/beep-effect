@@ -1,0 +1,392 @@
+{
+  "numTotalTestSuites": 12,
+  "numPassedTestSuites": 12,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 29,
+  "numPassedTests": 29,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790460136575,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DrizzleError declared-field equivalence"],
+          "fullName": "DrizzleError declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different errors as distinct",
+          "duration": 1.2529289999997673,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790460139435,
+      "endTime": 1790460139436.253,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/drizzle/test/Drizzle.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError constructs the single public tagged driver error",
+          "status": "passed",
+          "title": "constructs the single public tagged driver error",
+          "duration": 3.415238000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError normalizes unknown causes into the optional cause field",
+          "status": "passed",
+          "title": "normalizes unknown causes into the optional cause field",
+          "duration": 3.2942330000000766,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError captures explicit query context",
+          "status": "passed",
+          "title": "captures explicit query context",
+          "duration": 3.287381000000096,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError returns existing DrizzleError values with redacted params",
+          "status": "passed",
+          "title": "returns existing DrizzleError values with redacted params",
+          "duration": 3.2838560000000143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError retains safe native Drizzle query object causes while extracting context",
+          "status": "passed",
+          "title": "retains safe native Drizzle query object causes while extracting context",
+          "duration": 3.2814029999999548,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError does not throw when native query context getters throw",
+          "status": "passed",
+          "title": "does not throw when native query context getters throw",
+          "duration": 2.010265999999774,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError uses referential cycle checks for hostile nested cause objects",
+          "status": "passed",
+          "title": "uses referential cycle checks for hostile nested cause objects",
+          "duration": 2.000500000000102,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError does not throw when proxied Cause values hide their reasons",
+          "status": "passed",
+          "title": "does not throw when proxied Cause values hide their reasons",
+          "duration": 1.99679500000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError does not retain uninspectable raw proxy causes",
+          "status": "passed",
+          "title": "does not retain uninspectable raw proxy causes",
+          "duration": 1.9952429999998458,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError does not throw when Cause reasons hide their payload",
+          "status": "passed",
+          "title": "does not throw when Cause reasons hide their payload",
+          "duration": 1.9929290000000037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError unwraps Cause failures to capture native Drizzle query context",
+          "status": "passed",
+          "title": "unwraps Cause failures to capture native Drizzle query context",
+          "duration": 1.9068160000001626,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError returns Cause.fail DrizzleError values with redacted params",
+          "status": "passed",
+          "title": "returns Cause.fail DrizzleError values with redacted params",
+          "duration": 1.896009999999933,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError keeps fallback failed-query params as one opaque diagnostic value",
+          "status": "passed",
+          "title": "keeps fallback failed-query params as one opaque diagnostic value",
+          "duration": 1.8934650000001056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError decodes an omitted cause as none",
+          "status": "passed",
+          "title": "decodes an omitted cause as none",
+          "duration": 1.8954889999999978,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError keeps context wire shape while decoding to Option fields",
+          "status": "passed",
+          "title": "keeps context wire shape while decoding to Option fields",
+          "duration": 1.891001999999844,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError keeps normalized error wire shape while enforcing redacted params",
+          "status": "passed",
+          "title": "keeps normalized error wire shape while enforcing redacted params",
+          "duration": 13.437161000000287,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError rejects unredacted params while decoding a normalized error",
+          "status": "passed",
+          "title": "rejects unredacted params while decoding a normalized error",
+          "duration": 13.439996000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError decodes product-neutral row arrays from the schema value",
+          "status": "passed",
+          "title": "decodes product-neutral row arrays from the schema value",
+          "duration": 13.43834199999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError round-trips schema-derived Drizzle error contexts",
+          "status": "passed",
+          "title": "round-trips schema-derived Drizzle error contexts",
+          "duration": 36.881880999999794,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError round-trips schema-derived Drizzle errors",
+          "status": "passed",
+          "title": "round-trips schema-derived Drizzle errors",
+          "duration": 38.429645000000164,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DrizzleError"],
+          "fullName": "DrizzleError round-trips schema-derived Drizzle rows",
+          "status": "passed",
+          "title": "round-trips schema-derived Drizzle rows",
+          "duration": 26.238573000000088,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Drizzle",
+            "exposes adapter execute failures as DrizzleError"
+          ],
+          "fullName": "Drizzle exposes adapter execute failures as DrizzleError exposes adapter execute failures as DrizzleError",
+          "status": "passed",
+          "title": "exposes adapter execute failures as DrizzleError",
+          "duration": 5.475601999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Drizzle",
+            "provides execute and transaction through Drizzle.makeLayer"
+          ],
+          "fullName": "Drizzle provides execute and transaction through Drizzle.makeLayer provides execute and transaction through Drizzle.makeLayer",
+          "status": "passed",
+          "title": "provides execute and transaction through Drizzle.makeLayer",
+          "duration": 5.4472679999998945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Drizzle",
+            "preserves callback failures inside transactions"
+          ],
+          "fullName": "Drizzle preserves callback failures inside transactions preserves callback failures inside transactions",
+          "status": "passed",
+          "title": "preserves callback failures inside transactions",
+          "duration": 5.424672999999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Drizzle",
+            "preserves adapter failures from transactions"
+          ],
+          "fullName": "Drizzle preserves adapter failures from transactions preserves adapter failures from transactions",
+          "status": "passed",
+          "title": "preserves adapter failures from transactions",
+          "duration": 5.416510000000017,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Drizzle",
+            "uses explicit Effect-native transaction callbacks"
+          ],
+          "fullName": "Drizzle uses explicit Effect-native transaction callbacks uses explicit Effect-native transaction callbacks",
+          "status": "passed",
+          "title": "uses explicit Effect-native transaction callbacks",
+          "duration": 5.405343000000357,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790460139510,
+      "endTime": 1790460139563.2385,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/drizzle/test/Drizzle.errors.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Drizzle PgLite integration"],
+          "fullName": "Drizzle PgLite integration runs execute and transaction flows against a PgLite-backed adapter",
+          "status": "passed",
+          "title": "runs execute and transaction flows against a PgLite-backed adapter",
+          "duration": 1338.7699029999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Drizzle PgLite integration"],
+          "fullName": "Drizzle PgLite integration rolls back an interrupted transaction and remains usable",
+          "status": "passed",
+          "title": "rolls back an interrupted transaction and remains usable",
+          "duration": 1338.8629960000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790460139455,
+      "endTime": 1790460140794.863,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts"
+    }
+  ]
+}

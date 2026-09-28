@@ -7,15 +7,12 @@ import {
 } from "@beep/architecture-lab-server/aggregates/WorkItem";
 import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
+import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Layer, Option as O } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import { Effect, Equal } from "effect";
 import * as S from "effect/Schema";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkItemActionFailed = S.decodeUnknownEffect(WorkItemUseCases.WorkItemActionFailed);
@@ -77,20 +74,22 @@ describe("WorkItem server", () => {
     })
   );
 
-  it.effect(
-    "provides a configured WorkItem use-case facade",
-    Effect.fnUntraced(function* () {
-      const server = yield* WorkItemServer;
-      const id = yield* decodeWorkItemId("work-item-1");
-      const workItem = yield* server.create(
-        WorkItemUseCases.CreateWorkItemCommand.make({
-          id,
-          title: "Document topology",
-        })
-      );
+  it.layer(ArchitectureLabServerTest)("isolated repository stores", (it) => {
+    it.effect(
+      "provides a configured WorkItem use-case facade",
+      Effect.fnUntraced(function* () {
+        const server = yield* WorkItemServer;
+        const id = yield* decodeWorkItemId("work-item-1");
+        const workItem = yield* server.create(
+          WorkItemUseCases.CreateWorkItemCommand.make({
+            id,
+            title: "Document topology",
+          })
+        );
 
-      expect(workItem.status).toBe("open");
-      expect(O.isNone(workItem.assignee)).toBe(true);
-    }, provideScopedLayer(ArchitectureLabServerTest))
-  );
+        expect(workItem.status).toBe("open");
+        assertNone(workItem.assignee);
+      })
+    );
+  });
 });

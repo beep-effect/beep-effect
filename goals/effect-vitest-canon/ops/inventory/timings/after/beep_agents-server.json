@@ -1,0 +1,91 @@
+{
+  "package": "@beep/agents-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:32:51.396000+00:00",
+  "totalMs": 4155.8984375,
+  "testCount": 27,
+  "files": [
+    {
+      "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
+      "ms": 9.406005859375,
+      "tests": 5
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "ms": 22.055908203125,
+      "tests": 6
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "ms": 19.183349609375,
+      "tests": 2
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "ms": 13.843017578125,
+      "tests": 8
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "ms": 841.8984375,
+      "tests": 4
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "ms": 70.125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "testName": "ProviderInstance PGLite integration persists an authenticated probe snapshot and lists it",
+      "ms": 797.8634210000005
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "testName": "scanChunk any envelope x any chunking yields exactly the elements",
+      "ms": 70.12497300000041
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "testName": "ProviderInstance PGLite integration isolates organizations and attributes writes to the trusted actor scope",
+      "ms": 22.898363999999674
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "testName": "@beep/agents-server schema parity round-trips touched schemas with schema-derived arbitraries",
+      "ms": 19.183332000000064
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "testName": "@beep/agents-server schema parity keeps touched encoded shapes stable",
+      "ms": 15.142229999999927
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "testName": "scanChunk single-character chunking",
+      "ms": 13.34402
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "testName": "ProviderInstance PGLite integration uses database-generated ids for concurrent inserts",
+      "ms": 11.336628999999448
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "testName": "BlockRepair emits repaired blocks returned by a valid repair envelope",
+      "ms": 11.304759999999987
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "testName": "BlockRepair drops blocks missing from the repair envelope",
+      "ms": 11.114015999999992
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "testName": "BlockRepair keeps codec-valid repaired blocks even when the patch is empty",
+      "ms": 11.097991000000093
+    }
+  ]
+}

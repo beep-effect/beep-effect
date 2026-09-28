@@ -10,8 +10,10 @@ import {
   searchOntologyResources,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 
 const sessionId = SessionId.make("pizza-tutorial-session");
@@ -35,18 +37,16 @@ describe("Pizza tutorial authoring flow", () => {
       expect(applied.delta.added).toHaveLength(operations.length);
       expect(snapshot.metrics.tboxCount).toBeGreaterThan(0);
       expect(snapshot.metrics.aboxCount).toBeGreaterThan(0);
-      expect(
-        pipe(
-          tboxMatches,
-          A.some((resource) => resource.label === "Pizza")
-        )
-      ).toBe(true);
-      expect(
-        pipe(
-          aboxMatches,
-          A.some((resource) => resource.label === "Margherita")
-        )
-      ).toBe(true);
+      pipe(
+        tboxMatches,
+        A.some((resource) => resource.label === "Pizza"),
+        assertTrue
+      );
+      pipe(
+        aboxMatches,
+        A.some((resource) => resource.label === "Margherita"),
+        assertTrue
+      );
       yield* Effect.void;
     })
   );

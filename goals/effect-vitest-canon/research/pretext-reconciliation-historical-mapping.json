@@ -1,0 +1,146 @@
+[
+  {
+    "id": "EV002:packages/drivers/pretext/test/PretextCapture.test-layer.test.ts:27:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 11
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/PretextCapture.test-layer.test.ts:46:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 39
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/PretextCapture.test-layer.test.ts:65:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 60
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/PretextCapture.test-layer.test.ts:81:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 81
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/browser.test.ts:40:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 41
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/browser.test.ts:58:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 61
+  },
+  {
+    "id": "EV002:packages/drivers/pretext/test/browser.test.ts:75:provideScopedLayer@7#1",
+    "phase": "scope",
+    "fixSha": "81d5eeeddfb42a966567c79b31b0405d3fd07881",
+    "currentLine": 81
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:121:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 136
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:135:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 150
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:146:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 159
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:147:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 160
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:158:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 171
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:159:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 172
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:168:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 181
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:184:expect@8#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 198
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:188:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 207
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:189:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 208
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:199:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 219
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:212:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 238
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:230:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 254
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:26:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 29
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/PretextCapture.test-layer.test.ts:80:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 94
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:211:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 238
+  },
+  {
+    "id": "EV006:packages/drivers/pretext/test/Pretext.models.test.ts:229:expect@6#1",
+    "phase": "assertions",
+    "fixSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+    "currentLine": 254
+  }
+]

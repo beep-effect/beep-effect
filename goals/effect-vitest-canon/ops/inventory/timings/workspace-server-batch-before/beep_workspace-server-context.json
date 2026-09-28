@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/workspace-server",
+  "sourceHead": "6e0060d64f52413999cdca94cb2cfb26c28a3a43",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.822527947006165,
+  "bunWholeCommandSeconds": 3.6697436979884515,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.64501953125, 3.42724609375, 2.79296875],
+  "loadAfter": [3.9140625, 3.48681640625, 2.81591796875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.74 avg60=0.37 avg300=0.18 total=731952637\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199373\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125493\n",
+    "io": "some avg10=0.22 avg60=0.28 avg300=0.07 total=810967701\nfull avg10=0.15 avg60=0.19 avg300=0.05 total=709727723\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.40 avg60=0.34 avg300=0.18 total=731965251\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125494\n",
+    "io": "some avg10=0.12 avg60=0.25 avg300=0.07 total=810973855\nfull avg10=0.08 avg60=0.17 avg300=0.05 total=709731478\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "d2fdad0df516d56d5cd6a24d3e41c93124d57c9d902a204172025a78eab2513f"
+    },
+    {
+      "file": "packages/workspace/server/CHANGELOG.md",
+      "sha256": "0f082e8307f16de140dfb48afc9487e01b866b3b332bac38b3d14e883dde3503"
+    },
+    {
+      "file": "packages/workspace/server/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/workspace/server/README.md",
+      "sha256": "fc8341e37453224aa044a01a8bb7168e5037aaa4e4e1cf02657b38973bb788e2"
+    },
+    {
+      "file": "packages/workspace/server/docgen.json",
+      "sha256": "c8b933ab4cb53d48e74075f993e8596cdd29b6ef6d47d2988b3e88a9a83fca5b"
+    },
+    {
+      "file": "packages/workspace/server/package.json",
+      "sha256": "0e00a3f238bada59d1cb963723a965b93defc3d57c26032253e791c8ad146eb6"
+    },
+    {
+      "file": "packages/workspace/server/src/Layer.ts",
+      "sha256": "6cbcb404e645001c44495881972a068e035cd6c4f6b3b0d19401dab6fc0924c1"
+    },
+    {
+      "file": "packages/workspace/server/src/SourceText/WorkspaceSourceTextResolver.ts",
+      "sha256": "6b9fe4c0c8a1b0aaf84c0d65abe6d368ceaeb22212711b0b3ed696edb8efff20"
+    },
+    {
+      "file": "packages/workspace/server/src/SourceText/index.ts",
+      "sha256": "aafaf9ef0299a1088123353e406bd070f73a82cfca203254b967994e8d096701"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
+      "sha256": "8b3dc5eff2e9b92bbb71e5b7b5acf451c704a723755c46cfe88e918b9615574e"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.internal.ts",
+      "sha256": "ff063a3125d5c5cf322f4d16daa9984ff284f51e480423893025d17737754a36"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+      "sha256": "66d541084eaac714a5d385c53520886ecc58c59830b8ecf5f1ce3bdcb260b222"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Thread/index.ts",
+      "sha256": "2a5d5934ccf8f02f93d72ff335444fbf6ae1f8686b69c4d2db1896625c8636d3"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.layer.ts",
+      "sha256": "f92f2e01bdf1ede273189cc87810e66d0d1f01c0a4fc51fa8aeea20e75615dbd"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/WorkspaceVault.repo.ts",
+      "sha256": "90bb936c195ce57537bfc293e0dc5ece0aedf58d5ebe8a53df1e4ca0297ccb1e"
+    },
+    {
+      "file": "packages/workspace/server/src/aggregates/Workspace/index.ts",
+      "sha256": "8b235b34a21f40b4650e7942dbf629252c6d8c25b712f0f27b3a60d9c21f4e5c"
+    },
+    {
+      "file": "packages/workspace/server/src/index.ts",
+      "sha256": "54130c8edeb2c7e8e56cb056723953b39374c4b7396906a8d5c3451f4fc0e164"
+    },
+    {
+      "file": "packages/workspace/server/src/test.ts",
+      "sha256": "8dc27bace4ad481aeef97647510988464af85ad0eda39cc7263cbd1547548d43"
+    },
+    {
+      "file": "packages/workspace/server/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "sha256": "310f2215b835053dee3d30a5e38cfc769943406b5625d5fa40b71ee05c656306"
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStoreDriverFailure.pglite.test.ts",
+      "sha256": "490862116ac448e96ce4186022a320bcf0178fcf617f54eb047e9e2a8b98059f"
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "sha256": "ca1931e5f9bb98f6b4ee837a1bbfa8bd2a83bbc243ed38362c9ab9c67b9dcdbf"
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "sha256": "523a9bab36be9983fe7ca4ee57c752bbc7fbbc47c6d35527973a286f92647467"
+    },
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "sha256": "5f5859ca2d7f03e4a31572b2a24b82da20af42db000ca83392624f37ee392d10"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.check.json",
+      "sha256": "9b1ef63058ea24dacb7a76acb5bb048955b2ba74ddf7340e641ef64a922d305d"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.json",
+      "sha256": "da4f1a8629155d5725fe33af3f257959c72c174eb46ae89293e82becd88b93ad"
+    },
+    {
+      "file": "packages/workspace/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/workspace/server/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual workspace stores, native vault filesystem containment and DOCX extraction, and available PGlite fixtures. Preserve reported integration outcomes rather than inferring native database coverage. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 28,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.9140625, 3.48681640625, 2.81591796875],
+    "loadAfter": [3.92138671875, 3.49560546875, 2.82275390625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.40 avg60=0.34 avg300=0.18 total=731965265\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125494\n",
+      "io": "some avg10=0.12 avg60=0.25 avg300=0.07 total=810973855\nfull avg10=0.08 avg60=0.17 avg300=0.05 total=709731478\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.27 avg60=0.32 avg300=0.17 total=731973214\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125494\n",
+      "io": "some avg10=0.08 avg60=0.24 avg300=0.07 total=810979310\nfull avg10=0.05 avg60=0.16 avg300=0.05 total=709735014\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 28,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 28 registrations before and after with zero skips. Six converted round-trip domains preserve the 25/10-run floors and laws; the set-title property makes its existing 100-run default explicit and honors the configured run-count and replay seed. Timing differences are not causal speedup evidence."
+}

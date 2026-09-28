@@ -1,5 +1,6 @@
 import { resolveEpistemicRpcHttpUrl } from "@beep/epistemic-client";
-import { describe, expect, it } from "vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const runtimeAt = (origin: string): Readonly<{ readonly location: Readonly<{ readonly origin: string }> }> => ({
   location: { origin },

@@ -1,7 +1,8 @@
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -9,29 +10,22 @@ import * as S from "effect/Schema";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 describe("EffectGraph construction", () => {
-  it.effect("round-trips schema-derived node ids and metadata", () =>
-    Effect.gen(function* () {
-      yield* assertSchemaRoundTrip(EG.NodeId);
-      yield* assertSchemaRoundTrip(EG.NodeMetadata);
-    })
+  it.effect.prop(
+    "round-trips schema-derived node ids and metadata",
+    { NodeId: Arbitrary.schema(EG.NodeId), NodeMetadata: Arbitrary.schema(EG.NodeMetadata) },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaRoundTrip(EG.NodeId, values.NodeId, "EG.NodeId");
+        yield* assertSchemaRoundTrip(EG.NodeMetadata, values.NodeMetadata, "EG.NodeMetadata");
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(

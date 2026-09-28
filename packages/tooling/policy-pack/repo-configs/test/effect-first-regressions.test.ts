@@ -1,11 +1,12 @@
 import { fileURLToPath } from "node:url";
 import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSnapshotCodegen";
 import { resolveImportSpecifierImportKind } from "@beep/repo-configs/internal/eslint/RuleAstSchemas";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem } from "effect";
-import * as O from "effect/Option";
 
 const docsEslintConfigPath = fileURLToPath(new URL("../src/eslint/DocsESLintConfig.ts", import.meta.url));
 const requireCategoryTagRulePath = fileURLToPath(new URL("../src/eslint/RequireCategoryTagRule.ts", import.meta.url));
@@ -31,7 +32,7 @@ const readText = Effect.fn(function* (path: string) {
   return yield* fs.readFileString(path);
 });
 
-layer(NodeServices.layer)("effect-first regressions", (it) => {
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-first regressions", (it) => {
   describe("effect-first regressions", () => {
     it.effect(
       "disallows Match.value usage in retained docs and governance modules",
@@ -96,10 +97,10 @@ layer(NodeServices.layer)("effect-first regressions", (it) => {
     );
 
     it("resolves import kinds in data-first and data-last forms", () => {
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind({ importKind: "type" }))).toBe("type");
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind({}, "value"))).toBe("value");
-      expect(O.getOrUndefined(resolveImportSpecifierImportKind("type")({ importKind: "value" }))).toBe("value");
-      expect(O.isNone(resolveImportSpecifierImportKind(undefined)({}))).toBe(true);
+      assertSome(resolveImportSpecifierImportKind({ importKind: "type" }), "type");
+      assertSome(resolveImportSpecifierImportKind({}, "value"), "value");
+      assertSome(resolveImportSpecifierImportKind("type")({ importKind: "value" }), "value");
+      assertNone(resolveImportSpecifierImportKind(undefined)({}));
     });
   });
 });

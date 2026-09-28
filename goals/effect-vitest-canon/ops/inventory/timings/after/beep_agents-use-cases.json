@@ -1,0 +1,86 @@
+{
+  "package": "@beep/agents-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:09:08.274000+00:00",
+  "totalMs": 4926.358154296875,
+  "testCount": 33,
+  "files": [
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "ms": 18.218505859375,
+      "tests": 7
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "ms": 9.973876953125,
+      "tests": 4
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "ms": 28.358154296875,
+      "tests": 9
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "ms": 12.451171875,
+      "tests": 5
+    },
+    {
+      "file": "packages/agents/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.58935546875,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn models history as a role-tagged union of user and assistant items",
+      "ms": 15.816372000000229
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn round-trips touched schemas with schema-derived arbitraries",
+      "ms": 15.726854000000458
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn keeps touched encoded shapes stable",
+      "ms": 15.725040000000263
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn round-trips provider usage through its JSON-safe encoded boundary",
+      "ms": 15.723517999999785
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn derives the deterministic scripted block sequence from the last user prompt",
+      "ms": 15.710638999999901
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "testName": "@beep/agents-use-cases round-trips bounded runtime schemas with schema-derived arbitraries",
+      "ms": 13.35810500000025
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-use-cases ProviderInstance runs add, update, list, get, and remove command/query logic",
+      "ms": 11.666008999999576
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-use-cases ProviderInstance persists an authenticated probe snapshot",
+      "ms": 11.45115799999985
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-use-cases ProviderInstance persists claude logged-out snapshots and returns exact login guidance",
+      "ms": 11.434030999999777
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-use-cases ProviderInstance persists codex logged-out snapshots and returns exact login guidance",
+      "ms": 11.424166000000696
+    }
+  ]
+}

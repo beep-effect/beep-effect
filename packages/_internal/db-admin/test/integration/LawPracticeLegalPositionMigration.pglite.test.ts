@@ -14,6 +14,7 @@ import { toLegalOppositionCandidateInsert } from "@beep/law-practice-tables/enti
 import { toLegalPositionRelatorInsert } from "@beep/law-practice-tables/entities/LegalPositionRelator";
 import { toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -21,7 +22,7 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -306,7 +307,7 @@ if (!shouldRunPgliteIntegration) {
     // The two probes name different tables so two of the five triggers are
     // proven to fire rather than one; the other three rest on the exact-name
     // assertion above.
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the law-practice-legal-position migration and rejects re-kinding a stored relation",
         Effect.fnUntraced(function* () {
@@ -325,7 +326,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "rejects deleting a recorded power exercise",
         Effect.fnUntraced(function* () {

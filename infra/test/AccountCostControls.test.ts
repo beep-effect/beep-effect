@@ -1,12 +1,13 @@
 import { AccountCostControls, AccountCostControlsConfig, loadAccountCostControlsConfig } from "@beep/infra";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, MutableHashMap, Result } from "effect";
+import { Effect, MutableHashMap, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { vi } from "vitest";
 
 const decode = S.decodeUnknownResult(AccountCostControlsConfig);
 
@@ -16,10 +17,10 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
     expect(config.monthlyBudgetUsd).toBe(500);
     expect(config.anomalyImpactUsd).toBe(10);
     for (const invalid of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, "500"]) {
-      expect(Result.isFailure(decode({ expectedAccountId: "123456789012", monthlyBudgetUsd: invalid }))).toBe(true);
-      expect(Result.isFailure(decode({ expectedAccountId: "123456789012", anomalyImpactUsd: invalid }))).toBe(true);
+      pipe(decode({ expectedAccountId: "123456789012", monthlyBudgetUsd: invalid }), Result.isFailure, assertTrue);
+      pipe(decode({ expectedAccountId: "123456789012", anomalyImpactUsd: invalid }), Result.isFailure, assertTrue);
     }
-    expect(Result.isFailure(decode({ expectedAccountId: "wrong-account" }))).toBe(true);
+    pipe(decode({ expectedAccountId: "wrong-account" }), Result.isFailure, assertTrue);
   });
 
   it.effect("loads Pulumi settings and rejects invalid account or spending values", () =>

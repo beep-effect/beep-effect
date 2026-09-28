@@ -10,9 +10,11 @@ import {
 import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, Layer, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 
@@ -22,16 +24,40 @@ const content = decodeSafeDocumentUnsafe(
 );
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 
-const registryWithClient = (client: ChatClient["Service"]) =>
-  AtomRegistry.make({
-    initialValues: [[ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)]],
-  });
+const registryWithClient = Effect.fnUntraced(function* (client: ChatClient["Service"]) {
+  return yield* Effect.acquireRelease(
+    Effect.sync(() =>
+      AtomRegistry.make({
+        initialValues: [
+          [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)],
+        ],
+      })
+    ),
+    (registry) => Effect.sync(() => registry.dispose())
+  );
+});
 
 describe("assistant turn defects", { concurrent: false }, () => {
   it.effect(
     "clears the died turn and restores the prompt only when its receipt is provably not persisted",
     Effect.fnUntraced(function* () {
       const verifyDefectedTurn = Effect.fn("verifyDefectedTurn")(function* (status: "persisted" | "not_persisted") {
+        const draftKey = `draft:${threadId}`;
+        const storage = globalThis.localStorage;
+        yield* Effect.acquireRelease(
+          Effect.sync(() => {
+            const previous = O.fromNullishOr(storage?.getItem(draftKey));
+            storage?.removeItem(draftKey);
+            return previous;
+          }),
+          (previous) =>
+            Effect.sync(() =>
+              O.match(previous, {
+                onNone: () => storage?.removeItem(draftKey),
+                onSome: (value) => storage?.setItem(draftKey, value),
+              })
+            )
+        );
         let statusReads = 0;
         const client = ChatClient.of(((tag: string) => {
           if (tag === "GetTimeline") return Effect.succeed(emptyTimeline);
@@ -44,42 +70,35 @@ describe("assistant turn defects", { concurrent: false }, () => {
           if (tag === "SendMessage") return Stream.die("stream transport crashed");
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const draftAtom = draftAtoms(threadId);
         const draftRevisionAtom = draftRevisionAtoms(threadId);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountDraftRevision = registry.mount(draftRevisionAtom);
-        const unmountStreaming = registry.mount(streamingTurnAtom);
-        const unmountError = registry.mount(turnErrorAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, draftRevisionAtom);
+        yield* AtomRegistry.mount(registry, streamingTurnAtom);
+        yield* AtomRegistry.mount(registry, turnErrorAtom);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(draftAtom));
         expect(registry.get(draftRevisionAtom)).toBe(0);
 
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         const exit = yield* AtomRegistry.getResult(registry, runTurnAtom).pipe(Effect.exit);
 
         // the defect must surface as a failed run, not a silent success
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         // an exact terminal receipt ends the bounded poll on its first attempt
         expect(statusReads).toBe(1);
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(O.map(registry.get(turnErrorAtom), (error) => error.message)).toStrictEqual(
-          O.some("The reply failed unexpectedly before completing.")
+        assertNone(registry.get(streamingTurnAtom));
+        assertSome(
+          O.map(registry.get(turnErrorAtom), (error) => error.message),
+          "The reply failed unexpectedly before completing."
         );
         expect(registry.get(draftAtom)).toStrictEqual(status === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);
+      }, Effect.scoped);
 
-        unmountError();
-        unmountStreaming();
-        unmountDraftRevision();
-        unmountDraft();
-        unmountTurn();
-        registry.dispose();
-      });
-
-      // the not_persisted case writes the restored draft into localStorage, so
-      // the durable case must run first to see an empty draft baseline
+      // Each scenario restores its exact draft key after the registry is disposed.
       yield* verifyDefectedTurn("persisted");
       yield* verifyDefectedTurn("not_persisted");
     })

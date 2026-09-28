@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "repo-utils-inventory-lineage/v1",
+  "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+  "id": "EV006:packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts:196:expect@6#1",
+  "historical": {
+    "occurrence": "v2:53abe10604fd79e38e088b7e5f364030e017dfa580000b022b8420742dd43d68",
+    "evidence": "Original browser-map Option assertion migrated to assertSome with unchanged independent expected map.",
+    "action": "fixed",
+    "fixSha": "eee8c991c7c3483bbdb6df633cf00dca88498ee3"
+  },
+  "current": {
+    "occurrence": "v2:c3ba05706fb4c9fde51fc88338a1be25d4677565e7c575cb10f0a525859ecc43",
+    "evidence": "expect(result.bugs).toEqual(O.some({ email: \"bugs@example.com\" }))",
+    "action": "exception",
+    "reason": "Decoded Schema.Class instances are compared with independently specified plain objects using original Vitest toEqual semantics. assertSome adds prototype equality and fails this original contract."
+  },
+  "disposition": "Keep the exact current detector ID once in the ledger. Archive the distinct historical fixed concern here; its source proof remains valid. This is identity-collision deduplication, not reversal of the browser-map fix.",
+  "counts": {
+    "ledger": 383,
+    "fixed": 201,
+    "openNoFindings": 106,
+    "exceptions": 76,
+    "currentRootExceptions": 68,
+    "detectorFixedRows": 186,
+    "historicalFixedDetectorConcerns": 187
+  }
+}

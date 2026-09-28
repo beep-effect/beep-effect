@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/api-docs",
+  "sourceHead": "8a0f997a9053cc0b292c5c85557c117180079ce7",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.020425630995305,
+  "bunWholeCommandSeconds": 2.016779839002993,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [4.60986328125, 3.365234375, 2.451171875],
+  "loadAfter": [4.400390625, 3.34228515625, 2.44873046875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.14 avg60=0.29 avg300=0.17 total=822210343\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148821\n",
+    "io": "some avg10=0.03 avg60=0.19 avg300=0.12 total=868046267\nfull avg10=0.01 avg60=0.11 avg300=0.07 total=759373559\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.09 avg60=0.27 avg300=0.17 total=822213113\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148821\n",
+    "io": "some avg10=0.02 avg60=0.18 avg300=0.12 total=868047711\nfull avg10=0.01 avg60=0.10 avg300=0.07 total=759374738\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/labs/api-docs/AGENTS.md",
+      "sha256": "12942e93e29dd895f9be28cc3d255303e9ca7bdab2fa1ef8d211a8851583c921"
+    },
+    {
+      "file": "apps/labs/api-docs/CLAUDE.md",
+      "sha256": "12942e93e29dd895f9be28cc3d255303e9ca7bdab2fa1ef8d211a8851583c921"
+    },
+    {
+      "file": "apps/labs/api-docs/DESIGN.md",
+      "sha256": "9618d41567d1574bcfd89f7888517f78bcbf4efedf0e455dda5b49bf46ebb948"
+    },
+    {
+      "file": "apps/labs/api-docs/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/labs/api-docs/README.md",
+      "sha256": "c8ec7b3be4f623528adecad9dab5b1a3d56bb998240074329f70bb04e2518ecf"
+    },
+    {
+      "file": "apps/labs/api-docs/lab.manifest.json",
+      "sha256": "27c41bd261366d23773985cc521b2794b8818fd983e50b7cf2af873a0c8105a3"
+    },
+    {
+      "file": "apps/labs/api-docs/package.json",
+      "sha256": "2326348f54a3fe9e0d05c79807917d4561a8ae41476677ce7356bad32e0478bc"
+    },
+    {
+      "file": "apps/labs/api-docs/src/Api.ts",
+      "sha256": "15d773ca48562e1c7e432b6c547aeabf55c060b9f52d0c230eb5d9ba9e0a0c75"
+    },
+    {
+      "file": "apps/labs/api-docs/src/Catalog.models.ts",
+      "sha256": "784f642bf7af8ee1d191d38aac178ef744d37eb4066d2a5b08334bec0b47ca39"
+    },
+    {
+      "file": "apps/labs/api-docs/src/Catalog.ts",
+      "sha256": "735460adfa75e7a19a6cdb6137edbe0e64bc18bbb26f3cf0d5b3a0ec50384517"
+    },
+    {
+      "file": "apps/labs/api-docs/src/Docs.routes.ts",
+      "sha256": "984148ce6b7928fd99fb65f53089f6533df107e5d31907a340b8adaa29e5b06e"
+    },
+    {
+      "file": "apps/labs/api-docs/src/main.ts",
+      "sha256": "ba58e5921b5e5dbb7bc4cdaa1413f704cdbe28b47854cca619a15817e74eb7fc"
+    },
+    {
+      "file": "apps/labs/api-docs/src/runtime/Layer.ts",
+      "sha256": "0d76c887c2c3ba817db078035c515b43ae0d1f3eaa09b0d305f641e3827750d5"
+    },
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "sha256": "f1b6428d0c615e7a1e858899bd1c2459d56aa13b8ad66c5f0b35b0820bc0c91b"
+    },
+    {
+      "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
+      "sha256": "afe1f035019749dd968c9c2721210851c9affb75207f294f597b5bc4ef86a8e4"
+    },
+    {
+      "file": "apps/labs/api-docs/test/health.test.ts",
+      "sha256": "d524405e2f7d75077b7142c0ec59845fb6ebc426db1df04d57a710c84777d5df"
+    },
+    {
+      "file": "apps/labs/api-docs/tsconfig.check.json",
+      "sha256": "7e101439c21871b4d69bb58f57c8653cc879a095b59dca565969687e6f796178"
+    },
+    {
+      "file": "apps/labs/api-docs/tsconfig.json",
+      "sha256": "0ff437f777beabe7694c7e0f622d6645e7320354017da51c84af61e01aa97ea7"
+    },
+    {
+      "file": "apps/labs/api-docs/turbo.json",
+      "sha256": "20279475951c76f4a856d98627253dfaa27542810836c5f2f09be9dcc76e20ab"
+    },
+    {
+      "file": "apps/labs/api-docs/vitest.config.ts",
+      "sha256": "295443bcdd3f85eeef4d818e88659f6af085dad65f2df408f59ad03ac1d82e2f"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "786662da0492862dabd458bd4db0c7e254570e9b8459c0f5e638ebd8cdcdb96b"
+    }
+  ],
+  "environmentMode": "Configured API docs tests use real committed specifications and installed Scalar assets through an in-process HTTP web handler. No external provider, browser or network listener is used. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 5,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.400390625, 3.34228515625, 2.44873046875],
+    "loadAfter": [4.3681640625, 3.353515625, 2.45751953125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.09 avg60=0.27 avg300=0.17 total=822213115\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148821\n",
+      "io": "some avg10=0.02 avg60=0.18 avg300=0.12 total=868047711\nfull avg10=0.01 avg60=0.10 avg300=0.07 total=759374738\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.07 avg60=0.26 avg300=0.17 total=822217448\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186225869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178148821\n",
+      "io": "some avg10=0.01 avg60=0.17 avg300=0.12 total=868047777\nfull avg10=0.00 avg60=0.10 avg300=0.07 total=759374782\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 5,
+    "skipped": 0
+  },
+  "interpretation": "All5configured tests pass before and after on Node and Bun, zero skips and stable sources. All20original assertions and5titles remain, with an explicit health HTTP200 assertion added. Actual committed specifications and Scalar assets remain native in-process handler subjects. Handler disposal is retained. Host load and pressure are recorded; these are observations, not causal speedup or live provider/browser proof."
+}

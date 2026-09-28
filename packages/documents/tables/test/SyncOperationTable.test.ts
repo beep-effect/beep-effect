@@ -6,8 +6,10 @@ import {
   toSyncOperationInsert,
 } from "@beep/documents-tables/entities/SyncOperation";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
@@ -33,7 +35,7 @@ const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A
 
 const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
   expect(error._tag).toBe(tag);
-  expect(Str.isNonEmpty(error.message)).toBe(true);
+  pipe(Str.isNonEmpty(error.message), assertTrue);
 };
 
 const indexConfigNamed = (name: string) =>
@@ -66,23 +68,23 @@ describe("SyncOperation table", () => {
     expect(getTableConfig(syncOperationTable).name).toBe("documents_sync_operation");
     expect(SYNC_OPERATION_TABLE_NAME).toBe("documents_sync_operation");
     expect(DomainSyncOperation.SyncOperation.sql.tableName).toBe("documents_sync_operation");
-    expect(columns.id.primary).toBe(true);
+    pipe(columns.id.primary, assertTrue);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.attemptCount.name).toBe("attempt_count");
     expect(columns.attemptCount.columnType).toBe("PgInteger");
     expect(columns.idempotencyKey.name).toBe("idempotency_key");
-    expect(columns.idempotencyKey.notNull).toBe(true);
+    pipe(columns.idempotencyKey.notNull, assertTrue);
     expect(columns.inputContentDigest.name).toBe("input_content_digest");
-    expect(columns.inputContentDigest.notNull).toBe(false);
+    pipe(columns.inputContentDigest.notNull, assertFalse);
     expect(columns.operationType.name).toBe("operation_type");
     expect(columns.operationType.columnType).toBe("PgText");
     expect(columns.syncItemId.name).toBe("sync_item_id");
     expect(columns.syncItemId.columnType).toBe("PgInteger");
-    expect(columns.syncItemId.notNull).toBe(true);
+    pipe(columns.syncItemId.notNull, assertTrue);
     expect(columns.targetParentRelPath.name).toBe("target_parent_rel_path");
-    expect(columns.targetParentRelPath.notNull).toBe(false);
+    pipe(columns.targetParentRelPath.notNull, assertFalse);
     expect(columns.workspaceId.name).toBe("workspace_id");
-    expect(columns.workspaceId.notNull).toBe(true);
+    pipe(columns.workspaceId.notNull, assertTrue);
   });
 
   it("builds the SyncOperation indexes from schema-first hints", () => {
@@ -92,8 +94,8 @@ describe("SyncOperation table", () => {
     const syncItemIdLookup = indexConfigNamed("documents_sync_operation_sync_item_id_lookup_idx");
     const workspaceIdBtree = indexConfigNamed("documents_sync_operation_workspace_id_btree_idx");
 
-    expect(O.getOrThrow(publicIdUnique).config.unique).toBe(true);
-    expect(O.getOrThrow(idempotencyKeyUnique).config.unique).toBe(true);
+    pipe(O.getOrThrow(publicIdUnique).config.unique, assertTrue);
+    pipe(O.getOrThrow(idempotencyKeyUnique).config.unique, assertTrue);
     expect(O.getOrThrow(idempotencyKeyUnique).config.columns[0]).toMatchObject({ name: "idempotency_key" });
     expect(O.getOrThrow(statusLookup).config.columns[0]).toMatchObject({ name: "status" });
     expect(O.getOrThrow(syncItemIdLookup).config.columns[0]).toMatchObject({ name: "sync_item_id" });
@@ -106,7 +108,7 @@ describe("SyncOperation table", () => {
       const syncOperation = yield* decodeUnknownSyncOperation(uploadRow);
       const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
 
-      expect("id" in insert).toBe(false);
+      pipe("id" in insert, assertFalse);
       expect(insert.idempotencyKey).toBe("sync-item-1:uploadFile:4");
       expect(insert.status).toBe("queued");
       expect(insert.syncItemId).toBe(1);
@@ -125,9 +127,9 @@ describe("SyncOperation table", () => {
         })
       );
 
-      expect(roundTripped.inputContentDigest).toEqual(O.some("abc123"));
-      expect(roundTripped.lastError).toEqual(O.none());
-      expect(SyncOperationEquivalence(roundTripped, syncOperation)).toBe(true);
+      assertSome<string>(roundTripped.inputContentDigest, "abc123");
+      assertNone(roundTripped.lastError);
+      pipe(SyncOperationEquivalence(roundTripped, syncOperation), assertTrue);
     })
   );
 
@@ -136,7 +138,7 @@ describe("SyncOperation table", () => {
     [S.toType(DomainSyncOperation.SyncOperation)],
     ([syncOperation]) => {
       const insert = toSyncOperationInsert(syncOperation);
-      expect(Result.isSuccess(insert)).toBe(true);
+      pipe(insert, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(insert)) {
         return;
       }
@@ -147,12 +149,12 @@ describe("SyncOperation table", () => {
         lastError: insert.success.lastError ?? null,
         targetParentRelPath: insert.success.targetParentRelPath ?? null,
       });
-      expect(Result.isSuccess(decoded)).toBe(true);
+      pipe(decoded, Result.isSuccess, assertTrue);
       if (!Result.isSuccess(decoded)) {
         return;
       }
 
-      expect(SyncOperationEquivalence(decoded.success, syncOperation)).toBe(true);
+      pipe(SyncOperationEquivalence(decoded.success, syncOperation), assertTrue);
     },
     { arbitrary: fcRuns(50) }
   );

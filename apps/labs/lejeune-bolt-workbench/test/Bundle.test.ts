@@ -4,7 +4,7 @@ import { DuckDb } from "@beep/duckdb";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -67,13 +67,15 @@ const encodeRetentionAuthorization = S.encodeEffect(RetentionAuthorization);
 const encodeRuleResult = S.encodeEffect(RuleResult);
 const isFrozenSourceHash = S.is(FrozenSourceHash);
 
+import { it } from "@beep/test-runner";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import type {
   IsoDate as IsoDateValue,
   IsoTimestamp as IsoTimestampValue,
   OntologyClassName as OntologyClassNameValue,
 } from "@/domain/Ontology";
 
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 const makeInMemoryProjectionLayer = () => makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }));
 const decodedProviderRecording = decodeUnknownProviderRecording(providerRecordingFixture).pipe(
   Effect.flatMap(encodeProviderRecordingFromJsonString),
@@ -81,264 +83,282 @@ const decodedProviderRecording = decodeUnknownProviderRecording(providerRecordin
 );
 
 describe("LeJeune deterministic fixture bundle", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived retention authorizations",
-    Effect.fnUntraced(function* () {
+    [Arbitrary.schema(RetentionAuthorization)],
+    ([value]) => {
       const equivalent = S.toEquivalence(RetentionAuthorization);
-      const outcome = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(RetentionAuthorization),
-        (value) =>
-          encodeRetentionAuthorization(value).pipe(
-            Effect.flatMap(decodeUnknownRetentionAuthorization),
-            Effect.map((roundTripped) => equivalent(roundTripped, value))
-          ),
-        fcRuns(20)
+      return encodeRetentionAuthorization(value).pipe(
+        Effect.flatMap(decodeUnknownRetentionAuthorization),
+        Effect.map((roundTripped) => equivalent(roundTripped, value)),
+        Effect.map(assertTrue)
       );
-      expect(outcome._tag).toBe("Passed");
-    })
+    },
+    { arbitrary: fcRuns(20) }
   );
 
-  it.effect(
-    "generates exactly four stable synthetic source records across the two authorized layouts",
-    Effect.fnUntraced(function* () {
-      const [first, second] = yield* Effect.all([buildFixtureArtifacts, buildFixtureArtifacts], {
-        concurrency: 1,
-      }).pipe(provideBunCrypto);
-      const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "generates exactly four stable synthetic source records across the two authorized layouts",
+      Effect.fnUntraced(function* () {
+        const [first, second] = yield* Effect.all([buildFixtureArtifacts, buildFixtureArtifacts], {
+          concurrency: 1,
+        });
+        const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
 
-      expect(isFrozenSourceHash(manifest.sources[0])).toBe(true);
-      expect(A.map(first.sources, (source) => [source.id, source.sha256])).toEqual([
-        ["rfq-a-outlook-body", "ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"],
-        ["rfq-a-xlsx-takeoff", "09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"],
-        ["rfq-b-prose-email", "bc1144a4fdde67229b9e2178c09c133cdd48a0b8881e5f9b9f0316f4ba91806e"],
-        ["rfq-b-pdf-schedule", "bbaa1ae10d94a0680966ed5d1eef8c020b172131d760eb7bc9bc61e8f4831360"],
-      ]);
-      expect(A.map(second.sources, (source) => source.sha256)).toEqual(A.map(first.sources, (source) => source.sha256));
-      expect(A.map(first.sources, (source) => ({ id: source.id, sha256: source.sha256 }))).toEqual(manifest.sources);
-      expect(A.map(first.sources, (source) => source.format)).toEqual([
-        "outlook-body-table",
-        "xlsx-takeoff",
-        "prose-email",
-        "pdf-text-layer",
-      ]);
-      expect(A.every(first.sources, (source) => Str.Equivalence(source.syntheticLabel, "SYNTHETIC"))).toBe(true);
-    })
-  );
+        pipe(isFrozenSourceHash(manifest.sources[0]), assertTrue);
+        expect(A.map(first.sources, (source) => [source.id, source.sha256])).toEqual([
+          ["rfq-a-outlook-body", "ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"],
+          ["rfq-a-xlsx-takeoff", "09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"],
+          ["rfq-b-prose-email", "bc1144a4fdde67229b9e2178c09c133cdd48a0b8881e5f9b9f0316f4ba91806e"],
+          ["rfq-b-pdf-schedule", "bbaa1ae10d94a0680966ed5d1eef8c020b172131d760eb7bc9bc61e8f4831360"],
+        ]);
+        expect(A.map(second.sources, (source) => source.sha256)).toEqual(
+          A.map(first.sources, (source) => source.sha256)
+        );
+        expect(A.map(first.sources, (source) => ({ id: source.id, sha256: source.sha256 }))).toEqual(manifest.sources);
+        expect(A.map(first.sources, (source) => source.format)).toEqual([
+          "outlook-body-table",
+          "xlsx-takeoff",
+          "prose-email",
+          "pdf-text-layer",
+        ]);
+        pipe(
+          A.every(first.sources, (source) => Str.Equivalence(source.syntheticLabel, "SYNTHETIC")),
+          assertTrue
+        );
+      })
+    );
+  });
 
-  it.effect(
-    "grounds every normalized value to an exact source slice and retains both missing fields",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "grounds every normalized value to an exact source slice and retains both missing fields",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const manifest = yield* decodeUnknownFrozenFixtureManifest(fixtureManifestJson);
 
-      expect(fixtures).toEqual(CanonicalNormalizedFixtures);
-      expect(A.map(fixtures, (fixture) => fixture.rfq.id)).toEqual(["rfq-a", "rfq-b"]);
-      expect(A.map(fixtures, (fixture) => fixture.missingFields[0]?.field)).toEqual([
-        "certificationRequirement",
-        "domesticOrigin",
-      ]);
-      for (const fixture of fixtures) {
-        for (const field of fixture.extractedFields) {
-          const source = A.findFirst(fixture.sources, (candidate) =>
-            Str.Equivalence(candidate.id, field.sourceDocumentId)
-          );
-          expect(O.isSome(source)).toBe(true);
-          const sourceText = O.getOrThrow(source);
-          expect(Str.slice(field.anchor.startChar, field.anchor.endChar)(sourceText.text)).toBe(field.anchor.quote);
-          expect(field.anchor.quote).toBe(field.value);
+        expect(fixtures).toEqual(CanonicalNormalizedFixtures);
+        expect(A.map(fixtures, (fixture) => fixture.rfq.id)).toEqual(["rfq-a", "rfq-b"]);
+        expect(A.map(fixtures, (fixture) => fixture.missingFields[0]?.field)).toEqual([
+          "certificationRequirement",
+          "domesticOrigin",
+        ]);
+        for (const fixture of fixtures) {
+          for (const field of fixture.extractedFields) {
+            const source = A.findFirst(fixture.sources, (candidate) =>
+              Str.Equivalence(candidate.id, field.sourceDocumentId)
+            );
+            pipe(source, O.isSome, assertTrue);
+            const sourceText = O.getOrThrow(source);
+            expect(Str.slice(field.anchor.startChar, field.anchor.endChar)(sourceText.text)).toBe(field.anchor.quote);
+            expect(field.anchor.quote).toBe(field.value);
+          }
         }
-      }
-      expect(A.flatMap(fixtures, (fixture) => fixture.extractedFields)).toEqual(manifest.extractedFields);
-      expect(
-        A.flatMap(fixtures, (fixture) => A.map(fixture.missingFields, (field) => `${field.rfqId}|${field.field}`))
-      ).toEqual(manifest.missingFields);
-    })
-  );
+        expect(A.flatMap(fixtures, (fixture) => fixture.extractedFields)).toEqual(manifest.extractedFields);
+        expect(
+          A.flatMap(fixtures, (fixture) => A.map(fixture.missingFields, (field) => `${field.rfqId}|${field.field}`))
+        ).toEqual(manifest.missingFields);
+      })
+    );
+  });
 
-  it.effect(
-    "keeps the ontology at exactly twelve classes and covers each rule's pass and stop case",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const results = yield* evaluateRules(fixtures);
-      const ontologyClasses: ReadonlyArray<OntologyClassNameValue> = OntologyClassName.Options;
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "keeps the ontology at exactly twelve classes and covers each rule's pass and stop case",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const results = yield* evaluateRules(fixtures);
+        const ontologyClasses: ReadonlyArray<OntologyClassNameValue> = OntologyClassName.Options;
 
-      expect(ontologyClasses).toEqual([
-        "ProductVariant",
-        "Component",
-        "Standard",
-        "Finish",
-        "Tool",
-        "SupplierOffer",
-        "Project",
-        "RFQ",
-        "QuoteLine",
-        "LotCertificate",
-        "Approval",
-        "ExpertClaim",
-      ]);
-      expect([Approval.fields.decision !== undefined, ExpertClaim.fields.reviewStatus !== undefined]).toEqual([
-        true,
-        true,
-      ]);
-      expect(A.map(results, (result) => [result.ruleId, result.disposition, result.requiresHuman])).toEqual([
-        ["matched-assembly", "pass", false],
-        ["matched-assembly", "mismatch", true],
-        ["dti-strength-match", "pass", false],
-        ["dti-strength-match", "mismatch", true],
-        ["a490-hdg-refusal", "pass", false],
-        ["a490-hdg-refusal", "refuse", true],
-      ]);
-      expect(
-        A.every(results, (result) => Str.Equivalence(result.source.evidenceAnchor.quote, result.source.evidence))
-      ).toBe(true);
-      expect(
-        A.map(
-          A.dedupeWith(results, (left, right) => Str.Equivalence(left.source.id, right.source.id)),
-          (result) => [result.source.id, result.source.accessedOn, result.source.url, result.source.researchPath]
-        )
-      ).toEqual([
-        [
-          "aisc-matched-assembly",
-          "2026-08-25",
-          "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
-          "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
-        ],
-        [
-          "portland-bolt-astm-f959",
-          "2026-08-25",
-          "https://www.portlandbolt.com/technical/specifications/astm-f959/",
-          "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
-        ],
-        [
-          "fastenal-a490-coating",
-          "2026-08-25",
-          "https://blueprint.fastenal.com/structural-bolts.html",
-          "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
-        ],
-      ]);
+        expect(ontologyClasses).toEqual([
+          "ProductVariant",
+          "Component",
+          "Standard",
+          "Finish",
+          "Tool",
+          "SupplierOffer",
+          "Project",
+          "RFQ",
+          "QuoteLine",
+          "LotCertificate",
+          "Approval",
+          "ExpertClaim",
+        ]);
+        expect([Approval.fields.decision !== undefined, ExpertClaim.fields.reviewStatus !== undefined]).toEqual([
+          true,
+          true,
+        ]);
+        expect(A.map(results, (result) => [result.ruleId, result.disposition, result.requiresHuman])).toEqual([
+          ["matched-assembly", "pass", false],
+          ["matched-assembly", "mismatch", true],
+          ["dti-strength-match", "pass", false],
+          ["dti-strength-match", "mismatch", true],
+          ["a490-hdg-refusal", "pass", false],
+          ["a490-hdg-refusal", "refuse", true],
+        ]);
+        pipe(
+          A.every(results, (result) => Str.Equivalence(result.source.evidenceAnchor.quote, result.source.evidence)),
+          assertTrue
+        );
+        expect(
+          A.map(
+            A.dedupeWith(results, (left, right) => Str.Equivalence(left.source.id, right.source.id)),
+            (result) => [result.source.id, result.source.accessedOn, result.source.url, result.source.researchPath]
+          )
+        ).toEqual([
+          [
+            "aisc-matched-assembly",
+            "2026-08-25",
+            "https://www.aisc.org/aisc/solutions-center/engineering-faqs/6-bolting/",
+            "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
+          ],
+          [
+            "portland-bolt-astm-f959",
+            "2026-08-25",
+            "https://www.portlandbolt.com/technical/specifications/astm-f959/",
+            "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
+          ],
+          [
+            "fastenal-a490-coating",
+            "2026-08-25",
+            "https://blueprint.fastenal.com/structural-bolts.html",
+            "explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md",
+          ],
+        ]);
 
-      const [rfqA, rfqB] = fixtures;
-      const renamedA490 = NormalizedFixture.make({
-        ...rfqB,
-        productVariant: ProductVariant.make({ ...rfqB.productVariant, label: "Renamed structural bolt" }),
-      });
-      const renamedResults = yield* evaluateRules([rfqA, renamedA490]);
-      expect(
-        O.getOrThrow(A.findFirst(renamedResults, (result) => Str.Equivalence(result.caseId, "rfq-b-a490-hdg-refusal")))
-          .disposition
-      ).toBe("refuse");
+        const [rfqA, rfqB] = fixtures;
+        const renamedA490 = NormalizedFixture.make({
+          ...rfqB,
+          productVariant: ProductVariant.make({ ...rfqB.productVariant, label: "Renamed structural bolt" }),
+        });
+        const renamedResults = yield* evaluateRules([rfqA, renamedA490]);
+        expect(
+          O.getOrThrow(
+            A.findFirst(renamedResults, (result) => Str.Equivalence(result.caseId, "rfq-b-a490-hdg-refusal"))
+          ).disposition
+        ).toBe("refuse");
 
-      const encodedRfqA = yield* encodeNormalizedFixture(rfqA);
-      const incompatibleComponents = A.map(encodedRfqA.components, (component) =>
-        Str.Equivalence(component.kind, "nut")
-          ? { ...component, standardId: "astm-a490-type-1", strengthClass: "490" }
-          : component
-      );
-      const incompatibleAssembly = yield* decodeUnknownNormalizedFixture({
-        ...encodedRfqA,
-        components: incompatibleComponents,
-      });
-      const incompatibleResults = yield* evaluateRules([incompatibleAssembly, rfqB]);
-      const incompatibleMatchedResult = O.getOrThrow(
-        A.findFirst(incompatibleResults, (result) => Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch"))
-      );
-      expect([incompatibleMatchedResult.disposition, incompatibleMatchedResult.requiresHuman]).toEqual([
-        "mismatch",
-        true,
-      ]);
+        const encodedRfqA = yield* encodeNormalizedFixture(rfqA);
+        const incompatibleComponents = A.map(encodedRfqA.components, (component) =>
+          Str.Equivalence(component.kind, "nut")
+            ? { ...component, standardId: "astm-a490-type-1", strengthClass: "490" }
+            : component
+        );
+        const incompatibleAssembly = yield* decodeUnknownNormalizedFixture({
+          ...encodedRfqA,
+          components: incompatibleComponents,
+        });
+        const incompatibleResults = yield* evaluateRules([incompatibleAssembly, rfqB]);
+        const incompatibleMatchedResult = O.getOrThrow(
+          A.findFirst(incompatibleResults, (result) =>
+            Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch")
+          )
+        );
+        expect([incompatibleMatchedResult.disposition, incompatibleMatchedResult.requiresHuman]).toEqual([
+          "mismatch",
+          true,
+        ]);
 
-      const dtiStandardSwizzleComponents = A.map(encodedRfqA.components, (component) =>
-        Str.Equivalence(component.kind, "dti") ? { ...component, standardId: "astm-a563-dh" } : component
-      );
-      const dtiStandardSwizzle = yield* decodeUnknownNormalizedFixture({
-        ...encodedRfqA,
-        components: dtiStandardSwizzleComponents,
-      });
-      const dtiStandardSwizzleResults = yield* evaluateRules([dtiStandardSwizzle, rfqB]);
-      const dtiStandardSwizzleResult = O.getOrThrow(
-        A.findFirst(dtiStandardSwizzleResults, (result) =>
-          Str.Equivalence(result.caseId, "rfq-a-dti-strength-mismatch")
-        )
-      );
-      expect([dtiStandardSwizzleResult.disposition, dtiStandardSwizzleResult.requiresHuman]).toEqual([
-        "mismatch",
-        true,
-      ]);
+        const dtiStandardSwizzleComponents = A.map(encodedRfqA.components, (component) =>
+          Str.Equivalence(component.kind, "dti") ? { ...component, standardId: "astm-a563-dh" } : component
+        );
+        const dtiStandardSwizzle = yield* decodeUnknownNormalizedFixture({
+          ...encodedRfqA,
+          components: dtiStandardSwizzleComponents,
+        });
+        const dtiStandardSwizzleResults = yield* evaluateRules([dtiStandardSwizzle, rfqB]);
+        const dtiStandardSwizzleResult = O.getOrThrow(
+          A.findFirst(dtiStandardSwizzleResults, (result) =>
+            Str.Equivalence(result.caseId, "rfq-a-dti-strength-mismatch")
+          )
+        );
+        expect([dtiStandardSwizzleResult.disposition, dtiStandardSwizzleResult.requiresHuman]).toEqual([
+          "mismatch",
+          true,
+        ]);
 
-      const provenanceFields = A.map(encodedRfqA.extractedFields, (field) =>
-        Str.Equivalence(field.name, "product")
-          ? { ...field, anchor: { ...field.anchor, quote: "XX assembly" }, value: "XX assembly" }
-          : field
-      );
-      const provenanceSources = A.map(encodedRfqA.sources, (source) =>
-        Str.Equivalence(source.id, "rfq-a-xlsx-takeoff")
-          ? { ...source, text: Str.replace("TC assembly", "XX assembly")(source.text) }
-          : source
-      );
-      const unprovenAssembly = yield* decodeUnknownNormalizedFixture({
-        ...encodedRfqA,
-        extractedFields: provenanceFields,
-        sources: provenanceSources,
-      });
-      const unprovenResults = yield* evaluateRules([unprovenAssembly, rfqB]);
-      expect(
-        O.getOrThrow(
-          A.findFirst(unprovenResults, (result) => Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch"))
-        ).disposition
-      ).toBe("mismatch");
-    })
-  );
+        const provenanceFields = A.map(encodedRfqA.extractedFields, (field) =>
+          Str.Equivalence(field.name, "product")
+            ? { ...field, anchor: { ...field.anchor, quote: "XX assembly" }, value: "XX assembly" }
+            : field
+        );
+        const provenanceSources = A.map(encodedRfqA.sources, (source) =>
+          Str.Equivalence(source.id, "rfq-a-xlsx-takeoff")
+            ? { ...source, text: Str.replace("TC assembly", "XX assembly")(source.text) }
+            : source
+        );
+        const unprovenAssembly = yield* decodeUnknownNormalizedFixture({
+          ...encodedRfqA,
+          extractedFields: provenanceFields,
+          sources: provenanceSources,
+        });
+        const unprovenResults = yield* evaluateRules([unprovenAssembly, rfqB]);
+        expect(
+          O.getOrThrow(
+            A.findFirst(unprovenResults, (result) => Str.Equivalence(result.caseId, "rfq-a-matched-assembly-mismatch"))
+          ).disposition
+        ).toBe("mismatch");
+      })
+    );
+  });
 
-  it.live(
-    "rebuilds identical query outputs from fresh PGlite, DuckDB, and Oxigraph stores",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const rules = yield* evaluateRules(fixtures);
-      const referenceData = buildReferenceData(fixtures);
-      expect(A.every(referenceData.offers, (offer) => Str.Equivalence(offer.recordLabel, "SYNTHETIC"))).toBe(true);
-      expect(
-        A.every(referenceData.certificates, (certificate) => Str.Equivalence(certificate.recordLabel, "SYNTHETIC"))
-      ).toBe(true);
-      const input = ProjectionInput.make({
-        certificates: referenceData.certificates,
-        fixtures,
-        offers: referenceData.offers,
-        rules,
-      });
-      const rebuild = () => buildProjectionSnapshot(input).pipe(provideScopedLayer(makeInMemoryProjectionLayer()));
-      const first = yield* rebuild();
-      const second = yield* rebuild();
+  it.layer(BunCrypto.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+    it.effect(
+      "rebuilds identical query outputs from fresh PGlite, DuckDB, and Oxigraph stores",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const rules = yield* evaluateRules(fixtures);
+        const referenceData = buildReferenceData(fixtures);
+        pipe(
+          A.every(referenceData.offers, (offer) => Str.Equivalence(offer.recordLabel, "SYNTHETIC")),
+          assertTrue
+        );
+        pipe(
+          A.every(referenceData.certificates, (certificate) => Str.Equivalence(certificate.recordLabel, "SYNTHETIC")),
+          assertTrue
+        );
+        const input = ProjectionInput.make({
+          certificates: referenceData.certificates,
+          fixtures,
+          offers: referenceData.offers,
+          rules,
+        });
+        const rebuild = () => buildProjectionSnapshot(input).pipe(provideScopedLayer(makeInMemoryProjectionLayer()));
+        const first = yield* rebuild();
+        const second = yield* rebuild();
 
-      expect(second).toEqual(first);
-      expect(first.documentCount).toBe(4);
-      expect(first.documentDigests).toHaveLength(4);
-      expect(first.ontologyClasses).toEqual([
-        "Approval",
-        "Component",
-        "ExpertClaim",
-        "Finish",
-        "LotCertificate",
-        "ProductVariant",
-        "Project",
-        "QuoteLine",
-        "RFQ",
-        "Standard",
-        "SupplierOffer",
-        "Tool",
-      ]);
-      expect(first.quoteLines).toEqual([
-        "rfq-a-line-a-1|rfq-a-tc-assembly|180",
-        "rfq-b-line-b-1|rfq-b-a490-heavy-hex|860",
-      ]);
-      expect(first.citations).toHaveLength(4);
-      expect(first.syntheticRecords).toHaveLength(4);
-      expect(first.ruleDispositions).toHaveLength(6);
-    }),
-    { timeout: 90_000 }
-  );
+        expect(second).toEqual(first);
+        expect(first.documentCount).toBe(4);
+        expect(first.documentDigests).toHaveLength(4);
+        expect(first.ontologyClasses).toEqual([
+          "Approval",
+          "Component",
+          "ExpertClaim",
+          "Finish",
+          "LotCertificate",
+          "ProductVariant",
+          "Project",
+          "QuoteLine",
+          "RFQ",
+          "Standard",
+          "SupplierOffer",
+          "Tool",
+        ]);
+        expect(first.quoteLines).toEqual([
+          "rfq-a-line-a-1|rfq-a-tc-assembly|180",
+          "rfq-b-line-b-1|rfq-b-a490-heavy-hex|860",
+        ]);
+        expect(first.citations).toHaveLength(4);
+        expect(first.syntheticRecords).toHaveLength(4);
+        expect(first.ruleDispositions).toHaveLength(6);
+      }),
+      { timeout: 90_000 }
+    );
+  });
 
   for (const [column, corruption] of [
     [
@@ -350,10 +370,78 @@ describe("LeJeune deterministic fixture bundle", () => {
       "UPDATE rule_results SET requires_human = true WHERE case_id = 'rfq-a-a490-hdg-positive'",
     ],
   ] as const) {
-    it.live(
-      `rejects persisted ${column} corruption`,
+    it.layer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()), {
+      timeout: "30 seconds",
+      excludeTestServices: true,
+    })((it) => {
+      it.effect(
+        `rejects persisted ${column} corruption`,
+        Effect.fnUntraced(function* () {
+          const artifacts = yield* buildFixtureArtifacts;
+          const fixtures = yield* buildNormalizedFixtures(artifacts);
+          const rules = yield* evaluateRules(fixtures);
+          const referenceData = buildReferenceData(fixtures);
+          const input = ProjectionInput.make({
+            certificates: referenceData.certificates,
+            fixtures,
+            offers: referenceData.offers,
+            rules,
+          });
+          const failure = yield* Effect.flip(
+            Effect.gen(function* () {
+              const expected = yield* buildProjectionSnapshot(input);
+              const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+              yield* sql.unsafe(corruption);
+              return yield* verifyDurableProjectionSnapshot(expected);
+            })
+          );
+          expect(failure._tag).toBe("ProjectionError");
+        }),
+        { timeout: 90_000 }
+      );
+    });
+  }
+
+  it.layer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "rejects same-count corpus body corruption even when citations and the A490 result remain unchanged",
       Effect.fnUntraced(function* () {
-        const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const rules = yield* evaluateRules(fixtures);
+        const referenceData = buildReferenceData(fixtures);
+        const input = ProjectionInput.make({
+          certificates: referenceData.certificates,
+          fixtures,
+          offers: referenceData.offers,
+          rules,
+        });
+
+        const failure = yield* Effect.flip(
+          Effect.gen(function* () {
+            const expected = yield* buildProjectionSnapshot(input);
+            const duckdb = yield* DuckDb;
+            yield* duckdb.run(
+              "UPDATE corpus_documents SET body = body || ' integrity-corruption' WHERE id = 'rfq-a-xlsx-takeoff'"
+            );
+            return yield* verifyDurableProjectionSnapshot(expected);
+          })
+        );
+
+        expect(failure._tag).toBe("ProjectionError");
+      }),
+      { timeout: 90_000 }
+    );
+  });
+
+  it.layer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()), {
+    timeout: "30 seconds",
+    excludeTestServices: true,
+  })((it) => {
+    it.effect(
+      "rejects a persisted citation identifier associated with the wrong source URL",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
         const fixtures = yield* buildNormalizedFixtures(artifacts);
         const rules = yield* evaluateRules(fixtures);
         const referenceData = buildReferenceData(fixtures);
@@ -366,96 +454,42 @@ describe("LeJeune deterministic fixture bundle", () => {
         const failure = yield* Effect.flip(
           Effect.gen(function* () {
             const expected = yield* buildProjectionSnapshot(input);
-            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-            yield* sql.unsafe(corruption);
+            const duckdb = yield* DuckDb;
+            yield* duckdb.run("UPDATE rule_citations SET id = 'wrong-source-id' WHERE id = 'aisc-matched-assembly'");
             return yield* verifyDurableProjectionSnapshot(expected);
-          }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
+          })
         );
         expect(failure._tag).toBe("ProjectionError");
       }),
       { timeout: 90_000 }
     );
-  }
+  });
 
-  it.effect(
-    "rejects same-count corpus body corruption even when citations and the A490 result remain unchanged",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const rules = yield* evaluateRules(fixtures);
-      const referenceData = buildReferenceData(fixtures);
-      const input = ProjectionInput.make({
-        certificates: referenceData.certificates,
-        fixtures,
-        offers: referenceData.offers,
-        rules,
-      });
+  it.layer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "maps a reused projection store failure into the declared projection error",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const rules = yield* evaluateRules(fixtures);
+        const referenceData = buildReferenceData(fixtures);
+        const input = ProjectionInput.make({
+          certificates: referenceData.certificates,
+          fixtures,
+          offers: referenceData.offers,
+          rules,
+        });
+        const failure = yield* Effect.flip(
+          Effect.gen(function* () {
+            yield* buildProjectionSnapshot(input);
+            return yield* buildProjectionSnapshot(input);
+          })
+        );
 
-      const failure = yield* Effect.flip(
-        Effect.gen(function* () {
-          const expected = yield* buildProjectionSnapshot(input);
-          const duckdb = yield* DuckDb;
-          yield* duckdb.run(
-            "UPDATE corpus_documents SET body = body || ' integrity-corruption' WHERE id = 'rfq-a-xlsx-takeoff'"
-          );
-          return yield* verifyDurableProjectionSnapshot(expected);
-        }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
-      );
-
-      expect(failure._tag).toBe("ProjectionError");
-    }),
-    { timeout: 90_000 }
-  );
-
-  it.live(
-    "rejects a persisted citation identifier associated with the wrong source URL",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const rules = yield* evaluateRules(fixtures);
-      const referenceData = buildReferenceData(fixtures);
-      const input = ProjectionInput.make({
-        certificates: referenceData.certificates,
-        fixtures,
-        offers: referenceData.offers,
-        rules,
-      });
-      const failure = yield* Effect.flip(
-        Effect.gen(function* () {
-          const expected = yield* buildProjectionSnapshot(input);
-          const duckdb = yield* DuckDb;
-          yield* duckdb.run("UPDATE rule_citations SET id = 'wrong-source-id' WHERE id = 'aisc-matched-assembly'");
-          return yield* verifyDurableProjectionSnapshot(expected);
-        }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
-      );
-      expect(failure._tag).toBe("ProjectionError");
-    }),
-    { timeout: 90_000 }
-  );
-
-  it.effect(
-    "maps a reused projection store failure into the declared projection error",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const rules = yield* evaluateRules(fixtures);
-      const referenceData = buildReferenceData(fixtures);
-      const input = ProjectionInput.make({
-        certificates: referenceData.certificates,
-        fixtures,
-        offers: referenceData.offers,
-        rules,
-      });
-      const failure = yield* Effect.flip(
-        Effect.gen(function* () {
-          yield* buildProjectionSnapshot(input);
-          return yield* buildProjectionSnapshot(input);
-        }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
-      );
-
-      expect(failure._tag).toBe("ProjectionError");
-    })
-  );
+        expect(failure._tag).toBe("ProjectionError");
+      })
+    );
+  });
 
   it.effect(
     "rejects impossible semantic dates and timestamps",
@@ -473,614 +507,627 @@ describe("LeJeune deterministic fixture bundle", () => {
     })
   );
 
-  it.effect(
-    "rejects table-driven persisted boundary corruption",
-    Effect.fnUntraced(function* () {
-      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
-      const fixtures = yield* buildNormalizedFixtures(artifacts);
-      const rules = yield* evaluateRules(fixtures);
-      const recording = yield* decodedProviderRecording;
-      const replay = yield* replayOffline(recording).pipe(
-        provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()))
-      );
-      const fixture = yield* encodeNormalizedFixture(fixtures[0]);
-      const rule = yield* encodeRuleResult(rules[1]);
-      const bundle = yield* encodeImmutableDemoBundle(replay.bundle);
-      const [firstField, ...remainingFields] = fixture.extractedFields;
-      const [firstFixtureSource, secondFixtureSource] = fixture.sources;
-      const firstManifestField = O.getOrThrow(A.head(fixtureManifestJson.extractedFields));
-      const remainingManifestFields = A.drop(fixtureManifestJson.extractedFields, 1);
-      const [firstBundleRule, secondBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule] =
-        bundle.rules;
-      const [firstBundleCertificate, secondBundleCertificate] = bundle.certificates;
-      const [firstBundleFinish, secondBundleFinish] = bundle.finishes;
-      const [firstBundleFixture, secondBundleFixture] = bundle.fixtures;
-      const [firstBundleOffer, secondBundleOffer] = bundle.offers;
-      const [firstBundleStandard, ...remainingBundleStandards] = bundle.standards;
-      const [firstBundleTool, secondBundleTool] = bundle.tools;
-      const recordingPayload = yield* encodeProviderRecording(recording);
-      const [firstBundleFixtureField, secondBundleFixtureField, ...remainingBundleFixtureFields] =
-        firstBundleFixture.extractedFields;
-      const [firstBundleFixtureSource, secondBundleFixtureSource] = firstBundleFixture.sources;
-      const [firstBundleComponent, secondBundleComponent, thirdBundleComponent, fourthBundleComponent] =
-        firstBundleFixture.components;
-      const [providerProjectCandidate, providerDeliveryCandidate, providerFinishCandidate] =
-        bundle.providerRecording.candidates;
+  it.layer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "rejects table-driven persisted boundary corruption",
+      Effect.fnUntraced(function* () {
+        const artifacts = yield* buildFixtureArtifacts;
+        const fixtures = yield* buildNormalizedFixtures(artifacts);
+        const rules = yield* evaluateRules(fixtures);
+        const recording = yield* decodedProviderRecording;
+        const replay = yield* replayOffline(recording);
+        const fixture = yield* encodeNormalizedFixture(fixtures[0]);
+        const rule = yield* encodeRuleResult(rules[1]);
+        const bundle = yield* encodeImmutableDemoBundle(replay.bundle);
+        const [firstField, ...remainingFields] = fixture.extractedFields;
+        const [firstFixtureSource, secondFixtureSource] = fixture.sources;
+        const firstManifestField = O.getOrThrow(A.head(fixtureManifestJson.extractedFields));
+        const remainingManifestFields = A.drop(fixtureManifestJson.extractedFields, 1);
+        const [firstBundleRule, secondBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule] =
+          bundle.rules;
+        const [firstBundleCertificate, secondBundleCertificate] = bundle.certificates;
+        const [firstBundleFinish, secondBundleFinish] = bundle.finishes;
+        const [firstBundleFixture, secondBundleFixture] = bundle.fixtures;
+        const [firstBundleOffer, secondBundleOffer] = bundle.offers;
+        const [firstBundleStandard, ...remainingBundleStandards] = bundle.standards;
+        const [firstBundleTool, secondBundleTool] = bundle.tools;
+        const recordingPayload = yield* encodeProviderRecording(recording);
+        const [firstBundleFixtureField, secondBundleFixtureField, ...remainingBundleFixtureFields] =
+          firstBundleFixture.extractedFields;
+        const [firstBundleFixtureSource, secondBundleFixtureSource] = firstBundleFixture.sources;
+        const [firstBundleComponent, secondBundleComponent, thirdBundleComponent, fourthBundleComponent] =
+          firstBundleFixture.components;
+        const [providerProjectCandidate, providerDeliveryCandidate, providerFinishCandidate] =
+          bundle.providerRecording.candidates;
 
-      const fixtureSourceCardinality: unknown = { ...fixture, sources: A.take(fixture.sources, 1) };
-      const fixtureDuplicateSourceIdentity: unknown = {
-        ...fixture,
-        rfq: { ...fixture.rfq, sourceDocumentIds: [firstFixtureSource.id, firstFixtureSource.id] },
-        sources: [firstFixtureSource, { ...secondFixtureSource, id: firstFixtureSource.id }],
-      };
-      const fixtureDanglingSource: unknown = {
-        ...fixture,
-        extractedFields: [{ ...firstField, sourceDocumentId: "dangling-source" }, ...remainingFields],
-      };
-      const fixtureValueDrift: unknown = {
-        ...fixture,
-        extractedFields: [{ ...firstField, value: "corrupted-value" }, ...remainingFields],
-      };
-      const fixtureReferentialDrift: unknown = {
-        ...fixture,
-        quoteLine: { ...fixture.quoteLine, productVariantId: "dangling-product" },
-      };
-      const ruleHumanStop: unknown = { ...rule, requiresHuman: false };
-      const manifestSourceCardinality: unknown = {
-        ...fixtureManifestJson,
-        sources: A.take(fixtureManifestJson.sources, 1),
-      };
-      const manifestDuplicateSource: unknown = {
-        ...fixtureManifestJson,
-        sources: [
-          fixtureManifestJson.sources[0],
-          fixtureManifestJson.sources[0],
-          fixtureManifestJson.sources[2],
-          fixtureManifestJson.sources[3],
-        ],
-      };
-      const manifestHashDrift: unknown = {
-        ...fixtureManifestJson,
-        sources: [
-          {
-            ...fixtureManifestJson.sources[0],
-            sha256: "0000000000000000000000000000000000000000000000000000000000000000",
-          },
-          ...A.drop(fixtureManifestJson.sources, 1),
-        ],
-      };
-      const manifestDanglingExtraction: unknown = {
-        ...fixtureManifestJson,
-        extractedFields: [{ ...firstManifestField, sourceDocumentId: "dangling-source" }, ...remainingManifestFields],
-      };
-      const manifestDuplicateExtraction: unknown = {
-        ...fixtureManifestJson,
-        extractedFields: [firstManifestField, firstManifestField, ...A.drop(remainingManifestFields, 1)],
-      };
-      const manifestMissingFieldDrift: unknown = {
-        ...fixtureManifestJson,
-        missingFields: ["rfq-a|domesticOrigin", "rfq-b|certificationRequirement"],
-      };
-      const manifestSpanDrift: unknown = {
-        ...fixtureManifestJson,
-        extractedFields: [
-          {
-            ...firstManifestField,
-            anchor: {
-              ...firstManifestField.anchor,
-              endChar: firstManifestField.anchor.endChar + 1,
-              startChar: firstManifestField.anchor.startChar + 1,
+        const fixtureSourceCardinality: unknown = { ...fixture, sources: A.take(fixture.sources, 1) };
+        const fixtureDuplicateSourceIdentity: unknown = {
+          ...fixture,
+          rfq: { ...fixture.rfq, sourceDocumentIds: [firstFixtureSource.id, firstFixtureSource.id] },
+          sources: [firstFixtureSource, { ...secondFixtureSource, id: firstFixtureSource.id }],
+        };
+        const fixtureDanglingSource: unknown = {
+          ...fixture,
+          extractedFields: [{ ...firstField, sourceDocumentId: "dangling-source" }, ...remainingFields],
+        };
+        const fixtureValueDrift: unknown = {
+          ...fixture,
+          extractedFields: [{ ...firstField, value: "corrupted-value" }, ...remainingFields],
+        };
+        const fixtureReferentialDrift: unknown = {
+          ...fixture,
+          quoteLine: { ...fixture.quoteLine, productVariantId: "dangling-product" },
+        };
+        const ruleHumanStop: unknown = { ...rule, requiresHuman: false };
+        const manifestSourceCardinality: unknown = {
+          ...fixtureManifestJson,
+          sources: A.take(fixtureManifestJson.sources, 1),
+        };
+        const manifestDuplicateSource: unknown = {
+          ...fixtureManifestJson,
+          sources: [
+            fixtureManifestJson.sources[0],
+            fixtureManifestJson.sources[0],
+            fixtureManifestJson.sources[2],
+            fixtureManifestJson.sources[3],
+          ],
+        };
+        const manifestHashDrift: unknown = {
+          ...fixtureManifestJson,
+          sources: [
+            {
+              ...fixtureManifestJson.sources[0],
+              sha256: "0000000000000000000000000000000000000000000000000000000000000000",
             },
-          },
-          ...remainingManifestFields,
-        ],
-      };
-      const manifestQuoteValueDrift: unknown = {
-        ...fixtureManifestJson,
-        extractedFields: [
-          {
-            ...firstManifestField,
-            anchor: { ...firstManifestField.anchor, quote: "South Loop Canopy" },
-            value: "South Loop Canopy",
-          },
-          ...remainingManifestFields,
-        ],
-      };
-      const bundleFixtureCardinality: unknown = { ...bundle, fixtures: A.take(bundle.fixtures, 1) };
-      const bundleSourceHashDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            sources: [
-              {
-                ...firstBundleFixtureSource,
-                sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+            ...A.drop(fixtureManifestJson.sources, 1),
+          ],
+        };
+        const manifestDanglingExtraction: unknown = {
+          ...fixtureManifestJson,
+          extractedFields: [{ ...firstManifestField, sourceDocumentId: "dangling-source" }, ...remainingManifestFields],
+        };
+        const manifestDuplicateExtraction: unknown = {
+          ...fixtureManifestJson,
+          extractedFields: [firstManifestField, firstManifestField, ...A.drop(remainingManifestFields, 1)],
+        };
+        const manifestMissingFieldDrift: unknown = {
+          ...fixtureManifestJson,
+          missingFields: ["rfq-a|domesticOrigin", "rfq-b|certificationRequirement"],
+        };
+        const manifestSpanDrift: unknown = {
+          ...fixtureManifestJson,
+          extractedFields: [
+            {
+              ...firstManifestField,
+              anchor: {
+                ...firstManifestField.anchor,
+                endChar: firstManifestField.anchor.endChar + 1,
+                startChar: firstManifestField.anchor.startChar + 1,
               },
-              secondBundleFixtureSource,
-            ],
+            },
+            ...remainingManifestFields,
+          ],
+        };
+        const manifestQuoteValueDrift: unknown = {
+          ...fixtureManifestJson,
+          extractedFields: [
+            {
+              ...firstManifestField,
+              anchor: { ...firstManifestField.anchor, quote: "South Loop Canopy" },
+              value: "South Loop Canopy",
+            },
+            ...remainingManifestFields,
+          ],
+        };
+        const bundleFixtureCardinality: unknown = { ...bundle, fixtures: A.take(bundle.fixtures, 1) };
+        const bundleSourceHashDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              sources: [
+                {
+                  ...firstBundleFixtureSource,
+                  sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+                },
+                secondBundleFixtureSource,
+              ],
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleSourceContentDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              extractedFields: [
+                {
+                  ...firstBundleFixtureField,
+                  anchor: { ...firstBundleFixtureField.anchor, quote: "South Loop Canopy" },
+                  value: "South Loop Canopy",
+                },
+                secondBundleFixtureField,
+                ...remainingBundleFixtureFields,
+              ],
+              project: { ...firstBundleFixture.project, name: "South Loop Canopy" },
+              sources: [
+                {
+                  ...firstBundleFixtureSource,
+                  text: Str.replace("North Loop Canopy", "South Loop Canopy")(firstBundleFixtureSource.text),
+                },
+                secondBundleFixtureSource,
+              ],
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleSourceOrderDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            { ...firstBundleFixture, sources: [secondBundleFixtureSource, firstBundleFixtureSource] },
+            secondBundleFixture,
+          ],
+        };
+        const bundleExtractionOrderDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              extractedFields: [secondBundleFixtureField, firstBundleFixtureField, ...remainingBundleFixtureFields],
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleComponentOrderDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              components: [secondBundleComponent, firstBundleComponent, thirdBundleComponent, fourthBundleComponent],
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleMissingFieldSemanticDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              missingFields: [
+                {
+                  ...firstBundleFixture.missingFields[0],
+                  field: "fabricationApproval",
+                  question: "RFI: Is fabrication approval required for RFQ A?",
+                },
+              ],
+              rfq: { ...firstBundleFixture.rfq, missingFields: ["fabricationApproval"] },
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleProjectSemanticDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            { ...firstBundleFixture, project: { ...firstBundleFixture.project, name: "Renamed canopy project" } },
+            secondBundleFixture,
+          ],
+        };
+        const bundleProductSemanticDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              productVariant: { ...firstBundleFixture.productVariant, label: "Renamed TC assembly" },
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleDtiStrengthDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            {
+              ...firstBundleFixture,
+              components: [
+                firstBundleComponent,
+                secondBundleComponent,
+                thirdBundleComponent,
+                { ...fourthBundleComponent, strengthClass: "490" },
+              ],
+            },
+            secondBundleFixture,
+          ],
+        };
+        const bundleFixtureOrderDrift: unknown = {
+          ...bundle,
+          fixtures: [secondBundleFixture, firstBundleFixture],
+          offers: [
+            { ...firstBundleOffer, productVariantId: secondBundleFixture.productVariant.id },
+            { ...secondBundleOffer, productVariantId: firstBundleFixture.productVariant.id },
+          ],
+        };
+        const bundleRuleCardinality: unknown = { ...bundle, rules: A.take(bundle.rules, 1) };
+        const bundleRuleIdDrift: unknown = {
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, ruleId: "dti-strength-match" },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleRuleSourceDrift: unknown = {
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, source: thirdBundleRule.source },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleWithFirstRuleSource = (source: unknown): unknown => ({
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, source },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        });
+        const bundleRuleSourceUrlDrift = bundleWithFirstRuleSource({
+          ...firstBundleRule.source,
+          url: "https://example.com/altered-rule-source",
+        });
+        const bundleRuleSourceRevisionDrift = bundleWithFirstRuleSource({
+          ...firstBundleRule.source,
+          revision: "Altered governing revision",
+        });
+        const bundleRuleSourceEvidenceDrift = bundleWithFirstRuleSource({
+          ...firstBundleRule.source,
+          evidence: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidence),
+          evidenceAnchor: {
+            ...firstBundleRule.source.evidenceAnchor,
+            quote: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidenceAnchor.quote),
           },
-          secondBundleFixture,
-        ],
-      };
-      const bundleSourceContentDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            extractedFields: [
-              {
-                ...firstBundleFixtureField,
-                anchor: { ...firstBundleFixtureField.anchor, quote: "South Loop Canopy" },
-                value: "South Loop Canopy",
-              },
-              secondBundleFixtureField,
-              ...remainingBundleFixtureFields,
-            ],
-            project: { ...firstBundleFixture.project, name: "South Loop Canopy" },
-            sources: [
-              {
-                ...firstBundleFixtureSource,
-                text: Str.replace("North Loop Canopy", "South Loop Canopy")(firstBundleFixtureSource.text),
-              },
-              secondBundleFixtureSource,
-            ],
+        });
+        const bundleRuleSourceTitleDrift = bundleWithFirstRuleSource({
+          ...firstBundleRule.source,
+          title: "Altered rule source title",
+        });
+        const bundleRuleSourceResearchPathDrift = bundleWithFirstRuleSource({
+          ...firstBundleRule.source,
+          researchPath: "explorations/lejeune-bolt-agentic-demo/research/altered.md",
+        });
+        const bundleRuleDispositionDrift: unknown = {
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, disposition: "mismatch", requiresHuman: true },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleRuleOrderDrift: unknown = {
+          ...bundle,
+          rules: [
+            secondBundleRule,
+            firstBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleRuleFactsDrift: unknown = {
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, matchedFacts: ["Fabricated matched fact"] },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleRuleStopReasonDrift: unknown = {
+          ...bundle,
+          rules: [
+            { ...firstBundleRule, stopReason: "Fabricated stop reason." },
+            secondBundleRule,
+            thirdBundleRule,
+            fourthBundleRule,
+            fifthBundleRule,
+            sixthBundleRule,
+          ],
+        };
+        const bundleStandardSemanticDrift: unknown = {
+          ...bundle,
+          standards: [{ ...firstBundleStandard, revision: "Corrupted standard revision" }, ...remainingBundleStandards],
+        };
+        const bundleFinishSemanticDrift: unknown = {
+          ...bundle,
+          finishes: [
+            { ...firstBundleFinish, coatingSpecification: "Corrupted coating specification" },
+            secondBundleFinish,
+          ],
+        };
+        const bundleToolSemanticDrift: unknown = {
+          ...bundle,
+          tools: [{ ...firstBundleTool, operation: "Corrupted installation operation" }, secondBundleTool],
+        };
+        const bundleOfferSemanticDrift: unknown = {
+          ...bundle,
+          offers: [{ ...firstBundleOffer, unitPriceCents: 1_900 }, secondBundleOffer],
+        };
+        const bundleCertificateSemanticDrift: unknown = {
+          ...bundle,
+          certificates: [{ ...firstBundleCertificate, lotId: "corrupted-synthetic-lot" }, secondBundleCertificate],
+        };
+        const bundleQuoteProjectionDrift: unknown = {
+          ...bundle,
+          fixtures: [
+            { ...firstBundleFixture, quoteLine: { ...firstBundleFixture.quoteLine, quantity: 181 } },
+            secondBundleFixture,
+          ],
+        };
+        const bundleSyntheticProjectionDrift: unknown = {
+          ...bundle,
+          offers: [{ ...firstBundleOffer, observedAt: "2026-08-27T11:31:00.000Z" }, secondBundleOffer],
+        };
+        const projectionClassVocabulary: unknown = {
+          ...bundle.projection,
+          ontologyClasses: ["BogusClass", ...A.drop(bundle.projection.ontologyClasses, 1)],
+        };
+        const projectionRuleOrderDrift: unknown = {
+          ...bundle.projection,
+          ruleDispositions: [
+            bundle.projection.ruleDispositions[1],
+            bundle.projection.ruleDispositions[0],
+            ...A.drop(bundle.projection.ruleDispositions, 2),
+          ],
+        };
+        const providerDocumentDrift: unknown = { ...recordingPayload, documentId: "unrelated-document" };
+        const bundleProviderMetadataDrift: unknown = {
+          ...bundle,
+          providerRecording: {
+            ...bundle.providerRecording,
+            model: "altered-model",
+            provider: "xai",
+            recordedAt: "2026-08-27T13:25:18.044Z",
           },
-          secondBundleFixture,
-        ],
-      };
-      const bundleSourceOrderDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          { ...firstBundleFixture, sources: [secondBundleFixtureSource, firstBundleFixtureSource] },
-          secondBundleFixture,
-        ],
-      };
-      const bundleExtractionOrderDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            extractedFields: [secondBundleFixtureField, firstBundleFixtureField, ...remainingBundleFixtureFields],
+        };
+        const bundleProviderCandidateOrderDrift: unknown = {
+          ...bundle,
+          providerRecording: {
+            ...bundle.providerRecording,
+            candidates: [providerDeliveryCandidate, providerProjectCandidate, providerFinishCandidate],
           },
-          secondBundleFixture,
-        ],
-      };
-      const bundleComponentOrderDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            components: [secondBundleComponent, firstBundleComponent, thirdBundleComponent, fourthBundleComponent],
-          },
-          secondBundleFixture,
-        ],
-      };
-      const bundleMissingFieldSemanticDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            missingFields: [
-              {
-                ...firstBundleFixture.missingFields[0],
-                field: "fabricationApproval",
-                question: "RFI: Is fabrication approval required for RFQ A?",
-              },
-            ],
-            rfq: { ...firstBundleFixture.rfq, missingFields: ["fabricationApproval"] },
-          },
-          secondBundleFixture,
-        ],
-      };
-      const bundleProjectSemanticDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          { ...firstBundleFixture, project: { ...firstBundleFixture.project, name: "Renamed canopy project" } },
-          secondBundleFixture,
-        ],
-      };
-      const bundleProductSemanticDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            productVariant: { ...firstBundleFixture.productVariant, label: "Renamed TC assembly" },
-          },
-          secondBundleFixture,
-        ],
-      };
-      const bundleDtiStrengthDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          {
-            ...firstBundleFixture,
-            components: [
-              firstBundleComponent,
-              secondBundleComponent,
-              thirdBundleComponent,
-              { ...fourthBundleComponent, strengthClass: "490" },
-            ],
-          },
-          secondBundleFixture,
-        ],
-      };
-      const bundleFixtureOrderDrift: unknown = {
-        ...bundle,
-        fixtures: [secondBundleFixture, firstBundleFixture],
-        offers: [
-          { ...firstBundleOffer, productVariantId: secondBundleFixture.productVariant.id },
-          { ...secondBundleOffer, productVariantId: firstBundleFixture.productVariant.id },
-        ],
-      };
-      const bundleRuleCardinality: unknown = { ...bundle, rules: A.take(bundle.rules, 1) };
-      const bundleRuleIdDrift: unknown = {
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, ruleId: "dti-strength-match" },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      };
-      const bundleRuleSourceDrift: unknown = {
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, source: thirdBundleRule.source },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      };
-      const bundleWithFirstRuleSource = (source: unknown): unknown => ({
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, source },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      });
-      const bundleRuleSourceUrlDrift = bundleWithFirstRuleSource({
-        ...firstBundleRule.source,
-        url: "https://example.com/altered-rule-source",
-      });
-      const bundleRuleSourceRevisionDrift = bundleWithFirstRuleSource({
-        ...firstBundleRule.source,
-        revision: "Altered governing revision",
-      });
-      const bundleRuleSourceEvidenceDrift = bundleWithFirstRuleSource({
-        ...firstBundleRule.source,
-        evidence: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidence),
-        evidenceAnchor: {
-          ...firstBundleRule.source.evidenceAnchor,
-          quote: Str.replace("Galvanized", "Fabricated")(firstBundleRule.source.evidenceAnchor.quote),
-        },
-      });
-      const bundleRuleSourceTitleDrift = bundleWithFirstRuleSource({
-        ...firstBundleRule.source,
-        title: "Altered rule source title",
-      });
-      const bundleRuleSourceResearchPathDrift = bundleWithFirstRuleSource({
-        ...firstBundleRule.source,
-        researchPath: "explorations/lejeune-bolt-agentic-demo/research/altered.md",
-      });
-      const bundleRuleDispositionDrift: unknown = {
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, disposition: "mismatch", requiresHuman: true },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      };
-      const bundleRuleOrderDrift: unknown = {
-        ...bundle,
-        rules: [secondBundleRule, firstBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule],
-      };
-      const bundleRuleFactsDrift: unknown = {
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, matchedFacts: ["Fabricated matched fact"] },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      };
-      const bundleRuleStopReasonDrift: unknown = {
-        ...bundle,
-        rules: [
-          { ...firstBundleRule, stopReason: "Fabricated stop reason." },
-          secondBundleRule,
-          thirdBundleRule,
-          fourthBundleRule,
-          fifthBundleRule,
-          sixthBundleRule,
-        ],
-      };
-      const bundleStandardSemanticDrift: unknown = {
-        ...bundle,
-        standards: [{ ...firstBundleStandard, revision: "Corrupted standard revision" }, ...remainingBundleStandards],
-      };
-      const bundleFinishSemanticDrift: unknown = {
-        ...bundle,
-        finishes: [
-          { ...firstBundleFinish, coatingSpecification: "Corrupted coating specification" },
-          secondBundleFinish,
-        ],
-      };
-      const bundleToolSemanticDrift: unknown = {
-        ...bundle,
-        tools: [{ ...firstBundleTool, operation: "Corrupted installation operation" }, secondBundleTool],
-      };
-      const bundleOfferSemanticDrift: unknown = {
-        ...bundle,
-        offers: [{ ...firstBundleOffer, unitPriceCents: 1_900 }, secondBundleOffer],
-      };
-      const bundleCertificateSemanticDrift: unknown = {
-        ...bundle,
-        certificates: [{ ...firstBundleCertificate, lotId: "corrupted-synthetic-lot" }, secondBundleCertificate],
-      };
-      const bundleQuoteProjectionDrift: unknown = {
-        ...bundle,
-        fixtures: [
-          { ...firstBundleFixture, quoteLine: { ...firstBundleFixture.quoteLine, quantity: 181 } },
-          secondBundleFixture,
-        ],
-      };
-      const bundleSyntheticProjectionDrift: unknown = {
-        ...bundle,
-        offers: [{ ...firstBundleOffer, observedAt: "2026-08-27T11:31:00.000Z" }, secondBundleOffer],
-      };
-      const projectionClassVocabulary: unknown = {
-        ...bundle.projection,
-        ontologyClasses: ["BogusClass", ...A.drop(bundle.projection.ontologyClasses, 1)],
-      };
-      const projectionRuleOrderDrift: unknown = {
-        ...bundle.projection,
-        ruleDispositions: [
-          bundle.projection.ruleDispositions[1],
-          bundle.projection.ruleDispositions[0],
-          ...A.drop(bundle.projection.ruleDispositions, 2),
-        ],
-      };
-      const providerDocumentDrift: unknown = { ...recordingPayload, documentId: "unrelated-document" };
-      const bundleProviderMetadataDrift: unknown = {
-        ...bundle,
-        providerRecording: {
-          ...bundle.providerRecording,
-          model: "altered-model",
-          provider: "xai",
-          recordedAt: "2026-08-27T13:25:18.044Z",
-        },
-      };
-      const bundleProviderCandidateOrderDrift: unknown = {
-        ...bundle,
-        providerRecording: {
-          ...bundle.providerRecording,
-          candidates: [providerDeliveryCandidate, providerProjectCandidate, providerFinishCandidate],
-        },
-      };
-      const danglingLedgerSubject = {
-        approvals: [
-          {
-            decision: "approve",
-            id: "approval-one",
-            recordedAt: "2026-08-27T13:00:00.000Z",
-            reviewer: "Demo reviewer",
-            subjectId: "dangling-subject",
-          },
-        ],
-        claims: [],
-        disposition: "delete-or-promote",
-        dispositionDate: "2026-09-30",
-        schemaVersion: "lejeune-review-ledger/v1",
-      };
-      const duplicateLedgerIdentity: unknown = {
-        ...danglingLedgerSubject,
-        approvals: [danglingLedgerSubject.approvals[0], danglingLedgerSubject.approvals[0]],
-      };
-      const retentionBeforeCutoff = {
-        authorization: "promoted",
-        authorizedAt: "2026-08-27T12:00:00.000Z",
-        decisionReference: "goal/decision",
-        newDispositionDate: "2026-09-01",
-        owner: "demo operator",
-        schemaVersion: "lejeune-retention-authorization/v1",
-      };
-      const retentionAtCutoff: unknown = { ...retentionBeforeCutoff, newDispositionDate: "2026-09-30" };
-      const retentionBeforeAuthorization: unknown = {
-        ...retentionBeforeCutoff,
-        authorizedAt: "2027-01-02T12:00:00.000Z",
-        newDispositionDate: "2027-01-01",
-      };
+        };
+        const danglingLedgerSubject = {
+          approvals: [
+            {
+              decision: "approve",
+              id: "approval-one",
+              recordedAt: "2026-08-27T13:00:00.000Z",
+              reviewer: "Demo reviewer",
+              subjectId: "dangling-subject",
+            },
+          ],
+          claims: [],
+          disposition: "delete-or-promote",
+          dispositionDate: "2026-09-30",
+          schemaVersion: "lejeune-review-ledger/v1",
+        };
+        const duplicateLedgerIdentity: unknown = {
+          ...danglingLedgerSubject,
+          approvals: [danglingLedgerSubject.approvals[0], danglingLedgerSubject.approvals[0]],
+        };
+        const retentionBeforeCutoff = {
+          authorization: "promoted",
+          authorizedAt: "2026-08-27T12:00:00.000Z",
+          decisionReference: "goal/decision",
+          newDispositionDate: "2026-09-01",
+          owner: "demo operator",
+          schemaVersion: "lejeune-retention-authorization/v1",
+        };
+        const retentionAtCutoff: unknown = { ...retentionBeforeCutoff, newDispositionDate: "2026-09-30" };
+        const retentionBeforeAuthorization: unknown = {
+          ...retentionBeforeCutoff,
+          authorizedAt: "2027-01-02T12:00:00.000Z",
+          newDispositionDate: "2027-01-01",
+        };
 
-      const corruptions: ReadonlyArray<readonly [string, Effect.Effect<unknown, S.SchemaError>]> = [
-        ["fixture-source-cardinality", decodeUnknownNormalizedFixture(fixtureSourceCardinality)],
-        ["fixture-duplicate-source-identity", decodeUnknownNormalizedFixture(fixtureDuplicateSourceIdentity)],
-        ["fixture-dangling-source", decodeUnknownNormalizedFixture(fixtureDanglingSource)],
-        ["fixture-value-drift", decodeUnknownNormalizedFixture(fixtureValueDrift)],
-        ["fixture-referential-drift", decodeUnknownNormalizedFixture(fixtureReferentialDrift)],
-        ["rule-human-stop", decodeUnknownRuleResult(ruleHumanStop)],
-        ["manifest-source-cardinality", decodeUnknownFrozenFixtureManifest(manifestSourceCardinality)],
-        ["manifest-duplicate-source", decodeUnknownFrozenFixtureManifest(manifestDuplicateSource)],
-        ["manifest-hash-drift", decodeUnknownFrozenFixtureManifest(manifestHashDrift)],
-        ["manifest-dangling-extraction", decodeUnknownFrozenFixtureManifest(manifestDanglingExtraction)],
-        ["manifest-duplicate-extraction", decodeUnknownFrozenFixtureManifest(manifestDuplicateExtraction)],
-        ["manifest-missing-field-drift", decodeUnknownFrozenFixtureManifest(manifestMissingFieldDrift)],
-        ["manifest-span-drift", decodeUnknownFrozenFixtureManifest(manifestSpanDrift)],
-        ["manifest-quote-value-drift", decodeUnknownFrozenFixtureManifest(manifestQuoteValueDrift)],
-        ["bundle-fixture-cardinality", decodeUnknownImmutableDemoBundle(bundleFixtureCardinality)],
-        ["bundle-source-hash-drift", decodeUnknownImmutableDemoBundle(bundleSourceHashDrift)],
-        ["bundle-source-content-drift", decodeUnknownImmutableDemoBundle(bundleSourceContentDrift)],
-        ["bundle-source-order-drift", decodeUnknownImmutableDemoBundle(bundleSourceOrderDrift)],
-        ["bundle-extraction-order-drift", decodeUnknownImmutableDemoBundle(bundleExtractionOrderDrift)],
-        ["bundle-component-order-drift", decodeUnknownImmutableDemoBundle(bundleComponentOrderDrift)],
-        ["bundle-missing-field-semantic-drift", decodeUnknownImmutableDemoBundle(bundleMissingFieldSemanticDrift)],
-        ["bundle-project-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProjectSemanticDrift)],
-        ["bundle-product-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProductSemanticDrift)],
-        ["bundle-dti-strength-drift", decodeUnknownImmutableDemoBundle(bundleDtiStrengthDrift)],
-        ["bundle-fixture-order-drift", decodeUnknownImmutableDemoBundle(bundleFixtureOrderDrift)],
-        ["bundle-rule-cardinality", decodeUnknownImmutableDemoBundle(bundleRuleCardinality)],
-        ["bundle-rule-id-drift", decodeUnknownImmutableDemoBundle(bundleRuleIdDrift)],
-        ["bundle-rule-source-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceDrift)],
-        ["bundle-rule-source-url-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceUrlDrift)],
-        ["bundle-rule-source-revision-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceRevisionDrift)],
-        ["bundle-rule-source-evidence-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceEvidenceDrift)],
-        ["bundle-rule-source-title-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceTitleDrift)],
-        ["bundle-rule-source-research-path-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceResearchPathDrift)],
-        ["bundle-rule-disposition-drift", decodeUnknownImmutableDemoBundle(bundleRuleDispositionDrift)],
-        ["bundle-rule-order-drift", decodeUnknownImmutableDemoBundle(bundleRuleOrderDrift)],
-        ["bundle-rule-facts-drift", decodeUnknownImmutableDemoBundle(bundleRuleFactsDrift)],
-        ["bundle-rule-stop-reason-drift", decodeUnknownImmutableDemoBundle(bundleRuleStopReasonDrift)],
-        ["bundle-standard-semantic-drift", decodeUnknownImmutableDemoBundle(bundleStandardSemanticDrift)],
-        ["bundle-finish-semantic-drift", decodeUnknownImmutableDemoBundle(bundleFinishSemanticDrift)],
-        ["bundle-tool-semantic-drift", decodeUnknownImmutableDemoBundle(bundleToolSemanticDrift)],
-        ["bundle-offer-semantic-drift", decodeUnknownImmutableDemoBundle(bundleOfferSemanticDrift)],
-        ["bundle-certificate-semantic-drift", decodeUnknownImmutableDemoBundle(bundleCertificateSemanticDrift)],
-        ["bundle-quote-projection-drift", decodeUnknownImmutableDemoBundle(bundleQuoteProjectionDrift)],
-        ["bundle-synthetic-projection-drift", decodeUnknownImmutableDemoBundle(bundleSyntheticProjectionDrift)],
-        ["projection-class-vocabulary", decodeUnknownProjectionSnapshot(projectionClassVocabulary)],
-        ["projection-rule-order", decodeUnknownProjectionSnapshot(projectionRuleOrderDrift)],
-        ["provider-document-drift", decodeUnknownProviderRecording(providerDocumentDrift)],
-        ["bundle-provider-metadata-drift", decodeUnknownImmutableDemoBundle(bundleProviderMetadataDrift)],
-        ["bundle-provider-candidate-order-drift", decodeUnknownImmutableDemoBundle(bundleProviderCandidateOrderDrift)],
-        ["ledger-dangling-subject", decodeUnknownMutableReviewLedger(danglingLedgerSubject)],
-        ["ledger-duplicate-identity", decodeUnknownMutableReviewLedger(duplicateLedgerIdentity)],
-        ["retention-before-cutoff", decodeUnknownRetentionAuthorization(retentionBeforeCutoff)],
-        ["retention-at-cutoff", decodeUnknownRetentionAuthorization(retentionAtCutoff)],
-        ["retention-before-authorization", decodeUnknownRetentionAuthorization(retentionBeforeAuthorization)],
-      ];
+        const corruptions: ReadonlyArray<readonly [string, Effect.Effect<unknown, S.SchemaError>]> = [
+          ["fixture-source-cardinality", decodeUnknownNormalizedFixture(fixtureSourceCardinality)],
+          ["fixture-duplicate-source-identity", decodeUnknownNormalizedFixture(fixtureDuplicateSourceIdentity)],
+          ["fixture-dangling-source", decodeUnknownNormalizedFixture(fixtureDanglingSource)],
+          ["fixture-value-drift", decodeUnknownNormalizedFixture(fixtureValueDrift)],
+          ["fixture-referential-drift", decodeUnknownNormalizedFixture(fixtureReferentialDrift)],
+          ["rule-human-stop", decodeUnknownRuleResult(ruleHumanStop)],
+          ["manifest-source-cardinality", decodeUnknownFrozenFixtureManifest(manifestSourceCardinality)],
+          ["manifest-duplicate-source", decodeUnknownFrozenFixtureManifest(manifestDuplicateSource)],
+          ["manifest-hash-drift", decodeUnknownFrozenFixtureManifest(manifestHashDrift)],
+          ["manifest-dangling-extraction", decodeUnknownFrozenFixtureManifest(manifestDanglingExtraction)],
+          ["manifest-duplicate-extraction", decodeUnknownFrozenFixtureManifest(manifestDuplicateExtraction)],
+          ["manifest-missing-field-drift", decodeUnknownFrozenFixtureManifest(manifestMissingFieldDrift)],
+          ["manifest-span-drift", decodeUnknownFrozenFixtureManifest(manifestSpanDrift)],
+          ["manifest-quote-value-drift", decodeUnknownFrozenFixtureManifest(manifestQuoteValueDrift)],
+          ["bundle-fixture-cardinality", decodeUnknownImmutableDemoBundle(bundleFixtureCardinality)],
+          ["bundle-source-hash-drift", decodeUnknownImmutableDemoBundle(bundleSourceHashDrift)],
+          ["bundle-source-content-drift", decodeUnknownImmutableDemoBundle(bundleSourceContentDrift)],
+          ["bundle-source-order-drift", decodeUnknownImmutableDemoBundle(bundleSourceOrderDrift)],
+          ["bundle-extraction-order-drift", decodeUnknownImmutableDemoBundle(bundleExtractionOrderDrift)],
+          ["bundle-component-order-drift", decodeUnknownImmutableDemoBundle(bundleComponentOrderDrift)],
+          ["bundle-missing-field-semantic-drift", decodeUnknownImmutableDemoBundle(bundleMissingFieldSemanticDrift)],
+          ["bundle-project-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProjectSemanticDrift)],
+          ["bundle-product-semantic-drift", decodeUnknownImmutableDemoBundle(bundleProductSemanticDrift)],
+          ["bundle-dti-strength-drift", decodeUnknownImmutableDemoBundle(bundleDtiStrengthDrift)],
+          ["bundle-fixture-order-drift", decodeUnknownImmutableDemoBundle(bundleFixtureOrderDrift)],
+          ["bundle-rule-cardinality", decodeUnknownImmutableDemoBundle(bundleRuleCardinality)],
+          ["bundle-rule-id-drift", decodeUnknownImmutableDemoBundle(bundleRuleIdDrift)],
+          ["bundle-rule-source-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceDrift)],
+          ["bundle-rule-source-url-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceUrlDrift)],
+          ["bundle-rule-source-revision-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceRevisionDrift)],
+          ["bundle-rule-source-evidence-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceEvidenceDrift)],
+          ["bundle-rule-source-title-drift", decodeUnknownImmutableDemoBundle(bundleRuleSourceTitleDrift)],
+          [
+            "bundle-rule-source-research-path-drift",
+            decodeUnknownImmutableDemoBundle(bundleRuleSourceResearchPathDrift),
+          ],
+          ["bundle-rule-disposition-drift", decodeUnknownImmutableDemoBundle(bundleRuleDispositionDrift)],
+          ["bundle-rule-order-drift", decodeUnknownImmutableDemoBundle(bundleRuleOrderDrift)],
+          ["bundle-rule-facts-drift", decodeUnknownImmutableDemoBundle(bundleRuleFactsDrift)],
+          ["bundle-rule-stop-reason-drift", decodeUnknownImmutableDemoBundle(bundleRuleStopReasonDrift)],
+          ["bundle-standard-semantic-drift", decodeUnknownImmutableDemoBundle(bundleStandardSemanticDrift)],
+          ["bundle-finish-semantic-drift", decodeUnknownImmutableDemoBundle(bundleFinishSemanticDrift)],
+          ["bundle-tool-semantic-drift", decodeUnknownImmutableDemoBundle(bundleToolSemanticDrift)],
+          ["bundle-offer-semantic-drift", decodeUnknownImmutableDemoBundle(bundleOfferSemanticDrift)],
+          ["bundle-certificate-semantic-drift", decodeUnknownImmutableDemoBundle(bundleCertificateSemanticDrift)],
+          ["bundle-quote-projection-drift", decodeUnknownImmutableDemoBundle(bundleQuoteProjectionDrift)],
+          ["bundle-synthetic-projection-drift", decodeUnknownImmutableDemoBundle(bundleSyntheticProjectionDrift)],
+          ["projection-class-vocabulary", decodeUnknownProjectionSnapshot(projectionClassVocabulary)],
+          ["projection-rule-order", decodeUnknownProjectionSnapshot(projectionRuleOrderDrift)],
+          ["provider-document-drift", decodeUnknownProviderRecording(providerDocumentDrift)],
+          ["bundle-provider-metadata-drift", decodeUnknownImmutableDemoBundle(bundleProviderMetadataDrift)],
+          [
+            "bundle-provider-candidate-order-drift",
+            decodeUnknownImmutableDemoBundle(bundleProviderCandidateOrderDrift),
+          ],
+          ["ledger-dangling-subject", decodeUnknownMutableReviewLedger(danglingLedgerSubject)],
+          ["ledger-duplicate-identity", decodeUnknownMutableReviewLedger(duplicateLedgerIdentity)],
+          ["retention-before-cutoff", decodeUnknownRetentionAuthorization(retentionBeforeCutoff)],
+          ["retention-at-cutoff", decodeUnknownRetentionAuthorization(retentionAtCutoff)],
+          ["retention-before-authorization", decodeUnknownRetentionAuthorization(retentionBeforeAuthorization)],
+        ];
 
-      for (const [name, decode] of corruptions) {
-        const failed = yield* decode.pipe(Effect.match({ onFailure: () => true, onSuccess: () => false }));
-        expect(failed, name).toBe(true);
-      }
-    })
-  );
+        for (const [name, decode] of corruptions) {
+          const failed = yield* decode.pipe(Effect.match({ onFailure: () => true, onSuccess: () => false }));
+          expect(failed, name).toBe(true);
+        }
+      })
+    );
+  });
 
-  it.effect(
-    "verifies the committed provider recording digest and source grounding",
-    Effect.fnUntraced(function* () {
-      const recording = yield* decodedProviderRecording;
-      const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
-      const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(
-        provideBunCrypto
-      );
-      expect(A.map(verified.candidates, (candidate) => candidate.label)).toEqual([
-        "project",
-        "delivery_date",
-        "finish",
-      ]);
-      expect(frozen.recordedAt).toBe("2026-08-27T12:25:18.044Z");
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "verifies the committed provider recording digest and source grounding",
+      Effect.fnUntraced(function* () {
+        const recording = yield* decodedProviderRecording;
+        const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT);
+        const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT);
+        expect(A.map(verified.candidates, (candidate) => candidate.label)).toEqual([
+          "project",
+          "delivery_date",
+          "finish",
+        ]);
+        expect(frozen.recordedAt).toBe("2026-08-27T12:25:18.044Z");
 
-      const digestFailure = yield* Effect.flip(
-        verifyProviderRecording(
-          ProviderRecording.make({
-            ...recording,
-            responseSha256: Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000"),
-          }),
-          PROVIDER_RECORDING_SOURCE_TEXT
-        ).pipe(provideBunCrypto)
-      );
-      expect(digestFailure._tag).toBe("ProviderRecordingIntegrityError");
-      expect(digestFailure.issue).toBe("candidate-digest");
-
-      const [projectCandidate, deliveryCandidate, finishCandidate] = recording.candidates;
-      const swappedCandidates = yield* decodeTupleInlineSchema([
-        { label: projectCandidate.label, text: deliveryCandidate.text },
-        { label: deliveryCandidate.label, text: projectCandidate.text },
-        finishCandidate,
-      ]);
-      const swappedCandidateJson = yield* encodeProviderCandidateListFromJsonString(swappedCandidates);
-      const swappedDigest = yield* decodeSha256HexFromBytes(strToU8(swappedCandidateJson)).pipe(provideBunCrypto);
-      const contractFailure = yield* Effect.flip(
-        verifyProviderRecording(
-          ProviderRecording.make({ ...recording, candidates: swappedCandidates, responseSha256: swappedDigest }),
-          PROVIDER_RECORDING_SOURCE_TEXT
-        ).pipe(provideBunCrypto)
-      );
-      expect(contractFailure._tag).toBe("ProviderRecordingIntegrityError");
-      expect(contractFailure.issue).toBe("candidate-contract");
-
-      const reorderedCandidates = yield* decodeTupleInlineSchema([
-        deliveryCandidate,
-        projectCandidate,
-        finishCandidate,
-      ]);
-      const reorderedCandidateJson = yield* encodeProviderCandidateListFromJsonString(reorderedCandidates);
-      const reorderedDigest = yield* decodeSha256HexFromBytes(strToU8(reorderedCandidateJson)).pipe(provideBunCrypto);
-      const frozenMutations: ReadonlyArray<readonly [string, ProviderRecording]> = [
-        ["provider", ProviderRecording.make({ ...recording, provider: "xai" })],
-        ["model", ProviderRecording.make({ ...recording, model: "altered-model" })],
-        [
-          "recorded-at",
-          ProviderRecording.make({
-            ...recording,
-            recordedAt: IsoTimestamp.make("2026-08-27T13:25:18.044Z"),
-          }),
-        ],
-        [
-          "candidate-order",
-          ProviderRecording.make({
-            ...recording,
-            candidates: reorderedCandidates,
-            responseSha256: reorderedDigest,
-          }),
-        ],
-      ];
-      for (const [name, mutation] of frozenMutations) {
-        const failure = yield* Effect.flip(
-          verifyFrozenProviderRecording(mutation, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto)
+        const digestFailure = yield* Effect.flip(
+          verifyProviderRecording(
+            ProviderRecording.make({
+              ...recording,
+              responseSha256: Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000"),
+            }),
+            PROVIDER_RECORDING_SOURCE_TEXT
+          )
         );
-        expect(failure.issue, name).toBe("frozen-contract");
-      }
+        expect(digestFailure._tag).toBe("ProviderRecordingIntegrityError");
+        expect(digestFailure.issue).toBe("candidate-digest");
 
-      const groundingFailure = yield* Effect.flip(
-        verifyProviderRecording(recording, "SYNTHETIC unrelated source").pipe(provideBunCrypto)
-      );
-      expect(groundingFailure._tag).toBe("ProviderRecordingIntegrityError");
-      expect(groundingFailure.issue).toBe("source-grounding");
+        const [projectCandidate, deliveryCandidate, finishCandidate] = recording.candidates;
+        const swappedCandidates = yield* decodeTupleInlineSchema([
+          { label: projectCandidate.label, text: deliveryCandidate.text },
+          { label: deliveryCandidate.label, text: projectCandidate.text },
+          finishCandidate,
+        ]);
+        const swappedCandidateJson = yield* encodeProviderCandidateListFromJsonString(swappedCandidates);
+        const swappedDigest = yield* decodeSha256HexFromBytes(strToU8(swappedCandidateJson));
+        const contractFailure = yield* Effect.flip(
+          verifyProviderRecording(
+            ProviderRecording.make({ ...recording, candidates: swappedCandidates, responseSha256: swappedDigest }),
+            PROVIDER_RECORDING_SOURCE_TEXT
+          )
+        );
+        expect(contractFailure._tag).toBe("ProviderRecordingIntegrityError");
+        expect(contractFailure.issue).toBe("candidate-contract");
 
-      const canonicalSourceDrift = yield* Effect.flip(
-        verifyFrozenProviderRecording(recording, `${PROVIDER_RECORDING_SOURCE_TEXT} altered`).pipe(provideBunCrypto)
-      );
-      expect(canonicalSourceDrift.issue).toBe("source-grounding");
-    })
-  );
+        const reorderedCandidates = yield* decodeTupleInlineSchema([
+          deliveryCandidate,
+          projectCandidate,
+          finishCandidate,
+        ]);
+        const reorderedCandidateJson = yield* encodeProviderCandidateListFromJsonString(reorderedCandidates);
+        const reorderedDigest = yield* decodeSha256HexFromBytes(strToU8(reorderedCandidateJson));
+        const frozenMutations: ReadonlyArray<readonly [string, ProviderRecording]> = [
+          ["provider", ProviderRecording.make({ ...recording, provider: "xai" })],
+          ["model", ProviderRecording.make({ ...recording, model: "altered-model" })],
+          [
+            "recorded-at",
+            ProviderRecording.make({
+              ...recording,
+              recordedAt: IsoTimestamp.make("2026-08-27T13:25:18.044Z"),
+            }),
+          ],
+          [
+            "candidate-order",
+            ProviderRecording.make({
+              ...recording,
+              candidates: reorderedCandidates,
+              responseSha256: reorderedDigest,
+            }),
+          ],
+        ];
+        for (const [name, mutation] of frozenMutations) {
+          const failure = yield* Effect.flip(verifyFrozenProviderRecording(mutation, PROVIDER_RECORDING_SOURCE_TEXT));
+          expect(failure.issue, name).toBe("frozen-contract");
+        }
 
-  it.live(
-    "replays the same bundle identity with provider and network unavailable",
-    Effect.fnUntraced(function* () {
-      const recording = yield* decodedProviderRecording;
-      yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
-      const rebuild = () =>
-        replayOffline(recording).pipe(provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer())));
-      const first = yield* rebuild();
-      const second = yield* rebuild();
+        const groundingFailure = yield* Effect.flip(verifyProviderRecording(recording, "SYNTHETIC unrelated source"));
+        expect(groundingFailure._tag).toBe("ProviderRecordingIntegrityError");
+        expect(groundingFailure.issue).toBe("source-grounding");
 
-      expect(second.bundle).toEqual(first.bundle);
-      expect(second.receipt).toEqual(first.receipt);
-      expect(first.receipt.bundleIdentity).toBe(second.receipt.bundleIdentity);
-      expect(first.receipt.providerAvailable).toBe(false);
-      expect(first.receipt.networkAvailable).toBe(false);
-      expect(first.mutableLedger).toEqual({
-        approvals: [],
-        claims: [],
-        disposition: "delete-or-promote",
-        dispositionDate: "2026-09-30",
-        schemaVersion: "lejeune-review-ledger/v1",
-      });
-    })
-  );
+        const canonicalSourceDrift = yield* Effect.flip(
+          verifyFrozenProviderRecording(recording, `${PROVIDER_RECORDING_SOURCE_TEXT} altered`)
+        );
+        expect(canonicalSourceDrift.issue).toBe("source-grounding");
+      })
+    );
+  });
+
+  it.layer(BunCrypto.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+    it.effect(
+      "replays the same bundle identity with provider and network unavailable",
+      Effect.fnUntraced(function* () {
+        const recording = yield* decodedProviderRecording;
+        yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT);
+        const rebuild = () =>
+          replayOffline(recording).pipe(
+            provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()))
+          );
+        const first = yield* rebuild();
+        const second = yield* rebuild();
+
+        expect(second.bundle).toEqual(first.bundle);
+        expect(second.receipt).toEqual(first.receipt);
+        expect(first.receipt.bundleIdentity).toBe(second.receipt.bundleIdentity);
+        pipe(first.receipt.providerAvailable, assertFalse);
+        pipe(first.receipt.networkAvailable, assertFalse);
+        expect(first.mutableLedger).toEqual({
+          approvals: [],
+          claims: [],
+          disposition: "delete-or-promote",
+          dispositionDate: "2026-09-30",
+          schemaVersion: "lejeune-review-ledger/v1",
+        });
+      })
+    );
+  });
 });

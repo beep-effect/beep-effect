@@ -1,0 +1,168 @@
+{
+  "beforeSha": "f8bbc4c49dd5dce29dd46f1d174daf263feb6c95",
+  "preservation": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "changed": true,
+      "beforeSha": "05427f5933ba87403fc0f69d7ab9e4c1dea805fd8ffca8a9c14e5671204eb5b6",
+      "afterSha": "9d48a628eafadf4bff66c117815e1b26fa49bb2bce3c8c5d5dc3fbfd5fd1477f",
+      "assertionCount": 110,
+      "propertyCount": 1,
+      "caseCount": 16,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "changed": false,
+      "beforeSha": "9731bb06e7a685766a2889a4f22158cb93889ad1c60c258600322945ba8db5f6",
+      "afterSha": "9731bb06e7a685766a2889a4f22158cb93889ad1c60c258600322945ba8db5f6",
+      "assertionCount": 21,
+      "propertyCount": 1,
+      "caseCount": 6,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "changed": false,
+      "beforeSha": "0f300de663c0a055d442cb004f2bd8eec0fa4964104d2f0e3a16346cbe00321b",
+      "afterSha": "0f300de663c0a055d442cb004f2bd8eec0fa4964104d2f0e3a16346cbe00321b",
+      "assertionCount": 84,
+      "propertyCount": 1,
+      "caseCount": 21,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "changed": false,
+      "beforeSha": "b7a6c37b91549d962c0e9b4c299e4c59c65f275382c8f2a4dc5b1a97e586dfc5",
+      "afterSha": "b7a6c37b91549d962c0e9b4c299e4c59c65f275382c8f2a4dc5b1a97e586dfc5",
+      "assertionCount": 4,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "changed": false,
+      "beforeSha": "7dcfaa2b9391f5ea205273206bfa91c114f3b5da9a5aebd7365a9af294a271e6",
+      "afterSha": "7dcfaa2b9391f5ea205273206bfa91c114f3b5da9a5aebd7365a9af294a271e6",
+      "assertionCount": 39,
+      "propertyCount": 1,
+      "caseCount": 7,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "changed": false,
+      "beforeSha": "79e8bb3f27dec92fe145f283cc34c2b20c360821b91fd1caaa10cb0209cb668d",
+      "afterSha": "79e8bb3f27dec92fe145f283cc34c2b20c360821b91fd1caaa10cb0209cb668d",
+      "assertionCount": 54,
+      "propertyCount": 1,
+      "caseCount": 6,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "changed": false,
+      "beforeSha": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da",
+      "afterSha": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "changed": false,
+      "beforeSha": "5efc4b7008b3030e7521851b8db0c7097375ce62ef3da9b991f79278415e4b51",
+      "afterSha": "5efc4b7008b3030e7521851b8db0c7097375ce62ef3da9b991f79278415e4b51",
+      "assertionCount": 4,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "changed": false,
+      "beforeSha": "4dc2d545f3f702a4e86d1b30f0c004948e1f19d0c7c0728b6b530a10c776646a",
+      "afterSha": "4dc2d545f3f702a4e86d1b30f0c004948e1f19d0c7c0728b6b530a10c776646a",
+      "assertionCount": 13,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "originalAssertionsPreserved": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    }
+  ],
+  "packageVerify": {
+    "exit": 0,
+    "auditSeconds": 7.2,
+    "docgenSeconds": 4.0
+  },
+  "runtimeResults": {
+    "node": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [4.9873046875, 4.90185546875, 5.40869140625],
+      "loadAfter": [4.908203125, 4.88671875, 5.40087890625],
+      "pressureBefore": {
+        "cpu": "some avg10=0.64 avg60=0.53 avg300=0.19 total=224134840\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.05 avg60=0.02 avg300=0.00 total=87824864\nfull avg10=0.05 avg60=0.02 avg300=0.00 total=85234636\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=694480967\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=629142208\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.52 avg60=0.51 avg300=0.19 total=224140808\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.04 avg60=0.02 avg300=0.00 total=87824869\nfull avg10=0.04 avg60=0.02 avg300=0.00 total=85234641\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=694481121\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=629142330\n"
+      },
+      "wholeCommandSeconds": 3.6204553279967513,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "bun": {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [4.908203125, 4.88671875, 5.40087890625],
+      "loadAfter": [5.716796875, 5.0546875, 5.45263671875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.52 avg60=0.51 avg300=0.19 total=224140822\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.04 avg60=0.02 avg300=0.00 total=87824869\nfull avg10=0.04 avg60=0.02 avg300=0.00 total=85234641\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=694481121\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=629142330\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.43 avg60=0.49 avg300=0.19 total=224147633\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.03 avg60=0.02 avg300=0.00 total=87824869\nfull avg10=0.03 avg60=0.02 avg300=0.00 total=85234641\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.03 total=694481373\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=629142488\n"
+      },
+      "wholeCommandSeconds": 1.516280187999655,
+      "sourceStable": true,
+      "exit": 0,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0
+    }
+  }
+}

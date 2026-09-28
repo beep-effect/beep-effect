@@ -12,34 +12,24 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { SyncItemRepositoryShape } from "@beep/documents-use-cases/entities/SyncItem/server";
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
@@ -146,7 +136,10 @@ describe("SyncItem repository port", () => {
       const byPath = yield* repository.findByPath(
         FindSyncItemByPathInput.make({ localRelPath, provider: "box", workspaceId })
       );
-      expect(O.map(byPath, (item) => item.id)).toEqual(O.some(created.id));
+      assertSome(
+        O.map(byPath, (item) => item.id),
+        created.id
+      );
 
       const encoded = yield* encodeSyncItemEffect(created);
       const pushed = yield* decodeSyncItemEffect({ ...encoded, remoteId: "9001", syncState: "current" });
@@ -159,7 +152,10 @@ describe("SyncItem repository port", () => {
           workspaceId,
         })
       );
-      expect(O.map(byRemoteId, (item) => item.syncState)).toEqual(O.some("current"));
+      assertSome(
+        O.map(byRemoteId, (item) => item.syncState),
+        "current"
+      );
 
       const listed = yield* repository.listByWorkspace(
         ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId })
@@ -176,7 +172,10 @@ describe("SyncItem repository port", () => {
       const error = yield* repository.create(fileSeed).pipe(Effect.flip);
 
       const conflict = O.liftPredicate(error, SyncItemRepositoryConflict.is);
-      expect(O.map(conflict, (found) => found.localRelPath)).toEqual(O.some(fileSeed.localRelPath));
+      assertSome(
+        O.map(conflict, (found) => found.localRelPath),
+        fileSeed.localRelPath
+      );
     })
   );
 
@@ -187,7 +186,7 @@ describe("SyncItem repository port", () => {
       const unknown = yield* decodeSyncItemRow(syncItemRow(fileSeed, 99));
       const error = yield* repository.update(unknown).pipe(Effect.flip);
 
-      expect(SyncItemRepositoryNotFound.is(error)).toBe(true);
+      pipe(SyncItemRepositoryNotFound.is(error), assertTrue);
     })
   );
 
@@ -201,10 +200,20 @@ describe("SyncItem repository port", () => {
     })
   );
 
-  it("round-trips schema-derived seeds and lookup inputs", () => {
-    assertSchemaArbitraryRoundTrip(SyncItemSeed);
-    assertSchemaArbitraryRoundTrip(FindSyncItemByPathInput);
-    assertSchemaArbitraryRoundTrip(FindSyncItemByRemoteIdInput);
-    assertSchemaArbitraryRoundTrip(ListSyncItemsByWorkspaceInput);
-  });
+  it.prop(
+    "round-trips schema-derived seeds and lookup inputs",
+    [
+      Arbitrary.schema(SyncItemSeed),
+      Arbitrary.schema(FindSyncItemByPathInput),
+      Arbitrary.schema(FindSyncItemByRemoteIdInput),
+      Arbitrary.schema(ListSyncItemsByWorkspaceInput),
+    ],
+    ([syncItemSeed, findSyncItemByPathInput, findSyncItemByRemoteIdInput, listSyncItemsByWorkspaceInput]) => {
+      assertSchemaRoundTrip(SyncItemSeed, syncItemSeed);
+      assertSchemaRoundTrip(FindSyncItemByPathInput, findSyncItemByPathInput);
+      assertSchemaRoundTrip(FindSyncItemByRemoteIdInput, findSyncItemByRemoteIdInput);
+      assertSchemaRoundTrip(ListSyncItemsByWorkspaceInput, listSyncItemsByWorkspaceInput);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

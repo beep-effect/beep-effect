@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/pretext#audit",
+      "removedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/pretext#build",
+      "removedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pretext#check",
+      "removedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pretext#coverage",
+      "removedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/pretext#lint:deprecated-apis",
+      "removedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pretext#package-test-typecheck",
+      "removedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pretext#test",
+      "removedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/pretext#test:integration",
+      "removedDependency": "@beep/test-utils#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "4690deb9e5e767118ddc25a8617b06e6fd9d2d4a117c435736a744537cee8e2c"
+}

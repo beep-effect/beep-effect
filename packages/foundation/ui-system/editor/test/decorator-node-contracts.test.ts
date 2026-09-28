@@ -2,8 +2,11 @@
 
 import { $createCodeBlockNode, $isCodeBlockNode, CodeBlockNode } from "@beep/editor/code-block-node";
 import { $createMermaidNode, $isMermaidNode, MermaidNode } from "@beep/editor/mermaid-node";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { createHeadlessEditor } from "@lexical/headless";
+import { pipe } from "effect";
 
 const withNodeContext = (assertions: () => void): void => {
   const editor = createHeadlessEditor({
@@ -22,8 +25,8 @@ describe("viewer decorator node contracts", () => {
 
       expect(MermaidNode.getType()).toBe("mermaid");
       expect(node.getTextContent()).toBe("graph TD\n  A --> B");
-      expect($isMermaidNode(node)).toBe(true);
-      expect($isMermaidNode({ source: "graph TD" })).toBe(false);
+      pipe($isMermaidNode(node), assertTrue);
+      pipe($isMermaidNode({ source: "graph TD" }), assertFalse);
 
       const serialized = node.exportJSON();
       expect(serialized.type).toBe("mermaid");
@@ -51,8 +54,8 @@ describe("viewer decorator node contracts", () => {
 
       expect(CodeBlockNode.getType()).toBe("codeblock");
       expect(node.getTextContent()).toBe('console.log("beep")');
-      expect($isCodeBlockNode(node)).toBe(true);
-      expect($isCodeBlockNode("console.log")).toBe(false);
+      pipe($isCodeBlockNode(node), assertTrue);
+      pipe($isCodeBlockNode("console.log"), assertFalse);
 
       const serialized = node.exportJSON();
       expect(serialized.type).toBe("codeblock");

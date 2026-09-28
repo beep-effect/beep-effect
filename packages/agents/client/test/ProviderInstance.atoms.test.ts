@@ -6,8 +6,9 @@ import {
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderInstanceRpcs, ProviderUnauthenticated } from "@beep/agents-use-cases/public";
 import * as Agents from "@beep/shared-domain/identity/Agents";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -27,7 +28,6 @@ const encodedInstance = {
 };
 const loadInstance = S.decodeUnknownEffect(ProviderInstance)(encodedInstance).pipe(Effect.orDie);
 
-const settle = Effect.repeat(Effect.yieldNow, { times: 4 });
 let listReads = 0;
 let probeFailure: O.Option<ProviderUnauthenticated> = O.none();
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
@@ -52,80 +52,84 @@ const ProviderInstanceTransportTest = Layer.effect(
   ProviderInstanceTransport,
   RpcTest.makeClient(ProviderInstanceRpcs, { flatten: true })
 ).pipe(Layer.provide(ProviderInstanceRpcHandlersTest));
-const makeRegistry = () =>
-  AtomRegistry.make({
-    initialValues: [Atom.initialValue(providerInstanceTransportLayerAtom, O.some(ProviderInstanceTransportTest))],
-  });
+const RegistryTestLayer = AtomRegistry.layerOptions({
+  initialValues: [Atom.initialValue(providerInstanceTransportLayerAtom, O.some(ProviderInstanceTransportTest))],
+});
 
 describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, () => {
-  it.effect(
-    "reads provider instances through the injected transport",
-    Effect.fnUntraced(function* () {
-      const instance = yield* loadInstance;
-      listReads = 0;
-      probeFailure = O.none();
-      const registry = makeRegistry();
-      const unmount = registry.mount(providerInstancesAtom);
+  it.layer(Layer.fresh(RegistryTestLayer))((it) => {
+    it.effect(
+      "reads provider instances through the injected transport",
+      Effect.fnUntraced(function* () {
+        const instance = yield* loadInstance;
+        listReads = 0;
+        probeFailure = O.none();
+        const registry = yield* AtomRegistry.AtomRegistry;
+        yield* AtomRegistry.mount(registry, providerInstancesAtom);
 
-      yield* settle;
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
 
-      const result = registry.get(providerInstancesAtom);
-      expect(AsyncResult.isSuccess(result)).toBe(true);
-      if (AsyncResult.isSuccess(result)) {
-        expect(result.value).toStrictEqual([instance]);
-      }
-      unmount();
-    })
-  );
+        const result = registry.get(providerInstancesAtom);
+        expect(AsyncResult.isSuccess(result)).toBe(true);
+        if (AsyncResult.isSuccess(result)) {
+          expect(result.value).toStrictEqual([instance]);
+        }
+      })
+    );
+  });
 
-  it.effect(
-    "invalidates the provider-instance list after a probe",
-    Effect.fnUntraced(function* () {
-      const instance = yield* loadInstance;
-      listReads = 0;
-      probeFailure = O.none();
-      const registry = makeRegistry();
-      const unmountList = registry.mount(providerInstancesAtom);
-      const unmountProbe = registry.mount(probeProviderInstanceAtom);
+  it.layer(Layer.fresh(RegistryTestLayer))((it) => {
+    it.effect(
+      "invalidates the provider-instance list after a probe",
+      Effect.fnUntraced(function* () {
+        const instance = yield* loadInstance;
+        listReads = 0;
+        probeFailure = O.none();
+        const registry = yield* AtomRegistry.AtomRegistry;
+        yield* AtomRegistry.mount(registry, providerInstancesAtom);
+        yield* AtomRegistry.mount(registry, probeProviderInstanceAtom);
 
-      yield* settle;
-      expect(listReads).toBe(1);
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
+        expect(listReads).toBe(1);
 
-      registry.set(probeProviderInstanceAtom, { id: instance.id });
-      yield* settle;
+        registry.set(probeProviderInstanceAtom, { id: instance.id });
+        yield* AtomRegistry.getResult(registry, probeProviderInstanceAtom, { suspendOnWaiting: true });
+        yield* AtomRegistry.getResult(registry, providerInstancesAtom, { suspendOnWaiting: true });
 
-      expect(listReads).toBe(2);
-      unmountProbe();
-      unmountList();
-    })
-  );
+        expect(listReads).toBe(2);
+      })
+    );
+  });
 
-  it.effect(
-    "surfaces ProviderUnauthenticated guidance to the caller",
-    Effect.fnUntraced(function* () {
-      const instance = yield* loadInstance;
-      const guidance = "Run `codex login` in your terminal, then probe again.";
-      const error = ProviderUnauthenticated.make({ providerInstanceId: instance.id, guidance });
-      probeFailure = O.some(error);
-      const registry = makeRegistry();
-      const unmount = registry.mount(probeProviderInstanceAtom);
+  it.layer(Layer.fresh(RegistryTestLayer))((it) => {
+    it.effect(
+      "surfaces ProviderUnauthenticated guidance to the caller",
+      Effect.fnUntraced(function* () {
+        const instance = yield* loadInstance;
+        const guidance = "Run `codex login` in your terminal, then probe again.";
+        const error = ProviderUnauthenticated.make({ providerInstanceId: instance.id, guidance });
+        probeFailure = O.some(error);
+        const registry = yield* AtomRegistry.AtomRegistry;
+        yield* AtomRegistry.mount(registry, probeProviderInstanceAtom);
 
-      registry.set(probeProviderInstanceAtom, { id: Agents.ProviderInstanceId.make(7) });
-      yield* settle;
+        registry.set(probeProviderInstanceAtom, { id: Agents.ProviderInstanceId.make(7) });
+        yield* AtomRegistry.getResult(registry, probeProviderInstanceAtom, { suspendOnWaiting: true }).pipe(
+          Effect.exit
+        );
 
-      const result = registry.get(probeProviderInstanceAtom);
-      expect(AsyncResult.isFailure(result)).toBe(true);
-      if (AsyncResult.isFailure(result)) {
-        const reason = O.getOrThrow(A.head(result.cause.reasons));
-        expect(Cause.isFailReason(reason)).toBe(true);
-        if (Cause.isFailReason(reason)) {
-          expect(isProviderUnauthenticated(reason.error)).toBe(true);
-          if (isProviderUnauthenticated(reason.error)) {
-            expect(reason.error.guidance).toBe(guidance);
+        const result = registry.get(probeProviderInstanceAtom);
+        expect(AsyncResult.isFailure(result)).toBe(true);
+        if (AsyncResult.isFailure(result)) {
+          const reason = O.getOrThrow(A.head(result.cause.reasons));
+          expect(Cause.isFailReason(reason)).toBe(true);
+          if (Cause.isFailReason(reason)) {
+            expect(isProviderUnauthenticated(reason.error)).toBe(true);
+            if (isProviderUnauthenticated(reason.error)) {
+              expect(reason.error.guidance).toBe(guidance);
+            }
           }
         }
-      }
-      unmount();
-    })
-  );
+      })
+    );
+  });
 });

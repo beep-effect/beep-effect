@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/lint-rules#audit",
+      "addedDependencies": ["@beep/schema#audit", "@beep/test-runner#audit"]
+    },
+    {
+      "computation": "@beep/lint-rules#build",
+      "addedDependencies": ["@beep/schema#build", "@beep/test-runner#build"]
+    },
+    {
+      "computation": "@beep/lint-rules#check",
+      "addedDependencies": ["@beep/schema#build", "@beep/test-runner#build"]
+    },
+    {
+      "computation": "@beep/lint-rules#coverage",
+      "addedDependencies": ["@beep/schema#build", "@beep/test-runner#build"]
+    },
+    {
+      "computation": "@beep/lint-rules#lint:deprecated-apis",
+      "addedDependencies": ["@beep/schema#transit", "@beep/test-runner#transit"]
+    },
+    {
+      "computation": "@beep/lint-rules#package-test-typecheck",
+      "addedDependencies": ["@beep/schema#transit", "@beep/test-runner#transit"]
+    },
+    {
+      "computation": "@beep/lint-rules#test",
+      "addedDependencies": ["@beep/schema#transit", "@beep/test-runner#transit"]
+    },
+    {
+      "computation": "@beep/lint-rules#test:property",
+      "addedDependencies": ["@beep/schema#transit", "@beep/test-runner#transit"]
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "45ee50f53dbd8cef3a214e59d18521a9571706570730979583001c4efa20c703"
+}

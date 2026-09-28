@@ -1,6 +1,8 @@
 import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra";
+import { it } from "@beep/test-runner";
 import { O, Str } from "@beep/utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, MutableHashMap, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -34,73 +36,73 @@ const assertSubstringBefore = (text: string, before: string, after: string): voi
 
 describe("@beep/infra CiFleetController", () => {
   it("accepts AWS ARNs and rejects malformed values", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, githubAppKmsKeyArn: "not-an-arn" }))).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, githubAppKmsKeyArn: "not-an-arn" }), Result.isFailure, assertTrue);
   });
 
   it("accepts SSM parameter ARNs and rejects other ARN kinds", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({
-          ...validConfigValues,
-          githubAppIdSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
-        })
-      )
-    ).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        githubAppIdSsmParameterArn: "arn:aws:iam::123456789012:role/not-an-ssm-parameter",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("accepts absolute ZIP paths and rejects relative or non-ZIP paths", () => {
-    expect(Result.isSuccess(decodeConfigValues(validConfigValues))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({ ...validConfigValues, runnerBinariesSyncerLambdaZip: "artifacts/syncer.zip" })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(decodeConfigValues({ ...validConfigValues, runnerBinariesSyncerLambdaZip: "/artifacts/syncer" }))
-    ).toBe(true);
+    pipe(decodeConfigValues(validConfigValues), Result.isSuccess, assertTrue);
+    pipe(
+      decodeConfigValues({ ...validConfigValues, runnerBinariesSyncerLambdaZip: "artifacts/syncer.zip" }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeConfigValues({ ...validConfigValues, runnerBinariesSyncerLambdaZip: "/artifacts/syncer" }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("accepts runner labels and rejects empty, spaced, or overlong labels", () => {
-    expect(Result.isSuccess(decodeConfigValues({ ...validConfigValues, runnerLabel: "beep_runner-shadow" }))).toBe(
-      true
+    pipe(decodeConfigValues({ ...validConfigValues, runnerLabel: "beep_runner-shadow" }), Result.isSuccess, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, runnerLabel: "" }), Result.isFailure, assertTrue);
+    pipe(decodeConfigValues({ ...validConfigValues, runnerLabel: "beep runner" }), Result.isFailure, assertTrue);
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        runnerLabel: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      }),
+      Result.isFailure,
+      assertTrue
     );
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, runnerLabel: "" }))).toBe(true);
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, runnerLabel: "beep runner" }))).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({
-          ...validConfigValues,
-          runnerLabel: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        })
-      )
-    ).toBe(true);
   });
 
   it("accepts absolute AMI SSM parameter paths and rejects relative paths", () => {
-    expect(
-      Result.isSuccess(
-        decodeConfigValues({
-          ...validConfigValues,
-          amiSsmParameterName: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeConfigValues({
-          ...validConfigValues,
-          amiSsmParameterName: "aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        amiSsmParameterName: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+      }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      decodeConfigValues({
+        ...validConfigValues,
+        amiSsmParameterName: "aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("decodes complete Pulumi config values", () => {
     const result = decodeConfigValues({ ...validConfigValues, runnerLabel: "beep-custom-shadow" });
 
-    expect(Result.isSuccess(result)).toBe(true);
+    pipe(result, Result.isSuccess, assertTrue);
     if (Result.isSuccess(result)) {
       expect(result.success.githubAppKmsKeyArn).toBe(validConfigValues.githubAppKmsKeyArn);
       expect(result.success.runnerLabel).toBe("beep-custom-shadow");
@@ -112,8 +114,8 @@ describe("@beep/infra CiFleetController", () => {
     const withoutLabel = decodeConfigValues(validConfigValues);
     const withLabel = decodeConfigValues({ ...validConfigValues, runnerLabel: "beep-custom-shadow" });
 
-    expect(Result.isSuccess(withoutLabel)).toBe(true);
-    expect(Result.isSuccess(withLabel)).toBe(true);
+    pipe(withoutLabel, Result.isSuccess, assertTrue);
+    pipe(withLabel, Result.isSuccess, assertTrue);
     if (Result.isSuccess(withoutLabel) && Result.isSuccess(withLabel)) {
       expect(makeCiFleetControllerConfig(withoutLabel.success).runnerLabel).toBe("beep-ec2-heavy");
       expect(makeCiFleetControllerConfig(withLabel.success).runnerLabel).toBe("beep-custom-shadow");
@@ -123,10 +125,10 @@ describe("@beep/infra CiFleetController", () => {
   it("defaults the controller AMI SSM parameter when absent", () => {
     const result = decodeConfigValues(validConfigValues);
 
-    expect(Result.isSuccess(result)).toBe(true);
+    pipe(result, Result.isSuccess, assertTrue);
     if (Result.isSuccess(result)) {
       const config = makeCiFleetControllerConfig(result.success);
-      expect(O.isNone(config.amiId)).toBe(true);
+      assertNone(config.amiId);
       expect(config.amiSsmParameterName).toBe("/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64");
     }
   });
@@ -134,14 +136,14 @@ describe("@beep/infra CiFleetController", () => {
   it("honors an explicit controller AMI id instead of the SSM default", () => {
     const result = decodeConfigValues({ ...validConfigValues, amiId: "ami-07a5b367e8dc8bd92" });
 
-    expect(Result.isSuccess(result)).toBe(true);
+    pipe(result, Result.isSuccess, assertTrue);
     if (Result.isSuccess(result)) {
       expect(O.getOrUndefined(makeCiFleetControllerConfig(result.success).amiId)).toBe("ami-07a5b367e8dc8bd92");
     }
   });
 
   it("rejects malformed controller AMI ids", () => {
-    expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, amiId: "latest" }))).toBe(true);
+    pipe(decodeConfigValues({ ...validConfigValues, amiId: "latest" }), Result.isFailure, assertTrue);
   });
 
   it.effect(
@@ -279,18 +281,17 @@ describe("@beep/infra CiFleetController", () => {
 
       const postInstall = captured.value;
       expect(capturedManagedPolicyArns.value).toEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
-      expect(capturedOrganizationRunnerEnabled.value).toBe(true);
+      pipe(capturedOrganizationRunnerEnabled.value, assertTrue);
       expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
-      expect(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test")).toEqual(O.some("spot"));
-      expect(MutableHashMap.get(moduleAllocationStrategies, "ci-fleet-controller-test")).toEqual(
-        O.some("price-capacity-optimized")
+      assertSome(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test"), "spot");
+      assertSome(
+        MutableHashMap.get(moduleAllocationStrategies, "ci-fleet-controller-test"),
+        "price-capacity-optimized"
       );
-      expect(MutableHashMap.get(moduleOnDemandFailover, "ci-fleet-controller-test")).toEqual(O.some([]));
-      expect(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test")).toEqual(O.some(2));
-      expect(MutableHashMap.get(moduleScaleUpConcurrency, "ci-fleet-controller-test")).toEqual(O.some(1));
-      expect(MutableHashMap.get(moduleScaleDownSchedules, "ci-fleet-controller-test")).toEqual(
-        O.some("cron(* * * * ? *)")
-      );
+      assertSome(MutableHashMap.get(moduleOnDemandFailover, "ci-fleet-controller-test"), []);
+      assertSome(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test"), 2);
+      assertSome(MutableHashMap.get(moduleScaleUpConcurrency, "ci-fleet-controller-test"), 1);
+      assertSome(MutableHashMap.get(moduleScaleDownSchedules, "ci-fleet-controller-test"), "cron(* * * * ? *)");
       expect(MutableHashMap.size(rolePolicyRoles)).toBe(0);
       expect(MutableHashMap.size(decryptGrants)).toBe(6);
       for (const functionName of [
@@ -298,24 +299,23 @@ describe("@beep/infra CiFleetController", () => {
         "beep-ci-spot-termination-handler",
         "beep-ci-deregister-retry",
       ]) {
-        expect(MutableHashMap.get(lambdaRegions, functionName)).toEqual(O.some("us-east-1"));
+        assertSome(MutableHashMap.get(lambdaRegions, functionName), "us-east-1");
         A.forEach(
           [
             { purpose: "id", parameterArn: validConfigValues.githubAppIdSsmParameterArn },
             { purpose: "key", parameterArn: validConfigValues.githubAppKeyBase64SsmParameterArn },
           ],
           ({ purpose, parameterArn }) =>
-            expect(
-              MutableHashMap.get(decryptGrants, `ci-fleet-controller-test-${functionName}-app-${purpose}-decrypt`)
-            ).toEqual(
-              O.some({
+            assertSome(
+              MutableHashMap.get(decryptGrants, `ci-fleet-controller-test-${functionName}-app-${purpose}-decrypt`),
+              {
                 name: `${functionName}-immutable-id-${functionName}-role-${purpose}`,
                 region: "us-east-1",
                 keyId: validConfigValues.githubAppKmsKeyArn,
                 granteePrincipal: `arn:aws:iam::123456789012:role/beep-ci/${functionName}-role`,
                 operations: ["Decrypt"],
                 constraints: [{ encryptionContextEquals: { PARAMETER_ARN: parameterArn } }],
-              })
+              }
             )
         );
       }
@@ -326,7 +326,7 @@ describe("@beep/infra CiFleetController", () => {
         instance_metadata_tags: "enabled",
       });
       const decodedPolicy = decodePolicyDocument(capturedPolicy.value);
-      assert.isTrue(Result.isSuccess(decodedPolicy));
+      pipe(decodedPolicy, Result.isSuccess, assertTrue);
       if (Result.isSuccess(decodedPolicy)) {
         expect(decodedPolicy.success).toEqual({
           Version: "2012-10-17",

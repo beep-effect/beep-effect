@@ -1,11 +1,11 @@
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { FilingDecisionInput } from "@beep/documents-use-cases/aggregates/Document/server";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { describe } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownFilingDecisionInputResult = S.decodeUnknownResult(FilingDecisionInput);
@@ -18,27 +18,18 @@ describe("@beep/documents-use-cases FilingDecision port", () => {
       originalFileName: "complaint.pdf",
     });
 
-    expect(O.isNone(input.textExcerpt)).toBe(true);
+    assertNone(input.textExcerpt);
   });
 
-  it("round-trips the filing decision input with schema-derived arbitraries", () => {
-    const equivalent = S.toEquivalence(FilingDecisionInput);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(FilingDecisionInput),
-          (input) => {
-            const encoded = Result.getOrThrow(encodeFilingDecisionInputResult(input));
-            const decoded = Result.getOrThrow(decodeUnknownFilingDecisionInputResult(encoded));
-
-            expect(equivalent(decoded, input)).toBe(true);
-
-            return true;
-          },
-          fcRuns(10)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips the filing decision input with schema-derived arbitraries",
+    { input: Arbitrary.schema(FilingDecisionInput) },
+    ({ input }) => {
+      const equivalent = S.toEquivalence(FilingDecisionInput);
+      const encoded = Result.getOrThrow(encodeFilingDecisionInputResult(input));
+      const decoded = Result.getOrThrow(decodeUnknownFilingDecisionInputResult(encoded));
+      pipe(equivalent(decoded, input), assertTrue);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

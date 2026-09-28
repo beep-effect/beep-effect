@@ -3,18 +3,19 @@ import {
   writeFileWithinCanonicalRootAtomically,
   writeFileWithinRootAtomically,
 } from "@beep/file-processing/PathSafety";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 
 const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const payload = new TextEncoder().encode("safe payload");
 
-describe("@beep/file-processing PathSafety", () => {
+it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native filesystem", (it) => {
   it.effect(
     "writes nested bytes atomically and removes temporary artifacts",
     Effect.fnUntraced(function* () {
@@ -30,9 +31,9 @@ describe("@beep/file-processing PathSafety", () => {
       expect(target).toBe(path.join(root, "nested", "report.bin"));
       expect(new TextDecoder().decode(yield* fs.readFile(target))).toBe("safe payload");
       expect(yield* fs.readDirectory(path.dirname(target))).toEqual(["report.bin"]);
-      expect(Result.isFailure(yield* Effect.result(fs.readLink(target)))).toBe(true);
+      pipe(yield* Effect.result(fs.readLink(target)), Result.isFailure, assertTrue);
       expect((yield* fs.stat(target)).mode & 0o777).toBe(0o600);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -53,10 +54,10 @@ describe("@beep/file-processing PathSafety", () => {
         )
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* Ref.get(makeDirectoryCalls)).toBe(0);
       expect(yield* fs.readDirectory(root)).toEqual([]);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -83,11 +84,11 @@ describe("@beep/file-processing PathSafety", () => {
         )
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.exists(path.join(root, "result.bin"))).toBe(false);
       expect(yield* fs.exists(compromisedTemporaryDirectory)).toBe(false);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -101,9 +102,9 @@ describe("@beep/file-processing PathSafety", () => {
         writeFileWithinRootAtomically({ root, candidate: "blocked", bytes: payload })
       );
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -134,7 +135,7 @@ describe("@beep/file-processing PathSafety", () => {
       expect(target).toBe(path.join(root, "result.bin"));
       expect(yield* Ref.get(cleanupAttempts)).toBe(1);
       expect(yield* fs.readFileString(target)).toBe("safe payload");
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -165,7 +166,7 @@ describe("@beep/file-processing PathSafety", () => {
       expect(error).toBe(cleanupFailure);
       expect(yield* Ref.get(cleanupAttempts)).toBe(1);
       expect((yield* fs.stat(`${root}/blocked`)).type).toBe("Directory");
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -193,11 +194,11 @@ describe("@beep/file-processing PathSafety", () => {
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
       );
 
-      expect(Result.isFailure(readResult)).toBe(true);
-      expect(Result.isFailure(writeResult)).toBe(true);
+      pipe(readResult, Result.isFailure, assertTrue);
+      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
   it.effect(
@@ -215,18 +216,16 @@ describe("@beep/file-processing PathSafety", () => {
 
       expect(resolveError.reason).toBe("canonical-root-not-absolute");
       expect(writeError).toMatchObject({ reason: "canonical-root-not-absolute" });
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 
-  it.effect(
-    "rejects a POSIX symlink escape through an outside sibling containing a literal backslash",
+  it.effect.skipIf(Eq.equals(process.platform, "win32"))(
+    "POSIX only: rejects a symlink escape through an outside sibling containing a literal backslash",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
-      if (!Eq.equals(path.sep, "/")) {
-        return;
-      }
+      expect(path.sep).toBe("/");
 
       const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       const root = path.join(sandbox, "workspace");
@@ -246,10 +245,10 @@ describe("@beep/file-processing PathSafety", () => {
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
       );
 
-      expect(Result.isFailure(resolveResult)).toBe(true);
-      expect(Result.isFailure(writeResult)).toBe(true);
+      pipe(resolveResult, Result.isFailure, assertTrue);
+      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(link)).toBe(outsideVictim);
-    }, provideScopedLayer(PathSafetyTestLayer))
+    })
   );
 });

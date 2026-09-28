@@ -7,9 +7,10 @@ import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/agg
 import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -52,40 +53,35 @@ const WorkItemDrizzleRepositoryLayer = Layer.mergeAll(ArchitectureLabConfigTest,
   Layer.provideMerge(makeMigrationCapableLayer())
 );
 
-it("round-trips schema-derived repository identity values through domain schemas", () =>
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([WorkItemIdArbitrary, WorkItemTitleArbitrary, WorkerIdArbitrary, OrganizationIdArbitrary]),
-        ([workItemId, title, workerId, organizationId]) => {
-          const encodedWorkItemId = Effect.runSync(encodeWorkItemId(workItemId));
-          const decodedWorkItemId = Effect.runSync(decodeWorkItemId(encodedWorkItemId));
-          expect(Effect.runSync(encodeWorkItemId(decodedWorkItemId))).toBe(encodedWorkItemId);
+it.effect.prop(
+  "round-trips schema-derived repository identity values through domain schemas",
+  [WorkItemIdArbitrary, WorkItemTitleArbitrary, WorkerIdArbitrary, OrganizationIdArbitrary],
+  ([workItemId, title, workerId, organizationId]) =>
+    Effect.gen(function* () {
+      const encodedWorkItemId = yield* encodeWorkItemId(workItemId);
+      const decodedWorkItemId = yield* decodeWorkItemId(encodedWorkItemId);
+      expect(yield* encodeWorkItemId(decodedWorkItemId)).toBe(encodedWorkItemId);
 
-          const encodedTitle = Effect.runSync(encodeWorkItemTitle(title));
-          const decodedTitle = Effect.runSync(decodeWorkItemTitle(encodedTitle));
-          expect(Effect.runSync(encodeWorkItemTitle(decodedTitle))).toBe(encodedTitle);
+      const encodedTitle = yield* encodeWorkItemTitle(title);
+      const decodedTitle = yield* decodeWorkItemTitle(encodedTitle);
+      expect(yield* encodeWorkItemTitle(decodedTitle)).toBe(encodedTitle);
 
-          const encodedWorkerId = Effect.runSync(encodeWorkerId(workerId));
-          const decodedWorkerId = Effect.runSync(decodeWorkerId(encodedWorkerId));
-          expect(Effect.runSync(encodeWorkerId(decodedWorkerId))).toBe(encodedWorkerId);
+      const encodedWorkerId = yield* encodeWorkerId(workerId);
+      const decodedWorkerId = yield* decodeWorkerId(encodedWorkerId);
+      expect(yield* encodeWorkerId(decodedWorkerId)).toBe(encodedWorkerId);
 
-          const encodedOrganizationId = Effect.runSync(encodeOrganizationId(organizationId));
-          const decodedOrganizationId = Effect.runSync(decodeOrganizationId(encodedOrganizationId));
-          expect(Effect.runSync(encodeOrganizationId(decodedOrganizationId))).toBe(encodedOrganizationId);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )._tag
-  ).toBe("Passed"));
+      const encodedOrganizationId = yield* encodeOrganizationId(organizationId);
+      const decodedOrganizationId = yield* decodeOrganizationId(encodedOrganizationId);
+      expect(yield* encodeOrganizationId(decodedOrganizationId)).toBe(encodedOrganizationId);
+    }),
+  { arbitrary: fcRuns(25) }
+);
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("ArchitectureLab Drizzle repository PgLite integration", () => {});
 } else {
   describe("ArchitectureLab Drizzle repository PgLite integration", { concurrent: false }, () => {
-    layer(WorkItemDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(WorkItemDrizzleRepositoryLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "persists WorkItem lifecycle changes through Drizzle",
         Effect.fnUntraced(function* () {

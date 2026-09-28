@@ -1,5 +1,6 @@
 import { Footnote } from "@beep/law-practice-domain";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("Footnote.detectTextFootnotes", () => {
   it("detects supported markers and preserves their source spans", () => {
@@ -14,6 +15,16 @@ describe("Footnote.detectTextFootnotes", () => {
     const zones = Footnote.detectTextFootnotes(text);
 
     expect(zones.map(({ footnoteNumber }) => footnoteNumber)).toStrictEqual([1, 2, 3]);
+    expect(zones.map(({ start, end }) => ({ start, end }))).toStrictEqual([
+      { start: 23, end: 44 },
+      { start: 44, end: 65 },
+      { start: 65, end: 84 },
+    ]);
+    expect(zones.map(({ start, end }) => text.slice(start, end))).toStrictEqual([
+      "FN1. First footnote.\n",
+      "[2] Second footnote.\n",
+      "n.3 Third footnote.",
+    ]);
     expect(text.slice(zones[0]?.start, zones[0]?.end)).toContain("First footnote");
     expect(text.slice(zones[2]?.start, zones[2]?.end)).toContain("Third footnote");
   });

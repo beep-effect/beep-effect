@@ -1,8 +1,10 @@
 import { OpenclawCommandExitError, OpenclawOutputParseError } from "@beep/openclaw/Openclaw.errors";
 import { OpenclawProcessResult } from "@beep/openclaw/Openclaw.models";
 import { OpenclawSystemd } from "@beep/openclaw/OpenclawSystemd.service";
-import { describe, expect, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -26,17 +28,26 @@ const verbStdout: Record<string, { readonly exitCode: number; readonly stdout: s
   show: { exitCode: 0, stdout: showStdout },
 };
 
-const calls: Array<OpenclawProcessRequest> = [];
-const recordingRunner: OpenclawCliRunner = (request) =>
-  Effect.sync(() => {
-    calls.push(request);
-    const output = O.getOrElse(
-      O.flatMap(A.get(request.args, 1), (verb) => R.get(verbStdout, verb)),
-      () => ({ exitCode: 0, stdout: "" })
-    );
-    return OpenclawProcessResult.make({ exitCode: output.exitCode, stderr: "", stdout: output.stdout });
-  });
-const lastRequest = (): OpenclawProcessRequest => O.getOrThrow(A.last(calls));
+const makeSystemdRecorder = () => {
+  const calls: Array<OpenclawProcessRequest> = [];
+  const recordingRunner: OpenclawCliRunner = (request) =>
+    Effect.sync(() => {
+      calls.push(request);
+      const output = O.getOrElse(
+        O.flatMap(A.get(request.args, 1), (verb) => R.get(verbStdout, verb)),
+        () => ({ exitCode: 0, stdout: "" })
+      );
+      return OpenclawProcessResult.make({ exitCode: output.exitCode, stderr: "", stdout: output.stdout });
+    });
+  const lastRequest = (): OpenclawProcessRequest => O.getOrThrow(A.last(calls));
+  return { calls, recordingRunner, lastRequest };
+};
+class SystemdRecorder extends Context.Service<SystemdRecorder, ReturnType<typeof makeSystemdRecorder>>()(
+  "@beep/openclaw/test/OpenclawSystemd.service.test/SystemdRecorder"
+) {}
+const SystemdRecorderTest = Layer.unwrap(
+  Effect.map(SystemdRecorder, ({ recordingRunner }) => OpenclawSystemd.makeLayerFromRunner(recordingRunner))
+).pipe(Layer.provideMerge(Layer.sync(SystemdRecorder, makeSystemdRecorder)));
 
 const quiescentRunner: OpenclawCliRunner = () =>
   Effect.succeed(OpenclawProcessResult.make({ exitCode: 0, stderr: "", stdout: quiescentShowStdout }));
@@ -50,10 +61,12 @@ const failingVerbRunner: OpenclawCliRunner = () =>
   );
 
 describe("@beep/openclaw OpenclawSystemd service", () => {
-  layer(OpenclawSystemd.makeLayerFromRunner(recordingRunner))((it) => {
+  it.layer(SystemdRecorderTest)("always prefixes --user and passes minimal env on lifecycle verbs", (it) => {
     it.effect(
       "always prefixes --user and passes minimal env on lifecycle verbs",
       Effect.fnUntraced(function* () {
+        const { calls, lastRequest } = yield* SystemdRecorder;
+        expect(calls).toEqual([]);
         const systemd = yield* OpenclawSystemd;
 
         yield* systemd.daemonReload;
@@ -82,10 +95,13 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
         expect(lastRequest().args).toEqual(["--user", "reset-failed", unitName]);
       })
     );
-
+  });
+  it.layer(SystemdRecorderTest)("models is-active nonzero exits as state results, not errors", (it) => {
     it.effect(
       "models is-active nonzero exits as state results, not errors",
       Effect.fnUntraced(function* () {
+        const { calls, lastRequest } = yield* SystemdRecorder;
+        expect(calls).toEqual([]);
         const systemd = yield* OpenclawSystemd;
         const state = yield* systemd.isActive(unitName);
 
@@ -93,10 +109,13 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
         expect(lastRequest().args).toEqual(["--user", "is-active", unitName]);
       })
     );
-
+  });
+  it.layer(SystemdRecorderTest)("parses Key=Value lines from systemctl show output", (it) => {
     it.effect(
       "parses Key=Value lines from systemctl show output",
       Effect.fnUntraced(function* () {
+        const { calls, lastRequest } = yield* SystemdRecorder;
+        expect(calls).toEqual([]);
         const systemd = yield* OpenclawSystemd;
         const unitState = yield* systemd.show(unitName);
 
@@ -125,54 +144,63 @@ describe("@beep/openclaw OpenclawSystemd service", () => {
     );
   });
 
-  layer(OpenclawSystemd.makeLayerFromRunner(quiescentRunner))((it) => {
-    it.effect(
-      "treats MainPID=0 and blank paths as absent unit facts",
-      Effect.fnUntraced(function* () {
-        const systemd = yield* OpenclawSystemd;
-        const unitState = yield* systemd.show(unitName);
+  it.layer(OpenclawSystemd.makeLayerFromRunner(quiescentRunner))(
+    "treats MainPID=0 and blank paths as absent unit facts",
+    (it) => {
+      it.effect(
+        "treats MainPID=0 and blank paths as absent unit facts",
+        Effect.fnUntraced(function* () {
+          const systemd = yield* OpenclawSystemd;
+          const unitState = yield* systemd.show(unitName);
 
-        expect(unitState.activeState).toBe("inactive");
-        expect(O.getOrThrow(unitState.knownActiveState)).toBe("inactive");
-        expect(O.isNone(unitState.mainPid)).toBe(true);
-        expect(O.isNone(unitState.fragmentPath)).toBe(true);
-        expect(O.isNone(unitState.controlGroup)).toBe(true);
-      })
-    );
-  });
+          expect(unitState.activeState).toBe("inactive");
+          expect(O.getOrThrow(unitState.knownActiveState)).toBe("inactive");
+          assertNone(unitState.mainPid);
+          assertNone(unitState.fragmentPath);
+          assertNone(unitState.controlGroup);
+        })
+      );
+    }
+  );
 
-  layer(OpenclawSystemd.makeLayerFromRunner(missingActiveStateRunner))((it) => {
-    it.effect(
-      "fails show with a parse error when ActiveState is missing",
-      Effect.fnUntraced(function* () {
-        const systemd = yield* OpenclawSystemd;
-        const error = yield* systemd.show(unitName).pipe(Effect.flip);
+  it.layer(OpenclawSystemd.makeLayerFromRunner(missingActiveStateRunner))(
+    "fails show with a parse error when ActiveState is missing",
+    (it) => {
+      it.effect(
+        "fails show with a parse error when ActiveState is missing",
+        Effect.fnUntraced(function* () {
+          const systemd = yield* OpenclawSystemd;
+          const error = yield* systemd.show(unitName).pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(OpenclawOutputParseError);
-        if (isOpenclawOutputParseError(error)) {
-          expect(error.executable).toBe("systemctl");
-          expect(error.subcommand).toBe("show");
-        }
-      })
-    );
-  });
+          expect(error).toBeInstanceOf(OpenclawOutputParseError);
+          if (isOpenclawOutputParseError(error)) {
+            expect(error.executable).toBe("systemctl");
+            expect(error.subcommand).toBe("show");
+          }
+        })
+      );
+    }
+  );
 
-  layer(OpenclawSystemd.makeLayerFromRunner(failingVerbRunner))((it) => {
-    it.effect(
-      "fails lifecycle verbs with redacted exit errors on nonzero exits",
-      Effect.fnUntraced(function* () {
-        const systemd = yield* OpenclawSystemd;
-        const error = yield* systemd.start(unitName).pipe(Effect.flip);
+  it.layer(OpenclawSystemd.makeLayerFromRunner(failingVerbRunner))(
+    "fails lifecycle verbs with redacted exit errors on nonzero exits",
+    (it) => {
+      it.effect(
+        "fails lifecycle verbs with redacted exit errors on nonzero exits",
+        Effect.fnUntraced(function* () {
+          const systemd = yield* OpenclawSystemd;
+          const error = yield* systemd.start(unitName).pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(OpenclawCommandExitError);
-        if (isOpenclawCommandExitError(error)) {
-          expect(error.executable).toBe("systemctl");
-          expect(error.subcommand).toBe("start");
-          expect(error.exitCode).toBe(1);
-          expect(O.isNone(error.diagnostics)).toBe(true);
-          expect(error.stderrLength).toBe("Failed to start openclaw-spike.service\n".length);
-        }
-      })
-    );
-  });
+          expect(error).toBeInstanceOf(OpenclawCommandExitError);
+          if (isOpenclawCommandExitError(error)) {
+            expect(error.executable).toBe("systemctl");
+            expect(error.subcommand).toBe("start");
+            expect(error.exitCode).toBe(1);
+            assertNone(error.diagnostics);
+            expect(error.stderrLength).toBe("Failed to start openclaw-spike.service\n".length);
+          }
+        })
+      );
+    }
+  );
 });

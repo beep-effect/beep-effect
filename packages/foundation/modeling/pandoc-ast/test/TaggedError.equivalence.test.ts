@@ -1,6 +1,7 @@
 import { PandocDecodeError } from "@beep/pandoc-ast/Pandoc.codec";
 import { PandocMappingError } from "@beep/pandoc-ast/Pandoc.mapping";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const expectOpaqueCauseIgnored = <Schema extends S.Top>(

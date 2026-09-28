@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/libpff",
+  "sourceHead": "9a3d4b5214fff09c52ec5e2b6efbd5375172f58b",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 6.223541461004061,
+  "bunWholeCommandSeconds": 3.8204032650101,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.5458984375, 1.85107421875, 2.126953125],
+  "loadAfter": [2.90283203125, 1.93701171875, 2.1533203125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.19 avg300=0.07 total=718068831\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196845\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123197\n",
+    "io": "some avg10=0.00 avg60=0.22 avg300=0.10 total=804215345\nfull avg10=0.00 avg60=0.16 avg300=0.07 total=703711737\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.17 avg300=0.07 total=718081051\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196846\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123198\n",
+    "io": "some avg10=0.00 avg60=0.20 avg300=0.10 total=804218119\nfull avg10=0.00 avg60=0.15 avg300=0.07 total=703713784\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "30dd71a3abc665a56632d4a01c72afe535b9b14722882cc25cbf9741a70d4f0e"
+    },
+    {
+      "file": "packages/drivers/libpff/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/libpff/README.md",
+      "sha256": "32eee2cc88736559a4976f82f0bd541bd9f39380639fba4cd33d85479de57d21"
+    },
+    {
+      "file": "packages/drivers/libpff/docgen.json",
+      "sha256": "096b4a7e95fa4377f02f24a99fc6c98c17a71596539c18f16452d19488ed258d"
+    },
+    {
+      "file": "packages/drivers/libpff/package.json",
+      "sha256": "da34a9fea829ab7a12ae63c76db5f6d3b8af9792333b4c7aeae9f72d4a146985"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.eml.ts",
+      "sha256": "fd92f54481dbbb4ba0e82a55d8e57aeb2833fc324b8ea5ce05103fe619c77e93"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.error-translation.ts",
+      "sha256": "c49260763d33b73d1d379180a24f62194bac72489f68cb89e7ddeadc016a0d67"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+      "sha256": "a85ba11e5c8b32c923f6bafccb61e47f877bcb56048b56c08ee60147b56a2df5"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.messages.ts",
+      "sha256": "f57a11c4665f8ddcc5b9bf0c1411fd4f5e63e51e156796a539c4561a633e1176"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+      "sha256": "48fd4dfe4b598200ede079295627c82523d6ffb21091c6b0c6a6aa8b514b3a8c"
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.service.ts",
+      "sha256": "e5225c423bae2b2c6bd6a958937459933db0d0ed7a2c874e9a999a5a309901a8"
+    },
+    {
+      "file": "packages/drivers/libpff/src/index.ts",
+      "sha256": "2ff232e2b15c5b313b8b9c0f0e0d66581313f1e0563e570a6e9c10b7a1f133bf"
+    },
+    {
+      "file": "packages/drivers/libpff/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
+      "sha256": "7fae2401706c3ba62b7ff2ec10b0ffb27e6e79fa5daae41c37e6a3aee9c4fd49"
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.equivalence.test.ts",
+      "sha256": "644a38348360ebeadd5f3743147c351b8895fa7400655766634208ffe8cd91cd"
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "sha256": "e46e03caf7da58165374cba3abc319a1c5e96edc833045e32d0467527bd7c1ae"
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
+      "sha256": "368c1102f9433836377f4996d4c470ad17d62581b5f3241081cf4021ce57c249"
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "sha256": "e0e514a53beca2d1ba0730b577aa565cabdb09a2f2bfa41ce9035f86d61e64fc"
+    },
+    {
+      "file": "packages/drivers/libpff/tsconfig.check.json",
+      "sha256": "f6173b568481f6d96c04a55fbe89bcdd090ace42d52ab24ab647fa049ad928f7"
+    },
+    {
+      "file": "packages/drivers/libpff/tsconfig.json",
+      "sha256": "c389b0173730f3fb724781cddeb9f119069ff45ba9e9221a647cd69930b063da"
+    },
+    {
+      "file": "packages/drivers/libpff/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/libpff/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual native subprocess and symlink fixtures, bubblewrap integration when available, and opt-in supplied PST live tests. No virtual filesystem or process replacement. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 69,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.90283203125, 1.93701171875, 2.1533203125],
+    "loadAfter": [2.75, 1.92138671875, 2.14697265625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.01 avg60=0.17 avg300=0.07 total=718081061\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196846\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123198\n",
+      "io": "some avg10=0.00 avg60=0.20 avg300=0.10 total=804218119\nfull avg10=0.00 avg60=0.15 avg300=0.07 total=703713784\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.01 avg60=0.16 avg300=0.07 total=718086594\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186196847\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178123199\n",
+      "io": "some avg10=0.00 avg60=0.19 avg300=0.10 total=804218759\nfull avg10=0.00 avg60=0.14 avg300=0.06 total=703714213\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 69,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes report69registrations before and after. Before, two absent-PST cases returned successfully without executing integration assertions; after, they report explicit skips, leaving67passed and2skipped. All native process subjects and property domains remain. The250ms timeout and1250ms absence observation are unchanged, with added child-readiness and termination evidence."
+}

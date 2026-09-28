@@ -7,6 +7,7 @@ import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/Id
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import {
   fcRuns,
   makePgliteIntegrationGate,
@@ -15,7 +16,7 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -144,12 +145,12 @@ const submissionFactInput = {
 };
 
 describe("law-practice candor migration schema laws", () => {
-  it("generates valid patent citation events", () => {
-    expect(
-      Effect.runSync(Arbitrary.checkEffect(Arbitrary.schema(PatentCitationEvent), isPatentCitationEvent, fcRuns(25)))
-        ._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "generates valid patent citation events",
+    [Arbitrary.schema(PatentCitationEvent)],
+    ([value]) => isPatentCitationEvent(value),
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
@@ -229,7 +230,7 @@ if (!shouldRunPgliteIntegration) {
     // Two fresh databases rather than two probes in one session: an implicit
     // transaction pglite host rolls the whole session chain back after an
     // intentional failure, so the UPDATE and DELETE denials cannot share one.
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the law-practice-candor-gate migration and rejects updating a recorded disposition",
         Effect.fnUntraced(function* () {
@@ -247,7 +248,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "rejects deleting a recorded disposition",
         Effect.fnUntraced(function* () {
@@ -280,7 +281,7 @@ if (!shouldRunPgliteIntegration) {
         table: "law_practice_patent_citation_event",
       },
     ] as const) {
-      layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+      it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
         it.effect(
           `refuses unresolved legacy ST.13 identity at the constraint in ${table}`,
           Effect.fnUntraced(function* () {

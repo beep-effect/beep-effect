@@ -1,0 +1,66 @@
+{
+  "package": "@beep/architecture-lab-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:55:39.485000+00:00",
+  "totalMs": 5822.990234375,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "ms": 14.40380859375,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "ms": 4.320068359375,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "ms": 1164.990234375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "ArchitectureLab Drizzle repository PgLite integration persists WorkItem lifecycle changes through Drizzle",
+      "ms": 1127.4532309999995
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "ArchitectureLab Drizzle repository PgLite integration persists Worker entities through Drizzle",
+      "ms": 24.99012700000003
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server keeps HTTP schema encoded shapes byte-identical",
+      "ms": 14.403873000000203
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server redacts unavailable details from HTTP failure bodies",
+      "ms": 14.17079399999966
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server round-trips schema-derived HTTP values",
+      "ms": 14.146085999999741
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "round-trips schema-derived repository identity values through domain schemas",
+      "ms": 11.484606999999414
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "testName": "Worker server isolated repository stores provides a configured Worker use-case facade",
+      "ms": 4.320032999999967
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server isolated repository stores provides a configured WorkItem use-case facade",
+      "ms": 1.2561940000005052
+    }
+  ]
+}

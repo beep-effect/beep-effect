@@ -1,0 +1,28 @@
+[
+  {
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "schemas": [
+      "Agent",
+      "Skill",
+      "AssistantContent",
+      "AssistantBlock",
+      "InlineNode"
+    ],
+    "runFloor": 10,
+    "registrationCountUnchanged": true,
+    "deadlineUnchanged": true,
+    "roundTripHelperAndOraclesUnchanged": true,
+    "onlyReviewedRegistrationsChanged": true,
+    "sourceSha256": "eed17854412a3ad158f164453d46fb26f4948498777f0c7b15cab927d4a13747"
+  },
+  {
+    "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+    "schemas": ["AuthSnapshot", "ProviderKind", "ProviderInstance"],
+    "runFloor": 10,
+    "registrationCountUnchanged": true,
+    "deadlineUnchanged": true,
+    "roundTripHelperAndOraclesUnchanged": true,
+    "onlyReviewedRegistrationsChanged": true,
+    "sourceSha256": "9375ec8bccb93df3ca9b23e3385fbf9bcd9ba2d481c6af5ebd54e6991afa8806"
+  }
+]

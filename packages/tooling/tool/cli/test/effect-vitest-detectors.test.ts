@@ -1158,6 +1158,15 @@ layer(BunCrypto.layer)((it) => {
           className: "test-clock-stall-risk",
         },
         {
+          body: `it.effect("nested generators", () => Fx.gen(function* () {
+            yield* Fx.gen(function* () {
+              yield* Fx.gen(function* () { yield* Fx.sleep("1 second"); });
+            });
+          }));`,
+          mode: "detector",
+          className: "test-clock-stall-risk",
+        },
+        {
           body: `it.effect("direct helper", function* () { const wait = Fx.fnUntraced(function* () { yield* Fx.sleep("1 second"); }); yield* wait(); });`,
           mode: "detector",
           className: "test-clock-stall-risk",

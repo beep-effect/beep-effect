@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/lejeune-bolt-workbench",
+  "sourceHead": "cacb4ad34a64e476656ca9bf81b5c40122955508",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 12.13442051099264,
+  "bunWholeCommandSeconds": 10.581787854986032,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [0.65478515625, 1.39697265625, 2.19775390625],
+  "loadAfter": [4.82421875, 2.28515625, 2.4794921875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.06 avg300=0.06 total=809934815\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186220280\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178144103\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=861597438\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=753838227\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.59 avg60=0.22 avg300=0.10 total=810088561\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186220284\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178144107\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=861602384\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=753841925\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/AGENTS.md",
+      "sha256": "dd93b5160361426577dbec6e8cdfd7251f41e7bc27719cce1f3e3ad6ac554ef6"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/CLAUDE.md",
+      "sha256": "dd93b5160361426577dbec6e8cdfd7251f41e7bc27719cce1f3e3ad6ac554ef6"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/README.md",
+      "sha256": "85dfc53b168c6d6ad8ab9a78e25f60b1cadc43dd70bb1999fd15c9041f81dca9"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/index.html",
+      "sha256": "39c1f58ed22d180ffe1c7c4a04e1a351e96c8099bc827d837e8d4f897e0b8c4d"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/lab.manifest.json",
+      "sha256": "44c46efa0f2ec6b4770565884a347801264cdd62fb6252ea8b10fddf361083c8"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/package.json",
+      "sha256": "345ed521f82113cd23402575cafe433ff52d98309e1a4fc767faabd8bba593d7"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/postcss.config.mjs",
+      "sha256": "2ee9434af4fb47623ea9254b1b710f9110ec3befbf449591dadba2e5500344ea"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/server/build-bundle.ts",
+      "sha256": "fbb8cc57d845054a415fea204a14a3774ec4299b2b0a4a5a0f3ad9e0b85769f0"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/server/provider-smoke.ts",
+      "sha256": "313fa6226f3f1628f9259f3d77a295849168e671106ddbfcf5ade5eda257c6ed"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/App.tsx",
+      "sha256": "ce6b05d2ec4c9969befc41e4aca702c2b59045163323b7335cda153abf02ba57"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
+      "sha256": "06355eb795dd8ae36ce98f33937013bd5c214c2507c9bbb5fa355376520e9b88"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
+      "sha256": "dd17f3de8bde8c44af0c3b7d055bcc8040e1751f3f561ab74bf4e7fd22965520"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/domain/ReferenceData.ts",
+      "sha256": "427589520cf3de5124c4c847c777984239a15f9d43206ef56701599911ab1bbb"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/FixtureManifest.ts",
+      "sha256": "adec8b946335184e8ada8a01d37fe6572a16c5bb7eb48c9b43482447d0ca98bc"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/Sources.ts",
+      "sha256": "776c39d6e05edfcd885975b049709cf85d973887592ae7c04f166d072037e824"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/fixture-manifest.json",
+      "sha256": "07be3ac95ba1c6955ec10cb933ef1b1e18d248c7732b624b1a3446e8e8b63f5a"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/provider-recording.json",
+      "sha256": "8fb9a1f2c4b2dde9399b640d9d9963d0354806e62d5cf4ab388f75d898fb459c"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/main.tsx",
+      "sha256": "931dd98be5250dfbf7cf5415dbe85d8f7006c3cfa413123332ed69cb4da748c9"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/runtime/Projections.ts",
+      "sha256": "343ca58240ed4db2a8ca987610f209a9859717fe9fbdf2d2ef1457a4f40ea135"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/styles/globals.css",
+      "sha256": "19b011e8d6e12c1a414fef2493426f98eea4501b09e3555be4e2d057b63f57fd"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/workflows/Normalize.ts",
+      "sha256": "061b1d1cacfecf5574ef2698b5099d1ea9934fcb723ecc5aa77b02551e3fe5c6"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/workflows/ProviderRecording.ts",
+      "sha256": "a297b641ea444abc0a5e741e47e28f679d2dde3d94b703a5f99d450788a813c1"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/workflows/Replay.ts",
+      "sha256": "b133bd4a050444dd4e6d6f04275eca10afed825b088c44c78c5e5373ff4df5a4"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/src/workflows/Rules.ts",
+      "sha256": "58d66de33bc67aaf424f226fd34cc38ea76103b5b4e3fba225c937b4a86289a5"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/App.test.tsx",
+      "sha256": "8ad07b3af99ef6cf651fc0d61914cfc33b15d67823378d987908d07ae684fe24"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
+      "sha256": "e4fc365d1e906672dfb1999d8df47dd7008db8d959d572fe751fef44f45abe8e"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
+      "sha256": "95cbf80147417603b0b26f6dc3706cafbf702cd608c42402c7816cbee008bca1"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/tsconfig.check.json",
+      "sha256": "f9559cfa48daa345b51ac9137e3ccc797fa9e8972320992f599f8a4853d823b0"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/tsconfig.json",
+      "sha256": "f4092480cc75766480e6a45c839acd9d10beb56609586240a697631c979a5394"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/vite.config.ts",
+      "sha256": "4ba01d664bddc3bd5d60356aee62f4f79527187228a1a1e58ea05d31433b2c03"
+    },
+    {
+      "file": "apps/labs/lejeune-bolt-workbench/vitest.config.ts",
+      "sha256": "315bd603b4498c1d63f891ecb67ee5df48c8b19c038788b605d3d13a07f9060b"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "fdb0a35d3a59dc134769bc575e6259d0ae86509769f4b7fabb8a7ed21157f17f"
+    }
+  ],
+  "environmentMode": "Configured lejeune-bolt-workbench local fixture tests with native projection databases, filesystem publication and jsdom. No external provider endpoint is intended. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 28,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.82421875, 2.28515625, 2.4794921875],
+    "loadAfter": [5.32568359375, 2.474609375, 2.5390625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.59 avg60=0.22 avg300=0.10 total=810088612\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186220284\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178144107\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=861602384\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=753841925\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.21 avg60=0.18 avg300=0.10 total=810125891\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186220284\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178144107\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=861620251\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=753854108\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 28,
+    "skipped": 0
+  },
+  "interpretation": "All28configured local tests pass before and after on Node and Bun with zero skips and stable sources. Native PGlite/DuckDB/Oxigraph stores and filesystem atomic publication remain subjects. All118original assertions and27static registration titles remain;3aggregatePassed checks retire in favor of native properties with exact codecs and20trial floors. Independent inverted predicates each expose replay and shrinking. Per-case layer ownership preserves clocks and existing live modes. Single observations under recorded workstation load and pressure are not causal benchmarks or external provider/browser execution."
+}

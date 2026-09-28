@@ -1,0 +1,118 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-report>"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/anthropic/package.json",
+      "sha256": "bdf9d4ec97e4a10cde9e478d9eecd24ae236fa9dba1ad5b15d2ebd75645bd126"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.config.ts",
+      "sha256": "7f5d4f3b8e16aa65c6c029d78bdb70fbf30e7c6581f7c515fa4a457b1d3a04cc"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.errors.ts",
+      "sha256": "23beb485c179b1b84ef6ad2c542dffe8314954f9d65cd043546a70c8f4ec31f4"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.repair.ts",
+      "sha256": "a28af73326d91dd299e73e01fef8acc9c4ab2a4de765266b5a7bf21c6f7f7c59"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.service.ts",
+      "sha256": "ce27fdb8621f799c3361189438bf5d8d512b977814df4706fd16719f884d6224"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/index.ts",
+      "sha256": "665b9ef8887c8e9b50a50e2379dcb7133cf8efa25b11edd1a5a169eed20ad1e1"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "sha256": "da2e703c27cf924af491fa157951929b17d3c410b41186b269232d3b0f21b566"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "sha256": "6e5727780268effbf9c78cc940aaee40f1f6c5fa7cb0cd0584bd6f40e09b3b70"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "sha256": "822a3f66ca876bff942adf50f8aab946d365a65ee3610c483ae08fa83eefb936"
+    }
+  ],
+  "loadBefore": [34.49609375, 34.64697265625, 36.060546875],
+  "pressureBefore": {
+    "cpu": "some avg10=2.90 avg60=2.52 avg300=4.39 total=2280523539\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=3.89 avg60=1.86 avg300=0.85 total=197466618\nfull avg10=3.84 avg60=1.78 avg300=0.71 total=171183297\n",
+    "io": "some avg10=0.24 avg60=0.27 avg300=1.04 total=951344893\nfull avg10=0.09 avg60=0.09 avg300=0.46 total=649862728\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 6.865212760996656,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "5bf336f89756e4ab80b766c67bc85a4fc1f3752436afe8efd61dde35ccdf84f0"
+    },
+    {
+      "file": "packages/drivers/anthropic/package.json",
+      "sha256": "bdf9d4ec97e4a10cde9e478d9eecd24ae236fa9dba1ad5b15d2ebd75645bd126"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.config.ts",
+      "sha256": "7f5d4f3b8e16aa65c6c029d78bdb70fbf30e7c6581f7c515fa4a457b1d3a04cc"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.errors.ts",
+      "sha256": "23beb485c179b1b84ef6ad2c542dffe8314954f9d65cd043546a70c8f4ec31f4"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.repair.ts",
+      "sha256": "a28af73326d91dd299e73e01fef8acc9c4ab2a4de765266b5a7bf21c6f7f7c59"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/Anthropic.service.ts",
+      "sha256": "ce27fdb8621f799c3361189438bf5d8d512b977814df4706fd16719f884d6224"
+    },
+    {
+      "file": "packages/drivers/anthropic/src/index.ts",
+      "sha256": "665b9ef8887c8e9b50a50e2379dcb7133cf8efa25b11edd1a5a169eed20ad1e1"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "sha256": "da2e703c27cf924af491fa157951929b17d3c410b41186b269232d3b0f21b566"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "sha256": "6e5727780268effbf9c78cc940aaee40f1f6c5fa7cb0cd0584bd6f40e09b3b70"
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "sha256": "822a3f66ca876bff942adf50f8aab946d365a65ee3610c483ae08fa83eefb936"
+    }
+  ],
+  "loadAfter": [34.794921875, 34.70849609375, 36.0654296875],
+  "pressureAfter": {
+    "cpu": "some avg10=3.11 avg60=2.63 avg300=4.38 total=2280827542\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=3.09 avg60=1.90 avg300=0.88 total=197636410\nfull avg10=3.06 avg60=1.83 avg300=0.74 total=171350870\n",
+    "io": "some avg10=0.25 avg60=0.28 avg300=1.03 total=951406652\nfull avg10=0.05 avg60=0.08 avg300=0.45 total=649900877\n"
+  },
+  "sourceStable": true
+}

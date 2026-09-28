@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/qa-capture",
+  "sourceHead": "4519bdb75d0af2f878210bbfe22d692b94c23152",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.772243803992751,
+  "bunWholeCommandSeconds": 2.467926790995989,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [3.92822265625, 2.95068359375, 2.8818359375],
+  "loadAfter": [4.49462890625, 3.08447265625, 2.92578125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.01 avg300=0.03 total=709821533\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186088374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178015565\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=799442047\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=699447917\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.01 avg300=0.03 total=709837540\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186088374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178015565\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=799442808\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=699448601\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "42954fefb043edb93e02166112a1dba5c367b77e18eeb1945eb060efa7778b39"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/package.json",
+      "sha256": "210ae845eba6b09d4b61b3569c55c746dd2c4f8368a8b54b7d86e187badadbab"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/ActionEvent.models.ts",
+      "sha256": "f1809a393dd7a015a9ec3702032fd7c0aefc81aad12729c23928ebfd531ad517"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/ClockCorrelator.service.ts",
+      "sha256": "05f9fb134068620cffd8eedae29c2abb6ae3f362540bdef91a06157f8c162a60"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/Collector.api.ts",
+      "sha256": "cb78458eed798e860768be5ece43b01cdddb738818f51c56421a168639ab624f"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
+      "sha256": "34f88ce83424b61f053ec641a84af742c20cf4c17fe8e9a95ae7e8911bcaab7a"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/ExtractionPlan.models.ts",
+      "sha256": "9c3c69f052288d0992a005f2c3482f8717cbd4820640eb2b18b5c82bae1ce99a"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/ExtractionPlanner.ts",
+      "sha256": "a6a9965d327e65b0215ee8f4d6a0a9a15ebd9fde0d7139f732765b3ebe724733"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/QaCapture.errors.ts",
+      "sha256": "59baeb3f150729ada481b3066ebf074d564dc86a47c8869de53b9b5b5957e0ae"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/QaCapture.models.ts",
+      "sha256": "d74edcef9ebfc3103bfaef3d2dbb2810485bda159f5a0f6c5a7e2964a1007821"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/SessionStore.service.ts",
+      "sha256": "a2be51904f2a22a0bf59e2c36b18d46263f465440d527d1a65d8bc528e615546"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/Witness.service.ts",
+      "sha256": "7dcfb740356d4d69e84060c14f68929f0224c1f4b674617744a0079f402a8758"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/index.ts",
+      "sha256": "9cd6623485754c1ebf66b9813ed709eee1979101c627953533046450eb1c801a"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/src/witness/witness.iife.ts",
+      "sha256": "255fbc4caf28e3cf88d76b3b672e6ca408136b6cfa2952e005152a7c89268f84"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ActionEvent.pointer-cancel.test.ts",
+      "sha256": "fc40682a25a1b31247c6f998630f56476a346b77102efbd091310c1c3d8ff970"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ClockCorrelator.test.ts",
+      "sha256": "cc2897d8b613f0cb967d9080c6568b189aa546b38cf8ffc692496d337351b6d5"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
+      "sha256": "76cdb269c2b0b579dbb158b020896d129953e40a445db2236ec1a791e5cdc1a2"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/ExtractionPlanner.test.ts",
+      "sha256": "fdbcc5cb9e23c97cdf835264251b6abf6c68f1a7f3cc7fc307be6349ea647b7b"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.equivalence.test.ts",
+      "sha256": "442a3cbb92122d9af8223b8deeb8199be924bc0d01dcf0b0509ab9d45726f834"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/QaCapture.models.test.ts",
+      "sha256": "142725b6bba62010daa9457a9e6294710ae83045456c6a3f8062a662a86f15c0"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/SessionStore.test.ts",
+      "sha256": "836a2c8f680a815c45f2cb8976241ee314dadc3c13bd96af18611d436b787a4b"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/Witness.service.test.ts",
+      "sha256": "425afc0f52278dc49bde90a34889c8e84cbb0d16e1d3aa446a82f699eaa56560"
+    },
+    {
+      "file": "packages/tooling/library/qa-capture/test/integration/ClockCorrelator.integration.test.ts",
+      "sha256": "652cfe2422683d7becbff37686d09c12cad560867a0d6a331b5898b30afbb600"
+    }
+  ],
+  "environmentMode": "Native Bun HTTP collector, native files and PID ownership, real Bun IIFE compilation, real FFmpeg correlation integration and deterministic unit properties. Node compatibility is under test; no failed source body will be counted as proof.",
+  "bunProof": {
+    "passedTests": 41,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.49462890625, 3.08447265625, 2.92578125],
+    "loadAfter": [4.49462890625, 3.08447265625, 2.92578125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.01 avg300=0.03 total=709837544\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186088374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178015565\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=799442808\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=699448601\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.01 avg300=0.03 total=709843446\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186088374\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178015565\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.04 total=799442892\nfull avg10=0.00 avg60=0.00 avg300=0.03 total=699448641\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 37,
+    "skipped": 0,
+    "failed": 4
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Failed Node observations are retained, not accepted as proof: before37pass4fail, after38pass6fail. Two added native cases hit the existing Bun shim gaps. Native Bun before41pass and after44pass. The FFmpeg binary was present and the real integration executed."
+}

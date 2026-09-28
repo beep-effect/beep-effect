@@ -1,0 +1,56 @@
+{
+  "package": "@beep/workspace-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:36:53.062000+00:00",
+  "totalMs": 4135.7529296875,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "ms": 79.7529296875,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters",
+      "ms": 72.75291500000048
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips Workspace rows through the converters",
+      "ms": 22.855561999999736
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables reports a typed converter failure on both sides of each entity boundary",
+      "ms": 22.83897700000034
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes CandidateDraft metadata without executing a live database",
+      "ms": 7.320200999999997
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips Thread, Turn, and Message rows through the converters",
+      "ms": 7.228678999999829
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes CandidateProject metadata without executing a live database",
+      "ms": 7.2274780000002465
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables exports the metadata aggregate and entity namespaces",
+      "ms": 7.220357000000149
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes Thread, Turn, and Message metadata without executing a live database",
+      "ms": 7.216609999999946
+    }
+  ]
+}

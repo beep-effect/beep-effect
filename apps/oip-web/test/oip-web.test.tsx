@@ -1,15 +1,21 @@
 import { EmailString, NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Clock, ConfigProvider, Effect, Exit, Layer } from "effect";
+import { Clock, ConfigProvider, Effect, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import { FetchHttpClient } from "effect/http";
+import * as Logger from "effect/Logger";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as React from "react";
-import { beforeEach, vi } from "vitest";
+import { vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
 import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRouteResponse";
 import { POST } from "@/app/api/contact/route";
@@ -46,6 +52,8 @@ import {
 } from "@/content";
 import { OipAtomProvider } from "@/runtime/OipAtomProvider";
 
+const encodeCapturedLogs = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const decodeUnknownContactSubmissionAcceptedExit = S.decodeUnknownExit(ContactSubmissionAccepted);
 const decodeUnknownContactSubmissionFormPayloadExit = S.decodeUnknownExit(ContactSubmissionFormPayload);
 const decodeUnknownContactSubmissionRejectedExit = S.decodeUnknownExit(ContactSubmissionRejected);
@@ -79,31 +87,21 @@ vi.mock("next/server", () => ({
   },
 }));
 
-const validContactPayload = () => ({
+const validContactPayload = (submittedAt = Effect.runSync(Clock.currentTimeMillis) - 5_000) => ({
   email: "TOM@EXAMPLE.COM",
   message: "I would like help protecting a new machine design.",
   name: " Thomas Oppold ",
-  submittedAt: Effect.runSync(Clock.currentTimeMillis) - 5_000,
+  submittedAt,
 });
 
-const withContactConfig = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-  Effect.scoped(
-    Layer.build(
-      ConfigProvider.layer(
-        ConfigProvider.fromUnknown({
-          CRM_HUBSPOT_ACCOUNT_ID: "12345",
-          CRM_HUBSPOT_SERVICE_KEY: "hubspot-service-key",
-        })
-      )
-    ).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
-  );
-
-const withoutContactConfig = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-  Effect.scoped(
-    Layer.build(ConfigProvider.layer(ConfigProvider.fromUnknown({}))).pipe(
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context)))
-    )
-  );
+const withContactConfig = Effect.provideService(
+  ConfigProvider.ConfigProvider,
+  ConfigProvider.fromUnknown({
+    CRM_HUBSPOT_ACCOUNT_ID: "12345",
+    CRM_HUBSPOT_SERVICE_KEY: "hubspot-service-key",
+  })
+);
+const withoutContactConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 
 const hubSpotResponse = (body: unknown, status = 200): Response =>
   Response.json(body, {
@@ -152,17 +150,8 @@ const mockMediaQueryList = (matches: boolean): MediaQueryList => ({
 });
 
 const mockMatchMedia = (matches: boolean) => {
-  const originalMatchMedia = window.matchMedia;
-  Object.defineProperty(window, "matchMedia", {
-    configurable: true,
-    value: vi.fn(() => mockMediaQueryList(matches)),
-  });
-
-  return () =>
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: originalMatchMedia,
-    });
+  const spy = vi.spyOn(window, "matchMedia").mockImplementation(() => mockMediaQueryList(matches));
+  return () => spy.mockRestore();
 };
 
 const setWindowScrollY = (scrollY: number) =>
@@ -201,10 +190,26 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(screen.getByRole("button", { name: "Shared UI Button" })).toBeDefined();
   });
 
-  it("exports the main page as a valid React element", () =>
-    Home({}).then((page) => {
-      expect(React.isValidElement(page)).toBe(true);
-    }));
+  it("exports the main page as a valid React element", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        pipe(React.isValidElement(page), assertTrue);
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
   it("publishes install and indexing metadata for the canonical OIP URL", () => {
     expect(oipManifest()).toMatchObject({ name: "OIP - Oppold IP Law", start_url: "/" });
@@ -215,7 +220,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
   it("decodes the static OIP launch content", () => {
     const result = decodeOipSiteContentResult(oipSiteContent);
 
-    expect(Result.isSuccess(result)).toBe(true);
+    pipe(result, Result.isSuccess, assertTrue);
   });
 
   it.effect.prop(
@@ -224,7 +229,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     Effect.fnUntraced(function* ([content]) {
       const encoded = yield* encodeOipSiteContent(content);
       const decoded = yield* decodeOipSiteContent(encoded);
-      expect(OipSiteContentEquivalence(decoded, content)).toBe(true);
+      pipe(OipSiteContentEquivalence(decoded, content), assertTrue);
     }),
     { arbitrary: fcRuns(100) }
   );
@@ -235,7 +240,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     Effect.fnUntraced(function* ([submission]) {
       const encoded = yield* encodeContactSubmission(submission);
       const decoded = yield* decodeContactSubmission(encoded);
-      expect(ContactSubmissionEquivalence(decoded, submission)).toBe(true);
+      pipe(ContactSubmissionEquivalence(decoded, submission), assertTrue);
     }),
     { arbitrary: fcRuns(100) }
   );
@@ -246,7 +251,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     Effect.fnUntraced(function* ([payload]) {
       const encoded = yield* encodeContactSubmissionFormPayload(payload);
       const decoded = yield* decodeContactSubmissionFormPayload(encoded);
-      expect(ContactSubmissionFormPayloadEquivalence(decoded, payload)).toBe(true);
+      pipe(ContactSubmissionFormPayloadEquivalence(decoded, payload), assertTrue);
     }),
     { arbitrary: fcRuns(100) }
   );
@@ -257,7 +262,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     Effect.fnUntraced(function* ([response]) {
       const encoded = yield* encodeContactSubmissionResponse(response);
       const decoded = yield* decodeContactSubmissionResponse(encoded);
-      expect(ContactSubmissionResponseEquivalence(decoded, response)).toBe(true);
+      pipe(ContactSubmissionResponseEquivalence(decoded, response), assertTrue);
     }),
     { arbitrary: fcRuns(100) }
   );
@@ -298,27 +303,26 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     })
   );
 
-  it("exposes schema class-local decoders beside compatibility exports", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const contentResult = OipSiteContent.decodeUnknownResult(oipSiteContent);
-        expect(contentResult).toEqual(decodeOipSiteContentResult(oipSiteContent));
+  it.effect("exposes schema class-local decoders beside compatibility exports", () =>
+    Effect.gen(function* () {
+      const contentResult = OipSiteContent.decodeUnknownResult(oipSiteContent);
+      expect(contentResult).toEqual(decodeOipSiteContentResult(oipSiteContent));
 
-        const formPayload = contactSubmissionPayloadFromFormData(contactFormData());
-        const formResult = ContactSubmissionFormPayload.decodeUnknownResult(formPayload);
-        expect(Result.isSuccess(formResult)).toBe(true);
+      const formPayload = contactSubmissionPayloadFromFormData(contactFormData());
+      const formResult = ContactSubmissionFormPayload.decodeUnknownResult(formPayload);
+      pipe(formResult, Result.isSuccess, assertTrue);
 
-        const contactPayload = validContactPayload();
-        const submission = yield* ContactSubmission.decodeUnknownEffect(contactPayload);
-        const submissionFromAlias = yield* decodeContactSubmission(contactPayload);
-        const submissionWithOptionNamedField = yield* decodeContactSubmission({
-          ...contactPayload,
-          errors: "all",
-        });
-        expect(submission).toEqual(submissionFromAlias);
-        expect(submissionWithOptionNamedField).toEqual(submission);
-      })
-    ));
+      const contactPayload = validContactPayload();
+      const submission = yield* ContactSubmission.decodeUnknownEffect(contactPayload);
+      const submissionFromAlias = yield* decodeContactSubmission(contactPayload);
+      const submissionWithOptionNamedField = yield* decodeContactSubmission({
+        ...contactPayload,
+        errors: "all",
+      });
+      expect(submission).toEqual(submissionFromAlias);
+      expect(submissionWithOptionNamedField).toEqual(submission);
+    })
+  );
 
   it("decodes the firm social profiles", () => {
     expect(A.map(oipSiteContent.socials, (social) => social.platform)).toEqual([
@@ -334,24 +338,40 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     ]);
   });
 
-  it("renders brand-compliant footer social links", () =>
-    Home({}).then((page) => {
-      render(page);
+  it("renders brand-compliant footer social links", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        render(page);
 
-      const instagram = screen.getByRole("link", { name: "OIP on Instagram" });
+        const instagram = screen.getByRole("link", { name: "OIP on Instagram" });
 
-      expect(instagram.getAttribute("href")).toBe("https://www.instagram.com/oip.law/");
-      expect(instagram.getAttribute("rel")).toBe("me noopener noreferrer");
-      expect(instagram.getAttribute("target")).toBe("_blank");
-      expect(screen.getByRole("link", { name: "OIP on X" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "Oppold IP Law on LinkedIn" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "OIP on YouTube" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "OIP on Threads" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "OIP on TikTok" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "OIP on Reddit" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "Join the OIP Discord" })).toBeDefined();
-      expect(screen.getByRole("link", { name: "OIP on Pinterest" })).toBeDefined();
-    }));
+        expect(instagram.getAttribute("href")).toBe("https://www.instagram.com/oip.law/");
+        expect(instagram.getAttribute("rel")).toBe("me noopener noreferrer");
+        expect(instagram.getAttribute("target")).toBe("_blank");
+        expect(screen.getByRole("link", { name: "OIP on X" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "Oppold IP Law on LinkedIn" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "OIP on YouTube" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "OIP on Threads" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "OIP on TikTok" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "OIP on Reddit" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "Join the OIP Discord" })).toBeDefined();
+        expect(screen.getByRole("link", { name: "OIP on Pinterest" })).toBeDefined();
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
   it("publishes firm social profiles in JSON-LD, excludes the Discord invite, and keeps the personal LinkedIn on the Person", () => {
     const json = JSON.stringify(makeJsonLdGraph(oipSiteContent));
@@ -367,36 +387,84 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(oipTwitterHandle(oipSiteContent)).toBe("@opiplaw");
   });
 
-  it("renders the OIP public headline and contact CTA", () =>
-    Home({}).then((page) => {
-      render(page);
+  it("renders the OIP public headline and contact CTA", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        render(page);
 
-      expect(screen.getByRole("heading", { name: /thirty years as patent counsel/i })).toBeDefined();
-      expect(screen.getByRole("link", { name: oipSiteContent.contact.email })).toBeDefined();
-      expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeDefined();
-    }));
+        expect(screen.getByRole("heading", { name: /thirty years as patent counsel/i })).toBeDefined();
+        expect(screen.getByRole("link", { name: oipSiteContent.contact.email })).toBeDefined();
+        expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeDefined();
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
-  it("renders a server-seeded contact timestamp for progressive form posts", () =>
-    Home({}).then((page) => {
-      render(page);
+  it("renders a server-seeded contact timestamp for progressive form posts", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        render(page);
 
-      const submittedAtInput = document.querySelector<HTMLInputElement>('input[name="submittedAt"]');
+        const submittedAtInput = document.querySelector<HTMLInputElement>('input[name="submittedAt"]');
 
-      expect(submittedAtInput).not.toBeNull();
-      expect(Number(submittedAtInput?.value ?? 0)).toBeGreaterThan(0);
-    }));
+        expect(submittedAtInput).not.toBeNull();
+        expect(Number(submittedAtInput?.value ?? 0)).toBeGreaterThan(0);
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
-  it("renders the progressive theme toggle hook for the static layout script", () =>
-    Home({}).then((page) => {
-      render(page);
+  it("renders the progressive theme toggle hook for the static layout script", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        render(page);
 
-      const toggles = screen.getAllByRole("button", { name: "Switch to dark mode" });
-      const toggle = A.getUnsafe(toggles, A.length(toggles) - 1);
+        const toggles = screen.getAllByRole("button", { name: "Switch to dark mode" });
+        const toggle = A.getUnsafe(toggles, A.length(toggles) - 1);
 
-      expect(toggle.getAttribute("data-oip-theme-toggle")).toBe("");
-      expect(toggle.getAttribute("data-theme-mode")).toBe("light");
-      expect(toggle.getAttribute("aria-pressed")).toBe("false");
-    }));
+        expect(toggle.getAttribute("data-oip-theme-toggle")).toBe("");
+        expect(toggle.getAttribute("data-theme-mode")).toBe("light");
+        expect(toggle.getAttribute("aria-pressed")).toBe("false");
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
   it("provides an optional OIP MUI theme override provider", () => {
     render(
@@ -408,11 +476,35 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(screen.getByRole("button", { name: "OIP themed child" })).toBeDefined();
   });
 
-  it("drives the back-to-top control from Atom-managed scroll state", () => {
+  it("drives the back-to-top control from Atom-managed scroll state", ({ onTestFinished }) => {
+    const originalScrollYDescriptor = Object.getOwnPropertyDescriptor(window, "scrollY");
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        if (originalScrollYDescriptor !== undefined)
+          Object.defineProperty(window, "scrollY", originalScrollYDescriptor);
+        else Reflect.deleteProperty(window, "scrollY");
+      }
+    });
     const restoreMatchMedia = mockMatchMedia(false);
-    const originalScrollTo = window.scrollTo;
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        restoreMatchMedia();
+      }
+    });
+
     const scrollTo = vi.fn();
-    Object.defineProperty(window, "scrollTo", { configurable: true, value: scrollTo });
+    const ownedScrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(scrollTo);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedScrollToSpy.mockRestore();
+      }
+    });
     setWindowScrollY(0);
 
     render(
@@ -423,29 +515,30 @@ describe("@beep/oip-web", { concurrent: false }, () => {
 
     const button = screen.getByLabelText("Back to top") as HTMLButtonElement;
 
-    expect(button.hidden).toBe(true);
+    strictEqual(button.hidden, true);
 
     setWindowScrollY(720);
     fireEvent.scroll(window);
 
-    return waitFor(() => expect(button.hidden).toBe(false))
-      .then(() => {
-        fireEvent.click(button);
+    return waitFor(() => strictEqual(button.hidden, false)).then(() => {
+      fireEvent.click(button);
 
-        expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 0 });
-      })
-      .finally(() => {
-        Object.defineProperty(window, "scrollTo", { configurable: true, value: originalScrollTo });
-        restoreMatchMedia();
-      });
+      expect(scrollTo).toHaveBeenCalledWith({ behavior: "smooth", top: 0 });
+    });
   });
 
-  it("starts the hero video through an Atom-mounted idle task and stores playing state in Atom", () => {
+  it("starts the hero video through an Atom-mounted idle task and stores playing state in Atom", ({
+    onTestFinished,
+  }) => {
     const restoreMatchMedia = mockMatchMedia(false);
-    const originalRequestIdleCallback = window.requestIdleCallback;
-    const originalCancelIdleCallback = window.cancelIdleCallback;
-    const originalLoad = HTMLMediaElement.prototype.load;
-    const originalPlay = HTMLMediaElement.prototype.play;
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        restoreMatchMedia();
+      }
+    });
+
     let idleCallback: IdleRequestCallback | undefined;
     const requestIdleCallback = vi.fn((callback: IdleRequestCallback): number => {
       idleCallback = callback;
@@ -454,10 +547,38 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     const cancelIdleCallback = vi.fn();
     const load = vi.fn();
     const play = vi.fn(() => Promise.resolve());
-    Object.defineProperty(window, "requestIdleCallback", { configurable: true, value: requestIdleCallback });
-    Object.defineProperty(window, "cancelIdleCallback", { configurable: true, value: cancelIdleCallback });
-    Object.defineProperty(HTMLMediaElement.prototype, "load", { configurable: true, value: load });
-    Object.defineProperty(HTMLMediaElement.prototype, "play", { configurable: true, value: play });
+    const ownedRequestIdleCallbackSpy = vi.spyOn(window, "requestIdleCallback").mockImplementation(requestIdleCallback);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedRequestIdleCallbackSpy.mockRestore();
+      }
+    });
+    const ownedCancelIdleCallbackSpy = vi.spyOn(window, "cancelIdleCallback").mockImplementation(cancelIdleCallback);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedCancelIdleCallbackSpy.mockRestore();
+      }
+    });
+    const ownedLoadSpy = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(load);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedLoadSpy.mockRestore();
+      }
+    });
+    const ownedPlaySpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(play);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedPlaySpy.mockRestore();
+      }
+    });
 
     const { container } = render(
       <OipAtomProvider>
@@ -473,42 +594,57 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(image).not.toBeNull();
     expect(video).not.toBeNull();
 
-    return waitFor(() => expect(requestIdleCallback).toHaveBeenCalled())
-      .then(() => {
-        idleCallback?.({ didTimeout: false, timeRemaining: () => 0 });
+    return waitFor(() => expect(requestIdleCallback).toHaveBeenCalled()).then(() => {
+      idleCallback?.({ didTimeout: false, timeRemaining: () => 0 });
 
-        expect(load).toHaveBeenCalled();
-        expect(play).toHaveBeenCalled();
-        expect(image?.className).toContain("opacity-70");
+      expect(load).toHaveBeenCalled();
+      expect(play).toHaveBeenCalled();
+      expect(image?.className).toContain("opacity-70");
 
-        fireEvent.playing(video as HTMLVideoElement);
+      fireEvent.playing(video as HTMLVideoElement);
 
-        return waitFor(() => {
-          expect(image?.className).toContain("opacity-0");
-          expect(video?.className).toContain("opacity-70");
-        });
-      })
-      .finally(() => {
-        Object.defineProperty(window, "requestIdleCallback", {
-          configurable: true,
-          value: originalRequestIdleCallback,
-        });
-        Object.defineProperty(window, "cancelIdleCallback", { configurable: true, value: originalCancelIdleCallback });
-        Object.defineProperty(HTMLMediaElement.prototype, "load", { configurable: true, value: originalLoad });
-        Object.defineProperty(HTMLMediaElement.prototype, "play", { configurable: true, value: originalPlay });
-        restoreMatchMedia();
+      return waitFor(() => {
+        expect(image?.className).toContain("opacity-0");
+        expect(video?.className).toContain("opacity-70");
       });
+    });
   });
 
-  it("rotates hero clips on an Atom-driven interval when multiple clips are supplied", () => {
+  it("rotates hero clips on an Atom-driven interval when multiple clips are supplied", ({ onTestFinished }) => {
     const restoreMatchMedia = mockMatchMedia(false);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        restoreMatchMedia();
+      }
+    });
     const setIntervalSpy = vi.spyOn(window, "setInterval");
-    const originalLoad = HTMLMediaElement.prototype.load;
-    const originalPlay = HTMLMediaElement.prototype.play;
-    Object.defineProperty(HTMLMediaElement.prototype, "load", { configurable: true, value: vi.fn() });
-    Object.defineProperty(HTMLMediaElement.prototype, "play", {
-      configurable: true,
-      value: vi.fn(() => Promise.resolve()),
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        setIntervalSpy.mockRestore();
+      }
+    });
+
+    const ownedLoadSpy = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(vi.fn());
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedLoadSpy.mockRestore();
+      }
+    });
+    const ownedPlaySpy = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockImplementation(vi.fn(() => Promise.resolve()));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        ownedPlaySpy.mockRestore();
+      }
     });
 
     const clips = [
@@ -522,7 +658,12 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       </OipAtomProvider>
     );
 
-    return waitFor(() => expect(setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS)).toBe(true))
+    return waitFor(() =>
+      pipe(
+        setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS),
+        assertTrue
+      )
+    )
       .then(() => {
         expect(container.querySelector('[data-hero-clip="0"]')?.className).toContain("opacity-100");
         expect(container.querySelector('[data-hero-clip="1"]')?.className).toContain("opacity-0");
@@ -538,18 +679,26 @@ describe("@beep/oip-web", { concurrent: false }, () => {
           expect(container.querySelector('[data-hero-clip="0"]')?.className).toContain("opacity-0");
           expect(container.querySelector('[data-hero-clip="1"]')?.className).toContain("opacity-100");
         })
-      )
-      .finally(() => {
-        setIntervalSpy.mockRestore();
-        Object.defineProperty(HTMLMediaElement.prototype, "load", { configurable: true, value: originalLoad });
-        Object.defineProperty(HTMLMediaElement.prototype, "play", { configurable: true, value: originalPlay });
-        restoreMatchMedia();
-      });
+      );
   });
 
-  it("does not arm hero rotation under reduced motion", () => {
+  it("does not arm hero rotation under reduced motion", ({ onTestFinished }) => {
     const restoreMatchMedia = mockMatchMedia(true);
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        restoreMatchMedia();
+      }
+    });
     const setIntervalSpy = vi.spyOn(window, "setInterval");
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        setIntervalSpy.mockRestore();
+      }
+    });
     const clips = [
       { poster: "/oip/hero-a-poster.jpg", mp4: "/oip/hero-a.mp4", webm: "/oip/hero-a.webm" },
       { poster: "/oip/hero-b-poster.jpg", mp4: "/oip/hero-b.mp4", webm: "/oip/hero-b.webm" },
@@ -564,13 +713,12 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     return waitFor(() => expect(container.querySelector('[data-hero-clip="0"]')).not.toBeNull())
       .then(() => act(() => {}))
       .then(() => {
-        expect(setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS)).toBe(false);
+        pipe(
+          setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS),
+          assertFalse
+        );
         expect(container.querySelector('[data-hero-clip="0"]')?.className).toContain("opacity-100");
         expect(container.querySelector('[data-hero-clip="1"]')?.className).toContain("opacity-0");
-      })
-      .finally(() => {
-        setIntervalSpy.mockRestore();
-        restoreMatchMedia();
       });
   });
 
@@ -593,8 +741,14 @@ describe("@beep/oip-web", { concurrent: false }, () => {
   it("keeps launch-risk content review-gated", () => {
     expect(launchReviewGates.clientLogos.status).toBe(ReviewStatus.Enum.needs_review);
     expect(launchReviewGates.contact.status).toBe(ReviewStatus.Enum.needs_review);
-    expect(A.every(oipSiteContent.clients, (client) => ReviewStatus.is.needs_review(client.review.status))).toBe(true);
-    expect(A.every(oipSiteContent.matters, (matter) => ReviewStatus.is.needs_review(matter.review.status))).toBe(true);
+    pipe(
+      A.every(oipSiteContent.clients, (client) => ReviewStatus.is.needs_review(client.review.status)),
+      assertTrue
+    );
+    pipe(
+      A.every(oipSiteContent.matters, (matter) => ReviewStatus.is.needs_review(matter.review.status)),
+      assertTrue
+    );
   });
 
   it("pins the OPIP compatibility redirect table to canonical OIP domains", () =>
@@ -651,28 +805,28 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         })
       ),
     ]).then(([emailExit, messageExit, submittedAtExit]) => {
-      expect(Exit.isFailure(emailExit)).toBe(true);
-      expect(Exit.isFailure(messageExit)).toBe(true);
-      expect(Exit.isFailure(submittedAtExit)).toBe(true);
+      pipe(emailExit, Exit.isFailure, assertTrue);
+      pipe(messageExit, Exit.isFailure, assertTrue);
+      pipe(submittedAtExit, Exit.isFailure, assertTrue);
     }));
 
   it("rejects malformed contact form payloads at the browser wire schema", () => {
-    expect(
-      Exit.isFailure(
-        decodeUnknownContactSubmissionFormPayloadExit({
-          ...validContactPayload(),
-          message: "short",
-        })
-      )
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        decodeUnknownContactSubmissionFormPayloadExit({
-          ...validContactPayload(),
-          name: "T",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContactSubmissionFormPayloadExit({
+        ...validContactPayload(),
+        message: "short",
+      }),
+      Exit.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContactSubmissionFormPayloadExit({
+        ...validContactPayload(),
+        name: "T",
+      }),
+      Exit.isFailure,
+      assertTrue
+    );
   });
 
   it("exposes an Effect HttpApi contract and Atom client for contact submissions", () => {
@@ -695,22 +849,22 @@ describe("@beep/oip-web", { concurrent: false }, () => {
 
     expect(accepted.status).toBe("accepted");
     expect(rejected.status).toBe("rejected");
-    expect(
-      Exit.isFailure(
-        decodeUnknownContactSubmissionAcceptedExit({
-          message: "The submission could not be accepted.",
-          status: "rejected",
-        })
-      )
-    ).toBe(true);
-    expect(
-      Exit.isFailure(
-        decodeUnknownContactSubmissionRejectedExit({
-          message: "Your note was received.",
-          status: "accepted",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeUnknownContactSubmissionAcceptedExit({
+        message: "The submission could not be accepted.",
+        status: "rejected",
+      }),
+      Exit.isFailure,
+      assertTrue
+    );
+    pipe(
+      decodeUnknownContactSubmissionRejectedExit({
+        message: "Your note was received.",
+        status: "accepted",
+      }),
+      Exit.isFailure,
+      assertTrue
+    );
   });
 
   it("converts contact FormData into the shared submission payload", () => {
@@ -739,68 +893,129 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(contactSubmissionPayloadFromFormData(formData).submittedAt).toBe(0);
   });
 
-  it("normalizes accepted contact payload fields before provider submission", () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(hubSpotResponse({ results: [{ id: "contact-id" }] }));
+  it.effect("normalizes accepted contact payload fields before provider submission", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(10_000);
+      const fetchSpy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(globalThis, "fetch").mockResolvedValue(hubSpotResponse({ results: [{ id: "contact-id" }] }))
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const now = yield* Clock.currentTimeMillis;
+      const response = yield* withContactConfig(submitContact(validContactPayload(now - 5_000))).pipe(
+        Effect.provideService(FetchHttpClient.Fetch, fetchSpy)
+      );
 
-    return Effect.runPromise(withContactConfig(submitContact(validContactPayload())))
-      .then((response) => {
-        expect(response.status).toBe("accepted");
-      })
-      .finally(() => fetchSpy.mockRestore());
-  });
+      expect(response.status).toBe("accepted");
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      const [input, init] = pipe(fetchSpy.mock.calls, A.head, O.getOrThrow);
+      const body = yield* Effect.tryPromise(() => new Request(input, init).json());
+      expect(body).toEqual({
+        inputs: [
+          {
+            id: "tom@example.com",
+            idProperty: "email",
+            objectWriteTraceId: "oip-contact-form",
+            properties: {
+              email: "tom@example.com",
+              firstname: "Thomas Oppold",
+              message: "Message:\nI would like help protecting a new machine design.",
+            },
+          },
+        ],
+      });
+    })
+  );
 
-  it("rejects contact submissions when HubSpot config is absent", () =>
-    Effect.runPromise(withoutContactConfig(submitContact(validContactPayload()))).then((response) => {
+  it.effect("rejects contact submissions when HubSpot config is absent", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(10_000);
+      const now = yield* Clock.currentTimeMillis;
+      const response = yield* withoutContactConfig(submitContact(validContactPayload(now - 5_000)));
       expect(response.status).toBe("rejected");
       expect(response.message).toBe("The submission could not be accepted.");
-    }));
+    })
+  );
 
-  it("rejects contact submissions when spam controls fail", () =>
-    Promise.all([
-      Effect.runPromise(
-        withContactConfig(
-          submitContact({
-            ...validContactPayload(),
-            website: "https://example.test",
-          })
-        )
-      ),
-      Effect.runPromise(
-        withContactConfig(
-          submitContact({
-            ...validContactPayload(),
-            submittedAt: 0,
-          })
-        )
-      ),
-    ]).then(([honeypotResponse, timestampResponse]) => {
+  it.effect("rejects contact submissions when spam controls fail", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(10_000);
+      const now = yield* Clock.currentTimeMillis;
+      const [honeypotResponse, timestampResponse] = yield* Effect.all(
+        [
+          withContactConfig(submitContact({ ...validContactPayload(now - 5_000), website: "https://example.test" })),
+          withContactConfig(submitContact({ ...validContactPayload(now - 5_000), submittedAt: 0 })),
+        ],
+        { concurrency: "unbounded" }
+      );
       expect(honeypotResponse.status).toBe("rejected");
       expect(timestampResponse.status).toBe("rejected");
-    }));
+    })
+  );
 
-  it("rejects contact submissions that are too fast", () =>
-    Effect.runPromise(
-      withContactConfig(
-        submitContact({
-          ...validContactPayload(),
-          submittedAt: Effect.runSync(Clock.currentTimeMillis) - 1_000,
-        })
-      )
-    ).then((response) => {
+  it.effect("rejects contact submissions that are too fast", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(10_000);
+      const fetchSpy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(globalThis, "fetch").mockResolvedValue(hubSpotResponse({ results: [{ id: "contact-id" }] }))
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const now = yield* Clock.currentTimeMillis;
+      const response = yield* withContactConfig(submitContact(validContactPayload(now - 1_000))).pipe(
+        Effect.provideService(FetchHttpClient.Fetch, fetchSpy)
+      );
       expect(response.status).toBe("rejected");
-    }));
+      expect(fetchSpy).not.toHaveBeenCalled();
+    })
+  );
 
-  it("logs and rejects contact submissions when the provider fails", () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(hubSpotResponse({ message: "unavailable" }, 503));
-
-    return Effect.runPromise(withContactConfig(submitContact(validContactPayload())))
-      .then((response) => {
-        expect(response.status).toBe("rejected");
-      })
-      .finally(() => fetchSpy.mockRestore());
-  });
+  it.effect("logs and rejects contact submissions when the provider fails", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(10_000);
+      const fetchSpy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(globalThis, "fetch").mockResolvedValue(hubSpotResponse({ message: "unavailable" }, 503))
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      let records: ReadonlyArray<ReturnType<typeof Logger.formatStructured.log>> = [];
+      const logger = Logger.make((options) => {
+        records = A.append(records, Logger.formatStructured.log(options));
+      });
+      const now = yield* Clock.currentTimeMillis;
+      const response = yield* withContactConfig(submitContact(validContactPayload(now - 5_000))).pipe(
+        Effect.provideService(Logger.CurrentLoggers, new Set([logger])),
+        Effect.provideService(FetchHttpClient.Fetch, fetchSpy)
+      );
+      expect(response.status).toBe("rejected");
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      const rejection = pipe(
+        records,
+        A.findFirst((record) => record.annotations.operation === "oip.contact.submit"),
+        O.getOrThrow
+      );
+      expect(rejection.annotations).toMatchObject({
+        operation: "oip.contact.submit",
+        outcome: "rejected",
+        reason: "provider",
+        provider: "hubspot",
+        providerReason: "response status",
+        status: 503,
+      });
+      const serialized = yield* encodeCapturedLogs(records);
+      for (const personal of [
+        "TOM@EXAMPLE.COM",
+        "tom@example.com",
+        "Thomas Oppold",
+        "I would like help protecting a new machine design.",
+        "hubspot-service-key",
+      ])
+        expect(serialized).not.toContain(personal);
+    })
+  );
 
   it("returns a JSON accepted response through the Effect HttpApi web handler", () => {
     const submit = () =>
@@ -843,50 +1058,81 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         })
       ));
 
-  it("returns a JSON rejected response for unreadable contact route submissions", () =>
-    POST(
+  it("returns a JSON rejected response for unreadable contact route submissions", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return POST(
       new Request("https://oip.law/api/contact", {
         body: "{",
         headers: { "content-type": "application/json" },
         method: "POST",
       })
-    ).then((response) =>
-      response.json().then((body) => {
-        expect(response.status).toBe(400);
-        expect(response.headers.get("content-type")).toContain("application/json");
-        expect(body).toEqual({
-          message: "The submission could not be accepted.",
-          status: "rejected",
-        });
-      })
-    ));
-
-  it("redirects malformed browser form submissions without calling submit", () => {
-    const formData = contactFormData();
-    formData.set("submittedAt", "not-a-number");
-    const submit = vi.fn(() =>
-      Effect.succeed(
-        ContactSubmissionResponse.make({
-          message: "Should not submit.",
-          status: "accepted",
+    )
+      .then((response) =>
+        response.json().then((body) => {
+          expect(response.status).toBe(400);
+          expect(response.headers.get("content-type")).toContain("application/json");
+          expect(body).toEqual({
+            message: "The submission could not be accepted.",
+            status: "rejected",
+          });
         })
       )
-    );
-
-    return Effect.runPromise(contactRequestResponseWithSubmit(formContactRequest(formData), submit)).then(
-      (response) => {
-        expect(submit).not.toHaveBeenCalled();
-        expect(response.status).toBe(303);
-        expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
-      }
-    );
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
   });
 
-  it("redirects browser form contact submissions back to the contact section", () =>
-    POST(formContactRequest()).then((response) => {
+  it.effect("redirects malformed browser form submissions without calling submit", () =>
+    Effect.gen(function* () {
+      const formData = contactFormData();
+      formData.set("submittedAt", "not-a-number");
+      const submit = vi.fn(() =>
+        Effect.succeed(
+          ContactSubmissionResponse.make({
+            message: "Should not submit.",
+            status: "accepted",
+          })
+        )
+      );
+
+      const response = yield* contactRequestResponseWithSubmit(formContactRequest(formData), submit);
+      expect(submit).not.toHaveBeenCalled();
       expect(response.status).toBe(303);
       expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
-    }));
+    })
+  );
+
+  it("redirects browser form contact submissions back to the contact section", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return POST(formContactRequest())
+      .then((response) => {
+        expect(response.status).toBe(303);
+        expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 
   it.effect(
     "rejects a browser form submission missing a required field without calling submit",
@@ -910,12 +1156,28 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     })
   );
 
-  it("serves llms.txt as plain text from the loaded site content", () =>
-    llmsTextRoute().then((response) =>
-      response.text().then((body) => {
-        expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
-        expect(body).toContain("# OIP - Oppold IP Law");
-        expect(body).toContain("## Practice Areas");
-      })
-    ));
+  it("serves llms.txt as plain text from the loaded site content", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return llmsTextRoute()
+      .then((response) =>
+        response.text().then((body) => {
+          expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+          expect(body).toContain("# OIP - Oppold IP Law");
+          expect(body).toContain("## Practice Areas");
+        })
+      )
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
 });

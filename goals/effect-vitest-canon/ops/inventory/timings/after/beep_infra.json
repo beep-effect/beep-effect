@@ -1,0 +1,101 @@
+{
+  "package": "@beep/infra",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T19:52:42.070000+00:00",
+  "totalMs": 5050.85693359375,
+  "testCount": 112,
+  "files": [
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "ms": 36.324951171875,
+      "tests": 10
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "ms": 64.401611328125,
+      "tests": 4
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "ms": 89.256591796875,
+      "tests": 11
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "ms": 38.259765625,
+      "tests": 14
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "ms": 153.85693359375,
+      "tests": 7
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "ms": 29.560546875,
+      "tests": 9
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "ms": 94.464111328125,
+      "tests": 47
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "ms": 27.62646484375,
+      "tests": 10
+    }
+  ],
+  "slowest": [
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "testName": "@beep/infra CiTurboCache uses Lambda invocation ARNs for the read and write API integrations",
+      "ms": 150.85682300000008
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "testName": "@beep/infra CiTurboCache accepts absolute ZIP paths and rejects relative or non-ZIP paths",
+      "ms": 132.2111759999998
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "testName": "@beep/infra CiFleetController wires the fail-closed workload identity boundary before runner startup",
+      "ms": 85.25665899999967
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawDeploymentConfig through its encoded wire codec",
+      "ms": 72.64932099999987
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawWorkstationPaths through its encoded wire codec",
+      "ms": 69.10838699999931
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawExpectedIdentity through its encoded wire codec",
+      "ms": 51.316945999999916
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawBackupConfig through its encoded wire codec",
+      "ms": 47.214608000000226
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawBundleHashInput through its encoded wire codec",
+      "ms": 46.35647700000027
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "testName": "@beep/infra AccountCostControls limits resources to account visibility and preserves the existing budget semantics",
+      "ms": 41.401614999999765
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClawPulumiConfigValues through its encoded wire codec",
+      "ms": 32.61406100000022
+    }
+  ]
+}

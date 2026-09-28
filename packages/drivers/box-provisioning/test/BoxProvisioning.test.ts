@@ -25,10 +25,12 @@ import {
   validateBoxProvisioningPostApplyPlan,
 } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { Sha256Hex } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect, layer } from "@effect/vitest";
-import { DateTime, Effect, Layer, Ref } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { DateTime, Effect, Layer, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -38,23 +40,27 @@ import * as S from "effect/Schema";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 import type { BoxBlockedAction } from "@beep/box-provisioning";
 
+const encodeBoxActionPrecondition = S.encodeEffect(BoxActionPrecondition);
+const decodeBoxActionPrecondition = S.decodeEffect(BoxActionPrecondition);
+const equivalentBoxActionPrecondition = S.toEquivalence(BoxActionPrecondition);
+const encodeBoxForeignResource = S.encodeEffect(BoxForeignResource);
+const decodeBoxForeignResource = S.decodeEffect(BoxForeignResource);
+const equivalentBoxForeignResource = S.toEquivalence(BoxForeignResource);
+const encodeBoxPostApplyVerdict = S.encodeEffect(BoxPostApplyVerdict);
+const decodeBoxPostApplyVerdict = S.decodeEffect(BoxPostApplyVerdict);
+const equivalentBoxPostApplyVerdict = S.toEquivalence(BoxPostApplyVerdict);
+const encodeBoxApplyJournalStarted = S.encodeEffect(BoxApplyJournalStarted);
+const decodeBoxApplyJournalStarted = S.decodeEffect(BoxApplyJournalStarted);
+const equivalentBoxApplyJournalStarted = S.toEquivalence(BoxApplyJournalStarted);
+const encodeBoxApplyJournalApplied = S.encodeEffect(BoxApplyJournalApplied);
+const decodeBoxApplyJournalApplied = S.decodeEffect(BoxApplyJournalApplied);
+const equivalentBoxApplyJournalApplied = S.toEquivalence(BoxApplyJournalApplied);
+const encodeBoxApplyJournalFailed = S.encodeEffect(BoxApplyJournalFailed);
+const decodeBoxApplyJournalFailed = S.decodeEffect(BoxApplyJournalFailed);
+const equivalentBoxApplyJournalFailed = S.toEquivalence(BoxApplyJournalFailed);
+
 const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
 const desiredInput = encodeBoxDesiredState(desiredFixture);
-
-const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>) => {
-  const equivalent = S.toEquivalence(schema);
-  const encode = S.encodeEffect(schema);
-  const decode = S.decodeEffect(schema);
-  return Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      encode(value).pipe(
-        Effect.flatMap(decode),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(5)
-  ).pipe(Effect.tap((result) => Effect.sync(() => expect(result).toMatchObject({ _tag: "Passed" }))));
-};
 
 const makeDependencies = (plan: BoxProvisioningPlan, postApplyPlan: BoxProvisioningPlan, applyCalls: Ref.Ref<number>) =>
   Layer.mergeAll(
@@ -138,7 +144,7 @@ const runProvisioning = <A, E>(
     provideScopedLayer(BoxProvisioning.layer.pipe(Layer.provide(dependencies)))
   );
 
-layer(BunCrypto.layer)("@beep/box-provisioning orchestration", (it) => {
+it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orchestration", (it) => {
   it.effect(
     "keeps reconcile dry-run-only and requires explicit apply",
     Effect.fnUntraced(function* () {
@@ -435,13 +441,17 @@ layer(BunCrypto.layer)("@beep/box-provisioning orchestration", (it) => {
         Effect.flip
       );
 
-      expect(A.some(blocked, (action) => action.reason._tag === "BlockedByAmbiguity")).toBe(true);
-      expect(
+      pipe(
+        A.some(blocked, (action) => action.reason._tag === "BlockedByAmbiguity"),
+        assertTrue
+      );
+      pipe(
         A.some(
           blocked,
           (action) => action.reason._tag === "BlockedByPolicy" && action.reason.policy === "blocked-folder-dependency"
-        )
-      ).toBe(true);
+        ),
+        assertTrue
+      );
       expect(error._tag).toBe("BoxProvisioningBlockerContractError");
       expect(yield* Ref.get(applyCalls)).toBe(0);
     })
@@ -510,15 +520,58 @@ layer(BunCrypto.layer)("@beep/box-provisioning orchestration", (it) => {
       );
     })
   );
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived plan and receipt building blocks",
-    Effect.fnUntraced(function* () {
-      yield* assertCodecRoundTrip(BoxActionPrecondition);
-      yield* assertCodecRoundTrip(BoxForeignResource);
-      yield* assertCodecRoundTrip(BoxPostApplyVerdict);
-      yield* assertCodecRoundTrip(BoxApplyJournalStarted);
-      yield* assertCodecRoundTrip(BoxApplyJournalApplied);
-      yield* assertCodecRoundTrip(BoxApplyJournalFailed);
-    })
+    { value: Arbitrary.schema(BoxActionPrecondition) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxActionPrecondition(value).pipe(Effect.flatMap(decodeBoxActionPrecondition));
+      pipe(equivalentBoxActionPrecondition(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxForeignResource",
+    { value: Arbitrary.schema(BoxForeignResource) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxForeignResource(value).pipe(Effect.flatMap(decodeBoxForeignResource));
+      pipe(equivalentBoxForeignResource(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxPostApplyVerdict",
+    { value: Arbitrary.schema(BoxPostApplyVerdict) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxPostApplyVerdict(value).pipe(Effect.flatMap(decodeBoxPostApplyVerdict));
+      pipe(equivalentBoxPostApplyVerdict(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxApplyJournalStarted",
+    { value: Arbitrary.schema(BoxApplyJournalStarted) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxApplyJournalStarted(value).pipe(Effect.flatMap(decodeBoxApplyJournalStarted));
+      pipe(equivalentBoxApplyJournalStarted(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxApplyJournalApplied",
+    { value: Arbitrary.schema(BoxApplyJournalApplied) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxApplyJournalApplied(value).pipe(Effect.flatMap(decodeBoxApplyJournalApplied));
+      pipe(equivalentBoxApplyJournalApplied(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxApplyJournalFailed",
+    { value: Arbitrary.schema(BoxApplyJournalFailed) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxApplyJournalFailed(value).pipe(Effect.flatMap(decodeBoxApplyJournalFailed));
+      pipe(equivalentBoxApplyJournalFailed(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
   );
 });

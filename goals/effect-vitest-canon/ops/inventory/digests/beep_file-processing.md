@@ -32,3 +32,13 @@ Exact Effect/adapter rc113 pin d3b837aee836f35d625d55205f7d6e61305fc198; the ado
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## P2 completion — 2026-09-27
+
+Saved findings are reconciled in the consolidated PR. Four test files pass all
+27 cases on Node and Bun, with complete operation payload oracles, native
+properties, named fixtures and explicit POSIX skip reporting. Real filesystem
+security subjects and all original domains, floors and deadlines remain. Full
+package audit/docgen and isolated regression controls pass. See the
+[completion receipt](../../../history/2026-09-27-file-processing-complete.md)
+for proof scope, retained exceptions and timing limitations.

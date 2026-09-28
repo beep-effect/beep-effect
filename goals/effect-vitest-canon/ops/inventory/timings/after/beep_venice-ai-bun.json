@@ -1,0 +1,244 @@
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 17,
+  "numPassedTests": 16,
+  "numFailedTests": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790407314578,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Venice AI declared-field equivalence"],
+          "fullName": "Venice AI declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+          "status": "passed",
+          "title": "treats field-equal errors as equivalent and field-different errors as distinct",
+          "duration": 2.1051709999999275,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407315770,
+      "endTime": 1790407315772.1052,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai constructs language models in data-last form",
+          "status": "passed",
+          "title": "constructs language models in data-last form",
+          "duration": 44.45586800000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai round-trips schema-derived OpenAPI fixture and prompt body data",
+          "status": "passed",
+          "title": "round-trips schema-derived OpenAPI fixture and prompt body data",
+          "duration": 141.62231300000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai keeps crispened production schema encoded shapes stable",
+          "status": "passed",
+          "title": "keeps crispened production schema encoded shapes stable",
+          "duration": 44.30851099999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai round-trips crispened production schemas with schema-derived arbitraries",
+          "status": "passed",
+          "title": "round-trips crispened production schemas with schema-derived arbitraries",
+          "duration": 139.8991390000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai keeps the operation registry and service surface aligned with swagger.yaml",
+          "status": "passed",
+          "title": "keeps the operation registry and service surface aligned with swagger.yaml",
+          "duration": 103.04746899999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai keeps descriptor metadata aligned with swagger.yaml",
+          "status": "passed",
+          "title": "keeps descriptor metadata aligned with swagger.yaml",
+          "duration": 67.227439,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai sends every operation with the expected method, path, auth, query, and body mode",
+          "status": "passed",
+          "title": "sends every operation with the expected method, path, auth, query, and body mode",
+          "duration": 17.142905000000155,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai honors request options for headers, accept, path encoding, JSON bodies, and missing path params",
+          "status": "passed",
+          "title": "honors request options for headers, accept, path encoding, JSON bodies, and missing path params",
+          "duration": 4.043435000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai normalizes custom base URLs",
+          "status": "passed",
+          "title": "normalizes custom base URLs",
+          "duration": 1.2312759999999798,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai decodes JSON, text, and binary success responses",
+          "status": "passed",
+          "title": "decodes JSON, text, and binary success responses",
+          "duration": 1.8550860000000284,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai maps response status, malformed JSON, multipart, transport, and SSE failures",
+          "status": "passed",
+          "title": "maps response status, malformed JSON, multipart, transport, and SSE failures",
+          "duration": 9.31478200000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai maps language-model transport failures to retryable network errors",
+          "status": "passed",
+          "title": "maps language-model transport failures to retryable network errors",
+          "duration": 5.4256339999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai parses SSE streams for chat completions and responses",
+          "status": "passed",
+          "title": "parses SSE streams for chat completions and responses",
+          "duration": 4.118340999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai emits SSE events before the response body closes",
+          "status": "passed",
+          "title": "emits SSE events before the response body closes",
+          "duration": 2.2639549999998962,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/venice-ai"],
+          "fullName": "@beep/venice-ai delegates the compatibility chat service through VeniceAI",
+          "status": "passed",
+          "title": "delegates the compatibility chat service through VeniceAI",
+          "duration": 4.441477999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407315818,
+      "endTime": 1790407315960.6223,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/venice-ai/test/VeniceAI.service.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["VeniceAI live integration (AI_VENICE_API_KEY)"],
+          "fullName": "VeniceAI live integration (AI_VENICE_API_KEY) skips live API calls when AI_VENICE_API_KEY is absent",
+          "status": "skipped",
+          "title": "skips live API calls when AI_VENICE_API_KEY is absent",
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790407314578,
+      "endTime": 1790407314578,
+      "status": "passed",
+      "message": "",
+      "name": "<checkout>/packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts"
+    }
+  ]
+}

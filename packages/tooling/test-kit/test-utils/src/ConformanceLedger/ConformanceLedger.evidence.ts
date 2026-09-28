@@ -46,7 +46,7 @@ const parseTestId = (
 const titleSlug = flow(Str.replace(/[^A-Za-z0-9]+/g, "-"), Str.replace(/^-+|-+$/g, ""));
 
 const testDeclarationPattern =
-  /^[\t ]*(?:it|test)(?:\.[A-Za-z]+)?\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|`((?:\\.|[^`\\])*)`)/gmu;
+  /^[\t ]*(?:it|test)(?:\.[A-Za-z]+(?:\.prop)?)?\(\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|`((?:\\.|[^`\\])*)`)/gmu;
 
 const declaredTestIds = (file: string, contents: string): ReadonlyArray<string> =>
   pipe(

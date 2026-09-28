@@ -1,0 +1,101 @@
+{
+  "package": "@beep/epistemic-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:39:21.086000+00:00",
+  "totalMs": 4157.772216796875,
+  "testCount": 94,
+  "files": [
+    {
+      "file": "packages/epistemic/domain/test/ClaimEvidenceReview.test.ts",
+      "ms": 14.804443359375,
+      "tests": 12
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "ms": 102.772216796875,
+      "tests": 18
+    },
+    {
+      "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
+      "ms": 3.96435546875,
+      "tests": 1
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "ms": 33.180908203125,
+      "tests": 10
+    },
+    {
+      "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
+      "ms": 15.585693359375,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "ms": 32.4384765625,
+      "tests": 30
+    },
+    {
+      "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
+      "ms": 10.269287109375,
+      "tests": 15
+    },
+    {
+      "file": "packages/epistemic/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 1.8798828125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants keys detector identities and versions independently",
+      "ms": 93.46776599999976
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants binds evidence partitions to beliefs while canonicalization remains reversal invariant",
+      "ms": 93.44647300000042
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants rejects proposal facts outside canonical JSON",
+      "ms": 93.44028400000025
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants bounds proposal fact bytes, node count, and nesting before digesting",
+      "ms": 93.43683899999951
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "testName": "Contradiction domain invariants derives only constructive unique collections and canonical pairs",
+      "ms": 93.4335530000003
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain matches an evidence span only to its exact provenance anchor",
+      "ms": 27.180934999999863
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain decodes and constructs a CandidateClaim row",
+      "ms": 27.163346999999703
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain appends a UsageRecord from turn-finalization activity",
+      "ms": 27.152431000000433
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain preserves encoded wire shapes for crispened schemas",
+      "ms": 27.132810999999947
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "testName": "@beep/epistemic-domain derives schema arbitraries for crispened epistemic schemas",
+      "ms": 27.119850000000042
+    }
+  ]
+}

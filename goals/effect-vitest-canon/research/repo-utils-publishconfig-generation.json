@@ -1,0 +1,26 @@
+{
+  "schema": "effect-vitest-publishconfig-generation/v1",
+  "phase": "pre-expansion-research",
+  "referenceSha": "8202a6ea410aa9a5a92988ad54f83b831a9737fe",
+  "runs": 400,
+  "seed": 20260708,
+  "oracle": "Existing O.some full PublishConfig encode/decode followed by Vitest expect(decoded).toEqual(value)",
+  "passedTests": 1,
+  "failedTests": 0,
+  "generatedCoverage": {
+    "total": 400,
+    "bin": 116,
+    "exports": 116,
+    "extras": 216,
+    "binString": 46,
+    "binRecord": 70,
+    "exportsNull": 20,
+    "exportsString": 22,
+    "exportsArray": 32,
+    "exportsRecord": 42
+  },
+  "conclusion": "Full production Arbitrary.schema(PublishConfig) supports recursive generation and the existing oracle. Retain core law and concrete cases; add full production law without filters or replacement schema.",
+  "discardedProbe": "An initial Node isDeepStrictEqual probe falsified on an object rendered as {}; it imposed stricter equality than the existing Vitest oracle and is not production defect evidence.",
+  "installedEffectVersion": "4.0.0-rc.117",
+  "sourceSha256": "901218f39c9dc8feac425036201c66e6a41e583136c2c516bb81eb3110b38eaf"
+}

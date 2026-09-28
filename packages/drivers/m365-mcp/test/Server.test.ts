@@ -35,13 +35,17 @@ import {
   withRequestMetadata,
 } from "@beep/mcp-kit/client";
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it, layer } from "@effect/vitest";
-import { Result } from "effect";
+import { assert, describe } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
+import { Match, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -154,11 +158,14 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
 
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
+    yield* Effect.log("M365 MCP completed server/discover requestId=1; awaiting tools/list requestId=2");
     yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(listRequest)));
   } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
     yield* Ref.set(stage, 2);
+    yield* Effect.log("M365 MCP completed tools/list requestId=2; awaiting tools/call requestId=3");
     yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(callRequest)));
   } else if (Str.includes(DriveId)(output)) {
+    yield* Effect.log("M365 MCP completed tools/call requestId=3");
     yield* Deferred.succeed(ready, void 0);
   }
 });
@@ -258,7 +265,7 @@ describe("M365 MCP server", () => {
     ]);
   });
 
-  layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
+  it.layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
     it.effect(
       "returns driver results through toolkit handlers",
       Effect.fnUntraced(function* () {
@@ -266,9 +273,10 @@ describe("M365 MCP server", () => {
         const stream = yield* toolkit.handle("m365_get_site", { siteId: SiteId });
         const first = yield* Stream.runHead(stream);
 
-        assert.isTrue(O.isSome(first));
+        pipe(first, O.isSome, assertTrue);
         if (O.isSome(first)) {
           assert.isFalse(first.value.isFailure);
+          assert.deepStrictEqual(first.value.result, site);
         }
       })
     );
@@ -289,18 +297,60 @@ describe("M365 MCP server", () => {
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
       yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
-      const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkDetach({ startImmediately: true }));
+      yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
+      const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkChild({ startImmediately: true }));
 
       yield* Effect.yieldNow;
       yield* Deferred.await(ready);
       const output = yield* Ref.get(stdout);
-      yield* Fiber.interrupt(fiber).pipe(Effect.forkDetach({ startImmediately: true }), Effect.ignore);
+      yield* Fiber.interrupt(fiber);
 
       assert.isTrue(Str.includes(`"id":1`)(output), output);
       assert.isTrue(Str.includes(`"id":2`)(output), output);
       assert.isTrue(Str.includes(`"id":3`)(output), output);
       assert.isTrue(Str.includes("m365_list_drives")(output), output);
       assert.isTrue(Str.includes(DriveId)(output), output);
+    })
+  );
+
+  it.effect.each(["normal", "failed", "interrupted"])("awaits server teardown when its parent exits %s", (outcome) =>
+    Effect.gen(function* () {
+      const released = yield* Ref.make(0);
+      const stdout = yield* Ref.make("");
+      const stdin = yield* Queue.make<Uint8Array>();
+      const stage = yield* Ref.make(0);
+      const ready = yield* Deferred.make<void>();
+      const serverLayer = makeServerLayer(M365McpServerConfig.make({ name: "beep-m365-test", version: "0.0.0" })).pipe(
+        Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)),
+        Layer.provide(MockM365Layer)
+      );
+      const parent = yield* Effect.gen(function* () {
+        yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
+        yield* Effect.log("M365 MCP awaiting server/discover requestId=1");
+        yield* serverLayer.pipe(
+          Layer.launch,
+          Effect.ensuring(Ref.update(released, (count) => count + 1)),
+          Effect.forkChild({ startImmediately: true })
+        );
+        yield* Deferred.await(ready);
+        return yield* Match.value(outcome).pipe(
+          Match.when("normal", () => Effect.void),
+          Match.when("failed", () => Effect.fail("planned parent failure")),
+          Match.orElse(() => Effect.interrupt)
+        );
+      }).pipe(Effect.forkChild({ startImmediately: true }));
+      const exit = yield* Fiber.await(parent);
+      assert.strictEqual(yield* Ref.get(released), 1);
+      Match.value(outcome).pipe(
+        Match.when("normal", () => assertExitSuccess(exit, undefined)),
+        Match.when("failed", () => assertExitFailure(exit, Cause.fail("planned parent failure"))),
+        Match.orElse(() =>
+          Exit.match(exit, {
+            onFailure: (cause) => pipe(cause, Cause.hasInterrupts, assertTrue),
+            onSuccess: () => assert.fail("Expected parent interruption"),
+          })
+        )
+      );
     })
   );
 });

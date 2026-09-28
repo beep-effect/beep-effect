@@ -1,0 +1,81 @@
+{
+  "package": "@beep/dock-react",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T17:57:30.842000+00:00",
+  "totalMs": 4553.178955078125,
+  "testCount": 30,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "ms": 190.14892578125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "ms": 235.178955078125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "ms": 175.764892578125,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
+      "ms": 64.87158203125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "testName": "DockviewReact collapses measured overflow while keeping the active tab visible",
+      "ms": 108.20186099999955
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "testName": "floating dock adapter renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
+      "ms": 105.01244900000074
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "testName": "dock pointer gestures previews the compiled group quadrant and center placements",
+      "ms": 55.83101499999975
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Minima.test.tsx",
+      "testName": "dock title minima clamps a feasible split to the measured long-title width",
+      "ms": 45.305875000000015
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Gestures.test.tsx",
+      "testName": "dock pointer gestures docks to a group left edge and the container bottom edge",
+      "ms": 25.30812700000024
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "testName": "floating dock adapter floats a docked group, then docks it back where it came from",
+      "ms": 23.500622999999905
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "testName": "floating dock adapter previews one header move, commits once, and cancels with Escape",
+      "ms": 23.03222099999948
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "testName": "DockviewReact preserves portal DOM identity across a group move and honors both render modes",
+      "ms": 22.509156000000075
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/Floating.test.tsx",
+      "testName": "floating dock adapter brings a non-frontmost floating member to front",
+      "ms": 21.01454399999966
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/test/DockviewReact.test.tsx",
+      "testName": "DockviewReact activates a tab and closes panels through typed operations",
+      "ms": 17.424355000000105
+    }
+  ]
+}

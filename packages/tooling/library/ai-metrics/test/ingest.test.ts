@@ -94,10 +94,12 @@ import {
 } from "@beep/repo-ai-metrics";
 import { NonEmptyTrimmedStr } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Base64 from "effect/encoding/Base64";
@@ -245,21 +247,11 @@ const assertEncodeDecodeRoundTrip = Effect.fn("assertEncodeDecodeRoundTrip")(fun
     readonly encode: (value: A) => Effect.Effect<unknown, S.SchemaError>;
     readonly equivalent: (self: A, that: A) => boolean;
   },
-  options?: { readonly runs?: number }
+  value: A
 ) {
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([law.arbitrary]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* law.encode(value);
-        const decoded = yield* law.decode(encoded);
-
-        return Equal.equals(decoded, value) || law.equivalent(decoded, value);
-      }),
-    fcRuns(options?.runs ?? 12)
-  );
-
-  expect(result._tag).toBe("Passed");
+  const encoded = yield* law.encode(value);
+  const decoded = yield* law.decode(encoded);
+  pipe(Equal.equals(decoded, value) || law.equivalent(decoded, value), assertTrue);
 });
 
 const transcriptTextSummaryInputLaw = {
@@ -275,12 +267,6 @@ const agentSessionLaw = {
   equivalent: S.toEquivalence(AgentSession),
 };
 const isAgentSession = S.is(AgentSession);
-const AgentSessionSchemaProperty = (options: Arbitrary.CheckOptions) =>
-  Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(AgentSession)]),
-    ([session]) => isAgentSession(session),
-    options
-  );
 const agentTurnLaw = {
   arbitrary: Arbitrary.schema(AgentTurn),
   decode: S.decodeUnknownEffect(AgentTurn),
@@ -348,8 +334,14 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
 
-it("derives valid agent sessions from the schema", () =>
-  expect(Effect.runSync(AgentSessionSchemaProperty(fcRuns(12)))._tag).toBe("Passed"));
+it.prop(
+  "derives valid agent sessions from the schema",
+  [Arbitrary.schema(AgentSession)],
+  ([session]) => {
+    pipe(isAgentSession(session), assertTrue);
+  },
+  { arbitrary: fcRuns(12) }
+);
 
 it("rejects impossible line and measurement values at construction", () => {
   expect(() =>
@@ -379,7 +371,7 @@ it("rejects impossible line and measurement values at construction", () => {
   ).toThrow();
 });
 
-layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
+it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -404,8 +396,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(summary.acceptedEvents).toBe(2);
       expect(summary.rejectedLines).toBe(1);
       expect(summary.eventNames).toEqual(["event_msg", "session_meta"]);
-      expect(summary.firstTimestamp).toEqual(O.some("2026-05-05T10:00:00Z"));
-      expect(summary.lastTimestamp).toEqual(O.some("2026-05-05T10:01:00Z"));
+      assertSome(summary.firstTimestamp, "2026-05-05T10:00:00Z");
+      assertSome(summary.lastTimestamp, "2026-05-05T10:01:00Z");
       expect(summary.sourcePathHash).not.toBe("codex.jsonl");
       const encoded = yield* summaryToJson(summary);
       expect(encoded).toContain('"firstTimestamp":"2026-05-05T10:00:00Z"');
@@ -442,20 +434,79 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(
         yield* OpenClawTranscriptLine.encodeJsonEffect(OpenClawTranscriptLine.make({ event: O.some("message") }))
       ).toBe('{"event":"message"}');
-
-      yield* assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
-      yield* assertEncodeDecodeRoundTrip(agentSessionLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(agentTurnLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { runs: 8 });
-      yield* assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
-      yield* assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
-      yield* assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
-      yield* assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
-      yield* assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
     })
+  );
+  it.effect.prop(
+    "round-trips transcriptTextSummaryInputLaw through its declared wire codec",
+    [transcriptTextSummaryInputLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips agentSessionLaw through its declared wire codec",
+    [agentSessionLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(agentSessionLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips agentTurnLaw through its declared wire codec",
+    [agentTurnLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(agentTurnLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips codexTranscriptLineLaw through its declared wire codec",
+    [codexTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips claudeTranscriptLineLaw through its declared wire codec",
+    [claudeTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips openClawTranscriptLineLaw through its declared wire codec",
+    [openClawTranscriptLineLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips transcriptIngestSummaryLaw through its declared wire codec",
+    [transcriptIngestSummaryLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, value),
+    { arbitrary: fcRuns(8) }
+  );
+  it.effect.prop(
+    "round-trips otlpAttributeValueLaw through its declared wire codec",
+    [otlpAttributeValueLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(otlpAttributeValueLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips forwarderOtlpExportLaw through its declared wire codec",
+    [forwarderOtlpExportLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips effectivenessAnnotationValueLaw through its declared wire codec",
+    [effectivenessAnnotationValueLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips retentionMutationResultLaw through its declared wire codec",
+    [retentionMutationResultLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(retentionMutationResultLaw, value),
+    { arbitrary: fcRuns(12) }
+  );
+  it.effect.prop(
+    "round-trips nonEmptyTrimmedStringLaw through its declared wire codec",
+    [nonEmptyTrimmedStringLaw.arbitrary],
+    ([value]) => assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw, value),
+    { arbitrary: fcRuns(12) }
   );
 
   it.effect(
@@ -472,11 +523,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       });
 
       expect(attribution.sourceRole).toBe("subagent");
-      expect(attribution.agentNicknameHash).toEqual(O.none());
-      expect(attribution.parentSessionIdHash).toEqual(O.none());
-      expect(attribution.agentRoleHash).toEqual(O.some(yield* hashPrivateIdentifier("reviewer", hashSalt)));
-      expect(attribution.parentThreadIdHash).toEqual(O.some(yield* hashPrivateIdentifier("thread-1", hashSalt)));
-      expect(attribution.sessionIdHash).toEqual(O.some(yield* hashPrivateIdentifier("session-1", hashSalt)));
+      assertNone(attribution.agentNicknameHash);
+      assertNone(attribution.parentSessionIdHash);
+      assertSome(attribution.agentRoleHash, yield* hashPrivateIdentifier("reviewer", hashSalt));
+      assertSome(attribution.parentThreadIdHash, yield* hashPrivateIdentifier("thread-1", hashSalt));
+      assertSome(attribution.sessionIdHash, yield* hashPrivateIdentifier("session-1", hashSalt));
     })
   );
 
@@ -547,12 +598,12 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
             expect(result.parquetExportMode).toBe("snapshot");
             const parquetExportDir = result.parquetExportDir;
-            expect(O.isSome(parquetExportDir)).toBe(true);
+            pipe(parquetExportDir, O.isSome, assertTrue);
             if (O.isNone(parquetExportDir)) {
               return;
             }
-            expect(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet"))).toBe(true);
-            expect(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json"))).toBe(true);
+            pipe(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet")), assertTrue);
+            pipe(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json")), assertTrue);
 
             const duckdb = yield* DuckDb;
             const turnRows = yield* duckdb.query("SELECT count(*) AS count FROM ai_metrics_turns");
@@ -576,7 +627,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(plaintext).toContain("secret-value");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -648,9 +699,9 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(disabled.parquetExportMode).toBe("none");
-            expect(disabled.parquetExportDir).toEqual(O.none());
+            assertNone(disabled.parquetExportDir);
             expect(disabled.parquetTables).toEqual([]);
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(false);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertFalse);
 
             const latest = yield* writeAiMetricsDerivedStorage(
               AiMetricsDerivedStorageWriteInput.make({
@@ -660,8 +711,8 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             expect(latest.parquetExportMode).toBe("latest");
-            expect(latest.parquetExportDir).toEqual(O.some(path.join(dataRoot, "derived/parquet/latest")));
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet"))).toBe(true);
+            assertSome(latest.parquetExportDir, path.join(dataRoot, "derived/parquet/latest"));
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet")), assertTrue);
 
             yield* writeText(path.join(dataRoot, "derived/parquet/latest/stale.tmp"), "stale\n");
             yield* writeAiMetricsDerivedStorage(
@@ -671,11 +722,11 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 parquetExportMode: AiMetricsParquetExportMode.Enum.latest,
               })
             );
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp"))).toBe(false);
-            expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2"))).toBe(false);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/stale.tmp")), assertFalse);
+            pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet/forwarder-latest-2")), assertFalse);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -747,7 +798,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -888,7 +939,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             // committed turns would be stranded and never reach Phoenix. Export state
             // is tracked on its own watermark for exactly that reason.
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -937,7 +988,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             // reads as one trace in Phoenix rather than as unrelated roots.
             expect(turnSpan.traceId).toBe(sessionSpan.traceId);
             expect(O.getOrThrow(turnSpan.parentSpanId)).toBe(sessionSpan.spanId);
-            expect(O.isNone(sessionSpan.parentSpanId)).toBe(true);
+            assertNone(sessionSpan.parentSpanId);
 
             // A rejected delivery must leave the watermark open. Without the failure
             // short-circuiting the mark, these turns would be recorded as exported after
@@ -947,7 +998,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               provideScopedLayer(rejectingSpanSender),
               Effect.exit
             );
-            expect(Exit.isFailure(rejectedExit)).toBe(true);
+            pipe(rejectedExit, Exit.isFailure, assertTrue);
             const afterRejectedExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterRejectedExport.turnIds).toEqual(pending.turnIds);
 
@@ -991,7 +1042,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               provideScopedLayer(succeedingThenRejectingSpanSender(senderCalls)),
               Effect.exit
             );
-            expect(Exit.isFailure(partialExit)).toBe(true);
+            pipe(partialExit, Exit.isFailure, assertTrue);
             const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
             expect(afterPartialExport.turnIds.length, "partial checkpoint turn count").toBe(258);
             const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
@@ -1026,7 +1077,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             yield* markAiMetricsOtlpTurnsExported([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1080,7 +1131,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               })
             );
             const firstTask = A.head(queue.items);
-            expect(O.isSome(firstTask)).toBe(true);
+            pipe(firstTask, O.isSome, assertTrue);
             if (O.isNone(firstTask)) {
               return;
             }
@@ -1128,10 +1179,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
             expect(queue.items).toHaveLength(1);
             expect(O.getOrThrow(label.note)).toContain("[REDACTED]");
-            expect(benchmarkRun.passed).toBe(true);
+            pipe(benchmarkRun.passed, assertTrue);
             expect(listedCases.cases).toHaveLength(1);
             expect(report.document.scores).toHaveLength(1);
-            expect(report.document.scores[0]?.scorecard.completionReady).toBe(true);
+            pipe(report.document.scores[0]?.scorecard.completionReady, assertTrue);
             expect(reportJson).toContain(forwarder.configSnapshotId);
             expect(reportJson).not.toContain("private benchmark prompt");
             expect(reportJson).not.toContain("secret-scorecard-fixture");
@@ -1139,7 +1190,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             expect(reportMarkdown).toContain("AI Metrics Weekly Config-Impact Report");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     }),
     AI_METRICS_LONG_TEST_TIMEOUT
   );
@@ -1167,7 +1218,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
         )
       ).toEqual(["langfuse", "phoenix", "opik"]);
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1175,20 +1226,19 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(phoenix.value.otlp.traceUrl).toBe("https://dankserver.tailc7c348.ts.net:8447/v1/traces");
       expect(phoenix.value.publicUrl).toBe("https://dankserver.tailc7c348.ts.net:8447");
       expect(O.getOrThrow(spec.hashSaltSecretRef)).toBe("op://TBK/ai-metrics/hash-salt");
-      expect(
-        pipe(
-          spec.plannedCommands,
-          A.some(
-            P.every([
-              Str.includes("ai-metrics otlp export --target dankserver"),
-              Str.includes("--data-root /srv/data/ai-metrics"),
-              Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
-              Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
-              Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
-            ])
-          )
-        )
-      ).toBe(true);
+      pipe(
+        spec.plannedCommands,
+        A.some(
+          P.every([
+            Str.includes("ai-metrics otlp export --target dankserver"),
+            Str.includes("--data-root /srv/data/ai-metrics"),
+            Str.includes("--otlp-base-url https://dankserver.tailc7c348.ts.net:8447"),
+            Str.includes("--hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt'"),
+            Str.includes("--raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key'"),
+          ])
+        ),
+        assertTrue
+      );
       expect(spec.plannedCommands).toEqual(
         expect.arrayContaining([
           expect.stringContaining("ai-metrics label queue --target dankserver --data-root /srv/data/ai-metrics"),
@@ -1247,7 +1297,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           const doctorJson = yield* aiMetricsInstallDoctorToJson(doctor);
           const applyJson = yield* aiMetricsInstallApplyDryRunToJson(apply);
 
-          expect(plan.dryRunOnly).toBe(true);
+          pipe(plan.dryRunOnly, assertTrue);
           expect(plan.steps).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -1258,14 +1308,14 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
           );
           expect(doctor.status).toBe("warning");
           expect(doctor.availableSourceCount).toBe(1);
-          expect(apply.dryRun).toBe(true);
+          pipe(apply.dryRun, assertTrue);
           expect(planJson).toContain("backend.phoenix.plan");
           expect(doctorJson).toContain("sources.available");
           expect(applyJson).toContain("CLI install apply is dry-run-only");
           expect(planJson).not.toContain(tmpDir);
           expect(doctorJson).not.toContain(tmpDir);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1328,7 +1378,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     Effect.fn(function* () {
       const plan = renderAiMetricsForwarderTimerPlan(
         AiMetricsForwarderTimerInput.make({
-          command: ["/bin/bun", "run", "beep", "--data-root", "/tmp/metrics; touch /tmp/pwn"],
+          command: ["/bin/bun", "run", "beep", "--data-root", "/tmp/metrics; touch /tmp/pwn", "agent's data"],
           intervalMinutes: 15,
           lockPath: "%t/beep-ai-metrics-forwarder.lock",
           serviceName: "beep\nmalicious.service",
@@ -1343,6 +1393,10 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
       expect(plan.serviceUnit).not.toContain("\nEnvironment=OWNED=1");
       expect(plan.serviceUnit).toContain("--data-root");
       expect(plan.serviceUnit).toContain("/tmp/metrics; touch /tmp/pwn");
+      // Fixed argv witness through the command quoting and outer bash -lc quoting.
+      expect(plan.serviceUnit).toContain(
+        String.raw`'\''/bin/bun'\'' '\''run'\'' '\''beep'\'' '\''--data-root'\'' '\''/tmp/metrics; touch /tmp/pwn'\'' '\''agent'\''\'\'''\''s data'\''`
+      );
     })
   );
 
@@ -1371,7 +1425,7 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
         })
       );
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1410,7 +1464,7 @@ volumes:
       const compose = yield* renderAiMetricsLocalPhoenixCompose(spec);
 
       const phoenix = phoenixService(spec);
-      expect(O.isSome(phoenix)).toBe(true);
+      pipe(phoenix, O.isSome, assertTrue);
       if (O.isNone(phoenix)) {
         return;
       }
@@ -1489,7 +1543,7 @@ volumes:
             );
 
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -1552,7 +1606,7 @@ volumes:
             expect(json).not.toContain(tmpDir);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1635,7 +1689,7 @@ volumes:
           const json = yield* privacyCheckToJson(result);
 
           expect(result.hashSaltStatus).toBe("provided");
-          expect(result.redaction.safeForDerivedUi).toBe(false);
+          pipe(result.redaction.safeForDerivedUi, assertFalse);
           expect(result.redaction.excludedRawTextFieldCount).toBeGreaterThan(0);
           expect(result.redaction.openAiKeyCount).toBe(1);
           expect(result.sanitized.rawEventEnvelopes).toHaveLength(2);
@@ -1645,7 +1699,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain(sourcePath);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1694,10 +1748,22 @@ volumes:
             );
 
             expect(privacy.sanitized.sourceRole).toBe("subagent");
-            expect(O.getOrThrow(privacy.sanitized.threadSpawn)).toBe(true);
-            expect(privacy.sanitized.sessionIdHash).not.toBe("child-session");
-            expect(privacy.sanitized.parentThreadIdHash).not.toBe("parent-thread");
-            expect(privacy.sanitized.agentRoleHash).not.toBe("worker");
+            pipe(O.getOrThrow(privacy.sanitized.threadSpawn), assertTrue);
+            expect(O.getOrThrow(privacy.sanitized.sessionIdHash)).not.toBe("child-session");
+            assertSome(
+              privacy.sanitized.sessionIdHash,
+              "e22d5c87f0b0a3e7b302d4f367fc68e51c62f231034c62225d5a3c41e50df897"
+            );
+            expect(O.getOrThrow(privacy.sanitized.parentThreadIdHash)).not.toBe("parent-thread");
+            assertSome(
+              privacy.sanitized.parentThreadIdHash,
+              "9d281c40bf21ddf2995b05c678cbe7b486dcb7e9f82936b559f72af521bae6d6"
+            );
+            expect(O.getOrThrow(privacy.sanitized.agentRoleHash)).not.toBe("worker");
+            assertSome(
+              privacy.sanitized.agentRoleHash,
+              "1172d710ffe3652a0cdc44d4a16bb14efe4bd97df39cd0fa6bf2c09fc6933851"
+            );
             expect(privacy.sanitized.rawEventEnvelopes[0]?.sourceRole).toBe("subagent");
 
             yield* writeAiMetricsDerivedStorage(
@@ -1749,7 +1815,7 @@ volumes:
             expect(turnRows).toEqual([{ sourceRole: "subagent" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1787,7 +1853,7 @@ volumes:
             expect(scorecardRows).toEqual([{ completionReady: false, coverageGapsJson: "[]" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1927,7 +1993,7 @@ volumes:
             expect(migrationRows).toEqual([{ migrationId: "ai-metrics-agent-task-id-v2" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -1992,7 +2058,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2099,132 +2165,138 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
-  it.effect(
-    "delivers projections to a real OTLP endpoint as chunked protobuf",
-    Effect.fn(function* () {
-      yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          const requests: Array<{
-            readonly body: string;
-            readonly contentType: string;
-          }> = [];
-          const server = Bun.serve({
-            // Continuation-passing rather than `async`/`await`: this repo represents async
-            // control flow with Effect, and a bare `async function` here trips the
-            // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
-            // either way. Body is captured as latin1 so protobuf's length-delimited string
-            // fields stay byte-addressable for the resource assertion below.
-            fetch: (request) =>
-              request.arrayBuffer().then((buffer) => {
-                A.appendInPlace(requests, {
-                  body: Buffer.from(buffer).toString("latin1"),
-                  contentType: request.headers.get("content-type") ?? "",
-                });
-                const rejecting = Str.includes("reject")(new URL(request.url).pathname);
-                return new Response(null, { status: rejecting ? 415 : 200 });
-              }),
-            hostname: "127.0.0.1",
-            port: 0,
-          });
-          return { requests, server };
-        }),
-        Effect.fnUntraced(function* ({ requests, server }) {
-          const endpointFor = (path: string) =>
-            AiMetricsOtlpEndpointSpec.make({
-              baseUrl: `http://127.0.0.1:${server.port}`,
-              protocol: "http/protobuf",
-              resourceAttributes: { "beep.test": "otlp-wire" },
-              signalScope: "traces_only",
-              traceUrl: `http://127.0.0.1:${server.port}${path}`,
+  it.layer(TestClock.layer())((it) => {
+    it.effect(
+      "delivers projections to a real OTLP endpoint as chunked protobuf",
+      Effect.fn(function* () {
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            const requests: Array<{
+              readonly body: string;
+              readonly contentType: string;
+            }> = [];
+            const server = Bun.serve({
+              // Continuation-passing rather than `async`/`await`: this repo represents async
+              // control flow with Effect, and a bare `async function` here trips the
+              // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
+              // either way. Body is captured as latin1 so protobuf's length-delimited string
+              // fields stay byte-addressable for the resource assertion below.
+              fetch: (request) =>
+                request.arrayBuffer().then((buffer) => {
+                  A.appendInPlace(requests, {
+                    body: Buffer.from(buffer).toString("latin1"),
+                    contentType: request.headers.get("content-type") ?? "",
+                  });
+                  const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+                  return new Response(null, { status: rejecting ? 415 : 200 });
+                }),
+              hostname: "127.0.0.1",
+              port: 0,
             });
-          const inputFor = (path: string) =>
-            AiMetricsOtlpExportInput.make({
-              duckDbPath: "unused.duckdb",
-              endpoint: endpointFor(path),
-              target: AiMetricsDeployTarget.Enum.local,
-            });
-          // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
-          // thousands of turns, and one request that large is the backpressure collapse this
-          // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
-          const projections = A.makeBy(1200, (index) =>
-            AiMetricsOtlpSpanProjection.make({
-              attributes: {
-                "ai_metrics.line_number": index + 1,
-                "openinference.span.kind": "CHAIN",
-              },
-              parentSpanId: O.some("aabbccddeeff0011"),
-              spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
-              spanName: "ai_metrics.agent.turn",
-              traceId: "0123456789abcdef0123456789abcdef",
-            })
-          );
-          const batch = AiMetricsOtlpSpanProjectionBatch.make({
-            projections,
-            sessionSpanCount: 0,
-            turnIds: [],
-            turnSpanCount: projections.length,
-          });
-
-          // The live sender, not a stub: real ReadableSpan construction through the real
-          // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
-          // with HTTP 415, which is also what the rejection path below asserts.
-          const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
-            provideScopedLayer(AiMetricsOtlpSpanSender.layer)
-          );
-
-          expect(exported.spanCount).toBe(1200);
-          expect(requests.length).toBe(3);
-          expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
-
-          // Phoenix routes spans into a project by this resource attribute. Without it every
-          // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
-          // named a project that never existed. Asserted on the wire, and pinned to the constant
-          // the reader queries for, so the two cannot drift apart silently.
-          expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
-          expect(
-            A.every(
-              requests,
-              (request) =>
-                Str.includes("openinference.project.name")(request.body) &&
-                Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
-            )
-          ).toBe(true);
-
-          const retryCalls = yield* Ref.make(0);
-          const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
-            inputFor("/v1/traces"),
-            AiMetricsOtlpSpanProjectionBatch.make({
-              projections: A.take(projections, 1),
+            return { requests, server };
+          }),
+          Effect.fnUntraced(function* ({ requests, server }) {
+            const endpointFor = (path: string) =>
+              AiMetricsOtlpEndpointSpec.make({
+                baseUrl: `http://127.0.0.1:${server.port}`,
+                protocol: "http/protobuf",
+                resourceAttributes: { "beep.test": "otlp-wire" },
+                signalScope: "traces_only",
+                traceUrl: `http://127.0.0.1:${server.port}${path}`,
+              });
+            const inputFor = (path: string) =>
+              AiMetricsOtlpExportInput.make({
+                duckDbPath: "unused.duckdb",
+                endpoint: endpointFor(path),
+                target: AiMetricsDeployTarget.Enum.local,
+              });
+            // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
+            // thousands of turns, and one request that large is the backpressure collapse this
+            // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
+            const projections = A.makeBy(1200, (index) =>
+              AiMetricsOtlpSpanProjection.make({
+                attributes: {
+                  "ai_metrics.line_number": index + 1,
+                  "openinference.span.kind": "CHAIN",
+                },
+                parentSpanId: O.some("aabbccddeeff0011"),
+                spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
+                spanName: "ai_metrics.agent.turn",
+                traceId: "0123456789abcdef0123456789abcdef",
+              })
+            );
+            const batch = AiMetricsOtlpSpanProjectionBatch.make({
+              projections,
               sessionSpanCount: 0,
               turnIds: [],
-              turnSpanCount: 1,
-            })
-          ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
-          yield* TestClock.adjust("2 seconds");
-          const retried = yield* Fiber.join(retryFiber);
+              turnSpanCount: projections.length,
+            });
 
-          expect(retried.spanCount).toBe(1);
-          expect(yield* Ref.get(retryCalls)).toBe(2);
+            // The live sender, not a stub: real ReadableSpan construction through the real
+            // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
+            // with HTTP 415, which is also what the rejection path below asserts.
+            const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
+              provideScopedLayer(AiMetricsOtlpSpanSender.layer)
+            );
 
-          // A collector that rejects the batch must surface as a typed failure, never a
-          // silent success. That confirmation is the whole reason delivery moved off
-          // fire-and-forget span emission.
-          const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
-            provideScopedLayer(AiMetricsOtlpSpanSender.layer),
-            Effect.flip
-          );
+            expect(exported.spanCount).toBe(1200);
+            expect(requests.length).toBe(3);
+            pipe(
+              A.every(requests, (request) => request.contentType === "application/x-protobuf"),
+              assertTrue
+            );
 
-          expect(rejected.message).toContain("did not accept the exported spans");
-        }),
-        ({ server }) => Effect.promise(() => server.stop(true))
-      );
-    }),
-    AI_METRICS_LONG_TEST_TIMEOUT
-  );
+            // Phoenix routes spans into a project by this resource attribute. Without it every
+            // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
+            // named a project that never existed. Asserted on the wire, and pinned to the constant
+            // the reader queries for, so the two cannot drift apart silently.
+            expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
+            pipe(
+              A.every(
+                requests,
+                (request) =>
+                  Str.includes("openinference.project.name")(request.body) &&
+                  Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
+              ),
+              assertTrue
+            );
+
+            const retryCalls = yield* Ref.make(0);
+            const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(
+              inputFor("/v1/traces"),
+              AiMetricsOtlpSpanProjectionBatch.make({
+                projections: A.take(projections, 1),
+                sessionSpanCount: 0,
+                turnIds: [],
+                turnSpanCount: 1,
+              })
+            ).pipe(provideScopedLayer(retryableThenSucceedingSpanSender(retryCalls)), Effect.forkChild);
+            yield* TestClock.adjust("2 seconds");
+            const retried = yield* Fiber.join(retryFiber);
+
+            expect(retried.spanCount).toBe(1);
+            expect(yield* Ref.get(retryCalls)).toBe(2);
+
+            // A collector that rejects the batch must surface as a typed failure, never a
+            // silent success. That confirmation is the whole reason delivery moved off
+            // fire-and-forget span emission.
+            const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
+              provideScopedLayer(AiMetricsOtlpSpanSender.layer),
+              Effect.flip
+            );
+
+            expect(rejected.message).toContain("did not accept the exported spans");
+          }),
+          ({ server }) => Effect.promise(() => server.stop(true))
+        );
+      }),
+      AI_METRICS_LONG_TEST_TIMEOUT
+    );
+  });
 
   it.effect(
     "keeps a session row whose turns outlive the run that last touched it",
@@ -2339,7 +2411,7 @@ volumes:
             expect(sessions).toEqual([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2427,7 +2499,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2519,7 +2591,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2607,7 +2679,7 @@ volumes:
             ]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2667,7 +2739,7 @@ volumes:
               })
             );
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -2685,7 +2757,7 @@ volumes:
             expect(exported.sessionSpanCount).toBe(1);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2759,7 +2831,7 @@ volumes:
               })
             );
             const phoenix = phoenixService(installSpec);
-            expect(O.isSome(phoenix)).toBe(true);
+            pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
               return;
             }
@@ -2790,7 +2862,7 @@ volumes:
             expect(turnParents).toEqual(sessionSpanIds);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2811,7 +2883,7 @@ volumes:
         summary,
       });
 
-      expect(result.redaction.safeForDerivedUi).toBe(true);
+      pipe(result.redaction.safeForDerivedUi, assertTrue);
     })
   );
 
@@ -2851,7 +2923,7 @@ volumes:
           expect(result.snapshot.configHash).toBe(again.snapshot.configHash);
           expect(json).not.toContain(".repos/effect-v4/AGENTS.md");
           expect(json).not.toContain("node_modules/pkg/CLAUDE.md");
-          expect(yield* fs.exists(path.join(snapshotDir, "latest.json.tmp"))).toBe(false);
+          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json.tmp")), assertFalse);
 
           yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5.1"\n');
           const changed = yield* makeAiMetricsConfigSnapshot(
@@ -2865,7 +2937,7 @@ volumes:
           expect(changed.diff.modifiedPaths).toEqual([".codex/config.toml"]);
           expect(O.getOrThrow(changed.snapshot.previousSnapshotId)).toBe(result.snapshot.snapshotId);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2909,7 +2981,7 @@ volumes:
           expect(O.getOrThrow(result.snapshot.previousSnapshotId)).toBe("config-legacy");
           expect(result.diff.modifiedPaths).toEqual(["AGENTS.md"]);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2933,7 +3005,7 @@ volumes:
 
           expect(error.message).toContain("Failed to decode previous AI metrics config snapshot artifact");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -2975,10 +3047,10 @@ volumes:
           const snapshotFiles = yield* fs.readDirectory(snapshotDir);
 
           expect(error.message).toContain("Failed to write encrypted AI metrics raw archive object");
-          expect(yield* fs.exists(path.join(snapshotDir, "latest.json"))).toBe(false);
-          expect(A.some(snapshotFiles, Str.endsWith(".json"))).toBe(true);
+          pipe(yield* fs.exists(path.join(snapshotDir, "latest.json")), assertFalse);
+          pipe(A.some(snapshotFiles, Str.endsWith(".json")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3043,7 +3115,7 @@ volumes:
           expect(json).not.toContain(tmpDir);
           expect(json).not.toContain("super-secret-token");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3077,7 +3149,7 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.claude)
           );
 
-          expect(O.isSome(claude)).toBe(true);
+          pipe(claude, O.isSome, assertTrue);
           if (O.isNone(claude)) {
             return;
           }
@@ -3085,7 +3157,7 @@ volumes:
           expect(claude.value.includedFileCount).toBe(1);
           expect(claude.value.files[0]?.sourceRole).toBe("primary");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3121,16 +3193,16 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(O.isSome(codex)).toBe(true);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
           expect(codex.value.candidateFileCount).toBe(2);
           expect(codex.value.includedFileCount).toBe(1);
-          expect(codex.value.limitedByMaxFiles).toBe(false);
+          pipe(codex.value.limitedByMaxFiles, assertFalse);
           expect(result.discoveredFileCount).toBe(1);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3171,8 +3243,8 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(result.maxFileBytes).toEqual(O.some(128));
-          expect(O.isSome(codex)).toBe(true);
+          assertSome(result.maxFileBytes, 128);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
@@ -3181,7 +3253,7 @@ volumes:
           expect(codex.value.files[0]?.sizeBytes).toBeLessThanOrEqual(128);
           expect(codex.value.sizeExcludedFileCount).toBe(1);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3214,16 +3286,16 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(O.isSome(codex)).toBe(true);
+          pipe(codex, O.isSome, assertTrue);
           if (O.isNone(codex)) {
             return;
           }
           expect(codex.value.files).toHaveLength(1);
-          expect(O.isSome(codex.value.files[0]?.agentRoleHash ?? O.none())).toBe(true);
+          pipe(codex.value.files[0]?.agentRoleHash ?? O.none(), O.isSome, assertTrue);
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
-          expect(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none())).toBe(true);
+          pipe(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none()), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3324,15 +3396,15 @@ volumes:
             return A.map(rows, (row) => globalThis.String(row.column_name));
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))));
 
-          expect(bundle.manifest.privacyProof.safe).toBe(true);
+          pipe(bundle.manifest.privacyProof.safe, assertTrue);
           expect(bundle.manifest.omittedTables).toContain("ai_metrics_raw_archive_objects");
           expect(bundle.manifest.includedTables).not.toContain("ai_metrics_raw_archive_objects");
           expect(yield* locateLatestAiMetricsMirrorBundle(dataRoot)).toBe(bundle.bundleDir);
-          expect(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet"))).toBe(true);
-          expect(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet"))).toBe(false);
-          expect(yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb"))).toBe(false);
+          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_ingest_runs.parquet")), assertTrue);
+          pipe(yield* fs.exists(path.join(bundle.parquetDir, "ai_metrics_raw_archive_objects.parquet")), assertFalse);
+          pipe(yield* fs.exists(path.join(bundle.bundleDir, "mirror.duckdb")), assertFalse);
           expect(bundle.mirrorDuckDbPath).not.toContain(bundle.bundleDir);
-          expect(yield* fs.exists(bundle.mirrorDuckDbPath)).toBe(false);
+          pipe(yield* fs.exists(bundle.mirrorDuckDbPath), assertFalse);
           expect(sourceFileColumns).toContain("source_path_hash");
           expect(sourceFileColumns).not.toContain("archive_path");
           expect(labelColumns).toContain("note_hash");
@@ -3342,7 +3414,7 @@ volumes:
           expect(statusText).not.toContain(dataRoot);
           expect(statusText).not.toContain("secret-value");
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3401,12 +3473,12 @@ volumes:
           expect(inventory.selectedRawArchiveObjectCount).toBe(1);
           expect(inventory.selectedDerivedExportCount).toBe(1);
           expect(inventory.selectedReportCount).toBe(1);
-          expect(drill.hashMatches).toBe(true);
+          pipe(drill.hashMatches, assertTrue);
           expect(drill.replayedObjectCount).toBe(1);
-          expect(drill.transcriptTextPrinted).toBe(false);
-          expect(yield* fs.exists(drill.derivedDuckDbPath)).toBe(true);
+          pipe(drill.transcriptTextPrinted, assertFalse);
+          pipe(yield* fs.exists(drill.derivedDuckDbPath), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3436,9 +3508,9 @@ volumes:
           );
           const dryRunJson = yield* aiMetricsRetentionEnforcementToJson(dryRun);
           expect(dryRun.deletedDerivedExportCount).toBe(2);
-          expect(dryRun.dryRun).toBe(true);
+          pipe(dryRun.dryRun, assertTrue);
           expect(dryRunJson).toContain("beep.ai_metrics.retention_enforcement.v1");
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-old"))).toBe(true);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertTrue);
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -3449,11 +3521,11 @@ volumes:
           );
           expect(applied.deletedDerivedExportCount).toBe(2);
           expect(applied.keptDerivedExportCount).toBe(0);
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-old"))).toBe(false);
-          expect(yield* fs.exists(path.join(parquetRoot, "forwarder-new"))).toBe(false);
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-old")), assertFalse);
+          pipe(yield* fs.exists(path.join(parquetRoot, "forwarder-new")), assertFalse);
+          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3474,6 +3546,11 @@ volumes:
           yield* writeText(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"), "three\n");
           yield* writeText(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"), "latest\n");
 
+          // Deliberately disagree with filename order and avoid clock-resolution ties.
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-1"), 1_700_000_300, 1_700_000_300);
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-2"), 1_700_000_100, 1_700_000_100);
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-3"), 1_700_000_200, 1_700_000_200);
+
           const dryRun = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
               dataRoot,
@@ -3484,6 +3561,21 @@ volumes:
           expect(dryRun.deletedDerivedExportCount).toBe(1);
           expect(dryRun.keptDerivedExportCount).toBe(2);
           expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(3);
+          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
+            "forwarder-1",
+            "forwarder-2",
+            "forwarder-3",
+            "latest",
+          ]);
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
+            "one\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-2/ai_metrics_turns.parquet"))).toBe(
+            "two\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
+            "three\n"
+          );
 
           const applied = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -3495,9 +3587,22 @@ volumes:
           expect(applied.deletedDerivedExportCount).toBe(1);
           expect(applied.keptDerivedExportCount).toBe(2);
           expect(forwarderCount(yield* fs.readDirectory(parquetRoot))).toBe(2);
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
+          expect(A.sort(yield* fs.readDirectory(parquetRoot), Str.Order)).toEqual([
+            "forwarder-1",
+            "forwarder-3",
+            "latest",
+          ]);
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-1/ai_metrics_turns.parquet"))).toBe(
+            "one\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"))).toBe(
+            "three\n"
+          );
+          expect(yield* fs.readFileString(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"))).toBe("latest\n");
+
+          pipe(yield* fs.exists(path.join(parquetRoot, "latest")), assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3561,7 +3666,7 @@ volumes:
               })
             )
           );
-          expect(Exit.isFailure(invalidPathExit)).toBe(true);
+          pipe(invalidPathExit, Exit.isFailure, assertTrue);
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
@@ -3583,9 +3688,9 @@ volumes:
             )
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          pipe(exit, Exit.isFailure, assertTrue);
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 
@@ -3659,16 +3764,16 @@ volumes:
             dataRoot,
           });
           const compactResult = yield* runAiMetricsRetentionCompact(selector, false);
-          expect(compactResult.dryRun).toBe(false);
+          pipe(compactResult.dryRun, assertFalse);
           expect(compactResult.deletedDerivedExportCount).toBe(1);
           expect(compactResult.deletedReportCount).toBe(1);
-          expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(true);
-          expect(yield* fs.exists(path.join(dataRoot, "reports/weekly.md"))).toBe(false);
+          pipe(yield* fs.exists(path.join(dataRoot, "derived/parquet")), assertTrue);
+          pipe(yield* fs.exists(path.join(dataRoot, "reports/weekly.md")), assertFalse);
 
           const deleteResult = yield* runAiMetricsRetentionDelete(selector, false).pipe(
             provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })))
           );
-          expect(deleteResult.dryRun).toBe(false);
+          pipe(deleteResult.dryRun, assertFalse);
           expect(deleteResult.deletedRawArchiveObjectCount).toBe(1);
           const rawFiles = yield* fs.readDirectory(path.join(dataRoot, "raw/codex"));
           expect(rawFiles).toEqual([]);
@@ -3723,7 +3828,7 @@ volumes:
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
           expect(labelOnlyCounts).toEqual({ agentTasks: 0, labels: 0 });
         })
-      ).pipe(provideScopedLayer(NodeServices.layer));
+      );
     })
   );
 });

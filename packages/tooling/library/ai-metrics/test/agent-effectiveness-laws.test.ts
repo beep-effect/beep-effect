@@ -6,12 +6,12 @@ import {
   AgentEffectivenessAnnotationTargetKind,
   AgentEffectivenessDatasetBundle,
 } from "@beep/repo-ai-metrics/agent-effectiveness";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const encodeAiMetricsSection = S.encodeUnknownResult(AgentEffectivenessAiMetricsSection);
@@ -24,16 +24,14 @@ const isTargetKind = S.is(AgentEffectivenessAnnotationTargetKind);
 const isFindingCode = S.is(AgentEffectivenessAnnotationCheckFindingCode);
 
 describe("agent-effectiveness schema laws", () => {
-  it("generates only members of the annotation optimization domain", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(AgentEffectivenessAnnotationOptimization)]),
-          ([value]) => isOptimization(value),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.prop(
+    "generates only members of the annotation optimization domain",
+    [Arbitrary.schema(AgentEffectivenessAnnotationOptimization)],
+    ([value]) => {
+      assertTrue(isOptimization(value));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps required null wire fields while decoding absence to Option", () => {
     const section = AgentEffectivenessAiMetricsSection.make({
@@ -52,19 +50,19 @@ describe("agent-effectiveness schema laws", () => {
     expect(encoded.latestScorecard).toBeNull();
 
     const decoded = Result.getOrThrow(decodeAiMetricsSection(encoded));
-    expect(O.isNone(decoded.latestForwarder)).toBe(true);
-    expect(O.isNone(decoded.latestScorecard)).toBe(true);
+    assertNone(decoded.latestForwarder);
+    assertNone(decoded.latestScorecard);
   });
 
   it("owns finite annotation vocabularies on their schemas", () => {
-    expect(isOptimization("maximize")).toBe(true);
-    expect(isOptimization("increase")).toBe(false);
-    expect(isSource("ai-metrics")).toBe(true);
-    expect(isSource("external-provider")).toBe(false);
-    expect(isTargetKind("agent-task")).toBe(true);
-    expect(isTargetKind("span")).toBe(false);
-    expect(isFindingCode("plan-encode-failed")).toBe(true);
-    expect(isFindingCode("unknown-finding")).toBe(false);
+    pipe(isOptimization("maximize"), assertTrue);
+    pipe(isOptimization("increase"), assertFalse);
+    pipe(isSource("ai-metrics"), assertTrue);
+    pipe(isSource("external-provider"), assertFalse);
+    pipe(isTargetKind("agent-task"), assertTrue);
+    pipe(isTargetKind("span"), assertFalse);
+    pipe(isFindingCode("plan-encode-failed"), assertTrue);
+    pipe(isFindingCode("unknown-finding"), assertFalse);
   });
 
   it("defaults and validates the dataset artifact version", () => {
@@ -76,8 +74,10 @@ describe("agent-effectiveness schema laws", () => {
     const encoded = Result.getOrThrow(encodeDatasetBundle(bundle));
 
     expect(encoded.schemaVersion).toBe("agent-effectiveness-datasets/v1");
-    expect(
-      Result.isFailure(decodeDatasetBundle({ ...encoded, schemaVersion: "agent-effectiveness-datasets/v2" }))
-    ).toBe(true);
+    pipe(
+      decodeDatasetBundle({ ...encoded, schemaVersion: "agent-effectiveness-datasets/v2" }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 });

@@ -7,8 +7,10 @@ import {
 import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyActionError } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 
@@ -34,11 +36,16 @@ describe("a failed ontology action explains itself", () => {
           ? Effect.fail(OntologyActionError.new(PARSE_FAILURE))
           : Effect.die(`unexpected ontology RPC: ${tag}`)) as unknown as OntologyClient["Service"]);
 
-      const registry = AtomRegistry.make({
-        initialValues: [
-          [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
-        ],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            initialValues: [
+              [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
+            ],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.set(ontologySessionAtom, O.some(session));
 
       registry.set(runOntologySparqlAtom, undefined);
@@ -46,7 +53,7 @@ describe("a failed ontology action explains itself", () => {
 
       const shown = registry.get(ontologySparqlErrorAtom);
 
-      expect(O.isSome(shown)).toBe(true);
+      pipe(shown, O.isSome, assertTrue);
       expect(O.getOrElse(shown, () => "")).toContain(PARSE_FAILURE);
 
       // And none of the program's internals: no stack frames, no module paths.
@@ -64,20 +71,27 @@ describe("a failed ontology action explains itself", () => {
         tag === "RunOntologySparql"
           ? Effect.die(new Error("token=private-value at /home/operator/query.sparql"))
           : Effect.die(`unexpected ontology RPC: ${tag}`)) as unknown as OntologyClient["Service"]);
-      const registry = AtomRegistry.make({
-        initialValues: [
-          [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
-        ],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            initialValues: [
+              [OntologyClient.runtime.layer, Layer.mergeAll(Layer.succeed(OntologyClient, client), Reactivity.layer)],
+            ],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.set(ontologySessionAtom, O.some(session));
 
       registry.set(runOntologySparqlAtom, undefined);
       yield* AtomRegistry.getResult(registry, runOntologySparqlAtom).pipe(Effect.ignore);
 
-      const text = O.getOrElse(registry.get(ontologySparqlErrorAtom), () => "");
+      const shown = registry.get(ontologySparqlErrorAtom);
+      pipe(shown, O.isSome, assertTrue);
+      const text = O.getOrElse(shown, () => "");
+      expect(text).toMatch(/^The query failed\./);
       expect(text).not.toContain("private-value");
       expect(text).not.toContain("/home/operator");
-      registry.dispose();
     })
   );
 });

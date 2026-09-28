@@ -41,8 +41,10 @@ import {
   OpenclawVersionInfo,
 } from "@beep/openclaw/Openclaw.models";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Duration, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -110,9 +112,9 @@ describe("@beep/openclaw models", () => {
 
     const commitless = O.getOrThrow(OpenclawVersionInfo.fromVersionOutput("OpenClaw 2026.7.1-2"));
     expect(commitless.version).toBe("2026.7.1-2");
-    expect(O.isNone(commitless.commit)).toBe(true);
+    assertNone(commitless.commit);
 
-    expect(O.isNone(OpenclawVersionInfo.fromVersionOutput("node: command not found"))).toBe(true);
+    assertNone(OpenclawVersionInfo.fromVersionOutput("node: command not found"));
   });
 
   it("decodes the exact observed secrets reload success JSON", () => {
@@ -136,8 +138,8 @@ describe("@beep/openclaw models", () => {
     expect(O.getOrThrow(account.connected)).toBe(true);
     expect(O.getOrThrow(account.tokenSource)).toBe("config");
     expect(O.getOrThrow(account.tokenStatus)).toBe("available");
-    expect(O.isNone(account.probeOk)).toBe(true);
-    expect(O.isNone(account.probeError)).toBe(true);
+    assertNone(account.probeOk);
+    assertNone(account.probeError);
   });
 
   it("tolerantly decodes channel health subsets of the gateway health document", () => {
@@ -298,7 +300,7 @@ describe("@beep/openclaw models", () => {
     const unrecognized = OpenclawSystemdUnitState.make({ activeState: "reloading" });
 
     expect(O.getOrThrow(active.knownActiveState)).toBe("active");
-    expect(O.isNone(unrecognized.knownActiveState)).toBe(true);
+    assertNone(unrecognized.knownActiveState);
   });
 
   it("constructs redacted driver errors with stable messages", () => {

@@ -1,7 +1,8 @@
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { PathSafetyError } from "@beep/file-processing/PathSafety";
 import { SourceTextResolverError } from "@beep/file-processing/SourceText";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

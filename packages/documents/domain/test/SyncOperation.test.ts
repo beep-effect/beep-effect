@@ -1,12 +1,13 @@
 import * as SyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownSyncOperation = S.decodeUnknownEffect(SyncOperation.SyncOperation);
@@ -14,25 +15,13 @@ const decodeUnknownSyncOperationStatus = S.decodeUnknownEffect(SyncOperation.Syn
 const decodeUnknownSyncOperationType = S.decodeUnknownEffect(SyncOperation.SyncOperationType);
 const encodeSyncOperation = S.encodeEffect(SyncOperation.SyncOperation);
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
 
 const uploadRow = {
@@ -68,9 +57,9 @@ describe("SyncOperation entity", () => {
       const decoded = yield* decodeUnknownSyncOperation(uploadRow);
 
       expect(decoded).toBeInstanceOf(SyncOperation.SyncOperation);
-      expect(decoded.inputContentDigest).toEqual(O.some("abc123"));
-      expect(decoded.targetParentRelPath).toEqual(O.some("matters/client-default"));
-      expect(decoded.lastError).toEqual(O.none());
+      assertSome<string>(decoded.inputContentDigest, "abc123");
+      assertSome<string>(decoded.targetParentRelPath, "matters/client-default");
+      assertNone(decoded.lastError);
       expect(decoded.status).toBe("queued");
       expect(yield* encodeSyncOperation(decoded)).toStrictEqual(uploadRow);
     })
@@ -89,28 +78,37 @@ describe("SyncOperation entity", () => {
         targetRelPath: "matters",
       });
 
-      expect(decoded.inputContentDigest).toEqual(O.none());
-      expect(decoded.targetParentRelPath).toEqual(O.none());
-      expect(decoded.lastError).toEqual(O.some("box responded 503"));
+      assertNone(decoded.inputContentDigest);
+      assertNone(decoded.targetParentRelPath);
+      assertSome<string>(decoded.lastError, "box responded 503");
     })
   );
 
   it.effect("exposes the operation literal families", () =>
     Effect.gen(function* () {
-      expect(SyncOperation.SyncOperationType.is.uploadFile("uploadFile")).toBe(true);
-      expect(SyncOperation.SyncOperationType.is.moveItem("uploadFile")).toBe(false);
-      expect(SyncOperation.SyncOperationStatus.is.queued("queued")).toBe(true);
+      pipe(SyncOperation.SyncOperationType.is.uploadFile("uploadFile"), assertTrue);
+      pipe(SyncOperation.SyncOperationType.is.moveItem("uploadFile"), assertFalse);
+      pipe(SyncOperation.SyncOperationStatus.is.queued("queued"), assertTrue);
       expect(SyncOperation.SyncOperationStatus.Enum.leased).toBe("leased");
       const typeExit = yield* Effect.exit(decodeUnknownSyncOperationType("deleteItem"));
       const statusExit = yield* Effect.exit(decodeUnknownSyncOperationStatus("cancelled"));
-      expect(Exit.isFailure(typeExit)).toBe(true);
-      expect(Exit.isFailure(statusExit)).toBe(true);
+      pipe(typeExit, Exit.isFailure, assertTrue);
+      pipe(statusExit, Exit.isFailure, assertTrue);
     })
   );
 
-  it("round-trips schema-derived sync operation values", () => {
-    assertSchemaArbitraryRoundTrip(SyncOperation.SyncOperationType);
-    assertSchemaArbitraryRoundTrip(SyncOperation.SyncOperationStatus);
-    assertSchemaArbitraryRoundTrip(SyncOperation.SyncOperation);
-  });
+  it.prop(
+    "round-trips schema-derived sync operation values",
+    [
+      Arbitrary.schema(SyncOperation.SyncOperationType),
+      Arbitrary.schema(SyncOperation.SyncOperationStatus),
+      Arbitrary.schema(SyncOperation.SyncOperation),
+    ],
+    ([syncOperationType, syncOperationStatus, syncOperation]) => {
+      assertSchemaRoundTrip(SyncOperation.SyncOperationType, syncOperationType);
+      assertSchemaRoundTrip(SyncOperation.SyncOperationStatus, syncOperationStatus);
+      assertSchemaRoundTrip(SyncOperation.SyncOperation, syncOperation);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

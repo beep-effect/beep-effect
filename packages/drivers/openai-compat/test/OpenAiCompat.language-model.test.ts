@@ -1,3 +1,4 @@
+import { $OpenaiCompatId } from "@beep/identity";
 import {
   decodeChatCompletionChunk,
   decodeChatCompletionResponse,
@@ -21,10 +22,11 @@ import {
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { expect, layer } from "@effect/vitest";
-import { Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Context, Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as AiError from "effect/ai/AiError";
 import * as Prompt from "effect/ai/Prompt";
@@ -35,7 +37,6 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { TUnsafe } from "@beep/types";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -62,11 +63,6 @@ const encodeResponse = S.encodeResult(OpenAiCompatChatCompletionResponse);
 const decodeResponse = S.decodeUnknownResult(OpenAiCompatChatCompletionResponse);
 const encodeChunk = S.encodeResult(OpenAiCompatChatCompletionChunk);
 const decodeChunk = S.decodeUnknownResult(OpenAiCompatChatCompletionChunk);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const nonNegativeInt = NonNegativeInt.make;
 const userMessage = (content = ""): OpenAiCompatUserChatMessage =>
@@ -128,7 +124,84 @@ const makeOpenAiCompatClientLayer = (respond: TestRespond) =>
     Layer.provide(makeHttpClientLayer(respond))
   );
 
-layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (it) => {
+const unsupportedToolkit = Toolkit.make(
+  Tool.make("unsupported_schema", {
+    parameters: S.Unknown,
+    success: S.String,
+  })
+);
+
+const $I = $OpenaiCompatId.create("test/OpenAiCompat.language-model.test");
+
+class HeaderClients extends Context.Service<
+  HeaderClients,
+  {
+    readonly capturedHeaders: Ref.Ref<ReadonlyArray<Record<string, string>>>;
+    readonly overrideHeaders: Ref.Ref<ReadonlyArray<Record<string, string>>>;
+    readonly defaultClient: OpenAiCompatClient["Service"];
+    readonly overrideClient: OpenAiCompatClient["Service"];
+  }
+>()($I`HeaderClients`) {}
+
+const headerClientsLayer = Layer.effect(
+  HeaderClients,
+  Effect.gen(function* () {
+    const capturedHeaders = yield* Ref.make<ReadonlyArray<Record<string, string>>>([]);
+    const jsonBody =
+      '{"choices":[{"finish_reason":"stop","index":0,"message":{"content":"ok","role":"assistant","tool_calls":[]}}],"usage":{"completion_tokens":2,"prompt_tokens":1,"total_tokens":3}}';
+    const defaultLayer = OpenAiCompatClient.makeLayer(
+      OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) })
+    ).pipe(
+      Layer.provide(
+        makeHttpClientLayer((request) =>
+          pipe(
+            Ref.update(capturedHeaders, A.append(request.headers)),
+            Effect.as(
+              request.headers.accept === "text/event-stream"
+                ? new Response("data: [DONE]\n\n", {
+                    headers: { "content-type": "text/event-stream" },
+                  })
+                : new Response(jsonBody, {
+                    headers: { "content-type": "application/json" },
+                  })
+            )
+          )
+        )
+      )
+    );
+    const overrideHeaders = yield* Ref.make<ReadonlyArray<Record<string, string>>>([]);
+    const overrideLayer = OpenAiCompatClient.makeLayer(
+      OpenAiCompatClientOptions.make({
+        apiKey: O.some(Redacted.make("test-key")),
+        headers: O.some({ Accept: "application/vnd.compat+json" }),
+      })
+    ).pipe(
+      Layer.provide(
+        makeHttpClientLayer((request) =>
+          pipe(
+            Ref.update(overrideHeaders, A.append(request.headers)),
+            Effect.as(
+              new Response(jsonBody, {
+                headers: { "content-type": "application/json" },
+              })
+            )
+          )
+        )
+      )
+    );
+
+    const defaultContext = yield* Layer.build(defaultLayer);
+    const overrideContext = yield* Layer.build(overrideLayer);
+    return HeaderClients.of({
+      capturedHeaders,
+      overrideHeaders,
+      defaultClient: Context.get(defaultContext, OpenAiCompatClient),
+      overrideClient: Context.get(overrideContext, OpenAiCompatClient),
+    });
+  })
+);
+
+describe("OpenAiCompat language model", () => {
   it.effect(
     "supports data-last codecs and model construction",
     Effect.fnUntraced(function* () {
@@ -657,35 +730,35 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     })
   );
 
-  it.effect(
-    "maps tool schema conversion failures to UnsupportedSchemaError before provider calls",
-    Effect.fnUntraced(function* () {
-      const languageModel = yield* makeFromProvider({
-        model: "compat-model",
-        moduleName: "OpenAiCompatLanguageModelTest",
-        provider: {
-          createChatCompletion: () => Effect.die("provider should not be called"),
-          streamChatCompletion: () => Stream.empty,
-        },
-      });
-      const UnsupportedTool = Tool.make("unsupported_schema", {
-        parameters: S.Unknown,
-        success: S.String,
-      });
+  it.layer(unsupportedToolkit.toLayer({ unsupported_schema: () => Effect.die("tool handler should not be called") }), {
+    timeout: "5 seconds",
+  })("unsupported tool schema fixture", (it) => {
+    it.effect(
+      "maps tool schema conversion failures to UnsupportedSchemaError before provider calls",
+      Effect.fnUntraced(function* () {
+        const languageModel = yield* makeFromProvider({
+          model: "compat-model",
+          moduleName: "OpenAiCompatLanguageModelTest",
+          provider: {
+            createChatCompletion: () => Effect.die("provider should not be called"),
+            streamChatCompletion: () => Stream.empty,
+          },
+        });
 
-      const error = yield* pipe(
-        languageModel.generateText({
-          prompt: "use tool",
-          toolkit: Toolkit.make(UnsupportedTool),
-        }),
-        Effect.flip
-      );
+        const error = yield* pipe(
+          languageModel.generateText({
+            prompt: "use tool",
+            toolkit: unsupportedToolkit,
+          }),
+          Effect.flip
+        );
 
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("prepareTools");
-      expect(error.reason._tag).toBe("UnsupportedSchemaError");
-    })
-  );
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("prepareTools");
+        expect(error.reason._tag).toBe("UnsupportedSchemaError");
+      })
+    );
+  });
 
   it.effect(
     "maps structured response schema conversion failures to UnsupportedSchemaError before provider calls",
@@ -713,241 +786,176 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     })
   );
 
-  it.effect(
-    "maps JSON body encoding failures to AiError",
-    Effect.fnUntraced(function* () {
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-        stream_options: {
-          retry_after: 1n,
-        },
-      });
+  it.layer(
+    makeOpenAiCompatClientLayer(() => Effect.die("body encoding should fail before execute")),
+    { timeout: "5 seconds" }
+  )("maps JSON body encoding failures to AiError fixture", (it) => {
+    it.effect(
+      "maps JSON body encoding failures to AiError",
+      Effect.fnUntraced(function* () {
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+          stream_options: {
+            retry_after: 1n,
+          },
+        });
 
-      const error = yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          return yield* client.createChatCompletion(request).pipe(Effect.flip);
-        }),
-        provideScopedLayer(makeOpenAiCompatClientLayer(() => Effect.die("body encoding should fail before execute")))
-      );
+        const client = yield* OpenAiCompatClient;
+        const error = yield* client.createChatCompletion(request).pipe(Effect.flip);
 
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("createChatCompletion");
-      expect(error.reason._tag).toBe("InvalidRequestError");
-    })
-  );
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("createChatCompletion");
+        expect(error.reason._tag).toBe("InvalidRequestError");
+      })
+    );
+  });
 
-  it.effect(
-    "maps non-2xx client responses without exposing response bodies",
-    Effect.fnUntraced(function* () {
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-      });
-
-      const error = yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          return yield* client.createChatCompletion(request).pipe(Effect.flip);
-        }),
-        provideScopedLayer(
-          makeOpenAiCompatClientLayer(() =>
-            Effect.succeed(
-              new Response('{"secret":"prompt text"}', {
-                status: 401,
-              })
-            )
-          )
-        )
-      );
-
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("createChatCompletion");
-      expect(error.reason._tag).toBe("AuthenticationError");
-      expect(error.reason.message).not.toContain("prompt text");
-    })
-  );
-
-  it.effect(
-    "rejects stream responses whose leading content type is not text/event-stream",
-    Effect.fnUntraced(function* () {
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-      });
-
-      const error = yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          return yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
-        }),
-        provideScopedLayer(
-          makeOpenAiCompatClientLayer(() =>
-            Effect.succeed(
-              new Response("{}", {
-                headers: {
-                  "content-type": "application/json; note=text/event-stream",
-                },
-              })
-            )
-          )
-        )
-      );
-
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("streamChatCompletion");
-      expect(error.reason._tag).toBe("InvalidOutputError");
-    })
-  );
-
-  it.effect(
-    "sets operation-specific Accept headers and allows configured overrides",
-    Effect.fnUntraced(function* () {
-      const capturedHeaders = yield* Ref.make<ReadonlyArray<Record<string, string>>>([]);
-      const jsonBody =
-        '{"choices":[{"finish_reason":"stop","index":0,"message":{"content":"ok","role":"assistant","tool_calls":[]}}],"usage":{"completion_tokens":2,"prompt_tokens":1,"total_tokens":3}}';
-      const defaultLayer = OpenAiCompatClient.makeLayer(
-        OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) })
-      ).pipe(
-        Layer.provide(
-          makeHttpClientLayer((request) =>
-            pipe(
-              Ref.update(capturedHeaders, A.append(request.headers)),
-              Effect.as(
-                request.headers.accept === "text/event-stream"
-                  ? new Response("data: [DONE]\n\n", {
-                      headers: { "content-type": "text/event-stream" },
-                    })
-                  : new Response(jsonBody, {
-                      headers: { "content-type": "application/json" },
-                    })
-              )
-            )
-          )
-        )
-      );
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-      });
-
-      yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          yield* client.createChatCompletion(request);
-          yield* client.streamChatCompletion(request).pipe(Stream.runCollect);
-        }),
-        provideScopedLayer(defaultLayer)
-      );
-
-      const defaults = yield* Ref.get(capturedHeaders);
-      expect(defaults[0]?.accept).toBe("application/json");
-      expect(defaults[1]?.accept).toBe("text/event-stream");
-
-      const overrideHeaders = yield* Ref.make<ReadonlyArray<Record<string, string>>>([]);
-      const overrideLayer = OpenAiCompatClient.makeLayer(
-        OpenAiCompatClientOptions.make({
-          apiKey: O.some(Redacted.make("test-key")),
-          headers: O.some({ Accept: "application/vnd.compat+json" }),
+  it.layer(
+    makeOpenAiCompatClientLayer(() =>
+      Effect.succeed(
+        new Response('{"secret":"prompt text"}', {
+          status: 401,
         })
-      ).pipe(
-        Layer.provide(
-          makeHttpClientLayer((request) =>
-            pipe(
-              Ref.update(overrideHeaders, A.append(request.headers)),
-              Effect.as(
-                new Response(jsonBody, {
-                  headers: { "content-type": "application/json" },
-                })
-              )
-            )
-          )
-        )
-      );
+      )
+    ),
+    { timeout: "5 seconds" }
+  )("maps non-2xx client responses without exposing response bodies fixture", (it) => {
+    it.effect(
+      "maps non-2xx client responses without exposing response bodies",
+      Effect.fnUntraced(function* () {
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+        });
 
-      yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          yield* client.createChatCompletion(request);
-        }),
-        provideScopedLayer(overrideLayer)
-      );
+        const client = yield* OpenAiCompatClient;
+        const error = yield* client.createChatCompletion(request).pipe(Effect.flip);
 
-      const overridden = yield* Ref.get(overrideHeaders);
-      expect(overridden[0]?.accept).toBe("application/vnd.compat+json");
-    })
-  );
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("createChatCompletion");
+        expect(error.reason._tag).toBe("AuthenticationError");
+        expect(error.reason.message).not.toContain("prompt text");
+      })
+    );
+  });
 
-  it.effect(
-    "maps SSE retry directives to typed AiError",
-    Effect.fnUntraced(function* () {
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-      });
+  it.layer(
+    makeOpenAiCompatClientLayer(() =>
+      Effect.succeed(
+        new Response("{}", {
+          headers: {
+            "content-type": "application/json; note=text/event-stream",
+          },
+        })
+      )
+    ),
+    { timeout: "5 seconds" }
+  )("rejects stream responses whose leading content type is not text/event-stream fixture", (it) => {
+    it.effect(
+      "rejects stream responses whose leading content type is not text/event-stream",
+      Effect.fnUntraced(function* () {
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+        });
 
-      const error = yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          return yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
-        }),
-        provideScopedLayer(
-          makeOpenAiCompatClientLayer(() =>
-            Effect.succeed(
-              new Response("retry: 1000\n\n", {
-                headers: {
-                  "content-type": "text/event-stream",
-                },
-              })
-            )
-          )
-        )
-      );
+        const client = yield* OpenAiCompatClient;
+        const error = yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
 
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("streamChatCompletion");
-      expect(error.reason._tag).toBe("InvalidOutputError");
-    })
-  );
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("streamChatCompletion");
+        expect(error.reason._tag).toBe("InvalidOutputError");
+      })
+    );
+  });
 
-  it.effect(
-    "maps SSE decoding failures to typed AiError",
-    Effect.fnUntraced(function* () {
-      const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [userMessage()],
-        model: "compat-model",
-      });
+  it.layer(headerClientsLayer, { timeout: "5 seconds" })("Accept header clients", (it) => {
+    it.effect(
+      "sets operation-specific Accept headers and allows configured overrides",
+      Effect.fnUntraced(function* () {
+        const { capturedHeaders, overrideHeaders, defaultClient, overrideClient } = yield* HeaderClients;
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+        });
 
-      // `Sse.decode` fails only when a pending event outgrows its 10 MiB
-      // `maxEventSize`, so the body is a single `data:` field past that bound
-      // with no blank line to flush it.
-      const oversizedEvent = `data: ${"x".repeat(10 * 1024 * 1024)}`;
+        yield* defaultClient.createChatCompletion(request);
+        yield* defaultClient.streamChatCompletion(request).pipe(Stream.runCollect);
 
-      const error = yield* pipe(
-        Effect.gen(function* () {
-          const client = yield* OpenAiCompatClient;
-          return yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
-        }),
-        provideScopedLayer(
-          makeOpenAiCompatClientLayer(() =>
-            Effect.succeed(
-              new Response(oversizedEvent, {
-                headers: {
-                  "content-type": "text/event-stream",
-                },
-              })
-            )
-          )
-        )
-      );
+        const defaults = yield* Ref.get(capturedHeaders);
+        expect(defaults[0]?.accept).toBe("application/json");
+        expect(defaults[1]?.accept).toBe("text/event-stream");
 
-      expect(AiError.isAiError(error)).toBe(true);
-      expect(error.method).toBe("streamChatCompletion");
-      expect(error.reason._tag).toBe("InvalidOutputError");
-      // Proves the decoding reason survives the mapping rather than being
-      // flattened into a generic stream failure.
-      expect(String(error)).toContain("EventTooLarge");
-    })
-  );
+        yield* overrideClient.createChatCompletion(request);
+
+        const overridden = yield* Ref.get(overrideHeaders);
+        expect(overridden[0]?.accept).toBe("application/vnd.compat+json");
+      })
+    );
+  });
+
+  it.layer(
+    makeOpenAiCompatClientLayer(() =>
+      Effect.succeed(
+        new Response("retry: 1000\n\n", {
+          headers: {
+            "content-type": "text/event-stream",
+          },
+        })
+      )
+    ),
+    { timeout: "5 seconds" }
+  )("maps SSE retry directives to typed AiError fixture", (it) => {
+    it.effect(
+      "maps SSE retry directives to typed AiError",
+      Effect.fnUntraced(function* () {
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+        });
+
+        const client = yield* OpenAiCompatClient;
+        const error = yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
+
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("streamChatCompletion");
+        expect(error.reason._tag).toBe("InvalidOutputError");
+      })
+    );
+  });
+
+  // `Sse.decode` fails only above its 10 MiB maxEventSize; no blank line flushes the event.
+  it.layer(
+    makeOpenAiCompatClientLayer(() =>
+      Effect.succeed(
+        new Response(`data: ${"x".repeat(10 * 1024 * 1024)}`, {
+          headers: {
+            "content-type": "text/event-stream",
+          },
+        })
+      )
+    ),
+    { timeout: "5 seconds" }
+  )("maps SSE decoding failures to typed AiError fixture", (it) => {
+    it.effect(
+      "maps SSE decoding failures to typed AiError",
+      Effect.fnUntraced(function* () {
+        const request = OpenAiCompatChatCompletionRequest.make({
+          messages: [userMessage()],
+          model: "compat-model",
+        });
+
+        const client = yield* OpenAiCompatClient;
+        const error = yield* client.streamChatCompletion(request).pipe(Stream.runCollect, Effect.flip);
+
+        expect(AiError.isAiError(error)).toBe(true);
+        expect(error.method).toBe("streamChatCompletion");
+        expect(error.reason._tag).toBe("InvalidOutputError");
+        // Proves the decoding reason survives the mapping rather than being
+        // flattened into a generic stream failure.
+        expect(String(error)).toContain("EventTooLarge");
+      })
+    );
+  });
 });

@@ -1,0 +1,1547 @@
+{
+  "numTotalTestSuites": 26,
+  "numPassedTestSuites": 26,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 116,
+  "numPassedTests": 116,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790482590027,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["EntityId"],
+          "fullName": "EntityId decodes generated entity ids and rejects invalid ids",
+          "status": "passed",
+          "title": "decodes generated entity ids and rejects invalid ids",
+          "duration": 12.24632900000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityId"],
+          "fullName": "EntityId derives default metadata and schema statics",
+          "status": "passed",
+          "title": "derives default metadata and schema statics",
+          "duration": 11.852892999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityId"],
+          "fullName": "EntityId preserves explicit metadata overrides",
+          "status": "passed",
+          "title": "preserves explicit metadata overrides",
+          "duration": 11.668769999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityId"],
+          "fullName": "EntityId supports data-first and data-last factories",
+          "status": "passed",
+          "title": "supports data-first and data-last factories",
+          "duration": 11.729111999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PublicEntityId"],
+          "fullName": "PublicEntityId derives URL-safe public ids from entity metadata",
+          "status": "passed",
+          "title": "derives URL-safe public ids from entity metadata",
+          "duration": 13.608797999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["PublicEntityId"],
+          "fullName": "PublicEntityId generates public ids with the entity prefix",
+          "status": "passed",
+          "title": "generates public ids with the entity prefix",
+          "duration": 12.762563999999884,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ProductEntity"],
+          "fullName": "ProductEntity preserves the six product variant memberships",
+          "status": "passed",
+          "title": "preserves the six product variant memberships",
+          "duration": 9.824259999999867,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ProductEntity"],
+          "fullName": "ProductEntity applies insert-time audit defaults without inventing row identity",
+          "status": "passed",
+          "title": "applies insert-time audit defaults without inventing row identity",
+          "duration": 9.82543099999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ProductEntity"],
+          "fullName": "ProductEntity materializes model extras into kit-provided table indexes",
+          "status": "passed",
+          "title": "materializes model extras into kit-provided table indexes",
+          "duration": 9.798158999999941,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["entity tier family"],
+          "fullName": "entity tier family scales column sets down the tier ladder",
+          "status": "passed",
+          "title": "scales column sets down the tier ladder",
+          "duration": 3.342117000000144,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["entity tier family"],
+          "fullName": "entity tier family derives colocated default indexes per tier",
+          "status": "passed",
+          "title": "derives colocated default indexes per tier",
+          "duration": 12.886294000000134,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["entity tier family"],
+          "fullName": "entity tier family rejects extensions that shadow inherited kit columns",
+          "status": "passed",
+          "title": "rejects extensions that shadow inherited kit columns",
+          "duration": 12.839762999999948,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["entity tier family"],
+          "fullName": "entity tier family rejects own fields that shadow identity columns",
+          "status": "passed",
+          "title": "rejects own fields that shadow identity columns",
+          "duration": 11.989413000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityRef and shared entity primitives"],
+          "fullName": "EntityRef and shared entity primitives builds entity references and validates primitive schemas",
+          "status": "passed",
+          "title": "builds entity references and validates primitive schemas",
+          "duration": 12.38820799999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityRef and shared entity primitives"],
+          "fullName": "EntityRef and shared entity primitives round-trips schema-derived document ids through entity references",
+          "status": "passed",
+          "title": "round-trips schema-derived document ids through entity references",
+          "duration": 18.31013699999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["EntityRef and shared entity primitives"],
+          "fullName": "EntityRef and shared entity primitives decodes principals, source kinds, and barrel exports",
+          "status": "passed",
+          "title": "decodes principals, source kinds, and barrel exports",
+          "duration": 1.4183349999998427,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591367,
+      "endTime": 1790482591412.31,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/EntityKernel.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["P3 identity namespaces"],
+          "fullName": "P3 identity namespaces expose deterministic entity-id metadata",
+          "status": "passed",
+          "title": "expose deterministic entity-id metadata",
+          "duration": 14.512429000000111,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["P3 identity namespaces"],
+          "fullName": "P3 identity namespaces carry the factory-attached codec statics at runtime",
+          "status": "passed",
+          "title": "carry the factory-attached codec statics at runtime",
+          "duration": 14.164383000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["P3 identity namespaces"],
+          "fullName": "P3 identity namespaces decode positive integer ids and reject invalid ids",
+          "status": "passed",
+          "title": "decode positive integer ids and reject invalid ids",
+          "duration": 14.150580999999875,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Agents.AgentId",
+          "status": "passed",
+          "title": "Agents.AgentId",
+          "duration": 20.490064000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Agents.SkillId",
+          "status": "passed",
+          "title": "Agents.SkillId",
+          "duration": 7.038477999999941,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace ArchitectureLab.WorkerId",
+          "status": "passed",
+          "title": "ArchitectureLab.WorkerId",
+          "duration": 7.021372000000156,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Documents.SyncItemId",
+          "status": "passed",
+          "title": "Documents.SyncItemId",
+          "duration": 6.924212000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Documents.SyncOperationId",
+          "status": "passed",
+          "title": "Documents.SyncOperationId",
+          "duration": 6.804008000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Documents.SyncCursorId",
+          "status": "passed",
+          "title": "Documents.SyncCursorId",
+          "duration": 5.181368999999904,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Documents.SyncConflictId",
+          "status": "passed",
+          "title": "Documents.SyncConflictId",
+          "duration": 5.12428100000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.CandidateClaimId",
+          "status": "passed",
+          "title": "Epistemic.CandidateClaimId",
+          "duration": 5.113774999999805,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.EvidenceId",
+          "status": "passed",
+          "title": "Epistemic.EvidenceId",
+          "duration": 3.95570100000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.ActivityId",
+          "status": "passed",
+          "title": "Epistemic.ActivityId",
+          "duration": 3.936151000000109,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.UsageRecordId",
+          "status": "passed",
+          "title": "Epistemic.UsageRecordId",
+          "duration": 4.5154039999999895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.ContradictionCandidateId",
+          "status": "passed",
+          "title": "Epistemic.ContradictionCandidateId",
+          "duration": 4.460239000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.ContradictionReceiptId",
+          "status": "passed",
+          "title": "Epistemic.ContradictionReceiptId",
+          "duration": 4.453056999999944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.ContradictionDispositionId",
+          "status": "passed",
+          "title": "Epistemic.ContradictionDispositionId",
+          "duration": 4.410822000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Epistemic.EvidenceVerificationId",
+          "status": "passed",
+          "title": "Epistemic.EvidenceVerificationId",
+          "duration": 4.407578000000058,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace LawPractice.LegalClientId",
+          "status": "passed",
+          "title": "LawPractice.LegalClientId",
+          "duration": 4.067404000000124,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace LawPractice.LegalContactId",
+          "status": "passed",
+          "title": "LawPractice.LegalContactId",
+          "duration": 4.019219000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace LawPractice.MatterId",
+          "status": "passed",
+          "title": "LawPractice.MatterId",
+          "duration": 4.014701999999943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace LawPractice.PatentAssetId",
+          "status": "passed",
+          "title": "LawPractice.PatentAssetId",
+          "duration": 3.9859579999999823,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Shared.OrganizationId",
+          "status": "passed",
+          "title": "Shared.OrganizationId",
+          "duration": 3.983695000000125,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Shared.UserId",
+          "status": "passed",
+          "title": "Shared.UserId",
+          "duration": 3.3871460000000297,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Shared.MembershipId",
+          "status": "passed",
+          "title": "Shared.MembershipId",
+          "duration": 3.3399530000001505,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.WorkspaceId",
+          "status": "passed",
+          "title": "Workspace.WorkspaceId",
+          "duration": 3.3363090000000284,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.EmailArtifactId",
+          "status": "passed",
+          "title": "Workspace.EmailArtifactId",
+          "duration": 3.311300000000074,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.CandidateProjectId",
+          "status": "passed",
+          "title": "Workspace.CandidateProjectId",
+          "duration": 3.309526999999889,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.CandidateTaskId",
+          "status": "passed",
+          "title": "Workspace.CandidateTaskId",
+          "duration": 2.9934299999999894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.CandidateDraftId",
+          "status": "passed",
+          "title": "Workspace.CandidateDraftId",
+          "duration": 2.960228000000143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.ApprovalGateId",
+          "status": "passed",
+          "title": "Workspace.ApprovalGateId",
+          "duration": 2.9572129999999106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.ContextPacketId",
+          "status": "passed",
+          "title": "Workspace.ContextPacketId",
+          "duration": 2.9267569999999523,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.ThreadId",
+          "status": "passed",
+          "title": "Workspace.ThreadId",
+          "duration": 2.923561999999947,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.TurnId",
+          "status": "passed",
+          "title": "Workspace.TurnId",
+          "duration": 1.1851059999999052,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "P3 identity namespaces",
+            "round-trips schema-derived ids for every identity namespace"
+          ],
+          "fullName": "P3 identity namespaces round-trips schema-derived ids for every identity namespace Workspace.MessageId",
+          "status": "passed",
+          "title": "Workspace.MessageId",
+          "duration": 1.129308999999921,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["P3 identity namespaces"],
+          "fullName": "P3 identity namespaces validates runtime identity composers",
+          "status": "passed",
+          "title": "validates runtime identity composers",
+          "duration": 14.13089100000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["P3 identity namespaces"],
+          "fullName": "P3 identity namespaces rejects invalid identity composer lookalikes",
+          "status": "passed",
+          "title": "rejects invalid identity composer lookalikes",
+          "duration": 0.6050420000001395,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591332,
+      "endTime": 1790482591375.185,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/IdentityNamespaces.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["LocalDate.Model"],
+          "fullName": "LocalDate.Model constructs, formats, stringifies, hashes, and compares values",
+          "status": "passed",
+          "title": "constructs, formats, stringifies, hashes, and compares values",
+          "duration": 18.811378999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDate.Model"],
+          "fullName": "LocalDate.Model converts to DateTime.Utc and JavaScript Date at midnight UTC",
+          "status": "passed",
+          "title": "converts to DateTime.Utc and JavaScript Date at midnight UTC",
+          "duration": 18.68176900000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDate.Model"],
+          "fullName": "LocalDate.Model decodes and encodes the schema class",
+          "status": "passed",
+          "title": "decodes and encodes the schema class",
+          "duration": 18.6842630000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDate.Model"],
+          "fullName": "LocalDate.Model round-trips schema-derived values through the class and string codecs",
+          "status": "passed",
+          "title": "round-trips schema-derived values through the class and string codecs",
+          "duration": 41.74734000000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDate.Model"],
+          "fullName": "LocalDate.Model rejects impossible calendar dates at the schema boundary",
+          "status": "passed",
+          "title": "rejects impossible calendar dates at the schema boundary",
+          "duration": 18.673076000000037,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors constructs LocalDate values through unsafe, optional, and effectful helpers",
+          "status": "passed",
+          "title": "constructs LocalDate values through unsafe, optional, and effectful helpers",
+          "duration": 1.9046539999999368,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors fails effectful construction when fields are outside schema bounds",
+          "status": "passed",
+          "title": "fails effectful construction when fields are outside schema bounds",
+          "duration": 1.8725239999998848,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors fails effectful construction for impossible calendar dates",
+          "status": "passed",
+          "title": "fails effectful construction for impossible calendar dates",
+          "duration": 1.8420370000001185,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors guards LocalDate instances",
+          "status": "passed",
+          "title": "guards LocalDate instances",
+          "duration": 1.8243800000000192,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors parses ISO date strings and rejects invalid fromString inputs",
+          "status": "passed",
+          "title": "parses ISO date strings and rejects invalid fromString inputs",
+          "duration": 1.7380960000000414,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors constructs from Date and DateTime using UTC calendar fields",
+          "status": "passed",
+          "title": "constructs from Date and DateTime using UTC calendar fields",
+          "duration": 2.6655550000000403,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["constructors"],
+          "fullName": "constructors constructs today's date from TestClock",
+          "status": "passed",
+          "title": "constructs today's date from TestClock",
+          "duration": 16.547943000000032,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ordering and predicates"],
+          "fullName": "ordering and predicates orders by year, month, day, and equality",
+          "status": "passed",
+          "title": "orders by year, month, day, and equality",
+          "duration": 1.6899720000001253,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["ordering and predicates"],
+          "fullName": "ordering and predicates supports data-first and data-last predicate helpers",
+          "status": "passed",
+          "title": "supports data-first and data-last predicate helpers",
+          "duration": 1.6824299999998402,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["date arithmetic"],
+          "fullName": "date arithmetic adds days, months, and years",
+          "status": "passed",
+          "title": "adds days, months, and years",
+          "duration": 0.7141689999998562,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["date arithmetic"],
+          "fullName": "date arithmetic calculates whole-day differences",
+          "status": "passed",
+          "title": "calculates whole-day differences",
+          "duration": 1.3924839999999676,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["date arithmetic"],
+          "fullName": "date arithmetic returns month and year boundaries",
+          "status": "passed",
+          "title": "returns month and year boundaries",
+          "duration": 1.3697000000001935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["date arithmetic"],
+          "fullName": "date arithmetic handles leap years and month lengths",
+          "status": "passed",
+          "title": "handles leap years and month lengths",
+          "duration": 1.3621279999999842,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDateFromString"],
+          "fullName": "LocalDateFromString decodes and encodes ISO local-date strings",
+          "status": "passed",
+          "title": "decodes and encodes ISO local-date strings",
+          "duration": 1.3488380000001143,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDateFromString"],
+          "fullName": "LocalDateFromString rejects malformed and impossible ISO local-date strings",
+          "status": "passed",
+          "title": "rejects malformed and impossible ISO local-date strings",
+          "duration": 2.746939999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["LocalDateFromString"],
+          "fullName": "LocalDateFromString round-trips through structs with encoded date fields",
+          "status": "passed",
+          "title": "round-trips through structs with encoded date fields",
+          "duration": 2.7075290000000223,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591261,
+      "endTime": 1790482591303.5479,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/LocalDate.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["OnePasswordReference"],
+          "fullName": "OnePasswordReference accepts 1Password item field references",
+          "status": "passed",
+          "title": "accepts 1Password item field references",
+          "duration": 8.726478000000043,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OnePasswordReference"],
+          "fullName": "OnePasswordReference rejects plaintext-like and incomplete values",
+          "status": "passed",
+          "title": "rejects plaintext-like and incomplete values",
+          "duration": 8.260491000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["OnePasswordReference"],
+          "fullName": "OnePasswordReference exposes a schema-derived guard",
+          "status": "passed",
+          "title": "exposes a schema-derived guard",
+          "duration": 8.164502999999968,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591271,
+      "endTime": 1790482591279.7266,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/OnePasswordReference.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization reuses the shared OrganizationId metadata",
+          "status": "passed",
+          "title": "reuses the shared OrganizationId metadata",
+          "duration": 19.50700999999981,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization defines license-tier literals and settings decoding",
+          "status": "passed",
+          "title": "defines license-tier literals and settings decoding",
+          "duration": 19.327764000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization round-trips schema-derived license tiers and settings",
+          "status": "passed",
+          "title": "round-trips schema-derived license tiers and settings",
+          "duration": 27.315655000000106,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization decodes nullable parent organization ids to Option values",
+          "status": "passed",
+          "title": "decodes nullable parent organization ids to Option values",
+          "duration": 19.311639000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization materializes product-entity variants for the organization model",
+          "status": "passed",
+          "title": "materializes product-entity variants for the organization model",
+          "duration": 19.239688000000115,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization extends ProductEntity through the Organization schema definition",
+          "status": "passed",
+          "title": "extends ProductEntity through the Organization schema definition",
+          "duration": 1.101165999999921,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["Organization"],
+          "fullName": "Organization checks tenant-root and parent organization invariants",
+          "status": "passed",
+          "title": "checks tenant-root and parent organization invariants",
+          "duration": 1.0403519999999844,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591379,
+      "endTime": 1790482591407.3157,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/Organization.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["shared-domain schema parity"],
+          "fullName": "shared-domain schema parity keeps EntityId option defaults encoded as optional keys",
+          "status": "passed",
+          "title": "keeps EntityId option defaults encoded as optional keys",
+          "duration": 15.690573000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["shared-domain schema parity"],
+          "fullName": "shared-domain schema parity keeps principal constructor defaults off the encoded wire shape",
+          "status": "passed",
+          "title": "keeps principal constructor defaults off the encoded wire shape",
+          "duration": 15.321333999999979,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["shared-domain schema parity"],
+          "fullName": "shared-domain schema parity keeps fromString byte-identical with the LocalDateFromString codec",
+          "status": "passed",
+          "title": "keeps fromString byte-identical with the LocalDateFromString codec",
+          "duration": 15.29635600000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["shared-domain schema parity"],
+          "fullName": "shared-domain schema parity keeps literal-kit member guards while adding decode statics",
+          "status": "passed",
+          "title": "keeps literal-kit member guards while adding decode statics",
+          "duration": 15.20704899999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants EntityId.EntityIdValue decodes to self",
+          "status": "passed",
+          "title": "EntityId.EntityIdValue decodes to self",
+          "duration": 31.33649700000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants EntityRef.EntityType decodes to self",
+          "status": "passed",
+          "title": "EntityRef.EntityType decodes to self",
+          "duration": 19.47469100000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants EntityRef.EntityRef decodes to self",
+          "status": "passed",
+          "title": "EntityRef.EntityRef decodes to self",
+          "duration": 23.959807000000183,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants primitives.Ed25519Signature decodes to self",
+          "status": "passed",
+          "title": "primitives.Ed25519Signature decodes to self",
+          "duration": 26.090228000000025,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants primitives.EncryptionKeyId decodes to self",
+          "status": "passed",
+          "title": "primitives.EncryptionKeyId decodes to self",
+          "duration": 28.104080000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants primitives.HybridLogicalClock decodes to self",
+          "status": "passed",
+          "title": "primitives.HybridLogicalClock decodes to self",
+          "duration": 13.588645999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants primitives.VectorClock decodes to self",
+          "status": "passed",
+          "title": "primitives.VectorClock decodes to self",
+          "duration": 12.983083000000079,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants SourceKind.SourceKind decodes to self",
+          "status": "passed",
+          "title": "SourceKind.SourceKind decodes to self",
+          "duration": 9.517918000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Organization.LicenseTier decodes to self",
+          "status": "passed",
+          "title": "Organization.LicenseTier decodes to self",
+          "duration": 8.485638000000108,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Membership.Role decodes to self",
+          "status": "passed",
+          "title": "Membership.Role decodes to self",
+          "duration": 8.784366999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Membership.Status decodes to self",
+          "status": "passed",
+          "title": "Membership.Status decodes to self",
+          "duration": 8.726328000000194,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Principal.SystemComponent decodes to self",
+          "status": "passed",
+          "title": "Principal.SystemComponent decodes to self",
+          "duration": 7.57151900000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Rule.Effect decodes to self",
+          "status": "passed",
+          "title": "Rule.Effect decodes to self",
+          "duration": 7.9012870000001385,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Rule.Rule decodes to self",
+          "status": "passed",
+          "title": "Rule.Rule decodes to self",
+          "duration": 10.45186600000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Rule.Ruleset decodes to self",
+          "status": "passed",
+          "title": "Rule.Ruleset decodes to self",
+          "duration": 11.261091000000079,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants ClaimLifecycle.ClaimLifecycle decodes to self",
+          "status": "passed",
+          "title": "ClaimLifecycle.ClaimLifecycle decodes to self",
+          "duration": 10.771686999999929,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants ClaimLifecycle.ClaimLifecycleTransition decodes to self",
+          "status": "passed",
+          "title": "ClaimLifecycle.ClaimLifecycleTransition decodes to self",
+          "duration": 11.43726300000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants OnePasswordReference decodes to self",
+          "status": "passed",
+          "title": "OnePasswordReference decodes to self",
+          "duration": 0.7494439999998121,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants EntityId.Options codec round trip",
+          "status": "passed",
+          "title": "EntityId.Options codec round trip",
+          "duration": 11.09479599999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants EntityId.Definition codec round trip",
+          "status": "passed",
+          "title": "EntityId.Definition codec round trip",
+          "duration": 18.331971000000067,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Principal.ServiceAccountPrincipal codec round trip",
+          "status": "passed",
+          "title": "Principal.ServiceAccountPrincipal codec round trip",
+          "duration": 15.992267999999967,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Principal.AgentPrincipal codec round trip",
+          "status": "passed",
+          "title": "Principal.AgentPrincipal codec round trip",
+          "duration": 15.35361399999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Principal.ConnectorAccountPrincipal codec round trip",
+          "status": "passed",
+          "title": "Principal.ConnectorAccountPrincipal codec round trip",
+          "duration": 14.387877000000117,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "shared-domain schema parity",
+            "round-trips schema-derived values through absorbed invariants"
+          ],
+          "fullName": "shared-domain schema parity round-trips schema-derived values through absorbed invariants Principal.Principal codec round trip",
+          "status": "passed",
+          "title": "Principal.Principal codec round trip",
+          "duration": 13.252549000000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["shared-domain schema parity"],
+          "fullName": "shared-domain schema parity keeps entity-id value statics colocated on the schema",
+          "status": "passed",
+          "title": "keeps entity-id value statics colocated on the schema",
+          "duration": 0.5015720000001238,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591346,
+      "endTime": 1790482591428.2524,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/SchemaParity.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["shared-domain tagged-error declared equivalence"],
+          "fullName": "shared-domain tagged-error declared equivalence excludes EntityRefInvariantError actualId while comparing stable diagnostics",
+          "status": "passed",
+          "title": "excludes EntityRefInvariantError actualId while comparing stable diagnostics",
+          "duration": 2.110981000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591280,
+      "endTime": 1790482591282.111,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/TaggedError.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["User and Membership"],
+          "fullName": "User and Membership decodes shared User rows",
+          "status": "passed",
+          "title": "decodes shared User rows",
+          "duration": 10.925363999999945,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["User and Membership"],
+          "fullName": "User and Membership decodes shared Membership rows",
+          "status": "passed",
+          "title": "decodes shared Membership rows",
+          "duration": 10.607285000000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790482591289,
+      "endTime": 1790482591299.9253,
+      "status": "passed",
+      "message": "",
+      "name": "packages/shared/domain/test/UserMembership.test.ts"
+    }
+  ]
+}

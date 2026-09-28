@@ -1,0 +1,56 @@
+{
+  "beforeSha": "1551e98139",
+  "replacements": 4,
+  "files": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "onlyCanonicalBooleanReplacements": true,
+      "sourceSha256": "4c4dc51378df38f2fa9d5d4486d6276444f3315adc72b123273fa269dd3b9a5b"
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "onlyCanonicalBooleanReplacements": true,
+      "sourceSha256": "b051c48715e44e3ef68b1f07fc8cb0ec5790d515df66db2a74db4b2dc17ecaf3"
+    }
+  ],
+  "proofs": [
+    {
+      "runtime": "node",
+      "passedCases": 9,
+      "failedCases": 0,
+      "wholeCommandSeconds": 3.620507316001749,
+      "sourceStable": true,
+      "loadBefore": [16.7978515625, 9.5263671875, 7.8359375],
+      "loadAfter": [16.73388671875, 9.63427734375, 7.8798828125],
+      "pressureBefore": {
+        "cpu": "some avg10=2.81 avg60=1.00 avg300=0.53 total=236960483\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88250783\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85646974\n",
+        "io": "some avg10=0.15 avg60=0.53 avg300=0.27 total=698090295\nfull avg10=0.04 avg60=0.36 avg300=0.18 total=631759762\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=1.89 avg60=0.93 avg300=0.52 total=236975867\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88250785\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85646976\n",
+        "io": "some avg10=0.10 avg60=0.49 avg300=0.27 total=698091414\nfull avg10=0.03 avg60=0.33 avg300=0.18 total=631760295\n"
+      }
+    },
+    {
+      "runtime": "bun",
+      "passedCases": 9,
+      "failedCases": 0,
+      "wholeCommandSeconds": 1.516402321998612,
+      "sourceStable": true,
+      "loadBefore": [16.73388671875, 9.63427734375, 7.8798828125],
+      "loadAfter": [16.73388671875, 9.63427734375, 7.8798828125],
+      "pressureBefore": {
+        "cpu": "some avg10=1.89 avg60=0.93 avg300=0.52 total=236976030\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88250785\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85646976\n",
+        "io": "some avg10=0.10 avg60=0.49 avg300=0.27 total=698091414\nfull avg10=0.03 avg60=0.33 avg300=0.18 total=631760295\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=1.54 avg60=0.90 avg300=0.52 total=236979932\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=88250790\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85646981\n",
+        "io": "some avg10=0.08 avg60=0.47 avg300=0.27 total=698091531\nfull avg10=0.02 avg60=0.32 avg300=0.18 total=631760369\n"
+      }
+    }
+  ]
+}

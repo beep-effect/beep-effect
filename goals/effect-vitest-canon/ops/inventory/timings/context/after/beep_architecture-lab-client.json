@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/architecture-lab-client",
+  "sourceHead": "3f7667fc4bccb198300f52b189861a29821c51ea",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.321368429009453,
+  "bunWholeCommandSeconds": 2.8688259390037274,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [12.4501953125, 7.64306640625, 6.6552734375],
+  "loadAfter": [12.4501953125, 7.64306640625, 6.6552734375],
+  "pressureBefore": {
+    "cpu": "some avg10=1.13 avg60=0.45 avg300=0.26 total=668201771\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.29 avg60=0.11 avg300=0.02 total=168196802\nfull avg10=0.11 avg60=0.08 avg300=0.02 total=160444564\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781307337\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684327087\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.75 avg60=0.42 avg300=0.25 total=668226353\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.19 avg60=0.10 avg300=0.02 total=168197910\nfull avg10=0.07 avg60=0.07 avg300=0.01 total=160445026\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781312289\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684330409\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "36014928e93218db21312aa068f7732898e0351b2fb2e61c86ffe2ef023a3129"
+    },
+    {
+      "file": "packages/architecture-lab/client/package.json",
+      "sha256": "436c069b957c22ba1d2b58dfd56eed529fa92d145e4dccf551277f0c2a4020f4"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
+      "sha256": "06d33657829a0afcfc130903d676ea7fbd2522c4518a6df2e3f95237a6f90dc0"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/index.ts",
+      "sha256": "58227417e6c1b4a7056ba603998c6e4c984231b2f03b398bcea352dc0fb9df13"
+    },
+    {
+      "file": "packages/architecture-lab/client/src/index.ts",
+      "sha256": "2a7cea2700282c6585f7dedb137fce5a773fb9f1b8649f1cf6d2d18bec4cbdc9"
+    },
+    {
+      "file": "packages/architecture-lab/client/test/WorkItemClient.test.ts",
+      "sha256": "165c5a471d5936e902cb6d797fa759344761b72dbb7a6115c140752cb277d2c2"
+    }
+  ],
+  "environmentMode": "Architecture-lab configured suites; server integration uses actual in-process PGlite, btree_gist and migrations with original deadlines; no external socket or substitute repository.",
+  "bunProof": {
+    "passedTests": 2,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [12.4501953125, 7.64306640625, 6.6552734375],
+    "loadAfter": [12.013671875, 7.63232421875, 6.6572265625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.75 avg60=0.42 avg300=0.25 total=668226373\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.19 avg60=0.10 avg300=0.02 total=168197910\nfull avg10=0.07 avg60=0.07 avg300=0.01 total=160445026\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781312289\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684330409\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.16 avg60=0.51 avg300=0.27 total=668378040\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.16 avg60=0.10 avg300=0.02 total=168200571\nfull avg10=0.06 avg60=0.07 avg300=0.01 total=160445745\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781313510\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684330879\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

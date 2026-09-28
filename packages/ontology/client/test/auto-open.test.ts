@@ -16,9 +16,11 @@ import {
   OpenOntologyDocumentResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
+import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
 import type { OpenOntologyDocumentInput } from "@beep/ontology-client/aggregates/Session";
 
@@ -63,17 +65,19 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
     "opens the seeded tutorial when the app session starts with no document",
     Effect.fnUntraced(function* () {
       const counter = { invocations: 0 };
-      const registry = registryWithClient(countingOpenClient(counter));
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(countingOpenClient(counter))),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-      registry.mount(ontologyWorkbenchAutoOpenAtom);
+      yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);
       registry.get(ontologyWorkbenchAutoOpenAtom);
       yield* AtomRegistry.getResult(registry, openOntologyDocumentAtom);
 
       expect(counter.invocations).toBe(1);
       expect(O.getOrNull(registry.get(ontologyPathAtom))).toBe(ontologyWorkbenchSeedPath);
-      expect(O.isSome(registry.get(ontologySessionAtom))).toBe(true);
-      expect(O.isNone(registry.get(ontologyDocumentErrorAtom))).toBe(true);
-      registry.dispose();
+      pipe(registry.get(ontologySessionAtom), O.isSome, assertTrue);
+      assertNone(registry.get(ontologyDocumentErrorAtom));
     })
   );
 
@@ -81,7 +85,10 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
     "leaves an already-open document alone",
     Effect.fnUntraced(function* () {
       const counter = { invocations: 0 };
-      const registry = registryWithClient(countingOpenClient(counter));
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(countingOpenClient(counter))),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const openSession = createSession(
         CreateSessionInput.make({
           id: ontologySessionIdForPath(materialsPath),
@@ -91,13 +98,12 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
       registry.set(ontologySessionAtom, O.some(openSession));
       registry.set(ontologyPathAtom, O.some(materialsPath));
 
-      registry.mount(ontologyWorkbenchAutoOpenAtom);
+      yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);
       registry.get(ontologyWorkbenchAutoOpenAtom);
 
       expect(counter.invocations).toBe(0);
-      expect(AsyncResult.isInitial(registry.get(openOntologyDocumentAtom))).toBe(true);
+      pipe(AsyncResult.isInitial(registry.get(openOntologyDocumentAtom)), assertTrue);
       expect(O.getOrNull(registry.get(ontologyPathAtom))).toBe(materialsPath);
-      registry.dispose();
       yield* Effect.void;
     })
   );
@@ -106,9 +112,15 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
     "attempts once per app session and never re-opens after the document goes away",
     Effect.fnUntraced(function* () {
       const counter = { invocations: 0 };
-      const registry = registryWithClient(countingOpenClient(counter));
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(countingOpenClient(counter))),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-      const unmount = registry.mount(ontologyWorkbenchAutoOpenAtom);
+      const unmount = yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(ontologyWorkbenchAutoOpenAtom)),
+        (release) => Effect.sync(release)
+      );
       registry.get(ontologyWorkbenchAutoOpenAtom);
       yield* AtomRegistry.getResult(registry, openOntologyDocumentAtom);
       expect(counter.invocations).toBe(1);
@@ -118,13 +130,12 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
       unmount();
       registry.set(ontologySessionAtom, O.none());
       registry.set(ontologyPathAtom, O.none());
-      registry.mount(ontologyWorkbenchAutoOpenAtom);
+      yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);
       registry.get(ontologyWorkbenchAutoOpenAtom);
 
       expect(counter.invocations).toBe(1);
-      expect(O.isNone(registry.get(ontologySessionAtom))).toBe(true);
-      expect(O.isNone(registry.get(ontologyPathAtom))).toBe(true);
-      registry.dispose();
+      assertNone(registry.get(ontologySessionAtom));
+      assertNone(registry.get(ontologyPathAtom));
     })
   );
 
@@ -140,23 +151,28 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
 
         return Effect.die(`unexpected ontology RPC: ${tag}`);
       }) as unknown as OntologyClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-      const unmount = registry.mount(ontologyWorkbenchAutoOpenAtom);
+      const unmount = yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(ontologyWorkbenchAutoOpenAtom)),
+        (release) => Effect.sync(release)
+      );
       registry.get(ontologyWorkbenchAutoOpenAtom);
       // The open action absorbs its own failure, so its result still settles.
       yield* AtomRegistry.getResult(registry, openOntologyDocumentAtom);
 
       expect(invocations).toBe(1);
-      expect(O.isNone(registry.get(ontologySessionAtom))).toBe(true);
-      expect(O.isNone(registry.get(ontologyPathAtom))).toBe(true);
+      assertNone(registry.get(ontologySessionAtom));
+      assertNone(registry.get(ontologyPathAtom));
       expect(O.getOrNull(registry.get(ontologyDocumentErrorAtom))).toBe("The tutorial document could not be opened.");
 
       unmount();
-      registry.mount(ontologyWorkbenchAutoOpenAtom);
+      yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);
       registry.get(ontologyWorkbenchAutoOpenAtom);
       expect(invocations).toBe(1);
-      registry.dispose();
     })
   );
 });

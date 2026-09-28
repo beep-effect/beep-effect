@@ -1,0 +1,95 @@
+{
+  "rows": 149,
+  "statuses": {
+    "fixed": 78,
+    "exception": 9,
+    "open": 62
+  },
+  "historicalDetectorIdsRetained": 67,
+  "upstreamAttributedIds": 5,
+  "currentDetectorExceptions": 6,
+  "subjectLoggerExceptions": 5,
+  "admittedFiles": 19,
+  "unrelatedRootRawBlocksPreserved": true,
+  "unrelatedRootRows": 7832,
+  "unrelatedCensusRawBlocksPreserved": true,
+  "unrelatedLedgerHashesPreserved": 683,
+  "sourceHashes": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "sha256": "158aec828b0c5363d9048f5923661df5dd695e82cb303906d205cc1e322852c0"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "sha256": "7249c4fd9d3fbd3b1d337652dba5c2349f203f9ed578c28f799d277bfee408a2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "sha256": "ab70e865f2f61e15f608b19bf22303038e67198f5b0a4272a8c20b0f64db2d7d"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "sha256": "599d447877d0c6a29fb7ec14314a2d97dd0d06b46b571d3f1920d05da78e76ff"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "sha256": "0f1baefa5ac2a153f419a3bf072cfb0e78e5c54de6605a17857c1b5c7d7a28d7"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "sha256": "db7e9501788782ca2e5dfee668b24b7e64843b650baa49677a75190398172b05"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "sha256": "f496bfdf8975f5d512764c532cba29ff9ebb756d2d29918f135ed018b11a8691"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "sha256": "507bf5782162b4b7a1cd4f9aef51ee504b016c6ec4e670494ba145f99781c912"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "sha256": "ebc731f6695997744444b89c8e0dc00629fa36d9be4a2b85be1ea79d63a84a45"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "sha256": "50525eca7804001ea428cc47c7c25bdc1831c3a957dae3687025790fd80a73eb"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "sha256": "fa7ab99b41808231b1899da1662c18d71fa90dca867da0279881159743dac1d5"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "sha256": "f2d296781c16cf41fad29e070928c30974fc6c7ffd9efd070fedd5c01237b3dc"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "sha256": "c248d57ff0648d47f96c3d0e80c3d108029dc9d5f351c2b834110c794d664e5b"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "sha256": "692c63eca6033cb4fe6d863fe551275778164d22227c2f0a3e5d9698d5c41c50"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "sha256": "a60d45f005d2eb8435babf8b016ebf1626ac00296512218a3ee0ff1edceabe13"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "8c486a5ff0226b2a10590ceaeb2e5b75b0d4954700033fdbb202b72bc999e65a"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "sha256": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "sha256": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8"
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "sha256": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146"
+    }
+  ]
+}

@@ -13,11 +13,12 @@ import { Document, P, Text } from "@beep/md";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { CuidState } from "@beep/schema/Cuid";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread";
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -44,7 +45,7 @@ const quiesce = Effect.fnUntraced(function* () {
 });
 
 describe("Workspace ThreadStore driver failures", { concurrent: false }, () => {
-  layer(UnmigratedThreadStoreLayer, { timeout: "2 minutes" })((it) => {
+  it.layer(UnmigratedThreadStoreLayer, { timeout: "2 minutes" })((it) => {
     it.effect(
       "redacts every ThreadStore statement to ThreadStoreUnavailable",
       Effect.fnUntraced(function* () {

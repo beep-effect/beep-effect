@@ -31,9 +31,10 @@ import {
   findLossySchemaPlaceholders,
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
+import { it } from "@beep/test-runner";
 import { currentHostArchitecture, currentHostPlatform } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Config, Context, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
@@ -121,6 +122,7 @@ const ensurePinnedBinaryStaged = Effect.gen(function* () {
   const binaryPath = path.join(stagePrefix, "node_modules", ".bin", "openclaw");
   const alreadyStaged = yield* fs.exists(binaryPath);
   if (!alreadyStaged) {
+    yield* Effect.logInfo("OpenClaw acquisition binary:install").pipe(Effect.when(acquisitionTraceEnabled));
     const [stdout, stderr, exitCode] = yield* runCapturedProcess(
       ambientProcess("npm", ["install", "--prefix", stagePrefix, "--no-save", "--package-lock=false", stagePackage])
     );
@@ -182,6 +184,7 @@ const isUsableNodeDirectory = Effect.fnUntraced(function* (directory: string) {
   if (!exists) {
     return false;
   }
+  yield* Effect.logInfo("OpenClaw acquisition node:probe").pipe(Effect.when(acquisitionTraceEnabled));
   const [stdout, , exitCode] = yield* runCapturedProcess(
     ambientProcess(candidate, ["-p", 'process.versions.bun ? "bun" : process.version'])
   ).pipe(Effect.orElseSucceed(() => ["", "", 1] as const));
@@ -205,6 +208,7 @@ const ensurePinnedNodeStaged = Effect.gen(function* () {
     return binDir;
   }
   yield* fs.makeDirectory(stageDir, { recursive: true });
+  yield* Effect.logInfo("OpenClaw acquisition node:download").pipe(Effect.when(acquisitionTraceEnabled));
   const url = `https://nodejs.org/dist/v${compatibility.nodeVersion}/${distribution}.tar.gz`;
   const [stdout, stderr, exitCode] = yield* runCapturedProcess(
     ambientProcess("sh", ["-c", `curl -fsSL '${url}' | tar -xz -C '${stageDir}'`])
@@ -249,11 +253,22 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
   return O.some(yield* ensurePinnedNodeStaged);
 });
 
+const acquisitionTraceEnabled = Effect.gen(function* () {
+  const explicit = yield* Config.option(Config.String("BEEP_TEST_TRACE"));
+  const ci = yield* Config.Boolean("CI").pipe(Config.withDefault(false));
+  return O.contains(explicit, "1") || ci;
+}).pipe(Effect.orElseSucceed(() => false));
+
 const makeWorkbench = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  yield* Effect.logInfo("OpenClaw acquisition binary:start").pipe(Effect.when(acquisitionTraceEnabled));
   const binaryPath = yield* ensurePinnedBinaryStaged;
+  yield* Effect.logInfo("OpenClaw acquisition binary:ready").pipe(Effect.when(acquisitionTraceEnabled));
+  yield* Effect.logInfo("OpenClaw acquisition node:resolve").pipe(Effect.when(acquisitionTraceEnabled));
   const nodeBinDir = yield* resolveNodeBinDirectory;
+  yield* Effect.logInfo("OpenClaw acquisition node:ready").pipe(Effect.when(acquisitionTraceEnabled));
+  yield* Effect.logInfo("OpenClaw acquisition workbench:start").pipe(Effect.when(acquisitionTraceEnabled));
   const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-openclaw-it-" });
   const configDir = path.join(rootDir, "configs");
   const homeDir = path.join(rootDir, "home");
@@ -270,6 +285,7 @@ const makeWorkbench = Effect.gen(function* () {
     Effect.flatMap(fs.writeFileString(stubPath, stubScript), () => fs.chmod(stubPath, 0o755))
   );
 
+  yield* Effect.logInfo("OpenClaw acquisition workbench:ready").pipe(Effect.when(acquisitionTraceEnabled));
   return OpenclawItWorkbench.of({
     binaryPath,
     configDir,
@@ -321,7 +337,7 @@ const writeRenderedGoldenConfig = Effect.fnUntraced(function* (bench: OpenclawIt
 });
 
 describe("@beep/openclaw pinned-binary acceptance", () => {
-  layer(acceptanceLayer, { timeout: "10 minutes" })((it) => {
+  it.layer(acceptanceLayer, { timeout: "10 minutes", excludeTestServices: true })("native pinned binary", (it) => {
     it.effect(
       "verifies the staged binary --version against the pinned compatibility set",
       Effect.fnUntraced(function* () {

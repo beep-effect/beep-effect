@@ -1,0 +1,201 @@
+{
+  "package": "@beep/repo-ai-metrics",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T18:17:34.752000+00:00",
+  "totalMs": 11199.18115234375,
+  "testCount": 377,
+  "files": [
+    {
+      "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
+      "ms": 861.8115234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/TaggedErrors.equivalence.test.ts",
+      "ms": 4.147705078125,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
+      "ms": 6.320556640625,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "ms": 397.219970703125,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "ms": 2945.671142578125,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts",
+      "ms": 69.628173828125,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "ms": 180.56298828125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
+      "ms": 14.66357421875,
+      "tests": 15
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "ms": 46.7275390625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts",
+      "ms": 6.76171875,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "ms": 7.1201171875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/forwarder.test.ts",
+      "ms": 7.17919921875,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/harness-ledger.test.ts",
+      "ms": 49.06201171875,
+      "tests": 21
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "ms": 1297.3994140625,
+      "tests": 69
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "ms": 127.58544921875,
+      "tests": 36
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "ms": 1181.109130859375,
+      "tests": 24
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "ms": 5445.18115234375,
+      "tests": 52
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/install.test.ts",
+      "ms": 15.758056640625,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/mirror.test.ts",
+      "ms": 6.76171875,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/otlp.test.ts",
+      "ms": 5.583984375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/privacy.test.ts",
+      "ms": 10.18212890625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "ms": 74.348876953125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/scorecard.test.ts",
+      "ms": 31.8017578125,
+      "tests": 21
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "ms": 843.47265625,
+      "tests": 20
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
+      "ms": 83.8203125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
+      "ms": 3.862060546875,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+      "ms": 71.653564453125,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
+      "ms": 12.2275390625,
+      "tests": 10
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "testName": "AI metrics encrypted raw archive envelope accepts ciphertext larger than the regex backtracking limit",
+      "ms": 1038.0363530000004
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "testName": "@beep/repo-ai-metrics identity registry fails loudly rather than hanging when a stale lock is never released",
+      "ms": 1025.140786
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "testName": "AI metrics encrypted raw archive envelope writes and decrypts a large raw archive object",
+      "ms": 1011.5035370000005
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "testName": "@beep/repo-ai-metrics retains repeated derived ingest runs for the same source records",
+      "ms": 929.6996920000001
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "testName": "AI metrics encrypted raw archive envelope still rejects corrupted large ciphertext",
+      "ms": 870.7719319999997
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
+      "testName": "flight record generation reconciles terminal outcomes and provenance in mechanical records",
+      "ms": 861.8115950000001
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "testName": "@beep/repo-ai-metrics records labels, benchmark results, and a weekly config-impact report without raw text",
+      "ms": 458.16807699999936
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "testName": "@beep/repo-ai-metrics lists retained inventory and replays a restore drill into disposable derived storage",
+      "ms": 352.28803900000094
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "testName": "@beep/repo-ai-metrics supports explicit-window compact and delete drills on disposable data roots",
+      "ms": 308.18107099999906
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "testName": "@beep/repo-ai-metrics supports disabled and latest-only Parquet export modes",
+      "ms": 287.33788599999934
+    }
+  ]
+}

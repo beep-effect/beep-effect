@@ -1,0 +1,86 @@
+{
+  "package": "@beep/law-practice-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T01:36:13.967000+00:00",
+  "totalMs": 6456.28076171875,
+  "testCount": 70,
+  "files": [
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "ms": 40.757568359375,
+      "tests": 27
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "ms": 19.9912109375,
+      "tests": 18
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/PatentClaimCandidate.test.ts",
+      "ms": 11.38037109375,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "ms": 53.28076171875,
+      "tests": 16
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.402099609375,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas (EntityInput)",
+      "ms": 51.743343000000095
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas (IrToLawExtractionErrorReason)",
+      "ms": 50.358690000000024
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas",
+      "ms": 49.721277999999984
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas (PracticeKgCandidateClaimToolRow)",
+      "ms": 26.879479000000174
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas (OfficeActionReviewInput)",
+      "ms": 26.85889700000007
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one releases only once every current event is disposed",
+      "ms": 19.682322000000568
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one stays blocked when only one of the two references is disposed",
+      "ms": 19.232068000000254
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — the quantifier above cardinality one gates on both current events when neither is disposed",
+      "ms": 18.089457999999468
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "testName": "CandorPolicy — one AI-discovered event stops blocking once a disposition covers the exact observation version",
+      "ms": 13.907154999999875
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/law-practice-use-cases schema parity round-trips schema-derived values through their source schemas (IrToLawExtractionError)",
+      "ms": 13.2806700000001
+    }
+  ]
+}

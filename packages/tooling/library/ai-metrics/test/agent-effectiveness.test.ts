@@ -30,10 +30,12 @@ import {
   makeAgentEffectivenessPromptBundle,
   syncAgentEffectivenessPhoenix,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
@@ -485,801 +487,830 @@ const phoenixWriteSdk = (
 });
 
 describe("@beep/repo-ai-metrics agent-effectiveness", () => {
-  it.effect("reports unavailable evidence as data instead of failing", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            })
-          );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("reports unavailable evidence as data instead of failing", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: true,
+                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+              })
+            );
 
-          expect(report.phoenix.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
-          expect(report.aiMetrics.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
-          expect(report.jsdocWorkerEval.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
-          expect(report.summary.status).toBe(AgentEffectivenessStatus.Enum.warning);
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+            expect(report.phoenix.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
+            expect(report.aiMetrics.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
+            expect(report.jsdocWorkerEval.status).toBe(AgentEffectivenessStatus.Enum.unavailable);
+            expect(report.summary.status).toBe(AgentEffectivenessStatus.Enum.warning);
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("decodes the live Phoenix trace annotation field shape", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: false,
-              phoenixBaseUrl: "https://phoenix.test",
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            })
-          );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("decodes the live Phoenix trace annotation field shape", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: false,
+                phoenixBaseUrl: "https://phoenix.test",
+                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+              })
+            );
 
-          expect(report.phoenix.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(report.phoenix.projectCount).toBe(1);
-          expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
-          expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
-        }).pipe(provideScopedLayer(phoenixRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+            expect(report.phoenix.status).toBe(AgentEffectivenessStatus.Enum.passed);
+            expect(report.phoenix.projectCount).toBe(1);
+            expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
+            expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
+          }).pipe(provideScopedLayer(phoenixRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("keeps Phoenix readable when the per-project aggregates do not return", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: false,
-              phoenixBaseUrl: "https://phoenix.test",
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            })
-          );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("keeps Phoenix readable when the per-project aggregates do not return", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: false,
+                phoenixBaseUrl: "https://phoenix.test",
+                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+              })
+            );
 
-          // Reachable, not `unavailable`: one slow aggregate must not take the section down.
-          expect(report.phoenix.projectCount).toBe(1);
-          expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
-          expect(report.phoenix.projects[0]?.name).toBe("beep-jsdoc-worker-eval");
-          // Cheap identity fields still populate.
-          expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
-          // Aggregates report as not-measured rather than as zero or false, so the
-          // report cannot be misread as "Phoenix has no traces".
-          expect(
+            // Reachable, not `unavailable`: one slow aggregate must not take the section down.
+            expect(report.phoenix.projectCount).toBe(1);
+            expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
+            expect(report.phoenix.projects[0]?.name).toBe("beep-jsdoc-worker-eval");
+            // Cheap identity fields still populate.
+            expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
+            // Aggregates report as not-measured rather than as zero or false, so the
+            // report cannot be misread as "Phoenix has no traces".
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.hasTraces),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(
+              O.isNone,
+              assertTrue
+            );
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.recordCount),
-              O.isNone
-            )
-          ).toBe(true);
-          expect(
+              O.isNone,
+              assertTrue
+            );
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.traceCount),
-              O.isNone
+              O.isNone,
+              assertTrue
+            );
+            pipe(Str.includes("unmeasured")(report.phoenix.message), assertTrue);
+            // The message must name the mode it actually hit. Reporting a rejected
+            // query as a timeout sends an operator after store size instead of the
+            // server's own refusal.
+            pipe(Str.includes("HTTP 500")(report.phoenix.message), assertTrue);
+            pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+          }).pipe(
+            provideScopedLayer(
+              phoenixAggregatesUnavailableRuntimeLayer(
+                path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+                phoenixAggregateRejected
+              )
             )
-          ).toBe(true);
-          expect(Str.includes("unmeasured")(report.phoenix.message)).toBe(true);
-          // The message must name the mode it actually hit. Reporting a rejected
-          // query as a timeout sends an operator after store size instead of the
-          // server's own refusal.
-          expect(Str.includes("HTTP 500")(report.phoenix.message)).toBe(true);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
-        }).pipe(
-          provideScopedLayer(
-            phoenixAggregatesUnavailableRuntimeLayer(
-              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-              phoenixAggregateRejected
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("distinguishes an undecodable aggregate response from a rejected one", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: false,
-              phoenixBaseUrl: "https://phoenix.test",
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            })
           );
+        })
+      )
+    );
+  });
 
-          expect(report.phoenix.projectCount).toBe(1);
-          expect(
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("distinguishes an undecodable aggregate response from a rejected one", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: false,
+                phoenixBaseUrl: "https://phoenix.test",
+                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+              })
+            );
+
+            expect(report.phoenix.projectCount).toBe(1);
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.traceCount),
-              O.isNone
+              O.isNone,
+              assertTrue
+            );
+            pipe(Str.includes("could not be decoded")(report.phoenix.message), assertTrue);
+            // A 200 carrying an unreadable body is not a rejection and not a timeout.
+            pipe(Str.includes("HTTP")(report.phoenix.message), assertFalse);
+            pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+          }).pipe(
+            provideScopedLayer(
+              phoenixAggregatesUnavailableRuntimeLayer(
+                path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+                phoenixAggregateUndecodable
+              )
             )
-          ).toBe(true);
-          expect(Str.includes("could not be decoded")(report.phoenix.message)).toBe(true);
-          // A 200 carrying an unreadable body is not a rejection and not a timeout.
-          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
-        }).pipe(
-          provideScopedLayer(
-            phoenixAggregatesUnavailableRuntimeLayer(
-              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-              phoenixAggregateUndecodable
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("reports an aggregate query that never reached Phoenix as unreachable", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: false,
-              phoenixBaseUrl: "https://phoenix.test",
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            })
           );
+        })
+      )
+    );
+  });
 
-          // The inventory still answered, so the section stays readable rather
-          // than collapsing to `unavailable`.
-          expect(report.phoenix.projectCount).toBe(1);
-          expect(
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("reports an aggregate query that never reached Phoenix as unreachable", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: false,
+                phoenixBaseUrl: "https://phoenix.test",
+                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+              })
+            );
+
+            // The inventory still answered, so the section stays readable rather
+            // than collapsing to `unavailable`.
+            expect(report.phoenix.projectCount).toBe(1);
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.traceCount),
-              O.isNone
+              O.isNone,
+              assertTrue
+            );
+            pipe(Str.includes("could not be reached")(report.phoenix.message), assertTrue);
+            pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+            pipe(Str.includes("HTTP")(report.phoenix.message), assertFalse);
+          }).pipe(
+            provideScopedLayer(
+              phoenixAggregatesUnavailableRuntimeLayer(
+                path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+                phoenixAggregateUnreachable
+              )
             )
-          ).toBe(true);
-          expect(Str.includes("could not be reached")(report.phoenix.message)).toBe(true);
-          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
-          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
-        }).pipe(
-          provideScopedLayer(
-            phoenixAggregatesUnavailableRuntimeLayer(
-              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-              phoenixAggregateUnreachable
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          );
+        })
+      )
+    );
+  });
 
-  it.effect("resolves the default worker-eval manifest to the latest raw report", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const initiativeRoot = path.join(tmpDir, "jsdoc-worker-eval");
-          const manifestPath = path.join(initiativeRoot, "ops", "manifest.json");
-          const rawReportPath = path.join(initiativeRoot, "history", "outputs", "latest-worker-eval.json");
-          yield* writeText(rawReportPath, workerReportJson);
-          yield* writeText(
-            manifestPath,
-            `{
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("resolves the default worker-eval manifest to the latest raw report", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const initiativeRoot = path.join(tmpDir, "jsdoc-worker-eval");
+            const manifestPath = path.join(initiativeRoot, "ops", "manifest.json");
+            const rawReportPath = path.join(initiativeRoot, "history", "outputs", "latest-worker-eval.json");
+            yield* writeText(rawReportPath, workerReportJson);
+            yield* writeText(
+              manifestPath,
+              `{
               "evidence": [
                 { "raw": "history/outputs/older-worker-eval.json" },
                 { "raw": "history/outputs/latest-worker-eval.json" }
               ]
             }`
-          );
+            );
 
-          const report = yield* makeAgentEffectivenessDoctorReport(
-            AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: manifestPath,
-            })
-          );
-
-          expect(report.jsdocWorkerEval.reportPath).toBe(rawReportPath);
-          expect(report.jsdocWorkerEval.completedPackets).toBe(2);
-          expect(report.jsdocWorkerEval.policyViolationCodes).toEqual(["missing-example"]);
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("plans sanitized worker annotations without draft JSDoc bodies", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          yield* writeText(workerReportPath, workerReportJson);
-
-          const plan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
-              doctor: AgentEffectivenessDoctorInput.make({
+            const report = yield* makeAgentEffectivenessDoctorReport(
+              AgentEffectivenessDoctorInput.make({
                 dataRoot,
                 noPhoenix: true,
-                workerEvalReportPath: workerReportPath,
-              }),
-            })
-          );
-          const json = yield* agentEffectivenessAnnotationPlanToJson(plan);
-          const check = makeAgentEffectivenessAnnotationCheckReport(plan);
+                workerEvalReportPath: manifestPath,
+              })
+            );
 
-          expect(json).not.toContain("draftJsDoc");
-          expect(json).not.toContain("@example");
-          expect(check.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(
+            expect(report.jsdocWorkerEval.reportPath).toBe(rawReportPath);
+            expect(report.jsdocWorkerEval.completedPackets).toBe(2);
+            expect(report.jsdocWorkerEval.policyViolationCodes).toEqual(["missing-example"]);
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("plans sanitized worker annotations without draft JSDoc bodies", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            yield* writeText(workerReportPath, workerReportJson);
+
+            const plan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot,
+                  noPhoenix: true,
+                  workerEvalReportPath: workerReportPath,
+                }),
+              })
+            );
+            const json = yield* agentEffectivenessAnnotationPlanToJson(plan);
+            const check = makeAgentEffectivenessAnnotationCheckReport(plan);
+
+            expect(json).not.toContain("draftJsDoc");
+            expect(json).not.toContain("@example");
+            expect(check.status).toBe(AgentEffectivenessStatus.Enum.passed);
             pipe(
               plan.annotations,
-              A.some((annotation) => annotation.name === "worker.policy_violation")
-            )
-          ).toBe(true);
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+              A.some((annotation) => annotation.name === "worker.policy_violation"),
+              assertTrue
+            );
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("disambiguates multi-entry scorecard and worker annotation ids", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          yield* writeText(workerReportPath, workerReportJsonWithMultipleViolations);
-          yield* writeText(path.join(dataRoot, "derived", ".keep"), "");
-          yield* seedScorecardWithCoverageGaps(`["no_labels","no_benchmark_runs"]`);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("disambiguates multi-entry scorecard and worker annotation ids", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            yield* writeText(workerReportPath, workerReportJsonWithMultipleViolations);
+            yield* writeText(path.join(dataRoot, "derived", ".keep"), "");
+            yield* seedScorecardWithCoverageGaps(`["no_labels","no_benchmark_runs"]`);
 
-          const plan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
-              doctor: AgentEffectivenessDoctorInput.make({
-                dataRoot,
-                noPhoenix: true,
-                workerEvalReportPath: workerReportPath,
-              }),
-            })
-          );
-          const annotationIds = pipe(
-            plan.annotations,
-            A.map((annotation) => annotation.annotationId)
-          );
-          const gapIds = pipe(
-            plan.annotations,
-            A.filter((annotation) => annotation.name === "scorecard.gap"),
-            A.map((annotation) => annotation.annotationId)
-          );
-          const workerViolationIds = pipe(
-            plan.annotations,
-            A.filter((annotation) => annotation.name === "worker.policy_violation"),
-            A.map((annotation) => annotation.annotationId)
-          );
+            const plan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot,
+                  noPhoenix: true,
+                  workerEvalReportPath: workerReportPath,
+                }),
+              })
+            );
+            const annotationIds = pipe(
+              plan.annotations,
+              A.map((annotation) => annotation.annotationId)
+            );
+            const gapIds = pipe(
+              plan.annotations,
+              A.filter((annotation) => annotation.name === "scorecard.gap"),
+              A.map((annotation) => annotation.annotationId)
+            );
+            const workerViolationIds = pipe(
+              plan.annotations,
+              A.filter((annotation) => annotation.name === "worker.policy_violation"),
+              A.map((annotation) => annotation.annotationId)
+            );
 
-          expect(A.length(annotationIds)).toBe(A.length(A.dedupe(annotationIds)));
-          expect(gapIds).toEqual([
-            "ai-metrics:scorecard:scorecard-test:scorecard.gap:no_labels",
-            "ai-metrics:scorecard:scorecard-test:scorecard.gap:no_benchmark_runs",
-          ]);
-          expect(workerViolationIds).toEqual([
-            "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-example",
-            "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-since",
-            "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:value",
-          ]);
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+            expect(A.length(annotationIds)).toBe(A.length(A.dedupe(annotationIds)));
+            expect(gapIds).toEqual([
+              "ai-metrics:scorecard:scorecard-test:scorecard.gap:no_labels",
+              "ai-metrics:scorecard:scorecard-test:scorecard.gap:no_benchmark_runs",
+            ]);
+            expect(workerViolationIds).toEqual([
+              "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-example",
+              "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:missing-since",
+              "jsdoc-worker-eval:worker-report:jsdoc-worker-eval-latest:worker.policy_violation:value",
+            ]);
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("disambiguates relabeled task annotations by label id", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          yield* writeText(path.join(dataRoot, "derived", ".keep"), "");
-          yield* seedOutcomeLabel({
-            labeledAtEpochMillis: 1,
-            labelId: "label-first",
-          });
-          yield* seedOutcomeLabel({
-            labeledAtEpochMillis: 2,
-            labelId: "label-second",
-          });
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("disambiguates relabeled task annotations by label id", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            yield* writeText(path.join(dataRoot, "derived", ".keep"), "");
+            yield* seedOutcomeLabel({
+              labeledAtEpochMillis: 1,
+              labelId: "label-first",
+            });
+            yield* seedOutcomeLabel({
+              labeledAtEpochMillis: 2,
+              labelId: "label-second",
+            });
 
-          const plan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
-              doctor: AgentEffectivenessDoctorInput.make({
-                dataRoot,
-                noPhoenix: true,
-                workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-              }),
-            })
-          );
-          const labelIds = pipe(
-            plan.annotations,
-            A.filter((annotation) => annotation.targetRef === "agent-task-relabeled"),
-            A.map((annotation) => annotation.annotationId)
-          );
-          const check = makeAgentEffectivenessAnnotationCheckReport(plan);
+            const plan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot,
+                  noPhoenix: true,
+                  workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+                }),
+              })
+            );
+            const labelIds = pipe(
+              plan.annotations,
+              A.filter((annotation) => annotation.targetRef === "agent-task-relabeled"),
+              A.map((annotation) => annotation.annotationId)
+            );
+            const check = makeAgentEffectivenessAnnotationCheckReport(plan);
 
-          expect(check.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(A.length(labelIds)).toBe(8);
-          expect(A.length(labelIds)).toBe(A.length(A.dedupe(labelIds)));
-          expect(labelIds).toEqual([
-            "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.passed:label-second",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.rating:label-second",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.interventions:label-second",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.follow_up_fix:label-second",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.passed:label-first",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.rating:label-first",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.interventions:label-first",
-            "ai-metrics:agent-task:agent-task-relabeled:agent.follow_up_fix:label-first",
-          ]);
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+            expect(check.status).toBe(AgentEffectivenessStatus.Enum.passed);
+            expect(A.length(labelIds)).toBe(8);
+            expect(A.length(labelIds)).toBe(A.length(A.dedupe(labelIds)));
+            expect(labelIds).toEqual([
+              "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.passed:label-second",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.rating:label-second",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.interventions:label-second",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.follow_up_fix:label-second",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.passed:label-first",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.outcome.rating:label-first",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.interventions:label-first",
+              "ai-metrics:agent-task:agent-task-relabeled:agent.follow_up_fix:label-first",
+            ]);
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("builds sanitized Phoenix dataset, prompt, and experiment bundles", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          yield* writeText(workerReportPath, workerReportJson);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("builds sanitized Phoenix dataset, prompt, and experiment bundles", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            yield* writeText(workerReportPath, workerReportJson);
 
-          const plan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
-              doctor: AgentEffectivenessDoctorInput.make({
-                dataRoot,
-                noPhoenix: true,
-                workerEvalReportPath: workerReportPath,
-              }),
-            })
-          );
-          const datasetBundle = makeAgentEffectivenessDatasetBundle(plan.doctor);
-          const promptBundle = makeAgentEffectivenessPromptBundle(plan.generatedAt);
-          const experimentBundle = makeAgentEffectivenessExperimentBundle(datasetBundle);
-          const datasetJson = yield* agentEffectivenessDatasetBundleToJson(datasetBundle);
+            const plan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot,
+                  noPhoenix: true,
+                  workerEvalReportPath: workerReportPath,
+                }),
+              })
+            );
+            const datasetBundle = makeAgentEffectivenessDatasetBundle(plan.doctor);
+            const promptBundle = makeAgentEffectivenessPromptBundle(plan.generatedAt);
+            const experimentBundle = makeAgentEffectivenessExperimentBundle(datasetBundle);
+            const datasetJson = yield* agentEffectivenessDatasetBundleToJson(datasetBundle);
 
-          expect(
-            pipe(
-              datasetBundle.datasets,
-              A.map((dataset) => dataset.kind)
-            )
-          ).toEqual([
-            "agent-loop-health",
-            "agent-outcomes",
-            "agent-config-snapshots",
-            "source-coverage",
-            "jsdoc-worker-model-suitability",
-          ]);
-          expect(promptBundle.prompts.length).toBe(2);
-          expect(experimentBundle.experiments.length).toBe(datasetBundle.datasets.length);
-          expect(datasetJson).not.toContain("draftJsDoc");
-          expect(datasetJson).not.toContain("@example");
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("keeps Phoenix sync dry-run by default and writes only with confirmation", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const calls = {
-          annotations: A.empty<string>(),
-          appends: A.empty<string>(),
-          datasets: A.empty<string>(),
-          experiments: A.empty<string>(),
-          prompts: A.empty<string>(),
-        };
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
-            doctor: AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: workerReportPath,
-            }),
-          });
-          yield* writeText(workerReportPath, workerReportJson);
-
-          const dryRun = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({ annotationPlan })
-          );
-          const blocked = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({
-              annotationPlan,
-              dryRun: false,
-            })
-          );
-          const written = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({
-              annotationPlan,
-              confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
-              dryRun: false,
-            })
-          );
-
-          expect(dryRun.dryRun).toBe(true);
-          expect(dryRun.datasetCount).toBe(5);
-          expect(dryRun.promptCount).toBe(2);
-          expect(dryRun.experimentCount).toBe(5);
-          expect(dryRun.writtenDatasetIds).toEqual([]);
-          expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
-          expect(written.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(written.writtenDatasetIds.length).toBe(5);
-          expect(written.writtenPromptVersionIds.length).toBe(2);
-          expect(written.writtenExperimentIds.length).toBe(5);
-          expect(written.annotationCount).toBe(0);
-          expect(written.skippedAnnotationCount).toBeGreaterThan(0);
-          expect(calls.datasets.length).toBe(5);
-          expect(calls.appends.length).toBe(0);
-          expect(calls.prompts.length).toBe(2);
-          expect(calls.experiments.length).toBe(5);
-          expect(calls.annotations.length).toBe(0);
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
-              Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("appends examples when Phoenix datasets already exist", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const calls = {
-          annotations: A.empty<string>(),
-          appends: A.empty<string>(),
-          datasets: A.empty<string>(),
-          experiments: A.empty<string>(),
-          prompts: A.empty<string>(),
-        };
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
-            doctor: AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: workerReportPath,
-            }),
-          });
-          yield* writeText(workerReportPath, workerReportJson);
-
-          const result = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({
-              annotationPlan,
-              confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
-              dryRun: false,
-            })
-          );
-
-          expect(result.status).toBe(AgentEffectivenessStatus.Enum.passed);
-          expect(result.writtenDatasetIds.length).toBe(5);
-          expect(result.writtenExperimentIds).toEqual([]);
-          expect(calls.datasets).toEqual([]);
-          expect(calls.appends).toEqual([
-            "agent-loop-health-v1",
-            "agent-outcomes-v1",
-            "agent-config-snapshots-v1",
-            "source-coverage-v1",
-            "jsdoc-worker-model-suitability-v1",
-          ]);
-          expect(calls.prompts.length).toBe(2);
-          expect(calls.experiments).toEqual([]);
-          expect(calls.annotations).toEqual([]);
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
-              Phoenix.makeLayerWithSdk(
-                phoenixWriteSdk(calls, {
-                  existingDatasetNames: [
-                    "agent-loop-health-v1",
-                    "agent-outcomes-v1",
-                    "agent-config-snapshots-v1",
-                    "source-coverage-v1",
-                    "jsdoc-worker-model-suitability-v1",
-                  ],
-                })
+            expect(
+              pipe(
+                datasetBundle.datasets,
+                A.map((dataset) => dataset.kind)
               )
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+            ).toEqual([
+              "agent-loop-health",
+              "agent-outcomes",
+              "agent-config-snapshots",
+              "source-coverage",
+              "jsdoc-worker-model-suitability",
+            ]);
+            expect(promptBundle.prompts.length).toBe(2);
+            expect(experimentBundle.experiments.length).toBe(datasetBundle.datasets.length);
+            expect(datasetJson).not.toContain("draftJsDoc");
+            expect(datasetJson).not.toContain("@example");
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
 
-  it.effect("does not create datasets when Phoenix dataset lookup transport fails", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const calls = {
-          annotations: A.empty<string>(),
-          appends: A.empty<string>(),
-          datasets: A.empty<string>(),
-          experiments: A.empty<string>(),
-          prompts: A.empty<string>(),
-        };
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
-            doctor: AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: workerReportPath,
-            }),
-          });
-          yield* writeText(workerReportPath, workerReportJson);
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("keeps Phoenix sync dry-run by default and writes only with confirmation", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const calls = {
+            annotations: A.empty<string>(),
+            appends: A.empty<string>(),
+            datasets: A.empty<string>(),
+            experiments: A.empty<string>(),
+            prompts: A.empty<string>(),
+          };
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
+              doctor: AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: true,
+                workerEvalReportPath: workerReportPath,
+              }),
+            });
+            yield* writeText(workerReportPath, workerReportJson);
 
-          const error = yield* pipe(
-            syncAgentEffectivenessPhoenix(
+            const dryRun = yield* syncAgentEffectivenessPhoenix(
+              AgentEffectivenessPhoenixSyncInput.make({ annotationPlan })
+            );
+            const blocked = yield* syncAgentEffectivenessPhoenix(
+              AgentEffectivenessPhoenixSyncInput.make({
+                annotationPlan,
+                dryRun: false,
+              })
+            );
+            const written = yield* syncAgentEffectivenessPhoenix(
               AgentEffectivenessPhoenixSyncInput.make({
                 annotationPlan,
                 confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
                 dryRun: false,
               })
-            ),
-            Effect.flip
-          );
+            );
 
-          expect(error.message).toBe("Failed to sync agent-effectiveness datasets to Phoenix.");
-          expect(calls.appends).toEqual([]);
-          expect(calls.datasets).toEqual([]);
-          expect(calls.prompts).toEqual([]);
-          expect(calls.experiments).toEqual([]);
-          expect(calls.annotations).toEqual([]);
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
-              Phoenix.makeLayerWithSdk(
-                phoenixWriteSdk(calls, {
-                  datasetLookupFailure: new Error("connect ECONNREFUSED 127.0.0.1:4040"),
-                })
+            pipe(dryRun.dryRun, assertTrue);
+            expect(dryRun.datasetCount).toBe(5);
+            expect(dryRun.promptCount).toBe(2);
+            expect(dryRun.experimentCount).toBe(5);
+            expect(dryRun.writtenDatasetIds).toEqual([]);
+            expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
+            expect(written.status).toBe(AgentEffectivenessStatus.Enum.passed);
+            expect(written.writtenDatasetIds.length).toBe(5);
+            expect(written.writtenPromptVersionIds.length).toBe(2);
+            expect(written.writtenExperimentIds.length).toBe(5);
+            expect(written.annotationCount).toBe(0);
+            expect(written.skippedAnnotationCount).toBeGreaterThan(0);
+            expect(calls.datasets.length).toBe(5);
+            expect(calls.appends.length).toBe(0);
+            expect(calls.prompts.length).toBe(2);
+            expect(calls.experiments.length).toBe(5);
+            expect(calls.annotations.length).toBe(0);
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(
+                runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
+                Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
               )
             )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+          );
+        })
+      )
+    );
+  });
 
-  it.effect("rejects forbidden private content in planned annotations", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const basePlan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("appends examples when Phoenix datasets already exist", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const calls = {
+            annotations: A.empty<string>(),
+            appends: A.empty<string>(),
+            datasets: A.empty<string>(),
+            experiments: A.empty<string>(),
+            prompts: A.empty<string>(),
+          };
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
               doctor: AgentEffectivenessDoctorInput.make({
                 dataRoot,
                 noPhoenix: true,
+                workerEvalReportPath: workerReportPath,
+              }),
+            });
+            yield* writeText(workerReportPath, workerReportJson);
+
+            const result = yield* syncAgentEffectivenessPhoenix(
+              AgentEffectivenessPhoenixSyncInput.make({
+                annotationPlan,
+                confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+                dryRun: false,
+              })
+            );
+
+            expect(result.status).toBe(AgentEffectivenessStatus.Enum.passed);
+            expect(result.writtenDatasetIds.length).toBe(5);
+            expect(result.writtenExperimentIds).toEqual([]);
+            expect(calls.datasets).toEqual([]);
+            expect(calls.appends).toEqual([
+              "agent-loop-health-v1",
+              "agent-outcomes-v1",
+              "agent-config-snapshots-v1",
+              "source-coverage-v1",
+              "jsdoc-worker-model-suitability-v1",
+            ]);
+            expect(calls.prompts.length).toBe(2);
+            expect(calls.experiments).toEqual([]);
+            expect(calls.annotations).toEqual([]);
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(
+                runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
+                Phoenix.makeLayerWithSdk(
+                  phoenixWriteSdk(calls, {
+                    existingDatasetNames: [
+                      "agent-loop-health-v1",
+                      "agent-outcomes-v1",
+                      "agent-config-snapshots-v1",
+                      "source-coverage-v1",
+                      "jsdoc-worker-model-suitability-v1",
+                    ],
+                  })
+                )
+              )
+            )
+          );
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("does not create datasets when Phoenix dataset lookup transport fails", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const calls = {
+            annotations: A.empty<string>(),
+            appends: A.empty<string>(),
+            datasets: A.empty<string>(),
+            experiments: A.empty<string>(),
+            prompts: A.empty<string>(),
+          };
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
+              doctor: AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: true,
+                workerEvalReportPath: workerReportPath,
+              }),
+            });
+            yield* writeText(workerReportPath, workerReportJson);
+
+            const error = yield* pipe(
+              syncAgentEffectivenessPhoenix(
+                AgentEffectivenessPhoenixSyncInput.make({
+                  annotationPlan,
+                  confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+                  dryRun: false,
+                })
+              ),
+              Effect.flip
+            );
+
+            expect(error.message).toBe("Failed to sync agent-effectiveness datasets to Phoenix.");
+            expect(calls.appends).toEqual([]);
+            expect(calls.datasets).toEqual([]);
+            expect(calls.prompts).toEqual([]);
+            expect(calls.experiments).toEqual([]);
+            expect(calls.annotations).toEqual([]);
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(
+                runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
+                Phoenix.makeLayerWithSdk(
+                  phoenixWriteSdk(calls, {
+                    datasetLookupFailure: new Error("connect ECONNREFUSED 127.0.0.1:4040"),
+                  })
+                )
+              )
+            )
+          );
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("rejects forbidden private content in planned annotations", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const basePlan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot,
+                  noPhoenix: true,
+                  workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+                }),
+              })
+            );
+            const plan = AgentEffectivenessAnnotationPlan.make({
+              annotations: [
+                AgentEffectivenessPlannedAnnotation.make({
+                  annotationId: "bad",
+                  metadata: { path: "/home/test-operator/private.txt" },
+                  name: "agent.outcome.note",
+                  optimization: "minimize",
+                  source: "ai-metrics",
+                  targetKind: "agent-task",
+                  targetRef: "task",
+                  value: "api_key=oops",
+                }),
+                AgentEffectivenessPlannedAnnotation.make({
+                  annotationId: "bad",
+                  metadata: {},
+                  name: "agent.outcome.note",
+                  optimization: "minimize",
+                  source: "ai-metrics",
+                  targetKind: "agent-task",
+                  targetRef: "task-duplicate",
+                  value: "safe",
+                }),
+              ],
+              doctor: basePlan.doctor,
+              generatedAt: basePlan.generatedAt,
+              mutationPolicy: basePlan.mutationPolicy,
+              schemaVersion: basePlan.schemaVersion,
+              summary: basePlan.summary,
+            });
+
+            const report = makeAgentEffectivenessAnnotationCheckReport(plan);
+            expect(report.status).toBe(AgentEffectivenessStatus.Enum.failed);
+            expect(
+              pipe(
+                report.findings,
+                A.map((finding) => finding.code)
+              )
+            ).toContain("private-home-path");
+            expect(
+              pipe(
+                report.findings,
+                A.map((finding) => finding.code)
+              )
+            ).toContain("secret-shaped-value");
+            expect(
+              pipe(
+                report.findings,
+                A.map((finding) => finding.code)
+              )
+            ).toContain("duplicate-annotation-id");
+          }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("rejects forbidden private content in the embedded doctor report", () =>
+      withTempDirectory(
+        Effect.fnUntraced(
+          function* (tmpDir) {
+            void tmpDir;
+            const plan = yield* makeAgentEffectivenessAnnotationPlan(
+              AgentEffectivenessAnnotationPlanInput.make({
+                doctor: AgentEffectivenessDoctorInput.make({
+                  dataRoot: "/home/beep-private/metrics",
+                  noPhoenix: true,
+                  workerEvalReportPath: "/home/beep-private/worker-eval.json",
+                }),
+              })
+            );
+
+            const report = makeAgentEffectivenessAnnotationCheckReport(plan);
+
+            expect(report.status).toBe(AgentEffectivenessStatus.Enum.failed);
+            expect(
+              pipe(
+                report.findings,
+                A.map((finding) => finding.annotationId)
+              )
+            ).toContain("plan.doctor.dataRoot");
+            expect(
+              pipe(
+                report.findings,
+                A.map((finding) => finding.code)
+              )
+            ).toContain("private-home-path");
+          },
+          (effect, tmpDir) =>
+            effect.pipe(provideScopedLayer(runtimeLayer(`${tmpDir}/metrics/derived/ai-metrics.duckdb`)))
+        )
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("blocks confirmed Phoenix sync when annotation privacy checks fail", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const calls = {
+            annotations: A.empty<string>(),
+            appends: A.empty<string>(),
+            datasets: A.empty<string>(),
+            experiments: A.empty<string>(),
+            prompts: A.empty<string>(),
+          };
+          yield* Effect.gen(function* () {
+            const dataRoot = path.join(tmpDir, "metrics");
+            const workerReportPath = path.join(tmpDir, "worker-eval.json");
+            const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
+              doctor: AgentEffectivenessDoctorInput.make({
+                dataRoot,
+                noPhoenix: true,
+                workerEvalReportPath: workerReportPath,
+              }),
+            });
+            yield* writeText(workerReportPath, unsafeWorkerReportJson);
+
+            const blocked = yield* syncAgentEffectivenessPhoenix(
+              AgentEffectivenessPhoenixSyncInput.make({
+                annotationPlan,
+                confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+                dryRun: false,
+              })
+            );
+
+            expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
+            expect(blocked.mutationPolicy).toBe("blocked-annotation-check-failed");
+            expect(calls.appends).toEqual([]);
+            expect(calls.datasets).toEqual([]);
+            expect(calls.prompts).toEqual([]);
+            expect(calls.experiments).toEqual([]);
+            expect(calls.annotations).toEqual([]);
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(
+                runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
+                Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
+              )
+            )
+          );
+        })
+      )
+    );
+  });
+
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("blocks confirmed Phoenix sync when the embedded doctor report contains private paths", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const calls = {
+            annotations: A.empty<string>(),
+            appends: A.empty<string>(),
+            datasets: A.empty<string>(),
+            experiments: A.empty<string>(),
+            prompts: A.empty<string>(),
+          };
+          yield* Effect.gen(function* () {
+            const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
+              doctor: AgentEffectivenessDoctorInput.make({
+                dataRoot: "/home/alice/.beep/ai-metrics",
+                noPhoenix: true,
                 workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
               }),
-            })
+            });
+
+            const blocked = yield* syncAgentEffectivenessPhoenix(
+              AgentEffectivenessPhoenixSyncInput.make({
+                annotationPlan,
+                confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
+                dryRun: false,
+              })
+            );
+
+            expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
+            expect(blocked.mutationPolicy).toBe("blocked-annotation-check-failed");
+            expect(calls.appends).toEqual([]);
+            expect(calls.datasets).toEqual([]);
+            expect(calls.prompts).toEqual([]);
+            expect(calls.experiments).toEqual([]);
+            expect(calls.annotations).toEqual([]);
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(
+                runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
+                Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
+              )
+            )
           );
-          const plan = AgentEffectivenessAnnotationPlan.make({
-            annotations: [
-              AgentEffectivenessPlannedAnnotation.make({
-                annotationId: "bad",
-                metadata: { path: "/home/test-operator/private.txt" },
-                name: "agent.outcome.note",
-                optimization: "minimize",
-                source: "ai-metrics",
-                targetKind: "agent-task",
-                targetRef: "task",
-                value: "api_key=oops",
-              }),
-              AgentEffectivenessPlannedAnnotation.make({
-                annotationId: "bad",
-                metadata: {},
-                name: "agent.outcome.note",
-                optimization: "minimize",
-                source: "ai-metrics",
-                targetKind: "agent-task",
-                targetRef: "task-duplicate",
-                value: "safe",
-              }),
-            ],
-            doctor: basePlan.doctor,
-            generatedAt: basePlan.generatedAt,
-            mutationPolicy: basePlan.mutationPolicy,
-            schemaVersion: basePlan.schemaVersion,
-            summary: basePlan.summary,
-          });
-
-          const report = makeAgentEffectivenessAnnotationCheckReport(plan);
-          expect(report.status).toBe(AgentEffectivenessStatus.Enum.failed);
-          expect(
-            pipe(
-              report.findings,
-              A.map((finding) => finding.code)
-            )
-          ).toContain("private-home-path");
-          expect(
-            pipe(
-              report.findings,
-              A.map((finding) => finding.code)
-            )
-          ).toContain("secret-shaped-value");
-          expect(
-            pipe(
-              report.findings,
-              A.map((finding) => finding.code)
-            )
-          ).toContain("duplicate-annotation-id");
-        }).pipe(provideScopedLayer(runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("rejects forbidden private content in the embedded doctor report", () =>
-    withTempDirectory(
-      Effect.fnUntraced(
-        function* (tmpDir) {
-          void tmpDir;
-          const plan = yield* makeAgentEffectivenessAnnotationPlan(
-            AgentEffectivenessAnnotationPlanInput.make({
-              doctor: AgentEffectivenessDoctorInput.make({
-                dataRoot: "/home/beep-private/metrics",
-                noPhoenix: true,
-                workerEvalReportPath: "/home/beep-private/worker-eval.json",
-              }),
-            })
-          );
-
-          const report = makeAgentEffectivenessAnnotationCheckReport(plan);
-
-          expect(report.status).toBe(AgentEffectivenessStatus.Enum.failed);
-          expect(
-            pipe(
-              report.findings,
-              A.map((finding) => finding.annotationId)
-            )
-          ).toContain("plan.doctor.dataRoot");
-          expect(
-            pipe(
-              report.findings,
-              A.map((finding) => finding.code)
-            )
-          ).toContain("private-home-path");
-        },
-        (effect, tmpDir) => effect.pipe(provideScopedLayer(runtimeLayer(`${tmpDir}/metrics/derived/ai-metrics.duckdb`)))
+        })
       )
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("blocks confirmed Phoenix sync when annotation privacy checks fail", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const calls = {
-          annotations: A.empty<string>(),
-          appends: A.empty<string>(),
-          datasets: A.empty<string>(),
-          experiments: A.empty<string>(),
-          prompts: A.empty<string>(),
-        };
-        yield* Effect.gen(function* () {
-          const dataRoot = path.join(tmpDir, "metrics");
-          const workerReportPath = path.join(tmpDir, "worker-eval.json");
-          const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
-            doctor: AgentEffectivenessDoctorInput.make({
-              dataRoot,
-              noPhoenix: true,
-              workerEvalReportPath: workerReportPath,
-            }),
-          });
-          yield* writeText(workerReportPath, unsafeWorkerReportJson);
-
-          const blocked = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({
-              annotationPlan,
-              confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
-              dryRun: false,
-            })
-          );
-
-          expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
-          expect(blocked.mutationPolicy).toBe("blocked-annotation-check-failed");
-          expect(calls.appends).toEqual([]);
-          expect(calls.datasets).toEqual([]);
-          expect(calls.prompts).toEqual([]);
-          expect(calls.experiments).toEqual([]);
-          expect(calls.annotations).toEqual([]);
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
-              Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
-  it.effect("blocks confirmed Phoenix sync when the embedded doctor report contains private paths", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const path = yield* Path.Path;
-        const calls = {
-          annotations: A.empty<string>(),
-          appends: A.empty<string>(),
-          datasets: A.empty<string>(),
-          experiments: A.empty<string>(),
-          prompts: A.empty<string>(),
-        };
-        yield* Effect.gen(function* () {
-          const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
-            doctor: AgentEffectivenessDoctorInput.make({
-              dataRoot: "/home/alice/.beep/ai-metrics",
-              noPhoenix: true,
-              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
-            }),
-          });
-
-          const blocked = yield* syncAgentEffectivenessPhoenix(
-            AgentEffectivenessPhoenixSyncInput.make({
-              annotationPlan,
-              confirmToken: AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
-              dryRun: false,
-            })
-          );
-
-          expect(blocked.status).toBe(AgentEffectivenessStatus.Enum.failed);
-          expect(blocked.mutationPolicy).toBe("blocked-annotation-check-failed");
-          expect(calls.appends).toEqual([]);
-          expect(calls.datasets).toEqual([]);
-          expect(calls.prompts).toEqual([]);
-          expect(calls.experiments).toEqual([]);
-          expect(calls.annotations).toEqual([]);
-        }).pipe(
-          provideScopedLayer(
-            Layer.mergeAll(
-              runtimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb")),
-              Phoenix.makeLayerWithSdk(phoenixWriteSdk(calls))
-            )
-          )
-        );
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
+    );
+  });
 });

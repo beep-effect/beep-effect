@@ -1,0 +1,182 @@
+# Database driver wave preparation
+
+This wave consumes 130 existing inventory rows across eight test files in
+DuckDB, Drizzle and Postgres. Five files changed since the frozen census;
+current membership remains eight files. Preparation reviewed every current
+file against the existing findings and preserved the native resource subjects.
+
+All six configured baseline commands passed with stable source hashes.
+Explicit empty BEEP_TEST_DATABASE_URL and pglite-inprocess driver selection
+keep SQL tests on the local in-process engine: a nonempty URL would otherwise
+take precedence. DuckDB uses native local databases and scoped files.
+No external database or container is selected by these runs.
+
+- duckdb node: 29 passed, 0 skipped; 11.848 seconds
+- duckdb bun: 29 passed, 0 skipped; 13.902 seconds
+- drizzle node: 26 passed, 0 skipped; 11.867 seconds
+- drizzle bun: 26 passed, 0 skipped; 10.492 seconds
+- postgres node: 43 passed, 0 skipped; 24.022 seconds
+- postgres bun: 43 passed, 0 skipped; 17.996 seconds
+
+Drizzle's current 26 registrations include a rejection case added upstream;
+the frozen 25-test receipt remains historical. These single samples are
+accompanied by load/pressure context and establish no performance improvement.
+
+D12 work preserves native SQL, Parquet, filesystem migration and transaction
+subjects. Scope comes first: independently owned native acquisitions,
+failure-safe controlled promises, harness ownership for pure fixtures, and
+an interruption-safe Drizzle transaction fixture. Property predicates,
+expected values, run floors, cancellation results and client identities must
+remain explicit. No production repair is authorized by this preparation.
+
+## Scope checkpoints
+
+Postgres commit `e36df8c4fb` replaces its two pure provider wrappers with
+single-case harness layers. Every assertion, all three client service-alias
+identities and the native missing-migration fixture remain unchanged. Full
+package audit/docgen passed (12.5 / 2.9 seconds) with in-process PGlite gates.
+
+Drizzle commit `251dd312f2` moves five pure client fixtures under isolated
+harness layers. The native integration fixture delegates transaction ownership
+to SqlClient.withTransaction with the existing error-normalization boundary.
+An independently provisioned interruption probe verifies rollback of an armed
+insert and a successful subsequent commit. Original result arrays, property
+predicates and timeout budgets remain intact. Full package audit/docgen passed
+(10.8 / 3.5 seconds) with in-process PGlite gates. No production code changed.
+
+Main's merged HTML checkpoint was then merged into this branch without
+conflicts. The subsequent checkpoints below continue the required per-package order.
+
+
+DuckDB scope commit `abcc797422` moves ordinary providers to isolated harness
+layers and keeps native directories for file-backed databases and Parquet.
+Instance and connection fixtures have independent finalizers; coordinator
+cleanup releases native promises before structured child joins. All 83 prior
+assertion expressions and property definitions were preserved. Deliberate
+short production scopes remain where close-count assertions run after teardown.
+Full package audit/docgen passed (8.1 / 2.7 seconds).
+
+## Assertions, properties and deterministic paths
+
+Postgres assertion commit `999d118b04` preserves seven absence predicates through
+assertNone (audit/docgen 11.8 / 2.8 seconds). Property commit `24b52b1c78`
+registers four separate native laws with the same domains and fcRuns(25).
+The normalized error generator still excludes cause and params, and each law
+still checks re-encoding equality plus Equal.equals or schema equivalence.
+The fixed migration-bundle fixture remains separate. Audit/docgen passed
+(10.5 / 2.8 seconds); all four named laws passed with 400 runs and seed 20260708.
+Flake commit `0d378ed030` owns a scoped native temporary parent and supplies
+an uncreated child to the real migrator, preserving the typed error, operation
+and ENOENT assertions (audit/docgen 10.7 / 2.8 seconds).
+
+Drizzle assertion commit `0e0402ef7f` preserves absence, expected cause and
+unknown Exit failure predicates, including strict cause identity. Its initial
+introduced missedPipeableOpportunity diagnostic was corrected without changing
+the predicate (final audit/docgen 10.2 / 2.8 seconds). Three native laws retain
+the Result codec paths, original arbitraries and all five error predicates,
+including comparison of both cause-presence booleans. Each keeps fcRuns(50).
+All three named laws passed with 400 runs and seed 20260708; full package
+audit/docgen passed (8.9 / 2.6 seconds). Separate root/transaction execution
+counters now distinguish client routing while retaining the original SQL and
+result-array oracles. The prior scoped interruption probe covers the identified
+transaction ownership defect; no additional flake repair was established.
+
+DuckDB assertion commit `bda048be32` uses expected string payloads for two
+assertSome checks and retains nine exact Exit failure predicates through
+assertTrue. Strict original cause identity remains unchanged (audit/docgen
+8.4 / 2.7 seconds). DuckDB properties, cancellation timing, final instrumentation,
+final timings and eight-file inventory reconciliation remain outstanding.
+
+These are per-phase proofs, not final wave or goal acceptance. Native SQL tests
+still explicitly select in-process PGlite with an empty external URL.
+
+
+DuckDB property-registration commit `6d4fb717df` preserves all seven domains,
+both original None-cause filters, schema equivalence and fcRuns(20). All seven
+named laws passed the seeded 400-run proof. The fixed wire-format case now
+runs through Effect codecs; its seven independent expected payloads retain
+the original JSON string bytes/order. Package audit/docgen passed (8.0 / 2.9
+seconds). Some-cause coverage is a separate next change, followed by the
+cancellation/clock phase. This registration checkpoint makes no claim that
+the generated-domain gap or five permit-clock findings are already repaired.
+
+
+Some-cause expansion commit `a964e75f40` adds two separate generated laws
+without changing the original seven laws or their None filters. Generated
+name/message/stack objects have independently specified complete wire payloads.
+Options and errors traverse JSON serialization and decoding; raw error
+normalization checks reference identity only before serialization. All nine
+DuckDB laws passed at 400 runs with seed 20260708, and full package audit/docgen
+passed (8.0 / 2.7 seconds). No valid-input counterexample or production repair
+was found. The typed JSON-string decoder corrected an introduced compiler
+diagnostic without altering the domains.
+
+
+## Explicit native cancellation proof
+
+The final DuckDB flake edit replaces five timeoutOption/ignore coordinators
+with explicit native-start, interruption-request, blocked-second-call, release
+and joined-outcome events. Original bounded native probes and exact row results
+remain, and each first fiber must finish interrupted. Serialization now uses
+controlled overlap, checks both query results and retains maxActiveExecutions=1.
+Release finalizers are installed before the first fiber starts, including the
+shorter interrupted-acquisition subject. All original expect expressions and
+the complete property cohort are preserved; no timeout budget increased.
+
+The exact final file passed full package audit/docgen (7.7 / 2.9 seconds).
+Two fresh Node and two fresh Bun runs each passed all seven selected cases:
+five permit cases, serialization and interrupted acquisition. Earlier samples
+preceding the cleanup-boundary review remain historical only. No production
+counterexample or production edit was needed.
+
+The remaining database-wave work is observability through the shared runner,
+final before/after timing receipts, inventory reconciliation, generated dependency
+metadata and PR gates. Per-phase success does not replace those acceptance gates.
+
+## Instrumented final checkpoint
+
+Commit `4d1e87568ae850a8b769e0fb29834efd5fcc89d4` registers all eight suites
+through @beep/test-runner and adds its three package dependencies. Generated
+TypeScript references and Fallow edges match those dependencies. Eight pure
+harness layers now state the ordinary shared 10-second hook budget explicitly;
+this does not increase a cancellation deadline. Integration hook and body
+budgets remain unchanged. Drizzle routing counters reset on every invocation,
+retaining the independent 1/1 counts and original SQL/result arrays.
+
+Full package audit/docgen passed for DuckDB and for the final Drizzle/Postgres
+sources (Drizzle 8.9 / 2.6 seconds; Postgres 11.6 / 3.0 seconds). The final
+instrumented properties passed with BEEP_FC_NUM_RUNS=400 and BEEP_FC_SEED=20260708:
+nine DuckDB, three Drizzle and four Postgres laws. Integration membership is
+excluded by the property environment where configured; ordinary whole-package
+and trace runs explicitly unset both property variables.
+
+Final ordinary Node / Bun wall times and passing counts:
+
+| Package | Node seconds | Bun seconds | Passed in each | Skipped |
+| --- | ---: | ---: | ---: | ---: |
+| DuckDB | 4.923 | 2.167 | 37 | 0 |
+| Drizzle | 4.572 | 2.869 | 29 | 0 |
+| Postgres | 6.074 | 4.622 | 46 | 0 |
+
+Raw reports and context receipts are in ops/inventory/timings/after/database-drivers
+and timings/context/after/database-drivers. Every command exited zero with stable
+source/manifest/lock hashes. Context includes runtime versions, resource limits,
+load averages and CPU/memory/I/O pressure. These are single observations with
+changed registrations and a newer lock state than the baseline; they establish
+no normalized performance gain.
+
+Ordinary trace-enabled whole suites also passed 37 / 29 / 46 tests. Their
+lifecycle output is captured by the installed TestConsole rather than emitted
+to stdout. Temporary assertions in an existing DuckDB Effect case and each
+native PGlite integration suite observed the start message through
+TestConsole.logLines. All three passed with BEEP_TEST_TRACE=1; all three failed
+the same diagnostic assertion with BEEP_TEST_TRACE=0 and CI=false. Every source
+was restored byte for byte. The private database-trace-receipt.json records
+source hashes and positive/negative exit codes. These controls establish
+captured lifecycle starts, not live stdout or complete failure-output coverage.
+
+The cache baseline changes only 28 owned task dependency lists introduced by
+the runner edge. Its reviewed basis is database-drivers-cache-review.md. The
+post-update cache audit exits zero with no blocking findings; eleven inherited
+configuration-source drift advisories remain unpromoted. Local package proofs
+and inventory validation do not substitute for full Yeet or hosted PR gates.

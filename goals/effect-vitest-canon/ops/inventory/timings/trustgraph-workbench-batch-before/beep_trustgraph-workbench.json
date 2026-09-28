@@ -1,0 +1,26 @@
+{
+  "package": "@beep/trustgraph-workbench",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T20:19:35.799000+00:00",
+  "totalMs": 3931.268798828125,
+  "testCount": 2,
+  "files": [
+    {
+      "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
+      "ms": 56.268798828125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
+      "testName": "@beep/trustgraph-workbench renders the branded shell",
+      "ms": 56.26874999999973
+    },
+    {
+      "file": "apps/labs/trustgraph-workbench/test/App.test.tsx",
+      "testName": "@beep/trustgraph-workbench hoists the brand favicon set and theme color into the document head",
+      "ms": 56.06256200000007
+    }
+  ]
+}

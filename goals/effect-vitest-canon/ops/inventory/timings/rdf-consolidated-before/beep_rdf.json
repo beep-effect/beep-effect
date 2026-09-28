@@ -1,0 +1,106 @@
+{
+  "package": "@beep/rdf",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T21:29:06.328000+00:00",
+  "totalMs": 4151.109130859375,
+  "testCount": 90,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "ms": 18.805419921875,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
+      "ms": 9.97021484375,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
+      "ms": 8.593017578125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "ms": 38.36962890625,
+      "tests": 26
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "ms": 160.109130859375,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+      "ms": 10.2421875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
+      "ms": 1.015869140625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
+      "ms": 13.577880859375,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
+      "ms": 1.32861328125,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas",
+      "ms": 98.10909300000048
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf JSON-LD models rejects malformed JSON-LD identifiers",
+      "ms": 43.40938299999971
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata constructs metadata and exposes literal domains",
+      "ms": 43.395392000000356
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata rejects unknown semantic schema metadata kinds",
+      "ms": 43.39105500000005
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata round-trips decode/encode for metadata derived from the source schema",
+      "ms": 43.38434499999994
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata annotates schemas in direct and curried forms and finds nested metadata",
+      "ms": 43.38154099999974
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "testName": "ProvRdf requires relation discriminators when decoding a provenance bundle",
+      "ms": 29.6505030000003
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "testName": "ProvRdf exports the PROV-O terms required by the core codec",
+      "ms": 29.44010900000012
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "testName": "ProvRdf round-trips the supported core through a named audit graph",
+      "ms": 29.431235000000015
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "testName": "ProvRdf keeps local object references reversible",
+      "ms": 29.42232200000035
+    }
+  ]
+}

@@ -5,8 +5,10 @@ import {
   LogicalEdgeKey,
   logicalEdgeKey,
 } from "@beep/epistemic-domain";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
 
 type LogicalEdgeIdentityInput = typeof LogicalEdgeIdentity.Encoded;
@@ -118,8 +120,8 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
   );
 
   it("rejects an endpoint kind outside the bounded vocabulary", () => {
-    expect(Result.isSuccess(decodeEndpoint({ claimId: 1, kind: "claim" }))).toBe(true);
-    expect(Result.isFailure(decodeEndpoint({ claimId: 1, kind: "banana" }))).toBe(true);
+    pipe(decodeEndpoint({ claimId: 1, kind: "claim" }), Result.isSuccess, assertTrue);
+    pipe(decodeEndpoint({ claimId: 1, kind: "banana" }), Result.isFailure, assertTrue);
   });
 
   it.effect("keeps qualifier delimiter characters from merging two identities", () =>

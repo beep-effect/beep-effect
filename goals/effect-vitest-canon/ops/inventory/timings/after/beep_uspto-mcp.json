@@ -1,0 +1,66 @@
+{
+  "package": "@beep/uspto-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:51:12.593000+00:00",
+  "totalMs": 3798.784423828125,
+  "testCount": 41,
+  "files": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "ms": 169.784423828125,
+      "tests": 41
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio sends server/discover then tools/call over stdio",
+      "ms": 82.60508600000003
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs imports the bin module without launching the stdio server",
+      "ms": 77.7026380000002
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio emits one compact JSON-RPC message per line and processes requests independently",
+      "ms": 70.51517699999977
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates DocumentsProjectionOutput values that round-trip through their schema",
+      "ms": 51.17226699999992
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates UsptoApplicationMetadata values that round-trip through their schema",
+      "ms": 48.195840999999746
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates package-owned tool schemas that round-trip through themselves",
+      "ms": 33.513958
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+      "ms": 26.99903099999983
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+      "ms": 26.84624599999961
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp through the kit client over streamable HTTP carries an array success in text content and emits no structuredContent",
+      "ms": 26.764570999999705
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over streamable HTTP calls a tool and returns a non-error result",
+      "ms": 25.754507000000103
+    }
+  ]
+}

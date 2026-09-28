@@ -10,27 +10,22 @@ import {
   RenderGifRequest,
   WriteContainerMetadataRequest,
 } from "@beep/ffmpeg";
+import { it } from "@beep/test-runner";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Layer, Match, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 
 // Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
-// cleanly (logInfo, no assertions) on machines without ffmpeg.
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideLive = provideScopedLayer(
-  Layer.mergeAll(NodeServices.layer, FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer)))
+// explicitly when a binary is missing; other prerequisite failures stay failures.
+const NativeCaptureTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))
 );
-
-const skipNotice = Effect.logInfo("Skipping the live ffmpeg capture lane because ffmpeg is not runnable on PATH.");
-
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -52,10 +47,24 @@ const runTool = (command: string, args: ReadonlyArray<string>) =>
     })
   );
 
-const ffmpegAvailable = runTool("ffmpeg", ["-version"]).pipe(
-  Effect.map((result) => result.exitCode === 0),
-  Effect.orElseSucceed(() => false)
-);
+const nativeToolAvailable = Effect.fn("FFmpegIntegration.nativeToolAvailable")(function* (command: string) {
+  const result = yield* runTool(command, ["-version"]).pipe(
+    Effect.asSome,
+    Effect.catchTag("PlatformError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.when({ _tag: "NotFound" }, () => Effect.succeedNone),
+        Match.orElse(() => Effect.fail(error))
+      )
+    )
+  );
+  if (O.isNone(result)) return false;
+  expect(result.value.exitCode, `${command} -version prerequisite must exit successfully`).toBe(0);
+  return true;
+});
+const missingNativeTool = Effect.gen(function* () {
+  if (!(yield* nativeToolAvailable("ffmpeg"))) return O.some("ffmpeg");
+  return (yield* nativeToolAvailable("ffprobe")) ? O.none<string>() : O.some("ffprobe");
+});
 
 const expectToolSuccess = Effect.fnUntraced(function* (command: string, args: ReadonlyArray<string>) {
   const result = yield* runTool(command, args);
@@ -132,13 +141,14 @@ const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, 
 const RAMP_FRAME_DURATION_SECONDS = 0.1;
 const LUMA_TOLERANCE_SECONDS = 0.05;
 
-describe("@beep/ffmpeg live capture", () => {
-  it.live(
+it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg live capture", (it) => {
+  it.effect(
     "extracts pts-accurate timestamped frames from the luma-ramp golden clip",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
@@ -191,16 +201,17 @@ describe("@beep/ffmpeg live capture", () => {
             }
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 
-  it.live(
+  it.effect(
     "renders gif and contact sheet artifacts with real byte sizes",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
@@ -257,16 +268,17 @@ describe("@beep/ffmpeg live capture", () => {
             expect(yield* fs.exists(framePath)).toBe(true);
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 
-  it.live(
+  it.effect(
     "cuts clips and round-trips BEEP_QA_SESSION_ID container metadata via ffprobe",
-    () =>
+    (context) =>
       Effect.gen(function* () {
-        if (!(yield* ffmpegAvailable)) {
-          return yield* skipNotice;
+        const missing = yield* missingNativeTool;
+        if (O.isSome(missing)) {
+          return yield* Effect.sync(() => context.skip(`Missing native prerequisite: ${missing.value} on PATH`));
         }
 
         yield* withTempDirectory(
@@ -284,7 +296,7 @@ describe("@beep/ffmpeg live capture", () => {
                 O.getOrElse(() => 0)
               )
             ).toBe(30);
-            expect(O.isSome(sourceProbe.startTimeSeconds)).toBe(true);
+            pipe(sourceProbe.startTimeSeconds, O.isSome, assertTrue);
 
             const clipPath = path.join(tmpDir, "clips", "cut.webm");
             const clip = yield* ffmpeg.extractClip(
@@ -345,7 +357,7 @@ describe("@beep/ffmpeg live capture", () => {
             }
           })
         );
-      }).pipe(provideLive),
+      }),
     120_000
   );
 });

@@ -1,6 +1,7 @@
 import { decodeActionEventJson, encodeActionEventJson, PointerCancelEvent } from "@beep/qa-capture";
-import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Equal } from "effect";
 
 describe("@beep/qa-capture pointer-cancel events", () => {
@@ -27,7 +28,7 @@ describe("@beep/qa-capture pointer-cancel events", () => {
         x: 160,
         y: 240,
       });
-      expect(O.isNone(event.rect)).toBe(true);
+      assertNone(event.rect);
       const encoded = yield* encodeActionEventJson(event);
       const decoded = yield* decodeActionEventJson(encoded);
       expect(Equal.equals(decoded, event)).toBe(true);

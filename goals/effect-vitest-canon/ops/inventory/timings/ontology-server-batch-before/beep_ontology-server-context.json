@@ -1,0 +1,284 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/ontology-server",
+  "sourceHead": "c4acd84610",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.172433908999665,
+  "bunWholeCommandSeconds": 2.81842222699197,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.77490234375, 4.05517578125, 3.228515625],
+  "loadAfter": [5.79296875, 4.087890625, 3.24365234375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.03 avg60=0.16 avg300=0.16 total=797056449\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218736\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142606\n",
+    "io": "some avg10=0.00 avg60=0.09 avg300=0.04 total=854967018\nfull avg10=0.00 avg60=0.07 avg300=0.02 total=747933366\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.14 avg300=0.15 total=797064464\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218736\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142606\n",
+    "io": "some avg10=0.00 avg60=0.08 avg300=0.04 total=854967461\nfull avg10=0.00 avg60=0.06 avg300=0.02 total=747933775\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "a3b8b6839262236d891a82ecc70c3eac9ebf257f555732ee2d0adc0d6e571c3b"
+    },
+    {
+      "file": "packages/ontology/server/AGENTS.md",
+      "sha256": "83693a0b5d41a944d59d3ea5a70adab6a6b006249f652c17d79f76e58b5efe41"
+    },
+    {
+      "file": "packages/ontology/server/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/ontology/server/README.md",
+      "sha256": "d7c278395fcc78ffeae974ccfa8e1af8b009b0a392a468ee03c55ced60accd9a"
+    },
+    {
+      "file": "packages/ontology/server/docgen.json",
+      "sha256": "236bb07dc04977703d93b60913a46fd447d39754426660bc519a2e6a8a51bea9"
+    },
+    {
+      "file": "packages/ontology/server/package.json",
+      "sha256": "9246621a1baf134647e3d4069d26cb186ac0b134fbbfad90a318742c0575757b"
+    },
+    {
+      "file": "packages/ontology/server/src/Layer.ts",
+      "sha256": "9a351e8cb68f48941d203c41b404a8bfe38913111f9639ba470a7ff26410565f"
+    },
+    {
+      "file": "packages/ontology/server/src/aggregates/Session/Session.file-store.ts",
+      "sha256": "f2594e48963efd1a33b1702e848edb8efefa8f7d55a6764ae7e9a351148b0541"
+    },
+    {
+      "file": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
+      "sha256": "4c36987abf81e67de6e728f35b7bf6a7d1e085541a35e6c28578164a119ab469"
+    },
+    {
+      "file": "packages/ontology/server/src/aggregates/Session/index.ts",
+      "sha256": "6144f3c625e152d4e4702ab5e5db1833c2a06b229583976b9e61c11b3310ec6d"
+    },
+    {
+      "file": "packages/ontology/server/src/index.ts",
+      "sha256": "262b4ec116d7ea505eb91c2be8ca4dffa47de1834fe144ad9806ddb7f296d1fc"
+    },
+    {
+      "file": "packages/ontology/server/src/test.ts",
+      "sha256": "6de9bd98f4c5814db7ce581cc975a2e63bb134d556028434f35b7ad4b13c116d"
+    },
+    {
+      "file": "packages/ontology/server/src/tools/OntologyToolHandlers.ts",
+      "sha256": "6e2d16b804d61995e9ac462c89293f4a3a00007d7145745b56ed58c561337120"
+    },
+    {
+      "file": "packages/ontology/server/src/tools/index.ts",
+      "sha256": "69401e2c3d15d590a869a0af4d97d7e3fa34aa8f49fae602ba555eb51ebed198"
+    },
+    {
+      "file": "packages/ontology/server/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
+      "sha256": "1e65c48de9c53ba851a4d2447a5be1c49aadfeb0f2abf0c9caa0dd8557bde9c7"
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
+      "sha256": "1160e85a9d7d7c0616a18451d08ce65c5d28399d1d9562ef2efd474e068a6611"
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "sha256": "464027d8aaa350b073da099f183505bedde3a5a2c42fee527c0d760ac819844c"
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "sha256": "edab510803dbcad6a7929e3eeba75b134d07bdae28b03004629e7b13817356ef"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/README.md",
+      "sha256": "6dbaa738c85b9981f02bd80f6fecf515223ac9020e10ec0e789340895fcfc21f"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/base-prefix/round-trip.ttl",
+      "sha256": "1d052980bfb11d981e142488c09641e32b4b5ba5e1f68cfec593643e7ddcda44"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/foaf-social-network/README.md",
+      "sha256": "85d334d48786c9412d74ad3676ec47276734a1b2db5d79a2f830510230e1b577"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/foaf-social-network/graph.ttl",
+      "sha256": "fc297c927f9518a4777cf173c33d56190c9af5496d598077979433a3a2442f3f"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/README.md",
+      "sha256": "a6c432bfffea6536f84d0f91fe57858350957eb5584939236f2733fae8cf975e"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t1-subsumption/cq.sparql",
+      "sha256": "fd8c85635797e10aca8bab67a36c4fadbce523fb94e94f649512ffc3e99fcdb9"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t1-subsumption/reference.ttl",
+      "sha256": "49db7b28a3972aa56b2a0418932ef9d4f60e9e426035076c697a308e3f1ac2f5"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t1-subsumption/shapes.ttl",
+      "sha256": "2f74ce525dc435acfadba3e8602bf2f485e445900fcaedb2bf92e7b37257fc93"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t1-subsumption/task.md",
+      "sha256": "432573154978c22c243f679e005c62f29d4831b6ac44f290d18aa60b769ec11e"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t2-existential/cq.sparql",
+      "sha256": "0185bb41197f6eb87a6b5ee6d0622fe1808bbe7300b6d16d7cbc2f71b5c9c1d0"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t2-existential/reference.ttl",
+      "sha256": "c32c5d081401244c4c5b546359d0255691bb2a471d037f23d9329fbc4fcdddec"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t2-existential/shapes.ttl",
+      "sha256": "88bd865c072bb6aa9389544bf1e1428734aa3adb01ffed96191ff709ed788f80"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t2-existential/task.md",
+      "sha256": "b007c60af3a13d51df25f94288b4e8f90e8f4f33ecbcb34940347519c19911ec"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t3-universal/cq.sparql",
+      "sha256": "cf703381af882155078f88721ad2639bbbead513788189beaad9a9e0f032a0a4"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t3-universal/reference.ttl",
+      "sha256": "ff605085d7be607217bd457d5f7d1138a99c307ec537d0eab24aa3471c85d83a"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t3-universal/shapes.ttl",
+      "sha256": "c836e1f4f6e4063802b03c96f5795e8638ebc5aa5464f133ba69f4a3b2a9d04e"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t3-universal/task.md",
+      "sha256": "9733f39e3ba95d4b69f844cbe170950c11cf9e53391afdbe916a7bc4c81dd8b6"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t4-disjointness/cq.sparql",
+      "sha256": "bc386da2eb8416e63024c66795e1bf0bbada61ac7d085d64e3fc942ab1b6c935"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t4-disjointness/reference.ttl",
+      "sha256": "c4ec2741e1f9eb010e47c82cca85c0e6cc2bf5192b196d5ed1902ac2f8360cdb"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t4-disjointness/shapes.ttl",
+      "sha256": "b8fc5bbc94064b9b1c4ec5c8008b26827c6ece7ecc775276f4bf8f6aa4fee692"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t4-disjointness/task.md",
+      "sha256": "dda0c04e0c4dfba760716a8dc6cefa1b2ec53287fd09ae9fcfbd5dec2c17b227"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t5-sameas/cq.sparql",
+      "sha256": "fefc8b5490c4d981fc2b1409326add1910c74036ccf1aaa5c89e2064f67d7601"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t5-sameas/reference.ttl",
+      "sha256": "34b04955fe8e2dbb76b88073a6165045ce3255c344da1221f8e0d7a239d4f7a0"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t5-sameas/shapes.ttl",
+      "sha256": "a3e969711958656b4462ee161c5633c63263f37fd8103bdad3b8cd848e1fc282"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t5-sameas/task.md",
+      "sha256": "941c20838e4ed1687f0a2c9616d55e6db034e9305e3d6dd97cce3d263317592a"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t6-unsatisfiability/cq.sparql",
+      "sha256": "a2ddb35761468028cd0b9ac5a7225cb29d137738b2012f56c08af68d172ad810"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t6-unsatisfiability/reference.ttl",
+      "sha256": "2676775f0f88011de1fb2dd33f3fba9bf573c57796c5eba25a4691e4ad49e058"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t6-unsatisfiability/shapes.ttl",
+      "sha256": "685e8896c4daf9e399bfa5b6d21b8f881fa0ecf7cb25aa2358609dfe95daaf97"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/ontoauthor-mat/t6-unsatisfiability/task.md",
+      "sha256": "cc963c1d715663f103b255ed3dea4eca84698953c17c75eaa69cb8719a252438"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/pizza-tutorial/README.md",
+      "sha256": "1dea98bb22917dc820be3986af97904870024318b3ba30c665530d1493974edf"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/pizza-tutorial/seed.md",
+      "sha256": "a4f3edab0b0c0b71076c87b31030de64f38fc022056aa4d7ac441a8d1c4c4c84"
+    },
+    {
+      "file": "packages/ontology/server/test/fixtures/real-world/prov-o-starting-point.ttl",
+      "sha256": "9eb284a829cfa714d3f5a7f2e189824d96c7b8a3a0d108aa47fa0ce84e20bd6e"
+    },
+    {
+      "file": "packages/ontology/server/tsconfig.check.json",
+      "sha256": "61972d9a7a1e9c42d4ca4c2e1bd6cdb5c307a9785787708321e18784d1b9924f"
+    },
+    {
+      "file": "packages/ontology/server/tsconfig.json",
+      "sha256": "f9496d22c9fd59f73931bd1107f20c87450a074c7024ef9843035cefa830d15f"
+    },
+    {
+      "file": "packages/ontology/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/ontology/server/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured ontology-server local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 26,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.79296875, 4.087890625, 3.24365234375],
+    "loadAfter": [5.48876953125, 4.05322265625, 3.23681640625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.01 avg60=0.14 avg300=0.15 total=797064726\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218736\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142606\n",
+      "io": "some avg10=0.00 avg60=0.08 avg300=0.04 total=854967461\nfull avg10=0.00 avg60=0.06 avg300=0.02 total=747933775\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.01 avg60=0.14 avg300=0.15 total=797072116\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218737\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142607\n",
+      "io": "some avg10=0.00 avg60=0.07 avg300=0.04 total=854968508\nfull avg10=0.00 avg60=0.06 avg300=0.02 total=747934440\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 26,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded load, not a causal benchmark. Before26 and after28 cases pass with zero skips and stable hashes; splitting three codec laws adds two registrations. All98 original assertions remain with15 helper conversions. Actual native filesystems, Turtle, Oxigraph and SHACL engines remain. Public layer fixtures use30second acquisition deadlines and preserve original body deadlines. Six old-pass/new-fail HTTP and literal controls, three replay/shrink inversions, and three native cleanup controls passed. Baseline overlaps a publisher; after overlaps machine census and detector scan."
+}

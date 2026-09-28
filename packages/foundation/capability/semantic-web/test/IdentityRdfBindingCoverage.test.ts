@@ -10,7 +10,8 @@ import {
   layerDataset,
   projectShapes,
 } from "@beep/semantic-web";
-import { assert, describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import type { Dataset, Quad } from "@beep/rdf/Rdf";
 
@@ -22,6 +23,9 @@ const binding = IdentityRdfBinding.make({
   fiberPaths: { label: labelPath },
 });
 const entry = IdentityEntry.fromComposer(entryComposer, { label: "Coverage entry" });
+const RegistryTestLayer = Layer.unwrap(
+  entriesToDataset(binding)([entry]).pipe(Effect.map((dataset) => layerDataset(dataset)(binding)))
+);
 const subject = makeNamedNode(entry.iri);
 const identifierQuad = makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value));
 const curieQuad = makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value));
@@ -39,12 +43,6 @@ const expectDecodeError = Effect.fnUntraced(function* (
   assert.strictEqual(error.subject, expectedSubject);
   assert.strictEqual(error.message, expectedMessage);
 });
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(provided: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(provided).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("identity RDF binding decode failures", () => {
   it.effect(
     "rejects a blank-node identity subject",
@@ -187,17 +185,18 @@ describe("identity RDF binding decode failures", () => {
 });
 
 describe("identity RDF data-last adapters", () => {
-  it.effect(
-    "builds a registry through the data-last layerDataset overload",
-    Effect.fnUntraced(function* () {
-      const dataset = yield* entriesToDataset(binding)([entry]);
-      const resolved = yield* IdentityRegistry.use((registry) =>
-        registry.resolve({ _tag: "identity", value: entry.identity })
-      ).pipe(provideScopedLayer(layerDataset(dataset)(binding)));
+  it.layer(RegistryTestLayer, { timeout: "30 seconds" })("dataset registry fixture", (it) => {
+    it.effect(
+      "builds a registry through the data-last layerDataset overload",
+      Effect.fnUntraced(function* () {
+        const resolved = yield* IdentityRegistry.use((registry) =>
+          registry.resolve({ _tag: "identity", value: entry.identity })
+        );
 
-      assert.deepStrictEqual(resolved, entry);
-    })
-  );
+        assert.deepStrictEqual(resolved, entry);
+      })
+    );
+  });
 
   it.effect(
     "matches data-first projection through the data-last projectShapes overload",

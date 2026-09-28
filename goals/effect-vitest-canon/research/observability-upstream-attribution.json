@@ -1,0 +1,14 @@
+{
+  "package": "@beep/observability",
+  "baselineHead": "9cb79ddda2b72c426b322045fee9f5131b92a13c",
+  "upstreamFixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+  "pullRequest": 1200,
+  "historicalIds": [
+    "EV001:packages/foundation/capability/observability/test/Observed.test.ts:62:runSync@6#1",
+    "EV001:packages/foundation/capability/observability/test/Observed.test.ts:80:runSync@6#1",
+    "EV007:packages/foundation/capability/observability/test/Observed.test.ts:63:checkEffect@8#1",
+    "EV007:packages/foundation/capability/observability/test/Observed.test.ts:81:checkEffect@8#1",
+    "EV011:packages/foundation/capability/observability/test/Observed.test.ts:6:vitest-import@0#1"
+  ],
+  "reason": "Upstream already migrated two original membership laws and the runtime registration import. This wave preserves those laws and receives no migration credit for those five historical detector identities."
+}

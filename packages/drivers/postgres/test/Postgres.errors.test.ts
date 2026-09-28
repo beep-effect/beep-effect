@@ -17,23 +17,23 @@ import {
   PostgresError,
   PostgresErrorContext,
 } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Equal, Layer, Result } from "effect";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import { Cause, Effect, Equal, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
 
 const NativeDate = globalThis.Date;
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const makeHostileProxy = (): unknown =>
   new Proxy(
@@ -97,36 +97,17 @@ const makeCauseWithHostileReason = (): Cause.Cause<unknown> => {
 const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
   Result.getOrThrow(S.encodeResult(schema)(value));
 
-const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
-  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
-
-const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
-  const encoded = encode(schema, value);
-  const decoded = decode(schema, encoded);
-  const reencoded = encode(schema, decoded);
+const expectRoundTrip = Effect.fn("expectRoundTrip")(function* <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  value: Codec["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  const reencoded = yield* S.encodeEffect(schema)(decoded);
 
   expect(reencoded).toEqual(encoded);
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
-};
-
-const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
-  schema: Codec,
-  arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expectRoundTrip(schema, value);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+});
 
 describe("PostgresError", () => {
   it("extracts SQLSTATE diagnostics from pg-like failures", () => {
@@ -209,35 +190,56 @@ describe("PostgresError", () => {
     });
   });
 
-  it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
-    const postgresErrorArbitrary = Arbitrary.schema(PostgresError).pipe(
-      Arbitrary.map((error) =>
-        PostgresError.make({
-          operation: error.operation,
-          cause: O.none(),
-          message: error.message,
-          sqlState: error.sqlState,
-          sqlStateName: error.sqlStateName,
-          severity: error.severity,
-          detail: error.detail,
-          hint: error.hint,
-          where: error.where,
-          schemaName: error.schemaName,
-          tableName: error.tableName,
-          columnName: error.columnName,
-          constraintName: error.constraintName,
-          query: error.query,
-          params: O.none(),
-          sourceLocation: error.sourceLocation,
-        })
-      )
-    );
+  const postgresErrorArbitrary = Arbitrary.schema(PostgresError).pipe(
+    Arbitrary.map((error) =>
+      PostgresError.make({
+        operation: error.operation,
+        cause: O.none(),
+        message: error.message,
+        sqlState: error.sqlState,
+        sqlStateName: error.sqlStateName,
+        severity: error.severity,
+        detail: error.detail,
+        hint: error.hint,
+        where: error.where,
+        schemaName: error.schemaName,
+        tableName: error.tableName,
+        columnName: error.columnName,
+        constraintName: error.constraintName,
+        query: error.query,
+        params: O.none(),
+        sourceLocation: error.sourceLocation,
+      })
+    )
+  );
 
-    assertSchemaRoundTrip(PgErrorCode);
-    assertSchemaRoundTrip(PgErrorName);
-    assertSchemaRoundTrip(PostgresErrorContext);
-    assertSchemaRoundTrip(PostgresError, postgresErrorArbitrary);
-  });
+  it.effect.prop(
+    "round-trips schema-derived SQLSTATE codes",
+    [PgErrorCode],
+    ([value]) => expectRoundTrip(PgErrorCode, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived SQLSTATE names",
+    [PgErrorName],
+    ([value]) => expectRoundTrip(PgErrorName, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived Postgres diagnostic context",
+    [PostgresErrorContext],
+    ([value]) => expectRoundTrip(PostgresErrorContext, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived normalized Postgres errors",
+    [postgresErrorArbitrary],
+    ([value]) => expectRoundTrip(PostgresError, value),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("keeps fallback Drizzle message params opaque when they contain commas", () => {
     const cause = new Error('Failed query: select 1 where payload = $1\nparams: {"label":"a,b"}, opaque');
@@ -331,24 +333,24 @@ describe("PostgresError", () => {
     const diagnostics = extractPostgresDiagnostics(makeHostileProxy());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("does not retain proxied Cause values with throwing reasons getters", () => {
     const diagnostics = extractPostgresDiagnostics(makeCauseWithThrowingReasons());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("ignores hostile Cause reason entries without throwing", () => {
     const diagnostics = extractPostgresDiagnostics(makeCauseWithHostileReason());
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.cause)).toBe(true);
-    expect(O.isNone(diagnostics.sqlState)).toBe(true);
+    assertNone(diagnostics.cause);
+    assertNone(diagnostics.sqlState);
   });
 
   it("ignores hostile Error.stack getters", () => {
@@ -362,7 +364,7 @@ describe("PostgresError", () => {
     const diagnostics = extractPostgresDiagnostics(cause);
 
     expect(diagnostics.operation).toBe("diagnostics");
-    expect(O.isNone(diagnostics.sourceLocation)).toBe(true);
+    assertNone(diagnostics.sourceLocation);
   });
 
   it("follows reason fallbacks when sibling getters throw", () => {
@@ -547,61 +549,67 @@ describe("Postgres interop", () => {
 });
 
 describe("Postgres Drizzle migrations", () => {
-  it.effect(
-    "normalizes synchronous native migrator setup failures",
-    Effect.fnUntraced(function* () {
-      const error = yield* migrate({} as PostgresDrizzleDatabase, {
-        migrationsFolder: "/tmp/beep-effect2-postgres-missing-migrations-folder/child",
-      }).pipe(Effect.flip);
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "normalizes synchronous native migrator setup failures",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const error = yield* migrate({} as PostgresDrizzleDatabase, {
+          migrationsFolder: path.join(directory, "missing-child"),
+        }).pipe(Effect.flip);
 
-      expect(error).toBeInstanceOf(PostgresError);
-      expect(error.operation).toBe("migrate");
-      expect(O.getOrThrow(error.message)).toContain("ENOENT");
-    })
-  );
+        expect(error).toBeInstanceOf(PostgresError);
+        expect(error.operation).toBe("migrate");
+        expect(O.getOrThrow(error.message)).toContain("ENOENT");
+      })
+    );
+  });
 
-  it.effect(
-    "validates and prepares in-memory migration bundles before native execution",
-    Effect.fnUntraced(function* () {
-      const config = MigrationBundleConfig.make({
-        migrations: [
-          MigrationBundleEntry.make({
-            name: "20260512000000_create_example",
-            sql: "CREATE TABLE example (id TEXT PRIMARY KEY);\n",
-          }),
-        ],
-        migrationsSchema: "drizzle",
-        migrationsTable: "__drizzle_migrations",
-      });
-      const execute = () => Effect.void;
-      const session = {
-        execute,
-        objects: () => Effect.succeed([]),
-        transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
-      };
-      const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config).pipe(
-        provideScopedLayer(NodeCrypto.layer)
-      );
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "validates and prepares in-memory migration bundles before native execution",
+      Effect.fnUntraced(function* () {
+        const config = MigrationBundleConfig.make({
+          migrations: [
+            MigrationBundleEntry.make({
+              name: "20260512000000_create_example",
+              sql: "CREATE TABLE example (id TEXT PRIMARY KEY);\n",
+            }),
+          ],
+          migrationsSchema: "drizzle",
+          migrationsTable: "__drizzle_migrations",
+        });
+        const execute = () => Effect.void;
+        const session = {
+          execute,
+          objects: () => Effect.succeed([]),
+          transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
+        };
+        const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config);
 
-      expectRoundTrip(MigrationBundleConfig, config);
-      expect(result).toBeUndefined();
-    })
-  );
+        yield* expectRoundTrip(MigrationBundleConfig, config);
+        expect(result).toBeUndefined();
+      })
+    );
+  });
 });
 
 describe("Postgres client", () => {
-  it.effect("provides all client service keys from an existing PgClient", () => {
-    const client = { fixture: "pg-client" } as unknown as PostgresClientValue;
-    const program = Effect.gen(function* () {
-      const beepClient = yield* PostgresClient;
-      const nativeClient = yield* NativePgClient.PgClient;
-      const sqlClient = yield* SqlClient.SqlClient;
+  const client = { fixture: "pg-client" } as unknown as PostgresClientValue;
 
-      assert.strictEqual(beepClient, client);
-      assert.strictEqual(nativeClient, client);
-      assert.strictEqual(sqlClient, client);
-    });
+  it.layer(PostgresClient.fromPgClient(client), { timeout: "10 seconds" })((it) => {
+    it.effect("provides all client service keys from an existing PgClient", () =>
+      Effect.gen(function* () {
+        const beepClient = yield* PostgresClient;
+        const nativeClient = yield* NativePgClient.PgClient;
+        const sqlClient = yield* SqlClient.SqlClient;
 
-    return program.pipe(provideScopedLayer(PostgresClient.fromPgClient(client)));
+        assert.strictEqual(beepClient, client);
+        assert.strictEqual(nativeClient, client);
+        assert.strictEqual(sqlClient, client);
+      })
+    );
   });
 });

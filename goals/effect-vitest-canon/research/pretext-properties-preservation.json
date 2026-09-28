@@ -1,0 +1,17 @@
+{
+  "beforeSha": "3cf8d62171633dca78f2b5d72715809a76ef2b59",
+  "onlyProvenanceAssertionsAdded": true,
+  "originalSentencePresenceRetained": true,
+  "originalOtherBodyBytesPreserved": true,
+  "expectedSource": "Independent chromeLinuxArial16 canned fixture",
+  "comparedFields": [
+    "sentence",
+    "capturedAt",
+    "engine",
+    "platform",
+    "engineProfile",
+    "oracle",
+    "domLineCounts"
+  ],
+  "sourceSha256": "ac5a5338b3b1b3b73583a1caa192e22138608bd39c6cc7ee31d01f66794ddfb6"
+}

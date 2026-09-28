@@ -1,0 +1,51 @@
+{
+  "package": "@beep/api-docs",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:21:44.290000+00:00",
+  "totalMs": 3630.607177734375,
+  "testCount": 5,
+  "files": [
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "ms": 15.4990234375,
+      "tests": 3
+    },
+    {
+      "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
+      "ms": 26.607177734375,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/api-docs/test/health.test.ts",
+      "ms": 10.23974609375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
+      "testName": "API docs routes serves contract docs and committed specifications",
+      "ms": 26.607180999999855
+    },
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "testName": "API docs catalog contains nine entries with unique slugs",
+      "ms": 14.103172000000086
+    },
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "testName": "API docs catalog generates OpenAPI for all four contract entries",
+      "ms": 11.819626999999855
+    },
+    {
+      "file": "apps/labs/api-docs/test/health.test.ts",
+      "testName": "@beep/api-docs serves GET /health",
+      "ms": 10.239754000000175
+    },
+    {
+      "file": "apps/labs/api-docs/test/Catalog.test.ts",
+      "testName": "API docs catalog committed spec files references committed spec files that exist",
+      "ms": 3.4989770000001954
+    }
+  ]
+}

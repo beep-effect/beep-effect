@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/n3",
+  "sourceHead": "88003af1b4e3ce99df9aa79fa9e2e409da7f691b",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 3.8699762460018974,
+  "bunWholeCommandSeconds": 1.3157673940004315,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.4150390625, 3.37548828125, 3.169921875],
+  "loadAfter": [2.38134765625, 3.3525390625, 3.16357421875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.06 avg300=0.09 total=777407407\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216257\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140214\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=842716267\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=737184664\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.06 avg300=0.09 total=777413149\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216257\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140214\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=842717448\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=737185799\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "d3bbaec55838e8f82ba9b956512051fccc83f6bd840502484b66376847467d04"
+    },
+    {
+      "file": "packages/drivers/n3/AGENTS.md",
+      "sha256": "cd8e57b686e3f60aac0ed1bffe6d5f0bedd0776e795e5e9a6fc113c1141c8ffb"
+    },
+    {
+      "file": "packages/drivers/n3/LICENSE",
+      "sha256": "200d5b40fec6e6be617f92d5da406bb0ab310f969bdbb7b151bfded815c8a36e"
+    },
+    {
+      "file": "packages/drivers/n3/README.md",
+      "sha256": "6301980055f5668cd010d6bce2f8b1b5359ebb57d5477605cfea20f1e950d349"
+    },
+    {
+      "file": "packages/drivers/n3/docgen.json",
+      "sha256": "276b46da3270cc3b4a706a0cb2bbbba5316a30e6a6368f7e152082ca8e29f55e"
+    },
+    {
+      "file": "packages/drivers/n3/package.json",
+      "sha256": "84f125c81cb8f4f6878c5c050730308e41aca2ccbdc8d95ac589843e0ae1706a"
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.errors.ts",
+      "sha256": "efe2e0e226da19303fdd4afade4abacb573e0c501f7d0b23b87eef50c83dc3fb"
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.service.ts",
+      "sha256": "cb9dddf7de44e1f0ecfd3e52ba11322a70982566ffcdb9eafdc318efb99d3a0d"
+    },
+    {
+      "file": "packages/drivers/n3/src/index.ts",
+      "sha256": "a87b247423cd220765d605e012ffdaee1002a4c211cbb0b42d326ce4b8b3a81a"
+    },
+    {
+      "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
+      "sha256": "0ecf21b726088a26650cd99e7c035e3f55b52f545cf6e974019d0aa2abda7e55"
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "sha256": "e0254e71142f7da6c1ad60cfb01bf0920d1b1ee33ddf566edeee1e8c069ef24e"
+    },
+    {
+      "file": "packages/drivers/n3/tsconfig.check.json",
+      "sha256": "5f75015b1730e7f512386751c31ad830625c7cfc1ca4104b361d2e4be1237041"
+    },
+    {
+      "file": "packages/drivers/n3/tsconfig.json",
+      "sha256": "60ee37a0ec142ffaedf2285d51706f7e523bf458e9c53f9547606f0043364f7f"
+    },
+    {
+      "file": "packages/drivers/n3/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/n3/vitest.config.ts",
+      "sha256": "ee95dd0c62dc47993f78b05b20c2a13b9c55c6a8ddaf1e1aca116c7da2f99216"
+    }
+  ],
+  "environmentMode": "Configured N3 Turtle codec and error-equivalence Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 6,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.38134765625, 3.3525390625, 3.16357421875],
+    "loadAfter": [2.38134765625, 3.3525390625, 3.16357421875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.06 avg300=0.09 total=777413179\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216257\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140214\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=842717448\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=737185799\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.06 avg300=0.09 total=777415328\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186216257\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178140214\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=842717504\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=737185816\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 6,
+    "skipped": 0
+  },
+  "interpretation": "Single observations under recorded workstation load, not a causal benchmark. Six configured tests pass before and after with zero skips and stable source.15originalassertions and6registrations remain. The stateless codec uses native it.layer; only the test mutating Writer.prototype.end becomes nonconcurrent. Its spy has a scopedowner proven by an earlydefect suite-level restoration control. Both observations overlap an early publisher or its termination. No external endpoint is contacted."
+}

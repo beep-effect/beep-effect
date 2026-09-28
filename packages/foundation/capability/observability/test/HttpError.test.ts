@@ -1,6 +1,7 @@
 import { makeInternalServerError, makeNotFoundError, makeTooManyRequestsError } from "@beep/observability";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { ErrorReporter } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("HttpError", () => {
   it("builds a not-found error with reporter metadata", () => {

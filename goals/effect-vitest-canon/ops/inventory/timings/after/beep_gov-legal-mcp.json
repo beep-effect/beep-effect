@@ -1,0 +1,71 @@
+{
+  "package": "@beep/gov-legal-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T09:09:16.405000+00:00",
+  "totalMs": 4924.986328125,
+  "testCount": 32,
+  "files": [
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "ms": 13.7314453125,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "ms": 114.986328125,
+      "tests": 28
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-gov-legal-test over newline-delimited stdio sends server/discover then tools/call over stdio",
+      "ms": 82.38001499999973
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-gov-legal-test over newline-delimited stdio emits one compact JSON-RPC message per line and processes requests independently",
+      "ms": 67.61159899999984
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-gov-legal-test over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+      "ms": 63.129234999999426
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-gov-legal-test over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+      "ms": 61.372628999999506
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "tool-name report determinism projects arbitrary candidates deterministically under the frozen cap and digest contract",
+      "ms": 54.34691800000019
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with the GovInfo hard-gate key keeps HTTP tracing enabled while suppressing request parameters from every completed span",
+      "ms": 36.17717100000027
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with the GovInfo hard-gate key decodes installed MCP definitions, listing, call envelopes, results, and source-schema round trips",
+      "ms": 34.10545100000036
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "tool-name report determinism with platform filesystem services renders identical temporary bytes matching the checked-in sorted artifact",
+      "ms": 31.98628699999972
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with only the keyless eCFR source composed mounts and calls all three eCFR tools without credentials",
+      "ms": 23.6427649999996
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-gov-legal-test over streamable HTTP calls a tool and returns a non-error result",
+      "ms": 21.422276000000238
+    }
+  ]
+}

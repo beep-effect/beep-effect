@@ -1,10 +1,14 @@
 import {
+  Activity,
   Agent,
   Association,
+  Attribution,
+  Derivation,
   Entity,
   Generation,
   LifecycleTimes,
   ObjectRef,
+  PrimarySource,
   ProvBundle,
   SoftwareAgent,
   Usage,
@@ -25,8 +29,11 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,6 +49,12 @@ const isUsage = S.is(Usage);
 const RoundTripEntitySeed = S.Struct({
   index: NonNegativeInt,
   value: S.String,
+});
+const SupportedCoreSeed = S.Struct({
+  index: NonNegativeInt,
+  value: Entity.fields.value,
+  name: Agent.fields.name,
+  atTime: Usage.fields.atTime,
 });
 
 const rawCoreBundle: unknown = {
@@ -78,13 +91,13 @@ const rawCoreBundle: unknown = {
 
 describe("ProvRdf", () => {
   it("requires relation discriminators when decoding a provenance bundle", () => {
-    expect(
-      Result.isFailure(
-        ProvBundle.decodeUnknownResult({
-          records: [{ activity: "activity:extract", entity: "entity:source" }],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      ProvBundle.decodeUnknownResult({
+        records: [{ activity: "activity:extract", entity: "entity:source" }],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
 
     const decoded = ProvBundle.decodeUnknownResult({
       records: [
@@ -93,7 +106,7 @@ describe("ProvRdf", () => {
       ],
     });
 
-    expect(Result.isSuccess(decoded)).toBe(true);
+    pipe(decoded, Result.isSuccess, assertTrue);
     expect(
       Result.match(decoded, {
         onFailure: () => [],
@@ -151,17 +164,22 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset, options));
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded, options));
 
-      expect(
-        A.every(dataset.quads, (quad) => quad.graph.termType === "NamedNode" && quad.graph.value === auditGraph.value)
-      ).toBe(true);
+      pipe(
+        A.every(dataset.quads, (quad) => quad.graph.termType === "NamedNode" && quad.graph.value === auditGraph.value),
+        assertTrue
+      );
       expect(decoded.records).toHaveLength(bundle.records.length);
       expect(A.map(sortDatasetQuads(reencoded), serializeQuad)).toEqual(
         A.map(sortDatasetQuads(dataset), serializeQuad)
       );
-      expect(A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_QUALIFIED_USAGE.value)).toBe(
-        true
+      pipe(
+        A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_QUALIFIED_USAGE.value),
+        assertTrue
       );
-      expect(A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_USED.value)).toBe(true);
+      pipe(
+        A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_USED.value),
+        assertTrue
+      );
     })
   );
 
@@ -173,45 +191,40 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const encodedAgain = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      expect(areDatasetsEquivalent(dataset, encodedAgain)).toBe(true);
+      pipe(areDatasetsEquivalent(dataset, encodedAgain), assertTrue);
     })
   );
 
-  it("round-trips schema-derived supported PROV records without RDF loss", () => {
-    const encodableBundle = Arbitrary.schema(RoundTripEntitySeed).pipe(
-      Arbitrary.map(({ index, value }) =>
-        ProvBundle.make({
-          records: [
-            Entity.make({
-              id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
-              value: O.some(value),
-            }),
-          ],
-        })
-      )
-    );
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([encodableBundle]),
-          ([bundle]) =>
-            Result.match(provBundleToDataset(bundle), {
-              onFailure: () => false,
-              onSuccess: (dataset) =>
-                Result.match(datasetToProvBundle(dataset), {
-                  onFailure: () => false,
-                  onSuccess: (decoded) =>
-                    Result.match(provBundleToDataset(decoded), {
-                      onFailure: () => false,
-                      onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
-                    }),
-                }),
-            }),
-          { runs: 100 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  const encodableBundle = Arbitrary.schema(RoundTripEntitySeed).pipe(
+    Arbitrary.map(({ index, value }) =>
+      ProvBundle.make({
+        records: [
+          Entity.make({
+            id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
+            value: O.some(value),
+          }),
+        ],
+      })
+    )
+  );
+  it.prop(
+    "round-trips schema-derived supported PROV records without RDF loss",
+    [encodableBundle],
+    ([bundle]) =>
+      Result.match(provBundleToDataset(bundle), {
+        onFailure: () => false,
+        onSuccess: (dataset) =>
+          Result.match(datasetToProvBundle(dataset), {
+            onFailure: () => false,
+            onSuccess: (decoded) =>
+              Result.match(provBundleToDataset(decoded), {
+                onFailure: () => false,
+                onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+              }),
+          }),
+      }),
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "preserves scalar and qualified-relation variants across the RDF boundary",
@@ -245,10 +258,10 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      expect(areDatasetsEquivalent(dataset, reencoded)).toBe(true);
-      expect(A.some(decoded.records, isAgent)).toBe(true);
-      expect(A.some(decoded.records, isGeneration)).toBe(true);
-      expect(A.some(decoded.records, isAssociation)).toBe(true);
+      pipe(areDatasetsEquivalent(dataset, reencoded), assertTrue);
+      pipe(A.some(decoded.records, isAgent), assertTrue);
+      pipe(A.some(decoded.records, isGeneration), assertTrue);
+      pipe(A.some(decoded.records, isAssociation), assertTrue);
     })
   );
 
@@ -260,7 +273,7 @@ describe("ProvRdf", () => {
       );
       const result = provBundleToDataset(bundle);
 
-      expect(Result.isFailure(result)).toBe(true);
+      pipe(result, Result.isFailure, assertTrue);
       expect(Result.match(result, { onFailure: (error) => error._tag, onSuccess: () => "" })).toBe("ProvRdfCodecError");
     })
   );
@@ -268,7 +281,7 @@ describe("ProvRdf", () => {
   it("rejects lifecycle adjuncts instead of projecting them incompletely", () => {
     const result = provBundleToDataset(ProvBundle.make({ records: [], lifecycle: O.some(LifecycleTimes.make({})) }));
 
-    expect(Result.isFailure(result)).toBe(true);
+    pipe(result, Result.isFailure, assertTrue);
   });
 
   it("rejects duplicate record subjects before RDF projection", () => {
@@ -277,7 +290,7 @@ describe("ProvRdf", () => {
       records: [Entity.make({ id, value: O.some("first") }), Entity.make({ id, value: O.some("second") })],
     });
 
-    expect(Result.isFailure(provBundleToDataset(bundle))).toBe(true);
+    pipe(provBundleToDataset(bundle), Result.isFailure, assertTrue);
   });
 
   it("rejects duplicate record subjects even when their PROV types differ", () => {
@@ -286,7 +299,7 @@ describe("ProvRdf", () => {
       records: [Agent.make({ id, name: O.some("Person") }), SoftwareAgent.make({ id, name: O.some("Software") })],
     });
 
-    expect(Result.isFailure(provBundleToDataset(bundle))).toBe(true);
+    pipe(provBundleToDataset(bundle), Result.isFailure, assertTrue);
   });
 
   it("rejects a named node used where prov:value requires a literal", () => {
@@ -296,7 +309,7 @@ describe("ProvRdf", () => {
       makeQuad(subject, ProvVocabulary.PROV_VALUE, makeNamedNode("urn:example:not-a-literal")),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects malformed, unsupported, and language-tagged prov:value literals", () => {
@@ -307,17 +320,21 @@ describe("ProvRdf", () => {
         makeQuad(subject, ProvVocabulary.PROV_VALUE, value),
       ]);
 
-    expect(Result.isFailure(datasetToProvBundle(datasetWithValue(makeLiteral("not-a-number", XSD_DOUBLE.value))))).toBe(
-      true
+    pipe(
+      datasetToProvBundle(datasetWithValue(makeLiteral("not-a-number", XSD_DOUBLE.value))),
+      Result.isFailure,
+      assertTrue
     );
-    expect(
-      Result.isFailure(datasetToProvBundle(datasetWithValue(makeLiteral("2026-08-17", XSD_DATE_TIME.value))))
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        datasetToProvBundle(datasetWithValue(makeLiteral("bonjour", XSD_STRING.value, { language: "fr" })))
-      )
-    ).toBe(true);
+    pipe(
+      datasetToProvBundle(datasetWithValue(makeLiteral("2026-08-17", XSD_DATE_TIME.value))),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      datasetToProvBundle(datasetWithValue(makeLiteral("bonjour", XSD_STRING.value, { language: "fr" }))),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("rejects a named node used where a PROV timestamp requires a literal", () => {
@@ -327,7 +344,7 @@ describe("ProvRdf", () => {
       makeQuad(subject, ProvVocabulary.PROV_GENERATED_AT_TIME, makeNamedNode("urn:example:not-a-timestamp")),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it.effect(
@@ -338,7 +355,7 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      expect(areDatasetsEquivalent(dataset, reencoded)).toBe(true);
+      pipe(areDatasetsEquivalent(dataset, reencoded), assertTrue);
     })
   );
 
@@ -364,7 +381,7 @@ describe("ProvRdf", () => {
       const encodedLocal = yield* Effect.fromResult(provBundleToDataset(localBundle));
       const decodedLocal = yield* Effect.fromResult(datasetToProvBundle(encodedLocal));
 
-      expect(areDatasetsEquivalent(externalDataset, reencodedExternal)).toBe(true);
+      pipe(areDatasetsEquivalent(externalDataset, reencodedExternal), assertTrue);
       expect(decodedReserved.records).toEqual(reservedBundle.records);
       expect(decodedLocal.records).toEqual(localBundle.records);
     })
@@ -378,10 +395,12 @@ describe("ProvRdf", () => {
         makeQuad(subject, ProvVocabulary.PROV_WAS_DERIVED_FROM, makeNamedNode(value)),
       ]);
 
-    expect(Result.isFailure(datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:*")))).toBe(true);
-    expect(
-      Result.isFailure(datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:aGFzIHdoaXRlc3BhY2U")))
-    ).toBe(true);
+    pipe(datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:*")), Result.isFailure, assertTrue);
+    pipe(
+      datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:aGFzIHdoaXRlc3BhY2U")),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("rejects a literal used where a PROV reference requires a named node", () => {
@@ -391,7 +410,7 @@ describe("ProvRdf", () => {
       makeQuad(subject, ProvVocabulary.PROV_WAS_DERIVED_FROM, makeLiteral("not-a-reference", XSD_STRING.value)),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects a named node used where rdfs:label requires a literal", () => {
@@ -401,7 +420,7 @@ describe("ProvRdf", () => {
       makeQuad(subject, RDFS_LABEL, makeNamedNode("urn:example:not-a-label")),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects non-canonical timestamp and label literal shapes", () => {
@@ -420,9 +439,9 @@ describe("ProvRdf", () => {
       makeQuad(agent, RDFS_LABEL, makeLiteral("Agent", XSD_STRING.value, { language: "en" })),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(wrongDatatype))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(invalidLexicalForm))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(languageLabel))).toBe(true);
+    pipe(datasetToProvBundle(wrongDatatype), Result.isFailure, assertTrue);
+    pipe(datasetToProvBundle(invalidLexicalForm), Result.isFailure, assertTrue);
+    pipe(datasetToProvBundle(languageLabel), Result.isFailure, assertTrue);
   });
 
   it("rejects duplicate singular properties and blank-node record subjects", () => {
@@ -435,15 +454,15 @@ describe("ProvRdf", () => {
     const blankSubject = makeBlankNode("anonymous-entity");
     const blankRecord = makeDataset([makeQuad(blankSubject, RDF_TYPE, ProvVocabulary.PROV_ENTITY)]);
 
-    expect(Result.isFailure(datasetToProvBundle(duplicateValue))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(blankRecord))).toBe(true);
+    pipe(datasetToProvBundle(duplicateValue), Result.isFailure, assertTrue);
+    pipe(datasetToProvBundle(blankRecord), Result.isFailure, assertTrue);
   });
 
   it("rejects unsupported PROV record types", () => {
     const subject = makeNamedNode("urn:example:unsupported-plan");
     const dataset = makeDataset([makeQuad(subject, RDF_TYPE, makeNamedNode(`${ProvVocabulary.PROV_NAMESPACE}Plan`))]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects multiple supported PROV types that share one RDF subject", () => {
@@ -453,7 +472,7 @@ describe("ProvRdf", () => {
       makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_SOFTWARE_AGENT),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects a qualified relation whose direct shortcut contradicts its target", () => {
@@ -468,14 +487,14 @@ describe("ProvRdf", () => {
       makeQuad(activity, ProvVocabulary.PROV_USED, directEntity),
     ]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it("rejects a qualified relation without its required parent and target", () => {
     const relation = makeNamedNode("urn:example:incomplete-usage");
     const dataset = makeDataset([makeQuad(relation, RDF_TYPE, ProvVocabulary.PROV_USAGE)]);
 
-    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+    pipe(datasetToProvBundle(dataset), Result.isFailure, assertTrue);
   });
 
   it.effect(
@@ -513,7 +532,62 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
 
       expect(decoded.records).toHaveLength(1);
-      expect(A.some(decoded.records, isUsage)).toBe(true);
+      pipe(A.some(decoded.records, isUsage), assertTrue);
     })
   );
 });
+it.prop(
+  "round-trips constructive supported PROV records and qualified relations without RDF loss",
+  [
+    Arbitrary.schema(SupportedCoreSeed).pipe(
+      Arbitrary.map(({ index, value, name, atTime }) => {
+        const entity = ObjectRef.make(`urn:beep:prov-core:${index}:entity`);
+        const source = ObjectRef.make(`urn:beep:prov-core:${index}:source`);
+        const activity = ObjectRef.make(`urn:beep:prov-core:${index}:activity`);
+        const agent = ObjectRef.make(`urn:beep:prov-core:${index}:agent`);
+        const software = ObjectRef.make(`urn:beep:prov-core:${index}:software`);
+
+        return ProvBundle.make({
+          records: [
+            Entity.make({
+              id: O.some(entity),
+              value,
+              wasGeneratedBy: O.some([activity]),
+              wasAttributedTo: O.some([agent]),
+              wasDerivedFrom: O.some([source]),
+              hadPrimarySource: O.some([source]),
+            }),
+            Entity.make({ id: O.some(source) }),
+            Activity.make({
+              id: O.some(activity),
+              used: O.some([source]),
+              wasAssociatedWith: O.some([agent, software]),
+            }),
+            Agent.make({ id: O.some(agent), name }),
+            SoftwareAgent.make({ id: O.some(software), name }),
+            Usage.make({ activity, entity: source, atTime }),
+            Generation.make({ entity, activity, atTime }),
+            Association.make({ activity, agent }),
+            Attribution.make({ entity, agent }),
+            Derivation.make({ generatedEntity: entity, usedEntity: source }),
+            PrimarySource.make({ entity, source }),
+          ],
+        });
+      })
+    ),
+  ],
+  ([bundle]) =>
+    Result.match(provBundleToDataset(bundle), {
+      onFailure: () => false,
+      onSuccess: (dataset) =>
+        Result.match(datasetToProvBundle(dataset), {
+          onFailure: () => false,
+          onSuccess: (decoded) =>
+            Result.match(provBundleToDataset(decoded), {
+              onFailure: () => false,
+              onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+            }),
+        }),
+    }),
+  { arbitrary: fcRuns(100) }
+);

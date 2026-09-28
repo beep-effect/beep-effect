@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/workspace-tables",
+  "sourceHead": "411bf443d2e02ff419dc24c7576be605db6a5c82",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.571422780005378,
+  "bunWholeCommandSeconds": 2.4675969060044736,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [9.71826171875, 5.91259765625, 7.11767578125],
+  "loadAfter": [10.6220703125, 6.1630859375, 7.1923828125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.12 avg60=0.28 avg300=0.13 total=661119993\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.10 avg60=0.25 avg300=0.21 total=167371604\nfull avg10=0.10 avg60=0.25 avg300=0.21 total=159663008\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775072006\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679401778\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.08 avg60=0.26 avg300=0.13 total=661128591\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.07 avg60=0.23 avg300=0.21 total=167371637\nfull avg10=0.07 avg60=0.23 avg300=0.21 total=159663041\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775076239\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679404462\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "4469264619371fcc19535c5af9c96a2d50415d4f181c4d7b320e242f855dcae2"
+    },
+    {
+      "file": "packages/workspace/tables/package.json",
+      "sha256": "fa344cda07977db57562e0caf38b80a6c525cf6849c98efc67600a891a033e07"
+    },
+    {
+      "file": "packages/workspace/tables/src/Schema.ts",
+      "sha256": "1b79fdb1fe78c9384b80c9fad5502dc44b645828486825d8b2b46a7eeb4f88a6"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/CandidateDraft/CandidateDraft.table.ts",
+      "sha256": "c7155a16a1b6dd048808fa821e5bb168c6ed9b40aada2a227d61d72ea172ae89"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/CandidateDraft/index.ts",
+      "sha256": "14c0e6415b51019cc924529b352e26db5570560890e900efdd050d6a93e7b766"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/CandidateProject/CandidateProject.table.ts",
+      "sha256": "9328cabc938968a3925a3913863236ad19c1dd15abb0d536b7b4bcff1a90e675"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/CandidateProject/index.ts",
+      "sha256": "6434f399854507289d5b22aeb63233c2cf681b9a2b6fd26006db008533a8158b"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Message/Message.converters.ts",
+      "sha256": "cf6ba75b2986887a429ec302375929a8fb2931baf12d75435ca8ab329426857c"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Message/Message.errors.ts",
+      "sha256": "ef4019e2b889a78b05c7c1a1931c80136c3cd085234f90a01e5793ac5291b6ee"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Message/Message.table.ts",
+      "sha256": "3887884e737cfa2ed904dac82e83bd1012a68f3cc041c8e3d33dfd0aeffc009e"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Message/index.ts",
+      "sha256": "7ac08eff2ddf0402c2b06e5de581dee2426d9c5a73e4c108e879a29af72db79b"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Thread/Thread.converters.ts",
+      "sha256": "9a4460ddff754eb2f8d4d39ebec29a613711dfb355cbe228626d1b6ecf44e634"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Thread/Thread.errors.ts",
+      "sha256": "77f029263aa22e98884e5bfa24cbb15c42415be8e519ac40e93004e94c0f56c8"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Thread/Thread.table.ts",
+      "sha256": "a7842711f25bbde22df3003f56174dffbfa624839f5c3c50a967f78cd840ddc8"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Thread/index.ts",
+      "sha256": "d644972faddaf0da75ac24516cc2c50f5a9db46291410c2ef8b8faf0e3d5c2a7"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Turn/Turn.converters.ts",
+      "sha256": "81ca89f4d7ac1e141b19d8b7930fbfb962dd5abca51dba42a7077828d10bc2df"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Turn/Turn.errors.ts",
+      "sha256": "d99fb6d9a4fac66290c4d23ce1c7dcd80065a64c2db2b90fcd9781bf22dbae1e"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Turn/Turn.table.ts",
+      "sha256": "2b693da0922dbbdc7c987d033edc6a681dbd9369bd95ce297e564dcb4edec5bb"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Turn/index.ts",
+      "sha256": "aafeec40274b0b7511445cdc501f9548d0d2d194d94bb7604a793402b94a8127"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Workspace/Workspace.converters.ts",
+      "sha256": "89b41c76283b92dbdcf2a7d96e40b0a136d6ed3ed443dc9145c5c68360dd7e08"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Workspace/Workspace.errors.ts",
+      "sha256": "502d35224a7a37d8df2edb1d279ff75272c55f19c7b44685643a64c6a2a549d6"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Workspace/Workspace.table.ts",
+      "sha256": "36da93baa5c8a8324108abca92cebe19f939b9ee51eba6ecda603038c246530b"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/Workspace/index.ts",
+      "sha256": "493cd348eaf05f7db7afe35c277eb38e75d37c61b73ce99ec8821b2f7d59951f"
+    },
+    {
+      "file": "packages/workspace/tables/src/entities/index.ts",
+      "sha256": "11e90435f72d014053afd7c318fa77ffcae288fd7c5fc37e3f5c01ff3aa723f3"
+    },
+    {
+      "file": "packages/workspace/tables/src/index.ts",
+      "sha256": "47c76c6e0472ba965ff9db9f9bc93c22669a7a86a280f9b08c02c5a86563d097"
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "sha256": "38dbbcfddcddad21e5bf62a645f8707ebe008da6c254d552a29dd8efad81ab36"
+    }
+  ],
+  "environmentMode": "Configured workspace codec and declaration metadata suites; no database or external process.",
+  "bunProof": {
+    "passedTests": 8,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [10.6220703125, 6.1630859375, 7.1923828125],
+    "loadAfter": [10.49169921875, 6.21044921875, 7.2021484375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.08 avg60=0.26 avg300=0.13 total=661128636\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.07 avg60=0.23 avg300=0.21 total=167371637\nfull avg10=0.07 avg60=0.23 avg300=0.21 total=159663041\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775076270\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679404493\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.05 avg60=0.24 avg300=0.13 total=661133819\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.04 avg60=0.22 avg300=0.21 total=167371695\nfull avg10=0.04 avg60=0.22 avg300=0.20 total=159663095\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.05 total=775076353\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=679404571\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

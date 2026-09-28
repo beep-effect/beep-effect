@@ -1,8 +1,11 @@
+import { $CiopsId } from "@beep/identity/packages";
 import { NonNegativeInt, PosInt } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber, FileSystem } from "effect";
+import { expect } from "@effect/vitest";
+import { assertExitFailure, assertNone } from "@effect/vitest/utils";
+import { Cause, Context, Effect, Exit, Fiber, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -56,6 +59,10 @@ const readPolicy = Effect.fn("CiOpsProjectionTest.readPolicy")(function* (): Eff
   return yield* decodeAdmissionPolicyParams(source);
 });
 
+const $I = $CiopsId.create("test/projection.test");
+class TestPolicy extends Context.Service<TestPolicy, AdmissionPolicyParams>()($I`TestPolicy`) {}
+const TestPolicyLive = Layer.effect(TestPolicy, readPolicy()).pipe(Layer.provideMerge(BunFileSystem.layer));
+
 const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);
 const proposalEquivalent = S.toEquivalence(ScheduleProposal);
 
@@ -69,11 +76,6 @@ const normalizePending = (
       nonce: `request-${index}-${request.nonce}`,
       weightTokens: PosInt.make(admissionWeightFor(request.kind, policy)),
     })
-  );
-
-const pendingArbitrary = (policy: AdmissionPolicyParams) =>
-  Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12))).pipe(
-    Arbitrary.map((requests) => normalizePending(policy, requests))
   );
 
 const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: number, admittedAtMillis: number): string =>
@@ -115,10 +117,10 @@ const inputFor = (
 const decodeProjectionInput = S.decodeEffect(ProjectionInput);
 const decodeUnknownProjectionInput = S.decodeUnknownEffect(ProjectionInput);
 
-describe("@beep/ciops S7 projection", () => {
+it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", (it) => {
   it.effect("strictly decodes every ratified S6 policy parameter from Turtle bytes", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
 
       expect(policy.capacityMaxTokens).toBe(10);
       expect(policy.slotSizeGib).toBe(5);
@@ -132,139 +134,125 @@ describe("@beep/ciops S7 projection", () => {
       expect(policy.weights.reviewFix).toBe(1);
       expect(policy.weights.publish).toBe(1);
       expect(policy.priorityOrder).toEqual(["publish", "verify"]);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
-  it.effect("property 1: projection and emitted A-Box are deterministic", () =>
-    Effect.gen(function* () {
-      const policy = yield* readPolicy();
-      const context = yield* Effect.context<never>();
-      const runSync = Effect.runSyncWith(context);
+  it.effect.prop(
+    "property 1: projection and emitted A-Box are deterministic",
+    [Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12)))],
+    ([requests]) =>
+      Effect.gen(function* () {
+        const policy = yield* TestPolicy;
+        const pending = normalizePending(policy, requests);
 
-      expect(
-        (yield* Arbitrary.checkEffect(
-          pendingArbitrary(policy),
-          (pending) => {
-            const input = inputFor(policy, pending);
-            const first = runSync(projectSchedule(input));
-            const second = runSync(projectSchedule(input));
-            const firstDocument = runSync(emitScheduleAbox(first));
-            const secondDocument = runSync(emitScheduleAbox(second));
+        const input = inputFor(policy, pending);
+        const first = yield* projectSchedule(input);
+        const second = yield* projectSchedule(input);
+        const firstDocument = yield* emitScheduleAbox(first);
+        const secondDocument = yield* emitScheduleAbox(second);
 
-            expect(proposalEquivalent(first, second)).toBe(true);
-            expect(firstDocument.content).toBe(secondDocument.content);
-            expect(firstDocument.content).toContain("@prefix ciops: <https://oip.law/ontology/ci-ops#> .");
-            expect(firstDocument.content).toContain("@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .");
+        expect(proposalEquivalent(first, second)).toBe(true);
+        expect(firstDocument.content).toBe(secondDocument.content);
+        expect(firstDocument.content).toContain("@prefix ciops: <https://oip.law/ontology/ci-ops#> .");
+        expect(firstDocument.content).toContain("@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .");
 
-            return true;
-          },
-          fcRuns(64)
-        ))._tag
-      ).toBe("Passed");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+        return true;
+      }),
+    { arbitrary: fcRuns(64) }
   );
 
-  it.effect("property 2: every admitted step preserves charge versus capacity", () =>
-    Effect.gen(function* () {
-      const policy = yield* readPolicy();
-      const context = yield* Effect.context<never>();
-      const runSync = Effect.runSyncWith(context);
+  it.effect.prop(
+    "property 2: every admitted step preserves charge versus capacity",
+    [Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12)))],
+    ([requests]) =>
+      Effect.gen(function* () {
+        const policy = yield* TestPolicy;
+        const pending = normalizePending(policy, requests);
 
-      expect(
-        (yield* Arbitrary.checkEffect(
-          pendingArbitrary(policy),
-          (pending) => {
-            const proposal = runSync(projectSchedule(inputFor(policy, pending)));
-            let active = 0;
-            for (const step of proposal.steps) {
-              const scope: ScheduleScope = step.scope;
-              expect(ScheduleScope.is.admission(scope)).toBe(true);
-              active += step.request.weightTokens;
-              expect(step.activeTokenTotalAfter).toBe(active);
-              expect(active).toBeLessThanOrEqual(policy.capacityMaxTokens);
-            }
+        const proposal = yield* projectSchedule(inputFor(policy, pending));
+        let active = 0;
+        for (const step of proposal.steps) {
+          const scope: ScheduleScope = step.scope;
+          expect(ScheduleScope.is.admission(scope)).toBe(true);
+          active += step.request.weightTokens;
+          expect(step.activeTokenTotalAfter).toBe(active);
+          expect(active).toBeLessThanOrEqual(policy.capacityMaxTokens);
+        }
 
-            return true;
-          },
-          fcRuns(64)
-        ))._tag
-      ).toBe("Passed");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+        return true;
+      }),
+    { arbitrary: fcRuns(64) }
   );
 
-  it.effect("property 3: every input request occurs once in steps or the deferred tail", () =>
-    Effect.gen(function* () {
-      const policy = yield* readPolicy();
-      const context = yield* Effect.context<never>();
-      const runSync = Effect.runSyncWith(context);
+  it.effect.prop(
+    "property 3: every input request occurs once in steps or the deferred tail",
+    [Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12)))],
+    ([requests]) =>
+      Effect.gen(function* () {
+        const policy = yield* TestPolicy;
+        const pending = normalizePending(policy, requests);
 
-      expect(
-        (yield* Arbitrary.checkEffect(
-          pendingArbitrary(policy),
-          (pending) => {
-            const proposal = runSync(projectSchedule(inputFor(policy, pending)));
-            const expected = HashSet.fromIterable(A.map(pending, (request) => request.nonce));
-            const projected = HashSet.fromIterable(
-              A.appendAll(
-                A.map(proposal.steps, (step) => step.request.nonce),
-                A.map(proposal.deferredTail, (request) => request.nonce)
-              )
-            );
+        const proposal = yield* projectSchedule(inputFor(policy, pending));
+        const expected = HashSet.fromIterable(A.map(pending, (request) => request.nonce));
+        const projectedNonces = A.appendAll(
+          A.map(proposal.steps, (step) => step.request.nonce),
+          A.map(proposal.deferredTail, (request) => request.nonce)
+        );
+        expect(A.length(projectedNonces)).toBe(A.length(pending));
+        for (const request of pending) {
+          expect(A.length(A.filter(projectedNonces, (nonce) => nonce === request.nonce))).toBe(1);
+        }
+        const projected = HashSet.fromIterable(projectedNonces);
 
-            expect(HashSet.size(projected)).toBe(A.length(pending));
-            expect(HashSet.size(expected)).toBe(A.length(pending));
-            expect(HashSet.isSubset(projected, expected)).toBe(true);
-            expect(HashSet.isSubset(expected, projected)).toBe(true);
+        expect(HashSet.size(projected)).toBe(A.length(pending));
+        expect(HashSet.size(expected)).toBe(A.length(pending));
+        expect(HashSet.isSubset(projected, expected)).toBe(true);
+        expect(HashSet.isSubset(expected, projected)).toBe(true);
 
-            return true;
-          },
-          fcRuns(64)
-        ))._tag
-      ).toBe("Passed");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+        return true;
+      }),
+    { arbitrary: fcRuns(64) }
   );
 
-  it.effect("property 4: publish aging and the review-fix class cap are honored", () =>
+  it.effect.prop(
+    "property 4: publish aging is honored",
+    [
+      PendingRequestArbitrary,
+      PendingRequestArbitrary,
+      Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 1_000_000 }))),
+    ],
+    ([publishSeed, verifySeed, enqueuedAtMillis]) =>
+      Effect.gen(function* () {
+        const policy = yield* TestPolicy;
+
+        const publish = PendingRequest.make({
+          ...publishSeed,
+          nonce: "publish-request",
+          kind: "publish",
+          priority: "publish",
+          weightTokens: policy.weights.publish,
+          enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis),
+        });
+        const verify = PendingRequest.make({
+          ...verifySeed,
+          nonce: "verify-request",
+          kind: "review-fix",
+          priority: "verify",
+          weightTokens: policy.weights.reviewFix,
+          enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis + 1),
+        });
+        const instant = enqueuedAtMillis + policy.publishAgingSeconds * 1000 + 1;
+        const proposal = yield* projectSchedule(inputFor(policy, [verify, publish], emptyTokenLedger, instant));
+
+        expect(pipeHeadNonce(proposal)).toBe(publish.nonce);
+
+        return true;
+      }),
+    { arbitrary: fcRuns(48) }
+  );
+  it.effect("keeps a saturated review-fix class deferred while admitting a full proof", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
-      const context = yield* Effect.context<never>();
-      const runSync = Effect.runSyncWith(context);
-
-      expect(
-        (yield* Arbitrary.checkEffect(
-          Arbitrary.all([
-            PendingRequestArbitrary,
-            PendingRequestArbitrary,
-            Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 1_000_000 }))),
-          ]),
-          ([publishSeed, verifySeed, enqueuedAtMillis]) => {
-            const publish = PendingRequest.make({
-              ...publishSeed,
-              nonce: "publish-request",
-              kind: "publish",
-              priority: "publish",
-              weightTokens: policy.weights.publish,
-              enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis),
-            });
-            const verify = PendingRequest.make({
-              ...verifySeed,
-              nonce: "verify-request",
-              kind: "review-fix",
-              priority: "verify",
-              weightTokens: policy.weights.reviewFix,
-              enqueuedAtMillis: NonNegativeInt.make(enqueuedAtMillis + 1),
-            });
-            const instant = enqueuedAtMillis + policy.publishAgingSeconds * 1000 + 1;
-            const proposal = runSync(projectSchedule(inputFor(policy, [verify, publish], emptyTokenLedger, instant)));
-
-            expect(pipeHeadNonce(proposal)).toBe(publish.nonce);
-
-            return true;
-          },
-          fcRuns(48)
-        ))._tag
-      ).toBe("Passed");
-
+      const policy = yield* TestPolicy;
       const saturatedLedger = TokenLedgerState.make({
         activeGrants: HashMap.make(
           ["active-review-1", policy.weights.reviewFix],
@@ -294,13 +282,13 @@ describe("@beep/ciops S7 projection", () => {
 
       expect(pipeHeadNonce(capped)).toBe(fullProof.nonce);
       expect(A.map(capped.deferredTail, (request) => request.nonce)).toContain(reviewFix.nonce);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("property 5: frozen journal replay strictly matches every recorded admission", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const journalSource = yield* fs
         .readFileString(journalPath)
         .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the frozen journal." })));
@@ -320,13 +308,13 @@ describe("@beep/ciops S7 projection", () => {
       expect(report.evictions[0]?.evictedNonce.startsWith("1813f29f")).toBe(true);
       expect(report.evictions[0]?.weightTokens).toBe(5);
       expect(report.evictions[0]?.eventIndex).toBe(66);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("decodes a v2 lease eviction fixture and folds it as a release", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const source = yield* fs
         .readFileString(evictionFixturePath)
         .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the eviction fixture." })));
@@ -338,13 +326,13 @@ describe("@beep/ciops S7 projection", () => {
       expect(report.admittedCount).toBe(1);
       expect(report.releasedCount).toBe(1);
       expect(report.passed).toBe(true);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("replays every v3 variant with legacy rows and counts ledger-neutral queue events in source indexes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const source = yield* fs.readFileString("test/fixtures/admission-journal-v3-mixed.ndjson");
       const events = yield* decodeAdmissionJournal(source);
       const report = yield* replayAdmissionJournal(policy, events, "fixture-policy", "mixed-journal").pipe(
@@ -374,7 +362,7 @@ describe("@beep/ciops S7 projection", () => {
       expect(A.map(report.verdicts, (verdict) => verdict.activeTokenTotal)).toStrictEqual([0, 5, 0, 0]);
       expect(report.passed).toBe(true);
       expect(report.mismatches).toHaveLength(0);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("renders byte-identical evidence from a typed replay report", () =>
@@ -419,7 +407,7 @@ describe("@beep/ciops S7 projection", () => {
 
   it.effect("mints distinct valid-Turtle nodes per proposal and re-points hasCurrentProposal", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const emptyFor = (proposalId: string) =>
         ScheduleProposal.make({
           episodeId: "verification-1",
@@ -463,13 +451,13 @@ describe("@beep/ciops S7 projection", () => {
       expect(stepped.content).toContain("rdf:type ciops:SeatRequest .");
       expect(stepped.content).not.toContain("WorkUnitSpecification");
       expect(stepped.content).not.toContain("schedulesWorkUnit ");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("emits the v2 golden ordering cluster with nonce evidence and a step-less deferred tail", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const pending = A.map(["admitted-a", "admitted-b", "deferred-c"], (nonce, index) =>
         PendingRequest.make({
           nonce,
@@ -494,12 +482,12 @@ describe("@beep/ciops S7 projection", () => {
       expect(document.content).not.toContain("ciops-prov:scheduler ");
       expect(document.content).not.toContain("-step-2 ");
       expect(document.content).not.toContain("ciops-prov:Scope");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("keeps empty and fully deferred proposals grounded without inventing steps", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const request = PendingRequest.make({
         nonce: "deferred-only",
         kind: "full-proof",
@@ -526,12 +514,12 @@ describe("@beep/ciops S7 projection", () => {
       const document = yield* emitScheduleAbox(deferred);
       expect(document.content).toContain("ciops-prov:defersSeatRequest ");
       expect(document.content).toContain('ciops-prov:scheduledUnitRef "deferred-only"^^xsd:string');
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("separates episode identity from specification content and escapes tuple boundaries", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const first = yield* projectSchedule(inputFor(policy, []));
       const emitVariant = (patch: Partial<ScheduleProposal>) =>
         emitScheduleAbox(ScheduleProposal.make({ ...first, ...patch }));
@@ -552,24 +540,50 @@ describe("@beep/ciops S7 projection", () => {
       const special = yield* emitVariant({ policyDigest: 'policy"\\\n', journalPrefixDigest: 'prefix"\\\n' });
       expect(special.content).toContain('ciops-prov:policyDigest "policy\\"\\\\\\n"^^xsd:string');
       expect(special.content).toContain('ciops-prov:journalPrefixDigest "prefix\\"\\\\\\n"^^xsd:string');
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("requires a non-empty episode identity at the input boundary", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const input = inputFor(policy, []);
-      const empty = yield* decodeProjectionInput({ ...input, episodeId: "" }).pipe(Effect.result);
-      expect(empty._tag).toBe("Failure");
+      const empty = yield* decodeProjectionInput({ ...input, episodeId: "" }).pipe(Effect.exit);
+      assertExitFailure(
+        Exit.match(empty, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
       const { episodeId: _episodeId, ...missingEpisode } = input;
-      const missing = yield* decodeUnknownProjectionInput(missingEpisode).pipe(Effect.result);
-      expect(missing._tag).toBe("Failure");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+      const missing = yield* decodeUnknownProjectionInput(missingEpisode).pipe(Effect.exit);
+      assertExitFailure(
+        Exit.match(missing, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+    })
   );
 
   it.effect("fails typed on ambiguous dead-lease censorship instead of guessing", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const events = yield* decodeAdmissionJournal(
         A.join(
           [
@@ -586,12 +600,12 @@ describe("@beep/ciops S7 projection", () => {
       expect(failure.message).toContain("Ambiguous dead-lease censorship");
       expect(failure.message).toContain("phantom-a");
       expect(failure.message).toContain("phantom-b");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
   it.effect("records a mismatch when a unique eviction cannot explain the recorded admission", () =>
     Effect.gen(function* () {
-      const policy = yield* readPolicy();
+      const policy = yield* TestPolicy;
       const events = yield* decodeAdmissionJournal(
         A.join(
           [
@@ -614,27 +628,29 @@ describe("@beep/ciops S7 projection", () => {
       expect(report.mismatches).toHaveLength(1);
       expect(report.mismatches[0]?.expectedNonce).toBe("blocked-d");
       expect((yield* Effect.flip(requireReplayMatch(report)))._tag).toBe("ReplayMismatchError");
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    })
   );
 
-  it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
-    Effect.gen(function* () {
-      const policy = yield* readPolicy().pipe(provideScopedLayer(BunFileSystem.layer));
-      const service: CiOpsProjectionShape = yield* CiOpsProjection;
-      expect(O.isNone(yield* service.currentProposal)).toBe(true);
+  it.layer(CiOpsProjectionLive, { timeout: "5 seconds" })((it) => {
+    it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
+      Effect.gen(function* () {
+        const policy = yield* TestPolicy;
+        const service: CiOpsProjectionShape = yield* CiOpsProjection;
+        assertNone(yield* service.currentProposal);
 
-      const waiting = yield* Effect.forkChild(service.awaitCurrentProposal);
-      const projected = yield* service.projectCurrent(inputFor(policy, []));
-      const awaited = yield* Fiber.join(waiting);
-      const queued = yield* service.nextProposal;
+        const waiting = yield* Effect.forkChild(service.awaitCurrentProposal);
+        const projected = yield* service.projectCurrent(inputFor(policy, []));
+        const awaited = yield* Fiber.join(waiting);
+        const queued = yield* service.nextProposal;
 
-      expect(Eq.equals(projected, awaited)).toBe(true);
-      expect(Eq.equals(projected, queued)).toBe(true);
-      expect((yield* Effect.flip(service.planEpisode(PlanEpisodeInput.make({ episodeId: "episode-1" }))))._tag).toBe(
-        "PlannerNotImplementedError"
-      );
-    }).pipe(provideScopedLayer(CiOpsProjectionLive))
-  );
+        expect(Eq.equals(projected, awaited)).toBe(true);
+        expect(Eq.equals(projected, queued)).toBe(true);
+        expect((yield* Effect.flip(service.planEpisode(PlanEpisodeInput.make({ episodeId: "episode-1" }))))._tag).toBe(
+          "PlannerNotImplementedError"
+        );
+      })
+    );
+  });
 });
 
 const pipeHeadNonce = (proposal: ScheduleProposal): string =>
