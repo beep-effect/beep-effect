@@ -1,10 +1,12 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 import { PackageFailure, PracticeKgHostError, SmokeFailure } from "../src/PracticeKgMcp.errors.ts";
 
 const expectOpaqueCauseEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  assertTrue(same(first, second));
+  assertFalse(same(first, different));
 };
 
 describe("practice KG MCP tagged-error declared equivalence", () => {

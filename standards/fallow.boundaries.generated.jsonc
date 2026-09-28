@@ -3077,6 +3077,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3088,6 +3089,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

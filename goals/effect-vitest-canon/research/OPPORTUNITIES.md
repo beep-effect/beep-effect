@@ -4243,3 +4243,19 @@ file to cache the validator before this test installs its schema-module mock.
 The package now explicitly retains file isolation, as the shared configuration
 requires for module-mocking packages. The original one-versus-three construction
 assertions, result contents and limit behavior remain intact.
+
+## 2026-09-28 — manifest loader lacked structural rejection coverage
+
+Practice KG MCP tested missing files and malformed JSON but not parseable JSON
+that violates the real bundle manifest schema. Added the `{}` boundary case
+with the exact typed invalid-manifest diagnostic. The same loader suite now runs
+against MemoryFileSystem and the existing native adapter under public layers,
+preserving optional corpus roots, path joining and independent scoped directories.
+This proves the loader contract before databases open; it is not MCP or SQL
+startup coverage.
+
+The structural-invalid control replaces only `{}` with a valid manifest before
+decoding: the original loader suite passes, while the new native and memory
+cases fail. Sources are restored after the control. Full package audit and
+Docgen passed before the instrumented-runner migration; its post-migration proof
+is tracked separately.
