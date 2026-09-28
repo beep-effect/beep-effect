@@ -10,6 +10,7 @@ import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/en
 import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem";
 import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -17,7 +18,7 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -60,7 +61,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin documents-sync migration PgLite integration", () => {});
 } else {
   describe.concurrent("db-admin documents-sync migration PgLite integration", () => {
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the documents-sync migration target SQL",
         Effect.fnUntraced(function* () {

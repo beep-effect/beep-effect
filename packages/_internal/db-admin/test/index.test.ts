@@ -1,5 +1,6 @@
 import { DbAdminMigrationTargets } from "@beep/db-admin";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("@beep/db-admin", () => {
   it("exports migration targets", () => {

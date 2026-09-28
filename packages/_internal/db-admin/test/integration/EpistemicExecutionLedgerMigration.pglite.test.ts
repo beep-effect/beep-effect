@@ -2,9 +2,10 @@ import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -77,7 +78,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin epistemic-execution-ledger migration PgLite integration", () => {});
 } else {
   describe("db-admin epistemic-execution-ledger migration PgLite integration", { concurrent: false }, () => {
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the epistemic-execution-ledger migration target SQL",
         Effect.fnUntraced(function* () {
@@ -130,7 +131,10 @@ if (!shouldRunPgliteIntegration) {
             settlement: "completed",
           });
 
-          const decisionRows = yield* db.select().from(EpistemicDbSchema.executionDecision);
+          const decisionRows = yield* db
+            .select()
+            .from(EpistemicDbSchema.executionDecision)
+            .orderBy(EpistemicDbSchema.executionDecision.seq);
           const outcomeRows = yield* db.select().from(EpistemicDbSchema.executionOutcome);
 
           expect(decisionRows).toHaveLength(2);
