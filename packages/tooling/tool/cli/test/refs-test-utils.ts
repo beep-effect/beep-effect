@@ -7,6 +7,32 @@ import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
+/**
+ * Stands in for `scripts/graft/apply-dist-patches.sh`; marker files in the owner script its answer.
+ *
+ * **Details**
+ * `patch-kit-missing` exits 1 (a patch is missing) and `patch-kit-broken` exits 2 (no Graft
+ * package); otherwise the check passes. Every call is logged to `$HOME/commands.log`, and the
+ * `GRAFT_PACKAGE_ROOT` and `GRAFT_API_KEY` it sees to `$HOME/patch-kit-env.log`.
+ *
+ * **Example** (Read the stub)
+ * ```ts
+ * typeof patchKitStub // => "string"
+ * ```
+ * @category test-fixtures
+ * @since 0.0.0
+ */
+export const patchKitStub = `#!/bin/sh
+printf 'patch-kit %s\\n' "$*" >> "$HOME/commands.log"
+printf 'root=%s key=%s\\n' "\${GRAFT_PACKAGE_ROOT-unset}" "\${GRAFT_API_KEY-unset}" >> "$HOME/patch-kit-env.log"
+if [ -f patch-kit-missing ]; then
+  printf 'applied  0001-keep\\nmissing  0002-summaries\\n1 patch(es) not applied to graft 9.9.9\\n' >&2
+  exit 1
+fi
+[ ! -f patch-kit-broken ] || { printf 'no Graft package at /nowhere\\n' >&2; exit 2; }
+printf 'graft 9.9.9 carries every recorded dist patch\\n'
+`;
+
 export const writeExecutable = Effect.fn("RefsTest.writeExecutable")(function* (file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(file, content);
@@ -25,6 +51,8 @@ export const fixture = Effect.fn("RefsTest.fixture")(function* () {
     yield* fs.makeDirectory(directory, { recursive: true });
   const manifestPath = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
   yield* fs.copyFile(manifestPath, path.join(owner, "scripts", "references.json"));
+  yield* fs.makeDirectory(path.join(owner, "scripts", "graft"), { recursive: true });
+  yield* writeExecutable(path.join(owner, "scripts", "graft", "apply-dist-patches.sh"), patchKitStub);
   const ambientPath = yield* Config.String("PATH");
   const configValues = { HOME: home, PATH: `${bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: root };
   const config = ConfigProvider.layer(ConfigProvider.fromUnknown(configValues));
