@@ -38,5 +38,14 @@ both pass ten baseline and 20 final cases with zero skips and stable source
 hashes. Whole-command times were Node 4.674 to 5.474 seconds and Bun 1.967 to
 1.366 seconds. Load and pressure are recorded; these are observations under
 different case counts, not causal speedup claims. No network request or live
-credential is involved. Inventory reconciliation and public timing publication
-remain pending; this package proof is not consolidated PR or goal acceptance.
+credential is involved.
+
+The seven saved actions are reconciled against source commit
+`631f4e9c0ebb7b92c8f4c167b4cd5e1c24be796d`. The single current scoped-provision
+exception retains its explicit failure-boundary reason. Historical IDs, including
+root-only records, are preserved. Strict validation passes for 5,250 root IDs and
+14,948 ledger IDs with no invalid rows or duplicates. All 683 unrelated ledger
+hashes and unrelated raw root/census objects are preserved. Four public timing
+artifacts contain the measured results and context. The saved queue now contains
+seven packages and 553 actions. This package closeout is not consolidated PR or
+goal acceptance.

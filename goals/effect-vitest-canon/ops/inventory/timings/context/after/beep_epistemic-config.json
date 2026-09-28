@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-config",
+  "sourceHead": "631f4e9c0ebb7b92c8f4c167b4cd5e1c24be796d",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.473507154999879,
+  "bunWholeCommandSeconds": 1.3659228970000186,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.08154296875, 9.353515625, 9.82080078125],
+  "loadAfter": [13.1611328125, 10.576171875, 10.2138671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.23 avg60=0.38 avg300=0.44 total=20389207\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=202933\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=188590\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.19 total=10321010\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=8019965\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=3.55 avg60=1.10 avg300=0.59 total=20915604\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=209914\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=189259\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=10330280\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=8026376\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "9864ec8336ac9551d3bee312ce1e2dd09396a3dd33e1a7a201f366d3bf00fdc5"
+    },
+    {
+      "file": "packages/epistemic/config/AGENTS.md",
+      "sha256": "ab523482343f1ec3a9cc86ad04e00bc807f1796a82eb4d67932a282c00a079ee"
+    },
+    {
+      "file": "packages/epistemic/config/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/epistemic/config/README.md",
+      "sha256": "4e76dfc341f95c0d17cc72ff7c5505d3aeec985b09cc6018f1fc0908c0460d98"
+    },
+    {
+      "file": "packages/epistemic/config/docgen.json",
+      "sha256": "6e410a3a349c0ecfc336e5b080262e7c69242b14f909a98ebce094c54d275c93"
+    },
+    {
+      "file": "packages/epistemic/config/package.json",
+      "sha256": "1c0e2ee4f780584216a128bc7f07dc58d60efa8caaf3ca78d357162085089f85"
+    },
+    {
+      "file": "packages/epistemic/config/src/Audience.ts",
+      "sha256": "3cfe66e61f62b14a5ef6118134a413b56b17772e53157e2e6cee20febfdbe29d"
+    },
+    {
+      "file": "packages/epistemic/config/src/ServerConfig.ts",
+      "sha256": "bba35261d6f34f63e4ad25f3672cbc31e1e779e7b66f6ed438716298e037bdb6"
+    },
+    {
+      "file": "packages/epistemic/config/src/TestLayer.ts",
+      "sha256": "31761be39b41b596da1b6a1fa0880523aa483ea6b4d42632e6f3303763d0bf49"
+    },
+    {
+      "file": "packages/epistemic/config/src/index.ts",
+      "sha256": "50f2a2b34a57cc3ab4169f1115c8d49efbe7d0b5f64616a892f1ea0d7fbf3a3a"
+    },
+    {
+      "file": "packages/epistemic/config/src/layer.ts",
+      "sha256": "46aaff22ccfc3aeb41137100a51652c11e7569853f58bf9aaff13bfcc1a8e712"
+    },
+    {
+      "file": "packages/epistemic/config/src/public.ts",
+      "sha256": "fe91353d78602050cadc79838fe23644759b0e67ae9b7c3d7267893391266068"
+    },
+    {
+      "file": "packages/epistemic/config/src/secrets.ts",
+      "sha256": "faa15f52d9828c743d73679584dad120bcaf1129410374b9df47462e1cbaef15"
+    },
+    {
+      "file": "packages/epistemic/config/src/server.ts",
+      "sha256": "b162e7fa77799bba54956486464ae557d6ca995d54c9d18bcbef02cae282ef33"
+    },
+    {
+      "file": "packages/epistemic/config/src/test.ts",
+      "sha256": "7fc81a6139ca0fe70c09ddfeabcc9919fa3d382f6b38652699c3d7fa299d9110"
+    },
+    {
+      "file": "packages/epistemic/config/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "sha256": "7a16f875699a8afb507da0fe06349a019db3878c2cea100a7341c77aa0261ccf"
+    },
+    {
+      "file": "packages/epistemic/config/tsconfig.check.json",
+      "sha256": "611154687ee5d3056caff4f418724ff7dab019a59305f2b39842fff5c7a574c2"
+    },
+    {
+      "file": "packages/epistemic/config/tsconfig.json",
+      "sha256": "5bb03cd8c43a8ef7a3f5524a870f484049faca2855d14bf0723e12ea123d578b"
+    },
+    {
+      "file": "packages/epistemic/config/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/epistemic/config/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual configuration, audience classification and grant fixture behavior; no network requests. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 20,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [13.1611328125, 10.576171875, 10.2138671875],
+    "loadAfter": [12.66748046875, 10.5166015625, 10.1962890625],
+    "pressureBefore": {
+      "cpu": "some avg10=3.55 avg60=1.10 avg300=0.59 total=20915609\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=209914\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=189259\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=10330280\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=8026376\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=2.91 avg60=1.06 avg300=0.59 total=20917226\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.02 avg300=0.00 total=209914\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=189259\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.18 total=10330364\nfull avg10=0.00 avg60=0.00 avg300=0.13 total=8026458\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 20,
+    "skipped": 0
+  },
+  "interpretation": "All10baseline and20final tests pass on Node and Bun without skips, with stable sources. All14original assertions and10static registrations remain. Eight malformed-destination cases and two valid URL parser controls supplement the original classifications and grant digest fixtures. No network request or credential is involved. Host load and pressure are recorded; these observations do not establish a causal speedup."
+}

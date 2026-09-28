@@ -30110,90 +30110,6 @@
       "reason": "Intentional shorter native database lifetime: explicitly build and provide the client within an inner scope so close completes before reopening the same dataDir or inspecting ordered results. Suite-lifetime sharing would remove the close/reopen durability witness; the outer test retains temporary-directory ownership."
     },
     {
-      "id": "EV002:packages/epistemic/config/test/Config.test.ts:31:provideScopedLayer@49#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 31,
-      "endLine": 31,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2bd505b8a35ff7f587dc1e920402bdc8f937931fde850add9b1a5e64962c4f2a",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(configLayer({}))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/epistemic/config/test/Config.test.ts:42:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 42,
-      "endLine": 47,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:f07334c92e4da49a7771ddb4b05e034e4214648daa59626eb2d86c813b4fdbc5",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( configLayer({ EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: \"https://a.example,https://b.example\", EPISTEMIC_POLICY_REVISION: \"2.1.0\", }) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/epistemic/config/test/Config.test.ts:59:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 59,
-      "endLine": 59,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:05cb787e30732e87f8bc8ac01c0784457691dca1f1338e58e21520e38d96a942",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(configLayer({ EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: \"\" }))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/epistemic/config/test/Config.test.ts:78:provideScopedLayer@61#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 78,
-      "endLine": 78,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:9cef4e4d11137a9c01d4750c5df8d763ccf679172cbcf418cb2a261c3e15d9cd",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(configLayer(configuration))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts:528:provideScopedLayer@52#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -52584,27 +52500,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/epistemic/config/test/Config.test.ts:23:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 23,
-      "endLine": 25,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/foundation/modeling/utils/test/Glob.test.ts:84:withBunGlobDisabled@28#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -66457,27 +66352,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "This existing codec rejection asserts only the failure branch of an Exit. It supplies no expected SchemaError or Cause; constructing an expected payload solely to use assertExitFailure would invent an oracle. Preserve the complete predicate and true polarity alongside the successful decode assertion."
-    },
-    {
-      "id": "EV006:packages/epistemic/config/test/Config.test.ts:80:expect@8#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 80,
-      "endLine": 80,
-      "symbol": "expect",
-      "occurrence": "v2:56aac6e515eb7108350669460325fde0c763c55b39fbbabb329a5669a28b36c8",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Exit.isFailure(exit)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Exit.isFailure Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV006:packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts:408:expect@10#1",
@@ -108473,6 +108347,7 @@
     {"id":"EV010:apps/labs/api-docs/test/Catalog.test.ts:2:@effect/platform-bun/BunServices@0#1","lens":"resource","ruleId":"EV010","package":"@beep/api-docs","file":"apps/labs/api-docs/test/Catalog.test.ts","line":2,"endLine":2,"symbol":"@effect/platform-bun/BunServices","occurrence":"v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c","class":"platform-resource-provenance-review","evidence":"import * as BunServices from \"@effect/platform-bun/BunServices\";","replacement":{"primitive":"it.layer","sketch":"Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Actual committed repository specification paths and bytes are the subject. Seeding MemoryFileSystem with expected filenames would fabricate this provenance. Public scoped platform provision preserves those checks, all9catalog entries and4generated contracts."},
     {"id":"EV002:packages/drivers/box/test/Box.service.test.ts:1116:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/box","file":"packages/drivers/box/test/Box.service.test.ts","line":1116,"endLine":1116,"symbol":"provideScopedLayer","occurrence":"v2:32fb2a7994ed538ed357ef7019093269dfc9b6d195c9443b9a77febe81e30698","class":"unresolved-layer-provide","evidence":"provideScopedLayer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => source } })))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Each case creates its own never-EOF readable and interruption/read-entry barriers. The canonical scoped helper binds that exact fixture to the client. Cleanup and listener assertions run after early take or fiber interruption; shared static acquisition cannot provide these body-local probes."},
     {"id":"EV002:packages/drivers/box/test/Box.service.test.ts:1134:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/box","file":"packages/drivers/box/test/Box.service.test.ts","line":1134,"endLine":1134,"symbol":"provideScopedLayer","occurrence":"v2:425649e9ca316c45d12cafbc6b71edd1a91192f0b60340850805006f964838a5","class":"unresolved-layer-provide","evidence":"provideScopedLayer(B.Box.makeLayerFromClient(makeFakeClient({ events: { getEventStream: () => source } })))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Each case creates its own never-EOF readable and interruption/read-entry barriers. The canonical scoped helper binds that exact fixture to the client. Cleanup and listener assertions run after early take or fiber interruption; shared static acquisition cannot provide these body-local probes."},
-    {"id":"EV002:packages/drivers/box/test/Box.service.test.ts:586:provideScopedLayer@10#1","lens":"resource","ruleId":"EV002","package":"@beep/box","file":"packages/drivers/box/test/Box.service.test.ts","line":586,"endLine":588,"symbol":"provideScopedLayer","occurrence":"v2:d5b2d79e70707a1fc8f4cef17b17c6415115778e4e9d4686d1fd8f37808796f4","class":"unresolved-layer-provide","evidence":"provideScopedLayer( B.BoxConfigLayer.pipe(EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))) )","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The expected configuration acquisition failure is the assertion subject; suite hook acquisition would fail before its typed error can be inspected. The canonical scoped helper replaces manual Layer.build/context provision without changing the config failure or diagnostic assertions."}
+    {"id":"EV002:packages/drivers/box/test/Box.service.test.ts:586:provideScopedLayer@10#1","lens":"resource","ruleId":"EV002","package":"@beep/box","file":"packages/drivers/box/test/Box.service.test.ts","line":586,"endLine":588,"symbol":"provideScopedLayer","occurrence":"v2:d5b2d79e70707a1fc8f4cef17b17c6415115778e4e9d4686d1fd8f37808796f4","class":"unresolved-layer-provide","evidence":"provideScopedLayer( B.BoxConfigLayer.pipe(EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))) )","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The expected configuration acquisition failure is the assertion subject; suite hook acquisition would fail before its typed error can be inspected. The canonical scoped helper replaces manual Layer.build/context provision without changing the config failure or diagnostic assertions."},
+    {"id":"EV002:packages/epistemic/config/test/Config.test.ts:78:provideScopedLayer@61#1","lens":"resource","ruleId":"EV002","package":"@beep/epistemic-config","file":"packages/epistemic/config/test/Config.test.ts","line":78,"endLine":78,"symbol":"provideScopedLayer","occurrence":"v2:9cef4e4d11137a9c01d4750c5df8d763ccf679172cbcf418cb2a261c3e15d9cd","class":"unresolved-layer-provide","evidence":"provideScopedLayer(configLayer(configuration))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Each malformed configuration is intentionally acquired inside Effect.exit so its typed failure and absence of defects can be asserted. Public suite-hook acquisition would fail before those assertions. The canonical scoped helper replaces the private helper for this exceptional failure boundary."}
   ]
 }

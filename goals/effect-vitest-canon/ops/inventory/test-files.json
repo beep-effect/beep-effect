@@ -2467,8 +2467,8 @@
     "file": "packages/epistemic/config/test/Config.test.ts",
     "package": "@beep/epistemic-config",
     "kind": "test",
-    "bytes": 5705,
-    "lines": 150
+    "bytes": 6649,
+    "lines": 178
   },
   {
     "file": "packages/epistemic/domain/test/Contradiction.test.ts",
