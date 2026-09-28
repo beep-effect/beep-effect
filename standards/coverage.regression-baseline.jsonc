@@ -19525,15 +19525,15 @@
     },
     "@beep/pretext": {
       "path": "packages/drivers/pretext",
-      "lines": 81.81,
-      "statements": 80.76,
-      "branches": 68.57,
-      "functions": 72.34,
+      "lines": 80.39,
+      "statements": 78.5,
+      "branches": 62.85,
+      "functions": 68.08,
       "uncovered": {
-        "lines": 18,
-        "statements": 20,
-        "branches": 11,
-        "functions": 13
+        "lines": 20,
+        "statements": 23,
+        "branches": 13,
+        "functions": 15
       },
       "files": {
         "packages/drivers/pretext/src/Pretext.errors.ts": {
@@ -19585,15 +19585,15 @@
           }
         },
         "packages/drivers/pretext/src/browser.ts": {
-          "lines": 63.88,
-          "statements": 61.53,
-          "branches": 47.36,
-          "functions": 50,
+          "lines": 58.33,
+          "statements": 53.84,
+          "branches": 36.84,
+          "functions": 38.88,
           "uncovered": {
-            "lines": 13,
-            "statements": 15,
-            "branches": 10,
-            "functions": 9
+            "lines": 15,
+            "statements": 18,
+            "branches": 12,
+            "functions": 11
           }
         },
         "packages/drivers/pretext/src/index.ts": {
@@ -27475,6 +27475,18 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveNotifier.ts": {
+          "lines": 96.84,
+          "statements": 93.51,
+          "branches": 84.44,
+          "functions": 87.87,
+          "uncovered": {
+            "lines": 3,
+            "statements": 7,
+            "branches": 7,
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts": {
