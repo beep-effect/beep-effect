@@ -11,11 +11,13 @@ import {
 import { Document } from "@beep/documents-use-cases/server";
 import { FileProcessingService } from "@beep/file-processing/Service";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, FileSystem, Layer, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Duration, Effect, FileSystem, Layer, Path, pipe, Stream } from "effect";
+import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as O from "effect/Option";
@@ -60,71 +62,85 @@ const filingInput = Document.FilingDecisionInput.make({
   originalFileName: "ambiguous-document.pdf",
   textExcerpt: O.some("A complaint alleging breach of contract."),
 });
-
-const decideWith = (response: Effect.Effect<string>) =>
-  Effect.gen(function* () {
-    const filingDecision = yield* Document.FilingDecision;
-    return yield* filingDecision.decide(filingInput);
-  }).pipe(provideScopedLayer(makeDecisionLayer(response)));
-
 describe("@beep/documents-server FilingDecisionLlm", () => {
-  it.effect(
-    "files a taxonomy-valid high-confidence proposal",
-    Effect.fnUntraced(function* () {
-      const outcome = yield* decideWith(
-        Effect.succeed(
-          '{"confidence":0.91,"rationale":"The excerpt describes a complaint.","taxonomyConceptId":"pleadings"}'
-        )
-      );
+  it.layer(
+    makeDecisionLayer(
+      Effect.succeed(
+        '{"confidence":0.91,"rationale":"The excerpt describes a complaint.","taxonomyConceptId":"pleadings"}'
+      )
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "files a taxonomy-valid high-confidence proposal",
+      Effect.fnUntraced(function* () {
+        const filingDecision = yield* Document.FilingDecision;
+        const outcome = yield* filingDecision.decide(filingInput);
 
-      expect(outcome).toMatchObject({
-        confidence: 0.91,
-        kind: "filed",
-        taxonomyConceptId: "pleadings",
-      });
-    })
-  );
+        expect(outcome).toMatchObject({
+          confidence: 0.91,
+          kind: "filed",
+          taxonomyConceptId: "pleadings",
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "routes a below-threshold proposal to the inbox",
-    Effect.fnUntraced(function* () {
-      const outcome = yield* decideWith(
-        Effect.succeed('{"confidence":0.42,"rationale":"The evidence is ambiguous.","taxonomyConceptId":"pleadings"}')
-      );
+  it.layer(
+    makeDecisionLayer(
+      Effect.succeed('{"confidence":0.42,"rationale":"The evidence is ambiguous.","taxonomyConceptId":"pleadings"}')
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "routes a below-threshold proposal to the inbox",
+      Effect.fnUntraced(function* () {
+        const filingDecision = yield* Document.FilingDecision;
+        const outcome = yield* filingDecision.decide(filingInput);
 
-      expect(outcome).toMatchObject({
-        kind: "inboxed",
-        rationale: "The evidence is ambiguous.",
-        reason: "low-confidence",
-      });
-    })
-  );
+        expect(outcome).toMatchObject({
+          kind: "inboxed",
+          rationale: "The evidence is ambiguous.",
+          reason: "low-confidence",
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "routes an unknown concept id to the inbox without inventing a folder",
-    Effect.fnUntraced(function* () {
-      const outcome = yield* decideWith(
-        Effect.succeed(
-          '{"confidence":0.99,"rationale":"The model proposed an unknown class.","taxonomyConceptId":"invented-folder"}'
-        )
-      );
+  it.layer(
+    makeDecisionLayer(
+      Effect.succeed(
+        '{"confidence":0.99,"rationale":"The model proposed an unknown class.","taxonomyConceptId":"invented-folder"}'
+      )
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "routes an unknown concept id to the inbox without inventing a folder",
+      Effect.fnUntraced(function* () {
+        const filingDecision = yield* Document.FilingDecision;
+        const outcome = yield* filingDecision.decide(filingInput);
 
-      expect(outcome).toMatchObject({
-        kind: "inboxed",
-        rationale: "The model proposed an unknown class.",
-        reason: "no-match",
-      });
-    })
-  );
+        expect(outcome).toMatchObject({
+          kind: "inboxed",
+          rationale: "The model proposed an unknown class.",
+          reason: "no-match",
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "routes provider failure to the inbox without failing the port",
-    Effect.fnUntraced(function* () {
-      const outcome = yield* decideWith(Effect.die("fixture provider unavailable"));
+  it.layer(makeDecisionLayer(Effect.die("fixture provider unavailable")), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "routes provider failure to the inbox without failing the port",
+      Effect.fnUntraced(function* () {
+        const filingDecision = yield* Document.FilingDecision;
+        const outcome = yield* filingDecision.decide(filingInput);
 
-      expect(outcome).toMatchObject({ kind: "inboxed", reason: "llm-unavailable" });
-    })
-  );
+        expect(outcome).toMatchObject({ kind: "inboxed", reason: "llm-unavailable" });
+      })
+    );
+  });
 });
 
 const FailingFileProcessingLayer = Layer.succeed(
@@ -156,25 +172,30 @@ const IntakeWithFailingExtractionLayer = DocumentIntakeLayer.pipe(
 );
 
 describe("@beep/documents-server FilingTextExtraction", () => {
-  it.effect(
-    "materializes the heuristic filing when the optional extraction engine fails",
-    Effect.fnUntraced(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-documents-extraction-fail-" });
-      const input = yield* decodeDocumentIntakeDroppedFileInput({
-        content: Buffer.from("complaint body").toString("base64"),
-        filingContext: DefaultVaultFilingContext,
-        intakeBatchId: "batch-extraction-fail",
-        originalFileName: "Complaint.pdf",
-        vaultRootPath,
-        workspaceId: 1,
-      });
+  it.layer(IntakeWithFailingExtractionLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "materializes the heuristic filing when the optional extraction engine fails",
+      Effect.fnUntraced(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-documents-extraction-fail-" });
+        const input = yield* decodeDocumentIntakeDroppedFileInput({
+          content: Buffer.from("complaint body").toString("base64"),
+          filingContext: DefaultVaultFilingContext,
+          intakeBatchId: "batch-extraction-fail",
+          originalFileName: "Complaint.pdf",
+          vaultRootPath,
+          workspaceId: 1,
+        });
 
-      const document = yield* intake.intakeDroppedFile(input);
+        const document = yield* intake.intakeDroppedFile(input);
 
-      expect(FilingOutcome.guards.filed(document.filing)).toBe(true);
-      expect(document.vaultPath.relativePath).toContain("01-pleadings");
-    }, provideScopedLayer(IntakeWithFailingExtractionLayer))
-  );
+        pipe(FilingOutcome.guards.filed(document.filing), assertTrue);
+        expect(document.vaultPath.relativePath).toContain("01-pleadings");
+        const path = yield* Path.Path;
+        const materialized = yield* fileSystem.readFile(path.join(vaultRootPath, ...document.vaultPath.segments));
+        expect(A.fromIterable(materialized)).toEqual(A.fromIterable(input.content));
+      })
+    );
+  });
 });

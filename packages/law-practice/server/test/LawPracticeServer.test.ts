@@ -9,11 +9,12 @@ import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { DocumentId } from "@beep/nlp/Core";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Effect, Layer, pipe, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   EXPECTED_DISTINCTION_LIMITATION,
@@ -64,7 +65,7 @@ const expectReviewExtractionError = Effect.fn("law_practice.server.test.expect_r
 
   const error = yield* review.review(input).pipe(Effect.flip);
 
-  expect(isIrToLawExtractionError(error)).toBe(true);
+  pipe(isIrToLawExtractionError(error), assertTrue);
   if (isIrToLawExtractionError(error)) {
     expect(error.reason).toBe(reason);
     expect(error.label).toBe("distinction");
@@ -73,7 +74,7 @@ const expectReviewExtractionError = Effect.fn("law_practice.server.test.expect_r
 });
 
 describe("@beep/law-practice-server", () => {
-  it.layer(makeLawPracticeServerTestLayer(OFFICE_ACTION_MODEL_OUTPUT))(
+  it.layer(makeLawPracticeServerTestLayer(OFFICE_ACTION_MODEL_OUTPUT), { timeout: "10 seconds" })(
     "office-action review loop over service-backed extraction",
     (it) => {
       it.effect(
@@ -97,7 +98,7 @@ describe("@beep/law-practice-server", () => {
           // (a) exactly one Distinction, well-formed.
           expect(law.distinction).toBeInstanceOf(Distinction);
           const distinctionDetail = law.distinction.detail;
-          expect(DistinctionDetail.guards.missing_limitation(distinctionDetail)).toBe(true);
+          pipe(DistinctionDetail.guards.missing_limitation(distinctionDetail), assertTrue);
 
           // (b) the anchor re-slices the source to its own quote, and that quote is
           // the original-case substring recovered via the case-insensitive match.
@@ -133,7 +134,7 @@ describe("@beep/law-practice-server", () => {
     }
   );
 
-  it.layer(makeLawPracticeServerTestLayer(MINIMAL_FOLD_DISTINCTION_MODEL_OUTPUT))(
+  it.layer(makeLawPracticeServerTestLayer(MINIMAL_FOLD_DISTINCTION_MODEL_OUTPUT), { timeout: "10 seconds" })(
     "office-action review loop over minimal-fold extraction",
     (it) => {
       it.effect(
@@ -159,7 +160,7 @@ describe("@beep/law-practice-server", () => {
     }
   );
 
-  it.layer(makeLawPracticeServerTestLayer(MISSING_DISTINCTION_MODEL_OUTPUT))(
+  it.layer(makeLawPracticeServerTestLayer(MISSING_DISTINCTION_MODEL_OUTPUT), { timeout: "10 seconds" })(
     "office-action review loop with missing extraction output",
     (it) => {
       it.effect("review rejects a missing required distinction label before admission", () =>
@@ -168,12 +169,12 @@ describe("@beep/law-practice-server", () => {
     }
   );
 
-  it.layer(makeLawPracticeServerTestLayer(UNALIGNED_DISTINCTION_MODEL_OUTPUT))(
+  it.layer(makeLawPracticeServerTestLayer(UNALIGNED_DISTINCTION_MODEL_OUTPUT), { timeout: "10 seconds" })(
     "office-action review loop with unaligned extraction output",
     (it) => {
       it.effect("review rejects unaligned distinction text before admission", () =>
         expectReviewExtractionError("required-extraction-unaligned", (error) => {
-          expect(error.alignmentStatus).toEqual(O.some("unaligned"));
+          assertSome<string>(error.alignmentStatus, "unaligned");
         })
       );
     }

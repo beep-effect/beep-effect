@@ -1,0 +1,61 @@
+{
+  "package": "@beep/practice-kg-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T08:21:27.079000+00:00",
+  "totalMs": 5665.12841796875,
+  "testCount": 7,
+  "files": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "ms": 8.12841796875,
+      "tests": 3
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+      "ms": 5292.097900390625,
+      "tests": 1
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "ms": 1.40283203125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+      "testName": "@beep/practice-kg-mcp entrypoints imports the compiled-host smoke module without running it",
+      "ms": 5292.0979370000005
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host loads a portable bundle manifest and preserves an optional corpus root",
+      "ms": 7.304239000000052
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host maps missing and invalid manifests to sanitized typed host errors",
+      "ms": 7.128507999999783
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host omits the corpus root when the caller does not provide one",
+      "ms": 6.942391999999927
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores PackageFailure cause and compares diagnostic fields",
+      "ms": 1.4028800000000956
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores PracticeKgHostError cause and compares diagnostic fields",
+      "ms": 1.2005789999998342
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores SmokeFailure cause and compares diagnostic fields",
+      "ms": 1.1839740000000347
+    }
+  ]
+}

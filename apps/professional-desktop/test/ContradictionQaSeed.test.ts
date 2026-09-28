@@ -1,6 +1,7 @@
 import { SOURCE_TEXT_PAGE_CODE_UNITS } from "@beep/file-processing/SourceText";
+import { it } from "@beep/test-runner";
 import * as Str from "@beep/utils/Str";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import {
   CONTRADICTION_QA_ANCHOR_START,
   CONTRADICTION_QA_SEED_ENV,

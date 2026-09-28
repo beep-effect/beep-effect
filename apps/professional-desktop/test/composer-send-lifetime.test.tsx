@@ -1,12 +1,13 @@
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
-import { RegistryProvider } from "@effect/atom-react";
+import { RegistryContext, RegistryProvider, scheduleTask } from "@effect/atom-react";
 import "@testing-library/jest-dom/vitest";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, describe, expect, vi } from "vitest";
+import { Atom, AtomRegistry } from "effect/reactivity";
 
 // The desktop registry sweeps atoms with an idle TTL (`ProfessionalAtomProvider`
 // sets 30s). Any node with no listeners and no dependents is disposed once its
@@ -36,11 +37,18 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       // never re-seeded. The composer stopped sending, permanently and silently,
       // with the user's draft still sitting in it. Enter and the Send button both
       // did nothing; there was no error, no toast, and no log to find.
+      const idleProbe = Atom.make(0);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ scheduleTask, defaultIdleTTL: IDLE_TTL_MS })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      registry.set(idleProbe, 1);
+      expect(registry.get(idleProbe)).toBe(1);
       const onSend = vi.fn(() => true);
       const { container, unmount } = render(
-        <RegistryProvider defaultIdleTTL={IDLE_TTL_MS}>
+        <RegistryContext.Provider value={registry}>
           <ChatComposer initialState={initialState} mountConfig={{ onSend }} />
-        </RegistryProvider>
+        </RegistryContext.Provider>
       );
       const screen = within(container);
 
@@ -48,6 +56,8 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       // empty composer is a legitimate no-op and would pass this test vacuously.
       yield* Effect.promise(() => screen.findByText("hello"));
       yield* sweep;
+      // An unmounted state atom has actually expired in this same registry.
+      expect(registry.get(idleProbe)).toBe(0);
       fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
       expect(onSend).toHaveBeenCalledTimes(1);

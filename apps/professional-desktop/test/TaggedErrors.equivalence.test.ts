@@ -1,5 +1,6 @@
 import { YouTubeWatchRequest } from "@beep/editor/youtube-embed";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { YouTubeWatchOpenFailed } from "@/chat/ui/YouTubeWatchOpener";
 import { ContradictionQaSeedError } from "@/contradiction/ContradictionQaSeed";

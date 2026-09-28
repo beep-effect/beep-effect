@@ -13,9 +13,11 @@ import { ChatClient, runTurnAtom, SendTurnRequest, turnErrorAtom } from "@beep/a
 import { ChatActionError } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { toast } from "@beep/ui/components/sonner";
 import { RegistryProvider, useAtomInitialValues, useAtomSet, useAtomSubscribe } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -23,7 +25,7 @@ import * as O from "effect/Option";
 import { Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { afterEach, vi } from "vitest";
+import { vi } from "vitest";
 import { userDocument } from "@/chat/ChatFixtures";
 import { ChatApp } from "@/chat/ui/ChatApp";
 import { ChatTurnErrorToasts } from "@/chat/ui/ChatTurnErrorToasts";
@@ -77,7 +79,7 @@ function RunFailingTurn({ threadId }: { readonly threadId: WorkspaceIdentity.Thr
   );
 }
 
-describe("StreamingBlocks", () => {
+describe("StreamingBlocks", { concurrent: false }, () => {
   it("renders the assistant block vocabulary to the expected tags", () => {
     const blocks: ReadonlyArray<AssistantBlock> = [
       { type: "heading", level: "h2", children: [{ type: "text", text: "Title" }] },
@@ -179,7 +181,7 @@ describe("StreamingBlocks", () => {
   });
 });
 
-describe("MessageView", () => {
+describe("MessageView", { concurrent: false }, () => {
   it("renders a persisted Md.Document's text", () => {
     const document = Md.Document.make({
       children: [Md.P.make({ children: [Md.Text.make({ value: "hello from a persisted message" })] })],
@@ -192,7 +194,7 @@ describe("MessageView", () => {
   });
 });
 
-describe("ChatApp", () => {
+describe("ChatApp", { concurrent: false }, () => {
   it("renders the chat shell in its empty/loading state without a live server", () => {
     const { getByTestId, unmount } = render(<ChatApp />);
 
@@ -206,7 +208,7 @@ describe("ChatApp", () => {
   });
 });
 
-describe("ChatTurnErrorToasts", () => {
+describe("ChatTurnErrorToasts", { concurrent: false }, () => {
   it.effect(
     "toasts a client-safe turn error message and clears the atom",
     Effect.fnUntraced(function* () {
@@ -223,7 +225,7 @@ describe("ChatTurnErrorToasts", () => {
       yield* Effect.promise(() =>
         waitFor(() => expect(toast.error).toHaveBeenCalledWith("Assistant stream failed safely"))
       );
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(latestTurnError)));
     })
   );
 
@@ -242,7 +244,7 @@ describe("ChatTurnErrorToasts", () => {
       fireEvent.click(getByTestId("run-failing-turn"));
 
       yield* Effect.promise(() => waitFor(() => expect(toast.error).toHaveBeenCalledWith("RPC stream failed safely")));
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(latestTurnError)));
     })
   );
 });

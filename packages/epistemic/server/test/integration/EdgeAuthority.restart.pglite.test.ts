@@ -22,11 +22,13 @@ import {
 } from "@beep/epistemic-use-cases/EdgeAuthority";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -194,8 +196,8 @@ const writeHistory = Effect.fnUntraced(function* () {
   );
 
   expect(corrected.version).toBe(2);
-  expect(corrected.supersedesId).toStrictEqual(O.some(former.id));
-  expect(O.isSome(outcome.disposition)).toBe(true);
+  assertSome(corrected.supersedesId, former.id);
+  pipe(outcome.disposition, O.isSome, assertTrue);
 
   // The claim id travels back branded (the resolver hands the decoded claim through),
   // so the second scope can read the disposition without re-decoding a raw row id.
@@ -206,71 +208,73 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Epistemic EdgeAuthority restart proof", () => {});
 } else {
   describe("Epistemic EdgeAuthority restart proof", { concurrent: false }, () => {
-    it.effect(
-      "history, lineage, dispositions, both as-of answers, and constraints survive a reopen",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-epistemic-restart-" });
-        const dataDir = path.join(tempDir, "pgdata");
+    it.layer(TempDirServices, { timeout: "10 seconds" })("native services", (it) => {
+      it.effect(
+        "history, lineage, dispositions, both as-of answers, and constraints survive a reopen",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-epistemic-restart-" });
+          const dataDir = path.join(tempDir, "pgdata");
 
-        const written = yield* writeHistory().pipe(provideScopedLayer(makePersistentLayer(dataDir)));
+          const written = yield* writeHistory().pipe(provideScopedLayer(makePersistentLayer(dataDir)));
 
-        // The first scope is closed here: PGlite has shut down and the only thing carrying
-        // the history across is the directory.
-        yield* Effect.gen(function* () {
-          const repository = yield* makeDrizzleEdgeAuthorityRepository();
-          const dispositions = yield* makeDrizzleClaimDispositionRepository();
+          // The first scope is closed here: PGlite has shut down and the only thing carrying
+          // the history across is the directory.
+          yield* Effect.gen(function* () {
+            const repository = yield* makeDrizzleEdgeAuthorityRepository();
+            const dispositions = yield* makeDrizzleClaimDispositionRepository();
 
-          const before = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 1_500));
-          const after = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 2_500));
-          expect(factOf(before, "amount")).toStrictEqual(O.some("100"));
-          expect(factOf(after, "amount")).toStrictEqual(O.some("150"));
+            const before = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 1_500));
+            const after = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 2_500));
+            assertSome(factOf(before, "amount"), "100");
+            assertSome(factOf(after, "amount"), "150");
 
-          const head = yield* pipe(
-            after,
-            O.match({
-              onNone: () => Effect.die("expected the corrected head to survive the reopen"),
-              onSome: Effect.succeed,
-            })
-          );
-          expect(head.version).toBe(2);
-          expect(head.supersedesId).toStrictEqual(O.some(written.formerId));
-          expect(DateTime.toEpochMillis(head.recordedAt)).toBe(2_000);
-
-          const recorded = yield* dispositions.listByClaim(written.claimId);
-          expect(A.map(recorded, (disposition) => disposition.status)).toStrictEqual(["rejected"]);
-          expect(A.map(recorded, (disposition) => DateTime.toEpochMillis(disposition.resolvedAt))).toStrictEqual([
-            resolvedAtMillis,
-          ]);
-          expect(
-            A.map(recorded, (disposition) => A.map(disposition.violations, (violation) => violation.message))
-          ).toStrictEqual([["Expected at least 1 value(s) for evidence."]]);
-
-          // The constraint is live in the reopened database, not merely recorded in its
-          // catalog: a closed interval overlapping the surviving open head is still
-          // refused, and the refusal still arrives as the typed conflict. Probe stays
-          // LAST — it aborts the surrounding transaction chain.
-          const conflict = yield* Effect.flip(
-            repository.record(
-              yield* decodeRecord({
-                fact: { amount: "999" },
-                identity: written.identity,
-                orgId: 1,
-                recordedAt: 2_600,
-                recordedBy: systemPrincipal,
-                schemaVersion: "0.0.0",
-                source: "Agent",
-                validFrom: 1_200,
-                validTo: 1_400,
+            const head = yield* pipe(
+              after,
+              O.match({
+                onNone: () => Effect.die("expected the corrected head to survive the reopen"),
+                onSome: Effect.succeed,
               })
-            )
-          );
-          expect(SupersessionConflict.is(conflict)).toBe(true);
-          expect(inspect(conflict, { depth: 12 })).toContain("epistemic_edge_no_overlap");
-        }).pipe(provideScopedLayer(makePersistentLayer(dataDir)));
-      }, provideScopedLayer(TempDirServices)),
-      180_000
-    );
+            );
+            expect(head.version).toBe(2);
+            assertSome(head.supersedesId, written.formerId);
+            expect(DateTime.toEpochMillis(head.recordedAt)).toBe(2_000);
+
+            const recorded = yield* dispositions.listByClaim(written.claimId);
+            expect(A.map(recorded, (disposition) => disposition.status)).toStrictEqual(["rejected"]);
+            expect(A.map(recorded, (disposition) => DateTime.toEpochMillis(disposition.resolvedAt))).toStrictEqual([
+              resolvedAtMillis,
+            ]);
+            expect(
+              A.map(recorded, (disposition) => A.map(disposition.violations, (violation) => violation.message))
+            ).toStrictEqual([["Expected at least 1 value(s) for evidence."]]);
+
+            // The constraint is live in the reopened database, not merely recorded in its
+            // catalog: a closed interval overlapping the surviving open head is still
+            // refused, and the refusal still arrives as the typed conflict. Probe stays
+            // LAST — it aborts the surrounding transaction chain.
+            const conflict = yield* Effect.flip(
+              repository.record(
+                yield* decodeRecord({
+                  fact: { amount: "999" },
+                  identity: written.identity,
+                  orgId: 1,
+                  recordedAt: 2_600,
+                  recordedBy: systemPrincipal,
+                  schemaVersion: "0.0.0",
+                  source: "Agent",
+                  validFrom: 1_200,
+                  validTo: 1_400,
+                })
+              )
+            );
+            pipe(SupersessionConflict.is(conflict), assertTrue);
+            expect(inspect(conflict, { depth: 12 })).toContain("epistemic_edge_no_overlap");
+          }).pipe(provideScopedLayer(makePersistentLayer(dataDir)));
+        }),
+        180_000
+      );
+    });
   });
 }

@@ -36,8 +36,9 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -80,35 +81,30 @@ const UnmigratedDrizzleLayer = makeDrizzleLayer().pipe(
 // A failed statement leaves an implicit-transaction PGlite session in the
 // aborted state, where the only legal next statement is the rollback that
 // quiesces it, so every expected failure is followed by one.
-const quiesce = Effect.fnUntraced(function* () {
+const quiesce = Effect.fn("SyncRepositoryDriverFailure.quiesce")(function* () {
   const sql = yield* SqlClient.SqlClient;
-  yield* Effect.ignore(sql.unsafe("ROLLBACK"));
+  yield* sql.unsafe("ROLLBACK").pipe(Effect.orDie);
 });
 
 describe("Documents sync repository driver failures", { concurrent: false }, () => {
-  layer(UnmigratedDrizzleLayer, { timeout: "2 minutes" })((it) => {
+  it.layer(UnmigratedDrizzleLayer, { timeout: "2 minutes" })((it) => {
     it.effect(
       "redacts every SyncItem statement to SyncItemRepositoryUnavailable",
       Effect.fnUntraced(function* () {
         const repository = yield* makeDrizzleSyncItemRepository();
 
-        const created = yield* Effect.flip(repository.create(itemSeed));
-        yield* quiesce();
-        const byPath = yield* Effect.flip(
-          repository.findByPath(
+        const created = yield* repository.create(itemSeed).pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const byPath = yield* repository
+          .findByPath(
             FindSyncItemByPathInput.make({ localRelPath: itemSeed.localRelPath, provider: "box", workspaceId })
           )
-        );
-        yield* quiesce();
-        const byRemoteId = yield* Effect.flip(
-          repository.findByRemoteId(FindSyncItemByRemoteIdInput.make({ provider: "box", remoteId, workspaceId }))
-        );
-        yield* quiesce();
-        const listed = yield* Effect.flip(
-          repository.listByWorkspace(ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId }))
-        );
-        yield* quiesce();
-
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const byRemoteId = yield* repository
+          .findByRemoteId(FindSyncItemByRemoteIdInput.make({ provider: "box", remoteId, workspaceId }))
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const listed = yield* repository
+          .listByWorkspace(ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId }))
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
         expect(A.map([created, byPath, byRemoteId, listed], SyncItemRepositoryUnavailable.is)).toEqual([
           true,
           true,
@@ -123,11 +119,10 @@ describe("Documents sync repository driver failures", { concurrent: false }, () 
       Effect.fnUntraced(function* () {
         const repository = yield* makeDrizzleSyncCursorRepository();
 
-        const found = yield* Effect.flip(repository.find(FindSyncCursorInput.make({ provider: "box", workspaceId })));
-        yield* quiesce();
-        const upserted = yield* Effect.flip(repository.upsert(cursorSeed));
-        yield* quiesce();
-
+        const found = yield* repository
+          .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const upserted = yield* repository.upsert(cursorSeed).pipe(Effect.flip, Effect.ensuring(quiesce()));
         expect(A.map([found, upserted], SyncCursorRepositoryUnavailable.is)).toEqual([true, true]);
         expect(found.reason).toBe(`select SyncCursor failed against ${SYNC_CURSOR_TABLE_NAME}`);
       })
@@ -138,17 +133,13 @@ describe("Documents sync repository driver failures", { concurrent: false }, () 
       Effect.fnUntraced(function* () {
         const repository = yield* makeDrizzleSyncConflictRepository();
 
-        const open = yield* Effect.flip(
-          repository.listOpen(ListOpenSyncConflictsInput.make({ provider: "box", workspaceId }))
-        );
-        yield* quiesce();
-        const reviewed = yield* Effect.flip(
-          repository.markReviewed(MarkSyncConflictReviewedInput.make({ conflictId }))
-        );
-        yield* quiesce();
-        const recorded = yield* Effect.flip(repository.record(conflictSeed));
-        yield* quiesce();
-
+        const open = yield* repository
+          .listOpen(ListOpenSyncConflictsInput.make({ provider: "box", workspaceId }))
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const reviewed = yield* repository
+          .markReviewed(MarkSyncConflictReviewedInput.make({ conflictId }))
+          .pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const recorded = yield* repository.record(conflictSeed).pipe(Effect.flip, Effect.ensuring(quiesce()));
         expect(A.map([open, reviewed, recorded], SyncConflictRepositoryUnavailable.is)).toEqual([true, true, true]);
       })
     );

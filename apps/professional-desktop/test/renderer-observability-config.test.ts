@@ -1,7 +1,7 @@
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import { describe, expect } from "vitest";
 import { RendererObservabilityConfig } from "@/runtime/RendererObservabilityConfig";
 
 describe("RendererObservabilityConfig", () => {
@@ -15,8 +15,8 @@ describe("RendererObservabilityConfig", () => {
   it.effect("decodes a payload omitting buildCommit and otlpUrl to None", () =>
     Effect.gen(function* () {
       const config = yield* RendererObservabilityConfig.decode(required);
-      expect(config.buildCommit).toEqual(O.none());
-      expect(config.otlpUrl).toEqual(O.none());
+      assertNone(config.buildCommit);
+      assertNone(config.otlpUrl);
     })
   );
 
@@ -27,8 +27,8 @@ describe("RendererObservabilityConfig", () => {
         buildCommit: "abc123",
         otlpUrl: "http://localhost:4318",
       });
-      expect(config.buildCommit).toEqual(O.some("abc123"));
-      expect(config.otlpUrl).toEqual(O.some("http://localhost:4318"));
+      assertSome<string>(config.buildCommit, "abc123");
+      assertSome<string>(config.otlpUrl, "http://localhost:4318");
     })
   );
 

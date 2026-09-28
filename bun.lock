@@ -281,6 +281,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -346,6 +347,7 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
@@ -752,6 +754,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1803,6 +1806,7 @@
       },
       "devDependencies": {
         "@beep/pglite": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/sql-pg": "catalog:",
@@ -2550,6 +2554,7 @@
       "devDependencies": {
         "@beep/md": "workspace:^",
         "@beep/pglite": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",

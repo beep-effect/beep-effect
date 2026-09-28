@@ -3,14 +3,15 @@ import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-cases/tools";
-import { NodeHttpServer, NodeServices } from "@effect/platform-node";
+import { NodeHttpServer } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow } from "effect/Function";
+import { flow } from "effect/Function";
 import { Headers, HttpClient, HttpClientRequest, HttpClientResponse, HttpRouter, HttpServer } from "effect/http";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -26,7 +27,6 @@ import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransp
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
-import type * as Scope from "effect/Scope";
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
 const socketTransportConfig = Config.Boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
@@ -113,7 +113,6 @@ const transportLayer = (root: string, options: TransportOptions) =>
     Layer.provide(options.ledger ?? silentLedgerLayer),
     Layer.provide(options.epistemicConfig ?? EpistemicConfigTest),
     Layer.provide(transportConfigProvider(root, options)),
-    Layer.provide(NodeServices.layer),
     Layer.orDie
   );
 
@@ -121,15 +120,6 @@ const transportLayer = (root: string, options: TransportOptions) =>
 // so the transport layer is built once, inside the entrypoint.
 const transportServer = (root: string, options: TransportOptions) =>
   HttpRouter.serve(transportLayer(root, options), { disableListenLog: true, disableLogger: true });
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
-      Effect.scoped
-    );
 
 const nodeLoopbackLayer = HttpServer.layerTestClient.pipe(
   Layer.provide(
@@ -242,14 +232,54 @@ const makeMcpClientProtocol = (useSocketTransport: boolean) =>
     ),
   }).pipe(Layer.provideMerge(RpcSerialization.layerJsonRpc()));
 
-type WithHttpServerRun<A2, E> = (
-  root: string,
-  ontologyPath: OntologyFilePath,
-  useSocketTransport: boolean
-) => Effect.Effect<A2, E, HttpClient.HttpClient | FileSystem.FileSystem | Path.Path | RpcClient.Protocol | Scope.Scope>;
+/**
+ * Workspace and transport mode owned by one ontology HTTP fixture.
+ *
+ * **Example** (Read the fixture workspace)
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { HttpServerFixture } from "./ontology-mcp-harness.ts"
+ *
+ * const workspace = Effect.map(HttpServerFixture, ({ root }) => root)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export class HttpServerFixture extends Context.Service<
+  HttpServerFixture,
+  {
+    readonly root: string;
+    readonly ontologyPath: OntologyFilePath;
+    readonly useSocketTransport: boolean;
+  }
+>()("@beep/professional-desktop/test/integration/support/ontology-mcp-harness/HttpServerFixture") {}
 
-const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>) =>
-  Effect.scoped(
+/**
+ * Own an isolated ontology workspace, HTTP transport, and MCP protocol in a layer.
+ *
+ * **Details**
+ * Public test layers own static fixtures. Tests comparing separate execution
+ * windows build fresh layers in explicit shorter scopes so cleanup precedes
+ * subsequent ledger observations. Both transport modes release their resources.
+ *
+ * **Example** (Provide host services to the fixture)
+ * ```ts
+ * import { NodeServices } from "@effect/platform-node"
+ * import * as Layer from "effect/Layer"
+ * import { makeHttpServerLayer } from "./ontology-mcp-harness.ts"
+ *
+ * const fixture = makeHttpServerLayer({
+ *   mutationsEnabled: false,
+ *   approvedMutationTools: []
+ * }).pipe(Layer.provide(NodeServices.layer))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeHttpServerLayer = (options: TransportOptions) =>
+  Layer.unwrap(
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -257,15 +287,18 @@ const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServe
       yield* fileSystem.writeFileString(path.join(root, "ontology.ttl"), fixtureSource);
       const ontologyPath = yield* decodeOntologyFilePath("ontology.ttl");
       const useSocketTransport = yield* socketTransportConfig;
+      const fixture = Layer.succeed(HttpServerFixture, { root, ontologyPath, useSocketTransport });
       if (useSocketTransport) {
         const server = transportServer(root, options).pipe(Layer.provideMerge(nodeLoopbackLayer));
         const client = mcpSessionClientLayer.pipe(Layer.provideMerge(server));
-        return yield* run(root, ontologyPath, useSocketTransport).pipe(
-          provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)))
-        );
+        return Layer.merge(fixture, makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)));
       }
 
-      const routes = transportLayer(root, options);
+      // The web handler starts its own runtime: bridge the public layer's services.
+      const routes = transportLayer(root, options).pipe(
+        Layer.provide(Layer.succeed(FileSystem.FileSystem, fileSystem)),
+        Layer.provide(Layer.succeed(Path.Path, path))
+      );
       const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });
       yield* Effect.addFinalizer(() => Effect.promise(dispose));
       function customFetch(
@@ -278,16 +311,9 @@ const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServe
       const clientLayer = mcpSessionClientLayer.pipe(
         Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, customFetch))))
       );
-      return yield* run(root, ontologyPath, useSocketTransport).pipe(
-        provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)))
-      );
-    }).pipe(provideScopedLayer(NodeServices.layer))
+      return Layer.merge(fixture, makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)));
+    })
   );
-
-export const withHttpServer: {
-  <A2, E>(run: WithHttpServerRun<A2, E>): (options: TransportOptions) => ReturnType<typeof withHttpServerImpl<A2, E>>;
-  <A2, E>(options: TransportOptions, run: WithHttpServerRun<A2, E>): ReturnType<typeof withHttpServerImpl<A2, E>>;
-} = dual(2, withHttpServerImpl);
 
 export const makeMcpClient = Effect.fn("OntologyMcpHttpTest.makeClient")(function* () {
   const client = yield* RpcClient.make(McpSchema.ClientRpcs);

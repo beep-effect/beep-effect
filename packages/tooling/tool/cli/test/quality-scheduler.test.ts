@@ -1907,6 +1907,8 @@ describe("quality-scheduler", () => {
 
             const stageLinks = yield* Ref.make(0);
             const bothContendersReady = yield* Deferred.make<void>();
+            const tombstonePublished = yield* Deferred.make<void>();
+            const followerFinished = yield* Deferred.make<void>();
             const lockTombstones = yield* Ref.make(0);
             const interleavedFileSystem = FileSystem.FileSystem.of({
               ...fs,
@@ -1917,6 +1919,9 @@ describe("quality-scheduler", () => {
                     yield* Deferred.succeed(bothContendersReady, undefined);
                   }
                   yield* Deferred.await(bothContendersReady);
+                  return yield* fs
+                    .link(existingPath, newPath)
+                    .pipe(Effect.tapError(() => (count === 2 ? Deferred.await(tombstonePublished) : Effect.void)));
                 }
                 return yield* fs.link(existingPath, newPath);
               }),
@@ -1925,6 +1930,10 @@ describe("quality-scheduler", () => {
                   yield* Ref.update(lockTombstones, (value) => value + 1);
                   yield* fs.remove(lockPath, { force: true });
                   yield* fs.writeFileString(lockPath, replacementGeneration);
+                  yield* fs.rename(oldPath, newPath);
+                  yield* Deferred.succeed(tombstonePublished, undefined);
+                  yield* Deferred.await(followerFinished);
+                  return;
                 }
                 yield* fs.rename(oldPath, newPath);
               }),
@@ -1934,7 +1943,8 @@ describe("quality-scheduler", () => {
               ["first-adopter", "second-adopter"],
               (token) =>
                 acquireJournalFileLock(lockPath, `${process.pid}:${token}`, 1).pipe(
-                  Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
+                  Effect.provideService(FileSystem.FileSystem, interleavedFileSystem),
+                  Effect.ensuring(Deferred.succeed(followerFinished, undefined))
                 ),
               { concurrency: "unbounded" }
             );

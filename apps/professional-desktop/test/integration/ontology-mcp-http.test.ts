@@ -19,10 +19,12 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientRequest } from "effect/http";
@@ -37,10 +39,11 @@ import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.ts";
 import {
   allowedOrigin,
   decodeOntologyFilePath,
+  HttpServerFixture,
+  makeHttpServerLayer,
   makeMcpClient,
   openThroughMcp,
   token,
-  withHttpServer,
 } from "./support/ontology-mcp-harness.ts";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 
@@ -61,24 +64,10 @@ const firstTextContent = (call: {
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
 const decodePublishProvenanceResponse = S.decodeUnknownEffect(PublishProvenanceResponse);
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 interface LedgerProbe {
@@ -153,71 +142,85 @@ const addName = (person: string, name: string) =>
   });
 
 describe("professional desktop ontology MCP streamable HTTP mount", { concurrent: false, timeout: 120_000 }, () => {
-  it("round-trips MCP request codecs with schema-derived arbitraries", () => {
-    assertSchemaRoundTrip(OpenInspectRequest);
-    assertSchemaRoundTrip(OntologySparqlQueryRequest);
-  });
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.prop(
+      "round-trips MCP request codecs with schema-derived arbitraries",
+      { openInspect: OpenInspectRequest, query: OntologySparqlQueryRequest },
+      ({ openInspect, query }) => {
+        assertSchemaRoundTrip(OpenInspectRequest, openInspect);
+        assertSchemaRoundTrip(OntologySparqlQueryRequest, query);
+      },
+      { arbitrary: fcRuns(10) }
+    );
 
-  it.effect(
-    "proves initialize, tools/list, and the read-only first slice while mutation registration is disabled",
-    () =>
-      withHttpServer({ mutationsEnabled: false, approvedMutationTools: [] }, (_root, ontologyPath) =>
-        Effect.gen(function* () {
-          const client = yield* makeMcpClient();
-          const listed = yield* client["tools/list"](undefined);
-          const names = A.map(listed.tools, (tool) => tool.name);
-          expect(A.contains(names, "ontology_capability_metadata")).toBe(true);
-          expect(A.contains(names, "ontology_sparql_query")).toBe(true);
-          expect(A.contains(names, "ontology_propose_change_batch")).toBe(false);
-          expect(A.contains(names, "ontology_repair")).toBe(false);
-
-          const metadataCall = yield* client["tools/call"]({
-            name: "ontology_capability_metadata",
-            arguments: {},
-          });
-          const metadata = yield* decodeCapabilityMetadataResponse(metadataCall.structuredContent);
-          const queryRequest = yield* encodeOntologySparqlQueryRequest(
-            OntologySparqlQueryRequest.make({
-              path: ontologyPath,
-              profile: "select",
-              query: "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+    it.layer(makeHttpServerLayer({ mutationsEnabled: false, approvedMutationTools: [] }), { timeout: "30 seconds" })(
+      (it) => {
+        it.effect(
+          "proves initialize, tools/list, and the read-only first slice while mutation registration is disabled",
+          () =>
+            Effect.gen(function* () {
+              const { root: _root, ontologyPath } = yield* HttpServerFixture;
+              const client = yield* makeMcpClient();
+              const listed = yield* client["tools/list"](undefined);
+              const names = A.map(listed.tools, (tool) => tool.name);
+              expect(A.contains(names, "ontology_capability_metadata")).toBe(true);
+              expect(A.contains(names, "ontology_sparql_query")).toBe(true);
+              expect(A.contains(names, "ontology_propose_change_batch")).toBe(false);
+              expect(A.contains(names, "ontology_repair")).toBe(false);
+              const metadataCall = yield* client["tools/call"]({
+                name: "ontology_capability_metadata",
+                arguments: {},
+              });
+              const metadata = yield* decodeCapabilityMetadataResponse(metadataCall.structuredContent);
+              const queryRequest = yield* encodeOntologySparqlQueryRequest(
+                OntologySparqlQueryRequest.make({
+                  path: ontologyPath,
+                  profile: "select",
+                  query: "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+                })
+              );
+              const queryCall = yield* client["tools/call"]({
+                name: "ontology_sparql_query",
+                arguments: queryRequest,
+              });
+              const query = yield* decodeOntologySparqlQueryResponse(queryCall.structuredContent);
+              expect(metadataCall.isError).toBe(false);
+              expect(metadata.budgets.maxQueryResults).toBe(200);
+              expect(queryCall.isError).toBe(false);
+              expect(query.query.displayedResultCount).toBe(4);
             })
-          );
-          const queryCall = yield* client["tools/call"]({ name: "ontology_sparql_query", arguments: queryRequest });
-          const query = yield* decodeOntologySparqlQueryResponse(queryCall.structuredContent);
+        );
+      }
+    );
 
-          expect(metadataCall.isError).toBe(false);
-          expect(metadata.budgets.maxQueryResults).toBe(200);
-          expect(queryCall.isError).toBe(false);
-          expect(query.query.displayedResultCount).toBe(4);
-        })
-      )
-  );
-
-  it.effect("rejects untrusted Origins with typed 403 and rejects unauthenticated requests", () =>
-    withHttpServer({ mutationsEnabled: false, approvedMutationTools: [] }, (_root, _ontologyPath, useSocketTransport) =>
-      Effect.gen(function* () {
-        const forbidden = yield* rawInitialize(useSocketTransport, {
-          authorization: rpcSessionAuthorizationHeader(token),
-          origin: "https://attacker.example",
-        });
-        const forbiddenBody = yield* forbidden.text;
-        const unauthorized = yield* rawInitialize(useSocketTransport, { origin: allowedOrigin });
-
-        expect(forbidden.status).toBe(403);
-        expect(Str.includes("OntologyMcpOriginForbidden")(forbiddenBody)).toBe(true);
-        expect(unauthorized.status).toBe(401);
-      })
-    )
-  );
-
-  it.effect("fails mutation closed through TierGate when no tool approval resolves", () =>
-    Effect.gen(function* () {
-      const probe = yield* makeLedgerProbe();
-      yield* withHttpServer(
-        { mutationsEnabled: true, approvedMutationTools: [], ledger: probe.layer },
-        (_root, ontologyPath) =>
+    it.layer(makeHttpServerLayer({ mutationsEnabled: false, approvedMutationTools: [] }), { timeout: "30 seconds" })(
+      (it) => {
+        it.effect("rejects untrusted Origins with typed 403 and rejects unauthenticated requests", () =>
           Effect.gen(function* () {
+            const { root: _root, ontologyPath: _ontologyPath, useSocketTransport } = yield* HttpServerFixture;
+            const forbidden = yield* rawInitialize(useSocketTransport, {
+              authorization: rpcSessionAuthorizationHeader(token),
+              origin: "https://attacker.example",
+            });
+            const forbiddenBody = yield* forbidden.text;
+            const unauthorized = yield* rawInitialize(useSocketTransport, { origin: allowedOrigin });
+            expect(forbidden.status).toBe(403);
+            expect(Str.includes("OntologyMcpOriginForbidden")(forbiddenBody)).toBe(true);
+            expect(unauthorized.status).toBe(401);
+          })
+        );
+      }
+    );
+
+    it.effect("fails mutation closed through TierGate when no tool approval resolves", () =>
+      Effect.gen(function* () {
+        const probe = yield* makeLedgerProbe();
+        yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({ mutationsEnabled: true, approvedMutationTools: [], ledger: probe.layer })
+          );
+          const { root: _root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
             const client = yield* makeMcpClient();
             const opened = yield* openThroughMcp(client, ontologyPath);
             const request = yield* encodeProposeChangeBatchRequest(
@@ -235,25 +238,31 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
 
             expect(call.isError).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
-          })
-      );
-      // A refused dispatch produces exactly one ledger row — the denied
-      // decision. There was no execution to settle, so no outcome row exists.
-      const decisions = yield* Ref.get(probe.decisions);
-      expect(decisions).toHaveLength(1);
-      expect(decisions[0]!.verdict).toBe("denied");
-      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
-      expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
-    })
-  );
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
+        // A refused dispatch produces exactly one ledger row — the denied
+        // decision. There was no execution to settle, so no outcome row exists.
+        const decisions = yield* Ref.get(probe.decisions);
+        expect(decisions).toHaveLength(1);
+        expect(decisions[0]!.verdict).toBe("denied");
+        expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
+        expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+      })
+    );
 
-  it.effect("chains two approved mutations of one MCP session into one governed run", () =>
-    Effect.gen(function* () {
-      const probe = yield* makeLedgerProbe();
-      yield* withHttpServer(
-        { mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name], ledger: probe.layer },
-        (_root, ontologyPath) =>
-          Effect.gen(function* () {
+    it.effect("chains two approved mutations of one MCP session into one governed run", () =>
+      Effect.gen(function* () {
+        const probe = yield* makeLedgerProbe();
+        yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [ProposeChangeBatchTool.name],
+              ledger: probe.layer,
+            })
+          );
+          const { root: _root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
             const client = yield* makeMcpClient();
             const opened = yield* openThroughMcp(client, ontologyPath);
             const firstRequest = yield* encodeProposeChangeBatchRequest(
@@ -281,39 +290,45 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             });
             expect(firstCall.isError).toBe(false);
             expect(secondCall.isError).toBe(false);
-          })
-      );
-      // Two rows per allowed dispatch — a write-ahead decision and its
-      // settlement — and both dispatches belong to ONE run. That last part is
-      // the session-keying proof: the HTTP protocol mints a fresh clientId per
-      // request, so a gate keyed on clientId would produce two runs, each a
-      // lone genesis row, and this chain assertion would fail. The read-only
-      // open/inspect call is ungated and writes nothing.
-      const decisions = yield* Ref.get(probe.decisions);
-      const outcomes = yield* Ref.get(probe.outcomes);
-      expect(decisions).toHaveLength(2);
-      const runKey = decisions[0]!.runKey;
-      expect(decisions[1]!.runKey).toBe(runKey);
-      expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1]);
-      expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "allowed"]);
-      expect(decisions[0]!.sinkClass).toBe("mcp-write");
-      expect(decisions[0]!.audience).toBe("local-workspace");
-      expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
-      expect(outcomes).toHaveLength(2);
-      expect(A.map(outcomes, (record) => record.settlement)).toEqual(["completed", "completed"]);
-      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
-      expect(verifyOutcomeBinding(outcomes[1]!, decisions[1]!)).toBe(true);
-    })
-  );
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
+        // Two rows per allowed dispatch — a write-ahead decision and its
+        // settlement — and both dispatches belong to ONE run. That last part is
+        // the session-keying proof: the HTTP protocol mints a fresh clientId per
+        // request, so a gate keyed on clientId would produce two runs, each a
+        // lone genesis row, and this chain assertion would fail. The read-only
+        // open/inspect call is ungated and writes nothing.
+        const decisions = yield* Ref.get(probe.decisions);
+        const outcomes = yield* Ref.get(probe.outcomes);
+        expect(decisions).toHaveLength(2);
+        const runKey = decisions[0]!.runKey;
+        expect(decisions[1]!.runKey).toBe(runKey);
+        expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1]);
+        expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "allowed"]);
+        expect(decisions[0]!.sinkClass).toBe("mcp-write");
+        expect(decisions[0]!.audience).toBe("local-workspace");
+        expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
+        expect(outcomes).toHaveLength(2);
+        expect(A.map(outcomes, (record) => record.settlement)).toEqual(["completed", "completed"]);
+        expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+        expect(verifyOutcomeBinding(outcomes[1]!, decisions[1]!)).toBe(true);
+      })
+    );
 
-  it.effect("refuses the mutation and leaves the workspace unchanged when the decision write fails", () =>
-    Effect.gen(function* () {
-      const probe = yield* makeLedgerProbe();
-      yield* Ref.set(probe.failWrites, true);
-      yield* withHttpServer(
-        { mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name], ledger: probe.layer },
-        (root, ontologyPath) =>
-          Effect.gen(function* () {
+    it.effect("refuses the mutation and leaves the workspace unchanged when the decision write fails", () =>
+      Effect.gen(function* () {
+        const probe = yield* makeLedgerProbe();
+        yield* Ref.set(probe.failWrites, true);
+        yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              approvedMutationTools: [ProposeChangeBatchTool.name],
+              ledger: probe.layer,
+            })
+          );
+          const { root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
             const client = yield* makeMcpClient();
             const opened = yield* openThroughMcp(client, ontologyPath);
             const fileSystem = yield* FileSystem.FileSystem;
@@ -342,62 +357,62 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             expect(after).toBe(before);
             // No provenance sidecar was produced either: the mutation never ran.
             expect(yield* fileSystem.readDirectory(root)).toEqual(["ontology.ttl"]);
-          })
-      );
-      expect(yield* Ref.get(probe.decisions)).toHaveLength(0);
-      expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
-    })
-  );
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
+        expect(yield* Ref.get(probe.decisions)).toHaveLength(0);
+        expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+      })
+    );
 
-  it.effect("leaves ontology_publish_provenance unregistered when no destination is allowlisted", () =>
-    withHttpServer(
-      {
+    it.layer(
+      makeHttpServerLayer({
         mutationsEnabled: true,
         approvedMutationTools: [ProposeChangeBatchTool.name],
         epistemicConfig: makeEpistemicConfigTest(
           EpistemicServerConfig.make({ destinationAllowlist: [], policyRevision: defaultPolicyRevision })
         ),
-      },
-      () =>
+      }),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("leaves ontology_publish_provenance unregistered when no destination is allowlisted", () =>
         Effect.gen(function* () {
           const client = yield* makeMcpClient();
           const listed = yield* client["tools/list"](undefined);
           const names = A.map(listed.tools, (tool) => tool.name);
-
           expect(A.contains(names, PublishProvenanceTool.name)).toBe(false);
-          // The sibling positive fact: registration is otherwise working, so
-          // the absence above is the allowlist gate and not a broken mount.
           expect(A.contains(names, ProposeChangeBatchTool.name)).toBe(true);
         })
-    )
-  );
+      );
+    });
 
-  it.effect("carries a publication from a real tool handler through the governed egress fetch", () =>
-    Effect.gen(function* () {
-      const probe = yield* makeLedgerProbe();
-      // The base fetch the governed boundary delegates to when it allows a
-      // request. Nothing here reaches the network; being called at all is the
-      // proof that the policy Fetch was the one in force, because an
-      // un-overridden Fetch would have used the platform fetch instead. A plain
-      // array, not a Ref: `fetch` has no fiber to run an Effect on.
-      const delivered: Array<string> = [];
-      const egressFetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-        delivered.push(`${String(init?.method ?? "GET")} ${String(input)}`);
-        return Promise.resolve(new Response("stored", { status: 202 }));
-      }) as typeof globalThis.fetch;
+    it.effect("carries a publication from a real tool handler through the governed egress fetch", () =>
+      Effect.gen(function* () {
+        const probe = yield* makeLedgerProbe();
+        // The base fetch the governed boundary delegates to when it allows a
+        // request. Nothing here reaches the network; being called at all is the
+        // proof that the policy Fetch was the one in force, because an
+        // un-overridden Fetch would have used the platform fetch instead. A plain
+        // array, not a Ref: `fetch` has no fiber to run an Effect on.
+        const delivered: Array<string> = [];
+        const egressFetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+          delivered.push(`${String(init?.method ?? "GET")} ${String(input)}`);
+          return Promise.resolve(new Response("stored", { status: 202 }));
+        }) as typeof globalThis.fetch;
 
-      yield* withHttpServer(
-        {
-          mutationsEnabled: true,
-          // Publication is granted; the change-batch tool is registered but
-          // deliberately ungranted, so the test has a real gate refusal to
-          // compare the egress refusal against.
-          approvedMutationTools: [ExportProvenanceTool.name, PublishProvenanceTool.name],
-          egressFetch,
-          ledger: probe.layer,
-        },
-        (_root, ontologyPath) =>
-          Effect.gen(function* () {
+        yield* Effect.gen(function* () {
+          const context = yield* Layer.build(
+            makeHttpServerLayer({
+              mutationsEnabled: true,
+              // Publication is granted; the change-batch tool is registered but
+              // deliberately ungranted, so the test has a real gate refusal to
+              // compare the egress refusal against.
+              approvedMutationTools: [ExportProvenanceTool.name, PublishProvenanceTool.name],
+              egressFetch,
+              ledger: probe.layer,
+            })
+          );
+          const { root: _root, ontologyPath } = Context.get(context, HttpServerFixture);
+          return yield* Effect.gen(function* () {
             const client = yield* makeMcpClient();
             const opened = yield* openThroughMcp(client, ontologyPath);
             const exportRequest = yield* encodeExportProvenanceRequest(
@@ -456,29 +471,30 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             expect(refusal._tag === "OntologyTierGateRefusal" && refusal.guidance).toBe(
               gateRefusal._tag === "OntologyTierGateRefusal" && gateRefusal.guidance
             );
-          })
-      );
+          }).pipe(Effect.provide(context));
+        }).pipe(Effect.scoped);
 
-      // The allowlisted destination was delivered; the other never reached the
-      // network side of the boundary at all.
-      expect(delivered).toEqual([`POST ${fixtureAllowedDestination}/v1/provenance`]);
+        // The allowlisted destination was delivered; the other never reached the
+        // network side of the boundary at all.
+        expect(delivered).toEqual([`POST ${fixtureAllowedDestination}/v1/provenance`]);
 
-      const decisions = yield* Ref.get(probe.decisions);
-      const egressDecisions = A.filter(decisions, (record) => record.sinkClass === "network-egress");
-      // Two decisions per publication attempt: the gate's (may this session
-      // publish) and the egress boundary's (may this destination be reached).
-      // The denied attempt is refused by the second, not the first.
-      expect(A.length(egressDecisions)).toBeGreaterThanOrEqual(3);
-      expect(A.some(egressDecisions, (record) => record.verdict === "denied")).toBe(true);
-      expect(A.some(egressDecisions, (record) => record.verdict === "allowed")).toBe(true);
-    })
-  );
+        const decisions = yield* Ref.get(probe.decisions);
+        const egressDecisions = A.filter(decisions, (record) => record.sinkClass === "network-egress");
+        // Two decisions per publication attempt: the gate's (may this session
+        // publish) and the egress boundary's (may this destination be reached).
+        // The denied attempt is refused by the second, not the first.
+        expect(A.length(egressDecisions)).toBeGreaterThanOrEqual(3);
+        expect(A.some(egressDecisions, (record) => record.verdict === "denied")).toBe(true);
+        expect(A.some(egressDecisions, (record) => record.verdict === "allowed")).toBe(true);
+      })
+    );
 
-  it.effect("records the authenticated MCP caller and surfaces budget and CAS failures as typed tool errors", () =>
-    withHttpServer(
-      { mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name] },
-      (root, ontologyPath) =>
+    it.layer(makeHttpServerLayer({ mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name] }), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect("records the authenticated MCP caller and surfaces budget and CAS failures as typed tool errors", () =>
         Effect.gen(function* () {
+          const { root, ontologyPath } = yield* HttpServerFixture;
           const client = yield* makeMcpClient();
           const opened = yield* openThroughMcp(client, ontologyPath);
           const firstRequest = yield* encodeProposeChangeBatchRequest(
@@ -498,7 +514,6 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
           const provenance = yield* fileSystem.readFileString(
             path.join(root, `ontology.ttl.${first.currentFingerprint}.prov.ttl`)
           );
-
           const budgetRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
               path: ontologyPath,
@@ -511,7 +526,6 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             arguments: budgetRequest,
           });
           const budget = yield* decodeOntologyToolFailureFromText(firstTextContent(budgetCall));
-
           const staleRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
               path: ontologyPath,
@@ -524,7 +538,6 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             arguments: staleRequest,
           });
           const stale = yield* decodeOntologyToolFailureFromText(firstTextContent(staleCall));
-
           expect(firstCall.isError).toBe(false);
           expect(Str.includes("urn:beep:desktop-rpc-session:mcp-client:")(provenance)).toBe(true);
           expect(Str.includes("prov:Agent")(provenance)).toBe(true);
@@ -534,6 +547,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
           expect(staleCall.isError).toBe(true);
           expect(stale._tag).toBe("OntologyCasConflict");
         })
-    )
-  );
+      );
+    });
+  });
 });

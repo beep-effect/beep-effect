@@ -1,0 +1,106 @@
+{
+  "package": "@beep/law-practice-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T07:13:41.406000+00:00",
+  "totalMs": 15925.868408203125,
+  "testCount": 87,
+  "files": [
+    {
+      "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "ms": 12.35302734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "ms": 5070.661865234375,
+      "tests": 6
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "ms": 14.185791015625,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "ms": 32.767578125,
+      "tests": 32
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "ms": 38.563232421875,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "ms": 2693.498291015625,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "ms": 33.861572265625,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "ms": 10261.868408203125,
+      "tests": 23
+    },
+    {
+      "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
+      "ms": 2.91064453125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections builds byte-identical ordered dumps with stable IRIs and complete provenance",
+      "ms": 9940.223398000002
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections serves all nine tools from the synthetic fixture bundle and degrades oversized results",
+      "ms": 5801.539893
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "conformance 2026-07-28: beep-practice-kg-test over newline-delimited stdio sends server/discover then tools/call over stdio",
+      "ms": 5710.644258
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections extracts, persists, and serves span-resolvable candidate claims with fixture model output",
+      "ms": 4540.868497000001
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections keeps the hand-written bundle DDL equal to the Drizzle read-model declarations",
+      "ms": 4393.80592
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections generates schema-valid fixture source rows round-trips the actual fixture source row through JSON",
+      "ms": 4389.15621
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections persists docket-scoped normalized patents with exact claims-section evidence and bounded input",
+      "ms": 1195.0127950000006
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "conformance 2026-07-28: beep-practice-kg-test over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+      "ms": 1118.765918000001
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "conformance 2026-07-28: beep-practice-kg-test over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+      "ms": 1111.6105989999996
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "conformance 2026-07-28: beep-practice-kg-test over streamable HTTP calls a tool and returns a non-error result",
+      "ms": 688.8776030000008
+    }
+  ]
+}

@@ -15,14 +15,14 @@ import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspa
 import { Composer } from "@/chat/ui/Composer";
 import { Thread } from "@/chat/ui/Thread";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider, useAtomRefresh, useAtomSet } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeAll, describe, expect, vi } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AsyncResult, Reactivity } from "effect/reactivity";
-import { afterEach, beforeAll, vi } from "vitest";
 import type { JSX } from "react";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
@@ -414,8 +414,27 @@ describe("the message you just sent", { concurrent: false }, () => {
     "keeps a receipt-uncertain prompt visible across successful timeline refreshes",
     Effect.fnUntraced(function* () {
       const timelineAtom = threadTimelineAtoms(threadId);
+      const refreshedTimeline = ThreadTimeline.make({
+        threadId,
+        turns: [
+          ...retryTimeline.turns,
+          TimelineTurn.make({
+            turnId: WorkspaceIdentity.TurnId.make(22),
+            turnIndex: NonNegativeInt.make(2),
+            items: [
+              TimelineMessageItem.make({
+                role: "assistant",
+                content: MdModel.Document.make({
+                  children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "refresh receipt applied" })] })],
+                }),
+              }),
+            ],
+            costMicros: 0,
+          }),
+        ],
+      });
       const client = ChatClient.of(((tag: string) => {
-        if (tag === "GetTimeline") return Effect.succeed(retryTimeline);
+        if (tag === "GetTimeline") return Effect.succeed(refreshedTimeline);
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
       const { container } = render(
@@ -433,7 +452,9 @@ describe("the message you just sent", { concurrent: false }, () => {
       screen.getByTestId("retain-receipt").click();
       expect(yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"))).toBeInTheDocument();
 
+      expect(screen.queryByText("refresh receipt applied")).not.toBeInTheDocument();
       screen.getByTestId("retry-timeline").click();
+      expect(yield* Effect.promise(() => screen.findByText("refresh receipt applied"))).toBeInTheDocument();
       expect(yield* Effect.promise(() => screen.findByText("superseded durable tail"))).toBeInTheDocument();
       expect(screen.getByTestId("turn-unreconciled")).toBeInTheDocument();
       expect(screen.getByTestId("turn-unreconciled-user")).toHaveTextContent("what did I just ask?");

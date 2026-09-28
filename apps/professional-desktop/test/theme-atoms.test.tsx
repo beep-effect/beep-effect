@@ -1,16 +1,19 @@
+import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { ThemeMode } from "@beep/ui/themes";
 import { RegistryProvider } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { afterEach, vi } from "vitest";
 import { ThemeToggle } from "@/chat/ui/ThemeToggle";
 import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime";
 import { migrateWorkbenchThemeMode, resolvedWorkbenchThemeModeAtom, workbenchThemeModeAtom } from "@/theme/Theme.atoms";
 import { WorkbenchThemeProvider } from "@/theme/WorkbenchThemeProvider";
+
+const themeLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 
 const NEW_THEME_KEY = "professional-desktop:theme-mode";
 const LEGACY_THEME_KEY = "mui-mode";
@@ -31,7 +34,9 @@ afterEach(() => {
 });
 
 describe("Atom-owned workbench theme", { concurrent: false }, () => {
-  it.layer(ProfessionalStorageLive)("theme preference migration", (it) => {
+  it.layer(ProfessionalStorageLive, {
+    timeout: themeLayerTimeout,
+  })("theme preference migration", (it) => {
     it.effect(
       "migrates a valid legacy MUI mode into the schema store",
       Effect.fnUntraced(function* () {

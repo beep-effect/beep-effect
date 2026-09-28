@@ -932,6 +932,15 @@ const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
 ): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const sidecars = yield* journalLockReapSidecars(lockPath);
+  const nowMillis = yield* Clock.currentTimeMillis;
+  // A missing lock can be an adopter's in-flight rename. Its tombstone and
+  // claim must survive until that owner restores or discards the generation.
+  for (const adopterPath of A.filter(sidecars, Str.includes(".adopt-"))) {
+    const claimPath = pipe(adopterPath, Str.split(".adopt-"), A.dropRight(1), A.join(".adopt-"));
+    if (yield* reapAdopterMayStillAct(adopterPath, claimPath, nowMillis)) {
+      return;
+    }
+  }
   const tombstones = A.filter(sidecars, isJournalLockReapTombstone);
   yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, {
     discard: true,

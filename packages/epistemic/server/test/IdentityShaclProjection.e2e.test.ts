@@ -11,7 +11,8 @@ import {
   projectShapes,
 } from "@beep/semantic-web";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { assert, describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -29,7 +30,7 @@ const entry = IdentityEntry.fromComposer(entryComposer, { displayName: "Identity
 const sameNamedNode = S.toEquivalence(NamedNode);
 
 describe("identity SHACL projection end to end", () => {
-  it.layer(BoundedShaclValidationServiceLive)("over the bounded SHACL validator", (it) => {
+  it.layer(BoundedShaclValidationServiceLive, { timeout: "10 seconds" })("over the bounded SHACL validator", (it) => {
     it.effect(
       "conforms with the required fiber and reports its path when removed",
       Effect.fnUntraced(function* () {

@@ -1,16 +1,18 @@
 import { DocumentIntakeActionError } from "@beep/documents-use-cases/public";
+import { it } from "@beep/test-runner";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { WorkspaceVaultActionError, WorkspaceVaultConfig } from "@beep/workspace-use-cases/public";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
-import { afterEach, describe, expect, vi } from "vitest";
+import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as Stream from "effect/Stream";
+import { vi } from "vitest";
 import {
   cancelManualVaultPathAtoms,
   chooseWorkspaceVaultAtoms,
@@ -64,19 +66,19 @@ const configuredRegistryWithClient = (client: DesktopIntakeClient["Service"]) =>
     ],
   });
 
-const pollSchedule = Schedule.spaced(Duration.millis(10)).pipe(
-  Schedule.upTo({ duration: Duration.seconds(3), times: 300 })
-);
-
 const waitForState = (
   registry: AtomRegistry.AtomRegistry,
   predicate: (state: DocumentIntakeState) => boolean
 ): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    predicate(registry.get(documentIntakeStateAtoms(workspaceId)))
-      ? Effect.void
-      : Effect.fail("document intake state has not reached the expected value")
-  ).pipe(Effect.retry(pollSchedule));
+  AtomRegistry.toStream(registry, documentIntakeStateAtoms(workspaceId)).pipe(
+    Stream.filter(predicate),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("document intake state has not reached the expected value"),
+    })
+  );
 
 const waitForSelection = (
   registry: AtomRegistry.AtomRegistry,
@@ -129,7 +131,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         tag === "SetWorkspaceVault"
           ? Deferred.await(save)
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       const result = runChooseVault(registry);
       yield* waitForSelection(registry, "saving");
@@ -137,11 +142,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
       yield* result;
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "leaves state unchanged when the operator cancels the picker",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -150,16 +154,18 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         Effect.die(
           "workspace vault RPC must not run after picker cancellation"
         )) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       yield* runChooseVault(registry);
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "surfaces a client-safe picker failure",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -168,7 +174,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         Effect.die(
           "workspace vault RPC must not run after picker failure"
         )) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       yield* runChooseVault(registry);
 
@@ -183,11 +192,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
           failed: ({ message }) => message,
         })
       ).not.toContain("/home/operator");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "opens the manual path form when the sidecar picker fails",
     Effect.fnUntraced(function* () {
       const prompt = vi.spyOn(window, "prompt");
@@ -195,7 +203,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         tag === "PickVaultDirectory"
           ? Effect.fail(VaultDirectoryPickError.new("Native picker unavailable."))
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       yield* runChooseVault(registry);
 
@@ -203,35 +214,39 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
         VaultSelectionState.cases.manual.make()
       );
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "persists a manually entered vault path and settles back to idle",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
         tag === "SetWorkspaceVault"
           ? Effect.succeed(successfulConfig)
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       openManualForm(registry);
 
       yield* runSubmitManualVaultPath(registry, `  ${selectedPath}  `);
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "keeps the manual form open with guidance when the submitted path is empty",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
         Effect.die(
           `workspace vault RPC must not run for an empty path: ${tag}`
         )) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       openManualForm(registry);
 
       yield* runSubmitManualVaultPath(registry, "   ");
@@ -239,18 +254,20 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
         VaultSelectionState.cases.manual.make({ message: O.some("Enter the absolute path of a local folder.") })
       );
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "keeps the manual form open with the persistence failure message",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
         tag === "SetWorkspaceVault"
           ? Effect.fail(WorkspaceVaultActionError.new("The selected vault is not writable."))
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       openManualForm(registry);
 
       yield* runSubmitManualVaultPath(registry, selectedPath);
@@ -263,43 +280,46 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
           message: O.some("The selected vault is not writable."),
         })
       );
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "ignores a manual submission when the form is not open",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
         Effect.die(
           `workspace vault RPC must not run outside the manual form: ${tag}`
         )) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.mount(documentIntakeStateAtoms(workspaceId));
 
       yield* runSubmitManualVaultPath(registry, selectedPath);
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "cancelling the manual form returns to the idle onboarding card",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
         Effect.die(`workspace vault RPC must not run on cancel: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       openManualForm(registry);
 
       yield* runCancelManualVaultPath(registry);
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection.kind).toBe("idle");
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "stores the public workspace-vault failure message",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -308,14 +328,16 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         tag === "SetWorkspaceVault"
           ? Effect.fail(WorkspaceVaultActionError.new("The selected vault is not writable."))
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
       yield* runChooseVault(registry);
 
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
         VaultSelectionState.cases.failed.make({ message: "The selected vault is not writable." })
       );
-      registry.dispose();
     })
   );
 
@@ -329,7 +351,10 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
         Effect.die(
           "workspace vault RPC must not run after picker cancellation"
         )) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const action = chooseWorkspaceVaultAtoms(workspaceId);
       registry.mount(documentIntakeStateAtoms(workspaceId));
       registry.mount(action);
@@ -343,7 +368,6 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
       picker.resolve(null);
       yield* waitForSelection(registry, "idle");
       expect(invoke).toHaveBeenCalledTimes(1);
-      registry.dispose();
     })
   );
 });
@@ -362,7 +386,10 @@ describe("document intake runtime concurrency", { concurrent: false }, () => {
         tag === "IntakeDroppedFile"
           ? intake()
           : Effect.die(`unexpected intake RPC: ${tag}`)) as unknown as DesktopIntakeClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const action = intakeFilesAtoms(workspaceId);
       const stateAtom = documentIntakeStateAtoms(workspaceId);
       registry.mount(stateAtom);
@@ -379,7 +406,6 @@ describe("document intake runtime concurrency", { concurrent: false }, () => {
       expect(intake).toHaveBeenCalledTimes(2);
       expect(A.length(state.results)).toBe(2);
       expect(A.every(state.results, (result) => result.kind === "failure")).toBe(true);
-      registry.dispose();
     })
   );
 });
@@ -388,7 +414,13 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
   it.live(
     "keeps the hidden file input available after the registry idle TTL",
     Effect.fnUntraced(function* () {
-      const registry = AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      const idleWitness = Atom.make(0);
+      registry.set(idleWitness, 1);
+      expect(registry.get(idleWitness)).toBe(1);
       const input = document.createElement("input");
       input.type = "file";
       const click = vi.spyOn(input, "click").mockImplementation(() => undefined);
@@ -401,7 +433,8 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
       releaseSetInput();
 
       yield* Effect.sleep(Duration.millis(50));
-      expect(registry.get(intakeFileInputAtoms(workspaceId))).toStrictEqual(O.some(input));
+      expect(registry.get(idleWitness)).toBe(0);
+      assertSome(registry.get(intakeFileInputAtoms(workspaceId)), input);
 
       const releaseOpenPicker = registry.mount(openPicker);
       registry.set(openPicker, void 0);
@@ -409,16 +442,18 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
 
       expect(click).toHaveBeenCalledOnce();
       releaseOpenPicker();
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "owns drag state and boundary narrowing inside the runtime",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of((() =>
         Effect.die("drag-only test must not call intake RPCs")) as unknown as DesktopIntakeClient["Service"]);
-      const registry = configuredRegistryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => configuredRegistryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const actions = intakeDomEventAtoms(workspaceId);
       const stateAtom = documentIntakeStateAtoms(workspaceId);
       const preventDefault = vi.fn();
@@ -440,16 +475,18 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
       registry.set(actions.dragLeave, { currentTarget: container, relatedTarget: null });
       yield* AtomRegistry.getResult(registry, actions.dragLeave);
       expect(registry.get(stateAtom).isDragging).toBe(false);
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "prevents configured drops and delegates the file batch inside the runtime",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of((() =>
         Effect.die("refused files must not call intake RPCs")) as unknown as DesktopIntakeClient["Service"]);
-      const registry = configuredRegistryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => configuredRegistryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const actions = intakeDomEventAtoms(workspaceId);
       const stateAtom = documentIntakeStateAtoms(workspaceId);
       const preventDefault = vi.fn();
@@ -464,7 +501,6 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
       expect(state.isDragging).toBe(false);
       expect(A.length(state.results)).toBe(1);
       expect(state.results[0]?.kind).toBe("failure");
-      registry.dispose();
     })
   );
 });

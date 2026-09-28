@@ -3,14 +3,14 @@
   "initiative": {
     "id": "time-to-certainty",
     "title": "Time To Certainty",
-    "status": "active",
+    "status": "paused",
     "created": "2026-09-03",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/time-to-certainty",
-  "lifecycle": "active",
-  "statusNote": "P0 complete 2026-09-03; P1 hygiene complete 2026-09-15; P3 ordering handoff complete 2026-09-25. Baseline ratified (ruling 8: M1 P50 43.3 min / P95 3.95 h; M5 327 of 3,069 starts unfinished, 10.7%); seventy-seven rulings in research/decisions.md (1-70 and 73-79; 71-72 reserved for the C5 grill draft). Landed: A3 (rulings 73-75), A4, A5 + A5b + A5c (PRs #978, #993), B1-B6 (B3 PR #1006, B6 PR #1005, B5 PR #1143), C1/C2 ledger, C3 complete (coverage, tsgo tests, lint-policy C3.1-C3.6, labs, ruling 58), C4a (rulings 59-60), C4.1 shadow mode (rulings 61-64), C5 must-fail fixtures (rulings 68-70), D1 pre-push order handed to the ontology packet as research/gate-order-handoff.json (rulings 76-79), D2 review follow-ups (rulings 65-67); next: C4.2 enforcement, then the P4 A1 close re-run.",
+  "lifecycle": "paused",
+  "statusNote": "Paused 2026-09-28 on ruling 80's resume condition. P0, P1, P3 complete; P2 complete except C4.2 enforcement; P4 A3 and the A1 close re-run landed (research/economics-close.md, round 25). Eighty rulings in research/decisions.md (1-80). Round 25: ruling 71 moves the proof ledger to the owning clone so sibling lanes share one shadow sample; ruling 72 records a red run's digest as an observation so disagreements are observable; ruling 80 defers C4.2 to a post-merge sample. Resume when `bun run beep yeet proof-report --since <round-25 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements) with zero malformed rows, every C5 fixture green, and the ruling-69 root-input gap closed; that flip PR turns reuse on, deletes LaneProofReuse and lane-proofs.json, re-runs economics.py --run close, and carries the status flip and closeout reflection. Completion gate at 2026-09-28: line 1 met; lines 2-5 not met (see SPEC.md accounting); B9 captured in explorations/github-merge-queue, gated on E8.",
   "mission": "Cut the fleet-aggregated P50/P95 time-to-certainty per verification episode by removing redundant lane executions across tiers, false-positive gate round-trips, and silent process deaths, measured before and after on the same operational proxies.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -38,7 +38,9 @@
     "research/g1-prior-art.md",
     "research/economics.md",
     "research/baseline.md",
-    "research/decisions.md"
+    "research/decisions.md",
+    "research/economics-close.md",
+    "research/p4-close-brief.md"
   ],
   "agentLaunchers": [
     {
@@ -73,7 +75,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

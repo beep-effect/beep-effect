@@ -1,6 +1,7 @@
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { failureMessageOr } from "@/lib/failureMessage";
 
 const decodeUnknownFinite = S.decodeUnknownEffect(S.Finite);
@@ -37,13 +38,16 @@ describe("failureMessageOr", () => {
     expect(orFallback(Object.create({ message: "inherited" }))).toBe("inherited");
   });
 
-  it("reads the issue text from a real SchemaError", () => {
-    const failure = Effect.runSync(decodeUnknownFinite("x").pipe(Effect.flip));
-    const message = orFallback(failure);
+  it.effect(
+    "reads the issue text from a real SchemaError",
+    Effect.fnUntraced(function* () {
+      const failure = yield* decodeUnknownFinite("x").pipe(Effect.flip);
+      const message = orFallback(failure);
 
-    expect(message).not.toBe("fallback");
-    expect(message).toContain("number");
-  });
+      expect(message).not.toBe("fallback");
+      expect(message).toContain("number");
+    })
+  );
 
   it("redacts secrets and home paths in the surfaced message", () => {
     const message = orFallback(new Error("auth failed for /home/ada with token sk-EXAMPLEKEY00"));

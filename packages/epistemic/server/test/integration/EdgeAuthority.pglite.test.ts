@@ -22,6 +22,7 @@ import {
   SupersessionConflict,
 } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -29,7 +30,8 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, isNull } from "drizzle-orm";
 import { DateTime, Effect, Layer, pipe, Result } from "effect";
@@ -189,7 +191,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Epistemic EdgeAuthority repository PgLite integration", () => {});
 } else {
   describe("Epistemic EdgeAuthority repository PgLite integration", { concurrent: false }, () => {
-    layer(EdgeAuthorityTestLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(EdgeAuthorityTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "records an open head and reads it back on both axes",
         Effect.fnUntraced(function* () {
@@ -206,25 +208,31 @@ if (!shouldRunPgliteIntegration) {
           );
 
           expect(head.version).toBe(1);
-          expect(O.isNone(head.validTo)).toBe(true);
-          expect(O.isNone(head.expiredAt)).toBe(true);
-          expect(O.isNone(head.supersedesId)).toBe(true);
+          assertNone(head.validTo);
+          assertNone(head.expiredAt);
+          assertNone(head.supersedesId);
           expect(DateTime.toEpochMillis(head.validFrom)).toBe(1_000);
           expect(DateTime.toEpochMillis(head.recordedAt)).toBe(1_000);
           // Endpoints survive the flatten/unflatten round trip the columns force.
           const identity = yield* decodeIdentity(scenario.identity);
-          expect(unflattenEdgeSource(head)).toStrictEqual(O.some(identity.source));
-          expect(unflattenEdgeTarget(head)).toStrictEqual(O.some(identity.target));
+          assertSome(unflattenEdgeSource(head), identity.source);
+          assertSome(unflattenEdgeTarget(head), identity.target);
 
           const atRead = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 1_500));
-          expect(O.map(atRead, (version) => version.version)).toStrictEqual(O.some(1));
+          assertSome<number>(
+            O.map(atRead, (version) => version.version),
+            1
+          );
 
           // `readLatest` is the same predicate asked at now/now, so pinning the
           // clock is what makes "latest" a decidable assertion rather than a
           // wall-clock race.
           yield* TestClock.setTime(3_000);
           const latest = yield* repository.readLatest(head.logicalKey);
-          expect(O.map(latest, (version) => version.version)).toStrictEqual(O.some(1));
+          assertSome<number>(
+            O.map(latest, (version) => version.version),
+            1
+          );
         }),
         120_000
       );
@@ -255,17 +263,17 @@ if (!shouldRunPgliteIntegration) {
           );
 
           expect(corrected.version).toBe(2);
-          expect(corrected.supersedesId).toStrictEqual(O.some(former.id));
+          assertSome(corrected.supersedesId, former.id);
 
           const before = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 1_500));
           const after = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 2_500));
           const atValidFrom = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_000, 1_000));
           const beforeValidFrom = yield* repository.readAsOf(yield* asOf(scenario.identity, 999, 2_500));
 
-          expect(factOf(before, "amount")).toStrictEqual(O.some("100"));
-          expect(factOf(after, "amount")).toStrictEqual(O.some("150"));
-          expect(factOf(atValidFrom, "amount")).toStrictEqual(O.some("100"));
-          expect(O.isNone(beforeValidFrom)).toBe(true);
+          assertSome(factOf(before, "amount"), "100");
+          assertSome(factOf(after, "amount"), "150");
+          assertSome(factOf(atValidFrom, "amount"), "100");
+          assertNone(beforeValidFrom);
 
           const openHeads = yield* db
             .select()
@@ -308,7 +316,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
 
-          expect(O.map(closed.validTo, DateTime.toEpochMillis)).toStrictEqual(O.some(1_800));
+          assertSome(O.map(closed.validTo, DateTime.toEpochMillis), 1_800);
 
           const knownBefore = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_900, 2_100));
           const knownAfter = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_900, 2_300));
@@ -316,11 +324,11 @@ if (!shouldRunPgliteIntegration) {
           const atValidTo = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_800, 2_300));
           const justBeforeValidTo = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_799, 2_300));
 
-          expect(factOf(knownBefore, "state")).toStrictEqual(O.some("employed"));
-          expect(O.isNone(knownAfter)).toBe(true);
-          expect(factOf(earlierValid, "state")).toStrictEqual(O.some("employed"));
-          expect(O.isNone(atValidTo)).toBe(true);
-          expect(factOf(justBeforeValidTo, "state")).toStrictEqual(O.some("employed"));
+          assertSome(factOf(knownBefore, "state"), "employed");
+          assertNone(knownAfter);
+          assertSome(factOf(earlierValid, "state"), "employed");
+          assertNone(atValidTo);
+          assertSome(factOf(justBeforeValidTo, "state"), "employed");
         }),
         120_000
       );
@@ -353,8 +361,8 @@ if (!shouldRunPgliteIntegration) {
           // Closed at the standing head's valid_from even though the command
           // named no upper bound, and carrying no lineage: a late arrival is not
           // a correction of the fact it precedes.
-          expect(O.map(late.validTo, DateTime.toEpochMillis)).toStrictEqual(O.some(2_000));
-          expect(O.isNone(late.supersedesId)).toBe(true);
+          assertSome(O.map(late.validTo, DateTime.toEpochMillis), 2_000);
+          assertNone(late.supersedesId);
 
           const openHeads = yield* db
             .select()
@@ -369,9 +377,9 @@ if (!shouldRunPgliteIntegration) {
           const newerWindow = yield* repository.readAsOf(yield* asOf(scenario.identity, 2_500, 3_000));
           const beforeLateArrival = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 2_200));
 
-          expect(factOf(olderWindow, "state")).toStrictEqual(O.some("older"));
-          expect(factOf(newerWindow, "state")).toStrictEqual(O.some("newer"));
-          expect(O.isNone(beforeLateArrival)).toBe(true);
+          assertSome(factOf(olderWindow, "state"), "older");
+          assertSome(factOf(newerWindow, "state"), "newer");
+          assertNone(beforeLateArrival);
         }),
         120_000
       );
@@ -402,8 +410,8 @@ if (!shouldRunPgliteIntegration) {
 
           // The command's own upper bound is already earlier than the head, so
           // the donor rule leaves it alone rather than stretching it to 2000.
-          expect(O.map(disjoint.validTo, DateTime.toEpochMillis)).toStrictEqual(O.some(900));
-          expect(O.isNone(disjoint.supersedesId)).toBe(true);
+          assertSome(O.map(disjoint.validTo, DateTime.toEpochMillis), 900);
+          assertNone(disjoint.supersedesId);
           expect(disjoint.version).toBe(2);
 
           const inGap = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 3_000));
@@ -411,9 +419,12 @@ if (!shouldRunPgliteIntegration) {
           yield* TestClock.setTime(3_000);
           const latest = yield* repository.readLatest(head.logicalKey);
 
-          expect(O.isNone(inGap)).toBe(true);
-          expect(factOf(inDisjoint, "state")).toStrictEqual(O.some("historic"));
-          expect(O.map(latest, (version) => version.version)).toStrictEqual(O.some(1));
+          assertNone(inGap);
+          assertSome(factOf(inDisjoint, "state"), "historic");
+          assertSome<number>(
+            O.map(latest, (version) => version.version),
+            1
+          );
         }),
         120_000
       );
@@ -439,7 +450,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(EdgeConstraintViolation.is(violation)).toBe(true);
+          pipe(EdgeConstraintViolation.is(violation), assertTrue);
           expect(EdgeConstraintViolation.is(violation) ? violation.constraintName : "").toBe(
             "epistemic_edge_valid_ordered"
           );
@@ -477,8 +488,8 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(SupersessionConflict.is(conflict)).toBe(true);
-          expect(SupersessionConflict.is(conflict) ? conflict.observedVersion : O.none()).toStrictEqual(O.some(1));
+          pipe(SupersessionConflict.is(conflict), assertTrue);
+          assertSome<number>(SupersessionConflict.is(conflict) ? conflict.observedVersion : O.none(), 1);
         }),
         120_000
       );
@@ -501,8 +512,8 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(SupersessionConflict.is(conflict)).toBe(true);
-          expect(SupersessionConflict.is(conflict) ? conflict.observedVersion : O.some(0)).toStrictEqual(O.none());
+          pipe(SupersessionConflict.is(conflict), assertTrue);
+          assertNone(SupersessionConflict.is(conflict) ? conflict.observedVersion : O.some(0));
         }),
         120_000
       );
@@ -533,7 +544,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(SupersessionConflict.is(conflict)).toBe(true);
+          pipe(SupersessionConflict.is(conflict), assertTrue);
           expect(inspect(conflict, { depth: 12 })).toMatch(/epistemic_edge_(?:open_head_idx|no_overlap)/u);
         }),
         120_000
@@ -577,7 +588,10 @@ if (!shouldRunPgliteIntegration) {
           );
 
           expect(outcome.claim.lifecycle).toBe("candidate");
-          expect(O.map(outcome.disposition, (disposition) => disposition.status)).toStrictEqual(O.some("rejected"));
+          assertSome(
+            O.map(outcome.disposition, (disposition) => disposition.status),
+            "rejected"
+          );
 
           const recorded = yield* dispositions.listByClaim(outcome.claim.id);
           expect(A.map(recorded, (disposition) => disposition.reason)).toStrictEqual([
@@ -599,7 +613,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
 
-          expect(O.isNone(admitted.disposition)).toBe(true);
+          assertNone(admitted.disposition);
           expect(admitted.claim.lifecycle).toBe("shape_valid");
           const afterAdmitted = yield* dispositions.listByClaim(outcome.claim.id);
           expect(A.length(afterAdmitted)).toBe(1);

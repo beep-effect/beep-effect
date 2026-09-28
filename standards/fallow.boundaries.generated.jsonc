@@ -1600,6 +1600,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1614,6 +1615,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1844,6 +1846,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1865,6 +1868,7 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2278,6 +2282,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -2302,6 +2307,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -3071,6 +3077,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -3082,6 +3089,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -3146,6 +3154,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils",
@@ -3194,6 +3203,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui",
           "@beep/utils",

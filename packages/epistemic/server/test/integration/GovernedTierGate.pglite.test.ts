@@ -19,9 +19,11 @@ import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate } from "@beep/mcp-kit";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Duration, Effect, Layer, pipe, Ref } from "effect";
 import { Tool } from "effect/ai";
@@ -118,7 +120,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Epistemic GovernedTierGate PgLite integration", () => {});
 } else {
   describe("Epistemic GovernedTierGate PgLite integration", { concurrent: false }, () => {
-    layer(GovernedGateTestLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(GovernedGateTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "an allowed dispatch writes its decision ahead of the effect and exactly two rows in total",
         Effect.fnUntraced(function* () {
@@ -151,7 +153,7 @@ if (!shouldRunPgliteIntegration) {
           const outcomes = yield* ledger.readOutcomes(runKey);
           expect(outcomes).toHaveLength(1);
           expect(outcomes[0]!.settlement).toBe("completed");
-          expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+          pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
           expect(yield* ledger.readUnsettledAllowed(runKey)).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
@@ -169,7 +171,7 @@ if (!shouldRunPgliteIntegration) {
           const result = yield* dispatchAs(gate, "s-2", ungrantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
-          expect(yield* Ref.get(ran)).toBe(false);
+          pipe(yield* Ref.get(ran), assertFalse);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
@@ -215,7 +217,7 @@ if (!shouldRunPgliteIntegration) {
 
     // A separate database: this block destroys the decision table to prove the
     // fail-closed refusal against a real driver failure, not a stub.
-    layer(GovernedGateTestLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(GovernedGateTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "a real decision-write failure refuses the dispatch and the effect does not run",
         Effect.fnUntraced(function* () {
@@ -229,7 +231,7 @@ if (!shouldRunPgliteIntegration) {
           const result = yield* dispatchAs(gate, "s-4", grantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
-          expect(yield* Ref.get(ran)).toBe(false);
+          pipe(yield* Ref.get(ran), assertFalse);
         }),
         pgliteIntegrationTimeoutMillis
       );

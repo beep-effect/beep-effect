@@ -1706,16 +1706,17 @@ const removeTurboLaneLedger = Effect.fn("QualityTasks.removeTurboLaneLedger")(fu
   yield* fs.remove(path.dirname(ledgerPath), { recursive: true }).pipe(Effect.ignore);
 });
 
-// The child side of the handoff: after each direct Turbo step, declare its digest to the ledger
-// the parent named. The result says whether a declaration was attempted (`Some`) and whether it
-// landed (`Some(true)`); the group's close record carries the attempt count so the parent can
-// refuse a ledger missing any declaration.
+// The child side of the handoff: after each direct Turbo step, passed or failed, declare its
+// digest to the ledger the parent named (ruling 72: a red step's digest is an observation, so the
+// parent can record a failed lane against the key it would have reused). The result says whether a
+// declaration was attempted (`Some`) and whether it landed (`Some(true)`); the group's close record
+// carries the attempt count so the parent can refuse a ledger missing any declaration.
 const recordTurboLaneLedgerRow = Effect.fn("QualityTasks.recordTurboLaneLedgerRow")(function* (
   ledger: O.Option<string>,
   outcome: StreamingStepOutcome
 ) {
   const tasks = directTurboTaskNames(outcome.step);
-  if (O.isNone(ledger) || O.isNone(tasks) || O.isSome(outcome.failure)) {
+  if (O.isNone(ledger) || O.isNone(tasks)) {
     return O.none<boolean>();
   }
   const digest = yield* readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks.value).pipe(
@@ -1922,17 +1923,17 @@ const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 
 // A lane that resolved no Turbo digest also has no package scope: an undeclared
-// lane, a failed step and a missing lane ledger all land here (ruling 68).
-// Failed and declared-digest lanes carry an empty scope by construction, and
-// not for want of a ledger: `laneStepsWithLedgers` attaches one to every
+// lane, a missing lane ledger and a ledger missing a declaration all land here
+// (ruling 68). A declared-digest lane carries an empty scope by construction,
+// and not for want of a ledger: `laneStepsWithLedgers` attaches one to every
 // wrapper step whatever the caller declared, and `resolveLaneInputDigest`
 // removes it under `Effect.ensuring`. The scope is discarded because
-// `resolveLaneInputDigestSource` returns at its
-// `O.isSome(declared) || O.isSome(outcome.failure)` short-circuit, before the
-// ledger is ever read. In production the declared digest is always `None` and
-// Turbo folds no digest for a red run, so a failed lane's key is `undeclared`
-// and the ledger refuses it as `undeclared-inputs` before the tripwire is
-// consulted.
+// `resolveLaneInputDigestSource` returns at its `O.isSome(declared)`
+// short-circuit, before the ledger is ever read. A failed lane is not
+// short-circuited (ruling 72): it resolves its digest and package scope through
+// the same wrapper-ledger or direct-Turbo path as a pass, so its key is the one
+// a pass of the same inputs records, the ledger can see a hit-versus-failed
+// disagreement, and the changed-package tripwire sees a failed lane's scope.
 const unscopedLaneInputs = (inputDigest: O.Option<string>): LaneInputResolution => ({
   inputDigest,
   inputPackages: A.empty<string>(),
@@ -1956,7 +1957,7 @@ const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDig
   declared: O.Option<string>,
   ledger: O.Option<string>
 ) {
-  if (O.isSome(declared) || O.isSome(outcome.failure)) {
+  if (O.isSome(declared)) {
     return unscopedLaneInputs(declared);
   }
   if (isWrapperLaneStep(outcome.step)) {
@@ -3975,7 +3976,8 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
 export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamingStepGroup;
 
 /**
- * Declare one direct Turbo step's digest to a wrapper lane ledger, exposed for tests.
+ * Declare one direct Turbo step's digest to a wrapper lane ledger, passed or failed, exposed for
+ * tests.
  *
  * **Example** (Declare without a ledger)
  *
@@ -4006,9 +4008,11 @@ export const recordTurboLaneLedgerRowForTesting = recordTurboLaneLedgerRow;
  * The resolution carries both halves of ruling 68: the digest a later attempt
  * can be reused by, and the workspace packages the Turbo tasks that digest
  * folds belong to. Only a lane whose Turbo digest was actually read carries
- * package names — a declared digest, a failed step, a wrapper lane with no
- * ledger and a direct step that named no Turbo task all resolve an empty
- * scope, matching the lanes whose input source is `undeclared`.
+ * package names — a declared digest, a wrapper lane with no ledger and a
+ * direct step that named no Turbo task all resolve an empty scope, matching
+ * the lanes whose input source is `undeclared`. A failed step resolves through
+ * the same path as a passed one (ruling 72), so it carries the digest and scope
+ * of the work it ran.
  *
  * **Example** (A declared digest wins and carries no package scope)
  *

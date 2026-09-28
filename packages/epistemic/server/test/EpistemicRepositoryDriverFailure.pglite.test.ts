@@ -18,9 +18,11 @@ import { ClaimDispositionRepositoryUnavailable } from "@beep/epistemic-use-cases
 import { ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { makeDrizzleLayer } from "@beep/postgres";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -36,23 +38,22 @@ const UnmigratedDrizzleLayer = makeDrizzleLayer().pipe(
 // A failed statement leaves an implicit-transaction PGlite session in the
 // aborted state, where the only legal next statement is the rollback that
 // quiesces it, so every expected failure is followed by one.
-const quiesce = Effect.fnUntraced(function* () {
+const quiesce = Effect.fn("EpistemicRepositoryDriverFailure.quiesce")(function* () {
   const sql = yield* SqlClient.SqlClient;
-  yield* Effect.ignore(sql.unsafe("ROLLBACK"));
+  yield* sql.unsafe("ROLLBACK").pipe(Effect.orDie);
 });
 
 describe("Epistemic repository driver failures", { concurrent: false }, () => {
-  layer(UnmigratedDrizzleLayer, { timeout: "2 minutes" })((it) => {
+  it.layer(UnmigratedDrizzleLayer, { timeout: "2 minutes" })((it) => {
     it.effect(
       "redacts claim disposition reads to ClaimDispositionRepositoryUnavailable",
       Effect.fnUntraced(function* () {
         const repository = yield* makeDrizzleClaimDispositionRepository();
         const claimId = yield* decodeCandidateClaimId(1);
 
-        const failure = yield* Effect.flip(repository.listByClaim(claimId));
-        yield* quiesce();
+        const failure = yield* repository.listByClaim(claimId).pipe(Effect.flip, Effect.ensuring(quiesce()));
 
-        expect(ClaimDispositionRepositoryUnavailable.is(failure)).toBe(true);
+        pipe(ClaimDispositionRepositoryUnavailable.is(failure), assertTrue);
         expect(failure.operation).toBe("listByClaim");
       })
     );
@@ -62,12 +63,9 @@ describe("Epistemic repository driver failures", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const ledger = yield* makeDrizzleExecutionLedger();
 
-        const decisions = yield* Effect.flip(ledger.readDecisions(runKey));
-        yield* quiesce();
-        const outcomes = yield* Effect.flip(ledger.readOutcomes(runKey));
-        yield* quiesce();
-        const unsettled = yield* Effect.flip(ledger.readUnsettledAllowed(runKey));
-        yield* quiesce();
+        const decisions = yield* ledger.readDecisions(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const outcomes = yield* ledger.readOutcomes(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const unsettled = yield* ledger.readUnsettledAllowed(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
 
         expect(A.map([decisions, outcomes, unsettled], (error) => ExecutionLedgerUnavailable.is(error))).toEqual([
           true,
@@ -91,7 +89,7 @@ describe("In-memory claim disposition repository", () => {
       const repository = yield* makeInMemoryClaimDispositionRepository();
       const claimId = yield* decodeCandidateClaimId(1);
 
-      expect(A.isReadonlyArrayEmpty(yield* repository.listByClaim(claimId))).toBe(true);
+      pipe(A.isReadonlyArrayEmpty(yield* repository.listByClaim(claimId)), assertTrue);
     })
   );
 });

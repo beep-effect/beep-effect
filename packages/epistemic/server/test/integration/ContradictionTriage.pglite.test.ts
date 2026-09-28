@@ -54,6 +54,7 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as ContradictionIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -62,7 +63,8 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { eq } from "drizzle-orm";
 import { Effect, flow, Layer, pipe } from "effect";
@@ -441,7 +443,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("ContradictionTriage repository PGlite integration", () => {});
 } else {
   describe("ContradictionTriage repository PGlite integration", { concurrent: false }, () => {
-    layer(ContradictionTestLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(ContradictionTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "canonicalizes repeats, appends receipts, and rejects material payload changes",
         Effect.fnUntraced(function* () {
@@ -460,10 +462,10 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(first.duplicateCandidate).toBe(false);
-          expect(repeated.duplicateCandidate).toBe(true);
+          pipe(first.duplicateCandidate, assertFalse);
+          pipe(repeated.duplicateCandidate, assertTrue);
           expect(repeated.candidate.id).toBe(first.candidate.id);
-          expect(ContradictionSubmissionConflict.is(retroactiveReceiptConflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(retroactiveReceiptConflict), assertTrue);
           expect(
             ContradictionSubmissionConflict.is(retroactiveReceiptConflict) && retroactiveReceiptConflict.reason
           ).toBe("receipt-predates-candidate");
@@ -476,7 +478,10 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(1_500),
             })
           );
-          expect(O.map(detail, (value) => value.receipts.length)).toStrictEqual(O.some(2));
+          assertSome(
+            O.map(detail, (value) => value.receipts.length),
+            2
+          );
 
           const conflict = yield* Effect.flip(
             repository.submit(
@@ -486,7 +491,7 @@ if (!shouldRunPgliteIntegration) {
               })
             )
           );
-          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(conflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("candidate-payload-mismatch");
         }),
         120_000
@@ -516,7 +521,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
 
-          expect(repeated.duplicateCandidate).toBe(true);
+          pipe(repeated.duplicateCandidate, assertTrue);
           expect(repeated.candidate.id).toBe(first.candidate.id);
           expect(repeated.candidate.candidateDigest).toBe(first.candidate.candidateDigest);
           expect(repeated.candidate.matchBasis).toStrictEqual(first.candidate.matchBasis);
@@ -548,19 +553,20 @@ if (!shouldRunPgliteIntegration) {
           );
           const second = yield* repository.submit(secondCommand);
 
-          expect(first.duplicateCandidate).toBe(false);
-          expect(repeated.duplicateCandidate).toBe(true);
-          expect(
+          pipe(first.duplicateCandidate, assertFalse);
+          pipe(repeated.duplicateCandidate, assertTrue);
+          pipe(
             A.every(
               receiptPayloadConflicts,
               (conflict) =>
                 ContradictionSubmissionConflict.is(conflict) && Eq.equals(conflict.reason, "receipt-key-reused")
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
           expect(repeated.receipt.id).toBe(first.receipt.id);
           expect(repeated.receipt.publicId).toBe(first.receipt.publicId);
           expect(repeated.receipt.orgId).toBe(firstOrganizationId);
-          expect(second.duplicateCandidate).toBe(false);
+          pipe(second.duplicateCandidate, assertFalse);
           expect(second.receipt.id).not.toBe(first.receipt.id);
           expect(second.receipt.publicId).not.toBe(first.receipt.publicId);
           expect(second.receipt.orgId).toBe(secondOrganizationId);
@@ -633,7 +639,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* ContradictionTriageRepository;
           const submitted = yield* repository.submit(command);
 
-          expect(submitted.duplicateCandidate).toBe(false);
+          pipe(submitted.duplicateCandidate, assertFalse);
           expect(submitted.candidate.candidateKey).toBe(foreignRow.candidateKey);
           expect(submitted.candidate.id).not.toBe(foreignRow.id);
           expect(submitted.candidate.orgId).toBe(firstOrganizationId);
@@ -659,7 +665,7 @@ if (!shouldRunPgliteIntegration) {
               })
             )
           );
-          expect(ContradictionSubmissionConflict.is(missingConflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(missingConflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(missingConflict) && missingConflict.reason).toBe(
             "candidate-payload-mismatch"
           );
@@ -694,7 +700,7 @@ if (!shouldRunPgliteIntegration) {
               })
             )
           );
-          expect(ContradictionSubmissionConflict.is(crossOrgConflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(crossOrgConflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(crossOrgConflict) && crossOrgConflict.reason).toBe(
             "candidate-payload-mismatch"
           );
@@ -722,7 +728,7 @@ if (!shouldRunPgliteIntegration) {
               })
             )
           );
-          expect(ContradictionSubmissionConflict.is(beliefConflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(beliefConflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(beliefConflict) && beliefConflict.reason).toBe(
             "candidate-predates-input"
           );
@@ -734,7 +740,7 @@ if (!shouldRunPgliteIntegration) {
               })
             )
           );
-          expect(ContradictionSubmissionConflict.is(evidenceConflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(evidenceConflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(evidenceConflict) && evidenceConflict.reason).toBe(
             "candidate-predates-input"
           );
@@ -762,7 +768,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(conflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("belief-mismatch");
           expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
         }),
@@ -787,7 +793,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(conflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("candidate-payload-mismatch");
           expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
         }),
@@ -821,7 +827,7 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(ContradictionSubmissionConflict.is(conflict)).toBe(true);
+          pipe(ContradictionSubmissionConflict.is(conflict), assertTrue);
           expect(ContradictionSubmissionConflict.is(conflict) && conflict.reason).toBe("candidate-payload-mismatch");
           expect(yield* db.select().from(DbSchema.contradictionCandidate)).toHaveLength(before.length);
         }),
@@ -874,7 +880,7 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(1_500),
             })
           );
-          expect(O.isSome(expanded)).toBe(true);
+          pipe(expanded, O.isSome, assertTrue);
           if (O.isNone(expanded)) {
             return yield* Effect.die("expected organization-scoped expanded contradiction detail");
           }
@@ -888,32 +894,37 @@ if (!shouldRunPgliteIntegration) {
             evidenceDetails,
             A.findFirst((detail) => detail.evidence.id === seeded.evidenceB.id)
           );
-          expect(
+          assertSome(
             pipe(
               evidenceA,
               O.flatMap((detail) => detail.latestVerification),
               O.map((verification) => verification.manifestationKey)
-            )
-          ).toStrictEqual(O.some(selected.manifestationKey));
-          expect(
+            ),
+            selected.manifestationKey
+          );
+          assertSome(
             pipe(
               evidenceA,
               O.flatMap((detail) => detail.latestVerification),
               O.map((verification) => verification.verifiedAnchor.source.scopeRef)
-            )
-          ).toStrictEqual(O.some("workspace:1"));
-          expect(
+            ),
+            "workspace:1"
+          );
+          assertSome(
             pipe(
               evidenceB,
               O.flatMap((detail) => detail.latestVerification),
               O.map((verification) => verification.manifestationKey)
-            )
-          ).toStrictEqual(O.some(selectedB.manifestationKey));
-          expect(A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefA.id)).toBe(
-            true
+            ),
+            selectedB.manifestationKey
           );
-          expect(A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefB.id)).toBe(
-            true
+          pipe(
+            A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefA.id),
+            assertTrue
+          );
+          pipe(
+            A.contains([expanded.value.left.belief.id, expanded.value.right.belief.id], seeded.beliefB.id),
+            assertTrue
           );
 
           const narrowed = yield* repository.getExpanded(
@@ -930,21 +941,22 @@ if (!shouldRunPgliteIntegration) {
             narrowed,
             O.map((detail) => A.appendAll(detail.left.evidence, detail.right.evidence))
           );
-          expect(
+          assertSome(
             pipe(
               narrowedEvidence,
               O.flatMap(A.findFirst((detail) => Eq.equals(detail.evidence.id, decodedEvidenceA.id))),
               O.flatMap((detail) => detail.latestVerification),
               O.map((verification) => verification.manifestationKey)
-            )
-          ).toStrictEqual(O.some(selected.manifestationKey));
-          expect(
+            ),
+            selected.manifestationKey
+          );
+          assertNone(
             pipe(
               narrowedEvidence,
               O.flatMap(A.findFirst((detail) => Eq.equals(detail.evidence.id, seeded.evidenceB.id))),
               O.flatMap((detail) => detail.latestVerification)
             )
-          ).toStrictEqual(O.none());
+          );
 
           const wrongOrganization = yield* repository.getExpanded(
             GetExpandedContradictionCandidate.make({
@@ -964,8 +976,8 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(1_500),
             })
           );
-          expect(wrongOrganization).toStrictEqual(O.none());
-          expect(wrongOrganizationReceiptDetail).toStrictEqual(O.none());
+          assertNone(wrongOrganization);
+          assertNone(wrongOrganizationReceiptDetail);
         }),
         120_000
       );
@@ -1008,8 +1020,9 @@ if (!shouldRunPgliteIntegration) {
             O.flatMap((evidence) => evidence.latestVerification)
           );
 
-          expect(O.map(latestVerification, (verification) => verification.manifestationKey)).toStrictEqual(
-            O.some(selected.manifestationKey)
+          assertSome(
+            O.map(latestVerification, (verification) => verification.manifestationKey),
+            selected.manifestationKey
           );
         }),
         120_000
@@ -1034,7 +1047,7 @@ if (!shouldRunPgliteIntegration) {
               reviewScope(submitted.candidate.orgId)
             )
           );
-          expect(ContradictionReviewConflict.is(conflict)).toBe(true);
+          pipe(ContradictionReviewConflict.is(conflict), assertTrue);
           expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
 
           const detail = yield* repository.get(
@@ -1046,12 +1059,12 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(1_500),
             })
           );
-          expect(
+          assertNone(
             pipe(
               detail,
               O.flatMap((value) => value.disposition)
             )
-          ).toStrictEqual(O.none());
+          );
         }),
         120_000
       );
@@ -1069,12 +1082,17 @@ if (!shouldRunPgliteIntegration) {
             A.findFirst((item) => item.candidate.id === submitted.candidate.id),
             O.map((item) => item.candidate)
           );
-          expect(O.map(listedCandidate, (candidate) => "assessment" in candidate)).toStrictEqual(O.some(false));
-          expect(O.map(listedCandidate, (candidate) => candidate.summary)).toStrictEqual(
-            O.some(submitted.candidate.assessment.proposals[0].rationale)
+          assertSome(
+            O.map(listedCandidate, (candidate) => "assessment" in candidate),
+            false
           );
-          expect(O.map(listedCandidate, (candidate) => candidate.confidence)).toStrictEqual(
-            O.some(submitted.candidate.assessment.confidence)
+          assertSome(
+            O.map(listedCandidate, (candidate) => candidate.summary),
+            submitted.candidate.assessment.proposals[0].rationale
+          );
+          assertSome(
+            O.map(listedCandidate, (candidate) => candidate.confidence),
+            submitted.candidate.assessment.confidence
           );
           yield* TestClock.setTime(2_000);
           const wrongOrganization = yield* Effect.flip(
@@ -1091,7 +1109,7 @@ if (!shouldRunPgliteIntegration) {
               reviewScope(SharedIdentity.OrganizationId.make(2))
             )
           );
-          expect(ContradictionReviewConflict.is(wrongOrganization)).toBe(true);
+          pipe(ContradictionReviewConflict.is(wrongOrganization), assertTrue);
           expect(ContradictionReviewConflict.is(wrongOrganization) && wrongOrganization.reason).toBe("not-found");
 
           const disposition = yield* repository.review(
@@ -1105,24 +1123,27 @@ if (!shouldRunPgliteIntegration) {
           );
 
           expect(disposition.decision.status).toBe("rejected");
-          expect(
+          pipe(
             A.some(
               (yield* repository.list(listQuery("open", 1_999))).items,
               (item) => item.candidate.id === submitted.candidate.id
-            )
-          ).toBe(true);
-          expect(
+            ),
+            assertTrue
+          );
+          pipe(
             A.some(
               (yield* repository.list(listQuery("open", 2_000))).items,
               (item) => item.candidate.id === submitted.candidate.id
-            )
-          ).toBe(false);
-          expect(
+            ),
+            assertFalse
+          );
+          pipe(
             A.some(
               (yield* repository.list(listQuery("rejected", 2_000))).items,
               (item) => item.candidate.id === submitted.candidate.id
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
 
           const historicalDetail = yield* repository.get(
             GetExpandedContradictionCandidate.make({
@@ -1178,34 +1199,36 @@ if (!shouldRunPgliteIntegration) {
               validAt: instant(999),
             })
           );
-          expect(
+          assertNone(
             pipe(
               historicalDetail,
               O.flatMap((detail) => detail.disposition)
             )
-          ).toStrictEqual(O.none());
-          expect(
+          );
+          assertSome(
             pipe(
               currentDetail,
               O.flatMap((detail) => detail.disposition),
               O.map((detail) => detail.decision.status)
-            )
-          ).toStrictEqual(O.some("rejected"));
-          expect(outsideValidity).toStrictEqual(O.none());
-          expect(
+            ),
+            "rejected"
+          );
+          assertNone(outsideValidity);
+          assertNone(
             pipe(
               historicalExpanded,
               O.flatMap((expanded) => expanded.disposition)
             )
-          ).toStrictEqual(O.none());
-          expect(
+          );
+          assertSome(
             pipe(
               currentExpanded,
               O.flatMap((expanded) => expanded.disposition),
               O.map((detail) => detail.decision.status)
-            )
-          ).toStrictEqual(O.some("rejected"));
-          expect(outsideExpandedValidity).toStrictEqual(O.none());
+            ),
+            "rejected"
+          );
+          assertNone(outsideExpandedValidity);
         }),
         120_000
       );
@@ -1265,17 +1288,27 @@ if (!shouldRunPgliteIntegration) {
               ),
               O.flatMap((belief) => belief.expiredAt)
             );
-          expect(O.map(before, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
-          expect(O.map(after, (edge) => edge.fact.amount)).toStrictEqual(O.some("125"));
-          expect(O.map(competing, (edge) => edge.fact.amount)).toStrictEqual(O.some("150"));
-          expect(losingBeliefExpiration(historicalExpanded)).toStrictEqual(O.none());
-          expect(losingBeliefExpiration(currentExpanded)).toStrictEqual(O.some(instant(2_000)));
-          expect(
+          assertSome(
+            O.map(before, (edge) => edge.fact.amount),
+            "100"
+          );
+          assertSome(
+            O.map(after, (edge) => edge.fact.amount),
+            "125"
+          );
+          assertSome(
+            O.map(competing, (edge) => edge.fact.amount),
+            "150"
+          );
+          pipe(historicalExpanded, losingBeliefExpiration, assertNone);
+          assertSome(losingBeliefExpiration(currentExpanded), instant(2_000));
+          pipe(
             A.some(
               (yield* repository.list(listQuery("superseded", 2_000))).items,
               (item) => item.candidate.id === submitted.candidate.id
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
         }),
         120_000
       );
@@ -1313,10 +1346,13 @@ if (!shouldRunPgliteIntegration) {
             )
           );
 
-          expect(ContradictionReviewConflict.is(conflict)).toBe(true);
+          pipe(ContradictionReviewConflict.is(conflict), assertTrue);
           expect(ContradictionReviewConflict.is(conflict) && conflict.reason).toBe("stale-candidate");
           const unchanged = yield* edges.readAsOf(asOf(seeded.identityA, 1_500, 2_500));
-          expect(O.map(unchanged, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
+          assertSome(
+            O.map(unchanged, (edge) => edge.fact.amount),
+            "100"
+          );
         }),
         120_000
       );
@@ -1349,7 +1385,10 @@ if (!shouldRunPgliteIntegration) {
           );
           expect(conflict._tag).toBe("ContradictionReviewConflict");
           const unchanged = yield* edges.readAsOf(asOf(seeded.identityA, 1_500, 2_500));
-          expect(O.map(unchanged, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
+          assertSome(
+            O.map(unchanged, (edge) => edge.fact.amount),
+            "100"
+          );
         }),
         120_000
       );

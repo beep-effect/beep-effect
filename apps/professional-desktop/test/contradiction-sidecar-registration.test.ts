@@ -33,10 +33,13 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
-import { productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -45,6 +48,7 @@ import * as Result from "effect/Result";
 import { RpcTest } from "effect/rpc";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 import type * as DateTime from "effect/DateTime";
 
 const leftLogicalKey = Str.repeat(64)("a");
@@ -63,7 +67,7 @@ const decodeEvidence = flow(S.decodeUnknownResult(Evidence), Result.getOrThrow);
 const decodeVerification = flow(S.decodeUnknownResult(EvidenceVerification), Result.getOrThrow);
 const encodeActionError = flow(S.encodeResult(S.toCodecJson(ContradictionActionError)), Result.getOrThrow);
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
+const cryptoLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const utf8Encoder = new TextEncoder();
 
 const leftBeliefRef = {
@@ -282,46 +286,58 @@ const sourcePayload = (selector: EvidenceSourcePageSelector) =>
     validAt: instant(2_000),
   });
 
-const sourceError = Effect.fn("test.source_error")(function* (sourceText: string, anchor: TextAnchor, locator: string) {
-  const identity = yield* makeSourceIdentity("workspace:1", locator, sourceText);
+const makeRegistrationFixture = Effect.fn("test.makeRegistrationFixture")(function* (
+  sourceText: string,
+  anchor: TextAnchor,
+  locator: string,
+  workspace: string
+) {
+  const identity = yield* makeSourceIdentity(workspace, locator, sourceText);
+  const verifiedAnchor = TextAnchorVerificationReceipt.make({ anchor, source: identity });
   const captures: Captures = { resolverCalls: 0 };
-  const handlers = makeHandlersLayer(
-    makeExpanded(
-      TextAnchorVerificationReceipt.make({
-        anchor,
-        source: identity,
-      })
-    ),
-    sourceText,
-    captures
+  return {
+    identity,
+    verifiedAnchor,
+    captures,
+    handlers: makeHandlersLayer(makeExpanded(verifiedAnchor), sourceText, captures),
+  };
+});
+
+class RegistrationFixture extends Context.Service<
+  RegistrationFixture,
+  Effect.Success<ReturnType<typeof makeRegistrationFixture>>
+>()("@beep/professional-desktop/test/contradiction-sidecar-registration.test/RegistrationFixture") {}
+
+const registrationLayer = (sourceText: string, anchor: TextAnchor, locator: string, workspace: string) =>
+  Layer.unwrap(
+    Effect.map(makeRegistrationFixture(sourceText, anchor, locator, workspace), (fixture) =>
+      Layer.merge(fixture.handlers, Layer.succeed(RegistrationFixture, fixture))
+    )
+  ).pipe(Layer.provide(BunCrypto.layer));
+
+const sourceError = Effect.fn("test.source_error")(function* () {
+  const { captures, identity } = yield* RegistrationFixture;
+  const client = yield* RpcTest.makeClient(ContradictionRpcs);
+  const error = yield* Effect.flip(
+    client.GetEvidenceSourcePage(sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({})))
   );
-  const error = yield* Effect.gen(function* () {
-    const client = yield* RpcTest.makeClient(ContradictionRpcs);
-    return yield* Effect.flip(
-      client.GetEvidenceSourcePage(sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({})))
-    );
-  }).pipe(provideScopedLayer(handlers));
   return { captures, error, identity };
 });
 
 describe("@beep/professional-desktop contradiction sidecar registration", () => {
-  it.effect(
-    "derives trusted scopes and opens the authoritative surrogate-safe anchor page",
-    Effect.fnUntraced(function* () {
-      const sourceText = `${Str.repeat(65_535)("a")}😀fact`;
-      const identity = yield* makeSourceIdentity("workspace:1", "private/surrogate-source.txt", sourceText);
-      const verifiedAnchor = TextAnchorVerificationReceipt.make({
-        anchor: TextAnchor.make({
-          endChar: NonNegativeInt.make(65_541),
-          quote: "fact",
-          startChar: NonNegativeInt.make(65_537),
-        }),
-        source: identity,
-      });
-      const captures: Captures = { resolverCalls: 0 };
-      const handlers = makeHandlersLayer(makeExpanded(verifiedAnchor), sourceText, captures);
-
-      const result = yield* Effect.gen(function* () {
+  it.layer(
+    registrationLayer(
+      `${Str.repeat(65_535)("a")}😀fact`,
+      TextAnchor.make({ endChar: NonNegativeInt.make(65_541), quote: "fact", startChar: NonNegativeInt.make(65_537) }),
+      "private/surrogate-source.txt",
+      "workspace:1"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("derives trusted scopes and opens the authoritative surrogate-safe anchor page", (it) => {
+    it.effect(
+      "derives trusted scopes and opens the authoritative surrogate-safe anchor page",
+      Effect.fnUntraced(function* () {
+        const { verifiedAnchor, captures } = yield* RegistrationFixture;
         const client = yield* RpcTest.makeClient(ContradictionRpcs);
         const list = yield* client.ListContradictionCandidates(
           ContradictionListPayload.make({
@@ -351,156 +367,157 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
         const page = yield* client.GetEvidenceSourcePage(
           sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({}))
         );
-        return { detail, list, page, reviewError };
-      }).pipe(provideScopedLayer(handlers));
+        const result = { detail, list, page, reviewError };
 
-      expect(result.list.total).toBe(0);
-      expect(captures.listOrgId).toBe(1);
-      expect(captures.expandedKnownAt).toStrictEqual(instant(2_000));
-      expect(captures.expandedOrgId).toBe(1);
-      expect(captures.expandedValidAt).toStrictEqual(instant(2_000));
-      expect(captures.reviewOrgId).toBe(1);
-      expect(captures.reviewer).toMatchObject({ kind: "User", userId: 1 });
-      expect(result.reviewError).toMatchObject({
-        _tag: "ContradictionActionError",
-        reason: "candidate-already-resolved",
-      });
-      expect(
-        pipe(
-          A.head(result.detail.left.evidence),
-          O.flatMap((evidence) => evidence.verifiedAnchor),
-          O.map((anchor) => anchor.anchor.quote)
-        )
-      ).toStrictEqual(O.some("fact"));
-      expect(result.page.page.pageIndex).toBe(1);
-      expect(result.page.page.startOffset).toBe(65_535);
-      expect(result.page.highlight).toStrictEqual(
-        EvidenceSourceHighlight.make({
-          endChar: verifiedAnchor.anchor.endChar,
-          source: verifiedAnchor.source,
-          startChar: verifiedAnchor.anchor.startChar,
-        })
-      );
-      expect(captures.resolverCalls).toBe(1);
-    }, provideBunCrypto)
-  );
-
-  it.effect(
-    "allows a valid anchor to continue across adjacent source pages",
-    Effect.fnUntraced(function* () {
-      const sourceText = `${Str.repeat(65_534)("a")}WXYZ`;
-      const identity = yield* makeSourceIdentity("workspace:1", "private/cross-page-source.txt", sourceText);
-      const verifiedAnchor = TextAnchorVerificationReceipt.make({
-        anchor: TextAnchor.make({
-          endChar: NonNegativeInt.make(65_538),
-          quote: "WXYZ",
-          startChar: NonNegativeInt.make(65_534),
-        }),
-        source: identity,
-      });
-      const captures: Captures = { resolverCalls: 0 };
-      const handlers = makeHandlersLayer(makeExpanded(verifiedAnchor), sourceText, captures);
-      const page = yield* Effect.gen(function* () {
-        const client = yield* RpcTest.makeClient(ContradictionRpcs);
-        return yield* client.GetEvidenceSourcePage(sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({})));
-      }).pipe(provideScopedLayer(handlers));
-
-      expect(page.page.pageIndex).toBe(0);
-      expect(page.page.endOffset).toBe(65_536);
-      expect(page.highlight.endChar).toBeGreaterThan(page.page.endOffset);
-    }, provideBunCrypto)
-  );
-
-  it.effect(
-    "rejects a persisted quote mismatch without leaking source detail",
-    Effect.fnUntraced(function* () {
-      const result = yield* sourceError(
-        "fact",
-        TextAnchor.make({
-          endChar: NonNegativeInt.make(4),
-          quote: "leak",
-          startChar: NonNegativeInt.make(0),
-        }),
-        "private/quote-leak.txt"
-      );
-      const encoded = encodeActionError(result.error);
-
-      expect(result.error).toMatchObject({ reason: "source-stale" });
-      expect(encoded).not.toContain("private/quote-leak.txt");
-      expect(encoded).not.toContain("leak");
-      expect(encoded).not.toContain(sourceDigest);
-    }, provideBunCrypto)
-  );
-
-  it.effect(
-    "rejects an out-of-range persisted anchor without leaking source detail",
-    Effect.fnUntraced(function* () {
-      const result = yield* sourceError(
-        "short",
-        TextAnchor.make({
-          endChar: NonNegativeInt.make(110),
-          quote: "range-leak",
-          startChar: NonNegativeInt.make(100),
-        }),
-        "private/range-leak.txt"
-      );
-      const encoded = encodeActionError(result.error);
-
-      expect(result.error).toMatchObject({ reason: "source-stale" });
-      expect(encoded).not.toContain("private/range-leak.txt");
-      expect(encoded).not.toContain("range-leak");
-      expect(encoded).not.toContain(result.identity.textDigest);
-    }, provideBunCrypto)
-  );
-
-  it.effect(
-    "rejects a persisted anchor that splits a UTF-16 surrogate pair",
-    Effect.fnUntraced(function* () {
-      const sourceText = "A😀B";
-      const result = yield* sourceError(
-        sourceText,
-        TextAnchor.make({
-          endChar: NonNegativeInt.make(3),
-          quote: Str.slice(2, 3)(sourceText),
-          startChar: NonNegativeInt.make(2),
-        }),
-        "private/surrogate-leak.txt"
-      );
-
-      expect(result.error).toMatchObject({ reason: "source-stale" });
-      expect(encodeActionError(result.error)).not.toContain("private/surrogate-leak.txt");
-    }, provideBunCrypto)
-  );
-
-  it.effect(
-    "denies a persisted anchor from another workspace before resolver use",
-    Effect.fnUntraced(function* () {
-      const identity = yield* makeSourceIdentity("workspace:2", "private/foreign-workspace.txt", "fact");
-      const captures: Captures = { resolverCalls: 0 };
-      const handlers = makeHandlersLayer(
-        makeExpanded(
-          TextAnchorVerificationReceipt.make({
-            anchor: TextAnchor.make({
-              endChar: NonNegativeInt.make(4),
-              quote: "fact",
-              startChar: NonNegativeInt.make(0),
-            }),
-            source: identity,
+        expect(result.list.total).toBe(0);
+        expect(captures.listOrgId).toBe(1);
+        expect(captures.expandedKnownAt).toStrictEqual(instant(2_000));
+        expect(captures.expandedOrgId).toBe(1);
+        expect(captures.expandedValidAt).toStrictEqual(instant(2_000));
+        expect(captures.reviewOrgId).toBe(1);
+        expect(captures.reviewer).toMatchObject({ kind: "User", userId: 1 });
+        expect(result.reviewError).toMatchObject({
+          _tag: "ContradictionActionError",
+          reason: "candidate-already-resolved",
+        });
+        assertSome<string>(
+          pipe(
+            A.head(result.detail.left.evidence),
+            O.flatMap((evidence) => evidence.verifiedAnchor),
+            O.map((anchor) => anchor.anchor.quote)
+          ),
+          "fact"
+        );
+        expect(result.page.page.pageIndex).toBe(1);
+        expect(result.page.page.startOffset).toBe(65_535);
+        expect(result.page.highlight).toStrictEqual(
+          EvidenceSourceHighlight.make({
+            endChar: verifiedAnchor.anchor.endChar,
+            source: verifiedAnchor.source,
+            startChar: verifiedAnchor.anchor.startChar,
           })
-        ),
-        "fact",
-        captures
-      );
-      const error = yield* Effect.gen(function* () {
+        );
+        expect(captures.resolverCalls).toBe(1);
+      })
+    );
+  });
+
+  it.layer(
+    registrationLayer(
+      `${Str.repeat(65_534)("a")}WXYZ`,
+      TextAnchor.make({ endChar: NonNegativeInt.make(65_538), quote: "WXYZ", startChar: NonNegativeInt.make(65_534) }),
+      "private/cross-page-source.txt",
+      "workspace:1"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("allows a valid anchor to continue across adjacent source pages", (it) => {
+    it.effect(
+      "allows a valid anchor to continue across adjacent source pages",
+      Effect.fnUntraced(function* () {
         const client = yield* RpcTest.makeClient(ContradictionRpcs);
-        return yield* Effect.flip(
+        const page = yield* client.GetEvidenceSourcePage(
+          sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({}))
+        );
+
+        expect(page.page.pageIndex).toBe(0);
+        expect(page.page.endOffset).toBe(65_536);
+        expect(page.highlight.endChar).toBeGreaterThan(page.page.endOffset);
+      })
+    );
+  });
+
+  it.layer(
+    registrationLayer(
+      "fact",
+      TextAnchor.make({ endChar: NonNegativeInt.make(4), quote: "leak", startChar: NonNegativeInt.make(0) }),
+      "private/quote-leak.txt",
+      "workspace:1"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("rejects a persisted quote mismatch without leaking source detail", (it) => {
+    it.effect(
+      "rejects a persisted quote mismatch without leaking source detail",
+      Effect.fnUntraced(function* () {
+        const result = yield* sourceError();
+        const encoded = encodeActionError(result.error);
+
+        expect(result.error).toMatchObject({ reason: "source-stale" });
+        expect(encoded).not.toContain("private/quote-leak.txt");
+        expect(encoded).not.toContain("leak");
+        expect(encoded).not.toContain(sourceDigest);
+      })
+    );
+  });
+
+  it.layer(
+    registrationLayer(
+      "short",
+      TextAnchor.make({ endChar: NonNegativeInt.make(110), quote: "range-leak", startChar: NonNegativeInt.make(100) }),
+      "private/range-leak.txt",
+      "workspace:1"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("rejects an out-of-range persisted anchor without leaking source detail", (it) => {
+    it.effect(
+      "rejects an out-of-range persisted anchor without leaking source detail",
+      Effect.fnUntraced(function* () {
+        const result = yield* sourceError();
+        const encoded = encodeActionError(result.error);
+
+        expect(result.error).toMatchObject({ reason: "source-stale" });
+        expect(encoded).not.toContain("private/range-leak.txt");
+        expect(encoded).not.toContain("range-leak");
+        expect(encoded).not.toContain(result.identity.textDigest);
+      })
+    );
+  });
+
+  it.layer(
+    registrationLayer(
+      "A😀B",
+      TextAnchor.make({
+        endChar: NonNegativeInt.make(3),
+        quote: Str.slice(2, 3)("A😀B"),
+        startChar: NonNegativeInt.make(2),
+      }),
+      "private/surrogate-leak.txt",
+      "workspace:1"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("rejects a persisted anchor that splits a UTF-16 surrogate pair", (it) => {
+    it.effect(
+      "rejects a persisted anchor that splits a UTF-16 surrogate pair",
+      Effect.fnUntraced(function* () {
+        const result = yield* sourceError();
+
+        expect(result.error).toMatchObject({ reason: "source-stale" });
+        expect(encodeActionError(result.error)).not.toContain("private/surrogate-leak.txt");
+      })
+    );
+  });
+
+  it.layer(
+    registrationLayer(
+      "fact",
+      TextAnchor.make({ endChar: NonNegativeInt.make(4), quote: "fact", startChar: NonNegativeInt.make(0) }),
+      "private/foreign-workspace.txt",
+      "workspace:2"
+    ),
+    { timeout: cryptoLayerTimeout }
+  )("denies a persisted anchor from another workspace before resolver use", (it) => {
+    it.effect(
+      "denies a persisted anchor from another workspace before resolver use",
+      Effect.fnUntraced(function* () {
+        const { captures } = yield* RegistrationFixture;
+        const client = yield* RpcTest.makeClient(ContradictionRpcs);
+        const error = yield* Effect.flip(
           client.GetEvidenceSourcePage(sourcePayload(EvidenceSourcePageSelector.cases.anchor.make({})))
         );
-      }).pipe(provideScopedLayer(handlers));
 
-      expect(error).toMatchObject({ reason: "source-access-denied" });
-      expect(captures.resolverCalls).toBe(0);
-      expect(encodeActionError(error)).not.toContain("private/foreign-workspace.txt");
-    }, provideBunCrypto)
-  );
+        expect(error).toMatchObject({ reason: "source-access-denied" });
+        expect(captures.resolverCalls).toBe(0);
+        expect(encodeActionError(error)).not.toContain("private/foreign-workspace.txt");
+      })
+    );
+  });
 });

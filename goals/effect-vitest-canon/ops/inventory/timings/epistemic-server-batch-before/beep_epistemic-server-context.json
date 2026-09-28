@@ -1,0 +1,245 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-server",
+  "sourceHead": "5c6bd1aba28c7d5d54b56271299abe56427647a7",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 6.1244963780000035,
+  "bunWholeCommandSeconds": 3.5700028929995824,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [15.05615234375, 19.904296875, 18.6435546875],
+  "loadAfter": [15.3720703125, 19.88916015625, 18.6455078125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.17 avg60=0.94 avg300=1.64 total=58735496\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2695951\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2513909\n",
+    "io": "some avg10=0.00 avg60=0.06 avg300=0.05 total=13949893\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=10589950\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.09 avg60=0.85 avg300=1.61 total=58754031\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2695952\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2513911\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.05 total=13955633\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=10594276\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "9d8c67b14c0b8915703955bc3120d6f6058517b75f391e41df8f542edb2eeaca"
+    },
+    {
+      "file": "packages/epistemic/server/README.md",
+      "sha256": "b686aac52cfb7ba119ac9c4241f7d553db40a0060d61800b475d033e619376ed"
+    },
+    {
+      "file": "packages/epistemic/server/package.json",
+      "sha256": "f65947716be94cae478a014c766bdf0f04da555189aed343edf95900b8a2ce0b"
+    },
+    {
+      "file": "packages/epistemic/server/src/ClaimDisposition/ClaimDisposition.layer.ts",
+      "sha256": "727d574efee0c928948e53fe9f6c4b17af333a5e518384ea5320192e4fed75b9"
+    },
+    {
+      "file": "packages/epistemic/server/src/ClaimDisposition/ClaimDisposition.repo.ts",
+      "sha256": "7bced4e53025f2e2675e25487432327f37d90fb4a06fdd7f730a0ec04124b980"
+    },
+    {
+      "file": "packages/epistemic/server/src/ClaimDisposition/index.ts",
+      "sha256": "6ae4cf19f311ccf90ab3a82bb2dd8f4d907b51ff4c0e0b554a5cbc9800cf46d0"
+    },
+    {
+      "file": "packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.layer.ts",
+      "sha256": "41426ea358115733fa8bec3836927f35e7966e6143f313e4b906291537e0e2c7"
+    },
+    {
+      "file": "packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts",
+      "sha256": "f27cde9c31371d47da688a435da40111f566b02a6957f01af75f3eb2ab5e65a3"
+    },
+    {
+      "file": "packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.rpc-handlers.ts",
+      "sha256": "0450919432159186505ee55ce3adfacf5254b634d641efd1be8eb258d727091a"
+    },
+    {
+      "file": "packages/epistemic/server/src/ContradictionTriage/index.ts",
+      "sha256": "91b06ff02cf10872ece1a46fbd9efb6e3ede79b126450c72cc7d3a68c4ca9ed8"
+    },
+    {
+      "file": "packages/epistemic/server/src/EdgeAuthority/EdgeAuthority.layer.ts",
+      "sha256": "9d0f28907ccfccc509958fbc0a96b94dde63ca08bb0c89352c108adc91c6c23a"
+    },
+    {
+      "file": "packages/epistemic/server/src/EdgeAuthority/EdgeAuthority.repo.ts",
+      "sha256": "80efccfbb2b650076b9691a1e79baaed3656f72f44b14bde72d17a4e98965496"
+    },
+    {
+      "file": "packages/epistemic/server/src/EdgeAuthority/index.ts",
+      "sha256": "ea7b1e4f527b880785faaa77d91a88ea34e0332448bd7b681588494ed31b1431"
+    },
+    {
+      "file": "packages/epistemic/server/src/ExecutionLedger/ExecutionLedger.layer.ts",
+      "sha256": "7a779a42cdf9aada316ed5860155587257c4023fdf6e8455928add1a616d5cdd"
+    },
+    {
+      "file": "packages/epistemic/server/src/ExecutionLedger/ExecutionLedger.repo.ts",
+      "sha256": "1dab4b66b99707a13b1e83a27ddb5994e61e132473dbfbc97f3c2b7a5543b40c"
+    },
+    {
+      "file": "packages/epistemic/server/src/ExecutionLedger/index.ts",
+      "sha256": "8b30bd6f979f23e8eef855880ca4784ccd6886542cd0e60c540cbaaa73e74a19"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.fetch.ts",
+      "sha256": "a5d1b46abf9abd16085a2c18d362dd63078c6831d742a7c0e854d4b2344c3d60"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
+      "sha256": "addbdf7b6132fea3194bc52d00e6e4c0228c5066d19e47aaba82bd8f02299fe1"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedEgress/index.ts",
+      "sha256": "cd51cf4ae5a02e6eb5143263557af9bee257bf089655815c353a2a6e8313e792"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts",
+      "sha256": "699a68b4c02edd04c881faf62b4db1f2f19556f2ee97e99fe576b7230b8bf405"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.layer.ts",
+      "sha256": "580c0ce6beffebc633183c8f53d39aaf4a48271b4c60685f3ac12883106bd8c6"
+    },
+    {
+      "file": "packages/epistemic/server/src/GovernedTierGate/index.ts",
+      "sha256": "ec7861b9db946a5fd9d9380bf4fc48aece90e40dad1894f01feaab4a0c4e19c2"
+    },
+    {
+      "file": "packages/epistemic/server/src/Layer.ts",
+      "sha256": "338584d471bb634801a2af29f22551addc98913f3169651d9dc0d701cf5305f4"
+    },
+    {
+      "file": "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts",
+      "sha256": "b58a556ac3dc724ff69489a90f15e52beb0a51884ff8590dce435c380ea26f62"
+    },
+    {
+      "file": "packages/epistemic/server/src/ShaclValidation/index.ts",
+      "sha256": "1187c460b4b7ff4ca85dfd250b022be289003189ee4f1f55fa2369997d0c6398"
+    },
+    {
+      "file": "packages/epistemic/server/src/index.ts",
+      "sha256": "83a2f4ff6501c95d9df6b6aa38a5bffacd7cfd3c7f75954bd31d8d85fc6ddd31"
+    },
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "sha256": "ac8a4a94ccd92d733d3ec95c714527c5ad59820593b1bb40da794ae4470bae5c"
+    },
+    {
+      "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
+      "sha256": "77f0bb446ab93e0842b9dd44bd65714b541d4fe26d8aa515f416ca4d5a6f971b"
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicRepositoryDriverFailure.pglite.test.ts",
+      "sha256": "2a7c3d1790dfba5c59b75b669e5867935abea7eb93adc08e59b9b2f2daf2e28c"
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicServer.test.ts",
+      "sha256": "5f26941fda225d9072b28757033c2e4460a8c351e012094192d2d0c9603ce782"
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "sha256": "b55e000fee1e1e095dc7019f9047f4b630e7a2da3d2f047b78bf045dcb532de5"
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "sha256": "13fc5649dc8fd1519e8dc4b2bf84684547719c87ad3708b73598d6f60a4cbf40"
+    },
+    {
+      "file": "packages/epistemic/server/test/IdentityShaclProjection.e2e.test.ts",
+      "sha256": "574f01f834aa50f2311c96401c1cfecd1afa8083acf93637c1ea7b1740b92fdf"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
+      "sha256": "f1e667c6523f0413b33997b7b45c37ea23c77564a2657922867d9e995d7aad2e"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "sha256": "cb07bb7295e03a1b3b68e831b12b80d13731b3a1130c5c2ba88b5f70b2175877"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "sha256": "7fd6625ff748e1d5424465c1172c575834b7c35ec1cddb4da7936bb948d9804b"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
+      "sha256": "ac66334d733c4a2966dea00cfb9e491289810d23966a1cb2ebf8e15f6247c74b"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
+      "sha256": "4d607f63279b7158adf3b9f8c8cb0c2581b09a6a1b7ebc888663e4fa1342d84f"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
+      "sha256": "2b53c8895afeef2e749451057cb88f53d938b797f319178019e883704e75b1be"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ExecutionLedger.pglite.test.ts",
+      "sha256": "f565d40247738345586fadb1f4fd10e0176b9c89896dfc50e952526bfd22b0c3"
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/GovernedTierGate.pglite.test.ts",
+      "sha256": "729d4fb626735490fd31dc50cafbcd9342d15374f77d86e09e62c5d6020decd5"
+    },
+    {
+      "file": "packages/epistemic/server/tsconfig.check.json",
+      "sha256": "42d8a4d4b006b22b76108995643c91d5ed0685a41940c010cbd83289c3da2225"
+    },
+    {
+      "file": "packages/epistemic/server/tsconfig.json",
+      "sha256": "32ec5244bd52b9e1f5a4115ea95f457f3e2355ac5d9cbcc819bcd89ce0fc64c7"
+    },
+    {
+      "file": "packages/epistemic/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/epistemic/server/vitest.config.ts",
+      "sha256": "74371247757931dbe82c40787e71e70ee755d7bc4019c6eab17167f3bc0bdc44"
+    }
+  ],
+  "environmentMode": "Epistemic Server unit selection excludes test/integration. These observations do not establish native PostgreSQL concurrency or persistent PGlite restart behavior; those require separate integration proof. Host load and pressure are recorded, not a causal performance claim.",
+  "bunProof": {
+    "passedTests": 38,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [15.3720703125, 19.88916015625, 18.6455078125],
+    "loadAfter": [15.181640625, 19.7744140625, 18.61474609375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.09 avg60=0.85 avg300=1.61 total=58754079\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2695952\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2513911\n",
+      "io": "some avg10=0.00 avg60=0.05 avg300=0.05 total=13955633\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=10594276\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.06 avg60=0.79 avg300=1.59 total=58767140\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=2696046\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2514004\n",
+      "io": "some avg10=0.00 avg60=0.05 avg300=0.05 total=13960231\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=10597593\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 38,
+    "skipped": 0
+  },
+  "interpretation": "All 38 unit cases pass before and after on Node and Bun with stable sources. The preservation audit across all 15 test files accounts for 437 assertions, 92 titles and 63 fixture initializers, with two documented oracle corrections and one relocated waiter assertion. Native PostgreSQL contention and persistent PGlite close/reopen have separate Node/Bun integration proof; this unit selection does not establish those subjects. Host load and pressure are recorded; these observations do not establish causal speedup."
+}

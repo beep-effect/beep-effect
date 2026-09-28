@@ -3881,3 +3881,948 @@ one of its subcommands. The actual command is `bun run beep cache census`.
 Unknown nested command help should identify the unrecognized segment and, where
 possible, suggest the valid route. Status: tooling follow-up; no command routing
 change is included in the Box Provisioning test batch.
+
+## 2026-09-28 — scheduler yields did not establish dispatch readiness
+
+The saved Epistemic Server overlap test read its decision ledger after one
+scheduler yield per fork. A controlled dispatch delay of 20 scheduler yields
+makes that oracle fail while explicit acknowledgements from the approved bodies
+pass. The test now awaits each acknowledgement before launching the next actor
+and inspecting decision order, while preserving reverse settlement, joined
+fibers, the second failure and exact hash binding. Use observable milestones for
+concurrency claims; a yield is not a readiness signal. Status: repaired locally
+in the current Epistemic Server batch; a historical hosted flake is not claimed.
+
+## 2026-09-28 — failed tamper assertions could leave append-only triggers absent
+
+ExecutionLedger PGlite tests dropped shared database triggers, performed tamper
+assertions, then restored the triggers. Assertion defects or interruption could
+skip restoration. Both scopes now use acquireUseRelease; restoration errors
+remain visible as defects. Controlled failures and interruption verify that each
+of the decision and outcome triggers exists afterward. Disabling restoration
+fails all four checks. Test teardown should be registered before deliberately
+weakening shared database constraints. Status: repaired locally; original forged
+fields, chain index and binding assertions remain intact.
+
+## 2026-09-28 — the external PostgreSQL lane asserted the wrong conflict layer
+
+The untouched ContradictionTriage PostgreSQL baseline produced one winning
+approval and one losing review, but rejected the loser because it expected
+SupersessionConflict. A classification-only probe found
+ContradictionReviewConflict with reason stale-candidate. The repository checks
+proposal applicability after locking the surviving edge and returns that review
+error before calling the edge superseder. The assertion now requires that exact
+type and reason rather than accepting an arbitrary failure. Status: repaired locally and verified on Node and Bun; no production behavior
+change was warranted by this evidence.
+The reproduction used a dedicated disposable PostgreSQL database.
+
+## 2026-09-28 — a fixed PostgreSQL wait was not a contention acknowledgement
+
+ContradictionTriage race tests waited 250 ms before counting lock waiters.
+The replacement polls the two known backend IDs for Lock state, clearing the
+statistics snapshot inside the blocker transaction between observations. Polling
+is limited to 250 ten-millisecond intervals and a ten-second live watchdog; it
+does not retry the race or advance TestClock. Actual simultaneous lock waiting
+remains required before releasing the blocker. Status: both native PostgreSQL races pass on Node and Bun. With writer startup
+delayed by 800 ms, the original fixed-delay observer fails and the bounded
+lock-state observer passes; all source is restored after the control.
+
+## 2026-09-28 — derived public-ID uniqueness was misclassified as malformed input
+
+The untouched EdgeAuthority PostgreSQL race B baseline produced one winner and
+one EdgeConstraintViolation naming epistemic_edge_version_public_id_unique_idx.
+The public ID is derived directly from logicalKey and version; its uniqueness
+constraint therefore enforces the same pair as the already-recognized logical
+version constraint. The write-error mapper omitted this fourth concurrency
+backstop, giving callers the wrong recovery classification when PostgreSQL
+reported that index first. The standing production-repair authorization covers
+adding the exact index name to the SupersessionConflict mapping. The race retains
+its one-winner, one-typed-conflict and lineage assertions; its diagnostic accepts
+the four equivalent backstop names rather than assuming index evaluation order.
+Status: the four native PostgreSQL tests pass on Node and Bun, and full package
+verification passes after the production repair. The overlap-witness and
+filtered-setup hardening are also repaired locally, with their evidence recorded
+below. Publication and the remaining batch closeout are still pending.
+
+## 2026-09-28 — filtered PostgreSQL races depended on another test's setup
+
+Running only EdgeAuthority race A on a fresh dedicated database failed because
+epistemic_candidate_claim did not exist. Reset and migration lived in the first
+test rather than suite setup. The public layer now performs those prerequisites,
+retaining the existing five-minute setup budget and original test deadlines.
+Filtered race A then passes on that fresh database. Test filtering should be a
+supported diagnostic workflow, with setup independent of test selection.
+Status: repaired locally in the Epistemic Server batch.
+
+## 2026-09-28 — timed row locking did not prove writer overlap
+
+EdgeAuthority race A released its blocker after 250 ms without observing either
+writer. Each writer now acknowledges its backend PID inside a pinned transaction;
+the blocker requires distinct PIDs and waits for both to enter Lock state before
+release. The bounded observer is shared with ContradictionTriage. An 800 ms writer
+delay still passes; withholding the second distinct witness fails. The two
+repository instances, four-connection pool and exact conflict/lineage outcomes
+remain. Status: repaired locally and verified against real PostgreSQL.
+
+## 2026-09-28 — assertion migration needs to preserve branded numeric expectations
+
+Mechanical Option assertion conversion caused four branded-number inference
+errors in EdgeAuthority PGlite tests: assertSome inferred PosInt while the
+unchanged expected value was the literal 1. Explicit assertSome<number> retains
+that original comparison. One nested helper call also required its equivalent
+pipe form for the Effect diagnostic. Preservation proof still accounts for all
+437 original assertions, including separately documented oracle repairs.
+Migration tooling should detect these cases before handoff and preserve expected
+values instead of introducing constructors solely to satisfy inferred brands.
+Status: local conversions repaired; broader converter improvements are a follow-up.
+
+
+## 2026-09-28 — schema-first inventory churn obscures surviving advisories
+
+The final Epistemic Server `bun run lint:schema-first` proof exits 1 with six
+stale `SFV4-arbitrary-tests` entries. The same scan reports the same six files,
+`schema-codec-tests` symbols and codec counts at their new line positions. For
+example, BoundedShaclValidator moves from line 19 to 21 and EdgeAuthority.pg
+from 65 to 68. These diagnostics do not establish that property coverage was
+removed; the advisory still exists at a different location.
+
+Reconcile the affected entries after confirming their identity and preserving
+all existing dispositions. Then rerun the gate. A tooling follow-up should
+check whether inventory identity can survive import and setup line shifts, or
+at least report a relocation rather than an apparent removal. A regression
+should insert unrelated lines above an unchanged advisory and verify that its
+review disposition survives without suppressing a genuinely new finding.
+Status: the six line anchors are reconciled with every disposition and reason
+preserved, and the root gate passes. Stable diagnostic matching remains a
+tooling improvement opportunity. The six property-coverage advisories still
+require their existing review and must not be silently dismissed.
+
+
+## 2026-09-28 — ignored rollback failures hid broken database cleanup
+
+The adjacent EpistemicRepositoryDriverFailure PGlite suite called rollback after
+expected failures but ignored rollback errors. Replacing ROLLBACK with a query
+against a deliberately missing table still passed all three tests. The existing
+typed-error assertions therefore did not establish that cleanup succeeded.
+
+Each expected driver failure now owns rollback through Effect.ensuring, and
+rollback errors remain visible through Effect.orDie. The unchanged three tests
+pass with real rollback; the identical broken-rollback control now fails.
+Existing error-type, operation-name and empty-repository assertions are retained.
+Status: repaired locally; full package audit and docgen pass. Error-path
+tests should prove their cleanup can fail visibly, especially when subsequent
+operations normalize several underlying driver failures to the same public type.
+
+## 2026-09-28 — filing metadata did not prove materialized bytes
+
+The extraction-fallback test asserted filing classification and the relative
+path but never read the file. A controlled production mutation that skips
+materialization still passed the original test. The strengthened test reads the
+returned path under the native temporary vault and compares every byte with the
+original decoded input. Preserve this boundary when refactoring intake: returning
+metadata is insufficient evidence of a completed write. Status: repaired locally. The skipped-write control fails at the actual file
+read; Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — remote paths and sync status did not prove uploaded content
+
+The vacated-path regression checked both remote keys and current status but not
+the content at either key. A fixture mutation that always reports the first
+scan's digest passed that original oracle. The test now checks each public
+fixture node's contentDigest against the independently calculated SHA-256 of its
+respective first or second input. Status: repaired locally. The stale-digest control fails the new assertion;
+Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — truncation length accepted an absent payload head
+
+The drift-payload test checked String(head).length <= 8192. A mutation returning
+undefined for head passed because that conversion produces a short string.
+The original bound and truncated flag remain; a new golden assertion requires
+the exact JSON prefix of the injected oversized payload. Status: repaired locally. The absent-head control fails the exact prefix
+assertion; Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — ambient configuration changed the retry scenario
+
+Running the existing three-attempt VaultSyncEngine regression in a subprocess
+with DOCUMENTS_SYNC_MAX_ATTEMPTS=1 fails its exact attempt assertion. The fixture
+now supplies an explicit ConfigProvider with the original three attempts and
+100-page limit. Production configuration decoding remains unchanged. Status:
+repaired locally. Subprocesses with ambient attempt limits 1 and 4 and page
+limit 1 retain the expected three attempts; full package audit/docgen pass. Test-local providers should own fixed scenarios without modifying
+process.env or weakening the production configuration tests.
+
+## 2026-09-28 — native byte containers differ across runtimes
+
+The new materialization assertion initially compared a Node Buffer directly to
+a Uint8Array. Vitest rejected deep equality despite identical bytes. Comparing
+A.fromIterable results through the Effect Array helper retains every byte
+and avoids treating a runtime container prototype as the persistence subject.
+Status: repaired locally and verified on Node and Bun. Keep both runtimes in
+verification of native-byte assertions.
+
+## 2026-09-28 — repository rollback gaps recur in Documents tests
+
+The adjacent SyncRepositoryDriverFailure suite ignored rollback errors after
+nine expected driver failures. All three cases still passed when ROLLBACK was
+replaced with invalid SQL. Guaranteed cleanup now surrounds each expected
+failure, with rollback errors exposed as defects; the same invalid-SQL control
+then fails. This preserves the existing public error-type and reason assertions.
+
+The integration duplicate-key case had the same ignored rollback after its
+assertions. Its full-file control also passed with invalid rollback. Cleanup is
+now guaranteed around the duplicate operation before its unchanged conflict
+assertions. The last-test ordering and native PGlite driver remain. Status:
+repaired locally; both invalid-rollback controls fail after repair, and full
+package audit/docgen plus nine integration cases pass on Node and Bun.
+Future error-path reviews should inspect both teardown execution and teardown
+error visibility rather than infer cleanup from expected domain errors.
+
+## 2026-09-28 — public layer migration exposes obsolete generator wrappers
+
+Removing twelve body providers from Box adapter cases exposed eleven nested
+Effect.gen wrappers that no longer establish a service boundary. Effect's
+nestedEffectGenYield diagnostic identified them. Their statements now run in
+the existing parent generator, retaining every command, returned-field binding
+and assertion. The test fixture service uses its deterministic package key.
+Status: repaired locally and package-verified before the later runner edits.
+Migration tooling can identify and inline these obsolete wrappers while keeping
+shorter resource scopes and body-specific client construction intact.
+
+## 2026-09-28 — property migration must include integration registrations
+
+The first native-property conversion covered top-level test files. The
+source-preservation audit found another aggregate Passed assertion in the
+integration file, backed by four seed schemas. Those four laws now use native registrations with their original domains,
+equivalence predicates and ten-run floor. Status: all four individual inversion
+controls fail with seed replay and shrinking; full package proof and both
+runtime integration suites pass. A migration must recurse through the complete saved test census;
+a passing unit selection cannot establish integration-file coverage.
+
+## 2026-09-28 — property codec compilation belongs at module scope
+
+Documents package verification passed while root oxlint rejected 32 codec
+compilations inside sixteen describe callbacks. Registration callbacks do not
+run per generated trial, but the repository compilation-placement rule still
+requires module-level reuse. Sixteen codec/equivalence groups now use named
+module constants. Root oxlint and the subsequent full package audit/docgen
+pass. This repeats the previously recorded gap between package verification
+and root policy coverage; tooling should expose that distinction earlier.
+
+## 2026-09-28 — publishing a resolved merge needs a separate commit step
+
+While resolving PR #1312 after the rc.118 snapshot landed, Yeet publish checked
+base freshness before committing the resolved in-progress merge and reported
+stale-base. Committing the merge with normal hooks resolved that condition.
+A second attempt established that early publication rejects amend/no-edit.
+The merge plus a new proof note then published through the normal early route.
+Status: operationally resolved; a documented existing-merge publication path
+would avoid repeated job submissions. No stale-base override was used.
+
+The conflict also illustrates why proof receipts must pin the dependency
+snapshot: the saved Documents proof used rc.117. Its 22-file batch was archived
+and restored with hashes verified; only the lockfile changed through main's
+merge. Reverification on rc.118 is required before claiming current proof.
+
+## 2026-09-28 — stale incremental diagnostics survive an Effect update
+
+After restoring the Documents batch onto rc.118, package verification failed
+in the unchanged Box dependency with TS2589 and no source location. Box's
+source/test/script check and a compiler run with fresh build-info both passed.
+Archiving only Box's generated incremental state made the full Documents audit
+and docgen pass (14.2 and 5.9 seconds). No production change was needed.
+Status: environment-only and verified. Dependency-snapshot transitions should
+invalidate incremental state or suggest a fresh-state diagnostic before source
+repair; preserve the failing state when investigating compiler cache behavior.
+
+## 2026-09-28 — root checks require explicit base and relocated anchors
+
+Direct Fallow check scripts expanded an unset BEEP_PROOF_BASE to an empty ref
+and exited 128. Re-running with origin/main supplies the intended comparison.
+The SHACL merge also moved the existing schema-first exception anchor from line
+21 to 36. Only that line reference changed; its rule, disposition, ownership and
+regression-coverage rationale remain intact. Root checks detect these cases
+after package verification; standalone recipes should name the comparison base
+and stable finding identities should avoid line-only invalidation.
+
+### PR #1312 Documents changeset omission
+
+Repo Sanity on `d8a746e93c` rejected the Documents Server batch because
+`quality changeset-status --since origin/main` found no in-range changeset for
+`@beep/documents-server`. The earlier local check did not establish the final
+committed-tree release contract. Added a package patch changeset and reran the
+check from the isolated publication tree. Keep this check in the final staged
+publication preflight, including test-runner dependency migrations.
+
+## 2026-09-28 — singleton frame reads cannot prove SQL ordering
+
+The Law Practice ordering regression stored one exercise per frame and did not
+assert correction order. Removing either frame-keyed ORDER BY independently
+still passed the original filtered native PGlite case. The repaired fixture
+adds two exercises and two corrections in one additional frame, inserting IDs
+301 before 201 while retaining forced sequential scans and every prior
+assertion. Status: repaired; the full four-case native suite passes and removing either
+ORDER BY now independently fails the strengthened case. Ordering tests should make heap and required order disagree within
+the exact scope being read, including each independently implemented query.
+
+## 2026-09-28 — a fixture-row property exercised only strings
+
+The Practice KG property titled schema-valid fixture rows generated S.String
+and checked isString. The original string domain and assertion remain as an
+explicit smoke case under that group; a separate property now generates actual
+FixtureSourceRow values and checks JSON codec equivalence. Both this group and
+the Legal Position tenant property route the existing ten-run floor through
+fcRuns. Status: repaired; positive property runs and all three inverted predicates
+pass their expected outcomes with seed replay and shrinking. Property names need a domain-and-predicate review, not only a native
+property-registration check.
+
+## 2026-09-28 — partial conformance setup leaked a native directory
+
+Forcing Practice KG bundle construction to fail after creating its fixture
+corpus left one owned temporary directory behind. The old manual Scope.make
+was saved only after construction completed, so afterAll could not close it
+on that failure path. The fixture now belongs to a public two-minute layer:
+scoped native resources are acquired under that owner, and its shared-context
+reference has a clearing finalizer. Status: repaired; the same forced failure leaves zero owned directories,
+and full MCP kit and Law Practice package verification pass.
+No user corpus or unrelated temporary resource was touched.
+
+The conformance helper previously registered only through global test methods,
+so enclosing a call in it.layer did not acquire the parent fixture. Its optional
+tester input now composes both HTTP and stdio arms through that owner; existing
+standalone hosts retain their default behavior. A shared-context reference is
+still needed because the harness accepts closed registration layers, and it is
+cleared by the public fixture finalizer.
+
+## 2026-09-28 — no-findings prose can become stale after remediation
+
+PR #1312 review identified three descriptions that still said rollback errors
+were ignored or race overlap was unwitnessed. The published tests had already
+repaired those subjects. Commit d8a746e93c updates the descriptions while keeping
+the opt-in external PostgreSQL and absent historical Node-baseline qualifications.
+Status: fixed, schema-validated, replied and resolved. Reconciliation should
+review adjacent no-findings prose as well as action rows and line anchors.
+
+## 2026-09-28 — deep property selection can exclude an explicitly named native suite
+
+The 400-run Law Practice command named three files but selected only the two
+property-bearing files under the shared deep-property filter. Its 27 passing
+cases did not include the native ordering suite. A separate ordinary run proves
+all four native PGlite cases, and isolated before/after ORDER BY controls each
+report one selected case. Status: proof scopes corrected; reports should carry
+selected file/case counts alongside requested paths.
+
+## 2026-09-28 — merged Refs assertion crossed the ratchet
+
+The local proof for #1312 stopped at one EV006 finding newly introduced by
+main #1311: `expect(O.isSome(report.coverage)).toBe(true)` in the Refs refresh
+regression. Replaced only its assertion wrapper with `assertTrue`, preserving
+the exact operand and polarity. Three Law Practice schema-first exceptions also
+needed line-only anchor updates after runner imports moved; their rule, reason
+and disposition are unchanged. Run the ratchet after a main merge even when
+the merge is conflict-free; do not rebaseline incoming findings.
+
+## 2026-09-28 — EV006 reported its own recommended assertion
+
+Direct `assertTrue(O.isSome(value))` remained an EV006 finding recommending
+`utils.assertTrue`. A focused regression fails before repair. The detector now
+recognizes an exact imported canonical helper matching its selected replacement,
+including aliases and namespace imports. It still reports legacy assertions and
+Option checks with a stronger `assertNone` replacement. This syntax-only repair
+avoids forcing users to reshape an already canonical assertion to evade a
+false positive. The shared primitive graph and original operands are unchanged.
+
+The CLI quick check initially failed with missing dependency declaration outputs
+(TS6305) and cascading Effect channel diagnostics. Building its dependencies
+restored a green quick check without changing those production modules.
+
+## 2026-09-28 — shared coverage module cache bypassed the SHACL mock
+
+The capped SHACL construction test passed alone with Node coverage but failed
+in the full package coverage selection: the mock recorded zero constructions
+instead of one. Coverage disables file isolation by default, allowing an earlier
+file to cache the validator before this test installs its schema-module mock.
+The package now explicitly retains file isolation, as the shared configuration
+requires for module-mocking packages. The original one-versus-three construction
+assertions, result contents and limit behavior remain intact.
+
+## 2026-09-28 — manifest loader lacked structural rejection coverage
+
+Practice KG MCP tested missing files and malformed JSON but not parseable JSON
+that violates the real bundle manifest schema. Added the `{}` boundary case
+with the exact typed invalid-manifest diagnostic. The same loader suite now runs
+against MemoryFileSystem and the existing native adapter under public layers,
+preserving optional corpus roots, path joining and independent scoped directories.
+This proves the loader contract before databases open; it is not MCP or SQL
+startup coverage.
+
+The structural-invalid control replaces only `{}` with a valid manifest before
+decoding: the original loader suite passes, while the new native and memory
+cases fail. Sources are restored after the control. Full package audit and
+Docgen passed before the instrumented-runner migration; its post-migration proof
+is tracked separately.
+
+## Practice KG smoke census delta
+
+While closing the saved Practice KG inventory, the current package contained
+`test/Smoke.test.ts`, added on main after the saved two-file census. The closeout
+adds this third file and its four lens judgments while preserving unrelated rows.
+A package-local comparison of tracked tests against census paths before closeout
+would catch this drift without restarting the full repository inventory. The
+smoke assertion proves guarded module import only, not compiled host execution.
+
+The closeout initially tried `bun run lint:effect-vitest`, which is not a root
+script. The canonical command is `bun run beep lint effect-vitest`. Keep saved
+operator recipes aligned with the CLI to avoid failed alias guesses.
+
+## Nested public layer setup budget in Law Practice conformance
+
+PR #1312 unit-b job 108849216221 failed the HTTP conformance suite with
+`Hook timed out in 10000ms`. The native fixture had a two-minute budget, but
+its unnamed public layer acquires in beforeEach; the inner named HTTP layer
+acquires in beforeAll and therefore built the expensive parent first.
+The installed Effect/Vitest implementation and the local Effect reference agree.
+Using the named outer layer acquires the shared fixture in its own beforeAll,
+preserving both the two-minute fixture budget and ten-second HTTP budget.
+A temporary eleven-second acquisition delay fails the old registration and
+passes the corrected one (14 conformance cases). The delay is removed.
+Review nested layer hook order during migrations; checking duration literals
+alone does not prove that the original setup boundary is preserved.
+
+## Desktop HTTP auth boundary and codec declaration mismatch
+
+The saved epistemic observation row correctly identified that header predicates
+and RPC descriptors cannot prove HTTP rejection. The Desktop auth test now mounts
+the actual middleware and real RPC protocol on an ephemeral socket, asserts two
+401 responses without handler calls, and checks a valid request's successful RPC
+response. Removing the middleware fails the new test. Keep this transport proof
+alongside pure header tests to catch omitted middleware composition.
+
+The initial new test used `Schema.UnknownFromJsonString`, which executed at runtime
+but failed package type checking with TS2551. The supported constructor
+`Schema.fromJsonString(Schema.Unknown)` fixes the declaration mismatch. Focused
+runtime success cannot replace the package's type-check gate.
+
+## Desktop chat metrics could pass from shared global state
+
+The saved L-OBS-04 finding reproduced: seed completion and duration metrics in
+the default registry, redirect the contract stream's metrics to another registry,
+and the original positive-count assertions still pass. A fresh MetricRegistry
+provided through the test's public layer makes the same control fail at the
+missing metric. Keep metric-producing contract programs and their child fibers
+inside one owned registry rather than clearing a shared global registry. Retain
+negative controls that suppress only the observed program's emissions; a positive
+snapshot alone cannot establish which program produced its counts.
+
+## Desktop runner migration exposed hoisted-mock and Node Wasm constraints
+
+Moving `vi` through the Effect/Vitest re-export broke four Desktop suites with
+`There are some problems in resolving the mocks API`. Keep only those hoisted
+mock imports direct from Vitest; route registration through the instrumented
+runner. A migration rule that treats every Vitest export identically would break
+otherwise unchanged tests. Four specific detector exceptions retain this proof.
+
+The Node integration command fails four suites importing PGlite initdb Wasm with
+`Cannot find package 'env'`. The pre-migration Pglite equivalence test reproduces
+it; the Bun integration run passes 30 tests. Fix Node/Vite asset loading and rerun
+the original suite; do not replace the native PGlite subject or count collection
+of opt-in sidecar/provider files as execution.
+
+### Node/PGlite asset-loading repair
+
+The Desktop integration config now maps only PGlite dist Wasm/data/archive
+imports to Vite asset URLs. The sidecar uses Bun file import attributes, which
+Node otherwise interprets as executable Wasm modules. Inlining the dependency
+alone did not fix the error; the explicit asset URL alias did, and the unused
+inline setting was removed. The same enabled integration selection now passes
+30 tests under both Node and Bun, with no test-body or production-source change.
+Keep runtime-specific file-import handling at this test/build boundary.
+
+## Assertion rewrites changed surrounding inventory identities
+
+Forty-two canonical assertion rewrites changed occurrence fingerprints for 14
+existing Desktop layer/live-clock candidates even though their finding evidence
+and ordered peer counts were unchanged. The baseline entries were reanchored
+with their original statuses and obligations retained; a preservation receipt
+accounts for every other non-import statement. Inventory identity should depend
+on the actionable expression rather than unrelated assertions in its enclosing
+callback. Two schema-first exception anchors also moved solely from imports.
+
+## Legacy fixture readiness escaped cleanup ownership
+
+The Desktop compatibility fixture awaited PGlite readiness inside acquisition,
+before registering close. A controlled readiness-step failure after real engine
+initialization observed zero close callbacks before the repair and one afterward.
+Readiness now runs in the protected use phase. Resource reviews should inspect
+failure paths within acquisition, as successful close/reopen tests missed this gap.
+
+## Runner dependency additions require generated boundaries and release entries
+
+PR #1312 Repo Sanity rejected stale Fallow boundaries and missing changesets for
+Practice KG MCP and Professional Desktop. Regeneration added only two Desktop
+`@beep/test-runner` allowed-dependency entries; a patch changeset covers both apps.
+Package-level proof did not cover these repository gates. Dependency migrations
+should refresh boundary output and validate changeset coverage before publication.
+
+## Browser failure registry cleanup depended on successful assertions
+
+Both browser-failure atom tests disposed registries only at the success tail.
+Injected defects after each real mount observed zero cleanup callbacks before
+repair and one afterward. Acquisition now registers disposal in the live test
+scope before mounting. Review registry construction together with failure-path
+ownership; ordinary passing tests did not expose this leak. Two enclosing EV009
+fingerprints changed with the resource edit and were reanchored without closing
+or weakening the pending live-clock judgments.
+
+## Composer and FPS cleanup needed failure-path ownership
+
+The composer registry and FPS frame loop relied on success-tail disposal. Failure
+controls after real mounts reproduced missing cleanup in both original tests;
+test-scope acquisition now guarantees it. The FPS early-disposal assertion stays
+in place and checks the same latest frame ID. When intercepting registry methods
+in controls, bind the original method to its instance so the observation preserves
+native cleanup behavior; the preceding browser controls were rerun with that bind.
+
+## Suspended sync work and IPC reader scopes needed parent ownership
+
+Failure controls reproduced missing registry disposal while sync RPC Deferreds
+were suspended and missing unlisten calls after IPC reader acquisition. Register
+registry release at acquisition and attach independently closeable child scopes
+to the test parent. Explicit early-close assertions should remain in place; they
+prove behavior that end-of-test cleanup alone cannot establish.
+
+## Intake and sidebar registries shared success-only cleanup
+
+The saved resource review found sixteen registry lifetimes whose cleanup followed
+assertions. Failure controls after sidebar persistence and during overlapping
+intake batches reproduced missing disposal. All sixteen acquisitions now register
+release in the public test scope. Preserve explicit mount releases in idle-TTL
+regressions; replacing those with end-of-test cleanup would weaken their subject.
+
+## Dock graph and binding ownership crossed failure paths
+
+Dock tests disposed graphs and mount bindings explicitly only after successful
+waits. Registering parent-scope cleanup preserves those early releases while
+covering failures before them. A temporary graph-cleanup control initially matched
+past a formatter-collapsed acquisition and instrumented the wrong callback; the
+probe was corrected before accepting evidence. Mutation controls should validate
+their insertion location structurally, not just count a text match.
+
+## Detached composer confirmation lacked a cleanup handle
+
+The confirmation helper returned void and released subscriptions only after its
+sleep completed. Tests used a 200 ms sleep instead of observing completion. The
+helper now returns its existing fiber and finalizes subscriptions when interrupted;
+existing callers may still ignore the return. A permanent cancellation regression
+fails with completion-only cleanup (an extra listener remains) and passes with the
+repair. Direct tests own and join the fiber; the real handler-closure test observes
+the unique turn subscription being released before disposing its registry.
+This production repair is covered by the operator's standing repair authorization.
+
+## Editor manual resources needed ordered fallback cleanup
+
+Four manual registries, directly attached Lexical roots and a standalone mention
+notice fixture depended on successful test flow. Failure controls reproduced two
+remaining DOM nodes and missing registry disposal. Scoped acquisitions/finalizers
+now own these resources while retaining early teardown and remount assertions.
+For React views backed by a manual registry, unmount the view before disposing
+that registry. Syntax-tree insertion made the failure probes independent of
+formatter line wrapping.
+
+## Sidecar teardown raced directory removal and retained its stderr reader
+
+The compiled-sidecar control observed the first directory finalizer before the
+child's exit promise resolved. Sending a signal alone was insufficient. The test
+now joins process exit, then drains scoped stderr, then removes both directories.
+The initial stream conversion still retained the reader lock; an explicit
+`releaseLockOnEnd` option fixed the lock assertion. Readiness buffering retains
+only the marker overlap before boot and no accumulated log text afterward.
+Real process I/O uses live-clock 20/30-second deadlines instead of an unadvanced
+TestClock. The enabled compiled IPC case, not its default zero-registration gate,
+is the execution evidence.
+
+## Proof repair hint disagreed with the actual failing lanes
+
+The sidecar IPC publisher reported a schema-first repair command even though its
+structured lane record and log showed schema-first passing. The actual failures
+were Fallow audit and health: five identical coverage/deep-sweep hook-budget
+expressions inflated the vault-directory picker registration callback's cognitive
+complexity. A shared file-local timeout preserves all five 10-second/5-minute
+budgets while evaluating the common condition once. Repair hints should derive
+from the failing lane records; this case needs a regression in the quality tool.
+
+## Public fixtures must cross independent HTTP runtime boundaries explicitly
+
+Moving the ontology MCP harness's platform services into public layer fixtures
+initially caused `Service not found: effect/FileSystem` in the in-process handler.
+`HttpRouter.toWebHandler` starts a separate runtime. Providing the already acquired
+filesystem and path services to its routes repairs the boundary without rebuilding
+native services or sharing per-call workspace/session state. Keep both in-process
+and socket execution in this harness's validation matrix; compile-time layer
+requirements exposed the missing bridge before publication.
+
+## Conditional error guards can hide a missing failure-family assertion
+
+The contradiction seed source-conflict test checked failure polarity, then only
+checked the reason if the error already belonged to the expected family. Mapping
+the actual seed error to an unrelated Error still passed the original test. Direct
+public assertions now require both failure polarity and the error family before
+the unchanged reason/file/database assertions. Review guarded assertion bodies
+for vacuous success, including guards that only exist to narrow TypeScript types.
+
+## Canonical property registration can still omit CI run and seed controls
+
+The composer configuration property had already moved to public `it.effect.prop`
+during an Effect update, but it supplied no arbitrary options. The installed
+peer runner forwards only explicit options, and Effect defaults to 100 cases.
+The existing `fcRuns(100)` helper preserves that floor while forwarding the
+`BEEP_FC_NUM_RUNS` maximum and `BEEP_FC_SEED` pin. A syntax migration alone does
+not establish property-budget preservation; inspect the live options and observe
+the generated case count and replay sequence.
+
+## Retry limits need a positive retry witness
+
+The SurfaceBoundary test checked that Reload left a failure card visible and
+caused no more than eight renders. A blocked click also satisfied both assertions.
+A positive render-count increase now proves a new attempt before the unchanged
+upper-bound check. The click-propagation control passed the original test and
+failed the strengthened one; no production retry behavior was changed.
+
+## Publish freshness guard rejects a resolved uncommitted main merge
+
+After merging main for PR #1312, all conflict markers were resolved, the inventory
+ratchet passed, and the affected package proof passed. Yeet publish still rejected
+the branch as stale because its pre-commit freshness check compared the old HEAD
+to main while MERGE_HEAD already identified the intended merge. Finalizing the
+merge commit before normal publication avoids an override. The guard should
+recognize a fully resolved merge of the current base, while still rejecting stale
+or unresolved merges. Inventory conflicts were reconciled as a three-way semantic
+delta so main's location updates did not restore this branch's removed findings.
+
+## Aggregate serialization counts permit a redundant subject encode
+
+The viewer test allowed the total stringify count on rerenders to be less than
+the initial total. A single repeat encode passed that bound (one is less than
+two) even though the cache contract requires zero repeats. The test now counts
+only schema-equivalent encodes of the actual fixture, proves the initial count is
+positive, and requires no increase. A full cache bypass failed both old and new
+tests; a narrower one-repeat control demonstrated the previously missed defect.
+
+## Package verification encounters the known no-location TS2589 signature
+
+During viewer-test verification, `quality package-verify @beep/professional-desktop`
+stopped at the unchanged upstream `@beep/ui` build with `error TS2589` and no
+source location. A single focused unchanged build passed, followed by the full
+package verification (audit and docgen). The repository already recognizes this
+signature in its quality flake quarantine. Package verification should expose the
+same bounded diagnostic/retry policy so this failure does not require manual
+attribution; a repeated or located diagnostic must remain a hard failure.
+
+## Timeline refresh assertions can be satisfied by seeded content
+
+The receipt-uncertain retention test awaited text already present in its initial
+timeline. Replacing GetTimeline with `Effect.never` still passed the original
+test. A response-only turn now witnesses completion and UI application before
+the unchanged receipt assertions run; the same control correctly fails. Similar
+refresh tests should distinguish seeded content from the newly applied response,
+without adding sleeps or relying only on RPC invocation counts.
+
+## Idle-lifetime tests need an eviction witness
+
+Waiting longer than an idle TTL does not prove the registry collected anything.
+The composer-send test passed with its TTL extended beyond the unchanged wait.
+It now witnesses an unmounted state resetting in the same registry before the
+original Send assertion. The handler itself must remain mounted; the saved lens
+sketch's suggestion to witness handler disposal would contradict the fixed
+lifetime contract. Removing that production mount still fails the test.
+
+## File-wide mock cleanup overlaps concurrent UI tests
+
+Chat UI inherited global test concurrency while afterEach cleaned all rendered
+DOM and cleared the shared toast mock. A temporary lifecycle counter demonstrated
+overlapping cases; four explicit serial suite options removed that overlap
+without changing any test body. Shared cleanup ownership should be reviewed
+whenever async UI tests inherit global concurrency. This control proves overlap,
+not a naturally reproduced toast flake.
+
+## Debounce delay is not a persistence completion signal
+
+The dock-shell regression sampled storage once after a 600 ms sleep while the
+400 ms debounced save ran in a detached registry. It now observes the exact
+snapshot key within the same 600 ms bound and verifies storage starts empty.
+Suppressing the save dispatch fails the bounded wait. The real debounce and
+original final assertion remain; no reproduced ambient timing failure is claimed.
+
+## Retry UI tests must choose their failure source
+
+The sync retry test assumed the default sidecar HTTP request would fail within
+four seconds. A never-resolving fetch control left the original test loading and
+failed its Retry lookup. A public DesktopSyncClient failure layer now drives the
+real panel/query path; the same control passes with zero fetch calls. The Retry
+assertions and wait bound remain unchanged.
+
+The direct always-failing client function initially failed TypeScript's generic
+RPC return constraint (TS2375). The existing sync-atoms service-stub boundary
+pattern resolved it. A reusable typed RPC test-client builder could reduce these
+local assertions while retaining the protocol's tag/payload/error relationship.
+
+## Distinguish shared descriptors from per-acquisition state
+
+The Tauri socket tests rebuilt an effectful layer inside each test and wrapped
+five whole test bodies in another scope. Source inspection showed that the layer
+creates a stateless descriptor while each reader/writer acquisition creates its
+own state. Public suite-layer ownership is safe here; a cross-test partial-frame
+probe confirmed fresh writer buffers on the shared Socket. Moving the actual
+writer or reader into a suite fixture would have changed that isolation contract.
+Theme and filesystem hook budgets were also made explicit using the existing
+normal/coverage/deep-sweep policy.
+
+## Mutable test services need isolated layer fixtures
+
+Chat contract tests repeatedly provided an effectful in-memory store inside test
+bodies. Grouping them under one shared suite layer would couple thread records,
+receipt state, and other mutable fixtures. One-test public layer suites retain
+separate memoization and teardown. A runtime identity probe confirmed fifteen
+distinct ThreadStore services after migration. Local pure history-capture stubs
+can remain inside the test without weakening D14 or hoisting their mutable Ref.
+
+The compiler's strictEffectProvide diagnostic also rejects a pure Layer.succeed
+stub passed to Effect.provide in a body. Supplying the same local kernel service
+with Effect.provideService avoids that diagnostic and preserves the test-owned
+capture Ref. No suppression or broader shared fixture was needed.
+
+## Registration fixtures can separate adapters from captured test state
+
+Contradiction registration repeated the same crypto adapter in six test bodies,
+while ontology registration built effectful handlers around local input fixtures
+and counters. Crypto can be suite-owned without sharing those inputs. The single
+ontology case now exposes its original counters through a public layer fixture,
+keeping the RPC client scoped to the test. Compiler checks caught the new service
+key convention and an unnecessary nested generator after provision moved; both
+were corrected without diagnostic suppression. Dynamic contradiction handler
+providers still require their own migration and are not closed by this batch.
+
+The registration imports moved two schema-first exception anchors by one line.
+`bun run lint:schema-first` reported both as stale plus untracked replacements;
+`bun run beep lint schema-first --write` replaced their reviewed exception
+statuses and reasons with generic advisory entries. Restoring the original
+metadata while updating only the two locations preserves the existing review.
+A location-only refresh should retain exception metadata when the complete
+finding identity apart from its location is unchanged.
+
+## Dynamic handler tests need independent fixture ownership
+
+The contradiction registration suite's repeated dynamic providers coupled RPC
+client acquisition to body-local handler construction. Moving the same inputs
+into six independent public layer fixtures removes those providers without
+sharing the captured repository/resolver state. A temporary identity probe
+required six distinct, initially empty captures objects while all original cases
+passed. The first package check caught the obsolete `provideScopedLayer` import;
+removing it completes the migration without suppressing the compiler diagnostic.
+
+## Configuration must reach operations as well as fixture acquisition
+
+While migrating the contradiction QA seed tests to public layers, providing the
+original environment only to layer construction made the body-level seed
+operation observe its default disabled setting. The initial Node and Bun runs
+failed three cases, including the exact seed counts and source-conflict witness.
+Using Layer.provideMerge exports the same ConfigProvider to the test body and
+restores the original behavior. Fixture examples should distinguish acquisition
+configuration from configuration used by operations after acquisition.
+
+Public-layer extraction also changed the syntax fingerprints of two unchanged
+EV005 result-outcome assertions. The ratchet initially reported two new findings
+while the assertion-preservation check passed. Matching the owned entries by
+file, rule, symbol, candidate class, expression, and case order allowed a narrow
+identity reanchor; both entries remain open. Location/structure migration needs
+a reviewed identity mapping rather than a whole-baseline refresh.
+
+## Awaited atom completion does not require a live test clock
+
+The intake and browser-failure suites used it.live for twelve cases that await
+AtomRegistry.getResult without sleeping or polling in the test fiber. The exact
+same bodies pass under it.effect. Guidance should distinguish the standalone
+registry runtime's clock from the test context's clock; asynchronous work alone
+is not a reason to disable the test clock.
+
+During this batch, publisher cancellation spent about a minute in systemd's
+final-sigterm phase after the main process exited. Wrapper edits applied before
+that terminal confirmation were immediately restored; no interrupted proof was
+credited. Edits were reapplied only after canonical job wait returned terminated.
+The cancellation command's completion boundary should be explicit to prevent
+mistaking an in-progress stop for permission to mutate its checkout.
+
+## State waits should observe registry events
+
+Four Desktop atom wait helpers repeatedly read registry state on ten-millisecond
+retry schedules. AtomRegistry.toStream provides current state plus later changes
+and scoped unsubscription. Filtering the original predicate and taking one value
+retains the three-second timeout while removing polling. The test context stays
+live for the watchdog because the registry owns an independent runtime.
+
+The interruption probe initially used a single Effect.yieldNow as a readiness
+barrier and observed no subscription yet. Waiting for the stream predicate's
+first invocation gives an actual subscription-processing witness before the
+interrupt. Scheduler yields should not be treated as proof of readiness.
+
+## Idle-lifetime tests should witness actual eviction
+
+The hidden-input lifetime test slept past its configured TTL and checked that
+the input remained available. Increasing the TTL beyond the unchanged wait still
+passed that original test. An unmounted witness atom now proves that eviction
+occurred in the same registry before checking input survival. The extended-TTL
+control fails the new witness while the original case passes; normal Node and
+Bun runs remain green. This pattern distinguishes lifetime preservation from a
+test that simply ran before any eviction.
+
+## In-process SQL tests can carry unused platform layers
+
+The UsageRecordSink and chat-persist fixtures provided real filesystem and path
+adapters although their migrations come from an embedded module and their bodies
+only exercise SQL. Removing those adapters keeps both cases green. The related
+contradiction seed fixture needs FileSystem semantics but no host path: the
+existing MemoryFileSystem passes all original cases, with a probe proving four
+isolated virtual volumes, no host fixture roots, and cleanup after finalization.
+Review actual service requirements before preserving broad platform bundles.
+
+## Local provider wrappers need an explicit resource review
+
+The PgliteDataDirCompatibility test defines its own provideScopedLayer helper,
+which calls Layer.build and Effect.scoped, and wraps it with withPgliteSql and
+withChatDbPath. The current detector rows do not include EV002 for that file.
+Those helpers deliberately open, close, and reopen database lifetimes, so they
+need a separate Resource-lens judgment and migration plan; a clean EV002 scan
+alone does not establish canonical ownership for this test. A focused detector
+fixture for locally defined higher-order provider wrappers would expose the gap.
+
+## Runtime-owned platform layers can defeat outer filesystem substitution
+
+RuntimeTest provides BunServices.layer internally to the ontology handler.
+During the Desktop filesystem review, this made an outer MemoryFileSystem
+replacement unsuitable: it would create a fixture workspace invisible to the
+runtime filesystem. The smoke and contract fixtures retain real directories;
+a removed smoke probe proves creation and finalizer cleanup. A future runtime
+fixture API could accept an explicit platform layer when service-level tests
+need a shared virtual volume, while keeping compiled-process tests on real disk.
+
+## Preserve terminal receipts across context recovery
+
+The Desktop sidecar proof logs recorded eleven passing cases in each runtime
+and a successful package audit/docgen, but their session handles were lost in
+truncated tool output. Process inspection confirmed they had ended; the bounded
+proofs were rerun with explicit exit-code files and all exited zero. Durable
+exit receipts alongside logs would avoid repeating completed proofs merely to
+recover authoritative termination evidence.
+
+## Canonicalization can reveal previously hidden lifetime findings
+
+Removing PgliteDataDirCompatibility's local provider wrappers exposed four more
+EV004 sites. Those scopes preserve engine close/reopen and extension cleanup
+before assertions; deleting the extension scope makes the original cleanup test
+fail. A higher-order wrapper can hide real lifetime ownership from syntax-only
+rules. Keep explicit lifetime judgments and behavioral controls when flattening
+such helpers instead of treating an increased detector count as regression alone.
+
+## Similar schema-test helpers can prove different laws
+
+The Desktop property migration compared its encode-then-decode equivalence law
+with assertSchemaArbitraryDecodesToSelf. The shared helper decodes generated
+values directly and does not test the original encodeResult path. Substituting
+it solely because both helpers mention schema round trips would silently change
+the tested contract. Helper documentation and future reuse searches should name
+the exact direction and equivalence law, and migrations should retain the
+production schemas and count/seed controls.
+
+## Layered live-clock tests use the non-live tester surface
+
+The IPC fixture migration initially called it.live inside an it.layer callback.
+The enabled test failed registration and package typechecking identified
+MethodsNonLive: the layer callback exposes it.effect, not it.live. For a native
+process fixture, use excludeTestServices: true on the public layer and it.effect
+inside it. This retains the live clock without invoking an unavailable method.
+A migration example pairing these two choices would prevent this API mistake.
+
+## Partial listener acquisition deserves a permanent regression case
+
+The Tauri reader's existing failure case rejects the first listener. A temporary
+resource-lens control allowed that listener to register and rejected the second,
+then checked release before error inspection. The current short scope passed;
+removing it failed. A dedicated permanent case for partial listener acquisition
+would protect this cleanup order more directly than the existing first-listener
+failure case. The probe was removed to preserve the original case and its input.
+
+## Assertion migration must retain pipeable helper form
+
+Hosted Heavy / Check on the property checkpoint reported TS377050 at
+refs-refresh-plan.test.ts:347. An earlier branch assertion migration changed
+expect(O.isSome(report.coverage)).toBe(true) to a nested assertTrue call;
+repo-cli's compiler plugin requires report.coverage.pipe(O.isSome, assertTrue).
+The repair preserves the same Boolean predicate and polarity. Desktop-only
+package proof could not catch this CLI test diagnostic; whole-branch hosted
+checks remain required. Job logs were retrievable directly through the jobs API
+while the workflow was active, although gh run view withheld the combined log.
+
+## Resource-wrapper detectors miss calls nested in ordinary generators
+
+The Desktop scan reported four withHttpServer calls, while exhaustive source
+inspection found twelve. The eight hidden calls used test-local ledger/egress
+probes or returned sequential execution windows inside Effect.gen. Removing the
+helper exposed their Context-provision and short-scope review points. Fixture
+migration should enumerate actual callers and verify workspace/session isolation
+and cleanup in each transport mode; a zero direct-wrapper count alone cannot
+establish canonical resource ownership.
+
+## Full-proof docgen reaches generated Pulumi SDK source
+
+While validating the Desktop follow-up, the full docgen lane failed in
+`@beep/infra`: `@pulumi/gharunners` resolves to the local generated SDK's
+TypeScript sources. Example compilation reports TS1205 for type re-exports,
+TS1294 for non-erasable syntax, and TS4114 for missing override modifiers.
+`infra/` and the docgen package have no branch diff against the current base;
+the isolated `bun run beep:docgen` in `infra/` reproduced the same failure.
+The installed SDK lacked its compiled declarations. Running the existing
+`bun run infra:prepare-gha-runners` succeeded, and the unchanged docgen command
+then passed all 101 examples. This is an environment preparation failure, not
+a source repair. Root postinstall already invokes this preparation; investigate
+why the installed dependency state lost its build output, and detect that state
+earlier in local proof preflight. Compiler checks remain unchanged. Receipt:
+the full publisher's `quality:docgen` log and the isolated before/after runs.
+
+## Publish verdict records the pre-commit head
+
+The same publisher log records creation of `fcf7e968a3`, but its final verdict
+records `c257acdeb9` in both `head` and `resolvedHeadSha`. The worktree remains
+at `fcf7e968a3`. A publish receipt must bind proof to the actual committed head,
+not the head captured before its commit step. Investigate when the publisher
+refreshes this identity; do not treat the mismatched verdict as exact-head proof.
+
+## 2026-09-28: Full lint-policy catches test codecs and historical fixture paths
+
+PR #1312 local full proof passed package lint, docgen, and integration but
+failed root lint-policy. Oxlint found three newly introduced inline schema
+compilations in the viewer-encoding and RPC authentication tests. The codecs
+are now compiled at module scope with the same schemas and assertion operands.
+A focused root oxlint pass before publishing would have caught this sooner.
+
+Knowledge refs also classified two JSON-escaped synthetic home-directory
+fixtures in the historical Effect Vitest baseline as external mirror links.
+Only the two evidence excerpts now label that prefix as a synthetic home
+fixture; finding IDs, occurrences, statuses, and detector matching are unchanged.
+The original excerpts remain available in the parent commit. A future refs
+classifier should distinguish quoted test data in generated inventories from
+actual external references without suppressing real workstation-path leaks.
+
+## Hosted scheduler property failure exposed active-recovery deletion
+
+PR #1312 Property Laws failed the scheduler replacement-restoration case with
+`NotFound: FileSystem.readFile (.../journal.lock)`. The scheduler source and
+test were unchanged from main. One-shot Node/Bun reproductions passed, but
+an event-controlled interleaving reproduced the failure: a follower reaches
+orphan sweeping after the winner moves a replacement into its tombstone and
+before restoration. The sweep deletes the live adopter's tombstone and claim.
+
+The repair checks existing adopter ownership before sweeping recovery sidecars.
+The existing regression now pins that interleaving with Deferred barriers,
+retaining its title and assertions. It fails before the source repair with the
+hosted missing-lock error. The independent control also reproduces a lost
+replacement before repair. Full scheduler tests and package proof are required
+before claiming the repair green. This production repair is covered by the
+operator's standing authorization to fix discovered defects and record them.

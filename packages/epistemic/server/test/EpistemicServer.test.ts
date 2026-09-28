@@ -2,8 +2,9 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { EpistemicServerLive } from "@beep/epistemic-server/layer";
 import { ClaimGate } from "@beep/epistemic-use-cases/ClaimGate";
 import { ClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -26,7 +27,7 @@ const evidenceInput = {
 
 describe("@beep/epistemic-server", () => {
   // Boots only the composed epistemic server layer (gate + transition over SHACL).
-  it.layer(EpistemicServerLive)("EpistemicServerLive", (it) => {
+  it.layer(EpistemicServerLive, { timeout: "10 seconds" })("EpistemicServerLive", (it) => {
     it.effect(
       "boots and admits + advances a claim end-to-end",
       Effect.fnUntraced(function* () {

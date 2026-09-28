@@ -1,0 +1,116 @@
+{
+  "package": "@beep/documents-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T06:29:14.406000+00:00",
+  "totalMs": 5686.488037109375,
+  "testCount": 97,
+  "files": [
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "ms": 55.14306640625,
+      "tests": 24
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "ms": 27.819091796875,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "ms": 27.839111328125,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/server/test/SyncConflictServer.test.ts",
+      "ms": 19.834716796875,
+      "tests": 8
+    },
+    {
+      "file": "packages/documents/server/test/SyncCursorServer.test.ts",
+      "ms": 15.158935546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "ms": 19.47021484375,
+      "tests": 7
+    },
+    {
+      "file": "packages/documents/server/test/SyncOperationServer.test.ts",
+      "ms": 18.184814453125,
+      "tests": 8
+    },
+    {
+      "file": "packages/documents/server/test/SyncRepositoryDriverFailure.pglite.test.ts",
+      "ms": 862.488037109375,
+      "tests": 3
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "ms": 45.58740234375,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "ms": 68.277099609375,
+      "tests": 17
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "ms": 69.040283203125,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/documents/server/test/SyncRepositoryDriverFailure.pglite.test.ts",
+      "testName": "Documents sync repository driver failures redacts every SyncItem statement to SyncItemRepositoryUnavailable",
+      "ms": 843.5701570000001
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions uploads a new file created at a previously vacated path",
+      "ms": 69.04019400000016
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions does not self-conflict when a file is moved and renamed between scans",
+      "ms": 62.246924000000035
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions revives terminally failed operations once the mirror is reachable again",
+      "ms": 54.21627900000021
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine converges a nested local tree into the remote mirror",
+      "ms": 52.360091000000466
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine converges a local move by repointing the remote parent",
+      "ms": 50.87937099999999
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions surfaces a foreign in-place remote edit as drift even when name and parent match",
+      "ms": 48.9785039999997
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine drift detection survives an engine restart without duplicate pushes and resumes the stored cursor",
+      "ms": 45.587352999999894
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine drift detection classifies foreign remote events, ignores echoes, and dedupes across polls",
+      "ms": 45.539208000000144
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine drift detection flags a remote delete as a conflict and keeps the local file untouched",
+      "ms": 43.46605600000021
+    }
+  ]
+}

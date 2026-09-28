@@ -37,6 +37,7 @@ import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 import type * as Md from "@beep/md/Md.model";
 import type { SafeDocument } from "@beep/md/Md.safe";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type * as Fiber from "effect/Fiber";
 
 /**
  * Classifies a persisted general document before it is projected into Lexical.
@@ -192,7 +193,9 @@ const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
  * and a detached timer fiber. The turn subscription is armed BEFORE the
  * submit write so a synchronous turn start cannot be missed, and both
  * subscriptions double as keep-alive for the dispatch window so the freshly
- * ensured fn nodes cannot be swept mid-flight.
+ * ensured fn nodes cannot be swept mid-flight. The returned fiber lets a caller
+ * await confirmation or interrupt it before disposing its registry. Interruption
+ * releases both subscriptions without restoring a draft.
  *
  * **Example** (Verify dispatch helper type)
  *
@@ -202,6 +205,7 @@ const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
  * console.log(typeof dispatchTurnWithConfirm === "function") // true
  * ```
  *
+ * @returns Confirmation fiber; interrupt it to release subscriptions before disposing the registry.
  * @category workflows
  * @since 0.0.0
  */
@@ -211,14 +215,14 @@ export const dispatchTurnWithConfirm: {
     content: SafeDocument,
     submit: Atom.Writable<A, SafeDocument>,
     timeout?: Duration.Input
-  ): (registry: AtomRegistry.AtomRegistry) => void;
+  ): (registry: AtomRegistry.AtomRegistry) => Fiber.Fiber<void>;
   <A>(
     registry: AtomRegistry.AtomRegistry,
     threadId: WorkspaceIdentity.ThreadId,
     content: SafeDocument,
     submit: Atom.Writable<A, SafeDocument>,
     timeout?: Duration.Input
-  ): void;
+  ): Fiber.Fiber<void>;
 } = dual(
   (args) => AtomRegistry.isAtomRegistry(args[0]),
   <A>(
@@ -227,7 +231,7 @@ export const dispatchTurnWithConfirm: {
     content: SafeDocument,
     submit: Atom.Writable<A, SafeDocument>,
     timeout: Duration.Input = TURN_DISPATCH_CONFIRM_TIMEOUT
-  ): void => {
+  ): Fiber.Fiber<void> => {
     let sawTurnTransition = false;
     const unsubscribeTurn = registry.subscribe(
       runTurnAtom,
@@ -242,12 +246,17 @@ export const dispatchTurnWithConfirm: {
     );
     const unsubscribeSubmit = registry.subscribe(submit, () => void 0, { immediate: false });
     registry.set(submit, content);
-    Effect.runFork(
+    return Effect.runFork(
       Effect.andThen(
-        Effect.sleep(timeout),
+        Effect.sleep(timeout).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              unsubscribeTurn();
+              unsubscribeSubmit();
+            })
+          )
+        ),
         Effect.sync(() => {
-          unsubscribeTurn();
-          unsubscribeSubmit();
           if (sawTurnTransition || registry.get(turnActiveAtom)) return;
           registry.set(draftAtoms(threadId), O.some(content));
           registry.set(draftRevisionAtoms(threadId), registry.get(draftRevisionAtoms(threadId)) + 1);

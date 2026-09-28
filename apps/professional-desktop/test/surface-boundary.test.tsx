@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
-import { afterEach, describe, expect, vi } from "vitest";
 import { SurfaceBoundary } from "@/App";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
@@ -70,6 +70,7 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
     // Reload restarts the cycle; a still-crashing surface lands back on the
     // card instead of looping forever.
     fireEvent.click(reload);
+    expect(onRender.mock.calls.length).toBeGreaterThan(rendersBeforeReload);
     expect(screen.getByRole("button", { name: "Reload Ontology" })).toBeInTheDocument();
     expect(onRender.mock.calls.length - rendersBeforeReload).toBeLessThanOrEqual(8);
   });

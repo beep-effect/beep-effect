@@ -152,7 +152,10 @@ Schema first, then the service contract, then a shadow ledger, then enforcement.
   fix reruns only the lanes whose inputs changed), gated on at least 200 attempts across at least
   10 branches with zero disagreements and every must-fail fixture green (rulings 2, 7). The second
   pair, pre-push to merged preview, follows once env profiles are proven in the key. Hosted reuse
-  is a separate decision recorded before any change, gated on the parity ledger.
+  is a separate decision recorded before any change, gated on the parity ledger. (2026-09-28,
+  round 25: ruling 71 resolves the ledger to the owning clone so the sample survives lane
+  retirement, and ruling 72 records a red run's digest as an observation so a disagreement can be
+  observed; ruling 80 carries enforcement past the packet's close with its flip condition.)
 - **C5 Must-fail fixtures.** Changed-package tasks never reuse; a lockfile or toolchain change
   invalidates the epoch; a proof from a different env profile never satisfies another tier. Each is
   a fixture that must fail before enforcement ships.
@@ -190,3 +193,10 @@ Not achieved until, on a sample the operator ratifies:
 5. M1 median is lower than the P0 baseline, with the number stated in the closeout;
 6. the final PR is driven to Yeet merge-ready through the operator's own gates, and the status flip
    and closeout reflection ride that PR.
+
+Accounting at the 2026-09-28 close re-run (round 25, `research/economics-close.md`): line 1 is met
+(baseline 2026-09-03, close 2026-09-28). Lines 2 to 5 are not met yet: line 2 needs enforcement,
+which ruling 80 defers to a post-merge sample; M4 is now measured but not classified by the three
+named classes; 23 post-P0 starts still have no finish; and the post-P0 M1 closed-episode median is
+1.02 h, a censored lower bound above the 43.3 min baseline. Line 6 rides the C4.2 flip PR. The
+packet is `paused` on ruling 80's resume condition; the gate text is unchanged.

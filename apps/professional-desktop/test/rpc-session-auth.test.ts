@@ -1,9 +1,18 @@
-import { Headers, HttpClientRequest } from "effect/http";
+import { ContradictionCandidatePage, ListContradictionCandidatesRpc } from "@beep/epistemic-use-cases/public";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { it } from "@beep/test-runner";
+import { NodeHttpServer } from "@effect/platform-node";
+import { describe, expect, vi } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import { Headers, HttpClient, HttpClientRequest, HttpRouter } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { describe, expect, it } from "vitest";
+import { RpcGroup, RpcSerialization, RpcServer } from "effect/rpc";
+import * as S from "effect/Schema";
 import {
   isAuthorizedRpcSessionHeaders,
   isAuthorizedRpcSessionRequest,
+  RpcSessionAuthLayer,
   rpcSessionAuthorizationHeader,
 } from "../server/RpcSessionAuth";
 
@@ -46,4 +55,60 @@ describe("desktop sidecar RPC session auth", () => {
       )
     ).toBe(true);
   });
+});
+
+// Exercise the real middleware and RPC wire boundary on an ephemeral socket.
+// The list handler is a deterministic observation point, not a database proof.
+const encodeRpcJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeRpcJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const AuthProbeRpcs = RpcGroup.make(ListContradictionCandidatesRpc);
+const listCandidates = vi.fn(() =>
+  Effect.succeed(ContradictionCandidatePage.make({ items: [], total: NonNegativeInt.make(0) }))
+);
+const AuthProbeHandlers = AuthProbeRpcs.toLayer({ ListContradictionCandidates: listCandidates });
+const authProbeToken = Redacted.make("boundary-test-session-token");
+const AuthProbeProtocol = Layer.mergeAll(
+  RpcServer.layerProtocolHttp({ path: "/rpc" }),
+  RpcSessionAuthLayer(authProbeToken)
+);
+const AuthProbeServer = HttpRouter.serve(
+  RpcServer.layer(AuthProbeRpcs).pipe(Layer.provide(AuthProbeHandlers), Layer.provideMerge(AuthProbeProtocol)),
+  { disableListenLog: true, disableLogger: true }
+).pipe(Layer.provideMerge(NodeHttpServer.layerTest), Layer.provide(RpcSerialization.layerNdjson));
+
+it.layer(AuthProbeServer, { timeout: "10 seconds" })("desktop RPC HTTP authentication boundary", (it) => {
+  it.effect("rejects missing and wrong bearer tokens before accepting the active token", () =>
+    Effect.gen(function* () {
+      const client = yield* HttpClient.HttpClient;
+      const encoded = yield* encodeRpcJson({
+        _tag: "Request",
+        id: "1",
+        tag: "ListContradictionCandidates",
+        payload: { disposition: "all", knownAt: 0, limit: 1, offset: 0, validAt: 0 },
+        headers: [],
+      });
+      const request = HttpClientRequest.post("/rpc").pipe(
+        HttpClientRequest.bodyText(`${encoded}\n`, "application/ndjson")
+      );
+      const missing = yield* client.execute(request);
+      expect(missing.status).toBe(401);
+      expect(yield* missing.text).toBe("Unauthorized desktop RPC session.");
+      expect(listCandidates).not.toHaveBeenCalled();
+
+      const wrong = yield* client.execute(HttpClientRequest.bearerToken(request, "wrong-boundary-token"));
+      expect(wrong.status).toBe(401);
+      expect(yield* wrong.text).toBe("Unauthorized desktop RPC session.");
+      expect(listCandidates).not.toHaveBeenCalled();
+
+      const accepted = yield* client.execute(HttpClientRequest.bearerToken(request, Redacted.value(authProbeToken)));
+      expect(accepted.status).toBe(200);
+      const response = yield* accepted.text.pipe(Effect.flatMap(decodeRpcJson));
+      expect(response).toEqual({
+        _tag: "Exit",
+        requestId: "1",
+        exit: { _tag: "Success", value: { items: [], total: 0 } },
+      });
+      expect(listCandidates).toHaveBeenCalledTimes(1);
+    })
+  );
 });

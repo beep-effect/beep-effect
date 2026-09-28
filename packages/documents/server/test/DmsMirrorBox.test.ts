@@ -21,34 +21,16 @@ import {
   UploadFileInput,
   UploadFileVersionInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
+import { $DocumentsServerId } from "@beep/identity/packages";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Context, Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
-};
 
 type FakeParentField = { readonly id: string };
 
@@ -296,6 +278,11 @@ const makeFakeBox = (overrides: FakeBoxOverrides = {}) => {
 };
 
 type FakeBoxHarness = ReturnType<typeof makeFakeBox>;
+const $I = $DocumentsServerId.create("test/DmsMirrorBox.test");
+class FakeBoxFixture extends Context.Service<FakeBoxFixture, FakeBoxHarness>()($I`FakeBoxFixture`) {}
+
+const withFakeBox = <A>(adapter: (fake: FakeBoxHarness) => Layer.Layer<A>) =>
+  Layer.unwrap(Effect.map(FakeBoxFixture, adapter)).pipe(Layer.provideMerge(Layer.sync(FakeBoxFixture, makeFakeBox)));
 
 const defaultConfig = BoxMirrorConfigValue.make({ mirrorRootName: BOX_MIRROR_DEFAULT_ROOT_NAME });
 
@@ -330,85 +317,95 @@ const boxEvent = (eventId: string, eventType: string, source?: Record<string, un
   eventType,
   ...(source === undefined ? {} : { source }),
 });
+const encodeBoxMirrorConfigValue = S.encodeResult(BoxMirrorConfigValue);
+const decodeBoxMirrorConfigValue = S.decodeUnknownResult(BoxMirrorConfigValue);
+const equivalentBoxMirrorConfigValue = S.toEquivalence(BoxMirrorConfigValue);
 
 describe("@beep/documents-server DmsMirrorBox", () => {
-  it.effect(
-    "resolves an existing mirror root once and caches it",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-      const rootId = fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "resolves an existing mirror root once and caches it",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
+        const rootId = fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
 
-      const program = Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const mirror = yield* DmsMirror;
+          const first = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
+          const second = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "correspondence" }));
+          return { first, second };
+        });
+
+        const { first, second } = yield* program;
+
+        expect(first.itemKind).toBe("folder");
+        assertNone(first.parentRemoteId);
+        assertNone(second.parentRemoteId);
+        expect(fake.items.get(first.remoteId)?.parentId).toBe(rootId);
+        expect(fake.counts.getFolderItems).toBe(1);
+        expect(fake.counts.createFolder).toBe(2);
+      })
+    );
+  });
+
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "creates the mirror root under the Box root when missing",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
+
         const mirror = yield* DmsMirror;
-        const first = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
-        const second = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "correspondence" }));
-        return { first, second };
-      });
+        const item = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
 
-      const { first, second } = yield* program.pipe(provideScopedLayer(mirrorLayer(fake)));
+        const root = [...fake.items.values()].find((candidate) => candidate.name === BOX_MIRROR_DEFAULT_ROOT_NAME);
 
-      expect(first.itemKind).toBe("folder");
-      expect(first.parentRemoteId).toEqual(O.none());
-      expect(second.parentRemoteId).toEqual(O.none());
-      expect(fake.items.get(first.remoteId)?.parentId).toBe(rootId);
-      expect(fake.counts.getFolderItems).toBe(1);
-      expect(fake.counts.createFolder).toBe(2);
-    })
-  );
+        assertNone(item.parentRemoteId);
+        expect(root?.parentId).toBe("0");
+        expect(fake.counts.createFolder).toBe(2);
+      })
+    );
+  });
 
-  it.effect(
-    "creates the mirror root under the Box root when missing",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(
+    Layer.fresh(
+      withFakeBox((fake) => mirrorLayer(fake, BoxMirrorConfigValue.make({ mirrorRootName: "custom-vault" })))
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "honors the configured mirror root name",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      const item = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
-        return yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
 
-      const root = [...fake.items.values()].find((candidate) => candidate.name === BOX_MIRROR_DEFAULT_ROOT_NAME);
+        const root = [...fake.items.values()].find((candidate) => candidate.name === "custom-vault");
 
-      expect(item.parentRemoteId).toEqual(O.none());
-      expect(root?.parentId).toBe("0");
-      expect(fake.counts.createFolder).toBe(2);
-    })
-  );
+        expect(root?.parentId).toBe("0");
+      })
+    );
+  });
 
-  it.effect(
-    "honors the configured mirror root name",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "returns the existing folder when Box reports a name conflict",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      yield* Effect.gen(function* () {
-        const mirror = yield* DmsMirror;
-        return yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
-      }).pipe(provideScopedLayer(mirrorLayer(fake, BoxMirrorConfigValue.make({ mirrorRootName: "custom-vault" }))));
-
-      const root = [...fake.items.values()].find((candidate) => candidate.name === "custom-vault");
-
-      expect(root?.parentId).toBe("0");
-    })
-  );
-
-  it.effect(
-    "returns the existing folder when Box reports a name conflict",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-
-      const { first, second } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const initial = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
         const repeat = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
-        return { first: initial, second: repeat };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const { first, second } = { first: initial, second: repeat };
 
-      expect(second.remoteId).toBe(first.remoteId);
-      expect(second.itemKind).toBe("folder");
-      expect(second.name).toBe("matters");
-      expect(fake.counts.createFolder).toBe(3);
-      expect(fake.counts.getFolderItems).toBe(2);
-    })
-  );
+        expect(second.remoteId).toBe(first.remoteId);
+        expect(second.itemKind).toBe("folder");
+        expect(second.name).toBe("matters");
+        expect(fake.counts.createFolder).toBe(3);
+        expect(fake.counts.getFolderItems).toBe(2);
+      })
+    );
+  });
 
   it.effect(
     "resolves a mirror root that only appears on a later folder-items page",
@@ -441,8 +438,8 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         return yield* availability.probe;
       }).pipe(provideScopedLayer(availabilityLayer(fake)));
 
-      expect(probe.connected).toBe(true);
-      expect(probe.rootRemoteId).toEqual(O.some(rootId));
+      pipe(probe.connected, assertTrue);
+      assertSome<string>(probe.rootRemoteId, rootId);
       // The first page (no marker) missed the root; the second page found it.
       expect(markers).toEqual([undefined, "page-2"]);
       expect(fake.counts.createFolder).toBe(0);
@@ -479,20 +476,20 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         return yield* availability.probe;
       }).pipe(provideScopedLayer(availabilityLayer(fake)));
 
-      expect(probe.connected).toBe(true);
-      expect(probe.rootRemoteId).toEqual(O.some(rootId));
+      pipe(probe.connected, assertTrue);
+      assertSome<string>(probe.rootRemoteId, rootId);
       expect(createFolderCalls).toBe(1);
       // One lookup found nothing, the create conflicted, the recovery lookup won.
       expect(getFolderItemsCalls).toBe(2);
     })
   );
 
-  it.effect(
-    "uploads a file and maps the remote item",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "uploads a file and maps the remote item",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      const { folder, inRoot, uploaded } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const parent = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
         const nested = yield* mirror.uploadFile(
@@ -508,24 +505,24 @@ describe("@beep/documents-server DmsMirrorBox", () => {
             name: "note.txt",
           })
         );
-        return { folder: parent, inRoot: rooted, uploaded: nested };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const { folder, inRoot, uploaded } = { folder: parent, inRoot: rooted, uploaded: nested };
 
-      expect(uploaded.itemKind).toBe("file");
-      expect(uploaded.name).toBe("complaint.pdf");
-      expect(uploaded.parentRemoteId).toEqual(O.some(folder.remoteId));
-      expect(fake.items.get(uploaded.remoteId)?.content).toBe("complaint-v1");
-      expect(inRoot.parentRemoteId).toEqual(O.none());
-      expect(fake.counts.uploadFile).toBe(2);
-    })
-  );
+        expect(uploaded.itemKind).toBe("file");
+        expect(uploaded.name).toBe("complaint.pdf");
+        assertSome(uploaded.parentRemoteId, folder.remoteId);
+        expect(fake.items.get(uploaded.remoteId)?.content).toBe("complaint-v1");
+        assertNone(inRoot.parentRemoteId);
+        expect(fake.counts.uploadFile).toBe(2);
+      })
+    );
+  });
 
-  it.effect(
-    "uploads a new version of an existing file",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "uploads a new version of an existing file",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      const { uploaded, versioned } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const initial = yield* mirror.uploadFile(
           UploadFileInput.make({
@@ -540,16 +537,16 @@ describe("@beep/documents-server DmsMirrorBox", () => {
             remoteId: initial.remoteId,
           })
         );
-        return { uploaded: initial, versioned: next };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const { uploaded, versioned } = { uploaded: initial, versioned: next };
 
-      expect(versioned.remoteId).toBe(uploaded.remoteId);
-      expect(versioned.itemKind).toBe("file");
-      expect(fake.items.get(uploaded.remoteId)?.content).toBe("complaint-v2");
-      expect(fake.items.get(uploaded.remoteId)?.version).toBe(2);
-      expect(fake.counts.uploadFileVersion).toBe(1);
-    })
-  );
+        expect(versioned.remoteId).toBe(uploaded.remoteId);
+        expect(versioned.itemKind).toBe("file");
+        expect(fake.items.get(uploaded.remoteId)?.content).toBe("complaint-v2");
+        expect(fake.items.get(uploaded.remoteId)?.version).toBe(2);
+        expect(fake.counts.uploadFileVersion).toBe(1);
+      })
+    );
+  });
 
   it.effect(
     "recovers an upload name conflict by versioning the existing file",
@@ -576,12 +573,12 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect(
-    "moves files and folders between parents",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "moves files and folders between parents",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      const { destination, movedFile, movedFolder, movedToRoot, uploaded } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const source = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
         const target = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "archive" }));
@@ -613,30 +610,30 @@ describe("@beep/documents-server DmsMirrorBox", () => {
             remoteId: file.remoteId,
           })
         );
-        return {
+        const { destination, movedFile, movedFolder, movedToRoot, uploaded } = {
           destination: target,
           movedFile: fileMove,
           movedFolder: folderMove,
           movedToRoot: rootMove,
           uploaded: file,
         };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
 
-      expect(movedFile.parentRemoteId).toEqual(O.some(destination.remoteId));
-      expect(movedFolder.parentRemoteId).toEqual(O.some(destination.remoteId));
-      expect(movedToRoot.parentRemoteId).toEqual(O.none());
-      expect(fake.items.get(uploaded.remoteId)?.parentId).not.toBe(destination.remoteId);
-      expect(fake.counts.updateFileById).toBe(2);
-      expect(fake.counts.updateFolderById).toBe(1);
-    })
-  );
+        assertSome(movedFile.parentRemoteId, destination.remoteId);
+        assertSome(movedFolder.parentRemoteId, destination.remoteId);
+        assertNone(movedToRoot.parentRemoteId);
+        expect(fake.items.get(uploaded.remoteId)?.parentId).not.toBe(destination.remoteId);
+        expect(fake.counts.updateFileById).toBe(2);
+        expect(fake.counts.updateFolderById).toBe(1);
+      })
+    );
+  });
 
-  it.effect(
-    "renames files and folders in place",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "renames files and folders in place",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
 
-      const { folder, renamedFile, renamedFolder, uploaded } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const parent = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
         const file = yield* mirror.uploadFile(
@@ -660,123 +657,128 @@ describe("@beep/documents-server DmsMirrorBox", () => {
             remoteId: parent.remoteId,
           })
         );
-        return { folder: parent, renamedFile: fileRename, renamedFolder: folderRename, uploaded: file };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const { folder, renamedFile, renamedFolder, uploaded } = {
+          folder: parent,
+          renamedFile: fileRename,
+          renamedFolder: folderRename,
+          uploaded: file,
+        };
 
-      expect(renamedFile.name).toBe("amended-complaint.pdf");
-      expect(renamedFile.parentRemoteId).toEqual(O.some(folder.remoteId));
-      expect(renamedFolder.name).toBe("closed-matters");
-      expect(fake.items.get(uploaded.remoteId)?.name).toBe("amended-complaint.pdf");
-      expect(fake.items.get(folder.remoteId)?.name).toBe("closed-matters");
-    })
-  );
+        expect(renamedFile.name).toBe("amended-complaint.pdf");
+        assertSome(renamedFile.parentRemoteId, folder.remoteId);
+        expect(renamedFolder.name).toBe("closed-matters");
+        expect(fake.items.get(uploaded.remoteId)?.name).toBe("amended-complaint.pdf");
+        expect(fake.items.get(folder.remoteId)?.name).toBe("closed-matters");
+      })
+    );
+  });
 
-  it.effect(
-    "bootstraps event polling at the provider now",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-      fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
-      fake.seedEvents([
-        boxEvent("evt-1", "ITEM_CREATE", fileSource("f-1", "a.pdf", "d-1")),
-        boxEvent("evt-2", "ITEM_UPLOAD", fileSource("f-2", "b.pdf", "d-1")),
-      ]);
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "bootstraps event polling at the provider now",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
+        fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
+        fake.seedEvents([
+          boxEvent("evt-1", "ITEM_CREATE", fileSource("f-1", "a.pdf", "d-1")),
+          boxEvent("evt-2", "ITEM_UPLOAD", fileSource("f-2", "b.pdf", "d-1")),
+        ]);
 
-      const page = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
-        return yield* mirror.pollEvents(PollEventsInput.make({}));
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const page = yield* mirror.pollEvents(PollEventsInput.make({}));
 
-      expect(page.entries).toEqual([]);
-      expect(page.nextStreamPosition).toBe("2");
-      expect(fake.receivedEventQueries[0]).toMatchObject({
-        limit: 100,
-        streamPosition: "now",
-        streamType: "changes",
-      });
-    })
-  );
+        expect(page.entries).toEqual([]);
+        expect(page.nextStreamPosition).toBe("2");
+        expect(fake.receivedEventQueries[0]).toMatchObject({
+          limit: 100,
+          streamPosition: "now",
+          streamType: "changes",
+        });
+      })
+    );
+  });
 
-  it.effect(
-    "maps polled events and advances the stream window",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-      fake.seedEvents([
-        boxEvent("evt-1", "ITEM_CREATE", fileSource("f-1", "a.pdf", "d-1")),
-        boxEvent("evt-2", "ITEM_UPLOAD", fileSource("f-2", "b.pdf", "d-1")),
-        boxEvent("evt-3", "ITEM_RENAME", fileSource("f-1", "a2.pdf", "d-1")),
-        boxEvent("evt-4", "ITEM_MOVE", fileSource("f-1", "a2.pdf", "d-2")),
-        boxEvent("evt-5", "ITEM_TRASH", fileSource("f-2", "b.pdf", "d-1")),
-        boxEvent("evt-6", "ITEM_MODIFY", fileSource("f-1", "a2.pdf", "d-2")),
-        boxEvent("evt-7", "SOMETHING_ELSE"),
-      ]);
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "maps polled events and advances the stream window",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
+        fake.seedEvents([
+          boxEvent("evt-1", "ITEM_CREATE", fileSource("f-1", "a.pdf", "d-1")),
+          boxEvent("evt-2", "ITEM_UPLOAD", fileSource("f-2", "b.pdf", "d-1")),
+          boxEvent("evt-3", "ITEM_RENAME", fileSource("f-1", "a2.pdf", "d-1")),
+          boxEvent("evt-4", "ITEM_MOVE", fileSource("f-1", "a2.pdf", "d-2")),
+          boxEvent("evt-5", "ITEM_TRASH", fileSource("f-2", "b.pdf", "d-1")),
+          boxEvent("evt-6", "ITEM_MODIFY", fileSource("f-1", "a2.pdf", "d-2")),
+          boxEvent("evt-7", "SOMETHING_ELSE"),
+        ]);
 
-      const { firstPage, secondPage } = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
         const full = yield* mirror.pollEvents(PollEventsInput.make({ streamPosition: O.some("0") }));
         const windowed = yield* mirror.pollEvents(PollEventsInput.make({ streamPosition: O.some("5") }));
-        return { firstPage: full, secondPage: windowed };
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const { firstPage, secondPage } = { firstPage: full, secondPage: windowed };
 
-      expect(A.map(firstPage.entries, (entry) => entry.eventType)).toEqual([
-        "created",
-        "created",
-        "renamed",
-        "moved",
-        "deleted",
-        "edited",
-        "unknown",
-      ]);
-      expect(firstPage.nextStreamPosition).toBe("7");
+        expect(A.map(firstPage.entries, (entry) => entry.eventType)).toEqual([
+          "created",
+          "created",
+          "renamed",
+          "moved",
+          "deleted",
+          "edited",
+          "unknown",
+        ]);
+        expect(firstPage.nextStreamPosition).toBe("7");
 
-      const first = O.getOrThrow(A.head(firstPage.entries));
-      expect(first.eventId).toBe("evt-1");
-      expect(first.itemKind).toEqual(O.some("file"));
-      expect(first.name).toEqual(O.some("a.pdf"));
-      expect(first.parentRemoteId).toEqual(O.some("d-1"));
-      expect(first.remoteId).toEqual(O.some("f-1"));
-      expect(first.payload.eventType).toBe("ITEM_CREATE");
+        const first = O.getOrThrow(A.head(firstPage.entries));
+        expect(first.eventId).toBe("evt-1");
+        assertSome<string>(first.itemKind, "file");
+        assertSome<string>(first.name, "a.pdf");
+        assertSome<string>(first.parentRemoteId, "d-1");
+        assertSome<string>(first.remoteId, "f-1");
+        expect(first.payload.eventType).toBe("ITEM_CREATE");
 
-      const last = O.getOrThrow(A.last(firstPage.entries));
-      expect(last.eventType).toBe("unknown");
-      expect(last.itemKind).toEqual(O.none());
-      expect(last.name).toEqual(O.none());
-      expect(last.remoteId).toEqual(O.none());
+        const last = O.getOrThrow(A.last(firstPage.entries));
+        expect(last.eventType).toBe("unknown");
+        assertNone(last.itemKind);
+        assertNone(last.name);
+        assertNone(last.remoteId);
 
-      expect(A.map(secondPage.entries, (entry) => entry.eventId)).toEqual(["evt-6", "evt-7"]);
-      expect(secondPage.nextStreamPosition).toBe("7");
-      expect(fake.receivedEventQueries[1]).toMatchObject({ streamPosition: "5" });
-    })
-  );
+        expect(A.map(secondPage.entries, (entry) => entry.eventId)).toEqual(["evt-6", "evt-7"]);
+        expect(secondPage.nextStreamPosition).toBe("7");
+        expect(fake.receivedEventQueries[1]).toMatchObject({ streamPosition: "5" });
+      })
+    );
+  });
 
-  it.effect(
-    "maps admin-shaped event sources and drops entries without event ids",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-      fake.seedEvents([
-        { eventType: "ITEM_CREATE", source: fileSource("f-1", "a.pdf", "d-1") },
-        boxEvent("evt-2", "ITEM_RENAME", {
-          itemId: "d-9",
-          itemName: "matters",
-          itemType: "folder",
-          parent: { id: "d-1", type: "folder" },
-        }),
-      ]);
+  it.layer(Layer.fresh(withFakeBox(mirrorLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "maps admin-shaped event sources and drops entries without event ids",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeBoxFixture;
+        fake.seedEvents([
+          { eventType: "ITEM_CREATE", source: fileSource("f-1", "a.pdf", "d-1") },
+          boxEvent("evt-2", "ITEM_RENAME", {
+            itemId: "d-9",
+            itemName: "matters",
+            itemType: "folder",
+            parent: { id: "d-1", type: "folder" },
+          }),
+        ]);
 
-      const page = yield* Effect.gen(function* () {
         const mirror = yield* DmsMirror;
-        return yield* mirror.pollEvents(PollEventsInput.make({ streamPosition: O.some("0") }));
-      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+        const page = yield* mirror.pollEvents(PollEventsInput.make({ streamPosition: O.some("0") }));
 
-      expect(A.map(page.entries, (entry) => entry.eventId)).toEqual(["evt-2"]);
+        expect(A.map(page.entries, (entry) => entry.eventId)).toEqual(["evt-2"]);
 
-      const entry = O.getOrThrow(A.head(page.entries));
-      expect(entry.eventType).toBe("renamed");
-      expect(entry.itemKind).toEqual(O.some("folder"));
-      expect(entry.name).toEqual(O.some("matters"));
-      expect(entry.parentRemoteId).toEqual(O.some("d-1"));
-      expect(entry.remoteId).toEqual(O.some("d-9"));
-    })
-  );
+        const entry = O.getOrThrow(A.head(page.entries));
+        expect(entry.eventType).toBe("renamed");
+        assertSome<string>(entry.itemKind, "folder");
+        assertSome<string>(entry.name, "matters");
+        assertSome<string>(entry.parentRemoteId, "d-1");
+        assertSome<string>(entry.remoteId, "d-9");
+      })
+    );
+  });
 
   it.effect(
     "translates transient Box failures as retryable",
@@ -794,7 +796,7 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       expect(uploadError._tag).toBe("DmsMirrorUnavailable");
       expect(uploadError.provider).toBe("box");
-      expect(uploadError.retryable).toBe(true);
+      pipe(uploadError.retryable, assertTrue);
       expect(uploadError.reason).toContain("uploads.uploadFile");
 
       const unavailable = makeFakeBox({
@@ -812,7 +814,7 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         );
       }).pipe(provideScopedLayer(mirrorLayer(unavailable)), Effect.flip);
 
-      expect(renameError.retryable).toBe(true);
+      pipe(renameError.retryable, assertTrue);
       expect(renameError.reason).toContain("status 503");
     })
   );
@@ -834,12 +836,12 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       }).pipe(provideScopedLayer(mirrorLayer(rejected)), Effect.flip);
 
       expect(uploadError._tag).toBe("DmsMirrorUnavailable");
-      expect(uploadError.retryable).toBe(false);
+      pipe(uploadError.retryable, assertFalse);
       expect(uploadError.reason).toContain("status 400");
       expect(uploadError.reason).toContain("bad_request");
       // Mirror verbs carry the same probe-facing classification the
       // availability layer reads: an unclassifiable 400 stays the fallback.
-      expect(uploadError.disconnectReason).toEqual(O.some("probe-failed"));
+      assertSome<string>(uploadError.disconnectReason, "probe-failed");
 
       const thrown = makeFakeBox({
         events: { getEvents: () => Promise.reject("boom") },
@@ -851,25 +853,24 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       }).pipe(provideScopedLayer(mirrorLayer(thrown)), Effect.flip);
 
       expect(pollError._tag).toBe("DmsMirrorUnavailable");
-      expect(pollError.retryable).toBe(false);
+      pipe(pollError.retryable, assertFalse);
     })
   );
 
-  it.effect(
-    "probes the Box availability layer as connected with the resolved mirror root",
-    Effect.fnUntraced(function* () {
-      const fake = makeFakeBox();
-      const probe = yield* Effect.gen(function* () {
+  it.layer(Layer.fresh(withFakeBox(availabilityLayer)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "probes the Box availability layer as connected with the resolved mirror root",
+      Effect.fnUntraced(function* () {
         const availability = yield* DmsMirrorAvailability;
-        return yield* availability.probe;
-      }).pipe(provideScopedLayer(availabilityLayer(fake)));
+        const probe = yield* availability.probe;
 
-      expect(probe.connected).toBe(true);
-      expect(probe.provider).toBe("box");
-      expect(O.isSome(probe.rootRemoteId)).toBe(true);
-      expect(O.isSome(probe.probedAt)).toBe(true);
-    })
-  );
+        pipe(probe.connected, assertTrue);
+        expect(probe.provider).toBe("box");
+        pipe(probe.rootRemoteId, O.isSome, assertTrue);
+        pipe(probe.probedAt, O.isSome, assertTrue);
+      })
+    );
+  });
 
   it.effect(
     "probes the Box availability layer as disconnected when the driver fails",
@@ -882,12 +883,12 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         return yield* availability.probe;
       }).pipe(provideScopedLayer(availabilityLayer(failing)));
 
-      expect(probe.connected).toBe(false);
-      expect(O.isNone(probe.rootRemoteId)).toBe(true);
+      pipe(probe.connected, assertFalse);
+      assertNone(probe.rootRemoteId);
       // A status-less SDK throw carries no classification signal, so the
       // probe stays on the unclassified fallback.
-      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
-      expect(O.isSome(probe.probedAt)).toBe(true);
+      assertSome<string>(probe.disconnectReason, "probe-failed");
+      pipe(probe.probedAt, O.isSome, assertTrue);
     })
   );
 
@@ -909,23 +910,23 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         );
 
       const unauthorized = yield* probeWithStatus(401);
-      expect(unauthorized.connected).toBe(false);
-      expect(unauthorized.disconnectReason).toEqual(O.some("auth-failed"));
+      pipe(unauthorized.connected, assertFalse);
+      assertSome<string>(unauthorized.disconnectReason, "auth-failed");
 
       const forbidden = yield* probeWithStatus(403);
-      expect(forbidden.disconnectReason).toEqual(O.some("root-unreachable"));
+      assertSome<string>(forbidden.disconnectReason, "root-unreachable");
 
       const missingRoot = yield* probeWithStatus(404);
-      expect(missingRoot.disconnectReason).toEqual(O.some("root-unreachable"));
+      assertSome<string>(missingRoot.disconnectReason, "root-unreachable");
 
       const rateLimited = yield* probeWithStatus(429);
-      expect(rateLimited.disconnectReason).toEqual(O.some("transient"));
+      assertSome<string>(rateLimited.disconnectReason, "transient");
 
       const serverDown = yield* probeWithStatus(503);
-      expect(serverDown.disconnectReason).toEqual(O.some("transient"));
+      assertSome<string>(serverDown.disconnectReason, "transient");
 
       const badRequest = yield* probeWithStatus(400);
-      expect(badRequest.disconnectReason).toEqual(O.some("probe-failed"));
+      assertSome<string>(badRequest.disconnectReason, "probe-failed");
     })
   );
 
@@ -948,9 +949,9 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         return yield* availability.probe;
       }).pipe(provideScopedLayer(availabilityLayer(malformed)));
 
-      expect(probe.connected).toBe(false);
-      expect(probe.disconnectReason).toEqual(O.some("probe-failed"));
-      expect(O.isNone(probe.rootRemoteId)).toBe(true);
+      pipe(probe.connected, assertFalse);
+      assertSome<string>(probe.disconnectReason, "probe-failed");
+      assertNone(probe.rootRemoteId);
     })
   );
 
@@ -977,49 +978,57 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         return { callsAfterRefresh: calls.getFolderItems, callsBeforeRefresh, cached, first, refreshed };
       }).pipe(provideScopedLayer(availabilityLayer(failing)));
 
-      expect(outcome.first.connected).toBe(false);
+      pipe(outcome.first.connected, assertFalse);
       // Within the failure TTL a passive probe replays the cached answer …
       expect(outcome.cached).toBe(outcome.first);
       // … while an explicit refresh must actually re-ask Box.
       expect(outcome.callsAfterRefresh).toBeGreaterThan(outcome.callsBeforeRefresh);
-      expect(outcome.refreshed.disconnectReason).toEqual(O.some("transient"));
-      expect(O.isSome(outcome.refreshed.probedAt)).toBe(true);
+      assertSome<string>(outcome.refreshed.disconnectReason, "transient");
+      pipe(outcome.refreshed.probedAt, O.isSome, assertTrue);
     })
   );
 });
 
 describe("@beep/documents-server BoxMirrorConfig", () => {
-  it("round-trips the config value schema through encode and decode", () => {
-    assertSchemaArbitraryRoundTrip(BoxMirrorConfigValue);
+  describe("round-trips the config value schema through encode and decode", () => {
+    it.prop(
+      "BoxMirrorConfigValue",
+      { value: Arbitrary.schema(BoxMirrorConfigValue) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeBoxMirrorConfigValue(value));
+        const decoded = Result.getOrThrow(decodeBoxMirrorConfigValue(encoded));
+        assertTrue(equivalentBoxMirrorConfigValue(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
   });
 
-  it.effect(
-    "defaults the mirror root name when the environment is empty",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(BoxMirrorConfigLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "defaults the mirror root name when the environment is empty",
+      Effect.fnUntraced(function* () {
         const config = yield* BoxMirrorConfig;
 
         expect(config.mirrorRootName).toBe(BOX_MIRROR_DEFAULT_ROOT_NAME);
-      },
-      provideScopedLayer(BoxMirrorConfigLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))))
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "reads the mirror root name from the environment",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(
+    BoxMirrorConfigLayer.pipe(
+      Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ [BOX_MIRROR_ROOT_NAME_ENV]: "custom-vault" })))
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "reads the mirror root name from the environment",
+      Effect.fnUntraced(function* () {
         const config = yield* BoxMirrorConfig;
 
         expect(config.mirrorRootName).toBe("custom-vault");
-      },
-      provideScopedLayer(
-        BoxMirrorConfigLayer.pipe(
-          Layer.provide(
-            ConfigProvider.layer(ConfigProvider.fromUnknown({ [BOX_MIRROR_ROOT_NAME_ENV]: "custom-vault" }))
-          )
-        )
-      )
-    )
-  );
+      })
+    );
+  });
 });

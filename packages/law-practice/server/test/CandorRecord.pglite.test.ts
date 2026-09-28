@@ -28,6 +28,7 @@ import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecor
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { it } from "@beep/test-runner";
 import {
   fcRuns,
   makePgliteIntegrationGate,
@@ -35,7 +36,8 @@ import {
   productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -94,7 +96,7 @@ describe("law-practice candor repository schema laws", () => {
   it.prop(
     "generates valid filing scopes",
     [CandorFilingScope],
-    ([value]) => expect(isCandorFilingScope(value)).toBe(true),
+    ([value]) => pipe(isCandorFilingScope(value), assertTrue),
     { arbitrary: fcRuns(25) }
   );
 });
@@ -333,7 +335,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("law-practice Drizzle candor record repository PgLite integration", () => {});
 } else {
   describe("law-practice Drizzle candor record repository PgLite integration", { concurrent: false }, () => {
-    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("appending and reading each record kind", (it) => {
+    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("appending and reading each record kind", (it) => {
       it.effect(
         "reads every appended kind back out of Postgres scoped to the filing it was recorded for",
         Effect.fnUntraced(function* () {
@@ -375,7 +377,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("tenant isolation in SQL", (it) => {
+    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("tenant isolation in SQL", (it) => {
       it.effect(
         "never returns another organization's records for the same citing application",
         Effect.fnUntraced(function* () {
@@ -414,7 +416,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one filing", (it) => {
+    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one filing", (it) => {
       it.effect(
         "returns each kind by id ascending whatever order it was appended in",
         Effect.fnUntraced(function* () {
@@ -449,7 +451,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("representative-volume query plans", (it) => {
+    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("representative-volume query plans", (it) => {
       it.effect(
         "bounds every filing read by the existing tenant index before applying jsonb equality",
         Effect.fnUntraced(function* () {
@@ -463,7 +465,7 @@ if (!shouldRunPgliteIntegration) {
             const plan = yield* explainFilingRead(table);
             const tenantIndexNode = A.findFirst(plan, (node) => node["Index Name"]?.includes("org_id") === true);
 
-            expect(O.isSome(tenantIndexNode), `${table} plan did not use an org_id index`).toBe(true);
+            assertTrue(O.isSome(tenantIndexNode), `${table} plan did not use an org_id index`);
             expect(
               O.getOrThrow(tenantIndexNode)["Rows Removed by Filter"],
               `${table} plan scanned beyond one representative tenant`
@@ -477,7 +479,7 @@ if (!shouldRunPgliteIntegration) {
 
     // Its own database: the read below is expected to fail, and an implicit
     // transaction pglite host rolls the whole session chain back afterwards.
-    layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("driver failures", (it) => {
+    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("driver failures", (it) => {
       it.effect(
         "reports an unreadable table as a typed repository failure naming that table",
         Effect.fnUntraced(function* () {

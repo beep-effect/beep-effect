@@ -1,5 +1,6 @@
 import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
-import { describe, expect, it } from "vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const SIDECAR_RPC_URL = "http://127.0.0.1:3939/rpc";
 const runtimeAt = (origin: string) => ({ location: { origin } });

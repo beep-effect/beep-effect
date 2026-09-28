@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { failureMessageOr } from "@/lib/failureMessage";
 
 describe("Professional Desktop failure observability", () => {
