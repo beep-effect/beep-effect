@@ -6,6 +6,7 @@ import {
   makeYeetPrWaveDescriptor,
   PROOF_JOB_FORWARDED_ENV_NAMES,
   PrCloseoutReport,
+  PrNumber,
   PrRepository,
   PrSessionRecord,
   PrSessionRegistryError,
@@ -20,6 +21,7 @@ import {
   YeetMergeReady,
   YeetMergeReadyCriteria,
   YeetPrWave,
+  YeetPrWaveDescriptor,
   YeetPrWaveDescriptorInput,
   YeetPrWaveDescriptorJson,
   YeetPrWaveEscalation,
@@ -37,6 +39,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { DateTime, Duration, Effect, FileSystem, HashSet, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -245,17 +248,15 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
         const commands = yield* Ref.get(launched);
         expect(A.length(commands)).toBe(1);
         const descriptorPath = `${root}/.beep/yeet/pr-wave-notifier/waves/${first.waveKey}.json`;
-        expect(A.head(commands)).toStrictEqual(
-          O.some([
-            "setsid",
-            "-f",
-            "bash",
-            "-c",
-            'exec bash "$0" "$@" </dev/null >/dev/null 2>&1',
-            `${root}/.claude/hooks/yeet-pr-wave-notifier.sh`,
-            descriptorPath,
-          ])
-        );
+        assertSome(A.head(commands), [
+          "setsid",
+          "-f",
+          "bash",
+          "-c",
+          'exec bash "$0" "$@" </dev/null >/dev/null 2>&1',
+          `${root}/.claude/hooks/yeet-pr-wave-notifier.sh`,
+          descriptorPath,
+        ]);
         const descriptor = yield* YeetPrWaveDescriptorJson.decode(yield* readText(descriptorPath));
         expect(descriptor.urgency).toBe("critical");
         expect(descriptor.ownerReason).toBe("non-claude-harness");
@@ -308,6 +309,29 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
     )
   );
 
+  it.effect("releases the claim when the spawn fails, so the next attempt launches", () =>
+    withCheckout((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const failing = ChildProcessSpawner.make(() => Effect.succeed(handle("", 1)));
+        const launched = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const attempt = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
+          Effect.flatMap(waveFor(root), (wave) =>
+            escalateYeetPrWave(root, wave, head, O.some(prUrl), { lookup: () => Effect.succeed(A.empty()) }).pipe(
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            )
+          );
+        const failed = yield* attempt(failing);
+        expect(failed.outcome).toBe("spawn-failed");
+        expect(yield* fs.exists(`${root}/.beep/yeet/pr-wave-notifier/waves/${failed.waveKey}.json`)).toBe(false);
+        const retried = yield* attempt(recordingSpawner(launched));
+        expect(retried.outcome).toBe("spawned");
+        expect(retried.waveKey).toBe(failed.waveKey);
+        expect(A.length(yield* Ref.get(launched))).toBe(1);
+      })
+    )
+  );
+
   it.effect("treats an unresolvable repository and an unreadable registry as dead", () =>
     withCheckout((root) =>
       Effect.gen(function* () {
@@ -330,6 +354,40 @@ it.layer(platform, { timeout: "30 seconds" })("W9 escalation", (it) => {
 });
 
 it.layer(platform, { timeout: "30 seconds" })("W9 descriptor rendering", (it) => {
+  it.effect("decodes only a positive integer pull request number, the worker's shape", () =>
+    Effect.gen(function* () {
+      const wave = yield* waveFor("/repo");
+      const descriptor = makeYeetPrWaveDescriptor(
+        YeetPrWaveDescriptorInput.make({
+          wave,
+          headSha: head,
+          checkout: "/repo",
+          waveKey: "feedfacefeedface",
+          owner: YeetPrWaveOwnerVerdict.make({ live: false, reason: "no-owner-record" }),
+          createdAt: at,
+        })
+      );
+      const encoded = yield* YeetPrWaveDescriptorJson.encode(descriptor);
+      assertSome(YeetPrWaveDescriptorJson.decodeOption(encoded), descriptor);
+      for (const prNumber of ["0", "-1", "1.5"]) {
+        const bad = Str.replace('"prNumber":7', `"prNumber":${prNumber}`)(encoded);
+        expect(bad).not.toBe(encoded);
+        assertNone(YeetPrWaveDescriptorJson.decodeOption(bad));
+      }
+    })
+  );
+
+  it.effect.prop(
+    "round-trips every schema-generated descriptor with a positive integer pull request number",
+    { descriptor: YeetPrWaveDescriptor },
+    ({ descriptor }) =>
+      Effect.gen(function* () {
+        const decoded = yield* YeetPrWaveDescriptorJson.decode(yield* YeetPrWaveDescriptorJson.encode(descriptor));
+        expect(decoded).toStrictEqual(descriptor);
+        expect(S.is(PrNumber)(decoded.prNumber)).toBe(true);
+      })
+  );
+
   it.effect("the local body names the resume command and the summary; nothing else carries them", () =>
     Effect.gen(function* () {
       const wave = yield* waveFor("/repo", ["Lint", "Test"]);
@@ -472,7 +530,10 @@ it.layer(platform, { timeout: "30 seconds" })("W9 notifier worker", (it) => {
         expect(
           A.every(rows, (row) => row.ownerReason === "non-claude-harness" && row.livenessProbe === "claude-only")
         ).toBe(true);
-        expect(O.map(A.last(rows), (row) => row.delivery.outcome)).toStrictEqual(O.some("timeout"));
+        assertSome(
+          O.map(A.last(rows), (row) => row.delivery.outcome),
+          "timeout"
+        );
       }),
     20_000
   );
@@ -599,6 +660,68 @@ const monitorRunner = ChildProcessSpawner.make(
 );
 
 it.layer(platform, { timeout: "30 seconds" })("W9 monitor escalation", (it) => {
+  it.effect("re-probes a wave whose owner was live and escalates once the owner is dead", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-wave-live-dead-" });
+      const polls = yield* Ref.make(0);
+      const verdicts = yield* Ref.make<ReadonlyArray<YeetPrWaveEscalation["outcome"]>>(A.empty());
+      // The owner is live on poll 0, the notifier fails to start on poll 1, it
+      // launches on poll 2, and every later poll sees the wave as settled.
+      const script: ReadonlyArray<YeetPrWaveEscalation["outcome"]> = ["owner-live", "spawn-failed", "spawned"];
+      const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+        policy: YeetUntilReadyPolicy.make({}),
+        pollInterval: Duration.zero,
+        capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
+        rulesetRead: () =>
+          Effect.succeedSome(
+            YeetRulesetRequiredContexts.make({ base: "main", readAt: at, contexts: ["Lint"], rulesetIds: [1] })
+          ),
+        closeout: () => Effect.die("unexpected closeout"),
+        onMerged: () => Effect.die("unexpected sweep"),
+        replayComments: () => Effect.void,
+        commentRows: () => Effect.succeed(A.empty()),
+        bindPullRequest: () => Effect.void,
+        escalateWave: () =>
+          Ref.modify(verdicts, (seen) => {
+            const outcome = O.getOrElse(A.get(script, A.length(seen)), () => "already-escalated" as const);
+            return [outcome, A.append(seen, outcome)];
+          }).pipe(
+            Effect.map((outcome) =>
+              YeetPrWaveEscalation.make({
+                outcome,
+                waveKey: "feedfacefeedface",
+                owner: YeetPrWaveOwnerVerdict.make({
+                  live: outcome === "owner-live",
+                  reason: outcome === "owner-live" ? "claude-session-live" : "claude-session-not-live",
+                }),
+              })
+            )
+          ),
+        // The same red on polls 0-4; poll 5 closes the pull request.
+        collectStatus: () =>
+          Ref.getAndUpdate(polls, (n) => n + 1).pipe(
+            Effect.map((n) =>
+              snapshot(
+                root,
+                [
+                  YeetWatchCheck.make({
+                    name: "Lint",
+                    outcome: "fail",
+                    link: "https://github.com/beep/repo/actions/runs/7/job/991",
+                  }),
+                ],
+                n === 5 ? "CLOSED" : "OPEN"
+              )
+            )
+          ),
+      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, monitorRunner));
+
+      expect(terminal).toBe("closed");
+      expect(yield* Ref.get(verdicts)).toStrictEqual(["owner-live", "spawn-failed", "spawned"]);
+    })
+  );
+
   it.effect("escalates a detached until-ready wave once, and again when a rerun comes back red", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

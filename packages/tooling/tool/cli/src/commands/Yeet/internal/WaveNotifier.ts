@@ -41,11 +41,11 @@ import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { describeYeetInboxRow } from "./Inbox.ts";
 import { YeetPrWave } from "./InboxView.ts";
-import { distinctPrSessions, PrRepository } from "./Provenance.ts";
+import { distinctPrSessions, PrNumber, PrRepository } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import { isClaudeSessionLive, selectResumeRecord } from "./Resume.ts";
 import type { ChildProcessSpawner } from "effect/process";
-import type { PrNumber, PrSessionRecord } from "./Provenance.ts";
+import type { PrSessionRecord } from "./Provenance.ts";
 import type { PrSessionRegistryError } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WaveNotifier");
@@ -211,7 +211,9 @@ export type YeetPrWaveUrgency = typeof YeetPrWaveUrgency.Type;
  *
  * **Details**
  *
- * `rowIds` are the rows whose acks resolve the notifier; `headSha` and
+ * `prNumber` is a positive integer, the only shape the worker accepts, so
+ * every descriptor this schema admits is one the worker runs. `rowIds` are
+ * the rows whose acks resolve the notifier; `headSha` and
  * `prNumber` let it notice a superseding push through the wave record.
  * `summary`, `resumeCommand`, `desktopTitle`, and `desktopBody` are local
  * presentation only: the worker shows them on the desktop and never sends
@@ -248,7 +250,7 @@ export class YeetPrWaveDescriptor extends S.Class<YeetPrWaveDescriptor>($I`YeetP
       S.withConstructorDefault(Effect.succeed(YEET_PR_WAVE_DESCRIPTOR_SCHEMA_VERSION))
     ),
     waveKey: S.String,
-    prNumber: S.Finite,
+    prNumber: PrNumber,
     headSha: S.NonEmptyString,
     checkout: S.String,
     rowIds: S.NonEmptyArray(S.String),
@@ -647,27 +649,10 @@ export const yeetPrWaveRepository = (url: string): O.Option<PrRepository> =>
     )
   );
 
-/**
- * Injectable reads for {@link escalateYeetPrWave}.
- *
- * **Details**
- *
- * `lookup` defaults to the live PR session registry, `sessionsRoot` to
- * `$HOME/.claude/sessions`, `procRoot` to `/proc`, and `now` to the clock.
- *
- * **Example** (Point the probe at fixtures)
- *
- * ```ts
- * import type { YeetPrWaveEscalationOptions } from "@beep/repo-cli/test/Yeet"
- *
- * const options: YeetPrWaveEscalationOptions = { sessionsRoot: "/fixtures/sessions", procRoot: "/fixtures/proc" }
- * console.log(options.procRoot) // "/fixtures/proc"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface YeetPrWaveEscalationOptions {
+// Injectable reads for `escalateYeetPrWave`: `lookup` defaults to the live PR
+// session registry, `sessionsRoot` to `$HOME/.claude/sessions`, `procRoot` to
+// `/proc`, and `now` to the clock. It carries effects, so it is no schema.
+interface EscalationOptions {
   readonly lookup?:
     | ((
         repository: PrRepository,
@@ -685,7 +670,7 @@ const liveRegistryLookup = (repository: PrRepository, pr: PrNumber) =>
 const resolveOwner = Effect.fn("YeetWaveNotifier.resolveOwner")(function* (
   prUrl: O.Option<string>,
   prNumber: number,
-  options: YeetPrWaveEscalationOptions
+  options: EscalationOptions
 ) {
   const repository = O.flatMap(prUrl, yeetPrWaveRepository);
   if (O.isNone(repository)) {
@@ -708,6 +693,9 @@ const resolveOwner = Effect.fn("YeetWaveNotifier.resolveOwner")(function* (
 // holds no descriptor of this process, so the capture returns immediately.
 const detachScript = 'exec bash "$0" "$@" </dev/null >/dev/null 2>&1';
 
+// The descriptor is the once-per-wave claim. `exists` means an earlier poll or
+// monitor already claimed this wave; `failed` means nothing was claimed, so a
+// later poll may try again.
 const claimDescriptor = Effect.fn("YeetWaveNotifier.claimDescriptor")(function* (
   descriptorPath: string,
   descriptor: YeetPrWaveDescriptor
@@ -715,11 +703,13 @@ const claimDescriptor = Effect.fn("YeetWaveNotifier.claimDescriptor")(function* 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const json = yield* YeetPrWaveDescriptorJson.encode(descriptor).pipe(Effect.option);
-  if (O.isNone(json)) return false;
+  if (O.isNone(json)) return "failed" as const;
   yield* fs.makeDirectory(path.dirname(descriptorPath), { recursive: true, mode: 0o700 }).pipe(Effect.ignore);
   return yield* fs.writeFileString(descriptorPath, `${json.value}\n`, { flag: "wx", mode: 0o600 }).pipe(
-    Effect.as(true),
-    Effect.orElseSucceed(() => false)
+    Effect.as("claimed" as const),
+    Effect.catchTag("PlatformError", (error) =>
+      Effect.succeed(error.reason._tag === "AlreadyExists" ? ("exists" as const) : ("failed" as const))
+    )
   );
 });
 
@@ -733,8 +723,10 @@ const claimDescriptor = Effect.fn("YeetWaveNotifier.claimDescriptor")(function* 
  * descriptor is claimed exclusively under
  * `<checkout>/.beep/yeet/pr-wave-notifier/waves/<waveKey>.json`, so the same
  * wave escalates once, and the notifier worker is launched detached with the
- * descriptor path as its only argument. Nothing fails the caller: every
- * failure is an outcome.
+ * descriptor path as its only argument. A spawn that fails releases the
+ * claim, so a later attempt launches it. Nothing fails the caller: every
+ * failure is an outcome, and only `spawned` and `already-escalated` settle a
+ * wave; the caller retries `owner-live` (the owner may die) and `spawn-failed`.
  *
  * **Example** (Build the escalation)
  *
@@ -758,7 +750,7 @@ export const escalateYeetPrWave = Effect.fn("YeetWaveNotifier.escalate")(functio
   wave: YeetPrWave,
   headSha: string,
   prUrl: O.Option<string>,
-  options: YeetPrWaveEscalationOptions = {}
+  options: EscalationOptions = {}
 ): Effect.fn.Return<
   YeetPrWaveEscalation,
   never,
@@ -775,10 +767,9 @@ export const escalateYeetPrWave = Effect.fn("YeetWaveNotifier.escalate")(functio
   ).pipe(Effect.orElseSucceed(() => Str.empty));
   const owner = yield* resolveOwner(prUrl, wave.prNumber, options);
   const result = (outcome: YeetPrWaveEscalationOutcome) => YeetPrWaveEscalation.make({ outcome, waveKey, owner });
-  if (owner.live) {
-    yield* Console.log(`[yeet] wave on PR #${wave.prNumber}: the owner session is live; the inbox hook carries it`);
-    return result("owner-live");
-  }
+  // A live owner is re-probed on every later poll (the monitor does not
+  // account the wave), so it stays quiet here instead of logging each poll.
+  if (owner.live) return result("owner-live");
   const worker = path.join(checkout, YEET_PR_WAVE_NOTIFIER_WORKER);
   const descriptorPath = path.join(checkout, ".beep", "yeet", "pr-wave-notifier", "waves", `${waveKey}.json`);
   if (Str.isEmpty(waveKey) || !(yield* fs.exists(worker).pipe(Effect.orElseSucceed(() => false)))) {
@@ -792,13 +783,21 @@ export const escalateYeetPrWave = Effect.fn("YeetWaveNotifier.escalate")(functio
     descriptorPath,
     makeYeetPrWaveDescriptor(YeetPrWaveDescriptorInput.make({ wave, headSha, checkout, waveKey, owner, createdAt }))
   );
-  if (!claimed) return result("already-escalated");
+  if (claimed === "exists") return result("already-escalated");
+  if (claimed === "failed") {
+    yield* Console.error(
+      `[yeet] wave on PR #${wave.prNumber}: no live owner (${owner.reason}); the wave descriptor could not be written`
+    );
+    return result("spawn-failed");
+  }
   const spawned = yield* runRepoCommandCapture(
     "setsid",
     ["-f", "bash", "-c", detachScript, worker, descriptorPath],
     checkout
   ).pipe(Effect.option);
   if (O.isNone(spawned) || spawned.value.exitCode !== 0) {
+    // Release the claim so the next poll, or a restarted monitor, launches it.
+    yield* fs.remove(descriptorPath).pipe(Effect.ignore);
     yield* Console.error(
       `[yeet] wave on PR #${wave.prNumber}: no live owner (${owner.reason}); the pr-wave notifier failed to start`
     );

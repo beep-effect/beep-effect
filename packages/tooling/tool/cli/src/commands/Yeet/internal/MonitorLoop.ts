@@ -2051,8 +2051,10 @@ const monitorWaveEscalation = Effect.fn("YeetMonitorLoop.waveEscalation")(functi
 // After the inbox converges, a new wave on the pull request (the rows a job
 // wait would return, less the ones this loop already escalated) goes to the
 // escalation, which spawns the pr-wave notifier only when no owner session is
-// live. The rows and the red set are then accounted for, so the same wave is
-// not re-read as new; a rerun that comes back red is a new wave again.
+// live. Once the notifier was launched or had already been claimed, the rows
+// and the red set are accounted for, so the same wave is not re-read as new; a
+// rerun that comes back red is a new wave again. A live owner or a failed
+// launch leaves the wave unaccounted, so the next poll re-probes it.
 const escalateMonitorWave = Effect.fn("YeetMonitorLoop.escalateWave")(function* (
   context: RepoRunContext,
   observation: MonitorObservation,
@@ -2070,12 +2072,16 @@ const escalateMonitorWave = Effect.fn("YeetMonitorLoop.escalateWave")(function* 
     O.some(yield* Ref.get(escalation.redSet))
   );
   if (O.isNone(wave)) return;
-  yield* escalation.escalate(
+  const escalated = yield* escalation.escalate(
     context.repoRoot,
     wave.value,
     headSha.value,
     O.fromUndefinedOr(observation.snapshot.remote.url)
   );
+  // Only a launched or already claimed wave is settled. A live owner may die
+  // before the rows are acked, and a failed launch released its claim, so
+  // both are read again as new on the next poll.
+  if (!(escalated.outcome === "spawned" || escalated.outcome === "already-escalated")) return;
   yield* Ref.update(escalation.escalated, (ids) =>
     HashSet.union(ids, HashSet.fromIterable(A.map(wave.value.entries, (entry) => entry.row.id)))
   );

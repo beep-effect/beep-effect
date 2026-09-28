@@ -1,11 +1,11 @@
 import { collectYeetStatus, RepoRunContext, YeetStatusSnapshotJson } from "@beep/repo-cli/test/Yeet";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, it } from "@effect/vitest";
-import { Duration, Effect, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
+import { Duration, Effect, FileSystem, HashMap, Layer, Path, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -166,15 +166,20 @@ const makeRecorder = Effect.gen(function* () {
   } satisfies GhRecorder;
 });
 
-const ghAnswer = (args: ReadonlyArray<string>): ReturnType<typeof handle> => {
-  const [first, second] = args;
-  if (first === "pr" && second === "view") return handle(pullRequestJson);
-  if (first === "pr" && second === "checks")
-    return handle(A.contains(args, "--required") ? requiredChecksJson : checksJson);
-  if (first === "api") return handle(threadsJson);
-  if (first === "run" && second === "list") return handle(runsJson);
-  return handle("[]");
-};
+// Canned gh stdout keyed by subcommand, plus `--required` for the filtered census.
+const ghAnswers = HashMap.make(
+  ["pr view", pullRequestJson],
+  ["pr checks", checksJson],
+  ["pr checks --required", requiredChecksJson],
+  ["api graphql", threadsJson],
+  ["run list", runsJson]
+);
+
+const ghRoute = (args: ReadonlyArray<string>): string =>
+  A.join([...A.take(args, 2), ...A.filter(args, (arg) => arg === "--required")], " ");
+
+const ghAnswer = (args: ReadonlyArray<string>): ReturnType<typeof handle> =>
+  handle(O.getOrElse(HashMap.get(ghAnswers, ghRoute(args)), () => "[]"));
 
 // Records every subprocess; each gh call holds a slot for `latency` on the
 // live clock, so the recorder's peak shows how many gh calls ran at once.
@@ -212,7 +217,7 @@ const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCe
     })
   );
 
-const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const FileSystemLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, FileSystemLayer);
 
 const tempRoot = Effect.fn("statusChainTest.tempRoot")(function* () {
