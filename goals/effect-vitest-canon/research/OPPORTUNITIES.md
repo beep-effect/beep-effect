@@ -5285,3 +5285,27 @@ covering two roots with the same relative config/file paths. Production repair
 is authorized by the operator's standing instruction. It is repaired in
 `f26bf72626`; see tsmorph-repository-isolation-proof.md for the three red/green
 regressions and full package proof.
+
+### Docgen temporary-repository setup could leak on acquisition failure
+
+While migrating docgen tests, the local withTempRepo and withTempRepoCommand
+helpers allocated a directory and changed cwd before creating .git, all inside
+acquireUseRelease acquisition. A failed directory creation never reached the
+registered release. Commit f309935ade replaces them with makeTempDirectoryScoped
+and a separately registered cwd release. Extracted fixture controls under Node
+and Bun prove cleanup on success, failure, interruption, chdir failure and mkdir
+failure. See cli-docgen-runtime-resource-proof.md. Review remaining temporary
+repository helpers for the same acquisition ordering when their inventory rows
+are reached; resource acquisition should register cleanup before later fallible
+setup, and controls should exercise setup defects as well as test-body failures.
+
+### Native import consolidation does not settle filesystem judgment
+
+The docgen migration reduced two native-platform detector rows to one because
+NodeServices replaces separate platform imports. The underlying suite still
+uses a real filesystem, cwd changes and git processes. Both historical native
+judgments remain open; detector disappearance is not sufficient evidence to
+close a backend decision. A future inventory aid should track service provenance
+through platform aggregate layers and retain the Resource lens decision when
+import spelling changes. The existing native-platform anchor was updated without
+adding baseline members or claiming a Memory migration.
