@@ -80,8 +80,8 @@ describe("sweep step ids", () => {
       "ff-main",
       "delete-local-branch",
       "delete-remote-branch",
-      "lockfile-install",
       "end-state",
+      "lockfile-install",
       "tmpfs-worktrees",
     ]);
   });

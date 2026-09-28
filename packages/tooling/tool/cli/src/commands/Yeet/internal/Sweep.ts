@@ -60,6 +60,34 @@
  * `needs-operator` refresh handoff actionable, since the worktree holding
  * `main` is rarely the worktree holding the merged branch.
  *
+ * `end-state` moves HEAD only off the branch being swept (or does nothing when
+ * the clone is on `main` already). Any other branch is a live checkout —
+ * someone's work in progress, possibly with a verify running in it — so
+ * `end-state` and `lockfile-install` skip, and the plan prints the HEAD that
+ * blocked them. Under `--retire` the swept branch lives in the lane, so for the
+ * owning clone the rule reads "not on `main`": a clone parked on another branch
+ * keeps its checkout and receives only the ref-only steps (`fetch-prune`,
+ * `ff-main`, the branch deletions). Gating on HEAD being `main` alone would be
+ * wrong: the second pass above and `monitor --until-merged` both rely on
+ * `end-state` moving a clone off the merged branch. (Receipt 2026-09-28: a
+ * sweep switched a clone from a live branch to `main` under another session's
+ * running verify.)
+ *
+ * `lockfile-install` is planned after `end-state` and runs only when
+ * `end-state` executed — the clone was already on `main`, or was just switched
+ * there — so `bun install` resolves `main`'s `bun.lock`, never the lockfile of
+ * a branch the clone is leaving or of one it was never allowed to leave. A
+ * `git switch` that fails at run time therefore skips the install as well.
+ *
+ * Open question: whether to also refuse the worktree-mutating steps while a
+ * process is working in the clone. The retire fence's holder scan
+ * (`blockingHolders` in `Worktree.service.ts`) is not reusable as-is: its
+ * `CLAUDE_PID` session exemption would hide a verify launched by the sweeping
+ * session itself, and `isPathWithin` in `ProcessAttachment.ts` is a path-prefix
+ * match, so applied to the clone it would count every lane nested under
+ * `.claude/worktrees/` as a holder. Until a narrower check exists, the HEAD
+ * rule above is the guard.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -278,6 +306,28 @@ const branchFreePrecondition = (state: SweepGitState): SweepPrecondition =>
         !holdsBranch(state.branchCheckedOutElsewhere, state.headBranch, state.branch)
       );
 
+// `main` needs no move, and the swept branch is the documented second pass:
+// `yeet sweep --branch <merged>` and `monitor --until-merged` rely on
+// `end-state` moving a clone off the branch it just merged. Any other branch is
+// a live checkout — someone's work in progress, possibly with a verify running
+// in it — so the worktree-mutating steps leave it where it stands.
+const headIsMovable = (state: SweepGitState): boolean =>
+  state.headBranch === state.mainBranch || state.headBranch === state.branch;
+
+const liveCheckoutPrecondition = (state: SweepGitState): SweepPrecondition =>
+  precondition(
+    `HEAD ${state.headBranch} is ${state.mainBranch} or the swept branch ${state.branch}; another branch is a live checkout the sweep leaves alone`,
+    headIsMovable(state)
+  );
+
+// What `git switch main` needs when the clone is not on `main` already: a HEAD
+// the sweep may move, a clean tree, and `main` not held by another worktree.
+const switchToMainPreconditions = (state: SweepGitState): ReadonlyArray<SweepPrecondition> => [
+  liveCheckoutPrecondition(state),
+  cleanWorktreePrecondition(state),
+  mainFreePrecondition(state),
+];
+
 /**
  * The pull request `gh` resolved is only this branch's pull request when its
  * head branch says so; every MERGED-gated step carries this check.
@@ -396,7 +446,14 @@ const lockfileInstallPlanStep = (state: SweepGitState): SweepPlanStep =>
         })`,
         true
       ),
-      cleanWorktreePrecondition(state),
+      // The install follows `end-state` and carries the same facts the switch
+      // needs, so `--plan` already says when it will not run: on `main` a
+      // clean tree is enough; anywhere else the clone must first be movable
+      // to `main`. At execution it additionally reads the `end-state` outcome,
+      // so a switch that fails at run time still blocks the install.
+      ...(state.headBranch === state.mainBranch
+        ? [cleanWorktreePrecondition(state)]
+        : switchToMainPreconditions(state)),
     ],
     requiresOperator: false,
   });
@@ -405,8 +462,7 @@ const endStatePlanStep = (state: SweepGitState): SweepPlanStep =>
   SweepPlanStep.make({
     id: "end-state",
     action: `git switch ${shellQuote(state.mainBranch)}`,
-    preconditions:
-      state.headBranch === state.mainBranch ? [] : [cleanWorktreePrecondition(state), mainFreePrecondition(state)],
+    preconditions: state.headBranch === state.mainBranch ? [] : switchToMainPreconditions(state),
     requiresOperator: false,
   });
 
@@ -447,6 +503,12 @@ const tmpfsWorktreesPlanStep = (): SweepPlanStep =>
  * `git worktree list --porcelain` or `git status --porcelain` — is not silently
  * treated as "nothing found". The step blocks, and its blocker names the
  * truncated command rather than claiming a worktree state.
+ *
+ * `end-state` and `lockfile-install` carry a live-checkout precondition when
+ * the clone is not on `main`: HEAD must be the swept branch. A clone standing
+ * on any other branch is left where it is — the plan names that HEAD as the
+ * blocker — and `lockfile-install` is planned after `end-state` so the install
+ * resolves `main`'s `bun.lock` rather than the branch the clone is leaving.
  *
  * **Example** (Plan a sweep for a squash-merged branch)
  *
@@ -498,8 +560,8 @@ export const buildSweepPlan: {
         ffMainPlanStep(state),
         deleteLocalBranchPlanStep(state),
         deleteRemoteBranchPlanStep(state),
-        lockfileInstallPlanStep(state),
         endStatePlanStep(state),
+        lockfileInstallPlanStep(state),
         tmpfsWorktreesPlanStep(),
       ],
     })
@@ -1057,12 +1119,53 @@ export const refreshNotCompletedHandoff: {
     })
 );
 
+const outcomeSummary = (outcome: SweepStepOutcome): string =>
+  SweepStepOutcome.match(outcome, {
+    executed: (executed) =>
+      `executed${pipe(
+        executed.detail,
+        O.map((detail) => `: ${firstLine(detail)}`),
+        O.getOrElse(() => "")
+      )}`,
+    skipped: (skipped) => `skipped: ${skipped.reason}`,
+    "needs-operator": (handoff) => `needs-operator: ${handoff.reason}`,
+  });
+
+// `end-state` runs first so `bun install` resolves `main`'s bun.lock. Only an
+// executed `end-state` proves the clone stands on `main` at install time: a
+// blocked or failed one left HEAD where it was, and installing there would
+// resolve that branch's lockfile into a checkout the sweep does not own.
+const installBlockedByEndState = (state: SweepGitState, priorSteps: ReadonlyArray<SweepReportStep>): O.Option<string> =>
+  pipe(
+    A.findFirst(priorSteps, (step) => step.id === "end-state"),
+    O.match({
+      onNone: () => O.some(`end-state has not run, so the clone is not known to be on ${state.mainBranch}`),
+      onSome: (step) =>
+        step.outcome.status === "executed"
+          ? O.none<string>()
+          : O.some(
+              `end-state did not leave the clone on ${state.mainBranch} (${outcomeSummary(step.outcome)}); bun install here would resolve the checked-out branch's bun.lock`
+            ),
+    })
+  );
+
 // The observed lockfile forecast predates the sweep's own fetch/fast-forward,
 // so the executed decision re-diffs the actual update window: the main tip
 // recorded at observation against post-refresh local main. An unreadable
 // re-check or an unknown starting tip errs toward installing — `bun install`
 // on a clean tree is safe; a silently stale node_modules is not.
 const runLockfileInstallStep = (
+  state: SweepGitState,
+  cwd: string,
+  action: string,
+  priorSteps: ReadonlyArray<SweepReportStep>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+  O.match(installBlockedByEndState(state, priorSteps), {
+    onSome: (reason) => Effect.succeed<SweepStepOutcome>(SweepStepSkipped.make({ reason })),
+    onNone: () => runLockfileInstallOnMain(state, cwd, action),
+  });
+
+const runLockfileInstallOnMain = (
   state: SweepGitState,
   cwd: string,
   action: string
@@ -1194,7 +1297,8 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
 const performSweepStep = (
   context: RepoRunContext,
   state: SweepGitState,
-  planStep: SweepPlanStep
+  planStep: SweepPlanStep,
+  priorSteps: ReadonlyArray<SweepReportStep>
 ): Effect.Effect<
   SweepStepOutcome,
   never,
@@ -1231,7 +1335,7 @@ const performSweepStep = (
         revalidateRemoteDeletion(context.repoRoot, state),
         runRemoteDeletionStep(state, context.repoRoot, planStep.action)
       ),
-    "lockfile-install": () => runLockfileInstallStep(state, context.repoRoot, planStep.action),
+    "lockfile-install": () => runLockfileInstallStep(state, context.repoRoot, planStep.action, priorSteps),
     "end-state": () => runEndStateStep(state, context.repoRoot, planStep.action),
     "tmpfs-worktrees": () => runTmpfsWorktreesStep(context.repoRoot),
   });
@@ -1239,7 +1343,8 @@ const performSweepStep = (
 const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
   context: RepoRunContext,
   state: SweepGitState,
-  planStep: SweepPlanStep
+  planStep: SweepPlanStep,
+  priorSteps: ReadonlyArray<SweepReportStep>
 ): Effect.fn.Return<
   SweepReportStep,
   never,
@@ -1248,7 +1353,7 @@ const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
   const startedAt = yield* Clock.currentTimeMillis;
   const blocked = sweepStepBlockers(planStep);
   const outcome = A.isReadonlyArrayEmpty(blocked)
-    ? yield* performSweepStep(context, state, planStep)
+    ? yield* performSweepStep(context, state, planStep, priorSteps)
     : SweepStepSkipped.make({
         reason: `blocked: ${A.join(
           A.map(blocked, (observed) => observed.description),
@@ -1289,7 +1394,9 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
  *
  * **Details**
  *
- * Steps run in {@link SweepStepId} order and each produces exactly one outcome.
+ * Steps run sequentially in {@link SweepStepId} order and each produces exactly
+ * one outcome; a later step may read the outcomes before it, which is how
+ * `lockfile-install` learns whether `end-state` left the clone on `main`.
  * No step outcome fails the sweep: the returned {@link SweepReport} is the whole
  * result, and a caller that renders it exits 0 whether every step ran, every step
  * skipped, or a remote deletion needs the operator. The report is written to
@@ -1327,7 +1434,11 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const state = yield* observeSweepGitState(context);
   const plan = buildSweepPlan(state, startedAt);
-  const steps = yield* Effect.forEach(plan.steps, (planStep) => runSweepStep(context, state, planStep));
+  // Sequential and accumulating on purpose: `lockfile-install` reads the
+  // `end-state` outcome that precedes it in plan order.
+  const steps = yield* Effect.reduce(plan.steps, A.empty<SweepReportStep>, (done, planStep) =>
+    Effect.map(runSweepStep(context, state, planStep, done), (step) => A.append(done, step))
+  );
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const report = SweepReport.make({
     schemaVersion: "yeet-sweep-report/v1",
@@ -1342,18 +1453,6 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
   yield* writeTextFile(yield* sweepReportPath(context), encoded);
   return report;
 });
-
-const outcomeSummary = (outcome: SweepStepOutcome): string =>
-  SweepStepOutcome.match(outcome, {
-    executed: (executed) =>
-      `executed${pipe(
-        executed.detail,
-        O.map((detail) => `: ${firstLine(detail)}`),
-        O.getOrElse(() => "")
-      )}`,
-    skipped: (skipped) => `skipped: ${skipped.reason}`,
-    "needs-operator": (handoff) => `needs-operator: ${handoff.reason}`,
-  });
 
 const operatorCommands = (report: SweepReport): ReadonlyArray<string> =>
   pipe(

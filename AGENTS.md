@@ -175,7 +175,11 @@ Runbook: `docs/runbooks/agent-pools.md`.
   inside the lane worktree as the last command of the session:
   `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`
   (archives residue, deletes the branch, sweeps the clone; it refuses until the
-  PR is MERGED and heads that branch, so running it early is safe). Run it from
+  PR is MERGED and heads that branch, so running it early is safe). The swept
+  clone is returned to `main` only when it already stands on `main`; a clone
+  on another live branch is left where it is (refs updated, no `git switch`,
+  no `bun install`) because that checkout may carry another session's running
+  work, so the trailing `cd` can land you on that branch. Run it from
   the lane, never from the clone: `bun run beep` resolves the CLI from the
   checkout it runs in, and the clone's `main` may still be behind the merge and
   reject `--retire` as an unknown flag. The command steps its own process out
