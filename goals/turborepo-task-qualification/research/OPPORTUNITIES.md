@@ -2209,3 +2209,13 @@ retention manifests should include ignored evidence producers and verify their
 hashes before retiring the lane. The scripts place output paths beneath the
 packet research directory; their argument is not relative to the repository
 root. Generated files were moved into the private evidence directory.
+
+## 2026-09-28: fast publication still waits for admission
+
+`yeet publish --fast --monitor` committed the packet update but queued for a
+full-proof slot before pushing. `runStandardPublishPhases` still enters the
+full-proof coordinator even when the fast planner omits proof steps. The
+queued attempt was deliberately interrupted; `--start-pr-early --monitor --pr`
+reused the clean local commit and pushed before admission. Use that route for
+the operator's requested early publication, and retain exact-head proof as a
+separate requirement. The original running proof was preserved.

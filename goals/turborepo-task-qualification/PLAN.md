@@ -2208,3 +2208,13 @@ obligations. Exact-hash recovery restored 53 historical review receipts and
 all three private producers. Two missing reviews remain explicitly unavailable.
 The attachment refreshes source identity only; it does not renew semantic or
 runtime acceptance. See [the receipt](research/current-attachment-restoration.json).
+
+### Complete changed TypeScript project-config comparison
+
+All 244 changed TypeScript project configs were compared against hash-matched
+historical bytes. The 243 non-root configs differ only in project references;
+the root config adds only the HarnessLedger path alias. Four exceptional
+baselines were recovered from Git history and parsed with TypeScript JSONC
+support. [The review](research/current-tsconfig-reference-review.json) records
+the source hashes and limits. Referenced source semantics and runtime
+qualification remain open.

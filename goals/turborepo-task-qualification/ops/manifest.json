@@ -387,7 +387,8 @@
     "research/current-main-census-delta.json",
     "research/current-main-planner-review.json",
     "research/current-convergence-semantics.json",
-    "research/current-attachment-restoration.json"
+    "research/current-attachment-restoration.json",
+    "research/current-tsconfig-reference-review.json"
   ],
   "agentLaunchers": [
     {
