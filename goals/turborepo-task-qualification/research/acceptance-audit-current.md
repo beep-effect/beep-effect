@@ -580,3 +580,10 @@ restoration recovers hits, stale generated-profile drift rejects before Turbo,
 and orchestration metadata preserves the hash. Profile rejection leaves the
 cache unchanged. These selected controls do not exhaust semantic input classes
 or renew the frozen profile after security dependency changes.
+
+The [current native I/O review](./current-native-io-review.json) verifies
+retained trace bytes, dependency parity, scalar read annotations and explicit
+write attribution for one isolated task execution. Its 439 repository read
+paths and 21 attributed writes provide bounded coverage. The `.git` mapping
+and undecoded ring contents remain explicit; no complete semantic-input
+closure or tuple promotion follows from the trace.

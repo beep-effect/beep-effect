@@ -2541,3 +2541,17 @@ doctor with no new blocking findings, explore integrity checks, and reflection
 artifact validation with zero blocking or advisory findings. The launcher is
 2,755 characters. These checks establish packet consistency, not a completed
 reflection, runtime qualification or merge readiness.
+
+### Current bounded native I/O observation
+
+The [native review](research/current-native-io-review.json) completes one real
+quiet identity-lint invocation in a read-only archived-source namespace at
+`7f53b4a840`. Dependency bytes match before and after. Independent trace
+review attributes 439 repository read paths and every positive scalar read;
+only `.git` is outside the retained native task-input map. All 21 explicit
+writes are attributed, with no vectored operations observed. The 19-file
+private evidence bundle totals 7,069,024 bytes. No read payloads are retained.
+Five successful ring setup/entry pairs remain undecoded; these observations
+do not establish complete semantic closure, current-dependency qualification
+or signed replay. The pilot worksheet now separates this evidence from older
+source snapshots and matrices.
