@@ -126,6 +126,9 @@
       "path": "../../packages/shared/domain/tsconfig.json"
     },
     {
+      "path": "../../packages/tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
       "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
     },
     {

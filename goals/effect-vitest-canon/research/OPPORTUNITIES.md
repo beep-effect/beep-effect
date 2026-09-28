@@ -4286,3 +4286,17 @@ A temporary eleven-second acquisition delay fails the old registration and
 passes the corrected one (14 conformance cases). The delay is removed.
 Review nested layer hook order during migrations; checking duration literals
 alone does not prove that the original setup boundary is preserved.
+
+## Desktop HTTP auth boundary and codec declaration mismatch
+
+The saved epistemic observation row correctly identified that header predicates
+and RPC descriptors cannot prove HTTP rejection. The Desktop auth test now mounts
+the actual middleware and real RPC protocol on an ephemeral socket, asserts two
+401 responses without handler calls, and checks a valid request's successful RPC
+response. Removing the middleware fails the new test. Keep this transport proof
+alongside pure header tests to catch omitted middleware composition.
+
+The initial new test used `Schema.UnknownFromJsonString`, which executed at runtime
+but failed package type checking with TS2551. The supported constructor
+`Schema.fromJsonString(Schema.Unknown)` fixes the declaration mismatch. Focused
+runtime success cannot replace the package's type-check gate.
