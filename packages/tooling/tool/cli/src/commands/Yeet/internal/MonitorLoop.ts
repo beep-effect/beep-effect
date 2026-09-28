@@ -160,6 +160,7 @@ import {
   YeetMergeReadyCriterion,
 } from "./Verdict.ts";
 import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
+import { escalateYeetPrWave } from "./WaveNotifier.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
@@ -1050,6 +1051,11 @@ interface YeetMonitorUntilMergedOptions {
   // drive the consumer without a GitHub read.
   readonly commentRows?: typeof pollYeetPrCommentRows | undefined;
   readonly commentsSince?: string | undefined;
+  // Under a detached until-ready loop, each new wave on the pull request whose
+  // owner session is not live is escalated to the pr-wave notifier (goals/
+  // yeet-pr-events W9). Absent, the loop escalates only inside a detached job
+  // (`BEEP_YEET_JOB_ID`); the seam lets a test observe every escalation.
+  readonly escalateWave?: typeof escalateYeetPrWave | undefined;
   readonly now?: Effect.Effect<DateTime.Utc> | undefined;
   readonly onMerged?:
     | ((
@@ -2007,11 +2013,83 @@ const returnOnMonitorWave = Effect.fn("YeetMonitorLoop.returnOnWave")(function* 
 
 // Loop-scoped inputs every poll reads: the comment consumer, and, for an
 // attached until-ready loop only, the row ids the inbox held when the loop
-// started, which never count as a new wave.
+// started, which never count as a new wave. A detached until-ready loop that
+// escalates dead-owner waves keeps the rows and the red set it already
+// escalated, so each wave is escalated once per loop.
 interface MonitorLoopScope {
   readonly comments: MonitorCommentConsumer;
+  readonly escalation: O.Option<MonitorWaveEscalation>;
   readonly waveBaseline: O.Option<HashSet.HashSet<string>>;
 }
+
+interface MonitorWaveEscalation {
+  readonly escalate: typeof escalateYeetPrWave;
+  readonly escalated: Ref.Ref<HashSet.HashSet<string>>;
+  readonly redSet: Ref.Ref<string>;
+}
+
+// The dead-owner escalation a loop runs (goals/yeet-pr-events W9): only a
+// detached until-ready loop, the one process that knows no owner is attached,
+// and by default only inside a detached job.
+const monitorWaveEscalation = Effect.fn("YeetMonitorLoop.waveEscalation")(function* (
+  options: YeetMonitorUntilMergedOptions
+) {
+  const detached = (options.attachment ?? YeetMonitorAttachment.Enum.detached) === YeetMonitorAttachment.Enum.detached;
+  if (!detached || !yeetMonitorPolicyConverges(options.policy ?? YeetUntilMergedPolicy.make({}))) {
+    return O.none<MonitorWaveEscalation>();
+  }
+  const { jobId } = yield* monitorJobAttribution();
+  const escalate = O.orElse(O.fromUndefinedOr(options.escalateWave), () => O.as(jobId, escalateYeetPrWave));
+  if (O.isNone(escalate)) return O.none<MonitorWaveEscalation>();
+  return O.some<MonitorWaveEscalation>({
+    escalate: escalate.value,
+    escalated: yield* Ref.make(HashSet.empty<string>()),
+    redSet: yield* Ref.make<string>(Str.empty),
+  });
+});
+
+// After the inbox converges, a new wave on the pull request (the rows a job
+// wait would return, less the ones this loop already escalated) goes to the
+// escalation, which spawns the pr-wave notifier only when no owner session is
+// live. Once the notifier was launched or had already been claimed, the rows
+// and the red set are accounted for, so the same wave is not re-read as new; a
+// rerun that comes back red is a new wave again. A live owner or a failed
+// launch leaves the wave unaccounted, so the next poll re-probes it.
+const escalateMonitorWave = Effect.fn("YeetMonitorLoop.escalateWave")(function* (
+  context: RepoRunContext,
+  observation: MonitorObservation,
+  scope: MonitorLoopScope
+) {
+  if (O.isNone(scope.escalation)) return;
+  const escalation = scope.escalation.value;
+  const prNumber = O.fromUndefinedOr(observation.snapshot.remote.number);
+  const headSha = observation.snapshot.remote.headSha;
+  if (O.isNone(prNumber) || O.isNone(headSha)) return;
+  const wave = yield* loadYeetPrWave(
+    context.repoRoot,
+    prNumber.value,
+    yield* Ref.get(escalation.escalated),
+    O.some(yield* Ref.get(escalation.redSet))
+  );
+  if (O.isNone(wave)) return;
+  const escalated = yield* escalation.escalate(
+    context.repoRoot,
+    wave.value,
+    headSha.value,
+    O.fromUndefinedOr(observation.snapshot.remote.url)
+  );
+  // Only a launched or already claimed wave is settled. A live owner may die
+  // before the rows are acked, and a failed launch released its claim, so
+  // both are read again as new on the next poll.
+  if (!(escalated.outcome === "spawned" || escalated.outcome === "already-escalated")) return;
+  yield* Ref.update(escalation.escalated, (ids) =>
+    HashSet.union(ids, HashSet.fromIterable(A.map(wave.value.entries, (entry) => entry.row.id)))
+  );
+  yield* O.match(wave.value.redSetKey, {
+    onNone: () => Effect.void,
+    onSome: (key) => Ref.set(escalation.redSet, key),
+  });
+});
 
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
@@ -2053,6 +2131,7 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
     })
   );
   const converged = yield* convergeMonitorInbox(context, options, observed, scope.comments);
+  yield* escalateMonitorWave(context, converged, scope);
   const settled = yield* settleAndCloseoutMonitorHead(context, options, converged);
   if (Result.isFailure(settled)) return settled.failure;
   const observation = settled.success;
@@ -2189,6 +2268,7 @@ export const runYeetMonitorUntilMerged: {
       waveBaseline: HashSet.has(terminals, YeetMonitorTerminalState.Enum.wave)
         ? O.some(yield* loadYeetInboxRowIds(context.repoRoot))
         : O.none(),
+      escalation: yield* monitorWaveEscalation(options),
     };
     while (true) {
       const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle, scope);

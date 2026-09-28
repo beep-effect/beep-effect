@@ -874,3 +874,31 @@ Graduated into `goals/yeet-pr-events` as a `paused` packet (execution was
 not authorized in the scaffold session); the goal's `SPEC.md` condenses
 D1-D38 into its decision log and links back here. Gated candidates stay in
 `MAP.md`; a fired gate reopens this packet at `decompose`.
+
+## 2026-09-28 — slice-2 verdict (W7 probe)
+
+### D39 — The socket probe failed for every detached sender; slice 2 is cut, W8 skipped
+
+- **Question.** D20 gated the tail on a live probe: does the harness deliver a
+  frame posted to `$CLAUDE_CODE_MESSAGING_SOCKET` by a detached child into a
+  bypass-permissions session?
+- **Answer.** No. Measured 2026-09-28 from a live bypass session (Claude Code
+  2.1.283): a child posting *while* its hook/tool invocation is in flight is
+  delivered (two of two); a plain `&` child posting after the invocation
+  returned, a `setsid -f` child (even during the invocation), and a
+  `systemd-run --user` unit were not delivered (five of five), with no
+  transcript row — the hold path. A 1.1 M-character frame was refused
+  (connection reset). Own-child verification is scoped to the in-flight child
+  tree, not to ancestry. Record:
+  `research/2026-09-28-W7-socket-probe.md`.
+- **Consequence.** Per D20/D29 and the goal `SPEC.md`, slice 2 closes as cut:
+  W8 is closed as cut in `goals/yeet-pr-events/ops/manifest.json` (status
+  `complete` with a cut reason; the phase domain has no `skipped`),
+  no D15 rejected option (direct post accepting the hold, `crossSessionInbound:
+  accept`) is revived, idle-owner wake stays hook injection plus the desktop
+  `set_monitor` switch, and dead-owner escalation is W9. The D9 receiver and
+  D11 takeover gates in `MAP.md` are unchanged.
+- **Rejected.** Keeping the hook invocation alive as a long-lived poster (the
+  SessionStart budget is 2 s and a blocked hook blocks the session); a resident
+  bypassing `claude -p` relay per session (a new process per checkout, and a
+  bypassing sender is itself the thing the hold protects against).

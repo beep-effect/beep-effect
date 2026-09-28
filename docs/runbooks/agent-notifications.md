@@ -16,6 +16,12 @@ inside a package. Git resolves it to the worktree root and common Git directory.
 Unavailable Git metadata falls back to the directory basename. Control characters
 and terminal delimiters are removed, and notification markup is escaped.
 
+Dead-owner pull request waves use a separate worker,
+`.claude/hooks/yeet-pr-wave-notifier.sh`, spawned by a detached
+`yeet monitor --until-ready` job. It writes its own ledger under
+`$BEEP_AGENT_EVIDENCE_ROOT/pr-wave/notification-events/` and never touches the
+sequence-break worker or its evidence.
+
 ## Returning to the originating session
 
 - **Ghostty:** when `TERM_PROGRAM=ghostty` and the hook has a controlling terminal,
