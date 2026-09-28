@@ -4793,3 +4793,19 @@ records `c257acdeb9` in both `head` and `resolvedHeadSha`. The worktree remains
 at `fcf7e968a3`. A publish receipt must bind proof to the actual committed head,
 not the head captured before its commit step. Investigate when the publisher
 refreshes this identity; do not treat the mismatched verdict as exact-head proof.
+
+## 2026-09-28: Full lint-policy catches test codecs and historical fixture paths
+
+PR #1312 local full proof passed package lint, docgen, and integration but
+failed root lint-policy. Oxlint found three newly introduced inline schema
+compilations in the viewer-encoding and RPC authentication tests. The codecs
+are now compiled at module scope with the same schemas and assertion operands.
+A focused root oxlint pass before publishing would have caught this sooner.
+
+Knowledge refs also classified two JSON-escaped synthetic home-directory
+fixtures in the historical Effect Vitest baseline as external mirror links.
+Only the two evidence excerpts now label that prefix as a synthetic home
+fixture; finding IDs, occurrences, statuses, and detector matching are unchanged.
+The original excerpts remain available in the parent commit. A future refs
+classifier should distinguish quoted test data in generated inventories from
+actual external references without suppressing real workstation-path leaks.

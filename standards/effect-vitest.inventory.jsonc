@@ -94560,7 +94560,7 @@
       "symbol": "it.layer",
       "occurrence": "v2:ba0b930d18d97ecfd468470e4fa0a14ce38f4b1be675f6c4dfa2132a427830d2",
       "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer( mockSpawnerLayer((command) => { assert.strictEqual(command.command, \"kdialog\"); assert.deepStrictEqual(command.args, [ \"--title\", \"Select workspace vault\", \"--getexistingdirectory\", \"/home/user",
+      "evidence": "layer( mockSpawnerLayer((command) => { assert.strictEqual(command.command, \"kdialog\"); assert.deepStrictEqual(command.args, [ \"--title\", \"Select workspace vault\", \"--getexistingdirectory\", \"<home>",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
@@ -94623,7 +94623,7 @@
       "symbol": "it.layer",
       "occurrence": "v2:62bf92e3323da54c0d8879cc87d1cd4cd7985dc789b86a93c84a1e698b4d579e",
       "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(mockSpawnerLayer((command) => (command.command === \"kdialog\" ? \"missing\" : { stdout: \"/home/user/vault2\\n\" })))",
+      "evidence": "layer(mockSpawnerLayer((command) => (command.command === \"kdialog\" ? \"missing\" : { stdout: \"<home>/vault2\\n\" })))",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

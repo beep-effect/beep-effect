@@ -14,6 +14,7 @@ const document = MdModel.Document.make({
   children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "a message already on screen" })] })],
 });
 
+const encodeEditorState = S.encodeEffect(SerializedEditorState);
 const EncodedState = S.toEncoded(SerializedEditorState);
 const isEncodedState = S.is(EncodedState);
 const equivalentEncodedState = S.toEquivalence(EncodedState);
@@ -29,7 +30,7 @@ describe("the viewer encodes a message once", { concurrent: false }, () => {
       // produce a string identical to the one it produced last time. The cost scaled
       // with the length of the conversation and was paid per frame of the answer.
       const state = yield* documentToEditorState(document);
-      const encodedState = yield* S.encodeEffect(SerializedEditorState)(state);
+      const encodedState = yield* encodeEditorState(state);
       const spy = vi.spyOn(JSON, "stringify");
       yield* Effect.addFinalizer(() => Effect.sync(() => spy.mockRestore()));
       const countSubjectEncodes = () =>

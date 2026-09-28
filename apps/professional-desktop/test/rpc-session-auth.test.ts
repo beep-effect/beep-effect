@@ -59,6 +59,8 @@ describe("desktop sidecar RPC session auth", () => {
 
 // Exercise the real middleware and RPC wire boundary on an ephemeral socket.
 // The list handler is a deterministic observation point, not a database proof.
+const encodeRpcJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeRpcJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const AuthProbeRpcs = RpcGroup.make(ListContradictionCandidatesRpc);
 const listCandidates = vi.fn(() =>
   Effect.succeed(ContradictionCandidatePage.make({ items: [], total: NonNegativeInt.make(0) }))
@@ -78,7 +80,7 @@ it.layer(AuthProbeServer, { timeout: "10 seconds" })("desktop RPC HTTP authentic
   it.effect("rejects missing and wrong bearer tokens before accepting the active token", () =>
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
-      const encoded = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const encoded = yield* encodeRpcJson({
         _tag: "Request",
         id: "1",
         tag: "ListContradictionCandidates",
@@ -100,7 +102,7 @@ it.layer(AuthProbeServer, { timeout: "10 seconds" })("desktop RPC HTTP authentic
 
       const accepted = yield* client.execute(HttpClientRequest.bearerToken(request, Redacted.value(authProbeToken)));
       expect(accepted.status).toBe(200);
-      const response = yield* accepted.text.pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Unknown))));
+      const response = yield* accepted.text.pipe(Effect.flatMap(decodeRpcJson));
       expect(response).toEqual({
         _tag: "Exit",
         requestId: "1",
