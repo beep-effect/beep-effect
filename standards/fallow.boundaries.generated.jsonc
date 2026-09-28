@@ -1087,7 +1087,7 @@
           "@beep/pacer",
           "@beep/qa-capture",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1099,7 +1099,7 @@
           "@beep/pacer",
           "@beep/qa-capture",
           "@beep/schema",
-          "@beep/test-utils",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

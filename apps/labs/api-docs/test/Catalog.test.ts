@@ -1,6 +1,6 @@
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, HashSet } from "effect";
 import * as A from "effect/Array";
 import { OpenApi } from "effect/http-api";
@@ -35,9 +35,9 @@ describe("API docs catalog", () => {
     expect(HashSet.size(HashSet.fromIterable(slugs))).toBe(A.length(slugs));
   });
 
-  it.effect("references committed spec files that exist", () =>
-    verifySpecFilesExist().pipe(provideScopedLayer(BunServices.layer))
-  );
+  it.layer(BunServices.layer, { timeout: "10 seconds" })("committed spec files", (it) => {
+    it.effect("references committed spec files that exist", verifySpecFilesExist);
+  });
 
   it("generates OpenAPI for all four contract entries", () => {
     expect(A.length(contractSources)).toBe(4);
