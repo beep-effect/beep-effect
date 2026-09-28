@@ -193,9 +193,9 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     expect(schemaCrispeningFamilyForFile("packages/epistemic/src/Foo.ts")).toEqual(O.some("apps-slices"));
     expect(schemaCrispeningFamilyForFile("packages/law-practice/src/Foo.ts")).toEqual(O.some("apps-slices"));
     expect(schemaCrispeningFamilyForFile("packages/workspace/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(O.isNone(schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts"))).toBe(true);
-    expect(O.isNone(schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts"))).toBe(true);
-    expect(O.isNone(schemaCrispeningFamilyForFile("README.md"))).toBe(true);
+    schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts").pipe(O.isNone, assertTrue);
+    schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts").pipe(O.isNone, assertTrue);
+    schemaCrispeningFamilyForFile("README.md").pipe(O.isNone, assertTrue);
   });
 
   describe("isSchemaCrispeningPolicyExempt", () => {
@@ -304,7 +304,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
-    expect(O.isNone(entry)).toBe(true);
+    entry.pipe(O.isNone, assertTrue);
   });
 });
 
@@ -340,7 +340,7 @@ describe("normalizationEntryFromCallExpression", () => {
     const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
-    expect(O.isNone(entry)).toBe(true);
+    entry.pipe(O.isNone, assertTrue);
   });
 });
 
@@ -371,7 +371,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       owner: "@beep/test",
     });
 
-    expect(O.isNone(entry)).toBe(true);
+    entry.pipe(O.isNone, assertTrue);
   });
 
   it("does not fire when nullish values are carried inside an approved return wrapper", () => {
@@ -391,7 +391,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
         file: "fixture.ts",
         owner: "@beep/test",
       });
-      expect(O.isNone(entry)).toBe(true);
+      entry.pipe(O.isNone, assertTrue);
     }
   });
 });
@@ -423,7 +423,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       owner: "@beep/test",
     });
 
-    expect(O.isNone(entry)).toBe(true);
+    entry.pipe(O.isNone, assertTrue);
   });
 });
 
@@ -507,7 +507,7 @@ describe("G4 foundation family-flip regression fixture", () => {
       // A path outside every wave family resolves to no family and stays exempt
       // (PLAN: unassigned surfaces are non-blocking by construction).
       const unassignedViolation = fnSchemaViolationForFile("scripts/OneOff.ts");
-      expect(O.isNone(schemaCrispeningFamilyForFile("scripts/OneOff.ts"))).toBe(true);
+      schemaCrispeningFamilyForFile("scripts/OneOff.ts").pipe(O.isNone, assertTrue);
       expect(isExempt(unassignedViolation)).toBe(true);
     })
   );

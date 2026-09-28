@@ -111,8 +111,8 @@ describe("canonical encoding and digests", () => {
       expect(parsed.value.type).toBe("status-set");
       expect(parsed.value.id).toBe(digest);
     }
-    expect(O.isNone(parsePacketEventFileName("notes.md"))).toBe(true);
-    expect(O.isNone(parsePacketEventFileName(`2-status-set-${digest}.json`))).toBe(true);
+    parsePacketEventFileName("notes.md").pipe(O.isNone, assertTrue);
+    parsePacketEventFileName(`2-status-set-${digest}.json`).pipe(O.isNone, assertTrue);
   });
 
   it(
@@ -585,7 +585,7 @@ describe("planForkRepair", () => {
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
           ]);
           const plan = yield* planForkRepair({ packet: "demo", root: "goals", events });
-          expect(O.isNone(plan)).toBe(true);
+          plan.pipe(O.isNone, assertTrue);
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000

@@ -1601,7 +1601,7 @@ describe("yeet planner", () => {
     const extracted = jsonObjectTextFromMixedOutputForTesting(hostile);
     const elapsedMs = globalThis.performance.now() - startedAt;
 
-    expect(O.isNone(extracted)).toBe(true);
+    extracted.pipe(O.isNone, assertTrue);
     expect(elapsedMs).toBeLessThan(1000);
   });
 
@@ -4429,7 +4429,7 @@ describe("yeet publish scope helpers", () => {
     );
 
     expect(verdict.pushed).toBe(false);
-    expect(O.isNone(verdict.attemptId)).toBe(true);
+    verdict.attemptId.pipe(O.isNone, assertTrue);
   });
 
   {
@@ -4801,7 +4801,7 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
           const lease = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]);
 
-          expect(O.isNone(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isNone, assertTrue);
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
@@ -4906,15 +4906,11 @@ describe("yeet publish scope helpers", () => {
           if (O.isSome(first)) {
             expect(first.value.lockPath).toBe(fallbackPath);
           }
-          expect(
-            O.isNone(
-              yield* acquireFullProofFallbackLockOrObserveAtPath(
-                otherOriginLockPath,
-                tempContext,
-                "bun run beep yeet verify"
-              )
-            )
-          ).toBe(true);
+          (yield* acquireFullProofFallbackLockOrObserveAtPath(
+            otherOriginLockPath,
+            tempContext,
+            "bun run beep yeet verify"
+          )).pipe(O.isNone, assertTrue);
 
           if (O.isSome(first)) {
             yield* releaseProofLock(first.value);
@@ -5515,7 +5511,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "PRRT_a,PRRT_b",
     });
-    expect(O.isNone(ok.error)).toBe(true);
+    ok.error.pipe(O.isNone, assertTrue);
     expect(ok.intents.map((intent) => `${intent.kind}:${intent.threadId}`)).toEqual([
       "reply:PRRT_a",
       "resolve:PRRT_a",
@@ -5643,16 +5639,16 @@ describe("yeet base ref safety", () => {
   it("refuses option-like and refspec-injecting base refs", () => {
     // Regression for the git fetch option injection: the stripped branch must not
     // be reparsable as a fetch option (--upload-pack=...) or a second refspec.
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("origin/--upload-pack=sh -c 'id' #"))).toBe(true);
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("origin/-rf"))).toBe(true);
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("origin/main:refs/heads/evil"))).toBe(true);
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("origin/has space"))).toBe(true);
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("origin/..evil"))).toBe(true);
+    safeOriginBranchFromBaseForTesting("origin/--upload-pack=sh -c 'id' #").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("origin/-rf").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("origin/main:refs/heads/evil").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("origin/has space").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("origin/..evil").pipe(O.isNone, assertTrue);
   });
 
   it("ignores non-origin base refs so they fall back to rev-parse", () => {
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("main"))).toBe(true);
-    expect(O.isNone(safeOriginBranchFromBaseForTesting("HEAD~1"))).toBe(true);
+    safeOriginBranchFromBaseForTesting("main").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("HEAD~1").pipe(O.isNone, assertTrue);
   });
 });
 

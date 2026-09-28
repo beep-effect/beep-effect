@@ -784,7 +784,7 @@ describe("knowledge semantic-delta gate semantics", () => {
 
       expect(A.length(report.unchanged)).toBe(1);
       expect(report.introduced).toEqual([]);
-      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+      knowledgeSemanticDeltaFailure(report).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -795,7 +795,7 @@ describe("knowledge semantic-delta gate semantics", () => {
       );
 
       expect(A.length(report.resolved)).toBe(1);
-      expect(O.isNone(knowledgeSemanticDeltaFailure(report))).toBe(true);
+      knowledgeSemanticDeltaFailure(report).pipe(O.isNone, assertTrue);
     })
   );
 });

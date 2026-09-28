@@ -548,7 +548,7 @@ describe("delete-package baseline writers", () => {
     for (const step of DeletePackageBaselineWriters.steps) {
       if (!Str.equivalence(step.label, "fallow health baseline")) {
         expect(step.exitPolicy).toBe("zero-only");
-        expect(O.isNone(step.verifiedOutput)).toBe(true);
+        step.verifiedOutput.pipe(O.isNone, assertTrue);
       }
     }
   });

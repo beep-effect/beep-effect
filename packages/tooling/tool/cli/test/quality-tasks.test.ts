@@ -2076,8 +2076,8 @@ describe("quality task adapter", () => {
         withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, prepareLaneProofSession([lane]))
       );
 
-      expect(O.isNone(disabled)).toBe(true);
-      expect(O.isNone(invalid)).toBe(true);
+      disabled.pipe(O.isNone, assertTrue);
+      invalid.pipe(O.isNone, assertTrue);
       withDefaultBase.pipe(O.isSome, assertTrue);
 
       const emptySession = LaneProofSession.make({
@@ -2116,7 +2116,7 @@ describe("quality task adapter", () => {
 
       try {
         const session = yield* prepareLaneProofSession([lane], "active");
-        expect(O.isNone(session)).toBe(true);
+        session.pipe(O.isNone, assertTrue);
       } finally {
         spawnSync.mockRestore();
       }
@@ -5047,7 +5047,7 @@ describe("quality task adapter", () => {
           "@beep/x": { _tag: "owns-changed-file", filePath: "packages/x/src/Alpha.ts" },
           "@beep/w": { _tag: "owns-changed-file", filePath: "packages/w/src/Index.ts" },
         });
-        expect(O.isNone(scope.globalExclusion)).toBe(true);
+        scope.globalExclusion.pipe(O.isNone, assertTrue);
       })
     );
 
@@ -7618,19 +7618,19 @@ describe("quality task adapter", () => {
     ));
 
   it("leaves lint policy subcommands on the existing command tree", () => {
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "circular"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "deprecated-apis"]))).toBe(true);
+    parseQualityTaskInvocation(["lint", "circular"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["lint", "deprecated-apis"]).pipe(O.isNone, assertTrue);
     assertNone(parseQualityTaskInvocation(["lint", "effect-vitest"]));
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "package-test-imports"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "policy"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "schema-first"]))).toBe(true);
+    parseQualityTaskInvocation(["lint", "package-test-imports"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["lint", "policy"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["lint", "schema-first"]).pipe(O.isNone, assertTrue);
   });
 
   it("leaves root CLI help and metadata flags on the existing command tree", () => {
-    expect(O.isNone(parseQualityTaskInvocation(["lint", "--help"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["check", "-h"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["build", "--version"]))).toBe(true);
-    expect(O.isNone(parseQualityTaskInvocation(["test", "--log-level=debug"]))).toBe(true);
+    parseQualityTaskInvocation(["lint", "--help"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["check", "-h"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["build", "--version"]).pipe(O.isNone, assertTrue);
+    parseQualityTaskInvocation(["test", "--log-level=debug"]).pipe(O.isNone, assertTrue);
   });
 
   it("delegates affected root lint only to the affected aggregate repo lint lane", () => {

@@ -272,12 +272,12 @@ describe("loadYeetRemediationWave", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
 
         const statePath = yield* yeetDispatchStatePath(root);
         yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
         yield* fs.writeFileString(statePath, "garbage");
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
 
         const json = yield* YeetRemediationWaveJson.encode(wave());
         yield* fs.writeFileString(statePath, `${json}\n`);
@@ -444,7 +444,7 @@ describe("dispatchYeetCheckFailure", () => {
 
         yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
@@ -462,7 +462,7 @@ describe("dispatchYeetCheckFailure", () => {
         );
 
         expect(A.length(yield* readInboxRows(root))).toBe(0);
-        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);

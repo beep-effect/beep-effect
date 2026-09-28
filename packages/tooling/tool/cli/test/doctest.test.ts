@@ -113,7 +113,7 @@ describe("doctest analyzer", () => {
   it("chooses a safe upstream name delimiter and rejects both delimiters", () => {
     expect(O.getOrUndefined(quotedDoctestName("Decode none"))).toBe('name="Decode none"');
     expect(O.getOrUndefined(quotedDoctestName('Decode "none"'))).toBe("name='Decode \"none\"'");
-    expect(O.isNone(quotedDoctestName("Decode \"none\" and 'some'"))).toBe(true);
+    quotedDoctestName("Decode \"none\" and 'some'").pipe(O.isNone, assertTrue);
   });
 });
 
@@ -134,10 +134,10 @@ describe("doctest rewrite planning", () => {
   });
 
   it("uses the real upstream transform as the assertion oracle", () => {
-    expect(O.isNone(validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1))).toBe(true);
+    validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1).pipe(O.isNone, assertTrue);
     validateDoctestAssertions("// => 2", "fixture.ts", 1).pipe(O.isSome, assertTrue);
     validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1).pipe(O.isSome, assertTrue);
-    expect(O.isNone(validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1))).toBe(true);
+    validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1).pipe(O.isNone, assertTrue);
   });
 
   it("plans canonical metadata and rewrites without mutating the analyzed source", () => {

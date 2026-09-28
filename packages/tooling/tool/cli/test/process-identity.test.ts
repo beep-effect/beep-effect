@@ -50,7 +50,7 @@ describe("ProcessIdentity", () => {
 
   it("parses proc stat field 22 after the final closing parenthesis", () => {
     expect(O.getOrThrow(parseAdmissionProcStatStartTime(PROC_STAT))).toBe("8241991");
-    expect(O.isNone(parseAdmissionProcStatStartTime("malformed"))).toBe(true);
+    parseAdmissionProcStatStartTime("malformed").pipe(O.isNone, assertTrue);
   });
 
   it.effect("classifies only same-source mismatches as PID reuse", () =>
@@ -104,9 +104,10 @@ describe("ProcessIdentity", () => {
       expect(
         O.getOrThrow(yield* withProcStat(PROC_STAT, processStartIdentityForPid(process.pid, O.some("proc:8241991"))))
       ).toBe("proc:8241991");
-      expect(
-        O.isNone(yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start"))))
-      ).toBe(true);
+      (yield* withProcStat("", processStartIdentityForPid(process.pid, O.some("proc:recorded-start")))).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const portable = yield* withProcStat("", processStartIdentityForPid(process.pid));
       portable.pipe(O.isSome, assertTrue);
@@ -115,8 +116,8 @@ describe("ProcessIdentity", () => {
         (yield* processStartIdentityForPid(process.pid, portable)).pipe(O.isSome, assertTrue);
       }
 
-      expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing")))).toBe(true);
-      expect(O.isNone(yield* processStartIdentityForPid(process.pid, O.some("win:recorded")))).toBe(true);
+      (yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing"))).pipe(O.isNone, assertTrue);
+      (yield* processStartIdentityForPid(process.pid, O.some("win:recorded"))).pipe(O.isNone, assertTrue);
     }).pipe(provideScopedLayer(NodeFileSystem.layer))
   );
 
@@ -129,7 +130,7 @@ describe("ProcessIdentity", () => {
       }),
       () =>
         withProcStat("", processStartIdentityForPid(process.pid)).pipe(
-          Effect.tap((identity) => Effect.sync(() => expect(O.isNone(identity)).toBe(true)))
+          Effect.tap((identity) => Effect.sync(() => identity.pipe(O.isNone, assertTrue)))
         ),
       (platform) =>
         Effect.sync(() =>

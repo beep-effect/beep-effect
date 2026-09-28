@@ -53,9 +53,9 @@ describe("DirectoryHandle", () => {
       expected.pipe(O.isSome, assertTrue);
       expect(sameDirectoryIdentity(O.getOrThrow(bound).identity, O.getOrThrow(expected))).toBe(true);
 
-      expect(O.isNone(yield* openDirectoryHandle(link))).toBe(true);
-      expect(O.isNone(yield* openDirectoryHandle(file))).toBe(true);
-      expect(O.isNone(yield* openDirectoryHandle(path.join(root, "missing")))).toBe(true);
+      (yield* openDirectoryHandle(link)).pipe(O.isNone, assertTrue);
+      (yield* openDirectoryHandle(file)).pipe(O.isNone, assertTrue);
+      (yield* openDirectoryHandle(path.join(root, "missing"))).pipe(O.isNone, assertTrue);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );
 

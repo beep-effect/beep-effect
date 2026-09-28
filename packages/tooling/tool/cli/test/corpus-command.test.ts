@@ -246,7 +246,7 @@ describe("corpus restoration evidence invariants", () => {
         expect(RA.pathsOverlap(path, root, filePath)).toBe(true);
         expect(RA.pathsOverlap(path, filePath, path.join(path.dirname(root), "other"))).toBe(false);
         expect(RA.filesystemRootFor(path, filePath)).toBe(path.parse(filePath).root);
-        expect(O.isNone(RA.parseProcStatStartTime("malformed"))).toBe(true);
+        RA.parseProcStatStartTime("malformed").pipe(O.isNone, assertTrue);
         expect(
           RA.parseProcStatStartTime(`1 (fixture) S ${A.join(A.map(A.range(0, 19), String), " ")}`).pipe(
             O.getOrElse(() => "")
@@ -412,9 +412,9 @@ describe("Corpus recycle-bin parsing", () => {
     expect(O.map(classifyRecycleBinName("$R0CB4M9.docx"), (entry) => `${entry.kind}:${entry.pairKey}`)).toStrictEqual(
       O.some("content:0CB4M9.docx")
     );
-    expect(O.isNone(classifyRecycleBinName("README.md"))).toBe(true);
-    expect(O.isNone(classifyRecycleBinName("$Xnope.txt"))).toBe(true);
-    expect(O.isNone(classifyRecycleBinName("$Recycle.Bin"))).toBe(true);
+    classifyRecycleBinName("README.md").pipe(O.isNone, assertTrue);
+    classifyRecycleBinName("$Xnope.txt").pipe(O.isNone, assertTrue);
+    classifyRecycleBinName("$Recycle.Bin").pipe(O.isNone, assertTrue);
   });
 
   it("pairs metadata with content and reports leftovers", () => {
@@ -1180,8 +1180,8 @@ describe("corpus salvage run labels and dedupe", () => {
       const record = yield* decodeCorpusProvenanceRecordJson(line);
 
       expect(record.sourceLabel).toBe("source-a");
-      expect(O.isNone(O.fromUndefinedOr(record.copyMode))).toBe(true);
-      expect(O.isNone(O.fromUndefinedOr(record.dedupeOfPath))).toBe(true);
+      O.fromUndefinedOr(record.copyMode).pipe(O.isNone, assertTrue);
+      O.fromUndefinedOr(record.dedupeOfPath).pipe(O.isNone, assertTrue);
     })
   );
 });
@@ -1529,8 +1529,8 @@ describe("corpus restoration preservation", () => {
         '{"destinationRelativePath":"../escape","objectId":"object-1","objectKind":"directory","recordedAt":"2026-08-27T00:00:00.000Z","recordType":"archive-directory-pass","runId":"preservation-1","schemaVersion":"oppold-corpus-restoration/v1","sourceLabel":"source-tree","sourceRelativePath":"safe"}'
       ).pipe(Effect.option);
 
-      expect(O.isNone(runLabelResult)).toBe(true);
-      expect(O.isNone(archivePathResult)).toBe(true);
+      runLabelResult.pipe(O.isNone, assertTrue);
+      archivePathResult.pipe(O.isNone, assertTrue);
     })
   );
 

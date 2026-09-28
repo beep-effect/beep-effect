@@ -145,8 +145,8 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
   });
 
   it("drops non-matching and malformed lines", () => {
-    expect(O.isNone(decodeSchemaFirstPolicyFindingLine("plain output line"))).toBe(true);
-    expect(O.isNone(decodeSchemaFirstPolicyFindingLine(`${SchemaFirstPolicyIssuePrefix}{not json`))).toBe(true);
+    decodeSchemaFirstPolicyFindingLine("plain output line").pipe(O.isNone, assertTrue);
+    decodeSchemaFirstPolicyFindingLine(`${SchemaFirstPolicyIssuePrefix}{not json`).pipe(O.isNone, assertTrue);
   });
 
   it("encodes to compact JSON with no prefix", () => {
@@ -175,7 +175,7 @@ describe("JsonStringCodec", () => {
   });
 
   it("decodeOption yields None on malformed input", () => {
-    expect(O.isNone(codec.decodeOption("nope"))).toBe(true);
+    codec.decodeOption("nope").pipe(O.isNone, assertTrue);
     codec.decodeOption('{"x":1,"y":2}').pipe(O.isSome, assertTrue);
   });
 
@@ -236,7 +236,7 @@ describe("EnvConfig readers", () => {
 
   it("configStringOptionSync reads present and absent snapshot values", () => {
     expect(configStringOptionSync("BEEP_SI_STR")).toEqual(O.some("value"));
-    expect(O.isNone(configStringOptionSync(UNSET))).toBe(true);
+    configStringOptionSync(UNSET).pipe(O.isNone, assertTrue);
   });
 
   it("configStringEqualsSync compares present and absent snapshot values", () => {
@@ -277,7 +277,7 @@ describe("EnvConfig readers", () => {
       const missing = provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         configStringOption("TOKEN")
       );
-      expect(O.isNone(yield* missing)).toBe(true);
+      (yield* missing).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -330,7 +330,7 @@ describe("Github plumbing", () => {
         onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
       })
     );
-    expect(O.isNone(result)).toBe(true);
+    result.pipe(O.isNone, assertTrue);
   });
 
   it("nextCursor yields the next cursor when a page follows", () => {
@@ -488,7 +488,7 @@ describe("readOptionalRedactedConfigString", () => {
       const missing = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         readOptionalRedactedConfigString("TOKEN")
       );
-      expect(O.isNone(missing)).toBe(true);
+      missing.pipe(O.isNone, assertTrue);
     })
   );
 });

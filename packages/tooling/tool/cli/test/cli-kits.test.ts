@@ -124,8 +124,8 @@ describe("internal/cli/RunMode", () => {
 describe("internal/cli/UnknownProbe", () => {
   it("narrows non-array objects, rejecting arrays and primitives", () => {
     asRecord({ a: 1 }).pipe(O.isSome, assertTrue);
-    expect(O.isNone(asRecord([1, 2]))).toBe(true);
-    expect(O.isNone(asRecord("nope"))).toBe(true);
+    asRecord([1, 2]).pipe(O.isNone, assertTrue);
+    asRecord("nope").pipe(O.isNone, assertTrue);
     expect(isUnknownRecord({ a: 1 })).toBe(true);
     expect(isUnknownRecord([1, 2])).toBe(false);
     expect(isUnknownRecord(null)).toBe(false);
@@ -134,8 +134,8 @@ describe("internal/cli/UnknownProbe", () => {
   it("reads present properties data-first and data-last, rejecting arrays and missing keys", () => {
     expect(unknownRecordProperty({ name: "beep" }, "name")).toStrictEqual(O.some("beep"));
     expect(unknownRecordProperty("name")({ name: "beep" })).toStrictEqual(O.some("beep"));
-    expect(O.isNone(unknownRecordProperty({ name: "beep" }, "missing"))).toBe(true);
-    expect(O.isNone(unknownRecordProperty([1, 2], "0"))).toBe(true);
+    unknownRecordProperty({ name: "beep" }, "missing").pipe(O.isNone, assertTrue);
+    unknownRecordProperty([1, 2], "0").pipe(O.isNone, assertTrue);
   });
 
   it("lists sorted keys and treats arrays and non-objects as empty", () => {

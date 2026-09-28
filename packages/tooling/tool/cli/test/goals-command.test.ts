@@ -79,7 +79,7 @@ describe("goals status migration mapping", () => {
       expect(O.getOrNull(migrateGoalStatusToken(canonical))).toBe(canonical);
       expect(canonical in GOAL_STATUS_MIGRATIONS).toBe(false);
     }
-    expect(O.isNone(migrateGoalStatusToken("not-a-status"))).toBe(true);
+    migrateGoalStatusToken("not-a-status").pipe(O.isNone, assertTrue);
   });
 
   it("maps every legacy phase-status token from the census", () => {
@@ -103,7 +103,7 @@ describe("goals status migration mapping", () => {
     for (const [legacy, canonical] of expectations) {
       expect(O.getOrNull(migrateGoalPhaseStatusToken(legacy))).toBe(canonical);
     }
-    expect(O.isNone(migrateGoalPhaseStatusToken("wat"))).toBe(true);
+    migrateGoalPhaseStatusToken("wat").pipe(O.isNone, assertTrue);
     expect("complete" in GOAL_PHASE_STATUS_MIGRATIONS).toBe(false);
   });
 });
@@ -247,16 +247,16 @@ describe("README helpers", () => {
   });
 
   it("refuses READMEs without a recognizable Lifecycle line", () => {
-    expect(O.isNone(rewriteReadmeLifecycleToken("## Status\n\nActive\n", "paused"))).toBe(true);
-    expect(O.isNone(readmeLifecycleToken("## Status\n\nActive\n"))).toBe(true);
+    rewriteReadmeLifecycleToken("## Status\n\nActive\n", "paused").pipe(O.isNone, assertTrue);
+    readmeLifecycleToken("## Status\n\nActive\n").pipe(O.isNone, assertTrue);
   });
 
   it("extracts a one-line mission only when cleanly extractable", () => {
     const readme = "# T\n\n## Mission\n\nLine one\nline two.\n\nSecond paragraph.\n\n## Next\n";
     expect(O.getOrNull(readmeMissionLine(readme))).toBe("Line one line two.");
     const long = `# T\n\n## Mission\n\n${"x".repeat(301)}\n`;
-    expect(O.isNone(readmeMissionLine(long))).toBe(true);
-    expect(O.isNone(readmeMissionLine("# T\n\n## Overview\n\nNo mission.\n"))).toBe(true);
+    readmeMissionLine(long).pipe(O.isNone, assertTrue);
+    readmeMissionLine("# T\n\n## Overview\n\nNo mission.\n").pipe(O.isNone, assertTrue);
   });
 });
 
@@ -308,7 +308,7 @@ describe("renderPortfolioIndex", () => {
 describe("parseGoalManifestText", () => {
   it("accepts JSON objects and rejects non-object or broken JSON", () => {
     parseGoalManifestText('{ "a": 1 }').pipe(O.isSome, assertTrue);
-    expect(O.isNone(parseGoalManifestText("[1, 2]"))).toBe(true);
-    expect(O.isNone(parseGoalManifestText("not json"))).toBe(true);
+    parseGoalManifestText("[1, 2]").pipe(O.isNone, assertTrue);
+    parseGoalManifestText("not json").pipe(O.isNone, assertTrue);
   });
 });

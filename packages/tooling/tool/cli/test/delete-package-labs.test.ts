@@ -21,6 +21,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -133,16 +134,16 @@ describe("delete-package labs surface declarations", () => {
   });
 
   it("declares no data resource without a manifest or without a postgres schema", () => {
-    expect(O.isNone(dataResourceSurfaceOf(labTargetWithoutManifest))).toBe(true);
-    expect(O.isNone(dataResourceSurfaceOf(labTargetWithoutSchema))).toBe(true);
+    dataResourceSurfaceOf(labTargetWithoutManifest).pipe(O.isNone, assertTrue);
+    dataResourceSurfaceOf(labTargetWithoutSchema).pipe(O.isNone, assertTrue);
   });
 
   it("keeps non-labs targets on the flat identity segment and the empty deletion note", () => {
     const identity = O.getOrThrow(identitySurfaceOf(productTarget));
-    expect(O.isNone(identity.generatedGroup)).toBe(true);
+    identity.generatedGroup.pipe(O.isNone, assertTrue);
     const pending = O.getOrThrow(pendingSurfaceOf(productTarget));
     expect(pending.deletionNotePolicy).toBe("emit-empty-note");
-    expect(O.isNone(dataResourceSurfaceOf(productTarget))).toBe(true);
+    dataResourceSurfaceOf(productTarget).pipe(O.isNone, assertTrue);
   });
 });
 

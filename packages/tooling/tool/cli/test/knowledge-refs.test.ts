@@ -643,7 +643,7 @@ describe("knowledge refs check gate", () => {
         "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(0);
-      expect(O.isNone(knowledgeRefsCheckFailure(report))).toBe(true);
+      knowledgeRefsCheckFailure(report).pipe(O.isNone, assertTrue);
       expect(renderKnowledgeRefsCheckSection(report)).toBe("check: 0 live gated observation(s)");
     })
   );

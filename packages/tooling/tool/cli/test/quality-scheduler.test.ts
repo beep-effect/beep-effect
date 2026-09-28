@@ -206,7 +206,7 @@ describe("process identity liveness", () => {
           )
         ).toBe("alive");
       }
-      expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID))).toBe(true);
+      (yield* processStartIdentityForPid(DEAD_PID)).pipe(O.isNone, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -980,7 +980,7 @@ describe("quality-scheduler", () => {
   it("parses /proc stat start time past executable names with spaces and parens", () => {
     const stat = "77 (a (weird) name) S 1 77 77 0 -1 4194560 0 0 0 0 0 0 0 0 20 0 1 0 424242 0 0";
     expect(O.getOrElse(parseAdmissionProcStatStartTime(stat), () => "none")).toBe("424242");
-    expect(O.isNone(parseAdmissionProcStatStartTime("garbage"))).toBe(true);
+    parseAdmissionProcStatStartTime("garbage").pipe(O.isNone, assertTrue);
   });
 
   it("runs scheduler status and reap command paths", () =>
@@ -1270,13 +1270,13 @@ describe("quality-scheduler", () => {
         const decoded = yield* decodeAdmissionJournalEvent(encoded);
         expect(decoded).toStrictEqual(event);
         expect(AdmissionJournalEvent.guards[event._tag](decoded)).toBe(true);
-        expect(O.isNone(yield* decodeLegacyAdmissionJournalEvent(encoded).pipe(Effect.option))).toBe(true);
+        (yield* decodeLegacyAdmissionJournalEvent(encoded).pipe(Effect.option)).pipe(O.isNone, assertTrue);
         const wire = yield* decodeJsonObject(encoded);
         const absent = yield* encodeJsonObject(Struct.omit(wire, ["attemptId"]));
         expect(absent).not.toContain("attemptId");
         expect((yield* decodeAdmissionJournalEvent(absent)).attemptId).toStrictEqual(O.none());
         const withoutBranch = yield* encodeJsonObject(Struct.omit(wire, ["branch"]));
-        expect(O.isNone(yield* decodeAdmissionJournalEvent(withoutBranch).pipe(Effect.option))).toBe(true);
+        (yield* decodeAdmissionJournalEvent(withoutBranch).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       })
     )
   );
@@ -1571,14 +1571,14 @@ describe("quality-scheduler", () => {
             expect(unparseable.message).toContain("stayed busy");
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:dead-holder`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
-            expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            (yield* fs.stat(lockPath).pipe(Effect.option)).pipe(O.isNone, assertTrue);
             // Only a malformed generation can age through the backstop; a
             // parseable live owner is never raced by time-based reclamation.
             yield* fs.writeFileString(lockPath, "aged-malformed-token");
             const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedSeconds, agedSeconds);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
-            expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            (yield* fs.stat(lockPath).pipe(Effect.option)).pipe(O.isNone, assertTrue);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
           })
@@ -1638,7 +1638,7 @@ describe("quality-scheduler", () => {
 
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
 
-            expect(O.isNone(yield* fs.stat(claimPath).pipe(Effect.option))).toBe(true);
+            (yield* fs.stat(claimPath).pipe(Effect.option)).pipe(O.isNone, assertTrue);
             expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
             expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           })
@@ -2727,7 +2727,7 @@ describe("quality-scheduler", () => {
               (yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeJournalLockGeneration))).ownerToken
             ).toBe(ownerToken);
             yield* releaseAdmissionJournalLockForTesting(lockPath, ownerToken);
-            expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
+            (yield* fs.stat(lockPath).pipe(Effect.option)).pipe(O.isNone, assertTrue);
           })
         );
       })
@@ -2838,8 +2838,9 @@ describe("quality-scheduler", () => {
               const journalPath = yield* admissionJournalPath(tempRoot.root);
               const original = yield* fs.readFileString(journalPath);
               expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(1);
-              expect(O.isNone(yield* decodeLegacyAdmissionJournalEvent(Str.trim(original)).pipe(Effect.option))).toBe(
-                true
+              (yield* decodeLegacyAdmissionJournalEvent(Str.trim(original)).pipe(Effect.option)).pipe(
+                O.isNone,
+                assertTrue
               );
               const legacyWrites = yield* Ref.make(0);
               const legacySink = AdmissionEvictionJournal.of({

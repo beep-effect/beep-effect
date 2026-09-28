@@ -84,7 +84,7 @@ describe("detectNoLocationTs2589Flake", () => {
       "@beep/box:build: src/internal/Foo.ts(12,5): error TS2589: Type instantiation is excessively deep and possibly infinite.",
       "Failed:    @beep/box#build",
     ].join("\n");
-    expect(O.isNone(detectNoLocationTs2589Flake(output))).toBe(true);
+    detectNoLocationTs2589Flake(output).pipe(O.isNone, assertTrue);
   });
 
   it("keeps mixed diagnostics hard", () => {
@@ -93,7 +93,7 @@ describe("detectNoLocationTs2589Flake", () => {
       "@beep/box:build: src/internal/Foo.ts(3,1): error TS2322: Type 'string' is not assignable to type 'number'.",
       "Failed:    @beep/box#build",
     ].join("\n");
-    expect(O.isNone(detectNoLocationTs2589Flake(output))).toBe(true);
+    detectNoLocationTs2589Flake(output).pipe(O.isNone, assertTrue);
   });
 
   it("keeps an unattributed no-location TS2589 hard", () => {
@@ -101,16 +101,16 @@ describe("detectNoLocationTs2589Flake", () => {
       "error TS2589: Type instantiation is excessively deep and possibly infinite.",
       "Failed:    @beep/box#build",
     ].join("\n");
-    expect(O.isNone(detectNoLocationTs2589Flake(output))).toBe(true);
+    detectNoLocationTs2589Flake(output).pipe(O.isNone, assertTrue);
   });
 
   it("keeps a failed task without TS2589 attribution hard", () => {
     const output = [boxTs2589Line, "Failed:    @beep/box#build, @beep/ui#build"].join("\n");
-    expect(O.isNone(detectNoLocationTs2589Flake(output))).toBe(true);
+    detectNoLocationTs2589Flake(output).pipe(O.isNone, assertTrue);
   });
 
   it("keeps a failure without a turbo Failed footer hard", () => {
-    expect(O.isNone(detectNoLocationTs2589Flake(boxTs2589Line))).toBe(true);
+    detectNoLocationTs2589Flake(boxTs2589Line).pipe(O.isNone, assertTrue);
   });
 
   it("keeps failures beyond the per-lane task cap hard", () => {
@@ -125,12 +125,12 @@ describe("detectNoLocationTs2589Flake", () => {
         ", "
       )}`,
     ].join("\n");
-    expect(O.isNone(detectNoLocationTs2589Flake(output))).toBe(true);
+    detectNoLocationTs2589Flake(output).pipe(O.isNone, assertTrue);
   });
 
   it("keeps a clean or unrelated failure hard", () => {
-    expect(O.isNone(detectNoLocationTs2589Flake(""))).toBe(true);
-    expect(O.isNone(detectNoLocationTs2589Flake("Failed:    @beep/box#build"))).toBe(true);
+    detectNoLocationTs2589Flake("").pipe(O.isNone, assertTrue);
+    detectNoLocationTs2589Flake("Failed:    @beep/box#build").pipe(O.isNone, assertTrue);
   });
 });
 

@@ -216,10 +216,10 @@ describe("yeet resume", () => {
         path.join(sessions, "123.json"),
         '{"pid":123,"sessionId":"session-local-only","cwd":"/workspace"}'
       );
-      expect(O.isNone(yield* isClaudeSessionLive(makeRecord({ harness: "codex" }), sessions, proc))).toBe(true);
+      (yield* isClaudeSessionLive(makeRecord({ harness: "codex" }), sessions, proc)).pipe(O.isNone, assertTrue);
       const withoutSession = PrSessionRecord.make({ ...makeRecord(), sessionId: O.none() });
-      expect(O.isNone(yield* isClaudeSessionLive(withoutSession, sessions, proc))).toBe(true);
-      expect(O.isNone(yield* isClaudeSessionLive(makeRecord(), sessions, proc))).toBe(true);
+      (yield* isClaudeSessionLive(withoutSession, sessions, proc)).pipe(O.isNone, assertTrue);
+      (yield* isClaudeSessionLive(makeRecord(), sessions, proc)).pipe(O.isNone, assertTrue);
     }).pipe(provideScopedLayer(TestLayer))
   );
 

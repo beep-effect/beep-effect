@@ -179,7 +179,7 @@ describe("worktree reap", () => {
         expect(report.schemaVersion).toBe("worktree-reap/v1");
         expect(report.candidates).toHaveLength(8);
         expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
-        expect(O.isNone(candidateAt(report, merged).skipReason)).toBe(true);
+        candidateAt(report, merged).skipReason.pipe(O.isNone, assertTrue);
         candidateAt(report, merged).bytes.pipe(O.isSome, assertTrue);
         expect(candidateAt(report, dirty).reapClass).toBe("merged-pr");
         expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
@@ -258,7 +258,7 @@ describe("worktree reap", () => {
 
         expect(candidateAt(report, occupied).reapClass).toBe("merged-pr");
         expect(O.getOrThrow(candidateAt(report, occupied).skipReason)).toBe("live-session");
-        expect(O.isNone(candidateAt(report, occupied).bytes)).toBe(true);
+        candidateAt(report, occupied).bytes.pipe(O.isNone, assertTrue);
       })
     )
   );
@@ -309,7 +309,7 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        expect(O.isNone(candidate.skipReason)).toBe(true);
+        candidate.skipReason.pipe(O.isNone, assertTrue);
         expect(report.retiredCount).toBe(1);
         expect(report.reclaimedBytes).toBeGreaterThan(0);
         expect(yield* fs.exists(merged)).toBe(false);
@@ -343,8 +343,8 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        expect(O.isNone(candidate.skipReason)).toBe(true);
-        expect(O.isNone(candidate.bytes)).toBe(true);
+        candidate.skipReason.pipe(O.isNone, assertTrue);
+        candidate.bytes.pipe(O.isNone, assertTrue);
         expect(report.reclaimedBytes).toBe(0);
         expect(A.some(report.warnings, Str.includes("size-probe-failed"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(false);
@@ -418,7 +418,7 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        expect(O.isNone(candidate.skipReason)).toBe(true);
+        candidate.skipReason.pipe(O.isNone, assertTrue);
         expect(A.some(report.warnings, Str.includes("retirement-cleanup-failed"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(false);
       })

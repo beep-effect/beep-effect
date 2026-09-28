@@ -5103,3 +5103,13 @@ original whole-cohort timeout or final package acceptance.
   zero while `.turbo/package-test-typecheck-result.json` records failure.
   Operators must inspect the artifact or use the aggregating quality command;
   a clearer command completion summary would prevent false green reports.
+
+- The unchanged detector scan took 17.2 seconds over 4,176 findings during
+  concurrent proofs, following a 10.0-second scan over 4,391 findings. Compare
+  phase timings with recorded load/pressure before attributing scan latency
+  to a code change; the final cheap-gate target needs a controlled measurement.
+- Scheduler status JSON includes its full historical quarantine inventory.
+  A status read encountered 2,068 quarantined entries, obscuring the live
+  capacity/lease summary. Prefer counts in the default summary and an explicit
+  verbose inventory for historical paths; consumers should allowlist fields
+  rather than exclude only known bulky fields. No leases were reaped or changed.

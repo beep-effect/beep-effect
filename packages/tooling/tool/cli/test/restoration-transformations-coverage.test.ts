@@ -202,7 +202,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
     expect(O.getOrUndefined(RT.signatureExtension(Uint8Array.of(0xff, 0xd8, 0xff)))).toBe("jpg");
     expect(O.getOrUndefined(RT.signatureExtension(Uint8Array.of(0x47, 0x49, 0x46, 0x38)))).toBe("gif");
     expect(O.getOrUndefined(RT.signatureExtension(Uint8Array.of(0x50, 0x4b, 0x03, 0x04)))).toBe("zip");
-    expect(O.isNone(RT.signatureExtension(Uint8Array.of(0x00)))).toBe(true);
+    RT.signatureExtension(Uint8Array.of(0x00)).pipe(O.isNone, assertTrue);
   });
 
   it.effect("normalizes paths, allocates collisions, and binds sandbox tools", () =>
@@ -211,7 +211,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(RT.sourceExtension(path, "MAIL.PST")).toBe("pst");
       expect(O.getOrUndefined(RT.residueRootFor("a/folder.export/child/msg"))).toBe("a/folder.export");
       expect(O.getOrUndefined(RT.residueRootFor("a\\folder.orphans\\child"))).toBe("a/folder.orphans");
-      expect(O.isNone(RT.residueRootFor("ordinary/file"))).toBe(true);
+      RT.residueRootFor("ordinary/file").pipe(O.isNone, assertTrue);
       expect(RT.safeRestoredPath(path, "C:\\bad<name>\\file. ")).toBe("bad_name_/file");
       expect(RT.safeRestoredPath(path, "")).toBe("_");
       expect(RT.safeRestoredPath(path, "x".repeat(200))).toContain("__");
@@ -272,8 +272,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
     });
     expect(RT.emptyMailAttemptOutputDigest().sizeBytes).toBe(0);
     expect(O.getOrUndefined(RT.parseNormalizedRmse("123 (0.125)"))).toBe(0.125);
-    expect(O.isNone(RT.parseNormalizedRmse("missing"))).toBe(true);
-    expect(O.isNone(RT.parseNormalizedRmse(`(${"9".repeat(400)})`))).toBe(true);
+    RT.parseNormalizedRmse("missing").pipe(O.isNone, assertTrue);
+    RT.parseNormalizedRmse(`(${"9".repeat(400)})`).pipe(O.isNone, assertTrue);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1))).toBe(true);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0))).toBe(false);
     expect(
@@ -336,20 +336,22 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const direct = path.join(outputRoot, "direct.txt");
       yield* RT.exclusiveCopyFile(source, direct, outputRoot);
       expect(yield* fs.readFileString(direct)).toBe("recycle");
-      expect(O.isNone(yield* RT.exclusiveCopyFile(source, direct, outputRoot).pipe(Effect.option))).toBe(true);
+      (yield* RT.exclusiveCopyFile(source, direct, outputRoot).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const promoted = path.join(outputRoot, "promoted.txt");
       expect(yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest)).toBe(7);
       expect(yield* RT.copyRecycleContent(outputRoot, source, promoted, sourceDigest)).toBe(0);
-      expect(
-        O.isNone(yield* RT.copyRecycleContent(outputRoot, source, promoted, sha("wrong")).pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.copyRecycleContent(outputRoot, source, promoted, sha("wrong")).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const partialDestination = path.join(outputRoot, "partial.txt");
       yield* fs.writeFileString(`${partialDestination}.partial`, "retained");
-      expect(
-        O.isNone(yield* RT.copyRecycleContent(outputRoot, source, partialDestination, sourceDigest).pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.copyRecycleContent(outputRoot, source, partialDestination, sourceDigest).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const wrongDigestDestination = path.join(outputRoot, "wrong-digest.txt");
       const wrongDigestError = yield* RT.copyRecycleContent(
@@ -404,16 +406,14 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
       const fifo = path.join(root, "unsupported.fifo");
       expect((yield* RT.runLegacyStep("mkfifo", [fifo], 2_000)).exitCode).toBe(0);
-      expect(O.isNone(yield* RT.hashRecycleContent(fifo).pipe(Effect.option))).toBe(true);
+      (yield* RT.hashRecycleContent(fifo).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const unsupportedDirectory = path.join(root, "unsupported-directory");
       const unsupportedDestination = path.join(outputRoot, "unsupported-directory");
       yield* fs.makeDirectory(unsupportedDirectory);
       expect((yield* RT.runLegacyStep("mkfifo", [path.join(unsupportedDirectory, "fifo")], 2_000)).exitCode).toBe(0);
-      expect(
-        O.isNone(
-          yield* RT.exclusiveCopyDirectory(unsupportedDirectory, unsupportedDestination, outputRoot).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.exclusiveCopyDirectory(unsupportedDirectory, unsupportedDestination, outputRoot).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -437,43 +437,31 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         outputRoot: path.join(root, name),
         runRoot: root,
       });
-      expect(
-        O.isNone(
-          yield* RT.requireRecycleCopyCapacity(
-            capacityContext("elapsed"),
-            { sha256: sha("payload"), sizeBytes: 1 },
-            { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
-            options,
-            -10_001
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
-      expect(
-        O.isNone(
-          yield* RT.requireRecycleCopyCapacity(
-            capacityContext("output"),
-            { sha256: sha("payload"), sizeBytes: 2 },
-            { inputBytes: 0, mappingCount: 0, outputBytes: 99 },
-            options,
-            DateTime.toEpochMillis(yield* DateTime.now)
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.requireRecycleCopyCapacity(
+        capacityContext("elapsed"),
+        { sha256: sha("payload"), sizeBytes: 1 },
+        { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
+        options,
+        -10_001
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.requireRecycleCopyCapacity(
+        capacityContext("output"),
+        { sha256: sha("payload"), sizeBytes: 2 },
+        { inputBytes: 0, mappingCount: 0, outputBytes: 99 },
+        options,
+        DateTime.toEpochMillis(yield* DateTime.now)
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const enormousOptions = RestorationRecycleOptions.make({
         ...options,
         maxTotalOutputBytes: PosInt.make(Number.MAX_SAFE_INTEGER),
       });
-      expect(
-        O.isNone(
-          yield* RT.requireRecycleCopyCapacity(
-            capacityContext("free-space"),
-            { sha256: sha("payload"), sizeBytes: Number.MAX_SAFE_INTEGER },
-            { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
-            enormousOptions,
-            DateTime.toEpochMillis(yield* DateTime.now)
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.requireRecycleCopyCapacity(
+        capacityContext("free-space"),
+        { sha256: sha("payload"), sizeBytes: Number.MAX_SAFE_INTEGER },
+        { inputBytes: 0, mappingCount: 0, outputBytes: 0 },
+        enormousOptions,
+        DateTime.toEpochMillis(yield* DateTime.now)
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -602,13 +590,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const ledger = yield* fs.readFileString(recycleContext.ledgerPath);
       yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, joins);
       expect(yield* fs.readFileString(recycleContext.ledgerPath)).toBe(ledger);
-      expect(
-        O.isNone(
-          yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, [
-            { ...joins[0]!, count: NonNegativeInt.make(2) },
-          ]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, [
+        { ...joins[0]!, count: NonNegativeInt.make(2) },
+      ]).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -703,23 +687,20 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(
         yield* RT.validateRecycleMappingCheckpoint(recycleContext, outputRoot, pair, mapping, MutableHashMap.empty())
       ).toBe(7);
-      expect(
-        O.isNone(
-          yield* RT.validateRecycleMappingCheckpoint(
-            recycleContext,
-            outputRoot,
-            pair,
-            { ...mapping, contentObjectId: "different" },
-            MutableHashMap.empty()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.validateRecycleMappingCheckpoint(
+        recycleContext,
+        outputRoot,
+        pair,
+        { ...mapping, contentObjectId: "different" },
+        MutableHashMap.empty()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       expect(yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], [pair])).toMatchObject({
         inputBytes: 7,
       });
-      expect(
-        O.isNone(yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], []).pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.validateRecycleMappingPrefix(recycleContext, outputRoot, [mapping], []).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const raceRunRoot = path.join(root, "race-output");
       const raceRestoredRoot = path.join(raceRunRoot, "restored");
@@ -761,17 +742,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* fs.writeFileString(contentPath, "recycle");
 
       yield* fs.writeFileString(retainedPath, "drifted");
-      expect(
-        O.isNone(
-          yield* RT.validateRecycleMappingCheckpoint(
-            recycleContext,
-            outputRoot,
-            pair,
-            mapping,
-            MutableHashMap.empty()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.validateRecycleMappingCheckpoint(
+        recycleContext,
+        outputRoot,
+        pair,
+        mapping,
+        MutableHashMap.empty()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       yield* fs.writeFileString(retainedPath, "recycle");
       let checkpointContentOpens = 0;
       const checkpointRaceFileSystem: FileSystem.FileSystem = {
@@ -792,13 +769,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         MutableHashMap.empty()
       ).pipe(Effect.provideService(FileSystem.FileSystem, checkpointRaceFileSystem), Effect.flip);
       expect(checkpointSourceDriftError.message).toContain("checkpoint source bytes drifted from preservation");
-      expect(O.isNone(yield* RT.hashPreservedRecycleContent(pair.content).pipe(Effect.option))).toBe(true);
+      (yield* RT.hashPreservedRecycleContent(pair.content).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const oversized = {
         ...pair.metadata,
         preservationRecord: { ...metadataRecord, sizeBytes: NonNegativeInt.make(65 * 1024) },
       };
-      expect(O.isNone(yield* RT.readRecycleMetadata(oversized).pipe(Effect.option))).toBe(true);
+      (yield* RT.readRecycleMetadata(oversized).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const directoryMetadata = {
         ...pair.metadata,
         preservationRecord: ArchiveLedgerRecord.cases["archive-directory-pass"].make({
@@ -816,7 +793,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const directoryMetadataError = yield* RT.readRecycleMetadata(directoryMetadata).pipe(Effect.flip);
       expect(directoryMetadataError.message).toContain("Recycle metadata occurrence is not a preserved bounded file");
       yield* fs.writeFileString(metadataPath, "drift");
-      expect(O.isNone(yield* RT.readRecycleMetadata(pair.metadata).pipe(Effect.option))).toBe(true);
+      (yield* RT.readRecycleMetadata(pair.metadata).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       yield* fs.writeFile(metadataPath, metadataBytes);
       yield* fs.writeFileString(contentPath, "recycle");
@@ -958,7 +935,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         "Prior mail exception references unknown candidate unmatched-mail"
       );
       yield* writeRecords(mailLedger, [familyRunStart("mail", 1), mailStart]);
-      expect(O.isNone(yield* RT.mailResumeState(mailContext, [], 0).pipe(Effect.option))).toBe(true);
+      (yield* RT.mailResumeState(mailContext, [], 0).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const legacyLedger = path.join(root, "legacy.jsonl");
       const legacyOutput = path.join(root, "legacy-output");
@@ -1028,7 +1005,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(legacyResume.candidates.map((candidate) => candidate.digest)).toEqual([sha("pending-legacy")]);
       expect(legacyResume.counters).toMatchObject({ exceptionCount: 1, inputBytes: 6, outputBytes: 13, passCount: 1 });
       yield* writeRecords(legacyLedger, [familyRunStart("legacy-word", 1), legacyStart]);
-      expect(O.isNone(yield* RT.legacyResumeState(legacyContext, [], 0).pipe(Effect.option))).toBe(true);
+      (yield* RT.legacyResumeState(legacyContext, [], 0).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1064,8 +1041,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const destination = path.join(directory, "preservation.json");
       const canonical = yield* RT.readCanonicalAcceptance(directory, destination, "acceptance");
       expect(canonical).toContain('"family":"preservation"');
-      expect(O.isNone(yield* RT.readCanonicalAcceptance(directory, directory, "acceptance").pipe(Effect.option))).toBe(
-        true
+      (yield* RT.readCanonicalAcceptance(directory, directory, "acceptance").pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
       );
 
       const partial = `${destination}.partial`;
@@ -1079,11 +1057,12 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       });
       const changedCanonical = yield* encodeRestorationAcceptanceRecordJson(changed);
       yield* fs.writeFileString(partial, `${changedCanonical}\n`);
-      expect(
-        O.isNone(yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical).pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
       yield* fs.remove(partial);
-      expect(O.isNone(yield* RT.writeAcceptanceRecord(corpusRoot, "run-1", changed).pipe(Effect.option))).toBe(true);
+      (yield* RT.writeAcceptanceRecord(corpusRoot, "run-1", changed).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const recycle = RestorationAcceptanceRecord.make({
         ...record,
@@ -1104,12 +1083,12 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         path.join(conflictingPartialDirectory, "preservation.json.partial"),
         `${changedCanonical}\n`
       );
-      expect(O.isNone(yield* RT.writeAcceptanceRecord(corpusRoot, "run-3", record).pipe(Effect.option))).toBe(true);
+      (yield* RT.writeAcceptanceRecord(corpusRoot, "run-3", record).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const outside = path.join(corpusRoot, "outside");
       yield* fs.writeFileString(outside, "x");
       const escaped = yield* RT.requireCanonicalContainedPath(directory, outside).pipe(Effect.option);
-      expect(O.isNone(escaped)).toBe(true);
+      escaped.pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1214,7 +1193,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(captured.exitCode).toBe(0);
       expect(captured.output).toBe("semantic-proof");
       const exhausted = yield* RT.runLegacyStep("sh", ["-c", "exit 0"], 0).pipe(Effect.option);
-      expect(O.isNone(exhausted)).toBe(true);
+      exhausted.pipe(O.isNone, assertTrue);
       expect(yield* RT.maximumPageRmse([], [], legacyOptions, legacyBudget)).toBe(0);
     })
   );
@@ -1247,46 +1226,34 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       });
 
       yield* fs.writeFileString(path.join(outputRoot, "over.bin"), "over");
-      expect(
-        O.isNone(
-          yield* RT.legacyOutputWatchdog(
-            legacyContext,
-            RestorationLegacyWordOptions.make({ ...baseOptions, maxTotalOutputBytes: PosInt.make(1) })
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.legacyOutputWatchdog(
+        legacyContext,
+        RestorationLegacyWordOptions.make({ ...baseOptions, maxTotalOutputBytes: PosInt.make(1) })
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       yield* fs.remove(path.join(outputRoot, "over.bin"));
 
       const failedOptions = RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: "/bin/false" });
-      expect(
-        O.isNone(
-          yield* RT.runSandboxedConversion(
-            input,
-            "doc",
-            "docx",
-            path.join(root, "failed-convert"),
-            failedOptions,
-            budget
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.runSandboxedConversion(
+        input,
+        "doc",
+        "docx",
+        path.join(root, "failed-convert"),
+        failedOptions,
+        budget
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const emptyOptions = RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: "/bin/true" });
-      expect(
-        O.isNone(
-          yield* RT.runSandboxedConversion(
-            input,
-            "doc",
-            "docx",
-            path.join(root, "empty-convert"),
-            emptyOptions,
-            budget
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
-      expect(O.isNone(yield* RT.normalizedTikaText(input, failedOptions, budget).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.normalizedTikaText(input, emptyOptions, budget).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.pdfPageCount(input, failedOptions, budget).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.pdfPageCount(input, emptyOptions, budget).pipe(Effect.option))).toBe(true);
+      (yield* RT.runSandboxedConversion(
+        input,
+        "doc",
+        "docx",
+        path.join(root, "empty-convert"),
+        emptyOptions,
+        budget
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.normalizedTikaText(input, failedOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.normalizedTikaText(input, emptyOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.pdfPageCount(input, failedOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.pdfPageCount(input, emptyOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const probe = path.join(root, "probe.sh");
       yield* fs.writeFileString(probe, "#!/bin/sh\nprintf 'Pages: 2\\n'\n");
@@ -1302,19 +1269,18 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         path.join(rendered, "page-1.png"),
         path.join(rendered, "page-2.png"),
       ]);
-      expect(
-        O.isNone(
-          yield* RT.renderPdfPages(input, path.join(root, "render-fail"), failedOptions, budget).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.renderPdfPages(input, path.join(root, "render-fail"), failedOptions, budget).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const compare = path.join(root, "compare.sh");
       yield* fs.writeFileString(compare, "#!/bin/sh\nprintf '0 (0.25)\\n'\n");
       expect((yield* RT.runLegacyStep("chmod", ["+x", compare], 2_000)).exitCode).toBe(0);
       const compareOptions = RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: compare });
       expect(yield* RT.comparePageRmse(input, input, compareOptions, budget)).toBe(0.25);
-      expect(O.isNone(yield* RT.comparePageRmse(input, input, failedOptions, budget).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.comparePageRmse(input, input, emptyOptions, budget).pipe(Effect.option))).toBe(true);
+      (yield* RT.comparePageRmse(input, input, failedOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.comparePageRmse(input, input, emptyOptions, budget).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const compareFailure = path.join(root, "compare-failure.sh");
       yield* fs.writeFileString(compareFailure, "#!/bin/sh\nexit 2\n");
       expect((yield* RT.runLegacyStep("chmod", ["+x", compareFailure], 2_000)).exitCode).toBe(0);
@@ -1328,8 +1294,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
       const workRoot = yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work");
       expect(yield* fs.exists(workRoot)).toBe(true);
-      expect(O.isNone(yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work").pipe(Effect.option))).toBe(
-        true
+      (yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work").pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
       );
 
       const converted = path.join(root, "converted.docx");
@@ -1339,22 +1306,14 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(
         (yield* RT.promoteLegacyWordOutput(converted, sha("legacy"), promotedRoot, root, PosInt.make(100))).sizeBytes
       ).toBe(4);
-      expect(
-        O.isNone(
-          yield* RT.promoteLegacyWordOutput(converted, sha("legacy"), promotedRoot, root, PosInt.make(100)).pipe(
-            Effect.option
-          )
-        )
-      ).toBe(true);
+      (yield* RT.promoteLegacyWordOutput(converted, sha("legacy"), promotedRoot, root, PosInt.make(100)).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
       const capacityRoot = path.join(root, "capacity");
       yield* fs.makeDirectory(capacityRoot);
-      expect(
-        O.isNone(
-          yield* RT.promoteLegacyWordOutput(converted, sha("capacity"), capacityRoot, root, PosInt.make(1)).pipe(
-            Effect.option
-          )
-        )
-      ).toBe(true);
+      (yield* RT.promoteLegacyWordOutput(converted, sha("capacity"), capacityRoot, root, PosInt.make(1)).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
       const stagedRaceRoot = path.join(root, "staged-race");
       yield* fs.makeDirectory(stagedRaceRoot);
       const stagedRaceDigest = sha("staged-race");
@@ -1390,17 +1349,13 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         passed: false,
         unapproved: false,
       });
-      expect(
-        O.isNone(
-          yield* RT.processLegacyWordCandidate(
-            { ...candidate, digest: sha("drift") },
-            "LibreOffice test",
-            legacyContext,
-            baseOptions
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
-      expect(O.isNone(yield* RT.legacyFailureTerminal(legacyContext, candidate).pipe(Effect.option))).toBe(true);
+      (yield* RT.processLegacyWordCandidate(
+        { ...candidate, digest: sha("drift") },
+        "LibreOffice test",
+        legacyContext,
+        baseOptions
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.legacyFailureTerminal(legacyContext, candidate).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const expiredCandidate = { ...candidate, digest: sha("expired"), pass: { ...pass, sha256: sha("expired") } };
       expect(
@@ -1570,16 +1525,12 @@ else exit 92; fi
         ...archivedFile("legacy-drift", "legacy/drift.doc", cfb.length),
         sha256: digest,
       });
-      expect(
-        O.isNone(
-          yield* RT.processLegacyWordCandidate(
-            { digest, occurrenceCount: 1, pass: driftPass, sourcePath: driftSourcePath },
-            "engine",
-            legacyContext,
-            optionsFor(mutatingConverterPath)
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.processLegacyWordCandidate(
+        { digest, occurrenceCount: 1, pass: driftPass, sourcePath: driftSourcePath },
+        "engine",
+        legacyContext,
+        optionsFor(mutatingConverterPath)
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1625,29 +1576,25 @@ else exit 92; fi
 
       (yield* RT.resumableFamilyStart(context, []).pipe(Effect.option)).pipe(O.isSome, assertTrue);
       (yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option)).pipe(O.isSome, assertTrue);
-      expect(O.isNone(yield* RT.resumableFamilyStart(context, [acceptance]).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary, runStart]).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary]).pipe(Effect.option))).toBe(true);
+      (yield* RT.resumableFamilyStart(context, [acceptance]).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.resumableFamilyStart(context, [summary, runStart]).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.resumableFamilyStart(context, [summary]).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       expect((yield* RT.contextFromFamilyStart(context, runStart)).startedAt).toBeGreaterThan(0);
       const invalidStart = { ...runStart, recordedAt: "not-a-date" };
-      expect(O.isNone(yield* RT.contextFromFamilyStart(context, invalidStart).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.requireMailScope(context).pipe(Effect.option))).toBe(true);
+      (yield* RT.contextFromFamilyStart(context, invalidStart).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.requireMailScope(context).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       expect(
         yield* RT.requireMailScope({ ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") })
       ).toBe("full");
-      expect(
-        O.isNone(
-          yield* RT.rejectFamilyPreflight(
-            true,
-            context,
-            0,
-            PosInt.make(100),
-            PosInt.make(100),
-            "denied",
-            "preflight rejected"
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rejectFamilyPreflight(
+        true,
+        context,
+        0,
+        PosInt.make(100),
+        PosInt.make(100),
+        "denied",
+        "preflight rejected"
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1683,11 +1630,11 @@ else exit 92; fi
       });
       expect(yield* RT.deterministicPreservationElapsed([preflight, seal], seal)).toBe(125);
       const invalidElapsed = yield* RT.deterministicPreservationElapsed([], seal).pipe(Effect.option);
-      expect(O.isNone(invalidElapsed)).toBe(true);
+      invalidElapsed.pipe(O.isNone, assertTrue);
 
       yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), "");
       const unsealed = yield* RT.currentPreservationEvidence(corpusRoot, "run-1").pipe(Effect.option);
-      expect(O.isNone(unsealed)).toBe(true);
+      unsealed.pipe(O.isNone, assertTrue);
       const encoded = yield* Effect.forEach([preflight, seal], encodeArchiveLedgerRecordJson);
       yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), `${encoded.join("\n")}\n`);
       const evidence = yield* RT.currentPreservationEvidence(corpusRoot, "run-1");
@@ -1715,7 +1662,7 @@ else exit 92; fi
       };
       const runStart = familyRunStart("legacy-word", 0);
       yield* fs.writeFileString(ledgerPath, `${yield* encodeTransformationLedgerRecordJson(runStart)}\n`);
-      expect(O.isNone(yield* RT.readStrictFamilyEvidence(strictContext).pipe(Effect.option))).toBe(true);
+      (yield* RT.readStrictFamilyEvidence(strictContext).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const summary = familySummary("legacy-word", 0, 0, 0);
       const acceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
@@ -1787,7 +1734,7 @@ else exit 92; fi
         "unsupported",
         O.none()
       ).pipe(Effect.option);
-      expect(O.isNone(conflict)).toBe(true);
+      conflict.pipe(O.isNone, assertTrue);
 
       yield* RT.appendAttachmentRepair(
         mailContext,
@@ -1813,37 +1760,29 @@ else exit 92; fi
 
       const unterminatedPath = path.join(root, "ledgers/mail/unterminated.jsonl");
       yield* fs.writeFileString(unterminatedPath, first.trimEnd());
-      expect(
-        O.isNone(
-          yield* RT.appendAttachmentRepair(
-            { ...mailContext, ledgerPath: unterminatedPath },
-            "attempt-3",
-            "object-3",
-            "attachments/file.bin",
-            "pdf",
-            "attachments/file.pdf",
-            "unsupported",
-            O.none()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendAttachmentRepair(
+        { ...mailContext, ledgerPath: unterminatedPath },
+        "attempt-3",
+        "object-3",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const blankRowPath = path.join(root, "ledgers/mail/blank-row.jsonl");
       yield* fs.writeFileString(blankRowPath, `${first}\n`);
-      expect(
-        O.isNone(
-          yield* RT.appendAttachmentRepair(
-            { ...mailContext, ledgerPath: blankRowPath },
-            "attempt-4",
-            "object-4",
-            "attachments/file.bin",
-            "pdf",
-            "attachments/file.pdf",
-            "unsupported",
-            O.none()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendAttachmentRepair(
+        { ...mailContext, ledgerPath: blankRowPath },
+        "attempt-4",
+        "object-4",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const terminalPath = path.join(root, "ledgers/mail/terminal.jsonl");
       const terminal = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
@@ -1861,20 +1800,16 @@ else exit 92; fi
         unapprovedCount: NonNegativeInt.make(1),
       });
       yield* fs.writeFileString(terminalPath, `${yield* encodeTransformationLedgerRecordJson(terminal)}\n`);
-      expect(
-        O.isNone(
-          yield* RT.appendAttachmentRepair(
-            { ...mailContext, ledgerPath: terminalPath },
-            "attempt-5",
-            "object-5",
-            "attachments/file.bin",
-            "pdf",
-            "attachments/file.pdf",
-            "unsupported",
-            O.none()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendAttachmentRepair(
+        { ...mailContext, ledgerPath: terminalPath },
+        "attempt-5",
+        "object-5",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const invalidPendingPath = path.join(root, "ledgers/mail/invalid-pending.jsonl");
       const pendingSummary = familySummary("mail", 0, 0, 0);
@@ -1882,20 +1817,16 @@ else exit 92; fi
         invalidPendingPath,
         `${yield* encodeTransformationLedgerRecordJson(pendingSummary)}\n${first}`
       );
-      expect(
-        O.isNone(
-          yield* RT.appendAttachmentRepair(
-            { ...mailContext, ledgerPath: invalidPendingPath },
-            "attempt-6",
-            "object-6",
-            "attachments/file.bin",
-            "pdf",
-            "attachments/file.pdf",
-            "unsupported",
-            O.none()
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendAttachmentRepair(
+        { ...mailContext, ledgerPath: invalidPendingPath },
+        "attempt-6",
+        "object-6",
+        "attachments/file.bin",
+        "pdf",
+        "attachments/file.pdf",
+        "unsupported",
+        O.none()
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1948,36 +1879,28 @@ else exit 92; fi
         )
       ).toBe(false);
       expect((yield* RT.applyFamilyCeiling(RT.emptyFamilyCounters(), -1, 0, 100)).unapprovedCount).toBe(1);
-      expect(
-        O.isNone(
-          yield* RT.rejectFamilyPreflight(
-            true,
-            runContext,
-            1,
-            PosInt.make(100),
-            PosInt.make(100),
-            "rejected",
-            "pending rejection"
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rejectFamilyPreflight(
+        true,
+        runContext,
+        1,
+        PosInt.make(100),
+        PosInt.make(100),
+        "rejected",
+        "pending rejection"
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const summary = familySummary("legacy-word", 0, 0, 0);
-      expect(
-        O.isNone(
-          yield* RT.completePendingFamilySummary({
-            context: runContext,
-            contractMatches: false,
-            counters: RT.emptyFamilyCounters(),
-            decoded: { lines: [yield* encodeTransformationLedgerRecordJson(summary)], records: [summary] },
-            expectedTerminalCount: 0,
-            maxTotalElapsedMillis: PosInt.make(100),
-            maxTotalOutputBytes: PosInt.make(100),
-            outputTree: { sha256: sha(""), sizeBytes: 0 },
-            sourceCount: 0,
-            terminalCount: 0,
-          }).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.completePendingFamilySummary({
+        context: runContext,
+        contractMatches: false,
+        counters: RT.emptyFamilyCounters(),
+        decoded: { lines: [yield* encodeTransformationLedgerRecordJson(summary)], records: [summary] },
+        expectedTerminalCount: 0,
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        outputTree: { sha256: sha(""), sizeBytes: 0 },
+        sourceCount: 0,
+        terminalCount: 0,
+      }).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -1996,7 +1919,7 @@ else exit 92; fi
       });
       const now = DateTime.toEpochMillis(yield* DateTime.now);
       expect(yield* RT.familyElapsedMillis(-1)).toBeGreaterThan(0);
-      expect(O.isNone(yield* RT.familyElapsedMillis(now + 60_000).pipe(Effect.option))).toBe(true);
+      (yield* RT.familyElapsedMillis(now + 60_000).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const expiredAttachmentError = yield* RT.extractAttachmentText(
         "/missing",
         "expired",
@@ -2193,11 +2116,9 @@ else exit 92; fi
       expect(yield* fs.readFileString(ledgerPath)).toContain("no remaining approved cumulative output budget");
 
       const drifted = { ...candidate, pass: O.some({ ...pass, sha256: sha("different") }) };
-      expect(
-        O.isNone(
-          yield* RT.processPstCandidate(drifted, options, mailContext, 100, 100, "attempt-drift").pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.processPstCandidate(drifted, options, mailContext, 100, 100, "attempt-drift").pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
 
       const noSpaceOptions = RestorationMailOptions.make({
         ...options,
@@ -2267,11 +2188,10 @@ else exit 92; fi
         passed: false,
         unapproved: true,
       });
-      expect(
-        O.isNone(
-          yield* RT.appendFamilyAttemptStart(mailContext, pst.objectId, sha(pst.objectId), 0).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.appendFamilyAttemptStart(mailContext, pst.objectId, sha(pst.objectId), 0).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const ledger = yield* fs.readFileString(mailContext.ledgerPath);
       expect(ledger).toContain("exhausted its approved total elapsed-time");
@@ -2294,13 +2214,9 @@ else exit 92; fi
       yield* fs.writeFileString(partial, "partial");
       yield* RT.retainInterruptedAttempt(mailContext, pstStart, [{ label: "partial", relativePath: partialRelative }]);
       yield* fs.writeFileString(partial, "second");
-      expect(
-        O.isNone(
-          yield* RT.retainInterruptedAttempt(mailContext, pstStart, [
-            { label: "partial", relativePath: partialRelative },
-          ]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.retainInterruptedAttempt(mailContext, pstStart, [
+        { label: "partial", relativePath: partialRelative },
+      ]).pipe(Effect.option)).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -2316,15 +2232,15 @@ else exit 92; fi
       yield* fs.writeFileString(outside, "outside");
       yield* fs.makeDirectory(tree, { recursive: true });
       yield* fs.symlink(outside, path.join(tree, "escape.bin"));
-      expect(O.isNone(yield* RT.walkTransformationEntries(tree).pipe(Effect.option))).toBe(true);
+      (yield* RT.walkTransformationEntries(tree).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       yield* fs.remove(path.join(tree, "escape.bin"));
       const fifo = path.join(tree, "unsupported.fifo");
       expect((yield* RT.runLegacyStep("mkfifo", [fifo], 2_000)).exitCode).toBe(0);
-      expect(O.isNone(yield* RT.walkTransformationEntries(tree).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.hashTransformationTree(fifo).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.hashTransformationTree(tree).pipe(Effect.option))).toBe(true);
-      expect(O.isNone(yield* RT.measureTransformationTreeBytes(fifo).pipe(Effect.option))).toBe(true);
+      (yield* RT.walkTransformationEntries(tree).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.hashTransformationTree(fifo).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.hashTransformationTree(tree).pipe(Effect.option)).pipe(O.isNone, assertTrue);
+      (yield* RT.measureTransformationTreeBytes(fifo).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       yield* fs.remove(fifo);
 
       yield* fs.makeDirectory(attemptRoot, { recursive: true });
@@ -2342,30 +2258,25 @@ else exit 92; fi
         runRoot: root,
       };
       yield* RT.requireAttachmentCapacity(mailContext, attemptRoot, 3, 3, "capacity");
-      expect(
-        O.isNone(yield* RT.requireAttachmentCapacity(mailContext, attemptRoot, 4, 3, "capacity").pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.requireAttachmentCapacity(mailContext, attemptRoot, 4, 3, "capacity").pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
       yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 3);
       yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 3);
       yield* fs.writeFileString(derived, "drift");
-      expect(
-        O.isNone(
-          yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 10).pipe(
-            Effect.option
-          )
-        )
-      ).toBe(true);
+      (yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 10).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
 
       yield* fs.remove(derived);
       const tikaRelativePath = path.join("derived", "source.tika.txt");
       yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100);
       yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100);
       yield* fs.writeFileString(path.join(attemptRoot, tikaRelativePath), "drift");
-      expect(
-        O.isNone(
-          yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
 
       const options = RestorationMailOptions.make({
         corpusRoot: root,
@@ -2408,20 +2319,16 @@ else exit 92; fi
       ).toBe(0);
       const mismatchedAttachment = path.join(attemptRoot, "Attachment-document.bin");
       yield* fs.writeFile(mismatchedAttachment, Uint8Array.of(0x25, 0x50, 0x44, 0x46));
-      expect(
-        O.isNone(
-          yield* RT.repairAttachment(
-            { absolutePath: mismatchedAttachment, relativePath: "Attachment-document.bin" },
-            attemptRoot,
-            "attempt-mismatched",
-            "object-mismatched",
-            options,
-            mailContext,
-            0,
-            100
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.repairAttachment(
+        { absolutePath: mismatchedAttachment, relativePath: "Attachment-document.bin" },
+        attemptRoot,
+        "attempt-mismatched",
+        "object-mismatched",
+        options,
+        mailContext,
+        0,
+        100
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       const repairRecords = yield* fs.readFileString(ledgerPath);
       expect(repairRecords).toContain('"repairStatus":"unsupported"');
       expect(repairRecords).toContain('"repairStatus":"unchanged"');
@@ -2579,15 +2486,14 @@ else exit 92; fi
         acceptance: failure,
         summary,
       });
-      expect(
-        O.isNone(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, acceptance]).pipe(Effect.option))
-      ).toBe(true);
+      (yield* RT.requireStrictFamilyTerminalRows(context, [runStart, acceptance]).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
       expect(yield* RT.requireStrictFamilySegment(context, [runStart, summary, acceptance])).toEqual([runStart]);
-      expect(
-        O.isNone(
-          yield* RT.requireStrictFamilySegment(context, [runStart, summary, summary, acceptance]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.requireStrictFamilySegment(context, [runStart, summary, summary, acceptance]).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
     })
   );
 
@@ -2625,16 +2531,12 @@ else exit 92; fi
         sourceFamily: "pst",
       });
       yield* RT.rehashMailExceptionOutputs(mailContext, [exception]);
-      expect(
-        O.isNone(
-          yield* RT.rehashMailExceptionOutputs(mailContext, [
-            { ...exception, retainedOutputSha256: sha("drift") },
-          ]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rehashMailExceptionOutputs(mailContext, [{ ...exception, retainedOutputSha256: sha("drift") }]).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
       yield* RT.requireMailPhysicalFilesOwned(mailContext, [], [], []);
       yield* fs.writeFileString(path.join(mailRoot, "rogue.txt"), "rogue");
-      expect(O.isNone(yield* RT.requireMailPhysicalFilesOwned(mailContext, [], [], []).pipe(Effect.option))).toBe(true);
+      (yield* RT.requireMailPhysicalFilesOwned(mailContext, [], [], []).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       yield* fs.remove(path.join(mailRoot, "rogue.txt"));
 
       const childPath = path.join(mailRoot, "attempts/mail-pass/child.txt");
@@ -2654,7 +2556,7 @@ else exit 92; fi
       });
       yield* RT.rehashMailChildren(mailContext, [child], []);
       yield* fs.writeFileString(childPath, "drift");
-      expect(O.isNone(yield* RT.rehashMailChildren(mailContext, [child], []).pipe(Effect.option))).toBe(true);
+      (yield* RT.rehashMailChildren(mailContext, [child], []).pipe(Effect.option)).pipe(O.isNone, assertTrue);
 
       const interruptedRoot = path.join(mailRoot, "interrupted/attempt-1");
       yield* fs.makeDirectory(interruptedRoot, { recursive: true });
@@ -2677,23 +2579,15 @@ else exit 92; fi
         sourceId: "source-1",
       });
       yield* RT.rehashMailChildren(mailContext, [{ ...child, attemptId: interrupted.attemptId }], [interrupted]);
-      expect(
-        O.isNone(
-          yield* RT.rehashMailChildren(
-            mailContext,
-            [{ ...child, attemptId: interrupted.attemptId }],
-            [{ ...interrupted, retainedOutputRelativePath: "../../escape" }]
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rehashMailChildren(
+        mailContext,
+        [{ ...child, attemptId: interrupted.attemptId }],
+        [{ ...interrupted, retainedOutputRelativePath: "../../escape" }]
+      ).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       yield* RT.rehashInterruptedOutputs(mailContext, [interrupted]);
-      expect(
-        O.isNone(
-          yield* RT.rehashInterruptedOutputs(mailContext, [
-            { ...interrupted, retainedOutputSha256: sha("wrong") },
-          ]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rehashInterruptedOutputs(mailContext, [{ ...interrupted, retainedOutputSha256: sha("wrong") }]).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
 
       const recycleRoot = path.join(root, "recycle");
       yield* fs.makeDirectory(path.join(recycleRoot, "restored"), { recursive: true });
@@ -2701,8 +2595,9 @@ else exit 92; fi
       yield* RT.rehashRetainedFamilyOutputs(recycleContext, []);
       yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [], []);
       yield* fs.writeFileString(path.join(recycleRoot, "rogue.txt"), "rogue");
-      expect(O.isNone(yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [], []).pipe(Effect.option))).toBe(
-        true
+      (yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [], []).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
       );
       yield* fs.remove(path.join(recycleRoot, "rogue.txt"));
       const restored = path.join(recycleRoot, "restored/item.txt");
@@ -2727,11 +2622,10 @@ else exit 92; fi
         [{ ...interruptedWithoutScope, family: "recycle" }]
       );
       yield* RT.rehashRecycleOutputs(recycleContext, [mapping]);
-      expect(
-        O.isNone(
-          yield* RT.rehashRecycleOutputs(recycleContext, [{ ...mapping, digest: sha("wrong") }]).pipe(Effect.option)
-        )
-      ).toBe(true);
+      (yield* RT.rehashRecycleOutputs(recycleContext, [{ ...mapping, digest: sha("wrong") }]).pipe(Effect.option)).pipe(
+        O.isNone,
+        assertTrue
+      );
 
       const legacyRoot = path.join(root, "legacy");
       const originalSha256 = sha("legacy-original");
@@ -2753,13 +2647,9 @@ else exit 92; fi
         visualRmse: 0,
       });
       yield* RT.rehashLegacyOutputs(legacyContext, [legacyPass]);
-      expect(
-        O.isNone(
-          yield* RT.rehashLegacyOutputs(legacyContext, [{ ...legacyPass, convertedSha256: sha("wrong") }]).pipe(
-            Effect.option
-          )
-        )
-      ).toBe(true);
+      (yield* RT.rehashLegacyOutputs(legacyContext, [{ ...legacyPass, convertedSha256: sha("wrong") }]).pipe(
+        Effect.option
+      )).pipe(O.isNone, assertTrue);
     })
   );
 
