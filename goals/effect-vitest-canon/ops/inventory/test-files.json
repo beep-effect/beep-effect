@@ -2649,22 +2649,22 @@
     "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
     "package": "@beep/epistemic-ui",
     "kind": "test",
-    "bytes": 1934,
-    "lines": 59
+    "bytes": 2316,
+    "lines": 65
   },
   {
     "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
     "package": "@beep/epistemic-ui",
     "kind": "test",
-    "bytes": 27917,
-    "lines": 774
+    "bytes": 28451,
+    "lines": 777
   },
   {
     "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
     "package": "@beep/epistemic-ui",
     "kind": "test",
-    "bytes": 2008,
-    "lines": 59
+    "bytes": 2052,
+    "lines": 60
   },
   {
     "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
@@ -7880,5 +7880,12 @@
     "kind": "test",
     "bytes": 8487,
     "lines": 199
+  },
+  {
+    "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+    "package": "@beep/epistemic-ui",
+    "kind": "test",
+    "bytes": 7391,
+    "lines": 169
   }
 ]
