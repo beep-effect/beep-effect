@@ -89,6 +89,7 @@ export * from "../commands/Yeet/internal/TurboQuery.ts";
 export * from "../commands/Yeet/internal/Verdict.ts";
 export * from "../commands/Yeet/internal/WatchMode.ts";
 export * from "../commands/Yeet/internal/WatchStream.ts";
+export * from "../commands/Yeet/internal/WaveNotifier.ts";
 export * from "../commands/Yeet/internal/WaveOrder.ts";
 export { yeetMonitorCommandRoute, yeetMonitorDurationMillis } from "../commands/Yeet/Yeet.command.ts";
 export * from "../commands/Yeet/Yeet.render.ts";

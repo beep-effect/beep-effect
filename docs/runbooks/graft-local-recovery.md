@@ -239,6 +239,26 @@ runbook](systemd-timers.md) for the agent-permitted `beep refs plan` and
 `beep refs install-timer --refresh` forms; agents never run `beep refs refresh`
 or a fresh refs timer install.
 
+Each refs run writes its receipt to
+`$HOME/.local/state/beep/refs/last-refresh.json`. Every member gets an
+`outcome`, and a failed or skipped member also gets `detail`, the last 2000
+characters of the failing step's output. Before a deep member's
+`graft build --deep`, the refresh sends a one-token request to
+`$GRAFT_BASE_URL/chat/completions`. If the proxy answers 429, the member runs a
+structural `graft build` only and reports `skipped-cooldown`. Its `detail` then
+reads `model <m> cooling down at <base-url>; retry-after <n>s (until <time>)`.
+Any other answer, or a probe that cannot run, lets the deep build go ahead.
+
+A receipt with `skipped-cooldown`, or a `build-failed` whose `detail` names
+`model_cooldown`, means the proxy's Claude credential hit Anthropic's account
+rate limit. Nothing needs repair. Confirm it with
+`journalctl --user -u cli-proxy-api`, which shows the 429 answers. Then wait
+for the reset time in `Retry-After` and let the next night run. The same
+cooldown fails the 02:30 `beep-graft-deep-refresh.service` run, and nothing
+prevents that yet. Before this preflight existed, the OpenAI SDK inside graft
+slept for the whole uncapped `Retry-After`. On 2026-09-27 that was 55516
+seconds, so each deep member hit its five-hour step timeout with no progress.
+
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,

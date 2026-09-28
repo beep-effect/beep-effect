@@ -610,9 +610,20 @@ const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
 const collectWorktreeStatus = Effect.fn("YeetStatus.collectWorktreeStatus")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<YeetStatusWorktree, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const staged = yield* runGitPaths(context.repoRoot, ["diff", "--cached", "--name-only", "-z"]);
-  const unstaged = yield* runGitPaths(context.repoRoot, ["diff", "--name-only", "-z"]);
-  const untracked = yield* runGitPaths(context.repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"]);
+  // The three reads are independent, so they run at once; their outcomes are
+  // then surfaced in the old sequential order, so the first failing read still
+  // names the error.
+  const [stagedResult, unstagedResult, untrackedResult] = yield* Effect.all(
+    [
+      runGitPaths(context.repoRoot, ["diff", "--cached", "--name-only", "-z"]),
+      runGitPaths(context.repoRoot, ["diff", "--name-only", "-z"]),
+      runGitPaths(context.repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"]),
+    ],
+    { concurrency: "unbounded", mode: "result" }
+  );
+  const staged = yield* Effect.fromResult(stagedResult);
+  const unstaged = yield* Effect.fromResult(unstagedResult);
+  const untracked = yield* Effect.fromResult(untrackedResult);
   const stagedCount = A.length(staged);
   const unstagedCount = A.length(unstaged);
   const untrackedCount = A.length(untracked);
@@ -1314,18 +1325,30 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   const view = yield* decodeGhStatusPullRequest(result.output).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet status."))
   );
-  const [checks, requiredChecks] = yield* Effect.all([
-    collectRemoteChecks(context, false),
-    collectRemoteChecks(context, true),
-  ]);
-  const threadPages = yield* collectRemoteReviewThreads(context, view.id);
+  // Only the review-thread read needs the pull request view (its node id), so
+  // the census, required census, thread pages and run list start together once
+  // the view decodes: two gh round-trips deep instead of five (W10). Outcomes
+  // surface in the old sequential order, so the first failing read in that
+  // order still names the error and the snapshot is unchanged.
+  const [checksResult, requiredChecksResult, threadPagesResult, workflowRunsResult] = yield* Effect.all(
+    [
+      collectRemoteChecks(context, false),
+      collectRemoteChecks(context, true),
+      collectRemoteReviewThreads(context, view.id),
+      collectRemoteWorkflowRuns(context),
+    ],
+    { concurrency: "unbounded", mode: "result" }
+  );
+  const checks = yield* Effect.fromResult(checksResult);
+  const requiredChecks = yield* Effect.fromResult(requiredChecksResult);
+  const threadPages = yield* Effect.fromResult(threadPagesResult);
   const triage = classifyReviewThreads(threadPages.threads, threadPages.pullRequestAuthor);
   const unresolvedReviewThreads = A.map(
     triage.unresolvedThreads,
     (thread) => `${thread.threadId}${O.match(thread.path, { onNone: () => Str.empty, onSome: (path) => ` (${path})` })}`
   );
   const checkSummary = summarizeRemoteChecksForTesting(checks, requiredChecks);
-  const workflowRuns = yield* collectRemoteWorkflowRuns(context);
+  const workflowRuns = yield* Effect.fromResult(workflowRunsResult);
   const hasFailingCheck = pipe(
     checkSummary.failingCheckCount,
     O.exists((count) => count > 0)

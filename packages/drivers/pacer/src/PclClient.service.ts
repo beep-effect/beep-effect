@@ -288,7 +288,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
         ) {
           return yield* Effect.acquireUseRelease(
             startCaseDownload(payload),
-            Effect.fnUntraced(function* (started: ReportInfoType) {
+            Effect.fnUntraced(function* (started) {
               const reportId = yield* Effect.fromOption(ReportId.decodeUnknownOption(started.reportId), () =>
                 invalidReportIdError()
               );

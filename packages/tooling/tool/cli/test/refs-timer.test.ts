@@ -125,4 +125,23 @@ describe("reference refresh timer", () => {
       );
     }
   );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "fails uninstall with systemctl's output when disabling the timer fails",
+    (it) => {
+      it.effect(
+        "fails uninstall with systemctl's output when disabling the timer fails",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* writeExecutable(f.path.join(f.bin, "systemctl"), '#!/bin/sh\nprintf "unit busy\\n"\nexit 3\n');
+          const unitDir = f.path.join(f.home, ".config/systemd/user");
+          yield* f.fs.makeDirectory(unitDir, { recursive: true });
+          yield* f.fs.writeFileString(f.path.join(unitDir, "beep-refs-refresh.timer"), "[Timer]\n");
+          const error = yield* workspace.use((service) => service.uninstallTimer(f.home)).pipe(Effect.flip);
+          expect(error.message).toBe("systemctl exited 3: unit busy");
+          expect(yield* f.fs.readDirectory(unitDir)).toEqual(["beep-refs-refresh.timer"]);
+        })
+      );
+    }
+  );
 });
