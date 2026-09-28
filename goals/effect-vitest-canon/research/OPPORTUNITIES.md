@@ -4448,3 +4448,13 @@ expressions inflated the vault-directory picker registration callback's cognitiv
 complexity. A shared file-local timeout preserves all five 10-second/5-minute
 budgets while evaluating the common condition once. Repair hints should derive
 from the failing lane records; this case needs a regression in the quality tool.
+
+## Public fixtures must cross independent HTTP runtime boundaries explicitly
+
+Moving the ontology MCP harness's platform services into public layer fixtures
+initially caused `Service not found: effect/FileSystem` in the in-process handler.
+`HttpRouter.toWebHandler` starts a separate runtime. Providing the already acquired
+filesystem and path services to its routes repairs the boundary without rebuilding
+native services or sharing per-call workspace/session state. Keep both in-process
+and socket execution in this harness's validation matrix; compile-time layer
+requirements exposed the missing bridge before publication.

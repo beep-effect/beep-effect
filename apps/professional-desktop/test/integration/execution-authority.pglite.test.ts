@@ -24,6 +24,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Arbitrary from "effect/Arbitrary";
@@ -78,7 +79,8 @@ const makeAcceptanceLayer = () =>
   ExecutionLedgerDrizzle.pipe(
     Layer.provideMerge(makeDrizzleLayer()),
     Layer.provideMerge(makeInProcessPgliteLayer()),
-    Layer.provideMerge(BunCrypto.layer)
+    Layer.provideMerge(BunCrypto.layer),
+    Layer.merge(NodeServices.layer)
   );
 
 const rawSql = Effect.map(SqlClient.SqlClient, (client) => client.withoutTransforms());

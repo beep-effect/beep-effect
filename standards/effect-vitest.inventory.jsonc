@@ -49696,17 +49696,17 @@
       "status": "open"
     },
     {
-      "id": "EV003:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:198:withHttpServer@4#1",
+      "id": "EV003:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:201:withHttpServer@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 198,
-      "endLine": 211,
+      "line": 201,
+      "endLine": 216,
       "symbol": "withHttpServer",
       "occurrence": "v2:28f07374ab0172a130ad5c6f3d58503d28070e580e3f0d60c50437af1e1bf69c",
       "class": "unresolved-resource-wrapper",
-      "evidence": "withHttpServer({ mutationsEnabled: false, approvedMutationTools: [] }, (_root, _ontologyPath, useSocketTransport) => Effect.gen(function* () { const forbidden = yield* rawInitialize(useSocketTransport",
+      "evidence": "withHttpServer( { mutationsEnabled: false, approvedMutationTools: [] }, (_root, _ontologyPath, useSocketTransport) => Effect.gen(function* () { const forbidden = yield* rawInitialize(useSocketTranspor",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -101073,6 +101073,50 @@
 {"id":"EV011:apps/professional-desktop/test/intake-atoms.test.ts:14:vitest-import@0#1","lens":"detector","ruleId":"EV011","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/intake-atoms.test.ts","line":14,"endLine":14,"symbol":"vitest-import","occurrence":"v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d","class":"plain-vitest-with-effect","evidence":"import { vi } from \"vitest\";","replacement":{"primitive":"module.@effect/vitest","sketch":"module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."},"severity":"minor","confidence":0.95,"mechanization":"detector","status":"exception","reason":"Only the hoisted mock API remains a direct Vitest import. Re-exporting vi through @effect/vitest reproduces \"There are some problems in resolving the mocks API\" for this suite. Test registration uses the instrumented runner and other test helpers use @effect/vitest; preserve module hoisting without enabling globals."},
 {"id":"EV011:apps/professional-desktop/test/tauri-ipc-socket.test.ts:10:vitest-import@0#1","lens":"detector","ruleId":"EV011","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/tauri-ipc-socket.test.ts","line":10,"endLine":10,"symbol":"vitest-import","occurrence":"v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d","class":"plain-vitest-with-effect","evidence":"import { vi } from \"vitest\";","replacement":{"primitive":"module.@effect/vitest","sketch":"module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."},"severity":"minor","confidence":0.95,"mechanization":"detector","status":"exception","reason":"Only the hoisted mock API remains a direct Vitest import. Re-exporting vi through @effect/vitest reproduces \"There are some problems in resolving the mocks API\" for this suite. Test registration uses the instrumented runner and other test helpers use @effect/vitest; preserve module hoisting without enabling globals."},
 {"id":"EV011:apps/professional-desktop/test/youtube-watch-opener.test.tsx:7:vitest-import@0#1","lens":"detector","ruleId":"EV011","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/youtube-watch-opener.test.tsx","line":7,"endLine":7,"symbol":"vitest-import","occurrence":"v2:4edb49754a5407dfdaee5918ee8c043d097d2eae413ba7ed6307ac9c06b7a01d","class":"plain-vitest-with-effect","evidence":"import { vi } from \"vitest\";","replacement":{"primitive":"module.@effect/vitest","sketch":"module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."},"severity":"minor","confidence":0.95,"mechanization":"detector","status":"exception","reason":"Only the hoisted mock API remains a direct Vitest import. Re-exporting vi through @effect/vitest reproduces \"There are some problems in resolving the mocks API\" for this suite. Test registration uses the instrumented runner and other test helpers use @effect/vitest; preserve module hoisting without enabling globals."},
-    {"id":"EV009:apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts:178:it.live@4#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts","line":178,"endLine":178,"symbol":"it.live","occurrence":"v2:2ad072a30f91a01de71e54112760d10d744e3fe0889809f48eeefd0249a14acd","class":"unjustified-live-test","evidence":"it.live(\"streams a fixture turn over the stdio rpc transport\", () => ipcStdio)","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Compiled native sidecar boot and streaming RPC run over OS pipes. The live tester enforces the original 20-second boot and 30-second RPC deadlines; an unadvanced TestClock cannot bound those real-process waits. Enabled compiled IPC and process-exit/stderr-drain controls pass."}
+    {"id":"EV009:apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts:178:it.live@4#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts","line":178,"endLine":178,"symbol":"it.live","occurrence":"v2:2ad072a30f91a01de71e54112760d10d744e3fe0889809f48eeefd0249a14acd","class":"unjustified-live-test","evidence":"it.live(\"streams a fixture turn over the stdio rpc transport\", () => ipcStdio)","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Compiled native sidecar boot and streaming RPC run over OS pipes. The live tester enforces the original 20-second boot and 30-second RPC deadlines; an unadvanced TestClock cannot bound those real-process waits. Enabled compiled IPC and process-exit/stderr-drain controls pass."},
+    {
+      "id": "EV010:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:27:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+      "line": 27,
+      "endLine": 27,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native platform services are owned by public it.layer fixtures. Real ontology workspace paths and optional loopback HTTP sockets remain the subject; each helper call retains its own workspace, handler and MCP session/client scope. The original cases and success/failure workspace cleanup probes pass under both in-process and socket modes. Memory substitution would change this integration boundary."
+    },
+    {
+      "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:24:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "line": 24,
+      "endLine": 24,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native platform services are owned by public it.layer fixtures. Real ontology workspace paths and optional loopback HTTP sockets remain the subject; each helper call retains its own workspace, handler and MCP session/client scope. The original cases and success/failure workspace cleanup probes pass under both in-process and socket modes. Memory substitution would change this integration boundary."
+    }
   ]
 }

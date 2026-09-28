@@ -3,7 +3,7 @@ import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-cases/tools";
-import { NodeHttpServer, NodeServices } from "@effect/platform-node";
+import { NodeHttpServer } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as Config from "effect/Config";
@@ -113,7 +113,6 @@ const transportLayer = (root: string, options: TransportOptions) =>
     Layer.provide(options.ledger ?? silentLedgerLayer),
     Layer.provide(options.epistemicConfig ?? EpistemicConfigTest),
     Layer.provide(transportConfigProvider(root, options)),
-    Layer.provide(NodeServices.layer),
     Layer.orDie
   );
 
@@ -265,7 +264,11 @@ const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServe
         );
       }
 
-      const routes = transportLayer(root, options);
+      // The web handler starts its own runtime: bridge the public layer's services.
+      const routes = transportLayer(root, options).pipe(
+        Layer.provide(Layer.succeed(FileSystem.FileSystem, fileSystem)),
+        Layer.provide(Layer.succeed(Path.Path, path))
+      );
       const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });
       yield* Effect.addFinalizer(() => Effect.promise(dispose));
       function customFetch(
@@ -281,7 +284,7 @@ const withHttpServerImpl = <A2, E>(options: TransportOptions, run: WithHttpServe
       return yield* run(root, ontologyPath, useSocketTransport).pipe(
         provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)))
       );
-    }).pipe(provideScopedLayer(NodeServices.layer))
+    })
   );
 
 export const withHttpServer: {
