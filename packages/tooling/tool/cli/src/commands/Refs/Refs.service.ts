@@ -196,14 +196,16 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       Effect.mapError(ioError(cwd, "Cannot read process PATH."))
     );
   // Maintenance commands receive no model/provider secrets. Only deep builds
-  // and the desktop notifier inherit the unit environment (R4, R9).
+  // and the desktop notifier inherit the unit environment (R4, R9). `extraEnv` adds
+  // named, non-secret variables a maintenance step needs, such as GRAFT_PACKAGE_ROOT.
   const step = Effect.fn("ReferenceWorkspace.step")(function* (
     home: string,
     cwd: string,
     command: string,
     args: ReadonlyArray<string>,
     deep = false,
-    timeout: Duration.Input = deep === true ? "5 hours" : "15 minutes"
+    timeout: Duration.Input = deep === true ? "5 hours" : "15 minutes",
+    extraEnv: Readonly<Record<string, string>> = {}
   ) {
     const ambientPath = yield* readAmbientPath(cwd);
     return yield* runCaptured({
@@ -215,7 +217,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       trim: true,
       tee: false,
       extendEnv: deep === true || command === "notify-send" || command === "systemctl",
-      env: { HOME: home, PATH: ambientPath, CI: "true", GRAFT_NO_GITIGNORE: "1" },
+      env: { ...extraEnv, HOME: home, PATH: ambientPath, CI: "true", GRAFT_NO_GITIGNORE: "1" },
       timeout,
       forceKillAfter: "30 seconds",
     }).pipe(Effect.provide(context), Effect.mapError(ioError(cwd, `${command} failed to run.`)));
@@ -303,14 +305,26 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   // The deep tier depends on the repo's Graft dist patches (they change what the graph
   // contains). Check them once before member work, like the beep deep refresh does, but degrade
   // instead of aborting: exit 1 is `missing`; an absent script, a spawn failure, a timeout, or any
-  // other exit is `unavailable`.
+  // other exit is `unavailable`. The deep build inherits the unit environment, so when it names
+  // GRAFT_PACKAGE_ROOT the check must inspect that same install; only that variable is passed.
   const patchKitScript = path.join(owner, "scripts", "graft", "apply-dist-patches.sh");
   const checkPatchKit = Effect.fn("ReferenceWorkspace.checkPatchKit")(function* (home: string) {
     const bounded = (text: string) => O.some(Str.slice(-PATCH_KIT_DETAIL_MAX_CHARS)(text));
     const present = yield* fs.exists(patchKitScript).pipe(Effect.orElseSucceed(constFalse));
     if (!present)
       return RefsRefreshPreflight.make({ patchKit: "unavailable", detail: bounded(`${patchKitScript} not found`) });
-    const result = yield* step(home, owner, patchKitScript, ["--check"], false, "5 minutes").pipe(Effect.result);
+    const packageRoot = yield* Config.String("GRAFT_PACKAGE_ROOT").pipe(
+      Config.option,
+      Effect.orElseSucceed(O.none),
+      Effect.map(O.filter(Str.isNonEmpty))
+    );
+    const packageEnv = O.match(packageRoot, {
+      onNone: () => ({}),
+      onSome: (value) => ({ GRAFT_PACKAGE_ROOT: value }),
+    });
+    const result = yield* step(home, owner, patchKitScript, ["--check"], false, "5 minutes", packageEnv).pipe(
+      Effect.result
+    );
     if (result._tag === "Failure")
       return RefsRefreshPreflight.make({ patchKit: "unavailable", detail: bounded(result.failure.message) });
     const { exitCode, output } = result.success;

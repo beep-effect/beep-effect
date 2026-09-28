@@ -12,7 +12,8 @@ import type * as HttpClientRequest from "effect/http/HttpClientRequest";
  *
  * **Details**
  * `patch-kit-missing` exits 1 (a patch is missing) and `patch-kit-broken` exits 2 (no Graft
- * package); otherwise the check passes. Every call is logged to `$HOME/commands.log`.
+ * package); otherwise the check passes. Every call is logged to `$HOME/commands.log`, and the
+ * `GRAFT_PACKAGE_ROOT` and `GRAFT_API_KEY` it sees to `$HOME/patch-kit-env.log`.
  *
  * **Example** (Read the stub)
  * ```ts
@@ -23,6 +24,7 @@ import type * as HttpClientRequest from "effect/http/HttpClientRequest";
  */
 export const patchKitStub = `#!/bin/sh
 printf 'patch-kit %s\\n' "$*" >> "$HOME/commands.log"
+printf 'root=%s key=%s\\n' "\${GRAFT_PACKAGE_ROOT-unset}" "\${GRAFT_API_KEY-unset}" >> "$HOME/patch-kit-env.log"
 if [ -f patch-kit-missing ]; then
   printf 'applied  0001-keep\\nmissing  0002-summaries\\n1 patch(es) not applied to graft 9.9.9\\n' >&2
   exit 1

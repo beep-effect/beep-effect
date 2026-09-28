@@ -60,7 +60,8 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
 const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
   respond: () => Response | undefined,
   seen: Array<HttpClientRequest.HttpClientRequest>,
-  arrange: (f: Effect.Success<ReturnType<typeof prepare>>) => Effect.Effect<void> = () => Effect.void
+  arrange: (f: Effect.Success<ReturnType<typeof prepare>>) => Effect.Effect<void> = () => Effect.void,
+  extraConfig: Readonly<Record<string, string>> = {}
 ) {
   const f = yield* prepare();
   for (const name of ["effect", "effect-tsgo"])
@@ -70,7 +71,7 @@ const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
     .use((service) => service.refresh(f.home, f.root, 4))
     .pipe(
       Effect.provideService(HttpClient.HttpClient, scriptedHttpClient({ respond, seen })),
-      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv(f.configValues))
+      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv({ ...f.configValues, ...extraConfig }))
     );
   const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
   const receipt = yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
@@ -336,7 +337,7 @@ describe("reference planning and refresh", () => {
       "runs deep builds when the model answers",
       Effect.fnUntraced(function* () {
         const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-        const { status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
+        const { f, status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
         expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
         expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
         expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
@@ -345,8 +346,9 @@ describe("reference planning and refresh", () => {
           assertNone(report.detail);
           expect(O.isSome(report.coverage)).toBe(true);
         }
-        // The patch kit is checked once, before any member work.
+        // The patch kit is checked once, before any member work, with the maintenance allowlist.
         expect(log.startsWith("patch-kit --check\n")).toBe(true);
+        expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe("root=unset key=unset\n");
         assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
       })
     );
@@ -436,6 +438,28 @@ describe("reference planning and refresh", () => {
             yield* writeExecutable(script, patchKitStub);
             yield* f.fs.remove(f.path.join(f.owner, "patch-kit-broken")).pipe(Effect.ignore);
           }
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "checks the Graft install the unit environment names and nothing else",
+    (it) => {
+      it.effect(
+        "checks the Graft install the unit environment names and nothing else",
+        Effect.fnUntraced(function* () {
+          const { f, status } = yield* refreshWithProxy(
+            () => new Response("{}", { status: 200 }),
+            [],
+            () => Effect.void,
+            { GRAFT_PACKAGE_ROOT: "/opt/graft-package" }
+          );
+          assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
+          // GRAFT_PACKAGE_ROOT reaches the check; the provider key in the same environment does not.
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe(
+            "root=/opt/graft-package key=unset\n"
+          );
         })
       );
     }
