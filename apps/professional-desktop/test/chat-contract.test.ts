@@ -12,10 +12,11 @@ import { AgentTurnKernel, TurnGenerationError, TurnHistoryItem } from "@beep/age
 import { UsageRecord } from "@beep/epistemic-domain";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
@@ -86,66 +87,77 @@ const userTurns = (timeline: Thread.ThreadTimeline): ReadonlyArray<Thread.Timeli
   A.filter(timeline.turns, (turn) => A.some(turn.items, (item) => item.kind === "message" && item.role === "user"));
 
 describe("@beep/professional-desktop chat contract", () => {
-  it.effect(
-    "happy path: send streams fixture blocks, persists user+assistant turns, appends one usage record",
-    Effect.fnUntraced(function* () {
-      const { operations, usageRef } = yield* makeStack;
-      const workspaceId = yield* decodeWorkspaceId(1);
+  it.layer(
+    Layer.mergeAll(
+      StackLayer,
+      Layer.sync(Metric.MetricRegistry, () => new Map())
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "happy path: send streams fixture blocks, persists user+assistant turns, appends one usage record",
+      Effect.fnUntraced(function* () {
+        const { operations, usageRef } = yield* makeStack;
+        const workspaceId = yield* decodeWorkspaceId(1);
 
-      const thread = yield* operations.createThread(workspaceId, "Contract");
-      const content = userDocument("Hi");
+        const thread = yield* operations.createThread(workspaceId, "Contract");
+        const content = userDocument("Hi");
 
-      const expectedBlocks = fixtureBlocksFor([{ role: "user", text: "Hi" }]);
-      const emitted = yield* Stream.runCollect(operations.sendMessage(thread.id, content));
+        const expectedBlocks = fixtureBlocksFor([{ role: "user", text: "Hi" }]);
+        const emitted = yield* Stream.runCollect(operations.sendMessage(thread.id, content));
 
-      // 1) the stream emits the fixture's deterministic blocks
-      expect(emitted).toHaveLength(expectedBlocks.length);
-      expect(emitted[0]).toStrictEqual(expectedBlocks[0]);
-      expect([...emitted]).toStrictEqual([...expectedBlocks]);
+        // 1) the stream emits the fixture's deterministic blocks
+        expect(emitted).toHaveLength(expectedBlocks.length);
+        expect(emitted[0]).toStrictEqual(expectedBlocks[0]);
+        expect([...emitted]).toStrictEqual([...expectedBlocks]);
 
-      // 2) the timeline shows a user turn then an assistant turn whose content
-      // is the lifted Document
-      const timeline = yield* operations.getTimeline(thread.id);
-      const items = messageItems(timeline);
-      expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
-      expect(items[0]?.content).toStrictEqual(content);
-      expect(items[1]?.content).toStrictEqual(assistantContentToDocument([...expectedBlocks]));
+        // 2) the timeline shows a user turn then an assistant turn whose content
+        // is the lifted Document
+        const timeline = yield* operations.getTimeline(thread.id);
+        const items = messageItems(timeline);
+        expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
+        expect(items[0]?.content).toStrictEqual(content);
+        expect(items[1]?.content).toStrictEqual(assistantContentToDocument([...expectedBlocks]));
 
-      // 3) exactly one finalized usage row with the fixture kernel's exact
-      // provider accounting and an explicit absent Activity link.
-      const usage = yield* Ref.get(usageRef);
-      expect(usage).toHaveLength(1);
-      const record = O.getOrThrow(A.head(usage));
-      expect(record.provider).toBe("fixture");
-      expect(record.model).toBe("fixture");
-      expect(record.orgId).toBe(thread.orgId);
-      expect(O.getOrThrow(record.inputTokens)).toBe(12);
-      expect(O.getOrThrow(record.outputTokens)).toBe(8);
-      expect(O.getOrThrow(record.totalTokens)).toBe(20);
-      expect(O.getOrThrow(record.latencyMillis)).toBe(0);
-      expect(O.getOrThrow(record.costUsdApproxMicros)).toBe(0);
-      expect(O.isNone(record.activityId)).toBe(true);
-      expect(record.metadata.activityLinkStatus).toBe("unavailable_no_activity_store");
-      expect(record.metadata.stopReason).toBe("stop");
+        // 3) exactly one finalized usage row with the fixture kernel's exact
+        // provider accounting and an explicit absent Activity link.
+        const usage = yield* Ref.get(usageRef);
+        expect(usage).toHaveLength(1);
+        const record = O.getOrThrow(A.head(usage));
+        expect(record.provider).toBe("fixture");
+        expect(record.model).toBe("fixture");
+        expect(record.orgId).toBe(thread.orgId);
+        expect(O.getOrThrow(record.inputTokens)).toBe(12);
+        expect(O.getOrThrow(record.outputTokens)).toBe(8);
+        expect(O.getOrThrow(record.totalTokens)).toBe(20);
+        expect(O.getOrThrow(record.latencyMillis)).toBe(0);
+        expect(O.getOrThrow(record.costUsdApproxMicros)).toBe(0);
+        expect(O.isNone(record.activityId)).toBe(true);
+        expect(record.metadata.activityLinkStatus).toBe("unavailable_no_activity_store");
+        expect(record.metadata.stopReason).toBe("stop");
 
-      // The successful stream records completion and duration telemetry in the
-      // same Effect runtime that executed the contract.
-      const metrics = yield* Metric.snapshot;
-      const completed = O.getOrThrow(
-        A.findFirst(
-          metrics,
-          (snapshot) => snapshot.id === "agents_chat_turns_completed_total" && snapshot.type === "Counter"
-        )
-      );
-      const duration = O.getOrThrow(
-        A.findFirst(metrics, (snapshot) => snapshot.id === "agents_chat_turn_duration" && snapshot.type === "Histogram")
-      );
-      expect(completed.type).toBe("Counter");
-      expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
-      expect(duration.type).toBe("Histogram");
-      expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
-    }, provideScopedLayer(StackLayer))
-  );
+        // The successful stream records completion and duration telemetry in the
+        // same Effect runtime that executed the contract.
+        const metrics = yield* Metric.snapshot;
+        const completed = O.getOrThrow(
+          A.findFirst(
+            metrics,
+            (snapshot) => snapshot.id === "agents_chat_turns_completed_total" && snapshot.type === "Counter"
+          )
+        );
+        const duration = O.getOrThrow(
+          A.findFirst(
+            metrics,
+            (snapshot) => snapshot.id === "agents_chat_turn_duration" && snapshot.type === "Histogram"
+          )
+        );
+        expect(completed.type).toBe("Counter");
+        expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
+        expect(duration.type).toBe("Histogram");
+        expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
+      })
+    );
+  });
 
   it.effect(
     "derives a thread title from the first non-empty user line without overwriting existing titles",

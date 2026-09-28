@@ -4300,3 +4300,14 @@ The initial new test used `Schema.UnknownFromJsonString`, which executed at runt
 but failed package type checking with TS2551. The supported constructor
 `Schema.fromJsonString(Schema.Unknown)` fixes the declaration mismatch. Focused
 runtime success cannot replace the package's type-check gate.
+
+## Desktop chat metrics could pass from shared global state
+
+The saved L-OBS-04 finding reproduced: seed completion and duration metrics in
+the default registry, redirect the contract stream's metrics to another registry,
+and the original positive-count assertions still pass. A fresh MetricRegistry
+provided through the test's public layer makes the same control fail at the
+missing metric. Keep metric-producing contract programs and their child fibers
+inside one owned registry rather than clearing a shared global registry. Retain
+negative controls that suppress only the observed program's emissions; a positive
+snapshot alone cannot establish which program produced its counts.
