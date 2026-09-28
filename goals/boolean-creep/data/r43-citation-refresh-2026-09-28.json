@@ -2,7 +2,7 @@
   "kind": "boolean-creep-source-citation-refresh/v1",
   "sourceSha": "980b4cd44c485a68d436465caa72b8201a958f98",
   "inventoryBeforeSha256": "4b7e97420b6c67b9eb09f60a85578b492997041161d22a0014453c64312f2f07",
-  "inventoryAfterSha256": "e54842fb165e1119ec983f81450c8637eae0b4d02808cdff8c7f0a75d95ac156",
+  "inventoryAfterSha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91",
   "sourceFileSha256": "1035895093596b2d2bb47f7217216244eccaec7ccec2944d57968562be422504",
   "classificationChanged": false,
   "dryCredit": false,
@@ -125,7 +125,7 @@
         "status": "disqualified",
         "disqualifier": {
           "class": "D2",
-          "note": "Instantiated sharp .png() encoder options at 1313-1318; adaptiveFiltering, force, and palette are independent sharp SDK knobs. This call sets adaptiveFiltering and force true and palette false."
+          "note": "Instantiated sharp .png() encoder options at 1303-1308; adaptiveFiltering, force, and palette are independent sharp SDK knobs. This call sets adaptiveFiltering and force true and palette false."
         }
       }
     }
