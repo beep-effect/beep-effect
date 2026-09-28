@@ -5,8 +5,8 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // The SHACL construction-count regression mocks a schema module. Keep its
-      // import graph isolated even when coverage shares workers across files.
+      // Tests here mock modules (BoundedShaclValidator.test.ts); keep every file in its own worker
+      // even under coverage (vitest.shared.ts shares the graph there by default).
       isolate: true,
     },
   })

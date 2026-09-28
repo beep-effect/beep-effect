@@ -1525,6 +1525,9 @@ const argumentExpression = (parameter: MethodParameter): string => {
   return `decoded.${parameter.name}`;
 };
 
+const usesCancellationSignal = (parameter: MethodParameter): boolean =>
+  parameter.name === "cancellationToken" || parameter.name === "optionalsInput";
+
 const renderOperationMethod = (method: ManagerMethod): string =>
   `${propertyName(method.methodName)}: (payload) =>
       runSdkCall(
@@ -1534,16 +1537,7 @@ const renderOperationMethod = (method: ManagerMethod): string =>
         M.${method.payloadName},
         M.${method.successName},
         payload,
-        (${A.match(method.parameters, {
-          onEmpty: () => "",
-          onNonEmpty: (parameters) =>
-            A.some(
-              parameters,
-              (parameter) => parameter.name === "cancellationToken" || parameter.name === "optionalsInput"
-            )
-              ? "decoded, signal"
-              : "decoded",
-        })}) =>
+        ${A.some(method.parameters, usesCancellationSignal) ? "(decoded, signal)" : "(decoded)"} =>
           invokeSdkMethod(client, ${stringLiteral(method.managerName)}, ${stringLiteral(method.methodName)}, [
             ${A.join(A.map(method.parameters, argumentExpression), ",\n            ")}
           ])
