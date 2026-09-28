@@ -2459,3 +2459,24 @@ different dependency digest and task hash. The [exact canary control](research/c
 also passed through admission in a separate namespace, with its own reviewed
 archive, native version checks and retention manifest. These frozen observations do not
 renew proof for the later security lockfile update or grant signed-remote credit.
+
+### Current isolated concurrency control
+
+The [stable concurrent pair](research/current-concurrency-stable.json) runs
+two ordinary CLI computations simultaneously in separate writable package
+overlays and local cache directories at frozen source `7f53b4a840`. Native
+Turbo executions overlap for 10,496 ms and identity lint tasks for 659 ms.
+All eight pair comparisons pass, including fresh output-tree and task-log
+equality. Each execution also passes two local replay controls. A manifest
+binds 3,094 retained observation files. The [canary pair](research/current-concurrency-canary.json) also passes all
+eight comparisons, with 8,741 ms native CLI overlap and 692 ms target overlap.
+Its separate retention manifest binds 3,094 files.
+This does not establish shared-cache writer safety or shared-output collision
+behavior and does not renew the frozen dependency profile after the security fix.
+
+A bounded local sibling search inspected 121 manifests each for conformance
+and trust across Beep clones, sibling worktrees and clone-local Claude
+worktrees. All were paused; no candidate receipt filenames were found in
+their research directories. Archived tasks, unchecked-out branches and
+differently named artifacts remain outside that search; no signed-evidence
+credit is inferred. The private search receipt is retained with local evidence.

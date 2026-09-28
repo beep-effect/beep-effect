@@ -419,7 +419,9 @@
     "research/current-runtime-matrix-attachment.json",
     "research/current-security-remediation.json",
     "research/current-cross-root-shared-view-stable.json",
-    "research/current-cross-root-shared-view-canary.json"
+    "research/current-cross-root-shared-view-canary.json",
+    "research/current-concurrency-stable.json",
+    "research/current-concurrency-canary.json"
   ],
   "agentLaunchers": [
     {
@@ -483,5 +485,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 82 reviews and 6 artifacts with 21 unresolved obligations. Stable 2.11.4 and exact canary 2.11.5-canary.2 each pass three local fresh/fresh pairs and twelve replay controls at frozen revision 7f53b4a840. Both clients pass seven current source-invalidation cases. Cross-root preflight found a differing toolchain digest; full snapshots attribute it to differing installed-dependency content; native-addon path metadata differs. Stable and exact canary cross-root replay pass when the identical installed dependency tree is mounted read-only at the second root. Independent-installation portability is unproven. Signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified."
+  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 82 reviews and 6 artifacts with 21 unresolved obligations. Stable 2.11.4 and exact canary 2.11.5-canary.2 each pass three local fresh/fresh pairs and twelve replay controls at frozen revision 7f53b4a840. Both clients pass seven current source-invalidation cases. Cross-root preflight found a differing toolchain digest; full snapshots attribute it to differing installed-dependency content; native-addon path metadata differs. Stable and exact canary cross-root replay pass when the identical installed dependency tree is mounted read-only at the second root. Independent-installation portability is unproven. Signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified. Stable isolated concurrency control passes with 659 ms native target overlap; canary passes with 692 ms native target overlap. Shared-writer collision proof remains separate."
 }

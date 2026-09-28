@@ -1,0 +1,36 @@
+{
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "profile": "canary 2.11.5-canary.2",
+  "authority": "Native summaries and independently reviewed isolated cache artifacts",
+  "checks": {
+    "distinctCaches": true,
+    "sameRevision": true,
+    "samePins": true,
+    "sameTaskHash": true,
+    "sameInputs": true,
+    "sameHashedEnvironment": true,
+    "sameFreshTree": true,
+    "sameLog": true
+  },
+  "cliOverlapMs": 8741,
+  "targetOverlapMs": 692,
+  "freshTaskHash": "09c592cc5530dbaf",
+  "executionCount": 2,
+  "casePatternPerExecution": [
+    "fresh MISS",
+    "replay HIT",
+    "repeat HIT"
+  ],
+  "retention": {
+    "reference": "concurrency-canary-7f53b4a840",
+    "files": 3094,
+    "manifestSha256": "5b39e9a39a014d0746649257960e10098feec32c336f812c9dbbf64e363f405c",
+    "receiptSha256": "87063afa1b2163211912804b44cda79aee02175eda165bb69ffe68848936ffe1"
+  },
+  "limits": [
+    "Two simultaneous executions with separate writable package overlays and local cache directories; not shared-cache writer or shared-output collision proof.",
+    "Identical frozen source and installed dependencies; later security lock changes do not inherit this evidence.",
+    "Task input maps, hashed environment, fresh identity trees and task logs agree. Whole CLI streams are not asserted equal.",
+    "No signed remote, semantic closure, shadow completion or qualification promotion."
+  ]
+}
