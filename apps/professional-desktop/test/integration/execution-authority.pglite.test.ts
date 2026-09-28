@@ -27,7 +27,6 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -128,13 +127,14 @@ ex:canary ex:value "${workspaceCanary}" .
 `;
 
 describe("professional desktop execution-authority schema laws", () => {
-  it("generates valid ontology SPARQL query requests", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.schema(OntologySparqlQueryRequest), isOntologySparqlQueryRequest, fcRuns(25))
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "generates valid ontology SPARQL query requests",
+    { request: OntologySparqlQueryRequest },
+    ({ request }) => {
+      expect(isOntologySparqlQueryRequest(request)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });
 
 describe("professional desktop execution authority PgLite acceptance", { concurrent: false }, () => {

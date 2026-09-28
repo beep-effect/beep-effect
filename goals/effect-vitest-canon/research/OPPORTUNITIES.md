@@ -4720,3 +4720,13 @@ before assertions; deleting the extension scope makes the original cleanup test
 fail. A higher-order wrapper can hide real lifetime ownership from syntax-only
 rules. Keep explicit lifetime judgments and behavioral controls when flattening
 such helpers instead of treating an increased detector count as regression alone.
+
+## Similar schema-test helpers can prove different laws
+
+The Desktop property migration compared its encode-then-decode equivalence law
+with assertSchemaArbitraryDecodesToSelf. The shared helper decodes generated
+values directly and does not test the original encodeResult path. Substituting
+it solely because both helpers mention schema round trips would silently change
+the tested contract. Helper documentation and future reuse searches should name
+the exact direction and equivalence law, and migrations should retain the
+production schemas and count/seed controls.

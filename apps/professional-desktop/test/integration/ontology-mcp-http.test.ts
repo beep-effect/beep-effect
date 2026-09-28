@@ -23,7 +23,6 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -63,24 +62,10 @@ const firstTextContent = (call: {
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
 const decodePublishProvenanceResponse = S.decodeUnknownEffect(PublishProvenanceResponse);
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 interface LedgerProbe {
@@ -156,10 +141,15 @@ const addName = (person: string, name: string) =>
 
 describe("professional desktop ontology MCP streamable HTTP mount", { concurrent: false, timeout: 120_000 }, () => {
   it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
-    it("round-trips MCP request codecs with schema-derived arbitraries", () => {
-      assertSchemaRoundTrip(OpenInspectRequest);
-      assertSchemaRoundTrip(OntologySparqlQueryRequest);
-    });
+    it.prop(
+      "round-trips MCP request codecs with schema-derived arbitraries",
+      { openInspect: OpenInspectRequest, query: OntologySparqlQueryRequest },
+      ({ openInspect, query }) => {
+        assertSchemaRoundTrip(OpenInspectRequest, openInspect);
+        assertSchemaRoundTrip(OntologySparqlQueryRequest, query);
+      },
+      { arbitrary: fcRuns(10) }
+    );
 
     it.effect(
       "proves initialize, tools/list, and the read-only first slice while mutation registration is disabled",

@@ -353,8 +353,8 @@
     "file": "apps/professional-desktop/test/failure-message.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2086,
-    "lines": 61
+    "bytes": 2132,
+    "lines": 64
   },
   {
     "file": "apps/professional-desktop/test/failure-observability.test.ts",
@@ -437,15 +437,15 @@
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 29439,
+    "bytes": 29375,
     "lines": 599
   },
   {
     "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 26463,
-    "lines": 545
+    "bytes": 26342,
+    "lines": 535
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
@@ -528,8 +528,8 @@
     "file": "apps/professional-desktop/test/schema-parity.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 11416,
-    "lines": 257
+    "bytes": 11615,
+    "lines": 261
   },
   {
     "file": "apps/professional-desktop/test/setup.dom.ts",
@@ -549,8 +549,8 @@
     "file": "apps/professional-desktop/test/spike-schema.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3608,
-    "lines": 93
+    "bytes": 3479,
+    "lines": 90
   },
   {
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",

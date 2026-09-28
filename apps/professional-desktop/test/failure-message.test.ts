@@ -38,13 +38,16 @@ describe("failureMessageOr", () => {
     expect(orFallback(Object.create({ message: "inherited" }))).toBe("inherited");
   });
 
-  it("reads the issue text from a real SchemaError", () => {
-    const failure = Effect.runSync(decodeUnknownFinite("x").pipe(Effect.flip));
-    const message = orFallback(failure);
+  it.effect(
+    "reads the issue text from a real SchemaError",
+    Effect.fnUntraced(function* () {
+      const failure = yield* decodeUnknownFinite("x").pipe(Effect.flip);
+      const message = orFallback(failure);
 
-    expect(message).not.toBe("fallback");
-    expect(message).toContain("number");
-  });
+      expect(message).not.toBe("fallback");
+      expect(message).toContain("number");
+    })
+  );
 
   it("redacts secrets and home paths in the surfaced message", () => {
     const message = orFallback(new Error("auth failed for /home/ada with token sk-EXAMPLEKEY00"));
