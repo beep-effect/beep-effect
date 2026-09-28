@@ -323,6 +323,13 @@ export type TSMorphServiceError = typeof TSMorphServiceError.Type;
 /**
  * Read-only v1 service contract for ts-morph-backed scope, symbol, source, and diagnostic operations.
  *
+ * **Details**
+ *
+ * Project and symbol caches are isolated by repository root. Public scope ids
+ * remain repository-relative. If an id has been resolved in multiple roots,
+ * id-based lookups use the current repository; an unmatched current repository
+ * produces a typed scope-resolution error instead of selecting another root.
+ *
  * **Example** (Import service shape type)
  *
  * ```ts
@@ -473,11 +480,19 @@ const ensureExists = Effect.fn("ensureExists")(function* <E extends TSMorphServi
 });
 
 const createProjectPool = (pathApi: Path.Path): ProjectPool => {
-  const projects = MutableHashMap.empty<ProjectCacheKey, Project>();
-  const explicitFileProjects = MutableHashMap.empty<ProjectCacheKey, Project>();
+  const projects = MutableHashMap.empty<RepoRootPath, MutableHashMap.MutableHashMap<ProjectCacheKey, Project>>();
+  const explicitFileProjects = MutableHashMap.empty<
+    RepoRootPath,
+    MutableHashMap.MutableHashMap<ProjectCacheKey, Project>
+  >();
 
   const getOrCreate: ProjectPool["getOrCreate"] = Effect.fn(function* (scope, loadTsconfigFiles) {
-    const pool = loadTsconfigFiles === false ? explicitFileProjects : projects;
+    const rootPools = loadTsconfigFiles === false ? explicitFileProjects : projects;
+    const pool = O.getOrElse(MutableHashMap.get(rootPools, scope.repoRootPath), () => {
+      const created = MutableHashMap.empty<ProjectCacheKey, Project>();
+      MutableHashMap.set(rootPools, scope.repoRootPath, created);
+      return created;
+    });
     const cachedProject = MutableHashMap.get(pool, scope.cacheKey);
     if (O.isSome(cachedProject)) {
       return cachedProject.value;
@@ -720,9 +735,15 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const pathApi = yield* Path.Path;
   const cryptoContext = yield* Effect.context<Crypto.Crypto>();
 
-  const resolvedScopes = MutableHashMap.empty<string, TsMorphProjectScope>();
+  const resolvedScopes = MutableHashMap.empty<
+    string,
+    MutableHashMap.MutableHashMap<RepoRootPath, TsMorphProjectScope>
+  >();
   const projectPool = createProjectPool(pathApi);
-  const symbolIndexPool = MutableHashMap.empty<ProjectCacheKey, ScopeSymbolIndex>();
+  const symbolIndexPool = MutableHashMap.empty<
+    RepoRootPath,
+    MutableHashMap.MutableHashMap<ProjectCacheKey, ScopeSymbolIndex>
+  >();
 
   const resolveRepoRoot = Effect.fn("TSMorphService.resolveRepoRoot")(function* (
     repoRootPath: O.Option<RepoRootPath>
@@ -884,7 +905,12 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       referencePolicy,
     });
 
-    MutableHashMap.set(resolvedScopes, scope.scopeId, scope);
+    const scopesByRoot = O.getOrElse(MutableHashMap.get(resolvedScopes, scope.scopeId), () => {
+      const created = MutableHashMap.empty<RepoRootPath, TsMorphProjectScope>();
+      MutableHashMap.set(resolvedScopes, scope.scopeId, created);
+      return created;
+    });
+    MutableHashMap.set(scopesByRoot, scope.repoRootPath, scope);
     return scope;
   });
 
@@ -905,9 +931,19 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const resolveScopeById = Effect.fnUntraced(function* (
     scopeId: string
   ): Effect.fn.Return<TsMorphProjectScope, TSMorphServiceError> {
-    const cachedScope = MutableHashMap.get(resolvedScopes, scopeId);
-    if (O.isSome(cachedScope)) {
-      return cachedScope.value;
+    const cachedScopes = MutableHashMap.get(resolvedScopes, scopeId);
+    if (O.isSome(cachedScopes)) {
+      if (MutableHashMap.size(cachedScopes.value) === 1) {
+        return O.getOrThrow(A.head(A.fromIterable(MutableHashMap.values(cachedScopes.value))));
+      }
+      const currentRoot = yield* resolveRepoRoot(O.none()).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+      const matchingScope = O.flatMap(currentRoot, (root) => MutableHashMap.get(cachedScopes.value, root));
+      return yield* Effect.fromOption(matchingScope, () =>
+        TsMorphScopeResolutionError.make({
+          entrypoint: scopeId,
+          message: `Scope id "${scopeId}" is ambiguous across repository roots; run the lookup within its repository or use a separate service instance.`,
+        })
+      );
     }
 
     const [tsConfigPath, _scopeSeparator, mode, _policySeparator, referencePolicy] = yield* decodeOrFail(
@@ -965,7 +1001,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     }
 
     if (existingSourceFile === undefined) {
-      MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+      MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+        MutableHashMap.remove(indexes, scope.cacheKey)
+      );
     }
 
     return {
@@ -1033,13 +1071,18 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   const getOrCreateScopeSymbolIndex = Effect.fnUntraced(function* (
     scope: TsMorphProjectScope
   ): Effect.fn.Return<ScopeSymbolIndex, TSMorphServiceError> {
-    const cachedSymbolIndex = MutableHashMap.get(symbolIndexPool, scope.cacheKey);
+    const indexesByKey = O.getOrElse(MutableHashMap.get(symbolIndexPool, scope.repoRootPath), () => {
+      const created = MutableHashMap.empty<ProjectCacheKey, ScopeSymbolIndex>();
+      MutableHashMap.set(symbolIndexPool, scope.repoRootPath, created);
+      return created;
+    });
+    const cachedSymbolIndex = MutableHashMap.get(indexesByKey, scope.cacheKey);
     if (O.isSome(cachedSymbolIndex)) {
       return cachedSymbolIndex.value;
     }
 
     const symbolIndex = yield* collectScopeSymbolIndex(scope);
-    MutableHashMap.set(symbolIndexPool, scope.cacheKey, symbolIndex);
+    MutableHashMap.set(indexesByKey, scope.cacheKey, symbolIndex);
     return symbolIndex;
   });
 
@@ -1275,7 +1318,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       }
 
       if (!A.isReadonlyArrayEmpty(request.sourceFileGlobs)) {
-        MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+        MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+          MutableHashMap.remove(indexes, scope.cacheKey)
+        );
       }
 
       for (const filePath of request.filePaths) {
@@ -1348,7 +1393,9 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           ),
       });
 
-      MutableHashMap.remove(symbolIndexPool, scope.cacheKey);
+      MutableHashMap.modify(symbolIndexPool, scope.repoRootPath, (indexes) =>
+        MutableHashMap.remove(indexes, scope.cacheKey)
+      );
       return true;
     }
   );
