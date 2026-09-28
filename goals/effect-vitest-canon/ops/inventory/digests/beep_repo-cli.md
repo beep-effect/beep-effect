@@ -9,10 +9,15 @@ preserved. The batch's exact 1,004-test cohort passes under Node and Bun, and
 AST comparison confirms all non-import statements remain unchanged. Evidence:
 `research/cli-runner-imports-proof.md` and its referenced receipts.
 
-Other CLI changes in the same commit include scoped cwd acquisition and smaller
-assertion/fixture migrations; their row reconciliation is still pending. The
-full CLI package audit and docgen passed after the cwd repair. The broader CLI
-inventory, final main delta, full goal proof, and hosted acceptance remain open.
+Eleven additional detector rows from that commit are now fixed: scoped cwd
+acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
+runner imports and the schema-topology layer timeout. The detector ledger now
+contains 67 fixed rows, seven reviewed exceptions and 3,347 open rows, with all
+3,415 historical identities preserved and six newly exposed shorter-scope
+judgments added and strict schema validation passing. The full CLI
+package audit and docgen passed after the cwd repair. Four-lens reconciliation,
+the remaining CLI inventory, final main delta, full goal proof and hosted
+acceptance remain open.
 
 Historical evidence follows unchanged.
 

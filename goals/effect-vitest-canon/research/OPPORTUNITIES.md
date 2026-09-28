@@ -4888,3 +4888,68 @@ interruption, and legacy-wrapper controls also restore cwd and remove the owned
 tree. The control removes its own old-pattern residue. Receipt:
 `cli-cwd-resource-control.json`. This proves the helper lifetime under controlled
 interruption; it is not yet proof of the installed package change.
+
+## Cache dashboard fixture cleanup is bypassed on failure and interruption
+
+The existing resource finding `L-RES-02` for `cache-command.test.ts` identifies
+an unscoped temporary directory removed only after dashboard assertions. A
+controlled copy of that ownership pattern now reproduces leftover directories
+on both failure and interruption under Node and Bun. The proposed scoped
+allocation leaves no residue in success, failure or interruption controls.
+The control removes its own old-pattern residue after recording the result.
+
+The proposed environment acquisition also restores both absent and present
+values after success, failure and interruption under Bun. This control uses a
+dedicated non-secret variable and emits only restoration booleans. Original
+short environment scopes must remain around each warm operation, including the
+two successive dirty/stale checks. Receipts: `cli-cache-resource-control-node.json`
+and `cli-cache-resource-control-bun.json`. These are resource-pattern controls;
+the draft still requires installed-suite and package verification before adoption.
+
+## Hosted runner loss delays an otherwise actionable same-head retry
+
+PR #1312 Heavy / Lint Policy job `109011487482` failed while its verification
+step remained in progress. The check annotation reports that the self-hosted
+runner lost communication with GitHub; no lint violation or failing-step log
+was available. A targeted rerun returned HTTP 403 because the containing
+workflow was still running its coverage job. Preserve the running sibling
+check and retry the failed job after the workflow settles. Runner-health
+telemetry and clearer job retry admission would shorten this recovery without
+misattributing infrastructure loss to repository code.
+
+The cache-command draft is now applied. All seven installed tests pass under
+Node and Bun with identical file/title registrations and stable source hashes.
+The migration exposes six EV004 shorter-scope review rows. Each is explicitly
+retained with a reason: restoration must happen after its individual warm
+operation, before assertions or the next dirty/stale operation. These are
+reviewed lifetime boundaries, not redundant whole-test scopes. The full package
+proof for this additional migration passed: CLI audit 657.8 seconds and docgen
+19.4 seconds. See `cli-allowlist-cache-resource-proof.md`.
+
+Coverage Regression in the same workflow also lost its runner: original job
+`109011487389` carries the same explicit annotation. The carried-forward check
+in attempt 2 has no annotation, so attribution must inspect the original attempt.
+Do not infer a coverage regression from the job label or the truncated test log.
+
+## Readiness receipt can precede complete optional-heavy settlement
+
+For PR #1312 at head `1459fae5a672b41d408099fb925db7df6eb414b2`, the detached
+`yeet monitor --until-ready` finished successfully with `merge-ready: yes`,
+while a fresh `gh pr checks` still showed Heavy / Lint Policy pending and Heavy /
+Coverage Regression failed. Both original failures have runner-loss annotations,
+but the repository merge rule still requires their successful retry; only
+Vercel rate limiting is exempt. The receipt alone is insufficient for merge.
+
+Review the monitor's settled/optional-check decision and add a regression for
+pending or failing heavy checks across a same-head rerun. Preserve required-check
+and review gates. Until repaired, corroborate the canonical receipt with all
+current checks and never merge from this premature readiness result.
+
+Source tracing locates the policy gap in
+`packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts`:
+`requiredChecksAreGreen` examines only required counts, and
+`deriveYeetMergeReady` uses that predicate as its check gate.
+`MonitorLoop.ts`'s `bindRequiredCensus` likewise only blocks failed required
+names. A repair must cover optional heavy pending/failing results while retaining
+an evidence-backed Vercel rate-limit exception; broadly ignoring Vercel failures
+or merely renaming the required-check criterion would not satisfy the rule.
