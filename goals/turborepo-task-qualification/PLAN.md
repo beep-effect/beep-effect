@@ -2414,3 +2414,23 @@ canary evidence remain separate; neither grants signed-remote or shadow credit.
 Current source-invalidation and failed-task non-reuse controls are queued through
 admission. Complete semantic closure and the remaining acceptance matrix are
 still required before promotion.
+
+### Current source invalidation and cross-root preflight
+
+Stable `2.11.4` and exact canary `2.11.5-canary.2` each passed seven
+ordinary CLI invalidation cases at `7f53b4a840`: initial miss/hit, source
+change miss/hit, malformed unimported source failure twice without a retained
+archive, and restored-source hit. The separate
+[stable](research/current-stable-invalidation.json) and
+[canary](research/current-canary-invalidation.json) receipts bind the two changed
+input paths, three distinct task hashes and matching successful log archives.
+Each observation set retains 1,562 hashed files. These are bounded source
+controls, not complete input closure or signed replay.
+
+The [cross-root preflight](research/current-cross-root-preflight.json) stopped
+before cache import: identical input maps, task definitions and executable
+pins produced different toolchain digests and identity-lint hashes across
+two frozen checkouts. Full snapshots reproduce both native digests and differ only in installed-dependency
+bytes and digest. Two native-addon `config.gypi` files carry different
+`local_prefix` paths. An identical-dependency overlay control is still needed.
+Cross-root portability remains unproven; the cache key has not been weakened.

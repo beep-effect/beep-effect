@@ -2264,3 +2264,21 @@ it supplies no comparison credit. The private runner now creates the empty
 `.turbo` and `.beep` mount destinations before constructing the read-only
 namespace. A mount-destination preflight would have prevented this failure.
 The retry uses the same scheduler admission and isolated writable overlays.
+
+### Cross-root runtime identity preflight
+
+A second frozen checkout at `7f53b4a840` produced a different identity-lint
+task hash despite matching input maps, task definitions and executable pins.
+The native summaries differ in the configured toolchain digest and profile-path
+metadata. The experiment stopped before importing cache data. The
+`current-cross-root-preflight.json` receipt preserves the comparison; inspect
+the complete toolchain snapshots before attributing this to path sensitivity
+or changing the identity rules. Capturing those snapshots with each ordinary
+runtime experiment would have made this difference directly attributable.
+
+The first standalone toolchain capture omitted `FsUtilsLive` and failed with
+`Service not found: @beep/repo-utils/FsUtils/FsUtils` before yielding a snapshot.
+The private collector now reuses the existing `FsUtilsLive` plus platform
+layer composition; checking the required service environment before launching
+would have prevented the failed diagnostic attempt. The failure is retained
+with the private cross-root evidence.
