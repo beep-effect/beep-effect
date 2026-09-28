@@ -1,11 +1,12 @@
 /**
  * The `beep qa judge-pack` evidence bundler.
  *
- * The vision judge runs in a read-only sandbox and cannot browse a round, so
- * this command hands it exactly three files: `timeline.md` (what happened, in
- * video seconds), `manifest.json` (the precise file list it must open, with
- * byte sizes and everything omitted for budget), and `prompt.md` (the committed
- * judge prompt with round placeholders filled).
+ * The vision judge is an Opus 5.5 Agent-tool subagent that must not browse a
+ * round or edit anything, so this command hands it exactly three files:
+ * `timeline.md` (what happened, in video seconds), `manifest.json` (the
+ * precise file list it must open, with byte sizes and everything omitted for
+ * budget), and `prompt.md` (the committed judge prompt with round placeholders
+ * filled).
  *
  * Two rules are structural, not stylistic: animated media and raw video are
  * never listed, and evidence that does not fit the byte budget is recorded in
