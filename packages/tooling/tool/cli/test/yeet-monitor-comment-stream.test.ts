@@ -21,7 +21,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Layer, Path, Ref, Schedule, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -209,7 +209,7 @@ describe("yeet monitor comment cursor persistence", () => {
   it.effect("has no position before a session has run", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
-        expect(yield* loadYeetMonitorCommentWatermark(monitorContext(root), PR_NUMBER)).toEqual(O.none());
+        assertNone(yield* loadYeetMonitorCommentWatermark(monitorContext(root), PR_NUMBER));
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -234,7 +234,7 @@ describe("yeet monitor comment cursor persistence", () => {
         const context = monitorContext(root);
         yield* writeState(context, stateAt(PR_NUMBER + 1, EARLIER_COMMENT_AT, 44));
 
-        expect(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)).toEqual(O.none());
+        assertNone(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER));
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -245,7 +245,7 @@ describe("yeet monitor comment cursor persistence", () => {
         const context = monitorContext(root);
         yield* writeStateText(context, "{ this is not the artifact }");
 
-        expect(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)).toEqual(O.none());
+        assertNone(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER));
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

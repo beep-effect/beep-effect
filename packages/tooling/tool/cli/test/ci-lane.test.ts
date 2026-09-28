@@ -27,7 +27,7 @@ import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -1673,7 +1673,11 @@ describe("ciLocalStepsForTesting", () => {
     expect(inputs).toHaveLength(1);
     expect(inputs[0]?.[0]).toBe("knip");
     expect(inputs[0]?.[1]).toBe(steps[0]);
-    expect(inputs[0]?.[2]).toStrictEqual(O.none());
+    {
+      const optionUnderTest = inputs[0]?.[2];
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
   });
 
   it("dispatches the labs lane with the hosted --summarize and without affected shaping", () => {

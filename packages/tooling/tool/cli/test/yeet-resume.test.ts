@@ -15,7 +15,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -180,7 +180,7 @@ describe("yeet resume", () => {
     expect(
       O.flatMap(selectResumeRecord([created, pushed, monitored, codex], O.some(2)), (record) => record.sessionId)
     ).toStrictEqual(O.some("codex-session"));
-    expect(selectResumeRecord([created, pushed, monitored, codex], O.some(3))).toStrictEqual(O.none());
+    assertNone(selectResumeRecord([created, pushed, monitored, codex], O.some(3)));
   });
 
   it.effect("detects a matching live Claude index only when its proc entry exists", () =>

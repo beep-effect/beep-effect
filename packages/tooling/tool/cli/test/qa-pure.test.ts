@@ -86,7 +86,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import type { ActionEvent } from "@beep/qa-capture";
@@ -277,7 +277,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const hintPath = `${dir}/record-hint.json`;
-          expect(yield* readRecordStartHint(hintPath)).toEqual(O.none());
+          assertNone(yield* readRecordStartHint(hintPath));
           yield* writeRecordStartHint(hintPath, 1754000000123);
           expect(yield* readRecordStartHint(hintPath)).toEqual(O.some(1754000000123));
         })
@@ -289,11 +289,11 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const budgetPath = `${dir}/artifact-budget.json`;
-          expect(yield* readArtifactBudget(budgetPath)).toEqual(O.none());
+          assertNone(yield* readArtifactBudget(budgetPath));
           yield* writeArtifactBudget(budgetPath, ArtifactBudget.make({ maxTotalBytes: 4096 }));
           const budget = yield* readArtifactBudget(budgetPath);
           budget.pipe(O.isSome, assertTrue);
-          expect(yield* readExtractionPlan(`${dir}/extraction-plan.json`)).toEqual(O.none());
+          assertNone(yield* readExtractionPlan(`${dir}/extraction-plan.json`));
         })
       )
     ));
@@ -304,9 +304,9 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const videoDir = `${dir}/video`;
-          expect(yield* discoverRecordedVideo(videoDir)).toEqual(O.none());
+          assertNone(yield* discoverRecordedVideo(videoDir));
           yield* fs.makeDirectory(videoDir, { recursive: true });
-          expect(yield* discoverRecordedVideo(videoDir)).toEqual(O.none());
+          assertNone(yield* discoverRecordedVideo(videoDir));
           yield* fs.writeFileString(`${videoDir}/notes.txt`, "ignore me");
           yield* fs.writeFileString(`${videoDir}/capture.mkv`, "not really a container");
           const found = yield* discoverRecordedVideo(videoDir);
@@ -331,7 +331,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
     Effect.runPromise(
       withTempDir(
         Effect.fnUntraced(function* (dir) {
-          expect(yield* readLegacyManifest(`${dir}/manifest.json`)).toEqual(O.none());
+          assertNone(yield* readLegacyManifest(`${dir}/manifest.json`));
         })
       )
     ));

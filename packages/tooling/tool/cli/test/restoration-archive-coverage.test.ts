@@ -10,7 +10,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
@@ -648,7 +648,7 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.some(claimText));
         expect(yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation")).toBe(false);
         expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
-        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.none());
+        assertNone(yield* RA.readCanonicalCoordinationFile(claimPath));
 
         const deadText = `${yield* RA.encodeRestorationWriterClaim({
           ...liveClaim,
@@ -1096,12 +1096,12 @@ describe("restoration archive boundary helpers", () => {
         const mismatchedPartial = `${mismatchedDestination}.partial`;
         yield* fs.writeFileString(mismatchedDestination, "mismatched-bytes");
         yield* fs.writeFileString(mismatchedPartial, "retained-partial");
-        expect(
+        assertNone(
           yield* RA.reconcileCompleteArchiveDestination(
             { ...context, destinationPath: mismatchedDestination, partialPath: mismatchedPartial },
             sourceInfo
           )
-        ).toEqual(O.none());
+        );
         expect(yield* fs.exists(`${mismatchedPartial}.rejected-${context.attemptId}`)).toBe(true);
         yield* fs.remove(destinationPath);
         yield* fs.link(sourcePath, destinationPath);

@@ -5,7 +5,7 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -67,7 +67,7 @@ describe("YeetMergeReady coherence", () => {
       });
 
       expect(decoded.ready).toBe(true);
-      expect(decoded.failing).toStrictEqual(O.none());
+      assertNone(decoded.failing);
       expect(decoded.criteria.greptileScore).toStrictEqual(O.some("5/5"));
     })
   );

@@ -5113,3 +5113,17 @@ original whole-cohort timeout or final package acceptance.
   capacity/lease summary. Prefer counts in the default summary and an explicit
   verbose inventory for historical paths; consumers should allowlist fields
   rather than exclude only known bulky fields. No leases were reaped or changed.
+
+### Option assertion drafts need optional-subject and pipe diagnostics
+
+While migrating 97 CLI comparisons with `Option.none()` to public `assertNone`,
+`package-test-typecheck` reported nine TS2345 errors for optional indexed
+subjects and two missed-pipeable diagnostics. The original comparisons also
+failed on `undefined`; a migration must preserve that failure without a cast
+or evaluating the subject twice. Bind the subject once, use public
+`assertDefined`, then `assertNone`; use pipe syntax for the two nested calls.
+The initial draft's parse/import/subject checks were insufficient to prove
+TypeScript compatibility. Future assertion preparation should classify optional
+subjects and account for Effect diagnostics before starting the timed after-run.
+Private receipt: `cli-option-none-equality-typecheck.json`. The generated task
+wrapper exited zero while its result artifact correctly reported exit one.

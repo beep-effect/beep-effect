@@ -46,7 +46,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
@@ -253,8 +253,8 @@ describe("corpus restoration evidence invariants", () => {
           )
         ).toBe("18");
         expect(RA.collectorRelativePath("C:\\root\\nested\\file.bin", 2)).toEqual(O.some("nested/file.bin"));
-        expect(RA.collectorRelativePath("C:\\root\\..\\file.bin", 2)).toEqual(O.none());
-        expect(RA.collectorRelativePath("C:\\root", 2)).toEqual(O.none());
+        assertNone(RA.collectorRelativePath("C:\\root\\..\\file.bin", 2));
+        assertNone(RA.collectorRelativePath("C:\\root", 2));
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.none(), resumeBytes: 0 })).toBe("wx+");
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 0 })).toBe("r+");
         expect(RA.partialArchiveOpenFlag({ expectedInfo: O.some(identity), resumeBytes: 1 })).toBe("a");

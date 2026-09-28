@@ -26,7 +26,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -851,7 +851,7 @@ describe("deletion revalidation", () => {
       expect(O.getOrElse(refusal, () => "")).toContain("moved since planning");
 
       const unchanged = yield* revalidateLocalDeletion("/repo", mergedState);
-      expect(unchanged).toEqual(O.none());
+      assertNone(unchanged);
     }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
   );
 
@@ -880,7 +880,7 @@ describe("deletion revalidation", () => {
   it.effect("allows the remote deletion when the live tip still matches the plan", () =>
     Effect.gen(function* () {
       const allowed = yield* revalidateRemoteDeletion("/repo", mergedState);
-      expect(allowed).toEqual(O.none());
+      assertNone(allowed);
     }).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
   );
 });

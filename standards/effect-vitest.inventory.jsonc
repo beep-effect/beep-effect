@@ -18040,9 +18040,9 @@
       "line": 275,
       "endLine": 284,
       "symbol": "runPromise",
-      "occurrence": "v2:e80a120c22ff4139e2b8ea9bfadb99c6c3dc4deb76a0bfb6d4e3d79e58df1957",
+      "occurrence": "v2:e95ddb8a83e53803c191f9465efaed7355ea3a18d4bd8ae4d21bf3de5737bdaa",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const hintPath = `${dir}/record-hint.json`; expect(yield* readRecordStartHint(hintPath)).toEqual(O.none()); yield* writeRecordStartH",
+      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const hintPath = `${dir}/record-hint.json`; assertNone(yield* readRecordStartHint(hintPath)); yield* writeRecordStartHint(hintPath,",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18061,9 +18061,9 @@
       "line": 287,
       "endLine": 298,
       "symbol": "runPromise",
-      "occurrence": "v2:9b549f65ad773bb0d80b4bbbff18ed9d76ef648462d858fe82703bf5218ba6e1",
+      "occurrence": "v2:2763162ad77146517e002e4d83fdd0eedd8874ddc3448490ddf6a7d0a19ed932",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const budgetPath = `${dir}/artifact-budget.json`; expect(yield* readArtifactBudget(budgetPath)).toEqual(O.none()); yield* writeArtif",
+      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const budgetPath = `${dir}/artifact-budget.json`; assertNone(yield* readArtifactBudget(budgetPath)); yield* writeArtifactBudget(budg",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18082,9 +18082,9 @@
       "line": 301,
       "endLine": 316,
       "symbol": "runPromise",
-      "occurrence": "v2:863dacd93a9ec9518f7ce3869b88dab50030b6a7e72a0d45f57bed44c9bf3832",
+      "occurrence": "v2:43a87563838a3c9bb4db21a66cb7379c78bf9e72105992de85f01300738bce73",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const videoDir = `${dir}/video`; expect(yield* discoverRecordedVideo(videoDir)).toEqual(O.n",
+      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const videoDir = `${dir}/video`; assertNone(yield* discoverRecordedVideo(videoDir)); yield*",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18124,9 +18124,9 @@
       "line": 330,
       "endLine": 336,
       "symbol": "runPromise",
-      "occurrence": "v2:b94db060afdcb6c91e40200975f662d34cac1ae6c090d005924e1b1db87c0063",
+      "occurrence": "v2:20cd371965dab7e6da63c363851403f30966bea7a941a8a8337d5afecec12fb2",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { expect(yield* readLegacyManifest(`${dir}/manifest.json`)).toEqual(O.none()); }) ) )",
+      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { assertNone(yield* readLegacyManifest(`${dir}/manifest.json`)); }) ) )",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -18985,7 +18985,7 @@
       "line": 1266,
       "endLine": 1280,
       "symbol": "runPromise",
-      "occurrence": "v2:20f8dfae067a209b08e80d8f892e05dad59ebbce9c1ab1c50bfc43c409a99bc0",
+      "occurrence": "v2:e46ba4ead9a69f4015ecb06f3a7fc05605f94b7010d71f56f11645791d8d18d0",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const encoded = yield* encodeUnknownAdmissionJournalEventJson(event); const decoded = yield* decodeAdmissionJournalEvent(encoded); expect(decoded).toStrict",
       "replacement": {
@@ -20813,7 +20813,7 @@
       "line": 1220,
       "endLine": 1239,
       "symbol": "runPromise",
-      "occurrence": "v2:0cf2edaa08a19a3c2bdc08aa050914bffa6491d7f8a509fbb84395c7a4c93922",
+      "occurrence": "v2:504532f11e47970018675c78290e38f45ac34f9b65772e7ccdfb22fb78b7d8f5",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { expect(yield* decodeGithubCheckFailurePolicy(\"fail-fast\")).toBe(\"fail-fast\"); const report = yield* decodeGithubCheckRunReport({ failurePolicy: \"collect-al",
       "replacement": {
@@ -20834,9 +20834,9 @@
       "line": 1242,
       "endLine": 1273,
       "symbol": "runPromise",
-      "occurrence": "v2:ae5aabcb93f77e7c4824c1ee7bdde858b11c9237a1706fe05e2ed7e3222bcf70",
+      "occurrence": "v2:21b68b99b46a2ec0f18d1a761e3c1c95659d10b2ff8d6b63b7363ca35a878197",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const legacy = yield* decodeQualityTaskLaneRun({ id: \"check\", label: \"ci:check\", status: \"passed\", }); expect(legacy.startedAt).toStrictEqual(O.none()); ex",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const legacy = yield* decodeQualityTaskLaneRun({ id: \"check\", label: \"ci:check\", status: \"passed\", }); assertNone(legacy.startedAt); assertNone(legacy.ende",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -20855,7 +20855,7 @@
       "line": 1276,
       "endLine": 1297,
       "symbol": "runPromise",
-      "occurrence": "v2:b07e2c6dee0309c9ee6ddd7792a1d4912b92ad3030ebf51bea47ddba4b16f08c",
+      "occurrence": "v2:7a98748960430203034224170cd311b3af96f48ad6ccf8c816461b99cbc8062a",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectQualityTaskLaneRunsForTesting( \"ci:local\", [ [\"check\", bunScriptStep(\"ci:check\", \"process.exit(0)\"), O.some(\"turbo-task-hash\")], [\"nix\", bunScriptStep(\"ci:nix\", \"process.exit",
       "replacement": {
@@ -21002,7 +21002,7 @@
       "line": 1511,
       "endLine": 1556,
       "symbol": "runPromise",
-      "occurrence": "v2:e46cb19e18f0a283a7de1ff5f40134c6e74d65e7ea636382c142767028c774bf",
+      "occurrence": "v2:ace9b9708cdc8ceb7add3ec8becfd2365f9246f8525ad80d9f02eec6e151250f",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD",
       "replacement": {
@@ -21086,7 +21086,7 @@
       "line": 1782,
       "endLine": 1831,
       "symbol": "runPromise",
-      "occurrence": "v2:e04e6f592b98503525b47b251549db74acb6a146d410a1d71f557f668d1545a0",
+      "occurrence": "v2:5b2db85e395f0ea7a9a00ef3f3a90dbcf2054e0560c03d46caf7828359734b92",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:a\", \"preflight\", \"process.exit(2)\", O",
       "replacement": {
@@ -21380,7 +21380,7 @@
       "line": 5086,
       "endLine": 5147,
       "symbol": "runPromise",
-      "occurrence": "v2:f8af330ca362b63a441ebea49fc7fbc9f84b6f114bd8ddba70594978159013c1",
+      "occurrence": "v2:f49e08d6e8033b0f26395178d92eb5126befe0363e92829e600604986199a2eb",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo",
       "replacement": {
@@ -24656,7 +24656,7 @@
       "line": 3869,
       "endLine": 3915,
       "symbol": "runPromise",
-      "occurrence": "v2:14c2dd4ec14132fe94ad0e1daca471b28bb2dc6110c18e374f56850150484ec6",
+      "occurrence": "v2:09b1d1595e611c494ce7f08ee1edc6b1fbb43e1c97360857b49273a9eb918f82",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const fixtureRoot = path.join(repoRoot, \"pa",
       "replacement": {
@@ -31053,7 +31053,7 @@
       "line": 478,
       "endLine": 478,
       "symbol": "provideCrypto",
-      "occurrence": "v2:21f364f5704e74219e41aed2b3de08544fa4c1e197a63ad06ed4d970fcc4be8c",
+      "occurrence": "v2:41101464fc5dc4bae76b3d70fc47f06a891425dd0c264156e710cb78a0077837",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -33468,7 +33468,7 @@
       "line": 262,
       "endLine": 262,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:9d93509bfbbf0e5e28b250e557ba2a10eb127e0f43cac382e9018c89a23a598e",
+      "occurrence": "v2:e3bc127d72f235c8b9f0ffd8c0f9b96a10dc65ae721aeb5f58fdf1f42433457d",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -40798,7 +40798,7 @@
       "line": 1193,
       "endLine": 1193,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:782604f85e57583b5147f876ce6ccecb213ce47730a7e17501e900e624704f74",
+      "occurrence": "v2:22e55a175f9a9d9d9be428b5e9cc4de0e7f3a9aa933e4b176397e62e234229f5",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -41029,7 +41029,7 @@
       "line": 755,
       "endLine": 755,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:157db6b3c30069117ed177a8ffd34c91ef08056a3d92138a94b9983d7dd5acf2",
+      "occurrence": "v2:b424e868355954a74da7bc187d81cc2935d65de0a500039d616690bd078d1201",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -45250,7 +45250,7 @@
       "line": 213,
       "endLine": 213,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:f74f79747ef33b7e5cb8b3019868df0a30a16df494a1b69eba31da7818661a8c",
+      "occurrence": "v2:36460d860397247d52aaa8c4bccfafb6a76b65ac8ad5d1f8302e08aa9cd37e7f",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45292,7 +45292,7 @@
       "line": 238,
       "endLine": 238,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:6366c22b552501561d5bb127c310ee0945a9bcdf6fed761b0b30b6e811c31918",
+      "occurrence": "v2:d747b6225d80eb6e4a227e2b2611e191e8c907ac161ee8f779064ed39f47abe6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45313,7 +45313,7 @@
       "line": 249,
       "endLine": 249,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:6054f7c3e529755608eabd2982572932e681d9c0700048fd6638854851b15c61",
+      "occurrence": "v2:f0dee7ec0bbf707059e9320ddc6697b9f54294b21ac405baa6e3510ae2943b50",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45733,7 +45733,7 @@
       "line": 69,
       "endLine": 69,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:9ab62345bc52bec0472fceb4590549fda32529b3a612ee4484ebb4b50eb16be4",
+      "occurrence": "v2:0091eefa675356b50ad069433676db80cd3a46b5b2345ef7dd73f26c7bf4ef92",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -47455,7 +47455,7 @@
       "line": 855,
       "endLine": 855,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:a5959168efdbab56ab0ed39ef7259574b53232233c5e801ddb93f143fd5a45cc",
+      "occurrence": "v2:ebb621266c0b4c7eb218b8667204e29c1e37452d3df507fe3b323605b3c5fc7f",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(sweepTestLayer(mergedSweepStubs))",
       "replacement": {
@@ -47518,7 +47518,7 @@
       "line": 884,
       "endLine": 884,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:18946d8c557d277613dad3ad768d71f93bf6c0c9058d8c5d98cfab45057ab669",
+      "occurrence": "v2:0a3df1e5720a6c52baa8b1b80dee8986989181ff4a75356aba79904d57178cba",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(sweepTestLayer(mergedSweepStubs))",
       "replacement": {
@@ -56853,7 +56853,7 @@
       "line": 261,
       "endLine": 261,
       "symbol": "scoped",
-      "occurrence": "v2:9d93509bfbbf0e5e28b250e557ba2a10eb127e0f43cac382e9018c89a23a598e",
+      "occurrence": "v2:e3bc127d72f235c8b9f0ffd8c0f9b96a10dc65ae721aeb5f58fdf1f42433457d",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -58596,7 +58596,7 @@
       "line": 1192,
       "endLine": 1192,
       "symbol": "scoped",
-      "occurrence": "v2:782604f85e57583b5147f876ce6ccecb213ce47730a7e17501e900e624704f74",
+      "occurrence": "v2:22e55a175f9a9d9d9be428b5e9cc4de0e7f3a9aa933e4b176397e62e234229f5",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -58764,7 +58764,7 @@
       "line": 754,
       "endLine": 754,
       "symbol": "scoped",
-      "occurrence": "v2:157db6b3c30069117ed177a8ffd34c91ef08056a3d92138a94b9983d7dd5acf2",
+      "occurrence": "v2:b424e868355954a74da7bc187d81cc2935d65de0a500039d616690bd078d1201",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -95461,7 +95461,7 @@
       "line": 61,
       "endLine": 61,
       "symbol": "it.layer",
-      "occurrence": "v2:481eca463284cb2cc19b4ac5c01eaae3137460d33d4f086ccf44e4a025fbdda7",
+      "occurrence": "v2:11254deccc94d87bc99230ae11d96e6d37b0db92f30b65c5fca984983ce030c2",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {
@@ -95503,7 +95503,7 @@
       "line": 881,
       "endLine": 881,
       "symbol": "it.layer",
-      "occurrence": "v2:806d53957e35071c8ac326d9e7f6b9a75d2af4b97cd87e0afe8babd82cced3dc",
+      "occurrence": "v2:6684f876a3e53216b171fbac8b461fc9e8428866695ccd132a32843961ebf9a0",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {

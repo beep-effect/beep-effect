@@ -154,7 +154,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -1647,7 +1647,7 @@ describe("yeet planner", () => {
     expect(publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/main")).toEqual(
       O.some('[yeet] warning: branch "feat/yeet" tracks "origin/main"; publish will push HEAD to origin/feat/yeet.')
     );
-    expect(publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/feat/yeet")).toEqual(O.none());
+    assertNone(publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/feat/yeet"));
   });
 
   it("keeps human comments that mention Greptile from replacing the bot summary", () => {
@@ -3907,9 +3907,9 @@ describe("yeet attempt journal", () => {
           A.findFirst((event) => event.runId === "current-run"),
           O.getOrThrow
         );
-        expect(legacy.resolvedHeadSha).toStrictEqual(O.none());
-        expect(legacy.diffFingerprint).toStrictEqual(O.none());
-        expect(legacy.proofTier).toStrictEqual(O.none());
+        assertNone(legacy.resolvedHeadSha);
+        assertNone(legacy.diffFingerprint);
+        assertNone(legacy.proofTier);
         expect(current.resolvedHeadSha).toStrictEqual(O.some("0123456789abcdef0123456789abcdef01234567"));
         expect(current.proofTier).toStrictEqual(O.some("full"));
       }).pipe(provideScopedLayer(PlatformLayer))
@@ -4387,7 +4387,11 @@ describe("yeet publish scope helpers", () => {
     expect(verdict.lanes[1]?.tier).toStrictEqual(O.some("full"));
     expect(verdict.lanes[1]?.startedAt).toStrictEqual(O.some("2026-09-03T00:00:00.000Z"));
     expect(verdict.lanes[1]?.endedAt).toStrictEqual(O.some("2026-09-03T00:00:01.000Z"));
-    expect(verdict.lanes[1]?.inputDigest).toStrictEqual(O.none());
+    {
+      const optionUnderTest = verdict.lanes[1]?.inputDigest;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
   });
 
   it("keeps pushed false when only the publish-phase install preflight succeeded", () => {

@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -399,8 +399,8 @@ describe("ci lane timings attempt filter", () => {
     // outage that read 18-21 minutes while real pickup was 19-67 seconds.
     const redispatched = job({ run_attempt: 2, started_at: "2026-08-06T12:18:00Z" });
 
-    expect(attemptOnePickupSeconds(redispatched)).toStrictEqual(O.none());
-    expect(ciLaneTimingRow(redispatched).pickupSeconds).toStrictEqual(O.none());
+    assertNone(attemptOnePickupSeconds(redispatched));
+    assertNone(ciLaneTimingRow(redispatched).pickupSeconds);
   });
 
   it("keeps the filter out of the aggregate's reach", () => {
@@ -419,7 +419,7 @@ describe("ci lane timings attempt filter", () => {
   it("reports no pickup median for an empty recent-run population", () => {
     const report = ciLaneTimingsReport([]);
 
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.none());
+    assertNone(report.medianAttemptOnePickupSeconds);
     expect(renderCiLaneTimingsSummary(report)).toContain(
       "- median attempt-1 pickup: no attempt-1 job carried both timestamps"
     );
@@ -610,8 +610,8 @@ describe("ci lane timings derivations", () => {
   it("refuses a negative span rather than clamping a garbled record to zero", () => {
     // Job payloads with a `created_at` postdating their own `completed_at` were
     // observed live. Missing data must not read as a fast job.
-    expect(ciTimestampSpanSeconds("2026-08-06T12:10:00Z", "2026-08-06T12:00:00Z")).toStrictEqual(O.none());
-    expect(ciTimestampSpanSeconds(null, "2026-08-06T12:00:00Z")).toStrictEqual(O.none());
+    assertNone(ciTimestampSpanSeconds("2026-08-06T12:10:00Z", "2026-08-06T12:00:00Z"));
+    assertNone(ciTimestampSpanSeconds(null, "2026-08-06T12:00:00Z"));
   });
 
   it("sums setup and install seconds from the step timings", () => {
@@ -686,7 +686,7 @@ describe("ci lane timings derivations", () => {
     // catastrophic fleet failure.
     const report = ciLaneTimingsReport([ciLaneTimingRow(job({ labels: ["ubuntu-latest"] }))]);
 
-    expect(report.managedInfraSuccessRate).toStrictEqual(O.none());
+    assertNone(report.managedInfraSuccessRate);
     expect(renderCiLaneTimingsSummary(report)).toContain("no managed-runner jobs collected");
   });
 
@@ -694,11 +694,19 @@ describe("ci lane timings derivations", () => {
     // No Actions API reports peak RSS, so `None` is the honest value.
     const rows = [ciLaneTimingRow(job())];
 
-    expect(rows[0]?.peakRssBytes).toStrictEqual(O.none());
+    {
+      const optionUnderTest = rows[0]?.peakRssBytes;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
     expect(withCiLanePeakRss(rows, { "Test Unit": 25_000_000_000 })[0]?.peakRssBytes).toStrictEqual(
       O.some(25_000_000_000)
     );
-    expect(withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes).toStrictEqual(O.none());
+    {
+      const optionUnderTest = withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
   });
 });
 

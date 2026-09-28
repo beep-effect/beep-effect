@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -187,7 +187,7 @@ describe("findReplyThread", () => {
 
   it("returns None for a comment id no live thread carries", () => {
     const draft = ReplyDraft.make({ commentId: O.some(UNKNOWN_COMMENT_ID), body: "ack" });
-    expect(findReplyThread(liveThreads, draft)).toEqual(O.none());
+    assertNone(findReplyThread(liveThreads, draft));
   });
 
   it("skips comments whose databaseId is absent instead of matching them", () => {
@@ -326,7 +326,11 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ commentId: O.some(UNKNOWN_COMMENT_ID), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("failed");
-    expect(outcome?.threadId).toEqual(O.none());
+    {
+      const optionUnderTest = outcome?.threadId;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
     expect(outcome?.commentId).toEqual(O.some(UNKNOWN_COMMENT_ID));
     expect(outcome?.detail).toContain(`comment id ${UNKNOWN_COMMENT_ID}`);
   });
@@ -670,7 +674,7 @@ describe("reply run verdict", () => {
   });
 
   it("has no verdict for a pass where nothing failed", () => {
-    expect(
+    assertNone(
       renderYeetReplyFailureVerdict(
         reportOf([
           ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
@@ -678,7 +682,7 @@ describe("reply run verdict", () => {
         ]),
         "reply-report.json"
       )
-    ).toEqual(O.none());
+    );
   });
 
   it.effect("exits zero when every outcome is posted, resolved, or stale", () =>

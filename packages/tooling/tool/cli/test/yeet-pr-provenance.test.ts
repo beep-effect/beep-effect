@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertDefined, assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Fiber, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -245,7 +246,11 @@ describe("Yeet PR provenance v2", () => {
     });
     const publicValue = toPublicPrProvenance([claude, codex], O.some(42), true);
     expect(publicValue).toBeInstanceOf(PublicPrProvenance);
-    expect(publicValue.agents[0]?.label).toStrictEqual(O.none());
+    {
+      const optionUnderTest = publicValue.agents[0]?.label;
+      assertDefined(optionUnderTest);
+      assertNone(optionUnderTest);
+    }
     expect(publicValue.agents[1]?.label).toStrictEqual(O.some("FABLE"));
     const footer = renderPrProvenance(publicValue);
     expect(footer).toContain("bun run beep yeet resume 42");

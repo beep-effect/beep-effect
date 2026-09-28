@@ -165,7 +165,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, vi } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -1235,7 +1235,7 @@ describe("quality task adapter", () => {
           schemaVersion: "github-check-run/v1",
         });
         expect(report.lanes[0]?.wave).toBe("test");
-        expect(report.firstRed).toStrictEqual(O.none());
+        assertNone(report.firstRed);
         expect(report.skippedAfterRed).toBe(0);
       })
     ));
@@ -1248,12 +1248,12 @@ describe("quality task adapter", () => {
           label: "ci:check",
           status: "passed",
         });
-        expect(legacy.startedAt).toStrictEqual(O.none());
-        expect(legacy.endedAt).toStrictEqual(O.none());
-        expect(legacy.durationMs).toStrictEqual(O.none());
-        expect(legacy.exitCode).toStrictEqual(O.none());
-        expect(legacy.inputDigest).toStrictEqual(O.none());
-        expect(legacy.redSchedulingDecision).toStrictEqual(O.none());
+        assertNone(legacy.startedAt);
+        assertNone(legacy.endedAt);
+        assertNone(legacy.durationMs);
+        assertNone(legacy.exitCode);
+        assertNone(legacy.inputDigest);
+        assertNone(legacy.redSchedulingDecision);
         // TTC ruling 68: `inputPackages` arrived after `quality-task-lane-run/v1`
         // shipped, so a report written before it still decodes, with an empty scope.
         expect(legacy.inputPackages).toStrictEqual([]);
@@ -1289,7 +1289,11 @@ describe("quality task adapter", () => {
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["passed", "failed"]);
           expect(A.map(report.lanes, (lane) => lane.exitCode)).toEqual([O.some(0), O.some(7)]);
           expect(report.lanes[0]?.inputDigest).toStrictEqual(O.some("turbo-task-hash"));
-          expect(report.lanes[1]?.inputDigest).toStrictEqual(O.none());
+          {
+            const optionUnderTest = report.lanes[1]?.inputDigest;
+            assertDefined(optionUnderTest);
+            assertNone(optionUnderTest);
+          }
           expect(A.every(report.lanes, (lane) => O.exists(lane.startedAt, Str.isNonEmpty))).toBe(true);
           expect(A.every(report.lanes, (lane) => O.exists(lane.endedAt, Str.isNonEmpty))).toBe(true);
           expect(A.every(report.lanes, (lane) => O.exists(lane.durationMs, (duration) => duration >= 0))).toBe(true);
@@ -1661,7 +1665,7 @@ describe("quality task adapter", () => {
         const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
-        expect(emittedReport.parentLaneId).toStrictEqual(O.none());
+        assertNone(emittedReport.parentLaneId);
         expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
         yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(provideScopedLayer(PlatformLayer))
@@ -1935,8 +1939,16 @@ describe("quality task adapter", () => {
           expect(report.skippedAfterRed).toBe(2);
           (laneReport.lanes[0]?.startedAt ?? O.none()).pipe(O.isSome, assertTrue);
           expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
-          expect(laneReport.lanes[1]?.inputDigest).toStrictEqual(O.none());
-          expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
+          {
+            const optionUnderTest = laneReport.lanes[1]?.inputDigest;
+            assertDefined(optionUnderTest);
+            assertNone(optionUnderTest);
+          }
+          {
+            const optionUnderTest = laneReport.lanes[2]?.inputDigest;
+            assertDefined(optionUnderTest);
+            assertNone(optionUnderTest);
+          }
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -3209,9 +3221,7 @@ describe("quality task adapter", () => {
           '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
       )
     );
-    expect(missingTestTsgoTaskMessageForTesting([{ packageName: "@beep/ready", hasTaskScript: true }])).toEqual(
-      O.none()
-    );
+    assertNone(missingTestTsgoTaskMessageForTesting([{ packageName: "@beep/ready", hasTaskScript: true }]));
   });
 
   it("plans package-owned tsgo tasks without filesystem-dependent coverage", () => {
@@ -3264,8 +3274,8 @@ describe("quality task adapter", () => {
     expect(testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n")).toEqual(
       O.some(".turbo/runs/example.json")
     );
-    expect(testTsgoPlanningForTesting.turboSummaryPath("no summary")).toEqual(O.none());
-    expect(testTsgoPlanningForTesting.turboSummaryPath("Summary:   ")).toEqual(O.none());
+    assertNone(testTsgoPlanningForTesting.turboSummaryPath("no summary"));
+    assertNone(testTsgoPlanningForTesting.turboSummaryPath("Summary:   "));
   });
 
   it.effect("places package-owned tsgo results in the package Turbo directory", () =>
@@ -3822,7 +3832,7 @@ describe("quality task adapter", () => {
       ]);
     }
     for (const selector of ["missing[selector]", "missing", "!B"]) {
-      expect(resolveCoverageSelector(owners, selector)).toEqual(O.none());
+      assertNone(resolveCoverageSelector(owners, selector));
       expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 1)).toEqual([
         "--maxWorkers=2",
       ]);
@@ -5174,24 +5184,24 @@ describe("quality task adapter", () => {
     it("refuses to scope when a non-row field changed", () => {
       const previous = withRows({ "@beep/a": coveragePackageBaseline("packages/a") });
 
-      expect(
+      assertNone(
         coverageBaselineRowDelta(
           previous,
           CoverageRegressionBaseline.make({ ...previous, minimum: coveragePercentages(1) })
         )
-      ).toEqual(O.none());
-      expect(
+      );
+      assertNone(
         coverageBaselineRowDelta(
           previous,
           CoverageRegressionBaseline.make({ ...previous, exemptions: { "@beep/x": "user-excluded" } })
         )
-      ).toEqual(O.none());
-      expect(
+      );
+      assertNone(
         coverageBaselineRowDelta(
           previous,
           CoverageRegressionBaseline.make({ ...previous, follow_ups: { "@beep/a": "needs tests" } })
         )
-      ).toEqual(O.none());
+      );
     });
 
     it("diffs the committed base against the working copy through git", () =>
@@ -5222,7 +5232,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "initial"]);
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a") }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
+            assertNone(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD"));
 
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
@@ -5234,7 +5244,7 @@ describe("quality task adapter", () => {
             expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(delta(["@beep/a"]));
 
             yield* fs.writeFileString(baselinePath, "{ not jsonc");
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(O.none());
+            assertNone(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD"));
 
             // The diff anchors on the merge base, not the base ref's tip: rows
             // that `main` changed after the branch diverged are not attributed
@@ -7236,19 +7246,19 @@ describe("quality task adapter", () => {
       })
     ).toEqual(O.some("postgres://test:secret@127.0.0.1:5432/test"));
 
-    expect(
+    assertNone(
       sqlIntegrationConnectionUriFromEnvForTesting({
         DATABASE_URL: "postgres://test:secret@127.0.0.1:5432/test",
       })
-    ).toEqual(O.none());
+    );
 
-    expect(
+    assertNone(
       sqlIntegrationConnectionUriFromEnvForTesting({
         BEEP_TEST_DATABASE_URL: "op://beep-dev-secrets/DATABASE_URL",
         DATABASE_URL: "postgres://test:secret@127.0.0.1:5432/test",
         DATABASE_URL_UNPOOLED: "postgres://test:secret@127.0.0.1:5432/test",
       })
-    ).toEqual(O.none());
+    );
   });
 
   it("forwards shared SQL env vars to the integration child process", () =>
@@ -7873,8 +7883,8 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
 
   it("opts a credential-free step into op run only when a session is needed", () => {
     expect(turboStepLocalEnvForTesting(undefined, true)).toEqual(O.some(true));
-    expect(turboStepLocalEnvForTesting(undefined, false)).toEqual(O.none());
-    expect(turboStepLocalEnvForTesting({ CI: "true" }, true)).toEqual(O.none());
+    assertNone(turboStepLocalEnvForTesting(undefined, false));
+    assertNone(turboStepLocalEnvForTesting({ CI: "true" }, true));
   });
 
   it("wraps a Turbo step without loading the project env file or carrying unrelated references", () => {

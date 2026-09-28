@@ -77,7 +77,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import {
   Clock,
   ConfigProvider,
@@ -159,10 +159,8 @@ describe("admission escalation", () => {
 describe("memory stats", () => {
   it("parses valid meminfo fields and rejects missing or invalid values", () => {
     expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: 2097152 kB\n", "MemTotal:")).toEqual(O.some(2));
-    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: unavailable kB\n", "MemTotal:")).toEqual(
-      O.none()
-    );
-    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemFree: 1024 kB\n", "MemTotal:")).toEqual(O.none());
+    assertNone(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: unavailable kB\n", "MemTotal:"));
+    assertNone(qualitySchedulerForTesting.parseMeminfoFieldGib("MemFree: 1024 kB\n", "MemTotal:"));
   });
 });
 
@@ -1274,7 +1272,7 @@ describe("quality-scheduler", () => {
         const wire = yield* decodeJsonObject(encoded);
         const absent = yield* encodeJsonObject(Struct.omit(wire, ["attemptId"]));
         expect(absent).not.toContain("attemptId");
-        expect((yield* decodeAdmissionJournalEvent(absent)).attemptId).toStrictEqual(O.none());
+        assertNone((yield* decodeAdmissionJournalEvent(absent)).attemptId);
         const withoutBranch = yield* encodeJsonObject(Struct.omit(wire, ["branch"]));
         (yield* decodeAdmissionJournalEvent(withoutBranch).pipe(Effect.option)).pipe(O.isNone, assertTrue);
       })

@@ -26,7 +26,7 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, strictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -471,12 +471,12 @@ describe("yeet review-thread classification against a captured pull request", ()
 
 describe("yeet merge readiness", () => {
   it("is unknown, not blocked, when the pull request was not read", () => {
-    expect(
+    assertNone(
       deriveYeetMergeReady(
         closeoutArtifact(0, O.some("5/5")),
         YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" })
       )
-    ).toStrictEqual(O.none());
+    );
   });
 
   it("names required-checks-green first when the pipeline is red and threads are also open", () => {
@@ -586,7 +586,7 @@ describe("yeet merge readiness", () => {
         openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
       );
 
-      expect(report.reviewedHeadSha).toStrictEqual(O.none());
+      assertNone(report.reviewedHeadSha);
       expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
     })
   );
@@ -671,7 +671,7 @@ describe("yeet merge readiness", () => {
     );
 
     expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+    assertNone(O.flatMap(mergeReady, (value) => value.failing));
     expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
   });
 
@@ -688,7 +688,7 @@ describe("yeet merge readiness", () => {
     );
 
     expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+    assertNone(O.flatMap(mergeReady, (value) => value.failing));
   });
 
   it("blocks readiness for an optional failure without exemption evidence", () => {
@@ -793,8 +793,8 @@ describe("yeet remote check partitions", () => {
     const summary = summarizeRemoteChecksForTesting(O.some([required]), O.none());
 
     expect(O.getOrThrow(summary.checkCount)).toBe(1);
-    expect(summary.requiredCheckCount).toStrictEqual(O.none());
-    expect(summary.optionalCheckCount).toStrictEqual(O.none());
+    assertNone(summary.requiredCheckCount);
+    assertNone(summary.optionalCheckCount);
   });
 });
 
@@ -912,9 +912,9 @@ describe("yeet status snapshot rendering and encoding", () => {
       ].join("");
       const decoded = yield* YeetStatusSnapshotJson.decode(legacy);
 
-      expect(decoded.mergeReady).toStrictEqual(O.none());
-      expect(decoded.remote.unresolvedThreads).toStrictEqual(O.none());
-      expect(decoded.remote.headSha).toStrictEqual(O.none());
+      assertNone(decoded.mergeReady);
+      assertNone(decoded.remote.unresolvedThreads);
+      assertNone(decoded.remote.headSha);
       expect(decoded.remote.checks).toStrictEqual([]);
       expect(decoded.unprovenGates).toStrictEqual([]);
     })

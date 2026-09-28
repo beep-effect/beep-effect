@@ -17,7 +17,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
 import * as O from "effect/Option";
 
@@ -110,7 +110,7 @@ describe("yeet merge-tree parsing", () => {
   it("reads no object id out of a capture that carries only prose", () => {
     // `error: duplicate parent <sha> ignored` embeds a 40-hex id mid-line;
     // requiring the id to own its line is what keeps that out of the result.
-    expect(gitObjectIdFromOutput(`error: duplicate parent ${BASE_SHA} ignored`)).toStrictEqual(O.none());
+    assertNone(gitObjectIdFromOutput(`error: duplicate parent ${BASE_SHA} ignored`));
   });
 
   it("renders a conflict refusal that names a merge, not a rebase", () => {

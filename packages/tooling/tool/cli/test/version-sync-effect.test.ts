@@ -35,7 +35,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -359,7 +359,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(state.vercelInstallVersion).toEqual(O.some("1.3.14"));
         expect(state.vercelBuildVersion).toEqual(O.some("1.3.14"));
         expect(state.bunArchiveSha256).toEqual(O.some(digest));
-        expect(state.expectedBunArchiveSha256).toEqual(O.none());
+        assertNone(state.expectedBunArchiveSha256);
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
@@ -380,9 +380,9 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         const state = yield* resolveBunVersions(tmpDir, true);
 
-        expect(state.vercelInstallVersion).toEqual(O.none());
-        expect(state.vercelBuildVersion).toEqual(O.none());
-        expect(state.bunArchiveSha256).toEqual(O.none());
+        assertNone(state.vercelInstallVersion);
+        assertNone(state.vercelBuildVersion);
+        assertNone(state.bunArchiveSha256);
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
@@ -442,7 +442,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
     it("extracts the Linux x64 archive digest from Bun's checksum manifest", () => {
       const digest = "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452";
       expect(extractBunArchiveChecksum(`${digest}  bun-linux-x64.zip\n`)).toEqual(O.some(digest));
-      expect(extractBunArchiveChecksum(`${digest}  bun-linux-aarch64.zip\n`)).toEqual(O.none());
+      assertNone(extractBunArchiveChecksum(`${digest}  bun-linux-aarch64.zip\n`));
     });
   });
 
@@ -907,8 +907,8 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
           yield* encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
         );
 
-        expect(yield* readLockfileResolvedVersion(tmpDir, "turbo")).toEqual(O.none());
-        expect(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome")).toEqual(O.none());
+        assertNone(yield* readLockfileResolvedVersion(tmpDir, "turbo"));
+        assertNone(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome"));
         expect(yield* resolveInstalledToolVersion(tmpDir, "turbo")).toBe("2.10.13");
         expect(yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome")).toBe("");
 

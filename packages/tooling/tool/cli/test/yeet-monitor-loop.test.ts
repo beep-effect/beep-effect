@@ -24,6 +24,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, HashSet, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -111,11 +112,11 @@ describe("yeet monitor flake fingerprints", () => {
   it("refuses a TS2589 that carries a file location", () => {
     // A located TS2589 is a real depth problem in a real file, not the
     // scheduling-dependent instantiation-count flake.
-    expect(detectYeetMonitorFlakeClass(locatedTs2589Log)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(locatedTs2589Log));
   });
 
   it("refuses an ordinary type error", () => {
-    expect(detectYeetMonitorFlakeClass(genuineTypeErrorLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(genuineTypeErrorLog));
   });
 
   it("recognizes both suite-level and job-level timeouts", () => {
@@ -126,13 +127,13 @@ describe("yeet monitor flake fingerprints", () => {
   it("refuses a bare cancellation", () => {
     // A job cancelled because a sibling failed carries no timeout evidence;
     // classifying it would spend a rerun on a fail-fast side effect.
-    expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(cancelledSiblingLog));
   });
 
   it("refuses the retired torn-read TS2306 signature", () => {
     // Retired with the single-project emit law: no build can tear a sibling's
     // dist anymore, so a TS2306 is a genuine defect and must not buy a rerun.
-    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.none());
+    assertNone(detectYeetMonitorFlakeClass(ts2306TornReadLog));
   });
 });
 
@@ -163,12 +164,12 @@ describe("yeet monitor job-shape fingerprints", () => {
     // red: the runner was present for the whole job.
     const job = jobRecord("failure", [jobStep("Set up job", "success"), jobStep("Run bun run test", "failure")]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job with no steps rather than reading absent evidence as runner loss", () => {
     // An empty `steps` list is missing evidence, not evidence of absence.
-    expect(detectGithubJobShapeClass(jobRecord("failure", []))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord("failure", [])));
   });
 
   it("refuses a cancelled job, whose steps are null for a reason that is not runner loss", () => {
@@ -176,11 +177,11 @@ describe("yeet monitor job-shape fingerprints", () => {
     // job-level conclusion is what separates them.
     const job = jobRecord("cancelled", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("refuses a job that has not concluded at all", () => {
-    expect(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)]))).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(jobRecord(null, [jobStep("Set up job", null)])));
   });
 
   it("prefers the setup class when a failed setup step coexists with unconcluded steps", () => {
@@ -226,7 +227,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", "failure"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.none());
+    assertNone(detectGithubJobShapeClass(job));
   });
 
   it("prefers the setup class over the install class when setup is what failed", () => {
@@ -641,8 +642,8 @@ describe("yeet monitor loop control", () => {
   it("reads the terminal state out of a gh pr view state string", () => {
     expect(yeetMonitorTerminalState(O.some("MERGED"))).toStrictEqual(O.some("merged"));
     expect(yeetMonitorTerminalState(O.some("closed"))).toStrictEqual(O.some("closed"));
-    expect(yeetMonitorTerminalState(O.some("OPEN"))).toStrictEqual(O.none());
-    expect(yeetMonitorTerminalState(O.none())).toStrictEqual(O.none());
+    O.some("OPEN").pipe(yeetMonitorTerminalState, assertNone);
+    O.none().pipe(yeetMonitorTerminalState, assertNone);
   });
 
   it("renders each decision so the operator sees the classification, not a bare exit", () => {
