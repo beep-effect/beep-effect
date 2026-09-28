@@ -65,7 +65,7 @@
   "method": "Reconciled the exact 30-path assigned inventory and hashes; searched all assigned source paths for explicit Boolean/literal/state and inferred-expression/owner forms, then read the relevant source owners. Other hits are documentation examples, scalar type aliases or static string/number data. Generated surfaces remain excluded by the frozen lane map.",
   "bindings": [
     {
-      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-launch/admitted-run/r44-foundation-primitive.execution.json",
+      "file": "private-evidence:primitive-execution-receipt",
       "sha256": "137b4e2a152a47e45fc3ec45f52c0517d7ac16f9b4bc4283de38122c750847ea"
     },
     {
@@ -73,15 +73,15 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-launch/admitted-run/r44-foundation-primitive.ndjson",
+      "file": "private-evidence:primitive-scanner-transcript",
       "sha256": "c8e50499c8c4c6990c7756741a31e2692dbb2da06782087b0bfa52e22222c3c0"
     },
     {
-      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-primitive-parent-search-0.txt",
+      "file": "private-evidence:primitive-parent-explicit-search",
       "sha256": "5b0cdb5770d3699c9f1b44faf42ef165cfb815b282e66171fde1146872a9697e"
     },
     {
-      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-primitive-parent-search-1.txt",
+      "file": "private-evidence:primitive-parent-inferred-search",
       "sha256": "1e9223171cffce62fbb12ea7aaea2d0146b886e933a4aa2880e93047b9620dde"
     }
   ],
