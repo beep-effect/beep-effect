@@ -3695,3 +3695,37 @@ the root ratchet then reported one new finding despite the same reviewed native
 loader boundary. A final scan refreshed only that owned exception and preserved
 its history. Wait for formatting and dependency synchronization to finish before
 capturing detector identities for reconciliation.
+
+## Untouched ontology browser suite fails in dependency optimization
+
+Before editing ontology-client, its configured browser command failed before
+running any test. Vite raised `exportsData` destructuring from a missing
+`depForEntryFileName[chunk.fileName]` entry. Archiving only this package's ignored
+Vite cache and rerunning reproduced it; an explicit Node invocation also failed.
+The passing Node/Bun suites do not prove browser behavior. Capture a browser
+baseline before migration and retain this distinct optimizer failure while
+investigating a bounded execution fix.
+
+The isolated optimizer diagnostic identified the collision: inputs
+`effect_schema` and `effect_Schema` produced an unmapped `effect_Schema2.js`.
+Excluding only `effect/schema` from this package's browser prebundling lets both
+original browser tests pass against the real renderers. The package-local config
+keeps both modules and avoids changing Vite or the application implementation.
+
+### Ontology client browser assertions and renderer ownership
+
+- Activity: close the saved ontology-client resource and assertion inventory.
+- Evidence: importing `@effect/vitest/utils` in the Chromium suite fails with
+  `deepStrictEqual is not a function` from Vite's externalized `node:assert`.
+  Keep the seven original browser assertions as explicit platform exceptions;
+  introducing a Node polyfill would change this test's environment.
+- Evidence: clearing the container and then disposing the registry does not
+  establish removal of every canvas. Moving that wait across registry disposal
+  still times out. The test now observes the actual renderer factories and
+  releases any handle not already destroyed before removing its DOM container.
+  The same call-through observers expose real selection statistics and update
+  delivery, replacing two unacknowledged sleeps. Both real browser cases pass;
+  dropped selection and projection controls pass the old checks and fail the new.
+- Prevention: provide a public renderer lifetime acknowledgement for integration
+  fixtures, and document the Node-only assertion-helper boundary. No renderer or
+  atom production implementation is changed by this repair.

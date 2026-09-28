@@ -1,5 +1,8 @@
 import { OntologyGraphWorkerTimeoutError } from "@beep/ontology-client/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 describe("ontology client tagged-error declared equivalence", () => {
@@ -9,7 +12,7 @@ describe("ontology client tagged-error declared equivalence", () => {
     const second = OntologyGraphWorkerTimeoutError.make({ message: "The graph worker timed out." });
     const different = OntologyGraphWorkerTimeoutError.make({ message: "The graph worker stopped." });
 
-    expect(same(first, second)).toBe(true);
-    expect(same(first, different)).toBe(false);
+    pipe(same(first, second), assertTrue);
+    pipe(same(first, different), assertFalse);
   });
 });

@@ -2729,6 +2729,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2741,6 +2742,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
