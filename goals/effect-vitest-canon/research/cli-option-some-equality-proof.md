@@ -59,7 +59,8 @@ after-runs pass all 1,444 tests on Node in 175.272593244 seconds and Bun in
 112.910102303 seconds, with zero failures/skips and stable source hashes.
 All four before/after runs have identical file/title registration multiplicities.
 The committed root knowledge-reference check also passes. Full CLI package
-audit/docgen remains active; its result is not yet claimed. Private receipts use
+verification passes: audit in 669.0 seconds and docgen in 19.3 seconds. Source
+hashes remained unchanged throughout the package proof. Private receipts use
 `cli-option-some-equality-*`, including proposal, optional/asymmetric handling,
 diagnostic repairs, statement comparisons, detector control, ledger plan,
 timing reports and actual typecheck artifacts. This batch does not close the
