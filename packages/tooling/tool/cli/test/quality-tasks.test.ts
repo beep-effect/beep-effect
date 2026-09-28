@@ -4035,7 +4035,7 @@ describe("quality task adapter", () => {
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(validateCoverageTaskArgsForTesting("/repo", ["--replace-all"]));
 
-      assert.isTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         assert.include(Cause.pretty(exit.cause), "--replace-all requires --write-baseline");
       }
@@ -4055,7 +4055,7 @@ describe("quality task adapter", () => {
       const rangeExit = yield* Effect.exit(
         validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--replace-all", "--since=origin/main"])
       );
-      assert.isTrue(Exit.isFailure(rangeExit));
+      rangeExit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(rangeExit)) {
         assert.include(Cause.pretty(rangeExit.cause), "require exact --filter=<workspace-package> selectors");
       }
@@ -4086,7 +4086,7 @@ describe("quality task adapter", () => {
         validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--filter=...@beep/repo-cli"])
       );
 
-      assert.isTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         assert.include(Cause.pretty(exit.cause), "must name exact workspace packages that define coverage");
       }
@@ -4318,7 +4318,7 @@ describe("quality task adapter", () => {
         })
       );
 
-      assert.isTrue(Exit.isFailure(decoded));
+      decoded.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -4404,7 +4404,7 @@ describe("quality task adapter", () => {
           packagePath: "packages/existing",
         })
       );
-      assert.isTrue(Exit.isFailure(unsafeFailure));
+      unsafeFailure.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -4446,7 +4446,7 @@ describe("quality task adapter", () => {
         })
       );
 
-      assert.isTrue(Exit.isFailure(decoded));
+      decoded.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -4488,7 +4488,7 @@ describe("quality task adapter", () => {
           );
 
           const scopedExit = yield* Effect.exit(writeCoverageRegressionBaseline(repoRoot, true));
-          assert.isTrue(Exit.isFailure(scopedExit));
+          scopedExit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(scopedExit)) {
             assert.include(Cause.pretty(scopedExit.cause), "schema version 1 requires a full");
           }
@@ -4527,7 +4527,7 @@ describe("quality task adapter", () => {
           assert.deepStrictEqual(migrated.exemptions, { "@beep/exempt": "Named migration exemption." });
           assert.deepStrictEqual(migrated.follow_ups, { "@beep/debt": "Named migration follow-up." });
           const migratedPackage = R.get(migrated.packages, "@beep/existing");
-          assert.isTrue(O.isSome(migratedPackage));
+          migratedPackage.pipe(O.isSome, assertTrue);
           if (O.isSome(migratedPackage)) {
             assert.deepStrictEqual(R.keys(migratedPackage.value.files), ["src/Index.ts"]);
           }

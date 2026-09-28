@@ -740,7 +740,7 @@ describe("knowledge semantic-delta negative controls", () => {
         fixture({ [hostilePath]: "No command.\n" }, { [hostilePath]: `Run \`bun run beep ${hostileCommand}\`.\n` })
       );
       const introduced = A.head(report.introduced);
-      assert.isTrue(O.isSome(introduced));
+      introduced.pipe(O.isSome, assertTrue);
       if (O.isSome(introduced)) {
         const finding = introduced.value;
         assert.strictEqual(
@@ -1565,9 +1565,9 @@ describe("knowledge semantic-delta base probe boot failure", () => {
 
       assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
       assert.deepEqual(degraded.introduced, []);
-      assert.isTrue(O.isNone(knowledgeSemanticDeltaFailure(degraded)));
+      knowledgeSemanticDeltaFailure(degraded).pipe(O.isNone, assertTrue);
       assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
-      assert.isTrue(O.isSome(knowledgeSemanticDeltaFailure(probed)));
+      knowledgeSemanticDeltaFailure(probed).pipe(O.isSome, assertTrue);
     })
   );
 

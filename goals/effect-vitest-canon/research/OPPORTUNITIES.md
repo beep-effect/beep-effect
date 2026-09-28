@@ -5160,3 +5160,19 @@ rows, now included in the inline Exit-tag follow-up batch. Future preparation
 should select candidates by the inventory class and inspect their AST, or test
 its evidence selector against multiline formatting. Receipt:
 `cli-option-some-residual-proposal.json`; no new repository inventory was needed.
+
+### Amortize full CLI proof across larger assertion batches
+
+The assertion work repeatedly ran `bun run beep quality package-verify
+@beep/repo-cli` after small batches. Recent audit phases took 680.6, 669.0 and
+672.8 seconds, plus roughly twenty seconds of docgen, while the five-file
+before/after cohorts took about 31 seconds on Node and 21 seconds on Bun.
+Holding source immutable during each full proof was necessary, but launching
+that proof after every small transformation unnecessarily serialized progress.
+Group subsequent assertion transformations into larger reviewable batches;
+retain source-preservation checks, actual Effect diagnostics, focused Node/Bun
+parity and the ratchet during editing, then run the full owning-package proof
+before publication. This changes batching, not acceptance requirements or the
+full Yeet/hosted gates. Receipts: the Option comparison and inline Exit assertion
+proof documents and their private package-verify logs. Do not interrupt or edit
+under a full proof that is already running.
