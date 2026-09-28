@@ -11,12 +11,12 @@
     "atom-reactivity-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "e5e001a74bdfb2818d4f1161cb51cdbeb1ca1b074314e50ff8eb302e1543d56c"
+      "computedHash": "15f5519fbdefddec8f1a8e06341419f32ab3204cf576bab6db4f6eefe67986f1"
     },
     "browser-qa-loop": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "431ae592c79036d7d359a5abf258d7309fdebdc179686360426f151a3a7a32ff"
+      "computedHash": "a1e2ff3f1b3b94861fdea7c6d9c558f4d9e3a9625aa6ad1e2a3978e5b0317653"
     },
     "codex-findings": {
       "source": "repo-local",
@@ -31,7 +31,7 @@
     "effect-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "c75970a1e5e48ceb900562938ce85522d0fbcc71e536894b089e0403338bab23"
+      "computedHash": "f62f9c4f1f02604cb8c4b184285548f8aba7e105c70399369ef6a9e182d6ef11"
     },
     "explore": {
       "source": "repo-local",
@@ -41,7 +41,7 @@
     "graft": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "9265d5ae30fcfa9d24d50a876579236442d98d4320f202eca1f245b2d65257f8"
+      "computedHash": "cc6964408e6eb4dd132693b9a8d1ffddd36c8334584aac63187ceaf723143996"
     },
     "grill-me": {
       "source": "mattpocock/skills",
@@ -123,7 +123,7 @@
     "oracle": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "34cae79fa42a4d6530ca5a124308c8968eb47aad4eb7df27266a4769cd7c3d25"
+      "computedHash": "ac366ef57f570a6e8464eb7d7f0b813bc1b6db48ea4345536ff33fd516ecf04a"
     },
     "portless": {
       "source": "vercel-labs/portless",
@@ -150,7 +150,7 @@
     "schema-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "aeac2a92009f62dd756921bdce2135238be352dca0d0f5bc019e298471d1d3a7"
+      "computedHash": "b6cee420ede9ada6284ead0d8c629a4e3ab988ac5d6fc17f82c61dabdd7a870c"
     },
     "shadcn": {
       "source": "shadcn-ui/ui",
@@ -174,7 +174,7 @@
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
-      "computedHash": "39a68e35d02b8a03dc35774038d373c95c98924e95dd0c8061f50ad43a78f9fe",
+      "computedHash": "75a529569bbb5a4823f4ee4fdd6d78a71a2f2b2c647264b5c8710bde60a43aa9",
       "ref": "main",
       "skillPath": "skills/turborepo/SKILL.md"
     },
@@ -186,7 +186,7 @@
     "yeet": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "ca3bc8f974d13e8d29e620a567ca33528c2eca8222fb1aa89961d8277990b9f4"
+      "computedHash": "710c494cbf6bc3ba904677d497da13e8fdd9c08e009a8c08553f8d54e4dc42ea"
     }
   }
 }
