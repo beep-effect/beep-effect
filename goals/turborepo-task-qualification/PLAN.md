@@ -2666,3 +2666,16 @@ These selected controls do not establish exhaustive semantic-input closure.
 has no findings, reflection-artifact lint has zero blocking/advisory findings,
 and the launcher remains 2,755 characters. This is consistency evidence only;
 the final reflection, signed remote, shadow and merge-ready gates remain open.
+
+### Patched dependency profile: synthetic-token capture
+
+The renewed [stable](research/current-patched-capture-stable.json) and
+[canary](research/current-patched-capture-canary.json) controls each pass a
+fresh run and two local replays with a synthetic token at `b410da2b6d`.
+Native summaries verify the synthetic value was supplied through passthrough.
+Scans of 1,547 observation files per client and decompressed cache archives
+find no marker; each archive contains only the expected task log and no
+home/checkout path. Private CLI diagnostics still contain paths and remain
+private. Before/after dependency archive identity is equal. These controls
+do not prove remote telemetry/authentication, exhaustive secret-pattern safety,
+signed replay or qualification.

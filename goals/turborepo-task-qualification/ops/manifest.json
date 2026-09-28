@@ -439,7 +439,9 @@
     "research/current-patched-canary-invalidation.json",
     "research/current-patched-stable-config-controls.json",
     "research/current-patched-canary-config-controls.json",
-    "research/current-patched-packet-verification.json"
+    "research/current-patched-packet-verification.json",
+    "research/current-patched-capture-stable.json",
+    "research/current-patched-capture-canary.json"
   ],
   "agentLaunchers": [
     {
