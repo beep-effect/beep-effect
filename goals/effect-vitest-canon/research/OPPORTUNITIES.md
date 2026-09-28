@@ -4426,3 +4426,15 @@ now own these resources while retaining early teardown and remount assertions.
 For React views backed by a manual registry, unmount the view before disposing
 that registry. Syntax-tree insertion made the failure probes independent of
 formatter line wrapping.
+
+## Sidecar teardown raced directory removal and retained its stderr reader
+
+The compiled-sidecar control observed the first directory finalizer before the
+child's exit promise resolved. Sending a signal alone was insufficient. The test
+now joins process exit, then drains scoped stderr, then removes both directories.
+The initial stream conversion still retained the reader lock; an explicit
+`releaseLockOnEnd` option fixed the lock assertion. Readiness buffering retains
+only the marker overlap before boot and no accumulated log text afterward.
+Real process I/O uses live-clock 20/30-second deadlines instead of an unadvanced
+TestClock. The enabled compiled IPC case, not its default zero-registration gate,
+is the execution evidence.
