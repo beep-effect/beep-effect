@@ -55,6 +55,21 @@ const decodeRetryAfterSeconds = S.decodeUnknownOption(S.FiniteFromString.check(S
 /** Untracked artifacts graft leaves in a member; excluded per clone, never via .gitignore (R3). */
 const GRAFT_EXCLUDE_ENTRIES: ReadonlyArray<string> = ["graft/", ".graft/", ".ignore"];
 
+/** Effective build tier for one member, plus the skip outcome when a preflight downgraded it. */
+interface MemberTierPlan {
+  readonly downgrade: O.Option<{
+    readonly outcome: "skipped-preflight" | "skipped-cooldown";
+    readonly detail: string;
+  }>;
+  readonly tier: ReferenceMember["tier"];
+}
+const deepPlan: MemberTierPlan = { tier: "deep", downgrade: O.none() };
+const structuralPlan: MemberTierPlan = { tier: "structural", downgrade: O.none() };
+const downgradedPlan = (outcome: "skipped-preflight" | "skipped-cooldown", detail: string): MemberTierPlan => ({
+  tier: "structural",
+  downgrade: O.some({ outcome, detail }),
+});
+
 /** Result of bringing one member to origin/main: skipped by policy or synced; git failures fail. */
 type MemberSync =
   | { readonly _tag: "skipped"; readonly outcome: "skipped-dirty" | "skipped-off-branch" }
@@ -384,6 +399,17 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       const patchKitOk = preflight.patchKit === "ok";
       const preflightTail = O.match(preflight.detail, { onNone: () => "", onSome: (tail) => `: ${tail}` });
       const preflightDetail = `graft dist patch kit ${preflight.patchKit}; deep pass skipped${preflightTail}`;
+      // Without the dist patches, or while the model cools down, keep the structural wiring fresh
+      // and skip the paid pass. Only a member still deep after the patch-kit preflight is probed.
+      const planTier = Effect.fnUntraced(function* (member: ReferenceMember) {
+        if (member.tier !== "deep") return structuralPlan;
+        if (!patchKitOk) return downgradedPlan("skipped-preflight", preflightDetail);
+        const cooldown = yield* probeCooldown();
+        return O.match(cooldown, {
+          onNone: () => deepPlan,
+          onSome: (detail) => downgradedPlan("skipped-cooldown", detail),
+        });
+      });
       const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
         const gitDir = path.join(cwd, ".git");
         const gitInfo = yield* fs
@@ -435,6 +461,23 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           detail: O.Option<string> = O.none(),
           coverage: MemberRefreshReport["coverage"] = O.none()
         ) => MemberRefreshReport.make({ name: member.name, outcome, coverage, detail });
+        const buildMember = (tier: MemberTierPlan["tier"]) =>
+          step(home, cwd, "graft", buildArgs(member, jobs, tier), tier === "deep").pipe(
+            Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
+          );
+        // A failed build wins over a downgrade; a clean deep build keeps its meaning coverage.
+        const builtReport = (plan: MemberTierPlan, changed: boolean, build: CapturedStep) => {
+          if (build.exitCode !== 0) return report("build-failed", stepDetail("graft", build));
+          return O.match(plan.downgrade, {
+            onSome: ({ outcome, detail }) => report(outcome, detailOf(detail)),
+            onNone: () =>
+              report(
+                changed ? "pulled" : "unchanged",
+                O.none(),
+                plan.tier === "deep" ? parseDeepCoverage(build.output) : O.none()
+              ),
+          });
+        };
         const memberRun = Effect.fn("ReferenceWorkspace.refreshMember")(function* () {
           // A missing member must not let Git walk upward into a different checkout.
           const hasGit = yield* fs
@@ -446,22 +489,9 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           yield* ensureGraftExcludes(cwd);
           const sync = yield* syncMember();
           if (sync._tag === "skipped") return report(sync.outcome);
-          // Without the dist patches, or while the model cools down, keep the structural wiring
-          // fresh and skip the paid pass. Only a member still deep after the preflight is probed.
-          const skippedByPreflight = member.tier === "deep" && !patchKitOk;
-          const cooldown = member.tier === "deep" && !skippedByPreflight ? yield* probeCooldown() : O.none<string>();
-          const tier = skippedByPreflight || O.isSome(cooldown) ? "structural" : member.tier;
-          const build = yield* step(home, cwd, "graft", buildArgs(member, jobs, tier), tier === "deep").pipe(
-            Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
-          );
-          if (build.exitCode !== 0) return report("build-failed", stepDetail("graft", build));
-          if (skippedByPreflight) return report("skipped-preflight", detailOf(preflightDetail));
-          if (O.isSome(cooldown)) return report("skipped-cooldown", O.flatMap(cooldown, detailOf));
-          return report(
-            sync.changed ? "pulled" : "unchanged",
-            O.none(),
-            tier === "deep" ? parseDeepCoverage(build.output) : O.none()
-          );
+          const plan = yield* planTier(member);
+          const build = yield* buildMember(plan.tier);
+          return builtReport(plan, sync.changed, build);
         });
         const memberReport = yield* memberRun().pipe(
           Effect.catchTag("ReferenceWorkspaceError", (error) =>
@@ -543,9 +573,13 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           [
             "[Unit]",
             "Description=beep reference workspace refresh",
-            // Ordering only: a oneshot start job stays pending until ExecStart exits, so a
-            // running beep deep pass delays this one. No Wants=/Requires=, so refs still runs
-            // when the beep unit is not installed.
+            // Ordering only: a oneshot start job stays installed until ExecStart exits, and
+            // systemd orders against any installed job, not only one from the same
+            // transaction, so a running beep deep pass delays this one. No Wants=/Requires=, so
+            // refs still runs when the beep unit is not installed. Proof on systemd 262:
+            //   systemd-run --user --unit=B --property=Type=oneshot sleep 25
+            //   systemd-run --user --unit=A --property=Type=oneshot --property=After=B.service true
+            // `systemctl --user list-jobs` shows A "start waiting" while B runs; A starts when B exits.
             `After=${beepDeepRefreshUnit}`,
             "",
             "[Service]",

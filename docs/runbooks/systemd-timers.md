@@ -24,10 +24,24 @@ and reports `skipped-preflight`, and the run sends a critical notification.
 The rendered `beep-refs-refresh.service` carries
 `After=beep-graft-deep-refresh.service` in `[Unit]`. It is ordering only, with no
 `Wants=` or `Requires=`, so refs still runs when the graft unit is not installed.
-Both services are `Type=oneshot`, and a oneshot start job stays pending until its
-`ExecStart` exits. When the 02:30 graft deep pass is still running at 03:30, the
-refs start job therefore waits for it instead of sharing the model proxy with a
-second deep build. `OnCalendar` stays at 03:30.
+Both services are `Type=oneshot`, and a oneshot start job stays installed until
+its `ExecStart` exits. systemd enforces `After=` against any installed job, not
+only against jobs from the same transaction. When the 02:30 graft deep pass is
+still running at 03:30, the refs start job therefore waits for it instead of
+sharing the model proxy with a second deep build. No `flock` or `ExecStartPre`
+wait is needed. `OnCalendar` stays at 03:30.
+
+This was checked on this workstation's systemd 262 with two transient units:
+
+```bash
+systemd-run --user --unit=B --property=Type=oneshot sleep 25
+# about 3 s later:
+systemd-run --user --unit=A --property=Type=oneshot --property=After=B.service true
+systemctl --user list-jobs   # A: start waiting, B: start running
+```
+
+B started at 04:30:04 and exited at 04:30:29. A started at 04:30:29, the second
+B exited.
 
 All installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
 the Bun the unit runs is the mise shim (`$HOME/.local/share/mise/shims/bun`)
