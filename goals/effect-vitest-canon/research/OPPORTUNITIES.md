@@ -5194,3 +5194,27 @@ in eight `@beep/schema` test files. They require the same canonical repair;
 the baseline must not grow to absorb them. The first corrected scan reports
 3,816 findings with 50 introduced. CLI's 216 repaired pipe assertions restore
 previously claimed migration credit rather than add a fresh reduction.
+
+### Compound Boolean predicates need a canonical public route
+
+The remaining CLI EV006 audit includes public `assertTrue` calls around
+`Option.contains` and Array `every`/`some`. Their return values are Boolean,
+but the detector falls back to structural equality guidance and flags the
+canonical helper again. The Effect reference declares both direct/curried
+contains overloads as Boolean and uses `Equal.asEquivalence`; changing these
+to payload deep equality could alter semantics. Add narrow provenance/arity
+regressions and route proven aggregate/member predicates to public Boolean
+helpers while preserving compound operands and truth polarity. Keep
+Option-valued transformations and genuine absence checks distinct.
+
+### Assertion preparation must distinguish arrays and event-version unions
+
+The compound assertion draft initially emitted method `.pipe` on arrays and
+projected version-specific journal fields before narrowing the event union.
+The generated test diagnostics rejected both (`Property 'pipe' does not
+exist` and keys outside the common union fields). The repair uses functional
+`pipe` and existing schema/variant guards before `Struct.pick`, without
+casts. Future preparation should classify receivers and preserve the
+version/tag facts already asserted by surrounding tests. Receipt:
+`cli-assertion-closeout-typecheck.log` and its generated diagnostic artifact;
+the final artifact has exit zero and empty diagnostics.
