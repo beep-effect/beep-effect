@@ -13,7 +13,8 @@ copied).
 - Deduplicating the three `hook-pulse.sh` copies before adding the fourth (D14).
 - Cloud Agents API or the self-hosted worker as the volume surface.
 - A `.cursor/rules/*.mdc` restating `AGENTS.md`; copied skills; a full agents mirror (D20).
-- Any change to how `codex exec` lanes run while Codex is above floor.
+- Any change to how `codex exec` lanes run when the operator opts into one (pins, sandbox,
+  `--add-dir`, commit flags stay as the Codex rules state them).
 - The picker command (`goals/agent-pool-picker`).
 
 ## Source Hierarchy
@@ -59,8 +60,9 @@ copied).
 
 ## Acceptance Criteria
 
-- `AGENTS.md` states the three-step order, floors, seat map, never-list, deny list, corpus rule, and
-  points at the runbook; Codex pins are unchanged in wording.
+- `AGENTS.md` states the three-step order (Opus 5.5 sub-agents, operator-authorized Cursor, hold),
+  floors, seat map, never-list, deny list, corpus rule, and points at the runbook; Codex is opt-in
+  only and its pins are unchanged in wording for that case (amended 2026-09-24).
 - `docs/runbooks/agent-pools.md` contains the Codex meter probe (copy-paste), the Cursor recipe v2 with
   success rule and jq cookbook, the seat map with list prices and buckets, the deny list rationale, the
   hooks/GAPs section, sandbox notes, failure signatures, and cited sources.

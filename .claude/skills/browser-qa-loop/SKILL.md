@@ -167,8 +167,10 @@ correlated against recorded `transitionstart`/`transitionend` events.
 
 ## Environment notes
 
-- codex sandbox cannot open listeners (vitest browser mode, dev servers) —
-  captures run on the operator side; codex only judges files.
+- The vision judge is the Opus 5.5 Agent-tool subagent from the Judge step;
+  it only reads the round's files. Captures run on the operator side: neither
+  the judge nor an opt-in codex sandbox opens listeners (vitest browser mode,
+  dev servers).
 - Lane B depends on the codex extension-host bridge being healthy — see the
   `codex-browser-automation` memory for the repair and routing recipe.
   Lane A (`beep qa record --lane playwright`) is the always-available

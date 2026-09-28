@@ -58,7 +58,7 @@ hold stdin for about 40 s.
 | Field | Meaning |
 | --- | --- |
 | `ordinaryUsageAllowed` | Boolean gate. `null` means unavailable — do not infer availability from percentages alone. |
-| `rateLimits.primary.usedPercent` | Primary window consumption (0–100). Codex is at or below the floor when `usedPercent` ≥ 95 → fall through to the Cursor pool (step 2); hold only when Cursor is also below floor (D7). |
+| `rateLimits.primary.usedPercent` | Primary window consumption (0–100). Codex is at or below the floor when `usedPercent` ≥ 95. On an opt-in Codex lane that means: stop the lane and return to the Opus pool (step 1); never cascade into a Cursor lane the operator has not authorized. |
 | `rateLimits.primary.resetsAt` | ISO timestamp when the primary window resets. |
 | `rateLimits.primary.windowDurationMins` | Window length in minutes (CLI account: 10080 = weekly). |
 | `rateLimits.secondary` | Secondary window with the same shape when present. |
@@ -69,8 +69,10 @@ CLIProxyAPI management API when it exposes quota, else probe fallback (D8).
 
 ### Cursor
 
-**Fail-open (D17).** No official per-account usage endpoint exists for individual Ultra. Team
-Admin API routes (`/teams/spend`, `/teams/daily-usage-data`) are team-scoped. `cursor-agent
+**Fail-open (D17).** Once the operator has authorized a Cursor lane, Cursor counts as available
+until a lane proves otherwise; fail-open is an availability rule, not a pool cascade — nothing
+falls into Cursor on its own. No official per-account usage endpoint exists for individual Ultra.
+Team Admin API routes (`/teams/spend`, `/teams/daily-usage-data`) are team-scoped. `cursor-agent
 about`/`status` carry no usage. stream-json emits no usage or rate-limit events
 (https://cursor.com/docs/cli/reference/output-format).
 
@@ -376,6 +378,7 @@ the same pins.
 | Stuck subagent holds `-p` | Single-turn `-p` waits for delegated subagents; kill or avoid Explore subagents. |
 | Cursor Models spill zeros Other | Floor-check dashboard; stop Cursor-bucket lanes before 100%. |
 | `Total usage limit reached` | Mark Cursor below floor; hold and notify (D7). |
+| `rate_limit_error` on a `claude-opus-5-5` delegation | Opus pool below floor: finish running children, then hold and notify unless a Cursor lane was authorized. |
 | Sudo / YubiKey prompt hang | `Shell(sudo)` and `Shell(pkexec)` in deny list (D21). |
 | Workspace trust hang | `--trust` on every headless lane. |
 | Missing `result/success` + exit 0 | Treat as failure; inspect stderr. |

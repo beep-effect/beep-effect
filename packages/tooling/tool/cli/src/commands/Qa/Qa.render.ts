@@ -306,7 +306,7 @@ const findingSection = (finding: QaFinding): ReadonlyArray<string> => [
  *
  * const inventory = QaInventory.make({
  *   findings: [],
- *   judge: QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" }),
+ *   judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),
  *   requiredCount: 0,
  *   round: 4,
  *   schemaVersion: "qa-inventory/v1",
