@@ -2826,3 +2826,31 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   --disable-nested-config <changed files>` before pushing test changes in `@beep/repo-cli`; and
   either turn off `noInferrableTypes` for defaulted generator parameters or have the pre-commit
   hook fail instead of rewriting a staged file the author did not ask it to fix.
+
+## 2026-09-28 — a root `bunx vitest run <files>` silently drops files outside the root projects
+
+- Doing: verifying the ported coverage-floor suites with `bunx vitest run <5 files>` from the lane
+  root of the #1321 follow-up.
+- Evidence: the run printed `Test Files 3 passed (3)`. The `@beep/api-transport` and
+  `@beep/observability` files were never run and nothing said so; the same held for
+  `@beep/nlp-processing` and `@beep/lint-rules`. Running `bunx --bun vitest run test/<file>` from
+  each package directory did run them.
+- Prevention: have the root vitest config (or a `beep` wrapper) report explicit file arguments that
+  match no project, or document which packages the root projects list leaves out; until then, run
+  a package's own `test` script for its files.
+
+## 2026-09-28 — a mutation probe restored its backup over a concurrent track's edit
+
+- Doing: running the #1321 follow-up as three concurrent Opus 5.5 tracks in one lane: coverage
+  port, docstrings, and a production-path attempt-counter test.
+- Evidence: the orchestrator's brief gave the docstrings track the doc comments of
+  `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` and gave the attempt-counter track a
+  mutation probe on the same file ("reintroduce the old guard, confirm the test fails, restore the
+  source exactly from your backup"). The probe's restore wrote a backup taken before the docstrings
+  track's edit, so `git diff HEAD -- …/Tasks.ts` came back empty two seconds after the docstrings
+  track reported the file changed. Its verifier caught it and the repair pass re-applied the doc
+  comments; nothing reached a commit.
+- Prevention: give concurrent tracks disjoint whole-file ownership, and never let a track restore
+  a whole file from a backup in a shared tree; probe with a reverse patch (`git apply -R` of the
+  probe hunk) or in a throwaway copy, and re-check `git diff HEAD --stat` of every owned file just
+  before reporting.
