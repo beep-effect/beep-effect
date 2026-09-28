@@ -2278,3 +2278,20 @@ exclusive creation and checked hard-link append, with no cross-process lock.
 The prior focused ledger test source still matches its passing receipt.
 [The storage review](research/current-proof-ledger-storage-review.json) keeps
 concurrent-write, incomplete-tail recovery and crash-durability limits open.
+
+### Detached monitor wave escalation
+
+All 17 existing notifier tests pass with subprocess test doubles. The
+[escalation review](research/current-monitor-escalation-review.json) records
+policy/job gating, owner liveness, exclusive claims, launch retry and per-loop
+settlement. Claim or launch acknowledgement is not notification delivery.
+No real worker or owner-session action was launched by this review.
+
+### Sweep checkout and installation ordering
+
+The existing sweep plan/schema suites report 82 passing tests across two files.
+[The bounded review](research/current-sweep-ordering-review.json) records live-branch
+preconditions, sequential outcomes and installation suppression after a failed
+checkout switch. Subprocess fixtures establish those branches; no real retirement
+was run. Observation races and process ownership remain outside this evidence,
+and command success alone does not mean all sweep steps executed.

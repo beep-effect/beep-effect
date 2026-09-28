@@ -394,7 +394,9 @@
     "research/current-vitest-config-review.json",
     "research/current-failed-lane-digest-review.json",
     "research/current-proof-shadow-review.json",
-    "research/current-proof-ledger-storage-review.json"
+    "research/current-proof-ledger-storage-review.json",
+    "research/current-monitor-escalation-review.json",
+    "research/current-sweep-ordering-review.json"
   ],
   "agentLaunchers": [
     {
