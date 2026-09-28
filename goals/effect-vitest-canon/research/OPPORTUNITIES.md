@@ -4970,3 +4970,45 @@ hosted missing-lock error. The independent control also reproduces a lost
 replacement before repair. Full scheduler tests and package proof are required
 before claiming the repair green. This production repair is covered by the
 operator's standing authorization to fix discovered defects and record them.
+
+A control now calls the actual production `deriveYeetMergeReady` with synthetic
+current-head closeout and complete check snapshots. With required checks green,
+it returns ready for each optional-heavy outcome: pass, pending and fail. Only
+pass is compatible with the repository merge rule. Receipt:
+`optional-heavy-readiness-control.json`. This is an actual-function reproduction,
+not merely a source inference; the snapshots are synthetic and do not claim a
+new hosted failure. The production repair and its regression are still pending.
+
+## Package proof granularity dominated small migration throughput
+
+The allowlist-only CLI audit took 790.8 seconds plus 20.1 seconds for docgen;
+the subsequent combined allowlist/cache audit took 657.8 plus 19.4 seconds.
+Those full proofs validate package handoff but are too costly to schedule after
+each tiny syntax-only edit. The next prepared batch groups 190 exact-preserving
+predicate replacements across 49 existing inventory files, with focused
+before/after execution and one full package proof at the batch boundary.
+This changes batching, not acceptance: preserve source during each run, require
+all selected files in reporter output, compare file/title multiplicity on both
+runtimes and retain the full package gate before handoff. The timing figures are
+observations under host load, not an estimated speedup.
+
+## Before-change cohort exposes a forwarder timeout
+
+The 49-file predicate-migration before cohort passed 1,508 tests and timed out
+one AI metrics forwarder case after its existing 30-second bound. Source hashes
+were stable and no batch edit had been applied. The failing case is
+`runs forwarder with derived OTLP export status without exposing raw transcript text`
+in `ai-metrics-command.test.ts`. Preserve the failed timing receipt and isolate
+the cause before attributing it to host load or changing any timeout. This is a
+before-state failure, not evidence that the proposed assertion migration caused it.
+
+A delayed-arrival control now reproduces a separate clock defect in the native
+OTLP polling pattern. Under TestClock, the first failed lookup waits on a
+25-millisecond virtual retry delay even after a native callback supplies the
+trace. Wrapping only that retry program in `TestClock.withLive` completes on
+both Node and Bun, preserving the 200-retry and 25-millisecond limits. The
+control uses a first-attempt Deferred barrier and does not advance virtual time.
+Receipts: `cli-otlp-clock-control-node.json` and
+`cli-otlp-clock-control-bun.json`. This proves the helper's delayed-arrival gap;
+it does not by itself identify which stage caused the full forwarder timeout.
+Keep the original 30-second test budget and qualify any repair accordingly.

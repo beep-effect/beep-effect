@@ -12,12 +12,17 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 67 fixed rows, seven reviewed exceptions and 3,347 open rows, with all
+contains 84 fixed rows, seven reviewed exceptions and 3,330 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
 the remaining CLI inventory, final main delta, full goal proof and hosted
 acceptance remain open.
+
+Commit `77f8387edb` additionally fixes 17 detector findings in the allowlist/cache
+resource migration and the cache dashboard cleanup resource finding. Its scoped
+proof and native-boundary qualifications are recorded in
+[the resource proof](../../../research/cli-allowlist-cache-resource-proof.md).
 
 Historical evidence follows unchanged.
 

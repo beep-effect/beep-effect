@@ -7,7 +7,9 @@ import {
   ReplyReport,
   ReplyReportJson,
 } from "@beep/repo-cli/test/Yeet";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 
@@ -81,7 +83,8 @@ describe("ReplyDrafts", () => {
         '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"threadId":"PRRT_kwDOKq9lNc5b8Xy1","body":"ack"}]}'
       );
       expect(decoded.drafts[0]?.resolve).toBe(true);
-      expect(decoded.drafts[0]?.commentId).toEqual(O.none());
+      assertDefined(decoded.drafts[0]);
+      assertNone(decoded.drafts[0]?.commentId);
     })
   );
 
@@ -90,8 +93,10 @@ describe("ReplyDrafts", () => {
       const decoded = yield* ReplyDraftsJson.decode(
         '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"commentId":2284119001,"body":"ack"}]}'
       );
-      expect(decoded.drafts[0]?.threadId).toEqual(O.none());
-      expect(decoded.drafts[0]?.commentId).toEqual(O.some(2_284_119_001));
+      assertDefined(decoded.drafts[0]);
+      assertNone(decoded.drafts[0]?.threadId);
+      assertDefined(decoded.drafts[0]);
+      assertSome(decoded.drafts[0]?.commentId, 2_284_119_001);
     })
   );
 
@@ -100,7 +105,7 @@ describe("ReplyDrafts", () => {
       const exit = yield* Effect.exit(
         ReplyDraftsJson.decode('{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"body":"ack"}]}')
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -111,7 +116,7 @@ describe("ReplyDrafts", () => {
           '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"threadId":"PRRC_kwDOKq9lNc5b8Xy1","body":"ack"}]}'
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -122,7 +127,7 @@ describe("ReplyDrafts", () => {
           '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"threadId":"PRRT_kwDOKq9lNc5b8Xy1","body":""}]}'
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });
