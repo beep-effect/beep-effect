@@ -292,7 +292,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
           expect(yield* readArtifactBudget(budgetPath)).toEqual(O.none());
           yield* writeArtifactBudget(budgetPath, ArtifactBudget.make({ maxTotalBytes: 4096 }));
           const budget = yield* readArtifactBudget(budgetPath);
-          expect(O.isSome(budget)).toBe(true);
+          assertTrue(O.isSome(budget));
           expect(yield* readExtractionPlan(`${dir}/extraction-plan.json`)).toEqual(O.none());
         })
       )
@@ -310,7 +310,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
           yield* fs.writeFileString(`${videoDir}/notes.txt`, "ignore me");
           yield* fs.writeFileString(`${videoDir}/capture.mkv`, "not really a container");
           const found = yield* discoverRecordedVideo(videoDir);
-          expect(O.isSome(found)).toBe(true);
+          assertTrue(O.isSome(found));
           expect(O.getOrElse(found, () => "")).toContain("capture.mkv");
         })
       )
@@ -349,7 +349,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
             })
           );
           const legacy = yield* readLegacyManifest(manifestPath);
-          expect(O.isSome(legacy)).toBe(true);
+          assertTrue(O.isSome(legacy));
         })
       )
     ));

@@ -15,7 +15,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { strictEqual } from "@effect/vitest/utils";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -198,7 +198,7 @@ describe("exploration projections", () => {
           expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 
           const alpha = A.findFirst(projection.readmes, (item) => item.path.endsWith("/alpha/README.md"));
-          expect(O.isSome(alpha)).toBe(true);
+          assertTrue(O.isSome(alpha));
           if (O.isSome(alpha)) {
             expect(alpha.value.projected).toContain("<!-- BEGIN GENERATED: EXPLORATION STATUS -->");
             expect(alpha.value.projected).toContain("Which question survives projection?");

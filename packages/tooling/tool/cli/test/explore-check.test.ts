@@ -143,7 +143,7 @@ describe("explore --check", () => {
             expect(output).toContain("[packet-trace-stale]");
             expect(output).toContain("does not parse as JSON");
             expect(output).not.toContain("- sound [");
-            expect(O.isSome(O.fromNullishOr(soloId))).toBe(true);
+            assertTrue(O.isSome(O.fromNullishOr(soloId)));
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

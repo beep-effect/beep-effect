@@ -214,10 +214,10 @@ describe("manifest translation", () => {
     expect(plan.probe.hasLifecycle).toBe(false);
     expect(plan.issues).toStrictEqual([]);
     expect(A.length(plan.assumptions)).toBeGreaterThan(0);
-    expect(O.isSome(plan.translation)).toBe(true);
+    assertTrue(O.isSome(plan.translation));
     if (O.isNone(plan.translation)) return;
     const parsed = parseGoalManifestText(plan.translation.value.content);
-    expect(O.isSome(parsed)).toBe(true);
+    assertTrue(O.isSome(parsed));
     if (O.isSome(parsed) && isJsonRecord(parsed.value)) {
       expect(parsed.value.schemaVersion).toBe("initiative-manifest/v2");
       expect(parsed.value.lifecycle).toBe("active");
@@ -239,7 +239,7 @@ describe("manifest translation", () => {
         })
       );
       expect(plan.issues).toStrictEqual([]);
-      expect(O.isSome(plan.translation)).toBe(true);
+      assertTrue(O.isSome(plan.translation));
       if (O.isNone(plan.translation)) return;
       expect(plan.translation.value.beforeVersion).toBe(schemaVersion);
       expect(plan.translation.value.drift).toContain("breaking");
@@ -260,7 +260,7 @@ describe("manifest translation", () => {
       })
     );
     expect(plan.issues).toStrictEqual([]);
-    expect(O.isSome(plan.translation)).toBe(true);
+    assertTrue(O.isSome(plan.translation));
     if (O.isNone(plan.translation)) return;
     expect(plan.translation.value.drift).not.toContain("breaking");
     expect(plan.translation.value.drift).toContain("additive");
@@ -276,7 +276,7 @@ describe("manifest translation", () => {
       })
     );
     expect(plan.issues).toStrictEqual([]);
-    expect(O.isSome(plan.translation)).toBe(true);
+    assertTrue(O.isSome(plan.translation));
     if (O.isNone(plan.translation)) return;
     expect(plan.translation.value.edits).not.toContain("schemaVersion -> initiative-manifest/v2");
     expect(plan.translation.value.drift).not.toContain("breaking");
@@ -417,7 +417,7 @@ describe("manifest translation", () => {
         }),
       })
     );
-    expect(O.isSome(withLifecycle.translation)).toBe(true);
+    assertTrue(O.isSome(withLifecycle.translation));
     if (O.isNone(withLifecycle.translation)) return;
     expect(withLifecycle.translation.value.edits).not.toContain("add lifecycle from initiative.status");
     expect(withLifecycle.translation.value.edits).toContain("add packetPath from the scanned directory");
@@ -431,7 +431,7 @@ describe("manifest translation", () => {
         completionGate,
       })
     );
-    expect(O.isSome(withPacketPath.translation)).toBe(true);
+    assertTrue(O.isSome(withPacketPath.translation));
     if (O.isNone(withPacketPath.translation)) return;
     expect(withPacketPath.translation.value.edits).toContain("add lifecycle from initiative.status");
     expect(withPacketPath.translation.value.edits).not.toContain("add packetPath from the scanned directory");
@@ -572,7 +572,7 @@ describe("migration report rendering", () => {
         completionGate,
       })
     );
-    expect(O.isSome(plan.translation)).toBe(true);
+    assertTrue(O.isSome(plan.translation));
     if (O.isNone(plan.translation)) return;
     const report = TranslationReport.make({
       schemaVersion: "packet-convention-report/v1",
@@ -739,9 +739,9 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       yield* fs.copy(FORKED_PATH, packetPath);
       const locator = PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath });
       const applier = yield* PacketForkRepairApplier;
-      expect(O.isSome(yield* applier.preview(locator))).toBe(true);
+      assertTrue(O.isSome(yield* applier.preview(locator)));
       const outcome = yield* applier.apply(locator);
-      expect(O.isSome(outcome)).toBe(true);
+      assertTrue(O.isSome(outcome));
       expect(O.getOrUndefined(outcome)?.revision).toBe(4);
       const store = yield* PacketEventStore;
       const listing = yield* store.list(locator);
@@ -765,7 +765,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const store = yield* PacketEventStore;
       const original = yield* store.list(locator);
       const nestedParent = A.findFirst(original.events, (stored) => stored.event.seq === 3);
-      expect(O.isSome(nestedParent)).toBe(true);
+      assertTrue(O.isSome(nestedParent));
       if (O.isNone(nestedParent)) return;
 
       for (const [at, status] of [
@@ -792,11 +792,11 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(foldPacketEvents({ packet: "forked", root: "goals", events: before.events }).forks).toHaveLength(2);
 
       const applier = yield* PacketForkRepairApplier;
-      expect(O.isSome(yield* applier.apply(locator))).toBe(true);
+      assertTrue(O.isSome(yield* applier.apply(locator)));
       const intermediate = yield* store.list(locator);
       expect(foldPacketEvents({ packet: "forked", root: "goals", events: intermediate.events }).forks).toHaveLength(1);
 
-      expect(O.isSome(yield* applier.apply(locator))).toBe(true);
+      assertTrue(O.isSome(yield* applier.apply(locator)));
       const repaired = yield* store.list(locator);
       const derived = foldPacketEvents({ packet: "forked", root: "goals", events: repaired.events });
       expect(repaired.issues).toStrictEqual([]);
@@ -840,7 +840,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         ...fs,
         makeTempDirectory: () => Effect.fail(injectedFileSystemError("makeTempDirectory", stagingPacketPath)),
       });
-      expect(O.isSome(yield* stagingApplier.preview(stagingLocator))).toBe(true);
+      assertTrue(O.isSome(yield* stagingApplier.preview(stagingLocator)));
       const stagingFailure = yield* Effect.exit(stagingApplier.apply(stagingLocator));
       expect(Exit.isFailure(stagingFailure) ? stagingFailure.cause.toString() : "").toContain("repair staging failed");
 
@@ -1040,7 +1040,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                 .pipe(Effect.andThen(fs.writeFileString(target, content, options)))
             : fs.writeFileString(target, content, options),
       });
-      expect(O.isSome(yield* lateBackupApplier.apply(lateBackupLocator))).toBe(true);
+      assertTrue(O.isSome(yield* lateBackupApplier.apply(lateBackupLocator)));
       expect(yield* fs.readFileString(lateBackupEvent)).toBe("late concurrent event\n");
 
       const traceRaceLocator = yield* makeFixture("trace-publication-race");
@@ -1086,7 +1086,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
             : fs.writeFileString(target, content, options),
       });
       const traceRaceOutcome = yield* traceRaceApplier.apply(traceRaceLocator);
-      expect(O.isSome(traceRaceOutcome)).toBe(true);
+      assertTrue(O.isSome(traceRaceOutcome));
       const traceRaceListing = yield* store.list(traceRaceLocator);
       const traceRaceDerived = foldPacketEvents({
         packet: "forked",
@@ -1312,7 +1312,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         ],
       });
       const seed = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
-      expect(O.isSome(seed)).toBe(true);
+      assertTrue(O.isSome(seed));
       if (O.isNone(seed)) return;
       yield* applyPacketGenesisSeed(seed.value);
       const store = yield* PacketEventStore;
@@ -1351,7 +1351,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         completionGate,
       });
       const planned = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
-      expect(O.isSome(planned)).toBe(true);
+      assertTrue(O.isSome(planned));
       if (O.isNone(planned)) return;
       yield* fs.makeDirectory(planned.value.eventsDirectory);
       yield* fs.writeFileString(
@@ -1360,7 +1360,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
 
       const recovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-27T00:00:00.000Z");
-      expect(O.isSome(recovery)).toBe(true);
+      assertTrue(O.isSome(recovery));
       if (O.isNone(recovery)) return;
       yield* applyPacketGenesisSeed(recovery.value);
       expect(yield* fs.readFileString(recovery.value.tracePath)).toBe(recovery.value.traceText);
@@ -1546,7 +1546,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine conflict");
       expect(yield* fs.readFileString(retry.tracePath)).toBe(displacedTrace);
-      expect(O.isSome(yield* planPacketGenesisSeed(packet, manifest, "2026-08-30T00:00:00.000Z"))).toBe(true);
+      assertTrue(O.isSome(yield* planPacketGenesisSeed(packet, manifest, "2026-08-30T00:00:00.000Z")));
     })
   );
 
@@ -1572,7 +1572,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         completionGate,
       });
       const seed = yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z");
-      expect(O.isSome(seed)).toBe(true);
+      assertTrue(O.isSome(seed));
       if (O.isNone(seed)) return;
       const failingSeed = PacketGenesisSeed.make({
         ...seed.value,
@@ -2520,7 +2520,7 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
             manifestText: manifest,
           });
           const seed = yield* planPacketGenesisSeed(packet, manifest, "2026-08-25T00:00:00.000Z");
-          expect(O.isSome(seed)).toBe(true);
+          assertTrue(O.isSome(seed));
           if (O.isNone(seed)) return;
           const fs = yield* FileSystem.FileSystem;
           const eventPath = `${seed.value.eventsDirectory}/${seed.value.eventFileName}`;

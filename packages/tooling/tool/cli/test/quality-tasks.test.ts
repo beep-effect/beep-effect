@@ -675,8 +675,8 @@ const expectSubstringBefore = (text: string, before: string, after: string): voi
   const beforeIndex = Str.indexOf(before)(text);
   const afterIndex = Str.indexOf(after)(text);
 
-  expect(O.isSome(beforeIndex)).toBe(true);
-  expect(O.isSome(afterIndex)).toBe(true);
+  assertTrue(O.isSome(beforeIndex));
+  assertTrue(O.isSome(afterIndex));
 
   if (O.isSome(beforeIndex) && O.isSome(afterIndex)) {
     expect(beforeIndex.value).toBeLessThan(afterIndex.value);
@@ -1933,7 +1933,7 @@ describe("quality task adapter", () => {
           ]);
           expect(report.firstRed).toStrictEqual(O.some("preflight:a"));
           expect(report.skippedAfterRed).toBe(2);
-          expect(O.isSome(laneReport.lanes[0]?.startedAt ?? O.none())).toBe(true);
+          assertTrue(O.isSome(laneReport.lanes[0]?.startedAt ?? O.none()));
           expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
           expect(laneReport.lanes[1]?.inputDigest).toStrictEqual(O.none());
           expect(laneReport.lanes[2]?.inputDigest).toStrictEqual(O.none());
@@ -2078,7 +2078,7 @@ describe("quality task adapter", () => {
 
       expect(O.isNone(disabled)).toBe(true);
       expect(O.isNone(invalid)).toBe(true);
-      expect(O.isSome(withDefaultBase)).toBe(true);
+      assertTrue(O.isSome(withDefaultBase));
 
       const emptySession = LaneProofSession.make({
         mode: "active",

@@ -1,3 +1,5 @@
+import { assertTrue } from "@effect/vitest/utils";
+
 // Effect's default ConfigProvider snapshots the ambient environment once, at
 // the first config read in this (isolated) test file. Set the values the
 // synchronous readers observe before any test triggers that first read.
@@ -91,7 +93,7 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
     const rendered = line(finding);
     expect(rendered.startsWith(SchemaFirstPolicyIssuePrefix)).toBe(true);
     const decoded = decodeSchemaFirstPolicyFindingLine(rendered);
-    expect(O.isSome(decoded)).toBe(true);
+    assertTrue(O.isSome(decoded));
     if (O.isSome(decoded)) {
       expect(decoded.value.severity).toBe("warning");
       expect(decoded.value.ruleId).toBe("SFV4-defaults");
@@ -135,7 +137,7 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
       message: "m",
     })}`;
     const decoded = decodeSchemaFirstPolicyFindingLine(bare);
-    expect(O.isSome(decoded)).toBe(true);
+    assertTrue(O.isSome(decoded));
     if (O.isSome(decoded)) {
       expect(decoded.value.severity).toBeUndefined();
       expect(decoded.value.remediation).toBeUndefined();
@@ -174,7 +176,7 @@ describe("JsonStringCodec", () => {
 
   it("decodeOption yields None on malformed input", () => {
     expect(O.isNone(codec.decodeOption("nope"))).toBe(true);
-    expect(O.isSome(codec.decodeOption('{"x":1,"y":2}'))).toBe(true);
+    assertTrue(O.isSome(codec.decodeOption('{"x":1,"y":2}')));
   });
 
   it("decodeOrFail maps schema errors to a domain error", () => {

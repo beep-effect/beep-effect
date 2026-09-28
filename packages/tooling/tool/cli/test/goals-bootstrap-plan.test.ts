@@ -438,7 +438,7 @@ describe("goals adopt --plan index parity", () => {
             { concurrency: 1 }
           );
           const first = A.head(generated);
-          expect(O.isSome(first)).toBe(true);
+          assertTrue(O.isSome(first));
           if (O.isNone(first)) return;
           expect(A.every(generated, (content) => content === first.value)).toBe(true);
           // The local goals/INDEX.md projection is git-ignored workstation state; drift against it is

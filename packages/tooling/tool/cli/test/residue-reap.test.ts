@@ -399,7 +399,7 @@ describe("residue reap", () => {
         expect(reaped.path).toBe(lexicalWorktree);
         // The real directory behind the link is gone; the symlink itself is untouched.
         expect(yield* fs.exists(fixture.oldWorktree)).toBe(false);
-        expect(O.isSome(yield* fs.readLink(linkedHome).pipe(Effect.option))).toBe(true);
+        assertTrue(O.isSome(yield* fs.readLink(linkedHome).pipe(Effect.option)));
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

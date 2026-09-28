@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -108,10 +109,10 @@ describe("ProcessIdentity", () => {
       ).toBe(true);
 
       const portable = yield* withProcStat("", processStartIdentityForPid(process.pid));
-      expect(O.isSome(portable)).toBe(true);
+      assertTrue(O.isSome(portable));
       if (O.isSome(portable)) {
         expect(Str.startsWith("ps:")(portable.value)).toBe(true);
-        expect(O.isSome(yield* processStartIdentityForPid(process.pid, portable))).toBe(true);
+        assertTrue(O.isSome(yield* processStartIdentityForPid(process.pid, portable)));
       }
 
       expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing")))).toBe(true);

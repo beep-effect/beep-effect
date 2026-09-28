@@ -77,6 +77,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import {
   Clock,
   ConfigProvider,
@@ -196,7 +197,7 @@ describe("process identity liveness", () => {
         Effect.provideService(FileSystem.FileSystem, withoutProcfs)
       );
 
-      expect(O.isSome(identity)).toBe(true);
+      assertTrue(O.isSome(identity));
       if (O.isSome(identity)) {
         expect(Str.startsWith(process.platform === "win32" ? "win:" : "ps:")(identity.value)).toBe(true);
         expect(

@@ -35,6 +35,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -86,7 +87,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         const report = buildEffectReport(state);
 
         expect(report.status).toBe("drift");
-        expect(O.isSome(report.latest)).toBe(true);
+        assertTrue(O.isSome(report.latest));
         if (O.isSome(report.latest)) {
           expect(report.latest.value).toBe("^4.0.0-beta.28");
         }

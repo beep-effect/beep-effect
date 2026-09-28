@@ -920,7 +920,7 @@ describe("ai-metrics command", () => {
         );
         const output = yield* loggedText();
         expect(result.maxFileBytes).toEqual(O.some(128));
-        expect(O.isSome(codex)).toBe(true);
+        assertTrue(O.isSome(codex));
         if (O.isSome(codex)) {
           expect(codex.value.fileCount).toBe(1);
           expect(codex.value.files[0]?.sizeBytes).toBeLessThanOrEqual(128);
@@ -1100,7 +1100,7 @@ describe("ai-metrics command", () => {
             const otlpExport = result.otlpExport;
             const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
-            expect(O.isSome(otlpExport)).toBe(true);
+            assertTrue(O.isSome(otlpExport));
             if (O.isSome(otlpExport)) {
               expect(otlpExport.value.status).toBe("exported");
               if (otlpExport.value.status === "exported") {
@@ -1176,7 +1176,7 @@ describe("ai-metrics command", () => {
 
               expect(result.sourceFileCount).toBe(1);
               expect(result.turnCount).toBeGreaterThan(0);
-              expect(O.isSome(otlpExport)).toBe(true);
+              assertTrue(O.isSome(otlpExport));
               if (O.isSome(otlpExport)) {
                 expect(otlpExport.value.status).toBe("failed");
                 if (otlpExport.value.status === "failed") {
@@ -1302,7 +1302,7 @@ describe("ai-metrics command", () => {
           ]);
           const queue = yield* decodeLabelQueue(yield* lastLoggedLine());
           const firstTask = A.head(queue.items);
-          expect(O.isSome(firstTask)).toBe(true);
+          assertTrue(O.isSome(firstTask));
           if (O.isNone(firstTask)) {
             return;
           }

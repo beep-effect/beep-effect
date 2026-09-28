@@ -27,6 +27,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -122,7 +123,7 @@ describe("internal/cli/RunMode", () => {
 
 describe("internal/cli/UnknownProbe", () => {
   it("narrows non-array objects, rejecting arrays and primitives", () => {
-    expect(O.isSome(asRecord({ a: 1 }))).toBe(true);
+    assertTrue(O.isSome(asRecord({ a: 1 })));
     expect(O.isNone(asRecord([1, 2]))).toBe(true);
     expect(O.isNone(asRecord("nope"))).toBe(true);
     expect(isUnknownRecord({ a: 1 })).toBe(true);

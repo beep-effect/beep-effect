@@ -180,7 +180,7 @@ describe("worktree reap", () => {
         expect(report.candidates).toHaveLength(8);
         expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
         expect(O.isNone(candidateAt(report, merged).skipReason)).toBe(true);
-        expect(O.isSome(candidateAt(report, merged).bytes)).toBe(true);
+        assertTrue(O.isSome(candidateAt(report, merged).bytes));
         expect(candidateAt(report, dirty).reapClass).toBe("merged-pr");
         expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
         expect(candidateAt(report, open).reapClass).toBe("open-pr");
@@ -385,7 +385,7 @@ describe("worktree reap", () => {
         expect(candidate.reapClass).toBe("open-pr");
         expect(O.getOrThrow(candidate.skipReason)).toBe("open-pr");
         expect(O.getOrThrow(candidate.prNumber)).toBe(305);
-        expect(O.isSome(candidate.bytes)).toBe(true);
+        assertTrue(O.isSome(candidate.bytes));
         expect(A.some(report.warnings, Str.includes("eligibility changed before retirement"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(true);
       })

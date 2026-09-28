@@ -21,6 +21,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Layer, Path, Ref, Schedule, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -294,7 +295,7 @@ describe("yeet monitor comment cursor persistence", () => {
         // comment posted in between.
         const persisted = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
         expect(O.map(persisted, (mark) => mark.issue.id)).toEqual(O.some(0));
-        expect(O.isSome(persisted)).toBe(true);
+        assertTrue(O.isSome(persisted));
       })
     ).pipe(
       provideScopedLayer(
@@ -481,7 +482,7 @@ describe("yeet monitor comment replay", () => {
         // Nothing was read, because there was no "since" to read from — the
         // point of the line is that the NEXT open is the one that resumes.
         expect(A.length(yield* Ref.get(commandsRef))).toBe(0);
-        expect(O.isSome(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER))).toBe(true);
+        assertTrue(O.isSome(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)));
       })
     ).pipe(
       provideScopedLayer(

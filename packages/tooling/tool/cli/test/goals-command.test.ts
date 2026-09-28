@@ -16,6 +16,7 @@ import {
   rewriteReadmeLifecycleToken,
 } from "@beep/repo-cli/test/Goals";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -306,7 +307,7 @@ describe("renderPortfolioIndex", () => {
 
 describe("parseGoalManifestText", () => {
   it("accepts JSON objects and rejects non-object or broken JSON", () => {
-    expect(O.isSome(parseGoalManifestText('{ "a": 1 }'))).toBe(true);
+    assertTrue(O.isSome(parseGoalManifestText('{ "a": 1 }')));
     expect(O.isNone(parseGoalManifestText("[1, 2]"))).toBe(true);
     expect(O.isNone(parseGoalManifestText("not json"))).toBe(true);
   });

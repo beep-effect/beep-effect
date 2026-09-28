@@ -13,6 +13,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { BuildYeetVerdictInput, buildYeetVerdictForTesting } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -48,7 +49,7 @@ const laneStep = QualityTaskStep.make({
 describe("detectNoLocationTs2589Flake", () => {
   it("quarantines a single no-location TS2589 turbo task failure", () => {
     const detected = detectNoLocationTs2589Flake(quarantinableBuildOutput);
-    expect(O.isSome(detected)).toBe(true);
+    assertTrue(O.isSome(detected));
     const tasks = O.getOrThrow(detected);
     expect(tasks).toHaveLength(1);
     expect(tasks[0]).toMatchObject({ taskId: "@beep/box#build", packageName: "@beep/box", task: "build" });
@@ -75,7 +76,7 @@ describe("detectNoLocationTs2589Flake", () => {
 
   it("detects through ANSI escapes", () => {
     const output = [`\u001B[31m${boxTs2589Line}\u001B[0m`, "\u001B[1mFailed:    @beep/box#build\u001B[0m"].join("\n");
-    expect(O.isSome(detectNoLocationTs2589Flake(output))).toBe(true);
+    assertTrue(O.isSome(detectNoLocationTs2589Flake(output)));
   });
 
   it("keeps a located TS2589 hard", () => {

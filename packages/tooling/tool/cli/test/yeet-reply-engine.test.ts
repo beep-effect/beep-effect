@@ -32,6 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -656,7 +657,7 @@ describe("reply run verdict", () => {
       ]),
       "/repo/.beep/yeet/reply-report.json"
     );
-    expect(O.isSome(verdict)).toBe(true);
+    assertTrue(O.isSome(verdict));
     const text = O.getOrElse(verdict, () => "");
     expect(text).toContain("2 of 2 drafts");
     expect(text).toContain("PRRT_open");

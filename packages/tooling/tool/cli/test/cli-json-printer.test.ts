@@ -32,7 +32,7 @@ const collectLines = <A, E>(
   Effect.gen(function* () {
     yield* effect;
     return yield* TestConsole.logLines;
-  }).pipe(provideScopedLayer(TestConsole.layer));
+  }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
 
 describe("internal/cli/Json renderPrettyCommandJson", () => {
   it("pretty-formats a compact JSON payload with a trailing newline", () => {

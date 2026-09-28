@@ -226,7 +226,7 @@ describe("image command", { concurrent: false }, () => {
           assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
-            expect(O.isSome(failure)).toBe(true);
+            assertTrue(O.isSome(failure));
             if (O.isSome(failure)) {
               expect(failure.value).toBeInstanceOf(FFmpegError);
               expect(failure.value.message).toBe(
@@ -295,7 +295,7 @@ describe("image command", { concurrent: false }, () => {
           assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
-            expect(O.isSome(failure)).toBe(true);
+            assertTrue(O.isSome(failure));
             if (O.isSome(failure)) {
               expect(failure.value).toBeInstanceOf(ImageCommandError);
               expect(failure.value.message).toBe("image extract-frames-dir: no direct video files found.");
@@ -328,7 +328,7 @@ describe("image command", { concurrent: false }, () => {
           expect(yield* fs.exists(argsPath)).toBe(false);
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
-            expect(O.isSome(failure)).toBe(true);
+            assertTrue(O.isSome(failure));
             if (O.isSome(failure)) {
               expect(failure.value).toBeInstanceOf(ImageCommandError);
               expect(failure.value.message).toBe(
@@ -375,7 +375,7 @@ describe("image command", { concurrent: false }, () => {
           assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
-            expect(O.isSome(failure)).toBe(true);
+            assertTrue(O.isSome(failure));
             if (O.isSome(failure)) {
               expect(failure.value).toBeInstanceOf(ImageCommandError);
               expect(failure.value.message).toBe("image extract-frames-dir: 1 video(s) failed.");

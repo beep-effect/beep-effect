@@ -5061,3 +5061,30 @@ original whole-cohort timeout or final package acceptance.
   expansion. Targeted Fallow audit/health and regression tests pass. Running the
   affected Fallow gates before publishing this production repair would have
   shortened the feedback loop. Receipts: `pr1323-fallow-fix-*`.
+
+- PR #1323 hosted CLI shard 2 exposed CI-only console pollution: runner
+  lifecycle logs entered three exact application-output assertions in
+  `cli-json-printer.test.ts` and `person-match-portability.test.ts`. Running
+  both files with `CI=1` reproduced the same three failures locally; ordinary
+  local proofs had not exercised that trace mode. A fresh TestConsole around
+  the application effect preserves CI lifecycle diagnostics and exact output
+  assertions. Keep explicit CI/trace-mode coverage for console-sensitive tests.
+  Receipt: `pr1323-ci-console-control`; follow-up proof: `console-followup-ci-*`.
+
+- The generated PR #1323 title used the latest documentation commit, and its
+  initial body included already-squashed #1312 checkpoint history. The body
+  required a manual rewrite around the current diff while retaining review
+  and provenance blocks. PR generation should summarize the effective diff
+  against the base instead of treating all reachable feature commits as new
+  work after a squash merge. Receipt: PR #1323 body rewrite.
+
+- PR #1323's full local publisher reached lint policy after the ordinary
+  package proof, then found Effect test-only diagnostics: nested predicate
+  assertions need the pipeable form, two existing test helpers need Effect.fn,
+  and a new backward-compatibility decoder must be hoisted and typed. Package
+  source checking alone does not cover this test diagnostic lane; run the
+  generated `package-test-typecheck` task during assertion migrations. The
+  same policy pass rejects literal synthetic home paths in captured inventory
+  evidence, even though they are test fixtures rather than real private paths.
+  Preserve the test case while using portable, unambiguous fixture paths or
+  sanitized inventory evidence. Receipt: `pr1323-local-policy-failures.json`.

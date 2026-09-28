@@ -12,6 +12,7 @@ import {
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -134,8 +135,8 @@ describe("doctest rewrite planning", () => {
 
   it("uses the real upstream transform as the assertion oracle", () => {
     expect(O.isNone(validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1))).toBe(true);
-    expect(O.isSome(validateDoctestAssertions("// => 2", "fixture.ts", 1))).toBe(true);
-    expect(O.isSome(validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1))).toBe(true);
+    assertTrue(O.isSome(validateDoctestAssertions("// => 2", "fixture.ts", 1)));
+    assertTrue(O.isSome(validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1)));
     expect(O.isNone(validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1))).toBe(true);
   });
 

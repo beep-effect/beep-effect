@@ -22,6 +22,7 @@ import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScr
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -288,7 +289,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = fnSchemaEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
-    expect(O.isSome(entry)).toBe(true);
+    assertTrue(O.isSome(entry));
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
     expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("updateWidget"));
     expect(O.map(entry, (found) => found.status)).toEqual(O.some("advisory"));
@@ -328,7 +329,7 @@ describe("normalizationEntryFromCallExpression", () => {
     }
     const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
-    expect(O.isSome(entry)).toBe(true);
+    assertTrue(O.isSome(entry));
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
     expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("normalizeName.trim"));
   });
@@ -353,7 +354,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
-    expect(O.isSome(entry)).toBe(true);
+    assertTrue(O.isSome(entry));
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
     expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("findUser"));
   });
@@ -405,7 +406,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
     const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
-    expect(O.isSome(entry)).toBe(true);
+    assertTrue(O.isSome(entry));
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
     expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("pickSomes.R.getSomes"));
   });

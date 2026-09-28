@@ -25,6 +25,7 @@ import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corp
 import { NonNegativeInt, PosInt, PosixPath, Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Path } from "effect";
@@ -1622,8 +1623,8 @@ else exit 92; fi
         unapprovedCount: NonNegativeInt.make(1),
       });
 
-      expect(O.isSome(yield* RT.resumableFamilyStart(context, []).pipe(Effect.option))).toBe(true);
-      expect(O.isSome(yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option))).toBe(true);
+      assertTrue(O.isSome(yield* RT.resumableFamilyStart(context, []).pipe(Effect.option)));
+      assertTrue(O.isSome(yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option)));
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [acceptance]).pipe(Effect.option))).toBe(true);
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary, runStart]).pipe(Effect.option))).toBe(true);
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary]).pipe(Effect.option))).toBe(true);

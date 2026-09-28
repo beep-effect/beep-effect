@@ -4,6 +4,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -130,7 +131,7 @@ layer(testLayer)("schema catalog command", (it) => {
               (candidate) => candidate.file === "packages/example/src/Example.ts" && candidate.symbol === "FixtureModel"
             );
 
-            expect(O.isSome(entry)).toBe(true);
+            assertTrue(O.isSome(entry));
             if (O.isSome(entry)) {
               expect(entry.value.kind).toBe("schema-class");
               expect(entry.value.owner).toBe("@beep/example");

@@ -10,6 +10,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
@@ -749,7 +750,7 @@ describe("restoration archive boundary helpers", () => {
           sourceRelativePath: "synthetic.bin",
         });
         expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
-        expect(O.isSome(RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId)).toBe(true);
+        assertTrue(O.isSome(RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId));
       },
       Effect.scoped,
       provideTestLayer

@@ -154,6 +154,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -2387,7 +2388,7 @@ describe("yeet quality issue index", () => {
         "\nfull:pre-push failed with exit code 1.\nsecurity:nix completed successfully"
     );
 
-    expect(O.isSome(remediation)).toBe(true);
+    assertTrue(O.isSome(remediation));
     expect(O.getOrUndefined(remediation)).toContain("typos");
   });
 
@@ -4458,7 +4459,7 @@ describe("yeet publish scope helpers", () => {
           yield* fs.writeFileString(path.join(tmpDir, "untracked.txt"), "wip\n");
 
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          expect(O.isSome(stash)).toBe(true);
+          assertTrue(O.isSome(stash));
 
           const cleanStatus = yield* runGitStatus(tmpDir);
           expect(cleanStatus).toBe("");
@@ -4484,7 +4485,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          expect(O.isSome(stash)).toBe(true);
+          assertTrue(O.isSome(stash));
 
           yield* fs.writeFileString(filePath, "conflicting\n");
           yield* runGit(tmpDir, ["add", "tracked.txt"]);
@@ -4508,7 +4509,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          expect(O.isSome(stash)).toBe(true);
+          assertTrue(O.isSome(stash));
           const parkedStatus = yield* runGitStatus(tmpDir);
           expect(parkedStatus).toBe("");
 
@@ -4531,7 +4532,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          expect(O.isSome(stash)).toBe(true);
+          assertTrue(O.isSome(stash));
 
           const committed = yield* Effect.succeed("committed").pipe(
             restorePublishStashOnFailure({ context: tempContext, stash })
@@ -4721,7 +4722,7 @@ describe("yeet publish scope helpers", () => {
             prePushStep,
           ]);
 
-          expect(O.isSome(lease)).toBe(true);
+          assertTrue(O.isSome(lease));
           if (O.isSome(lease)) {
             expect(lease.value.lockPath).toBe(lockPath);
             yield* releaseProofLock(lease.value);
@@ -4776,12 +4777,12 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
 
           const retired = yield* retireFullProofLockOrObserveAtPath(lockPath);
-          expect(O.isSome(retired)).toBe(true);
+          assertTrue(O.isSome(retired));
           const markerText = yield* fs.readFileString(lockPath);
           expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
           expect(markerText).toContain('"coordination":"quality-scheduler/v1"');
 
-          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
           expect(yield* fs.readFileString(lockPath)).toBe(markerText);
 
           const legacyPathRefusal = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]).pipe(
@@ -4804,7 +4805,7 @@ describe("yeet publish scope helpers", () => {
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
-          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
         })
       )
@@ -4828,7 +4829,7 @@ describe("yeet publish scope helpers", () => {
           )}\n`;
           yield* fs.writeFileString(lockPath, staleText);
 
-          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
           const markerText = yield* fs.readFileString(lockPath);
           expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
           expect(markerText).not.toBe(staleText);
@@ -4882,7 +4883,7 @@ describe("yeet publish scope helpers", () => {
             Effect.provideService(FileSystem.FileSystem, racingFileSystem)
           );
 
-          expect(O.isSome(retired)).toBe(true);
+          assertTrue(O.isSome(retired));
           expect(yield* fs.readFileString(lockPath)).toBe(competingMarker);
         })
       )
@@ -4895,13 +4896,13 @@ describe("yeet publish scope helpers", () => {
           const path = yield* Path.Path;
           const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
           const otherOriginLockPath = path.join(path.dirname(lockPath), "other-origin.lock");
-          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
           const first = yield* acquireFullProofFallbackLockOrObserveAtPath(
             lockPath,
             tempContext,
             "bun run beep yeet verify"
           );
-          expect(O.isSome(first)).toBe(true);
+          assertTrue(O.isSome(first));
           if (O.isSome(first)) {
             expect(first.value.lockPath).toBe(fallbackPath);
           }
@@ -4923,7 +4924,7 @@ describe("yeet publish scope helpers", () => {
             tempContext,
             "bun run beep yeet verify"
           );
-          expect(O.isSome(next)).toBe(true);
+          assertTrue(O.isSome(next));
           if (O.isSome(next)) {
             expect(next.value.lockPath).toBe(fallbackPath);
             yield* releaseProofLock(next.value);
@@ -4959,7 +4960,7 @@ describe("yeet publish scope helpers", () => {
             "bun run beep yeet verify"
           );
 
-          expect(O.isSome(replacement)).toBe(true);
+          assertTrue(O.isSome(replacement));
           expect(yield* fs.readFileString(fallbackPath)).not.toBe(recycledOwnerText);
           if (O.isSome(replacement)) {
             yield* releaseProofLock(replacement.value);
@@ -5006,7 +5007,7 @@ describe("yeet publish scope helpers", () => {
             O.some("ps:Sun Aug 31 00:00:00 2026")
           );
 
-          expect(O.isSome(acquired)).toBe(true);
+          assertTrue(O.isSome(acquired));
           expect(yield* fs.readFileString(fallbackPath)).toContain('"procStart":"ps:Sun Aug 31 00:00:00 2026"');
           if (O.isSome(acquired)) {
             yield* releaseProofLock(acquired.value);
@@ -5527,7 +5528,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "",
       resolveThreads: "PRRT_missing",
     });
-    expect(O.isSome(unknown.error)).toBe(true);
+    assertTrue(O.isSome(unknown.error));
     if (O.isSome(unknown.error)) {
       expect(unknown.error.value).toContain("PRRT_missing");
     }
@@ -5538,7 +5539,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "",
     });
-    expect(O.isSome(unpaired.error)).toBe(true);
+    assertTrue(O.isSome(unpaired.error));
 
     const orphanBody = closeoutWritePlanForTesting({
       knownThreadIds: known,
@@ -5546,7 +5547,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "",
       resolveThreads: "",
     });
-    expect(O.isSome(orphanBody.error)).toBe(true);
+    assertTrue(O.isSome(orphanBody.error));
 
     const oversized = closeoutWritePlanForTesting({
       knownThreadIds: known,
@@ -5554,7 +5555,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "",
     });
-    expect(O.isSome(oversized.error)).toBe(true);
+    assertTrue(O.isSome(oversized.error));
   });
 
   it("decodes closeout reports without writeActions for backwards compatibility", () =>

@@ -28,6 +28,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -281,7 +282,7 @@ describe("loadYeetRemediationWave", () => {
         const json = yield* YeetRemediationWaveJson.encode(wave());
         yield* fs.writeFileString(statePath, `${json}\n`);
         const loaded = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(loaded)).toBe(true);
+        assertTrue(O.isSome(loaded));
         if (O.isSome(loaded)) {
           expect(loaded.value.schemaVersion).toBe(YEET_DISPATCH_SCHEMA_VERSION);
           expect(loaded.value).toStrictEqual(wave());
@@ -409,7 +410,7 @@ describe("dispatchYeetCheckFailure", () => {
         expect(entry.capsule.state).toBe("CANCELLED");
 
         const persisted = yield* loadYeetRemediationWave(root);
-        expect(O.isSome(persisted)).toBe(true);
+        assertTrue(O.isSome(persisted));
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
       })

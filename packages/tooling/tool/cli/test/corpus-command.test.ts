@@ -1072,7 +1072,7 @@ describe("corpus salvage run labels and dedupe", () => {
         const deduped = A.findFirst(records, (record) => record.sourceLabel === "source-b");
         const duplicateCopyExists = yield* fs.exists(path.join(corpusRoot, "raw", "source-b", "duplicate.txt"));
 
-        expect(O.isSome(deduped)).toBe(true);
+        assertTrue(O.isSome(deduped));
         if (O.isSome(deduped)) {
           expect(deduped.value.copyMode).toBe("provenance-only");
           expect(deduped.value.destPath).toBe(existingRawPath);
@@ -1625,7 +1625,7 @@ describe("corpus restoration preservation", () => {
         expect(summary.unapprovedCount).toBe(0);
         expect(verified.unapprovedCount).toBe(0);
         expect(changedRows).toHaveLength(1);
-        expect(O.isSome(stablePass)).toBe(true);
+        assertTrue(O.isSome(stablePass));
         expect(Uint8Array.from(destination)).toStrictEqual(stableReplacement);
       },
       Effect.scoped,
@@ -2632,7 +2632,7 @@ describe("corpus restoration mail", { concurrent: false }, () => {
         expect(A.some(children, (record) => record.recordType === "mail-child-pass" && !record.engineReported)).toBe(
           true
         );
-        expect(O.isSome(repair)).toBe(true);
+        assertTrue(O.isSome(repair));
       },
       Effect.scoped,
       provideTestLayer
@@ -3470,7 +3470,7 @@ describe("corpus restoration legacy Word", () => {
               : false
           )
         ).toStrictEqual(O.some(true));
-        expect(O.isSome(acceptance)).toBe(true);
+        assertTrue(O.isSome(acceptance));
       },
       Effect.scoped,
       provideTestLayer
