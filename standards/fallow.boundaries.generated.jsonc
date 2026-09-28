@@ -2795,6 +2795,7 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -2810,6 +2811,7 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]
