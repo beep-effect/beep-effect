@@ -23,8 +23,10 @@ import "@testing-library/jest-dom/vitest";
 import { it } from "@beep/test-runner";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
 import { afterEach, beforeEach, describe, expect, vi } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -330,7 +332,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(editor).toBeDefined();
       if (editor !== undefined) {
         expect(registry.get(attachmentsAtom(editor))).toEqual([]);
-        expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+        assertNone(registry.get(attachmentFailureAtom(editor)));
       }
 
       view.unmount();
@@ -472,7 +474,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
         waitFor(() => expect(AsyncResult.isSuccess(registry.get(captureAttachmentsFn))).toBe(true))
       );
 
-      expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+      assertNone(registry.get(attachmentFailureAtom(editor)));
       expect(registry.get(attachmentsAtom(editor))[0]?.file.name).toBe("new-mount.png");
       expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
 
@@ -1069,13 +1071,13 @@ describe("editor contract hardening", { concurrent: false }, () => {
       "src",
       "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
     );
-    expect(
-      Result.isFailure(
-        decodeYouTubeWatchRequestResult({
-          url: "https://evil.example/?v=M7lc1UVf-VE",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeYouTubeWatchRequestResult({
+        url: "https://evil.example/?v=M7lc1UVf-VE",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it.effect.prop(
@@ -1207,7 +1209,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
         ],
       });
 
-      expect(Result.isSuccess(refineSafeDocument(content))).toBe(true);
+      pipe(refineSafeDocument(content), Result.isSuccess, assertTrue);
       const initialState = yield* documentToEditorState(content);
       const view = render(<ChatComposer namespace="safe-nested-link-seed" initialState={initialState} />);
       const editor = yield* Effect.promise(() => view.findByRole("combobox", { name: "Message composer" }));
@@ -1293,7 +1295,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(initialGate.message).toMatch(/link or embedded URL outside the safe destination policy/u);
 
       registry.get(changeHandlerAtom)(yield* documentToEditorState(corrected));
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(registry.get(gateAtom))).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(registry.get(gateAtom))));
       registry.dispose();
     })
   );

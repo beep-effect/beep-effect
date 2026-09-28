@@ -3,6 +3,7 @@ import { ANTHROPIC_DEFAULT_APPROXIMATE_PRICE } from "@beep/anthropic";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { approximateCostUsdMicros } from "@/chat/UsagePricing";
@@ -33,6 +34,6 @@ it.effect(
       stopReason: O.none(),
     });
 
-    expect(O.isNone(approximateCostUsdMicros(usage))).toBe(true);
+    assertNone(approximateCostUsdMicros(usage));
   })
 );

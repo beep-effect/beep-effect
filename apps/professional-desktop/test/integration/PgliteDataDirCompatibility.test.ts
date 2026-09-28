@@ -3,7 +3,9 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
+import { pipe } from "effect";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -200,7 +202,7 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           yield* fs.writeFileString(markerPath(path, dataDir), "runtime=professional-desktop-pglite-inprocess\n");
           const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
           expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
           expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
@@ -240,7 +242,7 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           yield* createLegacyPglite046Fixture(dataDir);
           const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
           expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
           expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
@@ -285,7 +287,7 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
           yield* fs.chmod(dataDir, 0o700).pipe(Effect.ignore);
 
-          expect(Exit.isFailure(result)).toBe(true);
+          pipe(result, Exit.isFailure, assertTrue);
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
           expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
         })

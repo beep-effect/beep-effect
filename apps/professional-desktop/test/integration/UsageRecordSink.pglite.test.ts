@@ -7,7 +7,9 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -138,16 +140,16 @@ if (!shouldRunPgliteIntegration) {
           const rows = yield* db.select().from(UsageRecordTable.Table);
           expect(rows).toHaveLength(2);
           const appended = A.findFirst(rows, (row) => row.publicId === usageAppendInput.publicId);
-          expect(O.isSome(appended)).toBe(true);
+          pipe(appended, O.isSome, assertTrue);
           if (O.isSome(appended)) {
             expect(appended.value.provider).toBe("fixture");
             expect(appended.value.model).toBe("fixture-model");
 
             const decoded = yield* Effect.fromResult(UsageRecordTable.fromUsageRecordRow(appended.value));
             expect(decoded.provider).toBe("fixture");
-            expect(O.isNone(decoded.activityId)).toBe(true);
+            assertNone(decoded.activityId);
             expect(O.getOrNull(decoded.inputTokens)).toBe(12);
-            expect(O.isNone(decoded.unitCount)).toBe(true);
+            assertNone(decoded.unitCount);
           }
         }),
         pgliteIntegrationTimeoutMillis

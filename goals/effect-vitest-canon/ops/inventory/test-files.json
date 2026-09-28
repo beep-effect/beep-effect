@@ -255,8 +255,8 @@
     "file": "apps/professional-desktop/test/UsagePricing.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1313,
-    "lines": 38
+    "bytes": 1347,
+    "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
@@ -269,15 +269,15 @@
     "file": "apps/professional-desktop/test/chat-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 31655,
-    "lines": 678
+    "bytes": 31689,
+    "lines": 679
   },
   {
     "file": "apps/professional-desktop/test/chat-ui.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 10795,
-    "lines": 249
+    "bytes": 10812,
+    "lines": 250
   },
   {
     "file": "apps/professional-desktop/test/code-block.test.tsx",
@@ -297,8 +297,8 @@
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6206,
-    "lines": 151
+    "bytes": 6265,
+    "lines": 153
   },
   {
     "file": "apps/professional-desktop/test/composer-policy.test.ts",
@@ -318,8 +318,8 @@
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18464,
-    "lines": 507
+    "bytes": 18513,
+    "lines": 509
   },
   {
     "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
@@ -339,8 +339,8 @@
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 57304,
-    "lines": 1349
+    "bytes": 57337,
+    "lines": 1351
   },
   {
     "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
@@ -374,15 +374,15 @@
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18710,
-    "lines": 471
+    "bytes": 18743,
+    "lines": 472
   },
   {
     "file": "apps/professional-desktop/test/intake-refusal.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1137,
-    "lines": 28
+    "bytes": 1210,
+    "lines": 30
   },
   {
     "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
@@ -395,15 +395,15 @@
     "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 13213,
-    "lines": 321
+    "bytes": 13292,
+    "lines": 323
   },
   {
     "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6254,
-    "lines": 157
+    "bytes": 6313,
+    "lines": 159
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
@@ -423,8 +423,8 @@
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 12970,
-    "lines": 305
+    "bytes": 13045,
+    "lines": 307
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
@@ -514,7 +514,7 @@
     "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1934,
+    "bytes": 1925,
     "lines": 55
   },
   {
@@ -528,8 +528,8 @@
     "file": "apps/professional-desktop/test/schema-parity.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 11433,
-    "lines": 256
+    "bytes": 11416,
+    "lines": 257
   },
   {
     "file": "apps/professional-desktop/test/setup.dom.ts",
@@ -542,15 +542,15 @@
     "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3214,
-    "lines": 82
+    "bytes": 3231,
+    "lines": 83
   },
   {
     "file": "apps/professional-desktop/test/spike-schema.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3528,
-    "lines": 91
+    "bytes": 3608,
+    "lines": 93
   },
   {
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
@@ -612,15 +612,15 @@
     "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4489,
-    "lines": 124
+    "bytes": 4548,
+    "lines": 126
   },
   {
     "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4747,
-    "lines": 127
+    "bytes": 4772,
+    "lines": 128
   },
   {
     "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",

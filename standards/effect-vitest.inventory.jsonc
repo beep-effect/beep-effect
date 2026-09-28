@@ -27026,27 +27026,7 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV002:apps/professional-desktop/test/contradiction-sidecar-registration.test.ts:385:provideBunCrypto@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
-      "line": 385,
-      "endLine": 385,
-      "symbol": "provideBunCrypto",
-      "occurrence": "v2:9c95a420a5a178794587ac2d7d954b250d5343eb751e966b1dc0c2d09f17ccb8",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideBunCrypto",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV002:apps/professional-desktop/test/contradiction-sidecar-registration.test.ts:388:provideBunCrypto@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/contradiction-sidecar-registration.test.ts","line":388,"endLine":388,"symbol":"provideBunCrypto","occurrence":"v2:8b2ae3116c1a5296860357ae757917631e42ff022e38ec1b053a76069946c2be","class":"unresolved-layer-provide","evidence":"provideBunCrypto","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV002:apps/professional-desktop/test/contradiction-sidecar-registration.test.ts:406:provideScopedLayer@14#1",
       "lens": "resource",
@@ -27194,69 +27174,9 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:131:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 131,
-      "endLine": 131,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3d6001ce10256db3315852d4582223a4f18238b5288ddff93ec395211a445e5b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(SeedServicesLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:132:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 132,
-      "endLine": 132,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3d6001ce10256db3315852d4582223a4f18238b5288ddff93ec395211a445e5b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:134:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 134,
-      "endLine": 134,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:4ca6836395d67570214c45eeb6572adf0ea92964da7c898854f376e4f1826877",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestPlatformLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:134:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":134,"endLine":134,"symbol":"provideScopedLayer","occurrence":"v2:5a35f4578440016fb1563a491f6220b09db96eaa0dac55cf924cd36f446b4782","class":"unresolved-layer-provide","evidence":"provideScopedLayer(SeedServicesLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:135:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":135,"endLine":135,"symbol":"provideScopedLayer","occurrence":"v2:5a35f4578440016fb1563a491f6220b09db96eaa0dac55cf924cd36f446b4782","class":"unresolved-layer-provide","evidence":"provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:137:provideScopedLayer@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":137,"endLine":137,"symbol":"provideScopedLayer","occurrence":"v2:7f5cb3df7f687da61656fa61673dfd7c3728296130f5f6c8cdfad4f9a7248035","class":"unresolved-layer-provide","evidence":"provideScopedLayer(TestPlatformLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:224:provideScopedLayer@8#1",
       "lens": "resource",
@@ -27320,132 +27240,12 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:266:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 266,
-      "endLine": 266,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:4e33df45e9049374822942f80ad3fcf79e3bc80e196a7be83c2927a9a7dadcd0",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(SeedServicesLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:267:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 267,
-      "endLine": 267,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:4e33df45e9049374822942f80ad3fcf79e3bc80e196a7be83c2927a9a7dadcd0",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:269:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 269,
-      "endLine": 269,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:d73cc5769da74a84c6b6b5015ed6ff936b3f17eecd6f27d4eace3286bb3ed828",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestPlatformLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:299:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 299,
-      "endLine": 299,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:11971511c28f60343ebb04f10cd2e64588ff8e2d96ac5447158af7da69da0f3b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(SeedServicesLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:300:provideScopedLayer@8#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 300,
-      "endLine": 300,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:11971511c28f60343ebb04f10cd2e64588ff8e2d96ac5447158af7da69da0f3b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 302,
-      "endLine": 302,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:25a652d107875e1c927863ca50359983fcde8d3c5ddacf90e6b08d4f90382912",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestPlatformLive)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:269:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":269,"endLine":269,"symbol":"provideScopedLayer","occurrence":"v2:84d01a12ea20357aa91cd446b939fca3780fe05e2c568c01ddb57975eef71866","class":"unresolved-layer-provide","evidence":"provideScopedLayer(SeedServicesLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:270:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":270,"endLine":270,"symbol":"provideScopedLayer","occurrence":"v2:84d01a12ea20357aa91cd446b939fca3780fe05e2c568c01ddb57975eef71866","class":"unresolved-layer-provide","evidence":"provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:272:provideScopedLayer@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":272,"endLine":272,"symbol":"provideScopedLayer","occurrence":"v2:2367fffcf35ccf10b0e6fc3dd3cac061f4d9f019a24dfdbe42cadfa37e867ac1","class":"unresolved-layer-provide","evidence":"provideScopedLayer(TestPlatformLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":302,"endLine":302,"symbol":"provideScopedLayer","occurrence":"v2:2521707258cf564f812a8e227f53eaa41a67b57542970a53e27771f8f7380fcf","class":"unresolved-layer-provide","evidence":"provideScopedLayer(SeedServicesLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:303:provideScopedLayer@8#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":303,"endLine":303,"symbol":"provideScopedLayer","occurrence":"v2:2521707258cf564f812a8e227f53eaa41a67b57542970a53e27771f8f7380fcf","class":"unresolved-layer-provide","evidence":"provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:305:provideScopedLayer@7#1","lens":"resource","ruleId":"EV002","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts","line":305,"endLine":305,"symbol":"provideScopedLayer","occurrence":"v2:1aab52f3a2bc5a6b2facd441ff41bcfe2c377b43a8bb36087655218989bfe5fa","class":"unresolved-layer-provide","evidence":"provideScopedLayer(TestPlatformLive)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV002:apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts:56:provideScopedLayer@14#1",
       "lens": "resource",
@@ -84646,69 +84446,9 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:115:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
-      "line": 115,
-      "endLine": 150,
-      "symbol": "it.live",
-      "occurrence": "v2:67f746aa0560e34b065efe10ebd86058329a7560cf8b427a5ebd146915d231f3",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"dispatches from the composer closure after its handler atom is disposed\", Effect.fnUntraced(function* () { const streamingClient = ChatClient.of(((tag: string) => { if (tag === \"GetTimeline\"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:69:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
-      "line": 69,
-      "endLine": 88,
-      "symbol": "it.live",
-      "occurrence": "v2:3a60e95cb3a0d84a93333a3af950b88042b455469fe42a177a91dbd5f1505bc0",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:90:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
-      "line": 90,
-      "endLine": 113,
-      "symbol": "it.live",
-      "occurrence": "v2:52f72b314c24fb0d3327e3c68ed73f09dafb1f3a491fb36f600281e486221614",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:117:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/composer-dispatch-confirm.test.ts","line":117,"endLine":152,"symbol":"it.live","occurrence":"v2:acf88f2155145356a19aa2d5cd187c870eabdf02c8a480c182e16edb656da862","class":"unjustified-live-test","evidence":"it.live( \"dispatches from the composer closure after its handler atom is disposed\", Effect.fnUntraced(function* () { const streamingClient = ChatClient.of(((tag: string) => { if (tag === \"GetTimeline\"","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:71:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/composer-dispatch-confirm.test.ts","line":71,"endLine":90,"symbol":"it.live","occurrence":"v2:4caa66f7f71d2bb8560a0670449e7a5eaf10b410ceadffc5251b7c0691126070","class":"unjustified-live-test","evidence":"it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:92:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/composer-dispatch-confirm.test.ts","line":92,"endLine":115,"symbol":"it.live","occurrence":"v2:11e015dc8603e3cc576c494e1e9090fc493bf0e203c2598c4b1c8a99b16b7cca","class":"unjustified-live-test","evidence":"it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV009:apps/professional-desktop/test/dock-shell.test.tsx:107:it.live@2#1",
       "lens": "resource",
@@ -84982,27 +84722,7 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV009:apps/professional-desktop/test/intake-atoms.test.ts:388:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/intake-atoms.test.ts",
-      "line": 388,
-      "endLine": 414,
-      "symbol": "it.live",
-      "occurrence": "v2:ecbe107629678a8fa754eaf098cb7c663704700ec7f54893a32ed45d79be6cc7",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"keeps the hidden file input available after the registry idle TTL\", Effect.fnUntraced(function* () { const registry = AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 }); const i",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV009:apps/professional-desktop/test/intake-atoms.test.ts:390:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/intake-atoms.test.ts","line":390,"endLine":416,"symbol":"it.live","occurrence":"v2:1c27763470d0d4bb6c69d26237beff6238305fd870b3fb064d340d8d32a9ad12","class":"unjustified-live-test","evidence":"it.live( \"keeps the hidden file input available after the registry idle TTL\", Effect.fnUntraced(function* () { const registry = AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 }); const i","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV009:apps/professional-desktop/test/intake-atoms.test.ts:416:it.live@2#1",
       "lens": "resource",

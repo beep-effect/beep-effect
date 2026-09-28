@@ -17,6 +17,7 @@ import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput, provideS
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
@@ -132,7 +133,7 @@ describe("@beep/professional-desktop chat contract", () => {
         expect(O.getOrThrow(record.totalTokens)).toBe(20);
         expect(O.getOrThrow(record.latencyMillis)).toBe(0);
         expect(O.getOrThrow(record.costUsdApproxMicros)).toBe(0);
-        expect(O.isNone(record.activityId)).toBe(true);
+        assertNone(record.activityId);
         expect(record.metadata.activityLinkStatus).toBe("unavailable_no_activity_store");
         expect(record.metadata.stopReason).toBe("stop");
 

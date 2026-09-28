@@ -10,6 +10,8 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { afterEach, describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -77,7 +79,7 @@ describe("visibleThreadTurnsAtoms", () => {
     );
     const view = registry.get(visibleThreadTurnsAtoms(threadId));
     expect(A.map(view.turns, (item) => item.turnId)).toEqual([firstTurnId]);
-    expect(O.isSome(view.streaming)).toBe(true);
+    pipe(view.streaming, O.isSome, assertTrue);
   });
 
   it("keeps the tail removed after streaming completes into a receipt-phase turn", () => {
@@ -95,7 +97,7 @@ describe("visibleThreadTurnsAtoms", () => {
     const view = registry.get(visibleThreadTurnsAtoms(threadId));
     expect(A.map(view.turns, (item) => item.turnId)).toEqual([firstTurnId]);
     expect(A.length(view.unreconciled)).toBe(1);
-    expect(O.isNone(view.streaming)).toBe(true);
+    assertNone(view.streaming);
   });
 
   it("ignores a streaming turn belonging to another thread", () => {
@@ -113,7 +115,7 @@ describe("visibleThreadTurnsAtoms", () => {
     );
     const view = registry.get(visibleThreadTurnsAtoms(threadId));
     expect(A.map(view.turns, (item) => item.turnId)).toEqual([firstTurnId, editedTurnId, tailTurnId]);
-    expect(O.isNone(view.streaming)).toBe(true);
+    assertNone(view.streaming);
   });
 
   it("marks no siblings in a linear conversation", () => {

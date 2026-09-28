@@ -11,6 +11,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { SetWorkspaceVaultInput } from "@beep/workspace-use-cases/public";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -194,7 +195,7 @@ describe("@beep/professional-desktop schema parity", () => {
         queuedOperations: 0,
       };
       const bootstrapStatus = yield* decodeVaultSyncStatus(bootstrapStatusWire);
-      expect(O.isNone(bootstrapStatus.cursorPosition)).toBe(true);
+      assertNone(bootstrapStatus.cursorPosition);
       expect(yield* encodeVaultSyncStatus(bootstrapStatus)).toStrictEqual(bootstrapStatusWire);
 
       const activeStatusWire = {
@@ -219,8 +220,8 @@ describe("@beep/professional-desktop schema parity", () => {
       // unavailable.
       const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...legacyStatusWire } = bootstrapStatusWire;
       const legacyStatus = yield* decodeVaultSyncStatus(legacyStatusWire);
-      expect(O.isNone(legacyStatus.disconnectReason)).toBe(true);
-      expect(O.isNone(legacyStatus.probedAt)).toBe(true);
+      assertNone(legacyStatus.disconnectReason);
+      assertNone(legacyStatus.probedAt);
     })
   );
 
@@ -238,7 +239,7 @@ describe("@beep/professional-desktop schema parity", () => {
     expect(O.getOrUndefined(decodeDerivedThreadTitle(longTitle))).toBe(
       "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-t"
     );
-    expect(O.isNone(decodeDerivedThreadTitle("   "))).toBe(true);
+    assertNone(decodeDerivedThreadTitle("   "));
   });
 
   it("round-trips schema-derived arbitraries through the absorbed invariants", () => {

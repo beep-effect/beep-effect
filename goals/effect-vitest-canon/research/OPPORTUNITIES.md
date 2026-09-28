@@ -4335,3 +4335,13 @@ alone did not fix the error; the explicit asset URL alias did, and the unused
 inline setting was removed. The same enabled integration selection now passes
 30 tests under both Node and Bun, with no test-body or production-source change.
 Keep runtime-specific file-import handling at this test/build boundary.
+
+## Assertion rewrites changed surrounding inventory identities
+
+Forty-two canonical assertion rewrites changed occurrence fingerprints for 14
+existing Desktop layer/live-clock candidates even though their finding evidence
+and ordered peer counts were unchanged. The baseline entries were reanchored
+with their original statuses and obligations retained; a preservation receipt
+accounts for every other non-import statement. Inventory identity should depend
+on the actionable expression rather than unrelated assertions in its enclosing
+callback. Two schema-first exception anchors also moved solely from imports.

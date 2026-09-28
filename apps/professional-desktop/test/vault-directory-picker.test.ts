@@ -1,6 +1,7 @@
 import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
 import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
@@ -80,7 +81,7 @@ describe("pickVaultDirectoryOnHost", () => {
       "returns None",
       Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isTrue(O.isNone(selected));
+        assertNone(selected);
       })
     );
   });
@@ -93,7 +94,7 @@ describe("pickVaultDirectoryOnHost", () => {
       "returns None",
       Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isTrue(O.isNone(selected));
+        assertNone(selected);
       })
     );
   });

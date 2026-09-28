@@ -17,6 +17,7 @@ import { it } from "@beep/test-runner";
 import { toast } from "@beep/ui/components/sonner";
 import { RegistryProvider, useAtomInitialValues, useAtomSet, useAtomSubscribe } from "@effect/atom-react";
 import { afterEach, describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -224,7 +225,7 @@ describe("ChatTurnErrorToasts", () => {
       yield* Effect.promise(() =>
         waitFor(() => expect(toast.error).toHaveBeenCalledWith("Assistant stream failed safely"))
       );
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(latestTurnError)));
     })
   );
 
@@ -243,7 +244,7 @@ describe("ChatTurnErrorToasts", () => {
       fireEvent.click(getByTestId("run-failing-turn"));
 
       yield* Effect.promise(() => waitFor(() => expect(toast.error).toHaveBeenCalledWith("RPC stream failed safely")));
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(latestTurnError)).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(latestTurnError)));
     })
   );
 });

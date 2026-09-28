@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { WorkspaceVaultActionError, WorkspaceVaultConfig } from "@beep/workspace-use-cases/public";
 import { afterEach, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -402,7 +403,7 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
       releaseSetInput();
 
       yield* Effect.sleep(Duration.millis(50));
-      expect(registry.get(intakeFileInputAtoms(workspaceId))).toStrictEqual(O.some(input));
+      assertSome(registry.get(intakeFileInputAtoms(workspaceId)), input);
 
       const releaseOpenPicker = registry.mount(openPicker);
       registry.set(openPicker, void 0);

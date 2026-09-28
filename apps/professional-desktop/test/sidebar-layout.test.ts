@@ -1,5 +1,6 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
@@ -28,12 +29,12 @@ describe("the width the user gave the sidebar", () => {
     // bounds existed — or typed into localStorage by hand — must not be able to hand
     // the user a pane they cannot recover from.
     expect(clampSidebarPercent(95)).toBe(SIDEBAR_MAX_PERCENT);
-    expect(O.isNone(decodeSidebarPercent(95))).toBe(true);
+    assertNone(decodeSidebarPercent(95));
   });
 
   it("cannot restore a sidebar collapsed past its minimum", () => {
     expect(clampSidebarPercent(0)).toBe(SIDEBAR_MIN_PERCENT);
-    expect(O.isNone(decodeSidebarPercent(0))).toBe(true);
+    assertNone(decodeSidebarPercent(0));
   });
 });
 

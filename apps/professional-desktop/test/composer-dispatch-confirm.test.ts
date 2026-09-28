@@ -13,6 +13,8 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -81,7 +83,7 @@ describe("dispatchTurnWithConfirm", () => {
       dispatchTurnWithConfirm(registry, threadId, content, swallowedSubmit, confirmTimeout);
       yield* settle;
 
-      expect(O.isSome(registry.get(draftAtoms(threadId)))).toBe(true);
+      pipe(registry.get(draftAtoms(threadId)), O.isSome, assertTrue);
       expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore + 1);
       registry.dispose();
     })
@@ -106,7 +108,7 @@ describe("dispatchTurnWithConfirm", () => {
       dispatchTurnWithConfirm(registry, threadId, content, synchronousSubmit, confirmTimeout);
       yield* settle;
 
-      expect(O.isNone(registry.get(draftAtoms(threadId)))).toBe(true);
+      assertNone(registry.get(draftAtoms(threadId)));
       expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore);
       registry.dispose();
     })
@@ -144,7 +146,7 @@ describe("dispatchTurnWithConfirm", () => {
       yield* waitForTurnStart(registry);
 
       expect(registry.get(turnActiveAtom)).toBe(true);
-      expect(O.isNone(registry.get(draftAtoms(threadId)))).toBe(true);
+      assertNone(registry.get(draftAtoms(threadId)));
       registry.dispose();
     })
   );

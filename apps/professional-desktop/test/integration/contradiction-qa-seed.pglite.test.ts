@@ -28,7 +28,9 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pipe } from "effect";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -126,7 +128,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
         });
         const store = yield* Workspace.WorkspaceVaultStore;
         const config = yield* store.getVaultConfig(desktopWorkspaceId);
-        expect(O.isNone(config.vaultRootPath)).toBe(true);
+        assertNone(config.vaultRootPath);
         expect(yield* fs.exists(qaVaultRoot)).toBe(false);
       }).pipe(
         provideScopedLayer(SeedServicesLive),
@@ -249,7 +251,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
       yield* Effect.gen(function* () {
         yield* configureVault(userRoot);
         const result = yield* Effect.result(seedContradictionQaFixtures());
-        expect(Result.isFailure(result)).toBe(true);
+        pipe(result, Result.isFailure, assertTrue);
         if (Result.isFailure(result)) {
           expect(ContradictionQaSeedError.is(result.failure)).toBe(true);
           if (ContradictionQaSeedError.is(result.failure)) {
@@ -289,7 +291,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
       yield* Effect.gen(function* () {
         yield* configureVault(qaVaultRoot);
         const result = yield* Effect.result(seedContradictionQaFixtures());
-        expect(Result.isFailure(result)).toBe(true);
+        pipe(result, Result.isFailure, assertTrue);
         if (Result.isFailure(result) && ContradictionQaSeedError.is(result.failure)) {
           expect(result.failure.reason).toBe("source-conflict");
         }

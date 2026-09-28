@@ -37,6 +37,7 @@ import { it } from "@beep/test-runner";
 import { productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
@@ -366,13 +367,14 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
         _tag: "ContradictionActionError",
         reason: "candidate-already-resolved",
       });
-      expect(
+      assertSome<string>(
         pipe(
           A.head(result.detail.left.evidence),
           O.flatMap((evidence) => evidence.verifiedAnchor),
           O.map((anchor) => anchor.anchor.quote)
-        )
-      ).toStrictEqual(O.some("fact"));
+        ),
+        "fact"
+      );
       expect(result.page.page.pageIndex).toBe(1);
       expect(result.page.page.startOffset).toBe(65_535);
       expect(result.page.highlight).toStrictEqual(

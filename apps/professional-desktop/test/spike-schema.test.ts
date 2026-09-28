@@ -1,6 +1,8 @@
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -58,7 +60,7 @@ describe("spike state schemas", () => {
       const invalidSizeExits = yield* Effect.forEach(invalidSizes, (input) =>
         Effect.exit(decodeCosmosSpikeSize(input))
       );
-      expect(A.every(invalidSizeExits, Exit.isFailure)).toBe(true);
+      pipe(A.every(invalidSizeExits, Exit.isFailure), assertTrue);
 
       const validProbe = {
         backend: "sigma",
@@ -70,7 +72,7 @@ describe("spike state schemas", () => {
       };
       yield* decodeCosmosSpikeProbeContract(validProbe);
       const invalidProbe = yield* Effect.exit(decodeCosmosSpikeProbeContract({ ...validProbe, projectedNodeCount: 0 }));
-      expect(Exit.isFailure(invalidProbe)).toBe(true);
+      pipe(invalidProbe, Exit.isFailure, assertTrue);
     })
   );
 
