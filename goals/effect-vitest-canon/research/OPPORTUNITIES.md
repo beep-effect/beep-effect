@@ -4515,3 +4515,12 @@ package verification (audit and docgen). The repository already recognizes this
 signature in its quality flake quarantine. Package verification should expose the
 same bounded diagnostic/retry policy so this failure does not require manual
 attribution; a repeated or located diagnostic must remain a hard failure.
+
+## Timeline refresh assertions can be satisfied by seeded content
+
+The receipt-uncertain retention test awaited text already present in its initial
+timeline. Replacing GetTimeline with `Effect.never` still passed the original
+test. A response-only turn now witnesses completion and UI application before
+the unchanged receipt assertions run; the same control correctly fails. Similar
+refresh tests should distinguish seeded content from the newly applied response,
+without adding sleeps or relying only on RPC invocation counts.

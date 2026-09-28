@@ -493,8 +493,8 @@
     "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18216,
-    "lines": 492
+    "bytes": 19049,
+    "lines": 513
   },
   {
     "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
