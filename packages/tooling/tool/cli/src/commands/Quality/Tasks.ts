@@ -1706,11 +1706,20 @@ const removeTurboLaneLedger = Effect.fn("QualityTasks.removeTurboLaneLedger")(fu
   yield* fs.remove(path.dirname(ledgerPath), { recursive: true }).pipe(Effect.ignore);
 });
 
-// The child side of the handoff: after each direct Turbo step, passed or failed, declare its
-// digest to the ledger the parent named (ruling 72: a red step's digest is an observation, so the
-// parent can record a failed lane against the key it would have reused). The result says whether a
-// declaration was attempted (`Some`) and whether it landed (`Some(true)`); the group's close record
-// carries the attempt count so the parent can refuse a ledger missing any declaration.
+/**
+ * Declare one direct Turbo step's digest to the lane ledger the parent named (the child side of the handoff).
+ *
+ * **Details**
+ *
+ * Runs after each direct Turbo step, passed or failed (ruling 72: a red step's
+ * digest is an observation, so the parent can record a failed lane against the
+ * key it would have reused). The group's close record carries the attempt count
+ * so the parent can refuse a ledger missing any declaration.
+ *
+ * @param ledger - Ledger path the parent named, if any.
+ * @param outcome - The finished direct step.
+ * @returns `None` when no declaration was attempted, otherwise whether it landed.
+ */
 const recordTurboLaneLedgerRow = Effect.fn("QualityTasks.recordTurboLaneLedgerRow")(function* (
   ledger: O.Option<string>,
   outcome: StreamingStepOutcome
@@ -1952,6 +1961,21 @@ const readLaneInputs = <Failure, Requirements>(
     Effect.orElseSucceed(() => unscopedLaneInputs(O.none()))
   );
 
+/**
+ * Resolve a lane's input digest and package scope from its declared digest, wrapper ledger, or direct Turbo run.
+ *
+ * **Details**
+ *
+ * A declared digest wins and carries no package scope. Otherwise a wrapper
+ * lane reads the ledger its child declared to, and a direct step reads its own
+ * Turbo run summary. A failed step takes the same path as a passed one
+ * (ruling 72), so its key is the one a pass of the same inputs records.
+ *
+ * @param outcome - The finished lane step.
+ * @param declared - Digest the caller declared, if any.
+ * @param ledger - Wrapper lane ledger path, if the step carries one.
+ * @returns The lane's input digest and package scope (ruling 68).
+ */
 const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDigestSource")(function* (
   outcome: StreamingStepOutcome,
   declared: O.Option<string>,

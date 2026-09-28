@@ -1985,6 +1985,29 @@ not protect better: the projection may carry no authored doctrine, and overwriti
 copy enforces that rule instead of leaving the copy in place behind a red. The whole-file projection
 contract is unchanged; only the remedy moved from the operator to the check.
 
+## 2026-09-22: The Minimum Slice Count Is the Drawing Plus the Lab Census
+
+- **Status:** Active
+
+Decision:
+
+`13-onboarding-the-minimum-viable-slice.md` no longer says a legal slice is
+"~15 files." The notes drawing names 13 files. The architecture lab that was
+built from that shape is a separate census: 7 packages, 168 tracked files, 68
+under `src/`, from `git ls-files packages/architecture-lab` on this date. The
+README known-unknowns opener now records that the lab exists, and it keeps
+`lint:promotion-records` as planned because no lint command implements that
+name.
+
+Rationale:
+
+The May 2026 opener said the standards had not been load-tested, and the
+onboarding page asked a future contributor to check a number nobody had
+counted. The lab is that contact for package shape and tests. It does not
+settle promotion-record lint, a real cross-slice workflow diagnostic, the
+published deprecation windows, span names in a live trace, or a new
+contributor walking the drawing.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

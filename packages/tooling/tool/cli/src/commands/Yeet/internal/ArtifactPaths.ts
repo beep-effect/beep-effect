@@ -294,7 +294,16 @@ export class ProofLedgerLocation extends S.Class<ProofLedgerLocation>($I`ProofLe
 
 const GITFILE_PREFIX = "gitdir:";
 
-// A linked worktree's `.git` is a one-line file `gitdir: <path>`.
+/**
+ * Read the target path out of a linked worktree's `.git` file.
+ *
+ * **Details**
+ *
+ * A linked worktree's `.git` is a one-line file `gitdir: <path>`.
+ *
+ * @param contents - Text of a checkout's `.git` file.
+ * @returns The trimmed `gitdir:` path, or `None` when the line is absent or empty.
+ */
 const gitfileTarget = (contents: string): O.Option<string> =>
   pipe(
     Str.trim(contents),
@@ -303,11 +312,27 @@ const gitfileTarget = (contents: string): O.Option<string> =>
     O.filter(Str.isNonEmpty)
   );
 
+/**
+ * Read one Git metadata file, mapping a failed read to {@link YeetCommandError}.
+ *
+ * @param fs - Filesystem service the read runs through.
+ * @param file - Absolute path of a `.git` file or a `commondir` file.
+ * @returns The file's text, or a {@link YeetCommandError} that names the file.
+ */
 const readGitMetadata = (fs: FileSystem.FileSystem, file: string) =>
   fs.readFileString(file).pipe(Effect.mapError(YeetCommandError.new(`Failed to read Git metadata "${file}".`)));
 
-// Mirrors `git rev-parse --path-format=absolute --git-common-dir` without
-// spawning git, then steps from the common dir to the clone that owns it.
+/**
+ * Resolve the clone that owns a checkout (ruling 71).
+ *
+ * **Details**
+ *
+ * Mirrors `git rev-parse --path-format=absolute --git-common-dir` without
+ * spawning git, then steps from the common dir to the clone that owns it.
+ *
+ * @param repoRoot - Checkout that ran: a primary clone, a linked worktree, or a plain directory.
+ * @returns The owning clone's root; the checkout itself when its `.git` is a directory or absent.
+ */
 const owningCloneRoot = Effect.fnUntraced(function* (
   repoRoot: string
 ): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {

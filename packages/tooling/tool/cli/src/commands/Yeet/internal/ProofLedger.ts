@@ -51,6 +51,18 @@ type LoadedProofLedger = {
   readonly rows: ReadonlyArray<ProofLedgerRow>;
 };
 
+/**
+ * Read and decode every terminated row of the owning clone's proof ledger (ruling 71).
+ *
+ * **Details**
+ *
+ * A missing ledger reads as empty. Terminated lines that do not decode are
+ * counted in `malformedRows` and skipped; an unterminated tail is an append
+ * still in flight and is ignored.
+ *
+ * @param repoRoot - Checkout that ran; the read resolves its owning clone's ledger.
+ * @returns The decoded rows and the count of malformed terminated rows.
+ */
 const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   repoRoot: string
 ): Effect.fn.Return<LoadedProofLedger, YeetCommandError, FileSystem.FileSystem | Path.Path> {
@@ -75,14 +87,24 @@ const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   return { malformedRows: A.length(lines) - A.length(rows), rows };
 });
 
-// One append per attempt (ruling 63), and no lock (packet law). Lanes cut from
-// one clone append to the same file (ruling 71), so two attempts can append at
-// once. The file is opened `O_APPEND`, which places each `write(2)` atomically
-// at end-of-file; the largest attempt append measured in the owning clone on
-// 2026-09-28 was 55,068 bytes (64 rows). Rows could only tear if one append
-// were split across syscalls and another append landed between the pieces; the
-// tolerant reader then counts each torn line in `malformedRows`, which
-// `yeet proof-report` prints.
+/**
+ * Append one attempt's rows to the owning clone's proof ledger in a single write.
+ *
+ * **Details**
+ *
+ * One append per attempt (ruling 63), and no lock (packet law). Lanes cut from
+ * one clone append to the same file (ruling 71), so two attempts can append at
+ * once. The file is opened `O_APPEND`, which places each `write(2)` atomically
+ * at end-of-file; the largest attempt append measured in the owning clone on
+ * 2026-09-28 was 55,068 bytes (64 rows). Rows could only tear if one append
+ * were split across syscalls and another append landed between the pieces; the
+ * tolerant reader then counts each torn line in `malformedRows`, which
+ * `yeet proof-report` prints.
+ *
+ * @param repoRoot - Checkout that ran; the append resolves its owning clone's ledger.
+ * @param rows - The attempt's fact and shadow rows; an empty list writes nothing.
+ * @returns Nothing once the rows are appended.
+ */
 const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
   repoRoot: string,
   rows: ReadonlyArray<ProofLedgerRow>

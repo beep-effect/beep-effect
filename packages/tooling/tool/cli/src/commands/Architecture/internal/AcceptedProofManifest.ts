@@ -429,6 +429,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   }),
   AcceptedProofFile.make({
     role: "server",
+    stage: "persistence",
+    path: "packages/architecture-lab/server/test/WorkItemDrizzleRepository.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "server",
     stage: "protocol",
     path: "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
     writer: "template",
@@ -473,6 +479,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "server",
     stage: "core",
     path: "packages/architecture-lab/server/test/WorkerServer.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "server",
+    stage: "persistence",
+    path: "packages/architecture-lab/server/test/WorkerDrizzleRepository.test.ts",
     writer: "template",
   }),
 

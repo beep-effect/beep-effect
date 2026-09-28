@@ -1,13 +1,16 @@
-import { ApiAuth, ApiTransportOptions, RateLimitSnapshot } from "@beep/api-transport";
+import { ApiAuth, ApiTransportOptions, makeApiTransport, RateLimitSnapshot } from "@beep/api-transport";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Redacted } from "effect";
+import { Effect, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Headers from "effect/http/Headers";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 
 const decodeApiTransportOptions = S.decodeEffect(ApiTransportOptions);
@@ -47,7 +50,65 @@ const hasAnyField = (snapshot: RateLimitSnapshot): boolean =>
     )
   );
 
+const sendThroughTransport = Effect.fnUntraced(function* (auth: ApiAuth) {
+  const seenUrl = yield* Ref.make("");
+  const seenHeaders = yield* Ref.make(Headers.empty);
+  const transport = yield* makeApiTransport(
+    ApiTransportOptions.make({
+      auth,
+      key: auth._tag,
+      rateLimit: { limit: 10, window: "1 second" },
+    })
+  );
+  const client = transport.transformClient(
+    HttpClient.make(
+      Effect.fnUntraced(function* (request, url) {
+        yield* Ref.set(seenUrl, url.href);
+        yield* Ref.set(seenHeaders, request.headers);
+        return HttpClientResponse.fromWeb(
+          request,
+          new Response("ok", { headers: { "x-ratelimit-limit": "10", "x-ratelimit-remaining": "9" } })
+        );
+      })
+    )
+  );
+
+  yield* client.get("https://example.test/item");
+
+  return {
+    headers: yield* Ref.get(seenHeaders),
+    snapshot: yield* transport.rateLimit,
+    url: yield* Ref.get(seenUrl),
+  };
+});
+
 describe("@beep/api-transport", () => {
+  it.layer(RateLimiter.layerStoreMemory, { timeout: "10 seconds" })(
+    "transport client over an in-memory rate-limit store",
+    (it) => {
+      it.effect(
+        "applies each auth strategy and records the rate-limit snapshot",
+        Effect.fnUntraced(function* () {
+          const expectedSnapshot = RateLimitSnapshot.make({ limit: 10, remaining: 9 });
+          const header = yield* sendThroughTransport(
+            ApiAuth.ApiKeyHeaderAuth({ header: "X-Api-Key", key: Redacted.make("header-secret") })
+          );
+          const token = yield* sendThroughTransport(ApiAuth.TokenHeaderAuth({ key: Redacted.make("token-secret") }));
+          const query = yield* sendThroughTransport(
+            ApiAuth.ApiKeyQueryAuth({ key: Redacted.make("query-secret"), param: "api_key" })
+          );
+
+          assertSome(Headers.get(header.headers, "x-api-key"), "header-secret");
+          assertSome(Headers.get(token.headers, "authorization"), "Token token-secret");
+          expect(query.url).toBe("https://example.test/item?api_key=query-secret");
+          assertSome(header.snapshot, expectedSnapshot);
+          assertSome(token.snapshot, expectedSnapshot);
+          assertSome(query.snapshot, expectedSnapshot);
+        })
+      );
+    }
+  );
+
   it.effect(
     "keeps auth constructors and matching on schema-backed transport options",
     Effect.fnUntraced(function* () {

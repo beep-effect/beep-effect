@@ -1090,9 +1090,17 @@ const inBarSample = (row: ProofLedgerShadowRow): boolean =>
   ProofStage.is[PROOF_SHADOW_BAR_SAMPLE.stage](row.stage) &&
   ProofEnvProfile.is[PROOF_SHADOW_BAR_SAMPLE.envProfile](row.envProfile);
 
-// Ruling 80: a `since` bound keeps only rows recorded at or after it. A row
-// whose `recordedAt` does not parse cannot be placed after the bound, so it is
-// left out of a bounded sample.
+/**
+ * Keep only the shadow rows recorded at or after a `since` bound (ruling 80).
+ *
+ * **Details**
+ *
+ * A row whose `recordedAt` does not parse cannot be placed after the bound, so
+ * it is left out of a bounded sample.
+ *
+ * @param since - Lower bound on the rows the enforcement bar counts.
+ * @returns A predicate that holds for a row recorded at or after `since`.
+ */
 const recordedSince =
   (since: DateTime.Utc) =>
   (row: ProofLedgerShadowRow): boolean =>

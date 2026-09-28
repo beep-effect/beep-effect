@@ -20,7 +20,7 @@ Use the scratchpad lane to learn. Use slice packages to commit.
 
 ## 2. The smallest legal slice
 
-A legal slice can be three packages and ~15 files. The example below is a `notes` slice with a single `Note` aggregate. No `client`, no `tables`, no `config`, no `ui` — those are added when there is a real reason, never pre-emptively.
+A legal slice can be three packages. The drawing below names 13 files for a `notes` slice with a single `Note` aggregate: model, errors, two barrels, commands, queries, ports, service, repository, HTTP handlers, the server layer, and the use-cases and server manifests. It does not draw the domain manifest, the test files, or the files inside `public/` and `server/`. The architecture lab built from this shape is 7 packages and 168 tracked files (68 under `src/`), counted with `git ls-files packages/architecture-lab` on 2026-09-22. A new slice starts from the drawing. `client`, `tables`, `config`, and `ui` appear in the lab because those packages had a reason; they are not part of the minimum.
 
 ```txt
 packages/notes/
