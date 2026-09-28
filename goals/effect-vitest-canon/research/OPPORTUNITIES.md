@@ -3762,3 +3762,13 @@ The preliminary scan was terminated and is not accepted as proof; the final
 source receives a fresh full scan. The command exposes no package selection.
 A supported package-local diagnostic mode, with full scanning retained for the
 ratchet acceptance gate, would make iterative remediation cheaper.
+
+Follow-up diagnosis: the slowdown was a detector defect exposed by the nested
+cache clock test, not ordinary full-scan cost. The preceding package scan took
+11.2 seconds. A per-file diagnostic isolated `ProviderCache.test.ts`; the old
+recursion guard compared ts-morph nodes with `A.contains`, which invokes Effect
+equality. Replacing that guard with explicit node identity scanned the same file
+in about 73 milliseconds and the entire repository in 8.8 seconds. Preserve AST
+identity when tracking visited syntax graph nodes. The simple nested-generator
+regression retains classification coverage; the full cache fixture, rather than
+that small example, reproduces the severe performance failure.
