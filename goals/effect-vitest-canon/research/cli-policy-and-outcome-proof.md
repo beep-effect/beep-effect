@@ -60,8 +60,9 @@ stable source during each run. Three unused PathSafety imports were removed
 after the comparison; final package proof includes that cleanup. Host load and
 pressure are recorded; timing differences are not causal performance claims.
 Full package proofs pass: file-processing audit 7.8 s/docgen 3.4 s and
-documents-server audit 14.5 s/docgen 6.1 s. The new full CLI package proof is
-still running and is not claimed complete.
+documents-server audit 14.5 s/docgen 6.1 s. The new full CLI package proof passes: audit 681.2 seconds and docgen
+24.8 seconds. The test-typecheck artifacts for both native filesystem packages
+also report exit code zero with empty diagnostics.
 
 The final ratchet passes with 4,391 findings, zero introduced and 626 resolved
 baseline findings. The nine newly exposed findings are repaired without
