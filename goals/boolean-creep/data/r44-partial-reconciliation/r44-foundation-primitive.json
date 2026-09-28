@@ -1,0 +1,91 @@
+{
+  "kind": "boolean-creep-parent-lane-reconciliation/v1",
+  "lane": "r44-foundation-primitive",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "executionAccepted": true,
+  "coverageReconciled": true,
+  "reviewer": "parent, independent of Grok inventory scanner",
+  "assignedFileCount": 30,
+  "assignedFiles": [
+    "packages/foundation/primitive/data/src/Blockchain.ts",
+    "packages/foundation/primitive/data/src/Calendar.ts",
+    "packages/foundation/primitive/data/src/CurrencyCodes.ts",
+    "packages/foundation/primitive/data/src/HotKey.ts",
+    "packages/foundation/primitive/data/src/KeyboardShortcuts.ts",
+    "packages/foundation/primitive/data/src/MimeTypes.ts",
+    "packages/foundation/primitive/data/src/Territories.ts",
+    "packages/foundation/primitive/data/src/Timezones.ts",
+    "packages/foundation/primitive/data/src/index.ts",
+    "packages/foundation/primitive/data/src/internal/data/calendar/index.ts",
+    "packages/foundation/primitive/data/src/internal/data/calendar/month.ts",
+    "packages/foundation/primitive/data/src/internal/data/calendar/weekday.ts",
+    "packages/foundation/primitive/data/src/internal/data/currency-codes.ts",
+    "packages/foundation/primitive/data/src/internal/data/index.ts",
+    "packages/foundation/primitive/data/src/internal/data/keyboard-shortcuts.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/application.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/audio.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/image.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/misc.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/text.ts",
+    "packages/foundation/primitive/data/src/internal/data/mime-types/video.ts",
+    "packages/foundation/primitive/data/src/internal/data/timezones.ts",
+    "packages/foundation/primitive/data/src/internal/data/utils.ts",
+    "packages/foundation/primitive/data/src/internal/index.ts",
+    "packages/foundation/primitive/types/src/TArray.types.ts",
+    "packages/foundation/primitive/types/src/TString.types.ts",
+    "packages/foundation/primitive/types/src/TUnsafe.types.ts",
+    "packages/foundation/primitive/types/src/TUtils.types.ts",
+    "packages/foundation/primitive/types/src/index.ts"
+  ],
+  "allSourceHashesMatch": true,
+  "seedRows": 0,
+  "reportRows": 0,
+  "newQualifiedIds": [],
+  "newDisqualifiedIds": [],
+  "unresolvedQuestions": [],
+  "evidence": [
+    {
+      "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+      "lines": [197, 300, 304, 317, 327, 370],
+      "judgment": "The false lookup sentinel is a return alternative, inittedMaps is a single Boolean latch, and the mapping helpers are callable predicates rather than sibling Boolean state members."
+    },
+    {
+      "file": "packages/foundation/primitive/types/src/TString.types.ts",
+      "lines": [92, 131],
+      "judgment": "The conditional type computes one type-level Boolean result; it does not introduce a co-owned Boolean carrier."
+    },
+    {
+      "file": "packages/foundation/primitive/data/src/MimeTypes.ts",
+      "lines": [194],
+      "judgment": "MimeTypeDefinition carries source and extensions, with no Boolean cluster."
+    }
+  ],
+  "method": "Reconciled the exact 30-path assigned inventory and hashes; searched all assigned source paths for explicit Boolean/literal/state and inferred-expression/owner forms, then read the relevant source owners. Other hits are documentation examples, scalar type aliases or static string/number data. Generated surfaces remain excluded by the frozen lane map.",
+  "bindings": [
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-launch/admitted-run/r44-foundation-primitive.execution.json",
+      "sha256": "137b4e2a152a47e45fc3ec45f52c0517d7ac16f9b4bc4283de38122c750847ea"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r44-main-8c16e6/r44-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-launch/admitted-run/r44-foundation-primitive.ndjson",
+      "sha256": "c8e50499c8c4c6990c7756741a31e2692dbb2da06782087b0bfa52e22222c3c0"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-primitive-parent-search-0.txt",
+      "sha256": "5b0cdb5770d3699c9f1b44faf42ef165cfb815b282e66171fde1146872a9697e"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/refresh-2026-09-28/r44-primitive-parent-search-1.txt",
+      "sha256": "1e9223171cffce62fbb12ea7aaea2d0146b886e933a4aa2880e93047b9620dde"
+    }
+  ],
+  "roundComplete": false,
+  "dryRoundCredit": false,
+  "P3Credit": false
+}

@@ -1,0 +1,57 @@
+{
+  "kind": "boolean-creep-public-artifact-index/v1",
+  "artifacts": [
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/README.md",
+      "sha256": "7fd418ae1eff2ed21b06767afd9c77ab5c21ca7a14a2ec929ac17d1904904557"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/integration.json",
+      "sha256": "90d3a143c69b543997ea271c516c2ad46757b017856efbc0ecc8b555ed12d592"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/post-terminal-frozen-input-verification.json",
+      "sha256": "ae1f15fde093eaf9c7f155237e54b114b345f0c444f728fe1068a89ce4664742"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-foundation-capability-independent.json",
+      "sha256": "7e93fbf0508153cea722a3caeb0d3ac8d00c67da2c3b9bf61e1a866266f4e8bc"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-foundation-capability-independent.md",
+      "sha256": "d0d609f49efc713fdffdb18176542069805ffe96f43b80a8fd603b66a668b56c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-foundation-modeling-rest-independent.json",
+      "sha256": "9097b984e06247f1b947d8c0784e8f8224cb025044e082a8ed05ddfc6dbfd8d7"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-foundation-modeling-rest-independent.md",
+      "sha256": "c8da67a3d720c0e3ef0d4d81c661f948dbd14efd4485d4b987b72d3450a7bf25"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-foundation-primitive.json",
+      "sha256": "78945e0cd71417147be6943e94fd3f5eb25d66f06057402299d61a037dae558a"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-runtime-diagnosis.json",
+      "sha256": "f250ab542d77679b9bb36697a2e9eadaf1dc9e3b1f364fe3c3dba94faea46a1c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-runtime-diagnosis.md",
+      "sha256": "7fa24a8dc02ec9589d23cd359b67a4a3a26e3567c250fc5e9de4e56dac6ec632"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-schema-independent.json",
+      "sha256": "f7008a2299565bb8e8482980e590da7dd7cc4c859941ec0d694fe74bba0c513a"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/r44-schema-independent.md",
+      "sha256": "af9e9c844ba5424bde0073cd4b715c5886c6a0557e47d53e3a35025239cadd33"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/schema-enforcement-matrix.json",
+      "sha256": "fe6b8ffed0e46cd284744fbc5e48eeae24c05a6286c7941f4a09438e00af6804"
+    }
+  ]
+}

@@ -1792,3 +1792,28 @@ search-tool initialization. Bootstrap every allowed tool family before freezing
 the runtime profile, bind executable artifacts, and distinguish runtime logs
 from routing inputs. Preserve the failed attempt and require a fresh full-round
 admission instead of relaxing its frozen guard after execution.
+
+## 2026-09-28 — R44 mixed protocol and diagnostic streams
+
+The UI census process exited zero with `end_turn`, then emitted
+`Resident session actor exited unexpectedly; reaping as DeadFailed`.
+The admitted runner merged stderr into stdout, so `trailing-invalid-stream`
+correctly refused the lane and skipped 21 remaining lanes. Five completed lanes
+remain partial evidence. Receipt: `data/sweeps/refresh-2026-09-28-r44-main-8c16e6/runtime-refusal.json`.
+
+Separate protocol stdout and diagnostic stderr from the start, hash-bind both,
+and require explicit review of evidence-backed teardown warnings. Preserve
+unknown-warning, error, panic, exhaustion, terminal-order and source guards.
+The candidate remains unadmitted; do not retroactively accept R44 UI or claim
+dry credit. This would have made channel attribution possible without rerunning
+the entire census merely to distinguish diagnostic output from protocol output.
+
+## 2026-09-28 — hash-map keys triggered credential detection
+
+R44 publication stopped at the pre-commit `generic-api-key` check on two
+verified source hashes keyed by `optionalKeyWithDefaults.ts` and
+`withKeyDefaults.ts`. Those values are SHA-256 source bindings, not credentials.
+The public review receipt now uses explicit `file`/`sha256` rows while retaining
+all paths and values. Its artifact index is rebound; the private original is
+preserved. Use this structured binding shape for future receipts rather than
+weakening secret detection or adding hash-specific suppressions.

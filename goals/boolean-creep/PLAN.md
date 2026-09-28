@@ -1,3 +1,19 @@
+## R44 partial reconciliation and runtime refusal, 2026-09-28
+
+R44 ran against source `862327c74e` and main `8c16e648527a`. Five lanes
+completed and are reconciled; UI failed stream validation and 21 lanes were
+skipped. All 4,167 frozen inputs matched after termination. The UI process
+exited zero but emitted a resident-session warning after its terminal event;
+merged stdout/stderr prevents channel attribution. Preserve the refusal.
+
+Seven declaration-kind corrections and one D1 census addition are installed,
+with the original inventory retained. Counts are **726 / 108 qualified /
+618 disqualified / zero applied**. No qualified owner or contract changed.
+See `data/r44-partial-reconciliation/README.md`. The round is incomplete,
+the dry streak remains zero, and no P3 or implementation credit is granted.
+A split-stream runtime candidate needs tests, bounded probing and independent
+admission before a fresh full round. The full campaign gates remain outstanding.
+
 # PLAN — Boolean-Creep Eradication
 
 ## Source advance during R41 preparation, 2026-09-25

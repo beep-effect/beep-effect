@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "boolean-creep-partial-round-verdict/v1",
+  "round": "refresh-2026-09-28-r44-main-8c16e6",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "complete": false,
+  "classification": "incomplete-runtime-stream-refusal",
+  "sourceStableAtTermination": true,
+  "successfulLanes": [
+    "r44-foundation-primitive",
+    "r44-foundation-capability",
+    "r44-foundation-modeling-rest",
+    "r44-foundation-schema-a-m",
+    "r44-foundation-schema-n-z"
+  ],
+  "failedLanes": [
+    {
+      "lane": "r44-foundation-ui",
+      "processExitCode": 0,
+      "accepted": false,
+      "errors": ["Refusal: trailing-invalid-stream"],
+      "transcriptSha256": "9234b7a30b99e10d57530bdf0dee2352595d54ae0fa091472c3f87756a968e8f"
+    }
+  ],
+  "notExecutedLanes": [
+    "r44-drivers-a-f",
+    "r44-drivers-g-m",
+    "r44-drivers-n-r",
+    "r44-drivers-s-z",
+    "r44-architecture-ecosystem-internal",
+    "r44-agents-workspace",
+    "r44-epistemic-ontology",
+    "r44-shared-documents",
+    "r44-law-practice-domain",
+    "r44-law-practice-runtime",
+    "r44-apps",
+    "r44-tooling-library-observability",
+    "r44-tooling-library-support",
+    "r44-tooling-policy",
+    "r44-tool-docgen",
+    "r44-cli-internal-root",
+    "r44-cli-commands-a-c",
+    "r44-cli-commands-d-k",
+    "r44-cli-commands-l-q",
+    "r44-cli-commands-r-z",
+    "r44-cli-yeet"
+  ],
+  "successfulLanesReconciled": 5,
+  "rawQualifiedCandidates": 0,
+  "acceptedNewQualified": 0,
+  "newDisqualified": [
+    "r44-foundation-schema-a-m-csv-normalize-parser-options-args"
+  ],
+  "kindCorrections": 7,
+  "inventoryCounts": {
+    "total": 726,
+    "qualified": 108,
+    "disqualified": 618,
+    "applied": 0
+  },
+  "dry": false,
+  "dryStreak": 0,
+  "P3Credit": false,
+  "implementationCredit": false,
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r44-main-8c16e6/execution-summary.json",
+      "sha256": "e9bb632ad804cd199b099d3532ce651941b1c1429c2ba11033698c09cad2c10a"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r44-main-8c16e6/lane-map.json",
+      "sha256": "48c4025ed4ebe396d9e8b33c0fcf202315fb9fddaaf993861c09d8d5a05b1e65"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r44-main-8c16e6/source-sha.txt",
+      "sha256": "d03cc94153dc7297e9865ee47ade939655560b23f1eaba1ba3066f6e5f13eb48"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r44-main-8c16e6/runtime-refusal.json",
+      "sha256": "0538aa08a7e5b3b1ad509f61e9409c0a7ded176c00f5a16aef3ea75207b96080"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/artifact-index.json",
+      "sha256": "08e8567561dfa702fd84665d7e1668b267a068c836d4898d0144dcb9a471a236"
+    },
+    {
+      "file": "goals/boolean-creep/data/r44-partial-reconciliation/integration.json",
+      "sha256": "90d3a143c69b543997ea271c516c2ad46757b017856efbc0ecc8b555ed12d592"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-28-r44-before-partial-integration.jsonl",
+      "sha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91"
+    }
+  ],
+  "limitation": "Five successful execution lanes were reconciled. UI stays failed and21lanes were not executed. No partial coverage is inherited by the next full round; the new runtime needs independent admission."
+}
