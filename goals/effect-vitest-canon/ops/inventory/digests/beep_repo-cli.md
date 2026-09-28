@@ -430,3 +430,14 @@ single evaluation and failure on undefined. The CLI detector ledger contains
 3,444 unique rows: 870 fixed, seven exceptions and 2,567 open. The zero-new
 ratchet reports 3,881 remaining findings. Timing and full package proof status
 is explicit in [the comparison proof](../../../research/cli-option-some-equality-proof.md).
+
+
+## Inline Exit tags and multiline Option residue
+
+Commit `56df0aa64cdecb1b22d4404cb63256c9064290f9` fixes 62 existing EV006 records:
+59 inline Exit Failure-tag assertions and three multiline Option comparisons.
+All 119 test registrations pass before/after on Node and Bun; Effect diagnostics
+and the zero-new ratchet pass. Other finding groups retain their multiplicities.
+The detector ledger has 3,444 unique rows: 932 fixed, seven exceptions and
+2,505 open. There are no new ledger findings in this batch. Full package proof
+status is explicit in [the proof](../../../research/cli-assertion-residual-proof.md).

@@ -30,7 +30,8 @@ finding groups preserve multiplicity and traversal order. Only occurrence and
 evidence fields on 25 enclosing-statement baseline anchors are updated;
 all other fields and statuses remain unchanged. All 62 removals match existing
 open ledger rows by file, rule and occurrence. There are no new ledger findings
-or baseline exceptions in this batch. Ledger updates follow the source commit.
+or baseline exceptions in this batch. All 62 ledger records now reference source
+commit `56df0aa64cdecb1b22d4404cb63256c9064290f9`; their historical identities and evidence remain intact.
 
 ## Proof status
 
