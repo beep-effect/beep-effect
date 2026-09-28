@@ -4769,3 +4769,27 @@ helper exposed their Context-provision and short-scope review points. Fixture
 migration should enumerate actual callers and verify workspace/session isolation
 and cleanup in each transport mode; a zero direct-wrapper count alone cannot
 establish canonical resource ownership.
+
+## Full-proof docgen reaches generated Pulumi SDK source
+
+While validating the Desktop follow-up, the full docgen lane failed in
+`@beep/infra`: `@pulumi/gharunners` resolves to the local generated SDK's
+TypeScript sources. Example compilation reports TS1205 for type re-exports,
+TS1294 for non-erasable syntax, and TS4114 for missing override modifiers.
+`infra/` and the docgen package have no branch diff against the current base;
+the isolated `bun run beep:docgen` in `infra/` reproduced the same failure.
+The installed SDK lacked its compiled declarations. Running the existing
+`bun run infra:prepare-gha-runners` succeeded, and the unchanged docgen command
+then passed all 101 examples. This is an environment preparation failure, not
+a source repair. Root postinstall already invokes this preparation; investigate
+why the installed dependency state lost its build output, and detect that state
+earlier in local proof preflight. Compiler checks remain unchanged. Receipt:
+the full publisher's `quality:docgen` log and the isolated before/after runs.
+
+## Publish verdict records the pre-commit head
+
+The same publisher log records creation of `fcf7e968a3`, but its final verdict
+records `c257acdeb9` in both `head` and `resolvedHeadSha`. The worktree remains
+at `fcf7e968a3`. A publish receipt must bind proof to the actual committed head,
+not the head captured before its commit step. Investigate when the publisher
+refreshes this identity; do not treat the mismatched verdict as exact-head proof.
