@@ -74,3 +74,15 @@ unique-identity validation. The goal remains incomplete.
 Private receipts use the `console-followup-policy-*`,
 `console-followup-detector-*`, `console-followup-new-outcomes-*` and
 `console-followup-*-verify` prefixes.
+
+## Frozen PR heavy-check attribution
+
+PR #1323's Heavy / Check job 109092814626 failed on the frozen `5a26711` head
+with 35 unique CLI test diagnostics across 16 files: 32 missed pipe forms, two
+`Effect.fn` opportunities and one typed schema-decoder preference. Every affected
+file is covered by repair commit `13cad3e1fa4b07ccdb84e95fd0d81fe92fa129ac`.
+The current whole-package Effect test diagnostic artifact reports exit zero
+with empty output. The failure therefore carries the already-saved follow-up
+repair; no additional code change or push to the frozen PR is needed. This
+does not make the frozen PR green. Private receipt:
+`pr1323-heavy-check-attribution.json` with the hosted job log and current result.
