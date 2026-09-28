@@ -48,6 +48,13 @@ adds the cooldown preflight and failure detail in receipts. Remaining operator i
 surface `$HOME/.claude/rules/effect-coding-standards.md` still names `.repos/effect-v4`, 12
 vendored `.repos/effect` holdouts remain, and `beep-graft-deep-refresh` needs the same preflight.
 
+The deliverable is the workspace, the tooling, the nightly timer, and the cooldown fix. The first two
+scheduled nights are recorded: 2026-09-26 ended with exit 130 when the user manager restarted, and
+2026-09-27 hit the model cooldown. Reading back the first clean scheduled night is an operator
+follow-up, recorded in [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) when it lands. The
+receipt is `$HOME/.local/state/beep/refs/last-refresh.json`, and
+`docs/runbooks/graft-local-recovery.md` describes how to read it.
+
 ## Latest Evidence
 
 [`history/reflections/2026-09-28-fable.md`](./history/reflections/2026-09-28-fable.md): closeout

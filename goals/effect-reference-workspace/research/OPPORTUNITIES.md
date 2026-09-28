@@ -23,3 +23,16 @@
   now carry a bounded `detail`. A one-token probe runs before each deep build
   and reports 429 as `skipped-cooldown` with a structural build only. The
   graft deep refresh timer still needs the same preflight.
+
+## Operator follow-up: read back the first clean scheduled refs night
+
+- **Work:** Closing P4 of this packet on 2026-09-28.
+- **Friction:** P4 asked for the next-morning deep tier to be confirmed, but the first two
+  scheduled nights both failed for reasons outside the packet. On 2026-09-26 the run ended with
+  exit 130 when the user manager restarted. On 2026-09-27 the model cooled down (the entry above).
+  The packet closed without a clean scheduled night to read back.
+- **Evidence:** The receipt is `~/.local/state/beep/refs/last-refresh.json`, and
+  `docs/runbooks/graft-local-recovery.md` describes how to read it. A clean night shows `pulled`
+  or `unchanged` for both members, with coverage and no `detail`.
+- **Proposal:** Once the timer has a clean night after PR #1311 lands, the operator adds its date
+  and both members' coverage here. Status: open.

@@ -30,7 +30,8 @@ printf 'git %s %s\\n' "\${PWD##*/}" "$*" >> "$HOME/commands.log"
 case "$1" in
   status) [ ! -f dirty ] || printf '?? dirty\\n' ;;
   branch) if [ -f off-main ]; then printf 'topic\\n'; else printf 'main\\n'; fi ;;
-  rev-parse) if [ -f advanced ]; then printf 'new-head\\n'; else printf 'old-head\\n'; fi ;;
+  rev-parse) [ ! -f rev-parse-fail ] || { printf 'fatal: bad object HEAD\\n' >&2; exit 128; }
+    if [ -f advanced ]; then printf 'new-head\\n'; else printf 'old-head\\n'; fi ;;
   pull) [ ! -f pull-fail ] || exit 7; [ ! -f advance ] || touch advanced ;;
   *) exit 99 ;;
 esac
@@ -328,4 +329,22 @@ describe("reference planning and refresh", () => {
       })
     );
   });
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "keeps a failed git probe's stderr in the member detail",
+    (it) => {
+      it.effect(
+        "keeps a failed git probe's stderr in the member detail",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          for (const name of ["effect", "effect-tsgo"])
+            yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+          yield* f.fs.writeFileString(f.path.join(f.root, "effect", "rev-parse-fail"), "");
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
+          expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
+          assertSome(status.members[0]?.detail ?? O.none(), "git rev-parse HEAD exited 128: fatal: bad object HEAD");
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git effect pull");
+        })
+      );
+    }
+  );
 });

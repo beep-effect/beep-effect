@@ -22,7 +22,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CapturedStep, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
+import { CapturedStep, OutputBound, runCaptured, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readInstalledSystemdUnit,
   resolveOperatorPath,
@@ -166,6 +166,11 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     }
   );
 
+  const readAmbientPath = (cwd: string) =>
+    Config.String("PATH").pipe(
+      Config.withDefault("/usr/bin:/bin"),
+      Effect.mapError(ioError(cwd, "Cannot read process PATH."))
+    );
   // Maintenance commands receive no model/provider secrets. Only deep builds
   // and the desktop notifier inherit the unit environment (R4, R9).
   const step = Effect.fn("ReferenceWorkspace.step")(function* (
@@ -173,19 +178,15 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     cwd: string,
     command: string,
     args: ReadonlyArray<string>,
-    deep = false,
-    stdout = false
+    deep = false
   ) {
-    const ambientPath = yield* Config.String("PATH").pipe(
-      Config.withDefault("/usr/bin:/bin"),
-      Effect.mapError(ioError(cwd, "Cannot read process PATH."))
-    );
+    const ambientPath = yield* readAmbientPath(cwd);
     return yield* runCaptured({
       command,
       args,
       cwd,
       bound: outputBound,
-      source: stdout === true ? "stdout" : "merge",
+      source: "merge",
       trim: true,
       tee: false,
       extendEnv: deep === true || command === "notify-send" || command === "systemctl",
@@ -193,6 +194,25 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       timeout: deep === true ? "5 hours" : "15 minutes",
       forceKillAfter: "30 seconds",
     }).pipe(Effect.provide(context), Effect.mapError(ioError(cwd, `${command} failed to run.`)));
+  });
+  // Git keeps stdout and stderr apart: stdout is parsed, stderr explains a failure. Same
+  // environment allowlist, output bound, and deadline as a maintenance `step`.
+  const gitStep = Effect.fn("ReferenceWorkspace.gitStep")(function* (
+    home: string,
+    cwd: string,
+    args: ReadonlyArray<string>
+  ) {
+    const ambientPath = yield* readAmbientPath(cwd);
+    return yield* runCapturedStreams({
+      command: "git",
+      args,
+      cwd,
+      bound: outputBound,
+      trim: true,
+      extendEnv: false,
+      env: { HOME: home, PATH: ambientPath, CI: "true", GRAFT_NO_GITIGNORE: "1" },
+      forceKillAfter: "30 seconds",
+    }).pipe(Effect.timeout("15 minutes"), Effect.provide(context), Effect.mapError(ioError(cwd, "git failed to run.")));
   });
   const mustRun = Effect.fn("ReferenceWorkspace.mustRun")(function* (
     home: string,
@@ -352,16 +372,15 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       let reports = HashMap.empty<string, MemberRefreshReport>();
       for (const member of manifest.members) {
         const cwd = path.join(root, member.name);
-        // A git call that yields its trimmed stdout, or fails the member with the call's output.
-        // Only `pull` merges stderr: its output is never parsed and its errors live there.
-        const gitOutput = Effect.fnUntraced(function* (args: ReadonlyArray<string>, merge?: true) {
-          const result = yield* step(home, cwd, "git", args, false, merge === undefined);
+        // A git call that yields its trimmed stdout, or fails the member with git's stderr.
+        const gitOutput = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
+          const result = yield* gitStep(home, cwd, args);
           if (result.exitCode !== 0)
             return yield* ReferenceWorkspaceError.make({
               path: cwd,
-              message: `git ${A.join(args, " ")} exited ${result.exitCode}${Str.isNonEmpty(result.output) ? `: ${result.output}` : ""}`,
+              message: `git ${A.join(args, " ")} exited ${result.exitCode}${Str.isNonEmpty(result.stderr) ? `: ${result.stderr}` : ""}`,
             });
-          return result.output;
+          return result.stdout;
         });
         // Bring the member to origin/main without ever rewriting local state (R9): a dirty or
         // off-main member is skipped, a failing git call fails the member, else it is synced.
@@ -371,7 +390,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const branch = yield* gitOutput(["branch", "--show-current"]);
           if (branch !== "main") return MemberSync.skipped("skipped-off-branch");
           const before = yield* gitOutput(["rev-parse", "HEAD"]);
-          yield* gitOutput(["pull", "--ff-only"], true);
+          yield* gitOutput(["pull", "--ff-only"]);
           const after = yield* gitOutput(["rev-parse", "HEAD"]);
           return MemberSync.synced(before !== after);
         });

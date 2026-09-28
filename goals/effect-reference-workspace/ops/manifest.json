@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/effect-reference-workspace",
   "lifecycle": "completed-retained",
+  "statusNote": "Closed 2026-09-28. The deliverable is the workspace, tooling, nightly timer, and the cooldown fix (PR #1311). The first two scheduled nights are recorded (2026-09-26 exit 130 on a user-manager restart, 2026-09-27 model cooldown). Reading back the first clean scheduled night is an operator follow-up recorded in research/OPPORTUNITIES.md when it lands.",
   "mission": "Consolidate the Effect reference clones into the manifest-configured reference root as a graft workspace with a nightly claude-opus-5 deep tier, reachable from every beep checkout via manifest-provisioned .repos links.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -72,12 +73,14 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "complete",
+      "exit": "Reflection lints; README, PLAN, and manifest updated; first two scheduled nights recorded. The first clean scheduled night's readback is an operator follow-up in research/OPPORTUNITIES.md."
     }
   ],
   "evidence": [
     "history/2026-09-25-s4-move.md",
     "history/2026-09-25-p2-p3-closeout.md",
-    "history/reflections/2026-09-28-fable.md"
+    "history/reflections/2026-09-28-fable.md",
+    "research/OPPORTUNITIES.md"
   ]
 }
