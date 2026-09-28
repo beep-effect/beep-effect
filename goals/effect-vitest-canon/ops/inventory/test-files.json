@@ -1368,50 +1368,50 @@
     "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 14294,
-    "lines": 372
+    "bytes": 23250,
+    "lines": 577
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 14209,
-    "lines": 374
+    "bytes": 20301,
+    "lines": 520
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 7164,
-    "lines": 167
+    "bytes": 8179,
+    "lines": 193
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 2006,
-    "lines": 59
+    "bytes": 2818,
+    "lines": 80
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 3894,
-    "lines": 100
+    "bytes": 4980,
+    "lines": 122
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 8162,
-    "lines": 230
+    "bytes": 8254,
+    "lines": 232
   },
   {
     "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
     "package": "@beep/box-provisioning",
     "kind": "test",
-    "bytes": 19319,
-    "lines": 525
+    "bytes": 22464,
+    "lines": 627
   },
   {
     "file": "packages/drivers/box-provisioning/test/fixtures.ts",

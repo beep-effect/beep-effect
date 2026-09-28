@@ -54,3 +54,16 @@ Whole-command observations are Node 5.324 to 5.027 seconds and Bun 2.719 to
 1.767 seconds. Source hashes are stable within each run. Load and pressure are
 recorded; these observations do not establish causal performance changes.
 Inventory reconciliation and consolidated PR acceptance remain separate gates.
+
+The 35 saved actions are reconciled against source commit
+`7a61d6ae10bc82888bd1ff850b3304c392b64237`. All 64 historical detector IDs,
+including root-only records and current findings, remain in the owned ledger.
+Ten current scoped-provision judgments retain explicit body-owned fixture
+reasons. These judgments do not satisfy the final empty-baseline requirement.
+
+Strict schema validation passes for 5,227 unique root IDs and 14,984 unique
+ledger IDs with no invalid rows. All 683 unrelated ledger hashes and unrelated
+raw root/census records are preserved. The full-scan ratchet reports zero
+introduced and zero resolved drift against the reconciled baseline. Four public
+timing artifacts record the baseline and final observations. The saved queue
+contains six packages and 518 actions after this package closeout.

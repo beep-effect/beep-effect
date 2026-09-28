@@ -1,0 +1,197 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/box-provisioning",
+  "sourceHead": "1df992e7b36fff152eae7240178393a605f86d03",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.323859425999672,
+  "bunWholeCommandSeconds": 2.719288941999821,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [14.86962890625, 11.017578125, 10.25341796875],
+  "loadAfter": [16.16162109375, 11.349609375, 10.365234375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.82 avg60=1.26 avg300=0.74 total=24020847\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.12 avg60=0.09 avg300=0.02 total=577006\nfull avg10=0.12 avg60=0.09 avg300=0.02 total=551710\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.07 total=10660148\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=8261783\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.70 avg60=1.21 avg300=0.74 total=24109154\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.08 avg60=0.08 avg300=0.02 total=629922\nfull avg10=0.08 avg60=0.08 avg300=0.02 total=603968\n",
+    "io": "some avg10=0.00 avg60=0.05 avg300=0.07 total=10662034\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=8263056\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "9864ec8336ac9551d3bee312ce1e2dd09396a3dd33e1a7a201f366d3bf00fdc5"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/AGENTS.md",
+      "sha256": "cffcefc7bb39f2d8366cc8fb8a58f1c714efbead427b9f07647619cfcf3a3c26"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/CLAUDE.md",
+      "sha256": "cffcefc7bb39f2d8366cc8fb8a58f1c714efbead427b9f07647619cfcf3a3c26"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/README.md",
+      "sha256": "5cb482b64a949e61c68410c7428763ccc962b986b891d2b0554cbcba5d2ce558"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/docgen.json",
+      "sha256": "6d59c30d4fd12835690fbfeba7dbe966e7a9734e764dd49b4821064be2c2a347"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/package.json",
+      "sha256": "5e0786e9e039efdeb0ad6619beb6e62577fdbb2ecc819cc76c05d5600fb126f9"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioning.ts",
+      "sha256": "d4afd54797756b30391b16c1858b1c56b8be28769ce073763f01b80072bf1fcf"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningApplier.ts",
+      "sha256": "665b9fb743f0d2b43cda95d14a880175b5792f0f9a2fb9e4a3f6ad5690a2acac"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningArtifacts.ts",
+      "sha256": "e4b71074088212da4da3d7d8699f5eac2da692bccdb823b8c7f9b4f0f6c7541e"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningErrors.ts",
+      "sha256": "e9e5f60a3f71400bd2ee8a0ce4cc9e7e8fe8a63b80e22adde0b4e2269ac103c5"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningIntent.ts",
+      "sha256": "86dc0a1069c0dfe013ce2249e279598e5604a81f8a2618dec97e0a527840ad2d"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningInventory.ts",
+      "sha256": "c533b851de6d9d3d799940be03830d6e88db889a435ecea855d40762e7fd892e"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningObserved.ts",
+      "sha256": "e7ff169f2616e36665ab6363a798c1b460a30377eb71edfeeedabde502289fe3"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningPlan.ts",
+      "sha256": "45fb1f7f992f4b248a744fe8553d1438ce22bc03afe33f2ec073966b87a24494"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts",
+      "sha256": "f397be093e26ab47bc6178019709ea22d59a62d631d4858902640c9e898c5abb"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/BoxProvisioningReceipt.ts",
+      "sha256": "f1beff07e62c946613a9c13435acf082333bcd878ea6bc73c686d68aa5943093"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/index.ts",
+      "sha256": "4350d14ef66249542a0fc915ef68f27ef25b431daf78093a70d4e4fea91d1372"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/internal/canonical.ts",
+      "sha256": "7987093488bd0e46b3993288b8b2110dbed99aad8f6771db89f3d3037a4377b1"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/src/internal/live.ts",
+      "sha256": "00522180c365ee4cc47be21324e615003e4caa4a71fc865c3080e1c10dce25cb"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "sha256": "2892aed3674ef4c37eef60b022c354966a46f5460870f9cf992a198b86be1439"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "sha256": "dbe9e65496b2397d287c56ef64e949f69ecebc959a3cf20f6bee731848b30fa0"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "sha256": "b888f1e92cecb51f39940536e9d05965e59d2c3f780648bb00f853775ec96f50"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
+      "sha256": "d00eff281daeb59109b9d6626e9daef5a670583ea9c2b752252e6a26deb88da8"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
+      "sha256": "0426722c8e9f0b6d97da1fe5d3aabf88543014d5ec8bf9c5761c68095131f9d8"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
+      "sha256": "e2863d792bb6cacba784fd56cf49eca609694006434a3e01d877ce7a18753a93"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
+      "sha256": "5eb69967c326b95743e2ad8da016153635dc930d1fcb0693a4f3145cc672cd15"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/fixtures.ts",
+      "sha256": "3dd61f30dd9848b0b944ed9b5f2f2b0d54481a9cda66f779649da7f7e271fec4"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/tsconfig.check.json",
+      "sha256": "318bf1909bcb29244ba58dbe089ebe72d8d5de9d7e48cc02dd1cec02f0e07b96"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/tsconfig.json",
+      "sha256": "c3ddc3d5621bbf942467468bae8601fa65b8d8fb69132ef223b1cf40a3e09d0a"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/box-provisioning/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Box Provisioning unit fixtures exercise planning, application, journals and schema laws with synthetic SDK doubles and actual platform Crypto. No live provider request or credential is used. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 62,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [16.16162109375, 11.349609375, 10.365234375],
+    "loadAfter": [16.16162109375, 11.349609375, 10.365234375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.93 avg60=1.24 avg300=0.75 total=24109185\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.24 avg60=0.11 avg300=0.03 total=630323\nfull avg10=0.24 avg60=0.11 avg300=0.03 total=604370\n",
+      "io": "some avg10=0.00 avg60=0.05 avg300=0.07 total=10662066\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=8263086\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.94 avg60=1.23 avg300=0.75 total=24139558\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.38 avg60=0.14 avg300=0.04 total=651714\nfull avg10=0.38 avg60=0.14 avg300=0.04 total=625627\n",
+      "io": "some avg10=0.00 avg60=0.04 avg300=0.07 total=10663257\nfull avg10=0.00 avg60=0.02 avg300=0.05 total=8263731\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 62,
+    "skipped": 0
+  },
+  "interpretation": "All 62 baseline and 104 final tests pass on Node and Bun with zero skips and stable sources. The preservation audit covers 151 original nonprivacy assertions and 62 titles; privacy retains all four sentinels and nine predicates as 36 named cases. Ten native laws preserve original schema domains, equivalence predicates and floors. A deterministic overlap witness verifies independent SDK counters. Actual Crypto and synthetic clients are retained without live provider requests. Host load and pressure are recorded; these observations do not establish causal speedup."
+}
