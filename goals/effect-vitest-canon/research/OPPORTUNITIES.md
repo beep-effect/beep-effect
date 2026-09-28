@@ -5149,3 +5149,14 @@ Effect diagnostic artifact is clean. Include expected-value brand compatibility
 in migration preparation, alongside optional subjects and asymmetric matchers.
 Private before/final receipts: `cli-option-some-equality-typecheck.json` and
 `cli-option-some-equality-final-typecheck.json`.
+
+### Inventory evidence selectors must accept multiline formatting
+
+The Option comparison preparation selected files from existing ledger evidence
+with a literal matcher opening followed immediately by `O.some`. Three files
+used a newline there and were missed, even though the AST rewrite itself
+handled multiline calls. A whitespace-tolerant selection found three existing
+rows, now included in the inline Exit-tag follow-up batch. Future preparation
+should select candidates by the inventory class and inspect their AST, or test
+its evidence selector against multiline formatting. Receipt:
+`cli-option-some-residual-proposal.json`; no new repository inventory was needed.

@@ -52,6 +52,7 @@ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
@@ -2008,23 +2009,19 @@ describe("corpus restoration preservation", () => {
           failureTerminal,
           failureTerminal.recordedAt
         );
-        expect(
-          yield* RA.appendProvenance(
-            path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
-            archiveRoot,
-            { ...provenanceSource, sourcePath: `${provenanceSource.sourcePath}.contradictory` },
-            fileTerminal.value,
-            fileTerminal.value.recordedAt
-          ).pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.appendProvenance(
+          path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
+          archiveRoot,
+          { ...provenanceSource, sourcePath: `${provenanceSource.sourcePath}.contradictory` },
+          fileTerminal.value,
+          fileTerminal.value.recordedAt
+        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         expect(
           (yield* RA.verifyArchiveTerminal(archiveRoot, failureTerminal.objectId, failureTerminal)).record
         ).toMatchObject({ _tag: "Some", value: { failureKind: "unapproved-terminal" } });
-        expect(
-          yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
-            Effect.exit
-          )
-        ).toMatchObject({ _tag: "Failure" });
+        (yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
+          Effect.exit
+        )).pipe(Exit.isFailure, assertTrue);
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
         const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
           unsealed: ReadonlyArray<ArchiveLedgerRecord>

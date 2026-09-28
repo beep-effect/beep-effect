@@ -9,6 +9,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
@@ -896,8 +897,9 @@ describe("tsconfig-sync", () => {
               syncResult.changes,
               (change) => change.section === "package-check-references"
             );
-            expect(O.map(overlayChange, (change) => change.summary)).toEqual(
-              O.some("references: 0 -> 1 (add 1, remove 0)")
+            assertSome(
+              O.map(overlayChange, (change) => change.summary),
+              "references: 0 -> 1 (add 1, remove 0)"
             );
 
             const expectedReferences = ["../foundation/modeling/identity/tsconfig.json"];

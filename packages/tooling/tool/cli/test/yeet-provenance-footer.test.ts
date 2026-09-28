@@ -27,7 +27,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -252,9 +252,7 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
 
 describe("Yeet provenance footer splice", () => {
   it("refuses gh pr view fields the CLI does not expose, as gh does", () => {
-    expect(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,createdAt,lastEditedAt"])).toStrictEqual(
-      O.some("lastEditedAt")
-    );
+    assertSome(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,createdAt,lastEditedAt"]), "lastEditedAt");
     assertNone(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,updatedAt"]));
     assertNone(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body"]));
   });
