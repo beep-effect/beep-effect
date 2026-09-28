@@ -253,6 +253,8 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
  * })); // true
  * ```
  *
+ * @param check - The classified check and its original failure description.
+ * @returns Whether the check blocks readiness under the repository merge policy.
  * @category predicates
  * @since 0.0.0
  */
