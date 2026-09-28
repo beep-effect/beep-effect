@@ -12,7 +12,7 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 360 fixed rows, seven reviewed exceptions and 3,055 open rows, with all
+contains 575 fixed rows, seven reviewed exceptions and 2,842 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
@@ -395,3 +395,13 @@ on Node and Bun; the CI console regression cohort passes all 38 tests on both.
 Full CLI audit/docgen passed, but separate Effect test diagnostics still need
 repair before repository readiness. See
 [the follow-up proof](../../../research/cli-option-presence-and-console-proof.md).
+
+## Option absence predicates
+
+Commit `038fe84ce4` fixes 213 existing EV006 rows and two newly captured
+assertions. All 1,194 registrations match before/after on Node and Bun, with
+zero failures/skips and stable source. Effect test diagnostics are clean,
+and the ratchet removes exactly 215 findings without baseline expansion.
+The detector ledger has 3,424 unique rows: 575 fixed, seven exceptions, and
+2,842 open. Full package proof status remains explicit in
+[the proof](../../../research/cli-option-absence-proof.md).
