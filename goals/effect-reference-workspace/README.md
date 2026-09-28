@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -41,13 +41,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close. PR #1257 merged to `main` (`217e308592`, 2026-09-25); the lint-policy follow-up is PR #1271.
-The seed deep pass finished 16:50 UTC (effect 15943/19938 cards, effect-tsgo 5257/5908) and the
-`beep-refs-refresh` timer owner is `beep-effect0` (next run 2026-09-26 03:35 CDT). Remaining: closeout
-reflection, remove the session symlink, retire the worktree (see
-`history/2026-09-25-p2-p3-closeout.md`).
+Closed 2026-09-28 (`completed-retained`). PR #1257 merged to `main` (`217e308592`, 2026-09-25) and
+the lint-policy follow-up PR #1271 merged (`9de64fb848`, 2026-09-25). The `refs-workspace-impl`
+worktree was retired on 2026-09-28. The 2026-09-27 nightly failed on a model cooldown; PR #1311
+adds the cooldown preflight and failure detail in receipts. Remaining operator items: the R14 home
+surface `$HOME/.claude/rules/effect-coding-standards.md` still names `.repos/effect-v4`, 12
+vendored `.repos/effect` holdouts remain, and `beep-graft-deep-refresh` needs the same preflight.
 
 ## Latest Evidence
+
+[`history/reflections/2026-09-28-fable.md`](./history/reflections/2026-09-28-fable.md): closeout
+reflection covering the two failed scheduled nights, the cooldown fix, and the remaining operator
+items.
 
 [`history/2026-09-25-s4-move.md`](./history/2026-09-25-s4-move.md): move, worktree repair, structural
 build (`effect/` 19937 nodes / 1679 cards, `effect-tsgo/` 5908 nodes / 1153 cards, `graft check` OK),
