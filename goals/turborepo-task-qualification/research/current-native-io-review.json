@@ -132,5 +132,33 @@
     "Current ring contents were not decoded. Earlier epoll-control observations do not retroactively decode this trace.",
     "This invokes the real task directly; no Turbo cache-hit or signed-remote observation is claimed.",
     "Raw traces and source paths remain private. No policy tuple is promoted."
-  ]
+  ],
+  "gitRoutingReview": {
+    "process": "installed Biome platform binary",
+    "events": [
+      {
+        "resource": "fixture Git pointer",
+        "returnedBytes": 49
+      },
+      {
+        "resource": "worktree common-directory pointer",
+        "returnedBytes": 6
+      },
+      {
+        "resource": "common Git exclusion file",
+        "returnedBytes": 727
+      }
+    ],
+    "traceSha256": "c47c0bc58548a9a8ef9f72ab8b02578720ce9665b1d5a267aa9c057e8f8f3a85",
+    "fixturePointerSha256": "12b79e10568c4dc8b82b48707184c4089221568800ae98a756bc0781f8e2f02b",
+    "retentionReference": "git-routing-current-7f53-reviewed",
+    "reviewSha256": "039faa12e6bd9f0a475e1a78dacc00cd3d151af35d67fa48640a28172626e4c0",
+    "manifestSha256": "aec533a9ef6478510aa3ccb15b1e0f6b66845ea29742ccc06c70e59900745914",
+    "interpretation": "The current trace attributes all three Git metadata reads to Biome. The fixture pointer routes through the worktree common-directory pointer to the common exclusion file.",
+    "limits": [
+      "Read buffers were suppressed; returned contents are not independently hashed.",
+      "The retained fixture pointer was checked after observation. Common Git metadata was a read-only mount of shared host state, not a frozen copy.",
+      "This attribution does not prove routing metadata semantically irrelevant, complete input closure, or coverage of alternate Git layouts."
+    ]
+  }
 }

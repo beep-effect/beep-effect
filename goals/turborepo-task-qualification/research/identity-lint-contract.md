@@ -24,6 +24,10 @@ read-buffer contents suppressed. All 21 explicit writes are attributed to
 captured stderr, pipes, Unix sockets, the null device or an event descriptor.
 No vectored I/O appears in this execution. Five successful ring setup/entry
 pairs remain undecoded; earlier ring observations do not decode this trace.
+A separate retained trace review attributes the fixture Git pointer, worktree
+common-directory pointer and common exclusion-file reads to Biome. Read
+payloads remain suppressed and the shared Git metadata was not frozen; this
+establishes process attribution only.
 Input-map membership is not byte identity or semantic closure. The source
 archive keeps caching disabled; its configuration bytes are not asserted
 identical to the disposable cache-enabled runtime overlay.

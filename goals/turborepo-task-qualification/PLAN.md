@@ -2555,3 +2555,14 @@ Five successful ring setup/entry pairs remain undecoded; these observations
 do not establish complete semantic closure, current-dependency qualification
 or signed replay. The pilot worksheet now separates this evidence from older
 source snapshots and matrices.
+
+### Current Git routing attribution
+
+The retained native trace now attributes the 49-byte fixture Git-pointer read,
+the six-byte common-directory pointer and the 727-byte common exclusion read
+to the installed Biome binary. The independent parser verifies both trace
+hashes and suppresses payloads. A separate two-file retention bundle binds
+the reviewer and result. This closes process attribution for this observation;
+it does not freeze the shared Git metadata, hash returned read buffers, or
+prove that alternate Git layouts preserve semantics. Those contract obligations
+remain open alongside the undecoded ring operations.
