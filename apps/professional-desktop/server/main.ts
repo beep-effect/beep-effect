@@ -107,9 +107,12 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
       ),
   });
   const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp);
-  return RpcServerLive.pipe(
-    Layer.provideMerge(App),
-    Layer.provide(HttpRouter.serve(App)),
+  // HttpRouter.serve builds its app in a forked layer memo map and serves only the
+  // router built there, so the rpc handlers must sit inside the served app: a
+  // sibling `RpcServerLive.pipe(Layer.provideMerge(App))` outside `serve` would
+  // build a second, unserved protocol (and a second PGlite runtime) and register
+  // the handlers on that one.
+  return HttpRouter.serve(RpcServerLive.pipe(Layer.provideMerge(App))).pipe(
     // Bun's default 10s idleTimeout severs streamed responses during the silent
     // tail of a turn (no bytes flow while the kernel thinks); 255s is Bun's max
     // and covers the turn budget. Mirrors the POC.
