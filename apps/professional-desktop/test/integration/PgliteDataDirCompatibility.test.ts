@@ -7,6 +7,7 @@ import { assertTrue } from "@effect/vitest/utils";
 import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
 import { pipe } from "effect";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -24,44 +25,25 @@ import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.s
 
 const TestServices = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer);
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(scopeLayer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    scopeLayer.pipe(
-      Layer.build,
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
-      Effect.scoped
-    );
-
-const withPgliteSql = <A, E, R>(dataDir: string, effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(provideScopedLayer(makeBundledPgliteLayer({ dataDir, relaxedDurability: true })));
-
-const withChatDbPath =
-  (dataDir: string) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    effect.pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CHAT_DB_PATH: dataDir }))));
-
 const markerPath = (path: Path.Path, dataDir: string): string => path.join(dataDir, ChatDbCompatibilityMarker);
 
 const createPgliteFixture = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.createPgliteFixture")(function* (
   dataDir: string
 ) {
-  yield* withPgliteSql(
-    dataDir,
-    Effect.gen(function* () {
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-      yield* sql`
+  yield* Effect.gen(function* () {
+    const context = yield* Layer.build(makeBundledPgliteLayer({ dataDir, relaxedDurability: true }));
+    const sql = Context.get(context, SqlClient.SqlClient).withoutTransforms();
+    yield* sql`
         CREATE TABLE preserved_notes (
           id SERIAL PRIMARY KEY,
           body TEXT NOT NULL
         )
       `;
-      yield* sql`
+    yield* sql`
         INSERT INTO preserved_notes (body)
         VALUES ('keep me')
       `;
-    })
-  );
+  }).pipe(Effect.scoped);
 });
 
 const createLegacyPglite046Fixture = Effect.fn(
@@ -95,19 +77,17 @@ const createLegacyPglite046Fixture = Effect.fn(
 const readPgliteFixture = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.readPgliteFixture")(function* (
   dataDir: string
 ) {
-  return yield* withPgliteSql(
-    dataDir,
-    Effect.gen(function* () {
-      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-      const rows = yield* sql<{ readonly body: string }>`
+  return yield* Effect.gen(function* () {
+    const context = yield* Layer.build(makeBundledPgliteLayer({ dataDir, relaxedDurability: true }));
+    const sql = Context.get(context, SqlClient.SqlClient).withoutTransforms();
+    const rows = yield* sql<{ readonly body: string }>`
         SELECT body
         FROM preserved_notes
         ORDER BY id ASC
       `;
 
-      return rows.map((row) => row.body);
-    })
-  );
+    return rows.map((row) => row.body);
+  }).pipe(Effect.scoped);
 });
 
 const backupNames = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.backupNames")(function* (
@@ -141,7 +121,10 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
             ),
           });
 
-          yield* withPgliteSql(dataDir, Effect.void).pipe(
+          yield* makeBundledPgliteLayer({ dataDir, relaxedDurability: true }).pipe(
+            Layer.build,
+            Effect.asVoid,
+            Effect.scoped,
             Effect.provideService(FileSystem.FileSystem, isolatedFileSystem)
           );
 
@@ -307,16 +290,19 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
 
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
 
-          yield* PgliteDrizzleLive.pipe(Layer.build, Effect.asVoid, withChatDbPath(dataDir), Effect.scoped);
+          yield* PgliteDrizzleLive.pipe(
+            Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CHAT_DB_PATH: dataDir }))),
+            Layer.build,
+            Effect.asVoid,
+            Effect.scoped
+          );
 
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
-          yield* withPgliteSql(
-            dataDir,
-            Effect.gen(function* () {
-              const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-              yield* sql`SELECT id FROM workspace_thread LIMIT 0`;
-            })
-          );
+          yield* Effect.gen(function* () {
+            const context = yield* Layer.build(makeBundledPgliteLayer({ dataDir, relaxedDurability: true }));
+            const sql = Context.get(context, SqlClient.SqlClient).withoutTransforms();
+            yield* sql`SELECT id FROM workspace_thread LIMIT 0`;
+          }).pipe(Effect.scoped);
         }),
         { timeout: 90_000 }
       );

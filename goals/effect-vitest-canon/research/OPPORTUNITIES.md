@@ -4711,3 +4711,12 @@ truncated tool output. Process inspection confirmed they had ended; the bounded
 proofs were rerun with explicit exit-code files and all exited zero. Durable
 exit receipts alongside logs would avoid repeating completed proofs merely to
 recover authoritative termination evidence.
+
+## Canonicalization can reveal previously hidden lifetime findings
+
+Removing PgliteDataDirCompatibility's local provider wrappers exposed four more
+EV004 sites. Those scopes preserve engine close/reopen and extension cleanup
+before assertions; deleting the extension scope makes the original cleanup test
+fail. A higher-order wrapper can hide real lifetime ownership from syntax-only
+rules. Keep explicit lifetime judgments and behavioral controls when flattening
+such helpers instead of treating an increased detector count as regression alone.

@@ -395,8 +395,8 @@
     "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 13340,
-    "lines": 325
+    "bytes": 13157,
+    "lines": 311
   },
   {
     "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
