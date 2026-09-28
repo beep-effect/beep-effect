@@ -4809,3 +4809,20 @@ fixture; finding IDs, occurrences, statuses, and detector matching are unchanged
 The original excerpts remain available in the parent commit. A future refs
 classifier should distinguish quoted test data in generated inventories from
 actual external references without suppressing real workstation-path leaks.
+
+## Hosted scheduler property failure exposed active-recovery deletion
+
+PR #1312 Property Laws failed the scheduler replacement-restoration case with
+`NotFound: FileSystem.readFile (.../journal.lock)`. The scheduler source and
+test were unchanged from main. One-shot Node/Bun reproductions passed, but
+an event-controlled interleaving reproduced the failure: a follower reaches
+orphan sweeping after the winner moves a replacement into its tombstone and
+before restoration. The sweep deletes the live adopter's tombstone and claim.
+
+The repair checks existing adopter ownership before sweeping recovery sidecars.
+The existing regression now pins that interleaving with Deferred barriers,
+retaining its title and assertions. It fails before the source repair with the
+hosted missing-lock error. The independent control also reproduces a lost
+replacement before repair. Full scheduler tests and package proof are required
+before claiming the repair green. This production repair is covered by the
+operator's standing authorization to fix discovered defects and record them.
