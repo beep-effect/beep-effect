@@ -6,3 +6,6 @@
 Adopt the instrumented Effect test runner and canonical assertions while preserving
 native integration coverage. Isolate Desktop metrics, verify HTTP authentication,
 load PGlite assets under Node, and protect legacy fixture cleanup during readiness.
+
+Expose composer confirmation completion and release its subscriptions on
+interruption, allowing callers to own timer cleanup before registry disposal.

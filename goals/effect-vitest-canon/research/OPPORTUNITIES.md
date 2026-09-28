@@ -4405,3 +4405,14 @@ covering failures before them. A temporary graph-cleanup control initially match
 past a formatter-collapsed acquisition and instrumented the wrong callback; the
 probe was corrected before accepting evidence. Mutation controls should validate
 their insertion location structurally, not just count a text match.
+
+## Detached composer confirmation lacked a cleanup handle
+
+The confirmation helper returned void and released subscriptions only after its
+sleep completed. Tests used a 200 ms sleep instead of observing completion. The
+helper now returns its existing fiber and finalizes subscriptions when interrupted;
+existing callers may still ignore the return. A permanent cancellation regression
+fails with completion-only cleanup (an extra listener remains) and passes with the
+repair. Direct tests own and join the fiber; the real handler-closure test observes
+the unique turn subscription being released before disposing its registry.
+This production repair is covered by the operator's standing repair authorization.

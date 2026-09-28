@@ -297,8 +297,8 @@
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6265,
-    "lines": 153
+    "bytes": 9449,
+    "lines": 218
   },
   {
     "file": "apps/professional-desktop/test/composer-policy.test.ts",

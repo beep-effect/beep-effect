@@ -12,11 +12,13 @@ import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -35,9 +37,9 @@ const content: SafeDocument = Result.getOrThrow(
 );
 
 // The confirm window is real time (a detached fiber outside any registry), so
-// the tests shrink it and wait it out with a real sleep.
+// the tests shrink it and await the owned confirmation fiber.
 const confirmTimeout = Duration.millis(50);
-const settle = Effect.sleep(Duration.millis(200));
+
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 
 const deadClient = ChatClient.of(((tag: string) =>
@@ -77,15 +79,19 @@ describe("dispatchTurnWithConfirm", () => {
         () => 0,
         (_ctx, _value: SafeDocument) => void 0
       );
-      const registry = makeRegistry();
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+        Effect.sync(() => registry.dispose())
+      );
       const revisionBefore = registry.get(draftRevisionAtoms(threadId));
 
-      dispatchTurnWithConfirm(registry, threadId, content, swallowedSubmit, confirmTimeout);
-      yield* settle;
+      const confirmation = yield* Effect.acquireRelease(
+        Effect.sync(() => dispatchTurnWithConfirm(registry, threadId, content, swallowedSubmit, confirmTimeout)),
+        Fiber.interrupt
+      );
+      yield* Fiber.join(confirmation).pipe(Effect.timeout(Duration.millis(200)));
 
       pipe(registry.get(draftAtoms(threadId)), O.isSome, assertTrue);
       expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore + 1);
-      registry.dispose();
     })
   );
 
@@ -102,15 +108,19 @@ describe("dispatchTurnWithConfirm", () => {
           ctx.set(runTurnAtom, SendTurnRequest.make({ threadId, content: value }));
         }
       );
-      const registry = makeRegistry();
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+        Effect.sync(() => registry.dispose())
+      );
       const revisionBefore = registry.get(draftRevisionAtoms(threadId));
 
-      dispatchTurnWithConfirm(registry, threadId, content, synchronousSubmit, confirmTimeout);
-      yield* settle;
+      const confirmation = yield* Effect.acquireRelease(
+        Effect.sync(() => dispatchTurnWithConfirm(registry, threadId, content, synchronousSubmit, confirmTimeout)),
+        Fiber.interrupt
+      );
+      yield* Fiber.join(confirmation).pipe(Effect.timeout(Duration.millis(200)));
 
       assertNone(registry.get(draftAtoms(threadId)));
       expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore);
-      registry.dispose();
     })
   );
 
@@ -123,14 +133,19 @@ describe("dispatchTurnWithConfirm", () => {
         if (tag === "SendMessage") return Stream.never;
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 0,
-        timeoutResolution: 1,
-        initialValues: [
-          [professionalBrowserRuntime.layer, Layer.empty],
-          [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, streamingClient), Reactivity.layer)],
-        ],
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 0,
+            timeoutResolution: 1,
+            initialValues: [
+              [professionalBrowserRuntime.layer, Layer.empty],
+              [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, streamingClient), Reactivity.layer)],
+            ],
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const surfaceAtom = composerSurfaceAtoms(threadId)(content);
       registry.mount(draftAtoms(threadId));
       registry.mount(draftRevisionAtoms(threadId));
@@ -140,14 +155,64 @@ describe("dispatchTurnWithConfirm", () => {
       const send = registry.get(surfaceAtom).onSend;
       const serialized = yield* documentToEditorState(content);
 
+      const released = Promise.withResolvers<void>();
+      const subscribe = registry.subscribe.bind(registry);
+      const subscriptionSpy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(registry, "subscribe").mockImplementation((atom, listener, options) => {
+            const unsubscribe = subscribe(atom, listener, options);
+            return atom === runTurnAtom
+              ? () => {
+                  unsubscribe();
+                  released.resolve();
+                }
+              : unsubscribe;
+          })
+        ),
+        (spy) => Effect.sync(() => spy.mockRestore())
+      );
+      const confirmationReleased = Effect.promise(() => released.promise).pipe(Effect.timeout("3 seconds"));
+
       unmountSurface();
       yield* Effect.sleep(Duration.millis(25));
       expect(send(serialized)).toBe(true);
+      yield* Effect.addFinalizer(() => confirmationReleased.pipe(Effect.orDie));
+      expect(A.filter(subscriptionSpy.mock.calls, ([atom]) => atom === runTurnAtom)).toHaveLength(1);
       yield* waitForTurnStart(registry);
 
       expect(registry.get(turnActiveAtom)).toBe(true);
       assertNone(registry.get(draftAtoms(threadId)));
-      registry.dispose();
+      yield* confirmationReleased;
+    })
+  );
+  it.effect(
+    "releases confirmation subscriptions on interruption without restoring the draft",
+    Effect.fnUntraced(function* () {
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+        Effect.sync(() => registry.dispose())
+      );
+      const submit = Atom.writable(
+        () => 0,
+        (_ctx, _value: SafeDocument) => void 0
+      );
+      yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(submit)),
+        (release) => Effect.sync(release)
+      );
+      const listenersBefore = registry.getNodes().get(runTurnAtom)?.listeners.size;
+      const submitListenersBefore = registry.getNodes().get(submit)?.listeners.size;
+      const revisionBefore = registry.get(draftRevisionAtoms(threadId));
+      const confirmation = yield* Effect.acquireRelease(
+        Effect.sync(() => dispatchTurnWithConfirm(registry, threadId, content, submit, "1 minute")),
+        Fiber.interrupt
+      );
+      expect(registry.getNodes().get(runTurnAtom)?.listeners.size).toBe((listenersBefore ?? 0) + 1);
+      expect(registry.getNodes().get(submit)?.listeners.size).toBe((submitListenersBefore ?? 0) + 1);
+      yield* Fiber.interrupt(confirmation);
+      expect(registry.getNodes().get(runTurnAtom)?.listeners.size).toBe(listenersBefore);
+      expect(registry.getNodes().get(submit)?.listeners.size).toBe(submitListenersBefore);
+      assertNone(registry.get(draftAtoms(threadId)));
+      expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore);
     })
   );
 });
