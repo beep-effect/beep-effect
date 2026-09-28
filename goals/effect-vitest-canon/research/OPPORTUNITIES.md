@@ -5368,3 +5368,24 @@ six-case public-API control passes on Node and Bun, while removing those nested
 layers fails all four identity checks on both runtimes. This is evidence for
 the fixture design, not yet proof of the actual scheduler suite. Keep the
 judgment rows pending until the migrated suite and its clock witnesses pass.
+
+
+### Clock audits must follow journal helpers and include setTime
+
+The first applied scheduler draft collected no tests because layer-bound test
+methods do not expose it.live. The corrected public it.effect registrations
+retain native time with TestClock.withLive. A subsequent diagnostic run was
+stopped after identifying unadvanced retry sleeps in appendAdmissionJournalEvent
+through withJournalFileLock/pauseBeforeLockRetry. The initial clock audit had
+missed transitive journal, recovery and CLI callers; those previously live
+operations now explicitly retain live time. Neither diagnostic run is timing
+or success evidence.
+
+The actual-suite parent-clock witness then failed at 1000 ms despite all 133
+original tests passing. A fifth case used TestClock.setTime without adjust and
+was omitted from the first isolation audit. It now owns a separate clock;
+135/135 cases including the two witnesses pass on both Node and Bun. EV015
+currently detects adjust only. Review extending the judgment detector to
+setTime and other clock mutations, with corresponding syntax tests and an
+explicit inventory update. Do not infer clock isolation from passing business
+assertions or from the absence of adjust findings.
