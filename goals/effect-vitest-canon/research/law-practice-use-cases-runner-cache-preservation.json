@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/law-practice-use-cases#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "37fcd08a0bcbe34343bfa0b7a2c0811ab3d88cf8d0f524efcc90a766d54d36fc"
+}

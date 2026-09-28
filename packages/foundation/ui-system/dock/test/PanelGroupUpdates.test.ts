@@ -22,7 +22,9 @@ import {
   UpdatePanelCommand,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -121,7 +123,7 @@ describe("panel and group updates", () => {
         const restored = yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(changed.state));
         const panel = O.getOrThrow(DockWorkspace.findPanel(restored, panelOne.id));
         expect(panel.renderMode).toBe("always");
-        expect(panel.tabComponent).toEqual(O.some(RendererKey.make("custom-tab")));
+        assertSome(panel.tabComponent, RendererKey.make("custom-tab"));
       })
     );
 
@@ -149,16 +151,14 @@ describe("panel and group updates", () => {
             constraints: O.some(constraints),
           },
         ]);
-        expect(O.getOrThrow(DockWorkspace.findPanel(constrained.state, panelOne.id)).constraints).toEqual(
-          O.some(constraints)
-        );
+        assertSome(O.getOrThrow(DockWorkspace.findPanel(constrained.state, panelOne.id)).constraints, constraints);
         const cleared = yield* requireChanged(
           yield* engine.transition(
             constrained.state,
             updatePanel("clear-constraints", panelOne.id, PanelPatch.make({ constraints: O.some(O.none()) }))
           )
         );
-        expect(O.getOrThrow(DockWorkspace.findPanel(cleared.state, panelOne.id)).constraints).toEqual(O.none());
+        assertNone(O.getOrThrow(DockWorkspace.findPanel(cleared.state, panelOne.id)).constraints);
       })
     );
 
@@ -169,7 +169,7 @@ describe("panel and group updates", () => {
         const restored = yield* engine.decodeSnapshot(preM1Snapshot);
         const panel = O.getOrThrow(DockWorkspace.findPanel(restored, PanelId.make("pre-m1-panel")));
         expect(panel.title).toBe("Legacy");
-        expect(panel.constraints).toEqual(O.none());
+        assertNone(panel.constraints);
       })
     );
 

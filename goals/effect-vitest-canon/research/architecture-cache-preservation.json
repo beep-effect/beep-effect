@@ -1,0 +1,226 @@
+{
+  "reviewedNodes": 84,
+  "changedDependencyLists": 54,
+  "edges": [
+    {
+      "computation": "@beep/architecture-lab-client#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-client#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#audit",
+      "addedDependency": "@beep/test-runner#audit, @beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#build",
+      "addedDependency": "@beep/test-runner#build, @beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#check",
+      "addedDependency": "@beep/test-runner#build, @beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#coverage",
+      "addedDependency": "@beep/test-runner#build, @beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit, @beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit, @beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#test",
+      "addedDependency": "@beep/test-runner#transit, @beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#test:integration",
+      "addedDependency": "@beep/test-runner#build, @beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#test:property",
+      "addedDependency": "@beep/test-runner#transit, @beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#test:integration:parallel",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-server#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "ba2943737afa046afeea67eca7e00ae6c5966bd1913a83a3bca4e014e59cde8f"
+}

@@ -80,3 +80,15 @@ Evidence: [timing index](../timings/baseline-index.json), [failed timing attempt
 Exact historical coverage paths and generated-output names are preserved in the
 [reference evidence receipt](../../../history/2026-09-21-p1-reference-evidence/README.md).
 They identify captured observations, not current tracked source files.
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The original inventory above is historical. All saved findings for this package
+are fixed, with commit-specific evidence in
+history/2026-09-27-law-epistemic-reconciliation.md. Native properties retain
+original domains, comparator laws, run floors and total deadlines. Node/Bun
+tests and complete package audit/docgen pass. Property checks pass with
+400 runs and seed 20260708; negative controls restore exact source bytes.
+Timing receipts include workstation load and do not establish causal speedup.
+The consolidated goal and final full-head PR proof remain in progress.

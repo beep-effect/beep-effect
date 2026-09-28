@@ -1,0 +1,46 @@
+{
+  "package": "@beep/architecture-lab-ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:43:15.055000+00:00",
+  "totalMs": 3667.373779296875,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "ms": 12.373779296875,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model derives status labels from the canonical status value",
+      "ms": 11.053887999999915
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model exposes archive as terminal",
+      "ms": 10.862914000000274
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model keeps encoded summary wire shape byte-identical",
+      "ms": 10.847409999999854
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model defaults absent assignee labels without changing encoded absence",
+      "ms": 10.838466999999582
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model round-trips touched schemas with schema-derived arbitraries",
+      "ms": 10.830895000000055
+    },
+    {
+      "file": "packages/architecture-lab/ui/test/WorkItemViewModel.test.ts",
+      "testName": "WorkItem UI view model emits schema-accepted summaries for generated WorkItems",
+      "ms": 1.3736659999999574
+    }
+  ]
+}

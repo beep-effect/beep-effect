@@ -8,6 +8,7 @@ import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/Candidat
 import { fromEdgeVersionRow, toEdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion";
 import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -15,7 +16,8 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { getTableName } from "drizzle-orm";
 import { Effect, Layer, Order, pipe } from "effect";
@@ -112,7 +114,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin epistemic-edge migration PgLite integration", () => {});
 } else {
   describe("db-admin epistemic-edge migration PgLite integration", { concurrent: false }, () => {
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the epistemic-edge migration target SQL",
         Effect.fnUntraced(function* () {
@@ -193,12 +195,12 @@ if (!shouldRunPgliteIntegration) {
           expect(head.version).toEqual(1);
           expect(head.sourceKind).toEqual("claim");
           expect(head.targetKind).toEqual("evidence");
-          expect(head.sourceClaimId).toEqual(O.some(1));
-          expect(head.targetEvidenceId).toEqual(O.some(1));
+          assertSome<number>(head.sourceClaimId, 1);
+          assertSome<number>(head.targetEvidenceId, 1);
           expect(DateTime.toEpochMillis(head.validFrom)).toEqual(1_000);
           // Open head on both axes: the fact is still true and still current.
-          expect(O.isNone(head.validTo)).toBe(true);
-          expect(O.isNone(head.expiredAt)).toBe(true);
+          assertNone(head.validTo);
+          assertNone(head.expiredAt);
 
           const secondHead = yield* decodeEdgeVersion(edgeVersionFixture(2, 2_000));
           const secondInsert = yield* Effect.fromResult(toEdgeVersionInsert(secondHead));

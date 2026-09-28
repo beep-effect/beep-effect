@@ -1,0 +1,96 @@
+{
+  "package": "@beep/documents-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T22:59:16.752000+00:00",
+  "totalMs": 3981.452392578125,
+  "testCount": 27,
+  "files": [
+    {
+      "file": "packages/documents/domain/test/EntityMaterialization.test.ts",
+      "ms": 4.52294921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "ms": 19.1015625,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/domain/test/SyncCursor.test.ts",
+      "ms": 15.617431640625,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/domain/test/SyncItem.test.ts",
+      "ms": 16.452392578125,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "ms": 16.82958984375,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 1.010009765625,
+      "tests": 1
+    },
+    {
+      "file": "packages/documents/domain/test/Taxonomy.test.ts",
+      "ms": 10.417236328125,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "testName": "SyncConflict entity wires SyncConflict to the documents identity",
+      "ms": 18.293228
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "testName": "SyncConflict entity decodes and encodes a locally mapped drift row",
+      "ms": 18.101632999999765
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "testName": "SyncConflict entity decodes drift for remote items unknown locally as none",
+      "ms": 18.08703000000014
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "testName": "SyncConflict entity exposes the conflict literal families",
+      "ms": 18.077746999999817
+    },
+    {
+      "file": "packages/documents/domain/test/SyncConflict.test.ts",
+      "testName": "SyncConflict entity round-trips schema-derived sync conflict values",
+      "ms": 18.061341000000084
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "testName": "SyncOperation entity wires SyncOperation to the documents identity",
+      "ms": 16.829503999999815
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "testName": "SyncOperation entity decodes and encodes a full upload outbox row",
+      "ms": 16.66697400000021
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "testName": "SyncOperation entity decodes folder creation rows targeting the mirror root",
+      "ms": 16.65192100000013
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "testName": "SyncOperation entity exposes the operation literal families",
+      "ms": 16.64318699999967
+    },
+    {
+      "file": "packages/documents/domain/test/SyncOperation.test.ts",
+      "testName": "SyncOperation entity round-trips schema-derived sync operation values",
+      "ms": 16.623457000000144
+    }
+  ]
+}

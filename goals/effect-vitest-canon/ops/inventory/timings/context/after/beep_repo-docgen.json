@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/repo-docgen",
+  "sourceHead": "4b3b7f88f24ffb9d47c07e02392353e632e61ba6",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 6.974027682997985,
+  "bunWholeCommandSeconds": 3.4196585749887163,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.47705078125, 6.74755859375, 6.072265625],
+  "loadAfter": [7.51904296875, 6.7685546875, 6.0830078125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.37 avg60=0.31 avg300=0.22 total=686869418\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.10 avg60=0.09 avg300=0.02 total=181767002\nfull avg10=0.03 avg60=0.03 avg300=0.00 total=173789037\n",
+    "io": "some avg10=0.18 avg60=0.12 avg300=0.03 total=788045584\nfull avg10=0.07 avg60=0.04 avg300=0.00 total=689743277\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.70 avg60=0.37 avg300=0.23 total=686961479\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.04 avg60=0.08 avg300=0.01 total=181767013\nfull avg10=0.01 avg60=0.02 avg300=0.00 total=173789048\n",
+    "io": "some avg10=0.08 avg60=0.10 avg300=0.02 total=788048846\nfull avg10=0.03 avg60=0.04 avg300=0.00 total=689746461\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "d43b826dadc7af378c8388321540864fc57094415be6abd7c54d65962c62e81d"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/package.json",
+      "sha256": "8e854619a6128b194bf5b05196b3a104f047e25bd77369216239b0643605cbd1"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/CLI.ts",
+      "sha256": "bcfec29d43be28366fce1f7e86408c066aa23a22919202952315b628d7628a3b"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Checker.ts",
+      "sha256": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+      "sha256": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Core.ts",
+      "sha256": "dd82e62d97d1873157a4f266c6121a842f9d34539aec72f8f19e87fbc6f4df1d"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Domain.ts",
+      "sha256": "5159a8e1c88ed3139a63ef647855edb70fcfb6cd0054de4aa3dafe48fbffc243"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Parser.ts",
+      "sha256": "8076a7d7cc2d24f6c7df3c534f2b87f12ed2f2bfafbe01c71690c0c4ea7f81d1"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Printer.ts",
+      "sha256": "265c7376b077474c5e18680f444cf32fb5e2959adb7168ce5657728962f7dcc3"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+      "sha256": "08ba428406df312d4f7992b470c8bed56a3660b90e536469d277cd69086e9b8b"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/Version.ts",
+      "sha256": "72b8351a3b7057a59ba0740bcc533f52351fd8565726051b85f0af61791cb82d"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/bin.ts",
+      "sha256": "305fb645356b58122d401b2da5f1685a142c8aab8ee3c109ec4b8cc2c416fe71"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/index.ts",
+      "sha256": "eb7af5b59975dd76a8a806e2ddbdd5e9135c01b8ef731e891c5b447f14103604"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/internal/JsonFile.ts",
+      "sha256": "1ad841672a5b61cf685c842155efccf9ee99fb93a44af25bace023ef28ac6ace"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/src/markdown-toc.d.ts",
+      "sha256": "a6426367fcbc67e3bd0ac78e0db4bc4dbd4cfc83dd3ed774c46c74a3ae572dbc"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "sha256": "d45ce9c56137958629c72b0289c8ac6381226f5a3b2bd89d695bd996f1608f05"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
+      "sha256": "6b6220cd472c6feac0b996bfa96cc6f474683ad0f38b86a4437b1ecc942929df"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Core.test.ts",
+      "sha256": "5ca703acaafb47097024102e89b91021b86f2aa5e19ba7b9a979f07b37389696"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Domain.equivalence.test.ts",
+      "sha256": "a44ed61d8225d8fb4967e5d6196f1336604a8282ddc88b436dc1680e76b69260"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
+      "sha256": "45ea2cc57b091eaf8066048fe555e3bc9d5de798189675bfcf0a8ee4989c276a"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/ProofManifest.test.ts",
+      "sha256": "d922cda7708d94acb82b998a7d6bea40343f0bb83b26a87a034ec950428235f0"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/SchemaParity.test.ts",
+      "sha256": "f478dc1ff82308d635121a5ae18c2ba8303a1838387588e0ea3eb50eb38ac1ba"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/fixtures/section-example/src/index.ts",
+      "sha256": "51108c65ac74a155ae17c1b1102765a571682f9203c835a97cc5fe9aeb6b91c6"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/helpers.ts",
+      "sha256": "3d1d40b06a4c89123b53a29ffa7d8313168b7c3e7be5d76edbdcbf93b0f33923"
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/version.test.ts",
+      "sha256": "4e6f1355e5fba48cf0b1300670d1b795da1af40c6a3b0e8f7012231f001ba98f"
+    }
+  ],
+  "environmentMode": "Native docgen and compiler child execution against the retained section-example fixture, plus pure parser and schema tests; no live provider or credentials.",
+  "bunProof": {
+    "passedTests": 107,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [7.51904296875, 6.7685546875, 6.0830078125],
+    "loadAfter": [7.7978515625, 6.8388671875, 6.10986328125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.70 avg60=0.37 avg300=0.23 total=686961490\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.04 avg60=0.08 avg300=0.01 total=181767013\nfull avg10=0.01 avg60=0.02 avg300=0.00 total=173789048\n",
+      "io": "some avg10=0.08 avg60=0.10 avg300=0.02 total=788048940\nfull avg10=0.03 avg60=0.04 avg300=0.00 total=689746461\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.58 avg60=0.36 avg300=0.23 total=686980166\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.03 avg60=0.07 avg300=0.01 total=181767027\nfull avg10=0.01 avg60=0.02 avg300=0.00 total=173789062\n",
+      "io": "some avg10=0.06 avg60=0.10 avg300=0.02 total=788049282\nfull avg10=0.02 avg60=0.04 avg300=0.00 total=689746715\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

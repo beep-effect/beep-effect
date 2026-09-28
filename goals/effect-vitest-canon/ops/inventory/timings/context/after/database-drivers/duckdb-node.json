@@ -1,0 +1,122 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/database-drivers-duckdb-final-runner-node.json"
+  ],
+  "phase": "final-runner",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "9398507218247637e39d2ec50b51269a9c565a60784c77d108651901f0b5cbb6"
+    },
+    {
+      "file": "packages/drivers/duckdb/package.json",
+      "sha256": "a7e2d917186d136188fb6d6fa53268d72551d95b81bd1b0b6a3eda0b651934af"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
+      "sha256": "fbc50836c93bcb9a9a48938b67f2ee454f5314fa64b5b64f9022e149b8d555c3"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.models.ts",
+      "sha256": "0d1d8f4db98b4ea10737e2ec1f40d51a132862d5bcf0d373a2bda45678f79dde"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbNative.ts",
+      "sha256": "6efac35bc12ceda98b11901ab5c5df4f0effcd7f515aa492be9cb44116093686"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+      "sha256": "b90c68100a30d3771bcb4b6720e944943a0107482a421eba653e6b71c8cbb263"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/index.ts",
+      "sha256": "0df783aa92f5a1d81e946a9f3b836619bf0ea584e0f5bb315d43e9e8991f27aa"
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",
+      "sha256": "9866216ce93d727d29f583a4b5c909fe7d7bc53a9ab1ca43303a7d2b095b0844"
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "sha256": "69c091b53c5f3457826cf1e1e39e8bfc4c49b815225bab47e8d0f841fec87cf5"
+    }
+  ],
+  "loadBefore": [11.75439453125, 9.57861328125, 8.30224609375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.01 avg60=0.19 avg300=0.20 total=53118557\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=58366270\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=57221423\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=650020042\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=596598376\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "BEEP_TEST_DATABASE_URL empty; BEEP_TEST_DATABASE_DRIVER=pglite-inprocess; no external database or container selected",
+  "hostTimeoutSeconds": 180,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 4.922772962003364,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "9398507218247637e39d2ec50b51269a9c565a60784c77d108651901f0b5cbb6"
+    },
+    {
+      "file": "packages/drivers/duckdb/package.json",
+      "sha256": "a7e2d917186d136188fb6d6fa53268d72551d95b81bd1b0b6a3eda0b651934af"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
+      "sha256": "fbc50836c93bcb9a9a48938b67f2ee454f5314fa64b5b64f9022e149b8d555c3"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.models.ts",
+      "sha256": "0d1d8f4db98b4ea10737e2ec1f40d51a132862d5bcf0d373a2bda45678f79dde"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
+      "sha256": "678ef629f5faee38272d1aa33d63c0465c856dc2364ebda3d63acd1deeb50fb0"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbNative.ts",
+      "sha256": "6efac35bc12ceda98b11901ab5c5df4f0effcd7f515aa492be9cb44116093686"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+      "sha256": "b90c68100a30d3771bcb4b6720e944943a0107482a421eba653e6b71c8cbb263"
+    },
+    {
+      "file": "packages/drivers/duckdb/src/index.ts",
+      "sha256": "0df783aa92f5a1d81e946a9f3b836619bf0ea584e0f5bb315d43e9e8991f27aa"
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",
+      "sha256": "9866216ce93d727d29f583a4b5c909fe7d7bc53a9ab1ca43303a7d2b095b0844"
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "sha256": "69c091b53c5f3457826cf1e1e39e8bfc4c49b815225bab47e8d0f841fec87cf5"
+    }
+  ],
+  "loadAfter": [11.21337890625, 9.50244140625, 8.2841796875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.01 avg60=0.18 avg300=0.20 total=53126442\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=58366271\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=57221423\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=650021640\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=596599459\n"
+  },
+  "sourceStable": true,
+  "traceEnvironment": "BEEP_FC_NUM_RUNS and BEEP_FC_SEED unset; ordinary configured whole-package run"
+}

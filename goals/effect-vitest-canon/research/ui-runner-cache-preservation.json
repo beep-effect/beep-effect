@@ -1,0 +1,46 @@
+{
+  "reviewedNodes": 14,
+  "changedDependencyLists": 9,
+  "edges": [
+    {
+      "computation": "@beep/ui#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/ui#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ui#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ui#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/ui#doctest",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ui#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ui#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ui#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/ui#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "85b62a991c83c2c5dfda7b06c6d39fb0fd463e4a4a65544a3d5c5bc2b5f42b55"
+}

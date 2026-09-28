@@ -5,12 +5,12 @@
     "title": "Agent Pool Doctrine",
     "status": "active",
     "created": "2026-09-16",
-    "updated": "2026-09-16",
+    "updated": "2026-09-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-pool-doctrine",
   "lifecycle": "active",
-  "mission": "Make the volume-pool order (Codex Astra above 5%, then the Cursor agent, then hold) binding in AGENTS.md and a runbook, and make the Cursor lane a measurable, structurally guarded pool.",
+  "mission": "Make the volume-pool order (Opus 5.5 for every sub-agent, then the Cursor agent when authorized, then hold; Codex opt-in only since 2026-09-24) binding in AGENTS.md and a runbook, and make the Cursor lane a measurable, structurally guarded pool.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

@@ -1,5 +1,6 @@
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("WorkPriority value object", () => {
   it("ranks reusable WorkItem priorities", () => {

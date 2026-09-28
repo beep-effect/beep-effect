@@ -7,9 +7,11 @@ import {
   BoxFolderName,
   boxFolderNamesEquivalent,
 } from "@beep/box-provisioning/BoxProvisioningIntent";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -17,25 +19,20 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { desiredFixture } from "./fixtures.ts";
 
+const encodeBoxAdoption = S.encodeEffect(BoxAdoption);
+const decodeBoxAdoption = S.decodeEffect(BoxAdoption);
+const equivalentBoxAdoption = S.toEquivalence(BoxAdoption);
+const encodeBoxAdoptions = S.encodeEffect(BoxAdoptions);
+const decodeBoxAdoptions = S.decodeEffect(BoxAdoptions);
+const equivalentBoxAdoptions = S.toEquivalence(BoxAdoptions);
+const encodeBoxEntitlements = S.encodeEffect(BoxEntitlements);
+const decodeBoxEntitlements = S.decodeEffect(BoxEntitlements);
+const equivalentBoxEntitlements = S.toEquivalence(BoxEntitlements);
+
 const decodeBoxDesiredState2 = S.decodeEffect(BoxDesiredState);
 const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
 const decodeBoxFolderNameOption = S.decodeOption(BoxFolderName);
 const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
-
-const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>) => {
-  const equivalent = S.toEquivalence(schema);
-  const encode = S.encodeEffect(schema);
-  const decode = S.decodeEffect(schema);
-  return Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      encode(value).pipe(
-        Effect.flatMap(decode),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(5)
-  ).pipe(Effect.tap((result) => Effect.sync(() => expect(result).toMatchObject({ _tag: "Passed" }))));
-};
 
 describe("@beep/box-provisioning intent", () => {
   it("rejects folder names forbidden by Box and accepts the documented bounds", () => {
@@ -50,14 +47,17 @@ describe("@beep/box-provisioning intent", () => {
       Str.repeat(256)("x"),
     ];
 
-    expect(A.every(invalidNames, (name) => O.isNone(decodeBoxFolderNameOption(name)))).toBe(true);
-    expect(O.isSome(decodeBoxFolderNameOption(" Leading"))).toBe(true);
-    expect(O.isSome(decodeBoxFolderNameOption(Str.repeat(255)("x")))).toBe(true);
+    pipe(
+      A.every(invalidNames, (name) => O.isNone(decodeBoxFolderNameOption(name))),
+      assertTrue
+    );
+    pipe(decodeBoxFolderNameOption(" Leading"), O.isSome, assertTrue);
+    pipe(decodeBoxFolderNameOption(Str.repeat(255)("x")), O.isSome, assertTrue);
   });
 
   it("compares sibling names case-insensitively after trimming trailing whitespace", () => {
-    expect(boxFolderNamesEquivalent("Workspace", "workspace ")).toBe(true);
-    expect(boxFolderNamesEquivalent("Workspace", "Other")).toBe(false);
+    pipe(boxFolderNamesEquivalent("Workspace", "workspace "), assertTrue);
+    pipe(boxFolderNamesEquivalent("Workspace", "Other"), assertFalse);
   });
 
   it.effect(
@@ -68,7 +68,7 @@ describe("@beep/box-provisioning intent", () => {
       const first = O.getOrThrow(A.head(folders));
       const duplicate = { ...first, logicalKey: "folder.case-duplicate", name: "fixture WORKSPACE" };
 
-      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicate] }))).toBe(true);
+      assertNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicate] }));
     })
   );
   it.effect(
@@ -77,7 +77,7 @@ describe("@beep/box-provisioning intent", () => {
       const { adoptions: _adoptions, ...withoutAdoptions } = yield* encodeBoxDesiredState(desiredFixture);
       const decoded = yield* decodeBoxDesiredState2(withoutAdoptions);
 
-      expect(A.isReadonlyArrayEmpty(decoded.adoptions.entries)).toBe(true);
+      pipe(A.isReadonlyArrayEmpty(decoded.adoptions.entries), assertTrue);
     })
   );
   it.effect(
@@ -88,16 +88,35 @@ describe("@beep/box-provisioning intent", () => {
       const decoded = yield* Effect.option(decodeBoxDesiredState(malformed));
       const error = yield* decodeBoxDesiredState(malformed).pipe(Effect.flip);
 
-      expect(O.isNone(decoded)).toBe(true);
+      assertNone(decoded);
       expect(error._tag).toBe("BoxProvisioningSchemaError");
     })
   );
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived adoption and entitlement values",
-    Effect.fnUntraced(function* () {
-      yield* assertCodecRoundTrip(BoxAdoption);
-      yield* assertCodecRoundTrip(BoxAdoptions);
-      yield* assertCodecRoundTrip(BoxEntitlements);
-    })
+    { value: Arbitrary.schema(BoxAdoption) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxAdoption(value).pipe(Effect.flatMap(decodeBoxAdoption));
+      pipe(equivalentBoxAdoption(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxAdoptions",
+    { value: Arbitrary.schema(BoxAdoptions) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxAdoptions(value).pipe(Effect.flatMap(decodeBoxAdoptions));
+      pipe(equivalentBoxAdoptions(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived BoxEntitlements",
+    { value: Arbitrary.schema(BoxEntitlements) },
+    Effect.fnUntraced(function* ({ value }) {
+      const decoded = yield* encodeBoxEntitlements(value).pipe(Effect.flatMap(decodeBoxEntitlements));
+      pipe(equivalentBoxEntitlements(decoded, value), assertTrue);
+    }),
+    { arbitrary: fcRuns(5) }
   );
 });

@@ -1,0 +1,71 @@
+{
+  "package": "@beep/m365-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:00:41.942000+00:00",
+  "totalMs": 3858.201416015625,
+  "testCount": 20,
+  "files": [
+    {
+      "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+      "ms": 3.844970703125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "ms": 84.201416015625,
+      "tests": 19
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over newline-delimited stdio sends server/discover then tools/call over stdio",
+      "ms": 71.40844100000004
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server serves server/discover, tools/list and tools/call over stdio with 2026-07-28 framing",
+      "ms": 67.62881800000014
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over newline-delimited stdio emits one compact JSON-RPC message per line and processes requests independently",
+      "ms": 61.883820000000014
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+      "ms": 34.47672499999999
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+      "ms": 33.78616099999999
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server keeps encoded schema wire shapes byte-identical",
+      "ms": 22.402646000000004
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server round-trips schema-derived MCP schemas through their encoded shape",
+      "ms": 22.21556899999996
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server exposes the supported read-only Microsoft 365 tools",
+      "ms": 22.195486999999957
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over streamable HTTP calls a tool and returns a non-error result",
+      "ms": 15.20149500000025
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-m365-test over streamable HTTP projects invalid arguments as a tool error and malformed arguments as InvalidParams",
+      "ms": 12.468035000000327
+    }
+  ]
+}

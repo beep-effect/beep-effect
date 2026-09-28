@@ -1,0 +1,331 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-domain",
+  "sourceHead": "4d265ce94ae9e1e61c02e3411cd936caa65042d3",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.624396215993329,
+  "bunWholeCommandSeconds": 2.568027027999051,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [9.48486328125, 5.05078125, 4.72119140625],
+  "loadAfter": [9.6064453125, 5.14990234375, 4.75537109375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.51 avg60=0.31 avg300=0.16 total=679818278\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=177632347\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=169780354\n",
+    "io": "some avg10=0.74 avg60=0.78 avg300=0.22 total=785577911\nfull avg10=0.72 avg60=0.75 avg300=0.20 total=687868773\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.28 avg60=0.28 avg300=0.16 total=679972610\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=177642916\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=169790338\n",
+    "io": "some avg10=0.40 avg60=0.70 avg300=0.21 total=785583860\nfull avg10=0.39 avg60=0.68 avg300=0.20 total=687870603\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "7271c9c0f22e428ad564e4126171e08886b495dcfdcadcaa1ce2273ee8b3d249"
+    },
+    {
+      "file": "packages/epistemic/domain/package.json",
+      "sha256": "6b37eb1ebd5e8c193633a057aab53defa2f1103ae91eb0c24f548db3c4d2f040"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Activity/Activity.model.ts",
+      "sha256": "3926e629398d571033187682df758b6fade451bf6123cdc7dfc14b09a8bb8fc5"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Activity/index.ts",
+      "sha256": "1010eb701cf4102dfaed0975899b5dc28d624d663f9d11b922092528f3ba490b"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/CandidateClaim/CandidateClaim.model.ts",
+      "sha256": "89e56a2d3a5137fca97417c6c8ab96914f1e2e51a0ef973ec2495094b26a0ae9"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/CandidateClaim/index.ts",
+      "sha256": "39526b5b72ad19814b0fbdf5b3f31a394ba05245e7474e410fc5021d634669c7"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/ClaimDisposition/ClaimDisposition.model.ts",
+      "sha256": "9355a4271c3ef2f34abbb02ad67fefe9136b3c5e6a97a2b910edbaca8b85cbeb"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/ClaimDisposition/index.ts",
+      "sha256": "4a4af2e9d426dba00afc8117628c69d80cc157a193154823265c8a2dbc69a7de"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.behavior.ts",
+      "sha256": "a213a4f069f58a24ba6112366d7e42fca41600e3419f997b2757f44ad87cb483"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
+      "sha256": "d733f44cb52cf9e450425e8c69f4bc55ae05834aa885dfc7a15d5d7488c8971e"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Contradiction/index.ts",
+      "sha256": "c27869d2a7ec7741d8ff7c9c1c0eca7a41fa10580cd7dfaac0b619c20fc9795b"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "sha256": "c17ebd2d3c182f3a7f3e8238b3d056416877d519bc05e1ad6a4388308f28927c"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts",
+      "sha256": "fd8ca70b577a2e9c654e15646ee3f963db4ad222808d90d6ddd5d02626f98b8d"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/index.ts",
+      "sha256": "9ec02764cc818512f4af826ac212ce78e61648ae11f0e7efeec0af36ae13eb75"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Evidence/Evidence.model.ts",
+      "sha256": "9312ed9ec55791aed32b2e1519077cf9e8675a33c29b6ce7638eaafb0a63507f"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/Evidence/index.ts",
+      "sha256": "1bb80cca7299b5783465c78949793f66865c56c7760f77f5785553f3c38726a9"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.behavior.ts",
+      "sha256": "087f03e3323cbe576e43ddd1dbae589298ff78b06db54c1c47e876aef88064be"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.model.ts",
+      "sha256": "7e88c4d5c7b68af61f05610cc9c041134c38de50c73049d0148f70a56d5081b0"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EvidenceVerification/index.ts",
+      "sha256": "48e3200643563c725493a0de019ed94fe6200492c6cfdfeadff32c83c30c348f"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
+      "sha256": "3ee9e5f21d657e137a346c1e1469be0fd05e385958e28a47c3ce8dd12e5d0886"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/UsageRecord/index.ts",
+      "sha256": "05b8aed740b4270257876e52b85f3ac49583892504d94be1e62a509075727775"
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/index.ts",
+      "sha256": "9d52800e10efcfa433a836672bd94be73887b64a9a59c81918d226a62baa25fa"
+    },
+    {
+      "file": "packages/epistemic/domain/src/index.ts",
+      "sha256": "e401e7b8693f58091bbbb9b9a9f5095f133ea66eb3fd28c26fddf3e406f72ebe"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimDispositionStatus/ClaimDispositionStatus.model.ts",
+      "sha256": "04eb899284d70cd9c9c61780b6b334ebeca9e9bd538ed923c97506a48654d567"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts",
+      "sha256": "62beb8282f8964ccc75467dafaca50a31f17ce4f9dbfeca682e0ad85faf0775f"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.behavior.ts",
+      "sha256": "5bf671094f5bd0e5b880bda125c26f819f1818d264ffce1bc91dbf7f3bcd3b72"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.model.ts",
+      "sha256": "bf4f34b95dada3d222baf30729600e8ac1c18c4b70a0713ad4d38db2caf4e235"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimEvidenceReview/index.ts",
+      "sha256": "bf46e685df3815a021a807dcd6ae51003cdd724e8a67fb5e4bbbdfc743e799a2"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimGate/ClaimGateResult.model.ts",
+      "sha256": "31c506febc7a7f4fe19ac21147779a4e95b862ab981ca9e363743481cfa402a5"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimGate/index.ts",
+      "sha256": "e2000057af0e5d0bd8626f77a236eb8df2c1c47aba72e2e2066894e91d194c0a"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimLifecycle/ClaimLifecycle.errors.ts",
+      "sha256": "38f54d67d7c72df6d52ff79fc5998fd064c17f4f185b15393f07d712bd9d96de"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts",
+      "sha256": "85ed9bc01bf9882a6ffa3b9590e3af41faada2418548488ebf0c0c6d24765078"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimLifecycle/index.ts",
+      "sha256": "3e25be5a564c29caa9a327f8bed9d75cd7d4ae2a5d4c16e045d63fe15b4cdee2"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimProjection/ClaimProjectionView.model.ts",
+      "sha256": "ab85f477220b38e10f765d067fb4ab81ca94d31440b65a7550e78e0117ce2078"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ClaimProjection/index.ts",
+      "sha256": "ae4776473645ce3b6c581ab3ddac7d438fa8d24d062f27a452baa20ac3c70029"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "sha256": "6b12889b7ee05c43ce98ed64814c2d8b354202f96bdb74202944977b51144128"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/Contradiction/index.ts",
+      "sha256": "b245e0cda519599376e18f275f48be348c41f803dea84b4371306ed3731c7f16"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts",
+      "sha256": "d81e9631557fc35de7aa66bd9b4c3f0c8f3e97fc6bdf19cd306b664a2bbe9f0c"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeEndpoint/index.ts",
+      "sha256": "a6a239eb36e0a051951c6d871bdee3df9b76afcbfeac6390942297d538c1d5ee"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeRelation/EdgeRelation.model.ts",
+      "sha256": "57eb7a8e12c8c8d6de9356e5aa3b20b68da0b06b7cdd361dd7fa23ce9f44f6be"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EdgeRelation/index.ts",
+      "sha256": "fdd68f68632db55265ada37e49edec7d90d5e2d08e43dd042917a5e6e3ad0eb3"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EpistemicFixtureKey/EpistemicFixtureKey.model.ts",
+      "sha256": "23c625e609d9ace993dcdd94a2b6607ca36be231bad6871ff2649d31171adc36"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts",
+      "sha256": "52051c2d119f0a90b4af6277bd25282de5b235de80b986d7e1aace3d43ab2b55"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
+      "sha256": "56ec2f3ad8631ee23c5372f8f0465c616fa19bb025f83ba2bfcd534c1fe01081"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EvidenceSpan/index.ts",
+      "sha256": "c536a02ca8fb6c761dc465e157fe1ec9e2c8b0ee9310aabb8d9436a2b44554e4"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EvidenceVerification/EvidenceVerification.model.ts",
+      "sha256": "09b605a3c0ad84366e11d7310c0c0a600636b16e096364bfa2a37a60fc8f3fef"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/EvidenceVerification/index.ts",
+      "sha256": "66187546982fe3fc51e6d2c7991f6407faf3bee8dd66ac5587a78434411957ad"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts",
+      "sha256": "bd68ad439bbae41f0360fadaf68566a4768187d13c3a3d15f34b24098ef2fbc8"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionGrant/index.ts",
+      "sha256": "0f627228503b5db7ba0e192bbecdc8a99b281f795bfe106ae2593fa465221a00"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "sha256": "5be3f0db60cc0605f5a07a44ebc7f01ee071f46ea36bc5760f3acb4148ed0d1a"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/index.ts",
+      "sha256": "3dc5b90955d12d6270721f2f2df8de6a66d46257f48b67c12052ad802ca6ab1d"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts",
+      "sha256": "3c7fb5576b8a33755e5bb31d1c3c609435c2fcaf2e1c3d5024e4674a9cbd5c56"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionVerdict/index.ts",
+      "sha256": "674dad3d15c3621bc2258a3d4ec3dc83d0ba0fa8c53c660219d21423e3b163cf"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.errors.ts",
+      "sha256": "672d745230f1ffde951c959f2eb3f074a6e6a0892e13acf6c1dda930caf100fa"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "sha256": "13fa4d565a9e44f7364590a9fa8a75c1569e27c38a6a3a599b2ee3dc86dc5c74"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/index.ts",
+      "sha256": "032936a43e300510282c9f3ae01971c78a4b56a0756cc7206ff61927fd1a6bca"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts",
+      "sha256": "41055c571a32bbd1d864fdbb5b9d2dd18bb95aefc6b8753fc888df5ed02ba308"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts",
+      "sha256": "80eb551cfb1b10da5ac6d724dbb662ab6352a749a728cbef912cc6f8b147937f"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/index.ts",
+      "sha256": "f8043fe4b6060276446bc24f2a3d3d6aeaa0f7fc31ac7bfc9f6dfe7875709084"
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/internal/CanonicalJson.ts",
+      "sha256": "0f7f95548ad46cb3c9833e6a7a8335c6c2cf86525cfd51f659bf7924120dc07b"
+    },
+    {
+      "file": "packages/epistemic/domain/test/ClaimEvidenceReview.test.ts",
+      "sha256": "77225adf211d34b3314e10decd1d294cdd220270bf027215309665fde7b4a2ba"
+    },
+    {
+      "file": "packages/epistemic/domain/test/Contradiction.test.ts",
+      "sha256": "bd1bc22b650d7c2b768c56b963f1926ed43beecd79ea60379e62b7b0e16f0ccb"
+    },
+    {
+      "file": "packages/epistemic/domain/test/EntityMaterialization.test.ts",
+      "sha256": "56c9832b69cde9fc593ac867b4fe6c1e4ea1cf39f14ee9fe6937c35975aa5472"
+    },
+    {
+      "file": "packages/epistemic/domain/test/EpistemicDomain.test.ts",
+      "sha256": "69df8f0a40cf2b44c6202d110e79c2bc7cdfe4c1c151d0199ac1be0ecd66495e"
+    },
+    {
+      "file": "packages/epistemic/domain/test/EvidenceVerification.test.ts",
+      "sha256": "5df8784ec0d58c59f88727382fe8660b9316a1ae7d8b33256d2bba761658c9b4"
+    },
+    {
+      "file": "packages/epistemic/domain/test/ExecutionAuthority.test.ts",
+      "sha256": "018f4b03f138bdcfe7bc2ded3d073d17805daaea57b6a6d180a0aa21d4ed9298"
+    },
+    {
+      "file": "packages/epistemic/domain/test/LogicalEdgeIdentity.test.ts",
+      "sha256": "7dc08b70ef6dc8da4b1e9966a7f18e023f07eb7e5b6c6d97c6b62f61d9a842d5"
+    },
+    {
+      "file": "packages/epistemic/domain/test/TaggedError.equivalence.test.ts",
+      "sha256": "e9fbe99c50a51a9527f1e6f5ca645534783e99f3213d4090e99217120b42c954"
+    }
+  ],
+  "environmentMode": "Pure domain schemas and deterministic legal/evidence contracts; no live provider, database, filesystem fixture or credential lookup.",
+  "bunProof": {
+    "passedTests": 94,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [9.6064453125, 5.14990234375, 4.75537109375],
+    "loadAfter": [9.63818359375, 5.23046875, 4.78369140625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.28 avg60=0.28 avg300=0.16 total=679972716\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=177642916\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=169790338\n",
+      "io": "some avg10=0.40 avg60=0.70 avg300=0.21 total=785583872\nfull avg10=0.39 avg60=0.68 avg300=0.20 total=687870613\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.07 avg60=0.45 avg300=0.20 total=679980602\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.07 total=177642918\nfull avg10=0.00 avg60=0.00 avg300=0.07 total=169790340\n",
+      "io": "some avg10=0.27 avg60=0.66 avg300=0.21 total=785583964\nfull avg10=0.26 avg60=0.63 avg300=0.20 total=687870685\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

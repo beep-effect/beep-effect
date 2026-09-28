@@ -65,6 +65,7 @@ export type BoxGeneratedOperations = {
     readonly createFileUploadSessionPlanByUrl: (payload: M.ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess, BoxError>;
     readonly deleteFileUploadSessionById: (payload: M.ChunkedUploadsDeleteFileUploadSessionByIdPayload) => Effect.Effect<M.ChunkedUploadsDeleteFileUploadSessionByIdSuccess, BoxError>;
     readonly deleteFileUploadSessionByUrl: (payload: M.ChunkedUploadsDeleteFileUploadSessionByUrlPayload) => Effect.Effect<M.ChunkedUploadsDeleteFileUploadSessionByUrlSuccess, BoxError>;
+    readonly getCachedUploadPart: (payload: M.ChunkedUploadsGetCachedUploadPartPayload) => Effect.Effect<M.ChunkedUploadsGetCachedUploadPartSuccess, BoxError>;
     readonly getFileUploadSessionById: (payload: M.ChunkedUploadsGetFileUploadSessionByIdPayload) => Effect.Effect<M.ChunkedUploadsGetFileUploadSessionByIdSuccess, BoxError>;
     readonly getFileUploadSessionByUrl: (payload: M.ChunkedUploadsGetFileUploadSessionByUrlPayload) => Effect.Effect<M.ChunkedUploadsGetFileUploadSessionByUrlSuccess, BoxError>;
     readonly getFileUploadSessionParts: (payload: M.ChunkedUploadsGetFileUploadSessionPartsPayload) => Effect.Effect<M.ChunkedUploadsGetFileUploadSessionPartsSuccess, BoxError>;
@@ -377,6 +378,22 @@ export const makeGeneratedOperations: {
           invokeSdkMethod(client, "chunkedUploads", "deleteFileUploadSessionByUrl", [
             decoded.url,
             mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getCachedUploadPart: (payload) =>
+      runSdkCall(
+        "chunkedUploads",
+        "getCachedUploadPart",
+        "chunkedUploads.getCachedUploadPart",
+        M.ChunkedUploadsGetCachedUploadPartPayload,
+        M.ChunkedUploadsGetCachedUploadPartSuccess,
+        payload,
+        (decoded) =>
+          invokeSdkMethod(client, "chunkedUploads", "getCachedUploadPart", [
+            decoded.planUrl,
+            decoded.offset,
+            decoded.size,
+            decoded.sha512
           ])
       ),
     getFileUploadSessionById: (payload) =>

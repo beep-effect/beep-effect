@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/shared-tables",
+  "sourceHead": "7b1309f799edbe12810893cb0407631c5045737e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.219848772001569,
+  "bunWholeCommandSeconds": 1.4164723940048134,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.84375, 4.62744140625, 9.6728515625],
+  "loadAfter": [2.8564453125, 4.60009765625, 9.63671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.12 avg300=0.18 total=658520966\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.10 total=163781651\nfull avg10=0.00 avg60=0.05 avg300=0.10 total=156125610\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.17 total=773315253\nfull avg10=0.00 avg60=0.02 avg300=0.13 total=678057183\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.11 avg300=0.18 total=658525728\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.05 avg300=0.10 total=163781651\nfull avg10=0.00 avg60=0.05 avg300=0.10 total=156125610\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.16 total=773322031\nfull avg10=0.00 avg60=0.02 avg300=0.12 total=678062870\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "4469264619371fcc19535c5af9c96a2d50415d4f181c4d7b320e242f855dcae2"
+    },
+    {
+      "file": "packages/shared/tables/package.json",
+      "sha256": "d805ad19288b6043e2ebd6bef1098824ef5a82679d7536d3fccd956423997d4e"
+    },
+    {
+      "file": "packages/shared/tables/src/Schema.ts",
+      "sha256": "2df6277852a0732ffd512e92f8338d4f24b631809864b6a85a202bea3c494049"
+    },
+    {
+      "file": "packages/shared/tables/src/index.ts",
+      "sha256": "3b9f1a52a04fd07a2e5ef0906e4fe00e6d413af7eb63749916e3f8e6b2a4a79e"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/index.ts",
+      "sha256": "e50ba921b726a668c8881f210330c90da5c71eafc9c44b62dcdcc2ae4935b603"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/Membership/Membership.table.ts",
+      "sha256": "2b5e0934a2317b293b5d2c3258f82c9f009fcb5db0250d8a298fa0bb84fb4485"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/Membership/index.ts",
+      "sha256": "f4f1414b05c600a8f48896e0dd976df975d609a10d150e5e3ae0058277e58512"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/Organization/Organization.table.ts",
+      "sha256": "fdc50373b5901692e879d00c338f2346d8a076a15f53b4ceb1a298482810c10c"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/Organization/index.ts",
+      "sha256": "d255f603d59e7a56638f631831a85f79d5060e9a48dbce93dc6e1b3eee5911ce"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/User/User.table.ts",
+      "sha256": "44dd8c6729cc56bf029d910c81c812bf1a3f937ec519dc712402fc6d21e0b3a4"
+    },
+    {
+      "file": "packages/shared/tables/src/entities/User/index.ts",
+      "sha256": "d915adff8b2685a353288b0c9d0e78662f9b3dcbd5d84ae7645d39bbcb560e39"
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "sha256": "e5864e4544a05dfefa0a46c8c7513b5e1ca4c647316143103d63c3c82a8b2f7a"
+    }
+  ],
+  "environmentMode": "Configured Shared Tables suite inspects native Drizzle declarations only; no database connection or process is started.",
+  "bunProof": {
+    "passedTests": 4,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.8564453125, 4.60009765625, 9.63671875],
+    "loadAfter": [2.8564453125, 4.60009765625, 9.63671875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.11 avg300=0.18 total=658526123\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.05 avg300=0.10 total=163781651\nfull avg10=0.00 avg60=0.05 avg300=0.10 total=156125610\n",
+      "io": "some avg10=0.00 avg60=0.03 avg300=0.16 total=773322070\nfull avg10=0.00 avg60=0.02 avg300=0.12 total=678062871\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.11 avg300=0.18 total=658527885\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.05 avg300=0.10 total=163781652\nfull avg10=0.00 avg60=0.05 avg300=0.10 total=156125611\n",
+      "io": "some avg10=0.00 avg60=0.03 avg300=0.16 total=773324581\nfull avg10=0.00 avg60=0.02 avg300=0.12 total=678064692\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

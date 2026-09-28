@@ -1,7 +1,8 @@
 import * as Checker from "@beep/repo-docgen/Checker";
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Parser from "@beep/repo-docgen/Parser";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
 import * as ast from "ts-morph";
@@ -43,7 +44,7 @@ const failureTest = <A>(
   checker: (value: A) => Effect.Effect<Array<string>, never, Configuration.Configuration | Parser.Source>,
   failure: ReadonlyArray<string>
 ) =>
-  layer(makeTestLayer(sourceText, config))((it) =>
+  it.layer(makeTestLayer(sourceText, config))((it) =>
     it.effect(name, () =>
       parser.pipe(
         Effect.flatMap(

@@ -7,8 +7,10 @@ import {
   AiMetricsMirrorStatus,
   aiMetricsMirrorPayloadContainsJsonStringPrefix,
 } from "@beep/repo-ai-metrics";
-import { expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 
 const privacyProof = AiMetricsMirrorPrivacyProof.make({
   checkedTokens: ["dataRoot"],
@@ -73,11 +75,13 @@ it.effect("preserves the manifest.json wire shape", () =>
 
 it.effect("rejects exact and extended local paths in JSON payloads", () =>
   Effect.gen(function* () {
-    expect(
-      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics"}', "/tmp/ai-metrics")
-    ).toBe(true);
-    expect(
-      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics/sub"}', "/tmp/ai-metrics")
-    ).toBe(true);
+    pipe(
+      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics"}', "/tmp/ai-metrics"),
+      assertTrue
+    );
+    pipe(
+      yield* aiMetricsMirrorPayloadContainsJsonStringPrefix('{"remoteRoot":"/tmp/ai-metrics/sub"}', "/tmp/ai-metrics"),
+      assertTrue
+    );
   })
 );

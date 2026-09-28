@@ -1,3 +1,61 @@
+# @beep/repo-utils — implementation checkpoint
+
+The admitted wave covers 31 paths: 21 registered suites and ten support/compiler
+inputs. The newer Sha256Hex suite participates in configured execution but remains
+outside this inventory wave. Its source and root finding are preserved unchanged.
+
+The reconciled proposal contains 383 rows: 201 fixed, 106 open coverage-only
+judgments and 76 explicit exceptions. Detector reconciliation accounts for 186
+fixed historical identities and 68 current exceptions; four lenses account for
+15 fixed findings, 106 coverage-only judgments and eight native constraints.
+Historical duplicate IDs are inventory identities, not additional code repairs.
+Thirteen runtime-wrapper rows were already repaired upstream in PR #1200.
+One additional repaired historical browser-map finding shares its line-based ID
+with a different current retained class assertion. The current detector ID wins;
+the historical occurrence hash and repair attribution are retained separately.
+This collision removes duplicate ledger identity, not the source repair evidence.
+
+Retained detector exceptions comprise 50 failure predicates without independently
+specified complete Causes, ten whole class-payload comparisons whose original
+Vitest equality differs from prototype-sensitive assertSome, and eight native
+filesystem/process boundaries. Many historical anchors map to one current
+exception; those concerns receive no duplicate fixed credit.
+
+Scope ownership precedes fixture writes. Native glob, symlink, compiler-pool,
+checkout and real subprocess subjects retain native services. Controlled spawners
+and abstract-only filesystem controls use coherent memory fixtures. Fourteen
+original property laws retain their domains, filters, expected values and floors;
+a fifteenth law covers the full production PublishConfig schema. Finite witnesses
+and positive missing-path controls strengthen the original assertions.
+
+All 21 admitted suites use the public runner. Eight static Info events describe
+project and Biome phases without source or environment payloads. Independent
+nested layer registrations retain independent memoization through rootIt.
+Observability coverage-only rows remain coverage-only; runner adoption creates no
+retroactive defect credit.
+
+Final source verification passed package audit/docgen and focused root oxlint.
+Node and Bun each passed 232 cases in 22 configured suites with zero failures or
+skips. Fifteen laws passed 400 runs at seed 20260708. Two trace controls passed
+positive runs and rejected negative controls with exact source restoration.
+Final command durations were 5.224 seconds on Node and 2.418 seconds on Bun;
+source hashes and workstation load/pressure accompany the receipts. These are
+workstation observations, not controlled speedup estimates. Eight owned cache
+dependency arrays were refreshed across 13 reviewed computations; no cache
+qualification was promoted.
+
+See [final source evidence](../../../research/repo-utils-final-evidence.json),
+[assertion boundaries](../../../research/repo-utils-assertion-boundaries.json), and
+[production schema generation](../../../research/repo-utils-publishconfig-generation.json).
+Strict inventory and root ratchet results are recorded in the final wave history.
+Full local Yeet and hosted acceptance remain separate publication gates.
+
+## Historical P1 inventory
+
+The following snapshot preserves the original inventory findings, old runtime
+versions, source anchors and authorization state. Its open-status and proposed-work
+statements describe P1, not this implementation checkpoint.
+
 # @beep/repo-utils — combined P1 four-lens inventory
 
 All 31 census files were reviewed in two disjoint sequential chunks: 21 test files and ten support/compiler inputs. The combined inventory has 129 open judgment rows, comprising 23 review items and 106 coverage-only rows. Review items include 15 repair proposals and eight native-boundary constraints; these are not 23 reproduced defects.

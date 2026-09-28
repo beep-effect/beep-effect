@@ -56,10 +56,12 @@ import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
 import { SparqlAskResult, SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Layer, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 
@@ -79,32 +81,17 @@ const aliceNameQuad = makeQuad(
   makeLiteral("Alice", XSD_STRING.value)
 );
 const dataset = makeDataset([aliceNameQuad]);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("Session use-cases", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived graph projection option samples",
-    Effect.fnUntraced(function* () {
-      expect(
-        (yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(OntologyGraphProjectionOptions)]),
-          ([options]) => {
-            const encoded = Result.getOrThrow(encodeOntologyGraphProjectionOptionsResult(options));
-            const decoded = Result.getOrThrow(decodeOntologyGraphProjectionOptionsResult(encoded));
-
-            expect(Equal.equals(decoded, options)).toBe(true);
-
-            return true;
-          },
-          fcRuns(10)
-        ))._tag
-      ).toBe("Passed");
-      yield* Effect.void;
-    })
+    [Arbitrary.schema(OntologyGraphProjectionOptions)],
+    ([options]) =>
+      Effect.sync(() => {
+        const encoded = Result.getOrThrow(encodeOntologyGraphProjectionOptionsResult(options));
+        const decoded = Result.getOrThrow(decodeOntologyGraphProjectionOptionsResult(encoded));
+        pipe(Equal.equals(decoded, options), assertTrue);
+      }),
+    { arbitrary: fcRuns(10) }
   );
 
   it.effect(
@@ -275,381 +262,390 @@ describe("Session use-cases", () => {
       expect(error).toMatchObject({
         reason: "unsupportedPartition",
       });
-      expect(serialized).toBe(false);
-      expect(written).toBe(false);
+      pipe(serialized, assertFalse);
+      pipe(written, assertFalse);
     })
   );
-
-  it.effect(
-    "seeds structural inference on open and invalidates subclass closure incrementally",
-    Effect.fnUntraced(function* () {
-      const pizza = makeNamedNode("https://example.org/pizza#Pizza");
-      const margherita = makeNamedNode("https://example.org/pizza#Margherita");
-      const neapolitanMargherita = makeNamedNode("https://example.org/pizza#NeapolitanMargherita");
-      const m1 = makeNamedNode("https://example.org/pizza#m1");
-      const food = makeNamedNode("https://example.org/pizza#Food");
-      const subClassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
-      const inferredGraph = makeNamedNode(graphPartitionIri("inferred"));
-      const openedDataset = makeDataset([
-        makeQuad(pizza, RDF_TYPE, OWL_CLASS),
-        makeQuad(margherita, RDF_TYPE, OWL_CLASS),
-        makeQuad(margherita, subClassOf, pizza),
-        makeQuad(neapolitanMargherita, RDF_TYPE, OWL_CLASS),
-        makeQuad(neapolitanMargherita, subClassOf, margherita),
-        makeQuad(m1, RDF_TYPE, neapolitanMargherita),
-      ]);
-      const inferredQuad = (subject: typeof pizza, predicate: typeof subClassOf, object: typeof pizza) =>
-        serializeQuad(
-          makeQuad(subject, predicate, {
-            object,
-            graph: inferredGraph,
-          })
-        );
-      const fileStore = OntologyFileStore.of({
-        read: Effect.fn("OntologyFileStore.read")((request) =>
-          Effect.succeed(
-            ReadOntologyFileResult.make({
-              path: request.path,
-              source: "@prefix : <https://example.org/pizza#> .",
+  it.layer(OntologyReasonerLive, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "seeds structural inference on open and invalidates subclass closure incrementally",
+      Effect.fnUntraced(function* () {
+        const pizza = makeNamedNode("https://example.org/pizza#Pizza");
+        const margherita = makeNamedNode("https://example.org/pizza#Margherita");
+        const neapolitanMargherita = makeNamedNode("https://example.org/pizza#NeapolitanMargherita");
+        const m1 = makeNamedNode("https://example.org/pizza#m1");
+        const food = makeNamedNode("https://example.org/pizza#Food");
+        const subClassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
+        const inferredGraph = makeNamedNode(graphPartitionIri("inferred"));
+        const openedDataset = makeDataset([
+          makeQuad(pizza, RDF_TYPE, OWL_CLASS),
+          makeQuad(margherita, RDF_TYPE, OWL_CLASS),
+          makeQuad(margherita, subClassOf, pizza),
+          makeQuad(neapolitanMargherita, RDF_TYPE, OWL_CLASS),
+          makeQuad(neapolitanMargherita, subClassOf, margherita),
+          makeQuad(m1, RDF_TYPE, neapolitanMargherita),
+        ]);
+        const inferredQuad = (subject: typeof pizza, predicate: typeof subClassOf, object: typeof pizza) =>
+          serializeQuad(
+            makeQuad(subject, predicate, {
+              object,
+              graph: inferredGraph,
             })
-          )
-        ),
-        write: Effect.fn("OntologyFileStore.write")(() => Effect.void),
-      });
-      const turtle = TurtleCodec.of({
-        parse: Effect.fn("TurtleCodec.parse")(function* () {
-          return ParseTurtleResult.make({
-            dataset: openedDataset,
-            prefixes: yield* Effect.orDie(
-              decodePrefixMap({
-                pizza: "https://example.org/pizza#",
+          );
+        const fileStore = OntologyFileStore.of({
+          read: Effect.fn("OntologyFileStore.read")((request) =>
+            Effect.succeed(
+              ReadOntologyFileResult.make({
+                path: request.path,
+                source: "@prefix : <https://example.org/pizza#> .",
               })
-            ),
-          });
-        }),
-        serialize: Effect.fn("TurtleCodec.serialize")(() => Effect.succeed(SerializeTurtleResult.make({ source: "" }))),
-      });
-      const useCases = yield* makeSessionUseCases().pipe(
-        Effect.provideService(OntologyFileStore, fileStore),
-        Effect.provideService(TurtleCodec, turtle)
-      );
-      const reasoner = yield* OntologyReasoner;
-      const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
-      const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session: opened.session }));
+            )
+          ),
+          write: Effect.fn("OntologyFileStore.write")(() => Effect.void),
+        });
+        const turtle = TurtleCodec.of({
+          parse: Effect.fn("TurtleCodec.parse")(function* () {
+            return ParseTurtleResult.make({
+              dataset: openedDataset,
+              prefixes: yield* Effect.orDie(
+                decodePrefixMap({
+                  pizza: "https://example.org/pizza#",
+                })
+              ),
+            });
+          }),
+          serialize: Effect.fn("TurtleCodec.serialize")(() =>
+            Effect.succeed(SerializeTurtleResult.make({ source: "" }))
+          ),
+        });
+        const useCases = yield* makeSessionUseCases().pipe(
+          Effect.provideService(OntologyFileStore, fileStore),
+          Effect.provideService(TurtleCodec, turtle)
+        );
+        const reasoner = yield* OntologyReasoner;
+        const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
+        const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session: opened.session }));
 
-      const initialQuads = initial.inferredDataset.quads.map(serializeQuad);
-      expect(initial.fullRecompute).toBe(true);
-      expect(initial.processedChangeCount).toBe(0);
-      expect(initial.inferredDataset.quads).toHaveLength(3);
-      expect(initialQuads).toEqual(
-        expect.arrayContaining([
-          inferredQuad(neapolitanMargherita, subClassOf, pizza),
-          inferredQuad(m1, RDF_TYPE, margherita),
-          inferredQuad(m1, RDF_TYPE, pizza),
-        ])
-      );
-      expect(buildOntologySnapshotWithInference(opened.session, initial).metrics.quadCount).toBe(9);
+        const initialQuads = initial.inferredDataset.quads.map(serializeQuad);
+        pipe(initial.fullRecompute, assertTrue);
+        expect(initial.processedChangeCount).toBe(0);
+        expect(initial.inferredDataset.quads).toHaveLength(3);
+        expect(initialQuads).toEqual(
+          expect.arrayContaining([
+            inferredQuad(neapolitanMargherita, subClassOf, pizza),
+            inferredQuad(m1, RDF_TYPE, margherita),
+            inferredQuad(m1, RDF_TYPE, pizza),
+          ])
+        );
+        expect(buildOntologySnapshotWithInference(opened.session, initial).metrics.quadCount).toBe(9);
 
-      const pizzaFood = makeQuad(pizza, subClassOf, food);
-      const added = applyChangeOperationsWithDelta(opened.session, [
-        ChangeOperation.make({
-          kind: "addQuad",
-          partition: "asserted",
-          quad: pizzaFood,
-        }),
-      ]);
-      const addedInference = yield* reasoner.infer(
-        InferOntologySessionInput.make({
-          session: added.session,
-          previous: O.some(initial),
-        })
-      );
-      const addedQuads = addedInference.inferredDataset.quads.map(serializeQuad);
-
-      expect(added.delta.added).toHaveLength(1);
-      expect(addedInference.fullRecompute).toBe(false);
-      expect(addedInference.processedChangeCount).toBe(1);
-      expect(addedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
-      expect(addedInference.inferredDataset.quads).toHaveLength(6);
-      expect(addedQuads).toEqual(
-        expect.arrayContaining([
-          inferredQuad(margherita, subClassOf, food),
-          inferredQuad(neapolitanMargherita, subClassOf, food),
-          inferredQuad(m1, RDF_TYPE, food),
-        ])
-      );
-      expect(buildOntologySnapshotWithInference(added.session, addedInference).metrics.quadCount).toBe(13);
-
-      const removed = applyChangeOperationsWithDelta(added.session, [
-        ChangeOperation.make({
-          kind: "removeQuad",
-          partition: "asserted",
-          quad: pizzaFood,
-        }),
-      ]);
-      const removedInference = yield* reasoner.infer(
-        InferOntologySessionInput.make({
-          session: removed.session,
-          previous: O.some(addedInference),
-        })
-      );
-      const removedQuads = removedInference.inferredDataset.quads.map(serializeQuad);
-
-      expect(removed.delta.removed).toHaveLength(1);
-      expect(removedInference.fullRecompute).toBe(false);
-      expect(removedInference.processedChangeCount).toBe(2);
-      expect(removedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
-      expect(removedInference.inferredDataset.quads).toHaveLength(3);
-      expect(removedQuads).toEqual(
-        expect.arrayContaining([
-          inferredQuad(neapolitanMargherita, subClassOf, pizza),
-          inferredQuad(m1, RDF_TYPE, margherita),
-          inferredQuad(m1, RDF_TYPE, pizza),
-        ])
-      );
-      expect(removedQuads).not.toContain(inferredQuad(m1, RDF_TYPE, food));
-      expect(buildOntologySnapshotWithInference(removed.session, removedInference).metrics.quadCount).toBe(9);
-    }, provideScopedLayer(OntologyReasonerLive))
-  );
-
-  it.effect(
-    "invalidates disjointness when non-type assertions change inferred type output",
-    Effect.fnUntraced(function* () {
-      const parent = makeNamedNode("https://example.test/Parent");
-      const child = makeNamedNode("https://example.test/Child");
-      const parentOf = makeNamedNode("https://example.test/parentOf");
-      const alice = makeNamedNode("https://example.test/alice");
-      const domain = makeNamedNode(`${RDFS_NAMESPACE}domain`);
-      const range = makeNamedNode(`${RDFS_NAMESPACE}range`);
-      const disjointWith = makeNamedNode(`${OWL_NAMESPACE}disjointWith`);
-      const session = createSession(
-        CreateSessionInput.make({
-          id: sessionId,
-          baseDataset: makeDataset([
-            makeQuad(parentOf, domain, parent),
-            makeQuad(parentOf, range, child),
-            makeQuad(parent, disjointWith, child),
-          ]),
-        })
-      );
-      const reasoner = yield* OntologyReasoner;
-      const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session }));
-      const added = applyChangeOperationsWithDelta(session, [
-        ChangeOperation.make({
-          kind: "addQuad",
-          partition: "asserted",
-          quad: makeQuad(alice, parentOf, alice),
-        }),
-      ]);
-      const next = yield* reasoner.infer(
-        InferOntologySessionInput.make({
-          session: added.session,
-          previous: O.some(initial),
-        })
-      );
-
-      expect(initial.disjointnessViolations).toHaveLength(0);
-      expect(next.modules.find((entry) => entry.module === "domainRange")?.mode).toBe("incremental");
-      expect(next.modules.find((entry) => entry.module === "disjointness")?.mode).toBe("incremental");
-      expect(next.disjointnessViolations).toEqual([
-        expect.objectContaining({
-          individualIri: alice.value,
-          leftClassIri: child.value,
-          rightClassIri: parent.value,
-        }),
-      ]);
-    }, provideScopedLayer(OntologyReasonerLive))
-  );
-
-  it.effect(
-    "accepts SPARQL queries whose form appears after blank and comment lines",
-    Effect.fnUntraced(function* () {
-      let submittedQuery = "";
-      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-      const sparql = SparqlQueryService.of({
-        execute: Effect.fn("SparqlQueryService.execute")((request) =>
-          Effect.sync(() => {
-            submittedQuery = request.query;
-            return SparqlSelectResult.make({ profile: "select", rows: [] });
+        const pizzaFood = makeQuad(pizza, subClassOf, food);
+        const added = applyChangeOperationsWithDelta(opened.session, [
+          ChangeOperation.make({
+            kind: "addQuad",
+            partition: "asserted",
+            quad: pizzaFood,
+          }),
+        ]);
+        const addedInference = yield* reasoner.infer(
+          InferOntologySessionInput.make({
+            session: added.session,
+            previous: O.some(initial),
           })
-        ),
-      });
+        );
+        const addedQuads = addedInference.inferredDataset.quads.map(serializeQuad);
 
-      yield* Effect.gen(function* () {
-        const runner = yield* OntologySparqlRunner;
-        const result = yield* runner.run(
-          RunOntologySparqlInput.make({
-            session,
-            profile: "select",
-            query: "# generated by workbench\n\nSELECT ?s WHERE { ?s ?p ?o }",
+        expect(added.delta.added).toHaveLength(1);
+        pipe(addedInference.fullRecompute, assertFalse);
+        expect(addedInference.processedChangeCount).toBe(1);
+        expect(addedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+        expect(addedInference.inferredDataset.quads).toHaveLength(6);
+        expect(addedQuads).toEqual(
+          expect.arrayContaining([
+            inferredQuad(margherita, subClassOf, food),
+            inferredQuad(neapolitanMargherita, subClassOf, food),
+            inferredQuad(m1, RDF_TYPE, food),
+          ])
+        );
+        expect(buildOntologySnapshotWithInference(added.session, addedInference).metrics.quadCount).toBe(13);
+
+        const removed = applyChangeOperationsWithDelta(added.session, [
+          ChangeOperation.make({
+            kind: "removeQuad",
+            partition: "asserted",
+            quad: pizzaFood,
+          }),
+        ]);
+        const removedInference = yield* reasoner.infer(
+          InferOntologySessionInput.make({
+            session: removed.session,
+            previous: O.some(addedInference),
+          })
+        );
+        const removedQuads = removedInference.inferredDataset.quads.map(serializeQuad);
+
+        expect(removed.delta.removed).toHaveLength(1);
+        pipe(removedInference.fullRecompute, assertFalse);
+        expect(removedInference.processedChangeCount).toBe(2);
+        expect(removedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+        expect(removedInference.inferredDataset.quads).toHaveLength(3);
+        expect(removedQuads).toEqual(
+          expect.arrayContaining([
+            inferredQuad(neapolitanMargherita, subClassOf, pizza),
+            inferredQuad(m1, RDF_TYPE, margherita),
+            inferredQuad(m1, RDF_TYPE, pizza),
+          ])
+        );
+        expect(removedQuads).not.toContain(inferredQuad(m1, RDF_TYPE, food));
+        expect(buildOntologySnapshotWithInference(removed.session, removedInference).metrics.quadCount).toBe(9);
+      })
+    );
+  });
+  it.layer(OntologyReasonerLive, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "invalidates disjointness when non-type assertions change inferred type output",
+      Effect.fnUntraced(function* () {
+        const parent = makeNamedNode("https://example.test/Parent");
+        const child = makeNamedNode("https://example.test/Child");
+        const parentOf = makeNamedNode("https://example.test/parentOf");
+        const alice = makeNamedNode("https://example.test/alice");
+        const domain = makeNamedNode(`${RDFS_NAMESPACE}domain`);
+        const range = makeNamedNode(`${RDFS_NAMESPACE}range`);
+        const disjointWith = makeNamedNode(`${OWL_NAMESPACE}disjointWith`);
+        const session = createSession(
+          CreateSessionInput.make({
+            id: sessionId,
+            baseDataset: makeDataset([
+              makeQuad(parentOf, domain, parent),
+              makeQuad(parentOf, range, child),
+              makeQuad(parent, disjointWith, child),
+            ]),
+          })
+        );
+        const reasoner = yield* OntologyReasoner;
+        const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session }));
+        const added = applyChangeOperationsWithDelta(session, [
+          ChangeOperation.make({
+            kind: "addQuad",
+            partition: "asserted",
+            quad: makeQuad(alice, parentOf, alice),
+          }),
+        ]);
+        const next = yield* reasoner.infer(
+          InferOntologySessionInput.make({
+            session: added.session,
+            previous: O.some(initial),
           })
         );
 
-        expect(result.limitInjected).toBe(true);
-      }).pipe(
-        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+        expect(initial.disjointnessViolations).toHaveLength(0);
+        expect(next.modules.find((entry) => entry.module === "domainRange")?.mode).toBe("incremental");
+        expect(next.modules.find((entry) => entry.module === "disjointness")?.mode).toBe("incremental");
+        expect(next.disjointnessViolations).toEqual([
+          expect.objectContaining({
+            individualIri: alice.value,
+            leftClassIri: child.value,
+            rightClassIri: parent.value,
+          }),
+        ]);
+      })
+    );
+  });
+
+  {
+    let submittedQuery = "";
+    const sparql = SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        Effect.sync(() => {
+          submittedQuery = request.query;
+          return SparqlSelectResult.make({ profile: "select", rows: [] });
+        })
+      ),
+    });
+    it.layer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        "accepts SPARQL queries whose form appears after blank and comment lines",
+        Effect.fnUntraced(function* () {
+          submittedQuery = "";
+          const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+          const runner = yield* OntologySparqlRunner;
+          const result = yield* runner.run(
+            RunOntologySparqlInput.make({
+              session,
+              profile: "select",
+              query: "# generated by workbench\n\nSELECT ?s WHERE { ?s ?p ?o }",
+            })
+          );
+          pipe(result.limitInjected, assertTrue);
+
+          expect(submittedQuery).toBe("# generated by workbench\n\nSELECT ?s WHERE { ?s ?p ?o }\nLIMIT 100");
+        })
       );
+    });
+  }
 
-      expect(submittedQuery).toBe("# generated by workbench\n\nSELECT ?s WHERE { ?s ?p ?o }\nLIMIT 100");
-    })
-  );
+  {
+    let submittedQuery = "";
+    const sparql = SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        Effect.sync(() => {
+          submittedQuery = request.query;
+          return SparqlAskResult.make({ profile: "ask", value: true });
+        })
+      ),
+    });
+    it.layer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        "runs an ASK query and answers it",
+        Effect.fnUntraced(function* () {
+          submittedQuery = "";
+          // An ASK could not be run at all: the workbench's profile literal was
+          // ["select","construct"], so the query was rejected as a profile mismatch before
+          // it ever reached the engine — which had implemented ASK the whole time. And an
+          // ASK returns one boolean, so bounding it is meaningless: no LIMIT is appended to
+          // the user's query just so a badge has something to describe.
+          const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+          const query = "ASK { ?s ?p ?o }";
 
-  it.effect(
-    "runs an ASK query and answers it",
-    Effect.fnUntraced(function* () {
-      // An ASK could not be run at all: the workbench's profile literal was
-      // ["select","construct"], so the query was rejected as a profile mismatch before
-      // it ever reached the engine — which had implemented ASK the whole time. And an
-      // ASK returns one boolean, so bounding it is meaningless: no LIMIT is appended to
-      // the user's query just so a badge has something to describe.
-      let submittedQuery = "";
-      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-      const sparql = SparqlQueryService.of({
-        execute: Effect.fn("SparqlQueryService.execute")((request) =>
-          Effect.sync(() => {
-            submittedQuery = request.query;
-            return SparqlAskResult.make({ profile: "ask", value: true });
-          })
-        ),
-      });
-      const query = "ASK { ?s ?p ?o }";
+          const runner = yield* OntologySparqlRunner;
+          const result = yield* runner.run(
+            RunOntologySparqlInput.make({
+              session,
+              profile: "ask",
+              query,
+              safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+            })
+          );
+          expect(result.result.profile).toBe("ask");
+          pipe(result.limitInjected, assertFalse);
+          pipe(result.truncated, assertFalse);
 
-      yield* Effect.gen(function* () {
-        const runner = yield* OntologySparqlRunner;
-        const result = yield* runner.run(
-          RunOntologySparqlInput.make({
-            session,
-            profile: "ask",
-            query,
-            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
-          })
-        );
-
-        expect(result.result.profile).toBe("ask");
-        expect(result.limitInjected).toBe(false);
-        expect(result.truncated).toBe(false);
-      }).pipe(
-        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+          // The query reaches the engine exactly as written.
+          expect(submittedQuery).toBe(query);
+        })
       );
+    });
+  }
 
-      // The query reaches the engine exactly as written.
-      expect(submittedQuery).toBe(query);
-    })
-  );
+  {
+    let submittedQuery = "";
+    const sparql = SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        Effect.sync(() => {
+          submittedQuery = request.query;
+          return SparqlSelectResult.make({ profile: "select", rows: [] });
+        })
+      ),
+    });
+    it.layer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        "detects existing SPARQL LIMIT clauses separated by tabs or newlines",
+        Effect.fnUntraced(function* () {
+          submittedQuery = "";
+          const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+          const query = "SELECT ?s WHERE { ?s ?p ?o }\nLIMIT\t50";
 
-  it.effect(
-    "detects existing SPARQL LIMIT clauses separated by tabs or newlines",
-    Effect.fnUntraced(function* () {
-      let submittedQuery = "";
-      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-      const sparql = SparqlQueryService.of({
-        execute: Effect.fn("SparqlQueryService.execute")((request) =>
-          Effect.sync(() => {
-            submittedQuery = request.query;
-            return SparqlSelectResult.make({ profile: "select", rows: [] });
-          })
-        ),
-      });
-      const query = "SELECT ?s WHERE { ?s ?p ?o }\nLIMIT\t50";
+          const runner = yield* OntologySparqlRunner;
+          const result = yield* runner.run(
+            RunOntologySparqlInput.make({
+              session,
+              profile: "select",
+              query,
+              safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+            })
+          );
+          pipe(result.limitInjected, assertFalse);
+          expect(result.effectiveLimit).toBe(50);
 
-      yield* Effect.gen(function* () {
-        const runner = yield* OntologySparqlRunner;
-        const result = yield* runner.run(
-          RunOntologySparqlInput.make({
-            session,
-            profile: "select",
-            query,
-            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
-          })
-        );
-
-        expect(result.limitInjected).toBe(false);
-        // The bound the engine was actually given, not the one we would have supplied.
-        // `effectiveLimit` was reported as the safeguard default unconditionally, so a
-        // query that asked for 50 and received 50 rows was labelled `LIMIT 10`: the
-        // badge named a bound that had never been applied.
-        expect(result.effectiveLimit).toBe(50);
-      }).pipe(
-        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+          expect(submittedQuery).toBe(query);
+        })
       );
-
-      expect(submittedQuery).toBe(query);
-    })
-  );
+    });
+  }
 
   // The LIMIT guard is what stops the engine materializing an unbounded result
   // set; anything that fools it into reporting "already limited" removes the
   // bound entirely, so these are safety regressions, not formatting ones.
-  it.effect(
-    "still injects a LIMIT when the query only mentions one inside a comment",
-    Effect.fnUntraced(function* () {
-      let submittedQuery = "";
-      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-      const sparql = SparqlQueryService.of({
-        execute: Effect.fn("SparqlQueryService.execute")((request) =>
-          Effect.sync(() => {
-            submittedQuery = request.query;
-            return SparqlSelectResult.make({ profile: "select", rows: [] });
-          })
-        ),
-      });
-      const query = "SELECT ?s WHERE { ?s ?p ?o }\n# LIMIT 1";
+  {
+    let submittedQuery = "";
+    const sparql = SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        Effect.sync(() => {
+          submittedQuery = request.query;
+          return SparqlSelectResult.make({ profile: "select", rows: [] });
+        })
+      ),
+    });
+    it.layer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        "still injects a LIMIT when the query only mentions one inside a comment",
+        Effect.fnUntraced(function* () {
+          submittedQuery = "";
+          const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+          const query = "SELECT ?s WHERE { ?s ?p ?o }\n# LIMIT 1";
 
-      yield* Effect.gen(function* () {
-        const runner = yield* OntologySparqlRunner;
-        const result = yield* runner.run(
-          RunOntologySparqlInput.make({
-            session,
-            profile: "select",
-            query,
-            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
-          })
-        );
+          const runner = yield* OntologySparqlRunner;
+          const result = yield* runner.run(
+            RunOntologySparqlInput.make({
+              session,
+              profile: "select",
+              query,
+              safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+            })
+          );
+          pipe(result.limitInjected, assertTrue);
 
-        expect(result.limitInjected).toBe(true);
-      }).pipe(
-        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+          expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
+        })
       );
+    });
+  }
 
-      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
-    })
-  );
+  {
+    let submittedQuery = "";
+    const sparql = SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        Effect.sync(() => {
+          submittedQuery = request.query;
+          return SparqlSelectResult.make({ profile: "select", rows: [] });
+        })
+      ),
+    });
+    it.layer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        "still injects a LIMIT when the only LIMIT bounds a subquery",
+        Effect.fnUntraced(function* () {
+          submittedQuery = "";
+          const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+          // The inner LIMIT bounds the subquery's solutions, not the outer result.
+          const query = "SELECT ?s WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 5 } ?s ?p2 ?o2 }";
 
-  it.effect(
-    "still injects a LIMIT when the only LIMIT bounds a subquery",
-    Effect.fnUntraced(function* () {
-      let submittedQuery = "";
-      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
-      const sparql = SparqlQueryService.of({
-        execute: Effect.fn("SparqlQueryService.execute")((request) =>
-          Effect.sync(() => {
-            submittedQuery = request.query;
-            return SparqlSelectResult.make({ profile: "select", rows: [] });
-          })
-        ),
-      });
-      // The inner LIMIT bounds the subquery's solutions, not the outer result.
-      const query = "SELECT ?s WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 5 } ?s ?p2 ?o2 }";
+          const runner = yield* OntologySparqlRunner;
+          const result = yield* runner.run(
+            RunOntologySparqlInput.make({
+              session,
+              profile: "select",
+              query,
+              safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+            })
+          );
+          pipe(result.limitInjected, assertTrue);
 
-      yield* Effect.gen(function* () {
-        const runner = yield* OntologySparqlRunner;
-        const result = yield* runner.run(
-          RunOntologySparqlInput.make({
-            session,
-            profile: "select",
-            query,
-            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
-          })
-        );
-
-        expect(result.limitInjected).toBe(true);
-      }).pipe(
-        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+          expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
+        })
       );
-
-      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
-    })
-  );
+    });
+  }
 
   it.effect(
     "uses one ABox/TBox classification rule for snapshots and search",
@@ -891,34 +887,25 @@ describe("Session use-cases", () => {
     })
   );
 });
-
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+describe("Session use-case schema round-trips", () => {
+  it.prop(
+    "round-trips session schemas with schema-derived arbitraries",
+    [Arbitrary.schema(CreateSessionInput)],
+    ([value]) => assertSchemaRoundTrip(CreateSessionInput, value),
+    { arbitrary: { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 } }
+  );
+  it.prop(
+    "round-trips session schemas with schema-derived arbitraries (ChangeOperation)",
+    [Arbitrary.schema(ChangeOperation)],
+    ([value]) => assertSchemaRoundTrip(ChangeOperation, value),
+    { arbitrary: { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 } }
+  );
+});
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const decode = S.decodeUnknownResult(schema);
   const encode = S.encodeResult(schema);
   const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          expect(equivalent(decoded, value)).toBe(true);
-
-          return true;
-        },
-        // Partition/quad coherence rejects more native samples than the default budget allows.
-        { ...fcRuns(10), maxDiscards: fcRuns(10).runs * 100 }
-      )
-    )._tag
-  ).toBe("Passed");
+  const encoded = Result.getOrThrow(encode(value));
+  const decoded = Result.getOrThrow(decode(encoded));
+  pipe(equivalent(decoded, value), assertTrue);
 };
-
-describe("Session use-case schema round-trips", () => {
-  it("round-trips session schemas with schema-derived arbitraries", () => {
-    assertSchemaRoundTrip(CreateSessionInput);
-    assertSchemaRoundTrip(ChangeOperation);
-  });
-});

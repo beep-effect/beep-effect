@@ -1,0 +1,66 @@
+{
+  "package": "@beep/uspto-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:26:53.122000+00:00",
+  "totalMs": 3700.558837890625,
+  "testCount": 26,
+  "files": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "ms": 118.558837890625,
+      "tests": 26
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs imports the bin module without launching the stdio server",
+      "ms": 83.0948229999999
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs reshapes a large documentBag response under a configured budget via a named field tier",
+      "ms": 73.85319400000026
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs returns real @beep/uspto data when USPTO_API_KEY is present",
+      "ms": 72.95409900000004
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio sends server/discover then tools/call over stdio",
+      "ms": 61.78757600000017
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs returns the api_key_required envelope when USPTO_API_KEY is absent",
+      "ms": 59.52339000000029
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio emits one compact JSON-RPC message per line and processes requests independently",
+      "ms": 43.55894799999987
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio answers a legacy initialize with -32022 over stdio",
+      "ms": 34.704395000000204
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over newline-delimited stdio reconstructs a request whose bytes arrive in separate chunks",
+      "ms": 29.700610000000324
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema parity keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
+      "ms": 20.46539100000018
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "conformance 2026-07-28: beep-uspto-test over streamable HTTP calls a tool and returns a non-error result",
+      "ms": 18.31674299999986
+    }
+  ]
+}

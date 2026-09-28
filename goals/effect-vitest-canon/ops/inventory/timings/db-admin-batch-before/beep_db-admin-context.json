@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/db-admin",
+  "sourceHead": "b09b322d08",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 10.131984252016991,
+  "bunWholeCommandSeconds": 7.92696304799756,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [5.77685546875, 3.50146484375, 2.8056640625],
+  "loadAfter": [6.16650390625, 3.6650390625, 2.8671875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.01 avg60=0.21 avg300=0.18 total=795544668\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218341\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142212\n",
+    "io": "some avg10=0.00 avg60=0.24 avg300=0.15 total=854467190\nfull avg10=0.00 avg60=0.16 avg300=0.11 total=747513014\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.18 avg300=0.17 total=795569356\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218341\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142212\n",
+    "io": "some avg10=0.00 avg60=0.20 avg300=0.14 total=854481065\nfull avg10=0.00 avg60=0.13 avg300=0.10 total=747522989\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "3d10aa5147dd14325c5c2dcab54d306082285e120e9f1c77d663254ee322a40f"
+    },
+    {
+      "file": "packages/_internal/db-admin/AGENTS.md",
+      "sha256": "9db32d5837b3489c46b7ada46280fb1d842cf1fc7d40a37dd92184691e7b7f8b"
+    },
+    {
+      "file": "packages/_internal/db-admin/CHANGELOG.md",
+      "sha256": "2a8e8840bd73c5d7d249f7705daf9dac52a8a8d75e98a10bb481fa8d9c880e14"
+    },
+    {
+      "file": "packages/_internal/db-admin/CLAUDE.md",
+      "sha256": "9db32d5837b3489c46b7ada46280fb1d842cf1fc7d40a37dd92184691e7b7f8b"
+    },
+    {
+      "file": "packages/_internal/db-admin/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/_internal/db-admin/README.md",
+      "sha256": "c1d0dbaae5ca7c8133797a483552c382183c32fb88f1aaed4090ff790e4cfd59"
+    },
+    {
+      "file": "packages/_internal/db-admin/docgen.json",
+      "sha256": "6357eec0ff7b16cf56c2f831149aa516e27ce6dc1191fbced3dfe231a6ebc391"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle.config.ts",
+      "sha256": "93f5e4793fc50c1f79751f70b2a0df869df42770b2a9f920926e98ca98bfc9ce"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260813130540_baseline/migration.sql",
+      "sha256": "7866a953bdc1766d1077c569655c6ef7a9d51384059385ec15d5d74e2f6438c7"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260813130540_baseline/snapshot.json",
+      "sha256": "1887be56d14dadf24d5215de834b3a4c5b2a8b39eff83556aa5374834141d52f"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/migration.sql",
+      "sha256": "7978f53ea35f968c1414ded00a5ef4684566cc78a52246058907075c1f55a987"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/snapshot.json",
+      "sha256": "7a5141e0ebb5320c5c9bcc34ccdf8f470a5492628e61cefc131f14b93b15e4de"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260814001821_law_practice_st13_office_identity/migration.sql",
+      "sha256": "0cc07a6ada86f99efe52a5a3eb3bc8651e8f63777a492f779e3fe101eec1c7fe"
+    },
+    {
+      "file": "packages/_internal/db-admin/drizzle/20260814001821_law_practice_st13_office_identity/snapshot.json",
+      "sha256": "cd6d113700ed03773c2fa0d49a4e33ba45f12a1a703d7a9245d4cc0fe755ab2b"
+    },
+    {
+      "file": "packages/_internal/db-admin/package.json",
+      "sha256": "00c8e6234bad30a74f7c9062847931dfeb0d292a49415cdb92fd988b4490cb87"
+    },
+    {
+      "file": "packages/_internal/db-admin/scripts/check-migrations-drift.ts",
+      "sha256": "29a4132e2d0456cb39e735890461e6afe464add1b2c9b5c97708ee05e1161437"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/index.ts",
+      "sha256": "40db8928378a6c6a6292393ab664b52fe55597c6fef5ce56135291f2da92f1dd"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrate.ts",
+      "sha256": "e7e4eaa148da2a6df2d32efe44824390f7d3357e57f4ad959bd464eba3cbc898"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/ArchitectureLab.ts",
+      "sha256": "3a0035a62276526eaab2d0c25f22fa34e1f4ebe8478dcd4048b1f95f21e876c9"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/DocumentsSync.ts",
+      "sha256": "7a255eaa949cc6e0f28d01c3456ade4946a41943bf5b052c301a0967c8a841a3"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/EpistemicContradictionTriage.ts",
+      "sha256": "d8f045b4b28923e6a36ec00346c1467f64634aea4da79ea5f4cb7ec03831288b"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/EpistemicEdge.ts",
+      "sha256": "d5ce7d72f840d0599b101944ba5205981d8b09d75a708163a9ce83beb54bd23f"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts",
+      "sha256": "1163daf271cba6842257f443e50a2ba6c4d5523870f466fbd4a8f02fd564f044"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/EpistemicUsage.ts",
+      "sha256": "5e6e60abde9dc9c8b74e37487efb4cd00a0c1cb334305d25ce9a2528657dcf6e"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/LawPracticeCandorGate.ts",
+      "sha256": "8f2555273f4c66f40d87bd1203a7d60ed7791757ac94e6d8778d1989efcdf93a"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/LawPracticeLegalPosition.ts",
+      "sha256": "06e924fcefb2671e0a4885b32062e4f7471cfdfb6e1b5e69c84d8b138f51e24b"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/migrations/WorkspaceThread.ts",
+      "sha256": "9f036280ca08e839af857d2e5e03852140e6d0f3911c53a590fcbd14d3fc80b4"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/schema.ts",
+      "sha256": "f8c667ccd4dd462005646ac09bda1d39e92c4457f85d9498c30ba32646af3360"
+    },
+    {
+      "file": "packages/_internal/db-admin/src/targets.ts",
+      "sha256": "c62928bbbd54437956c53f72d53cf07f82b9742009c2ab23db334ebff0396406"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
+      "sha256": "2c573f65280be569822380407815e4ecc64215af7d3c0eb8a2f18a42b03bba87"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/index.test.ts",
+      "sha256": "a93a849c22f406749d06aa1c5677408c1ac218cacd61864dcde032e582db6312"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+      "sha256": "a240ea645f9596e9374f3d3226f15099afc53c77c6c255eba70c3463e877f081"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "sha256": "ae7fcb4d3dd10c2b352771512047cb41ed037c66e42aa6bc6581a6ddac451251"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
+      "sha256": "1bfd21c8758a416d62f7ae162e687f4ea2b719435079d7d82ef706990bf8ec0a"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+      "sha256": "0464fb5044a99ad5ef6c94974865b88174048cb73f2f01ca242d0fe12d7dc29f"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+      "sha256": "132233ed0df24fe5d3d028f96fac1c135e6cdbbea71be1e02a63543ed65a059e"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
+      "sha256": "e1d09e5c2a5c3763720b4238441442392d79c23619190eb5ed621e4e179797b6"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
+      "sha256": "52a33dcbc5fdf4186ff3bbefef45cb0fd5b604658485b603b58f8ff5d0c0cc3a"
+    },
+    {
+      "file": "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
+      "sha256": "96dc07e22161be07f8fb8de4b87f2c815c04f342f5020874b7e47fbda5c9945b"
+    },
+    {
+      "file": "packages/_internal/db-admin/tsconfig.check.json",
+      "sha256": "eb083916d13c2a8afeacf1c10b154794a724b87094b9c032144ba7c50a62f5dd"
+    },
+    {
+      "file": "packages/_internal/db-admin/tsconfig.drizzle.json",
+      "sha256": "70ae9c255fc3e485f896162ff9c0c20da5c842413de4e9bcfc99ed31d0a95c21"
+    },
+    {
+      "file": "packages/_internal/db-admin/tsconfig.json",
+      "sha256": "8fbe0e15019f41dd9424186186ad7b1f0d2695f4828084797d377e5d7556b9a7"
+    },
+    {
+      "file": "packages/_internal/db-admin/tsconfig.scripts.json",
+      "sha256": "3818b8a30eab15a29534b9088f95fc1d79eaaa40855a7d96e3fea786def4914c"
+    },
+    {
+      "file": "packages/_internal/db-admin/tsconfig.test.json",
+      "sha256": "6ae647de0eacd1dff883bcb02bbce5cdbc0f0015521fb4e267f3390a06c431fc"
+    },
+    {
+      "file": "packages/_internal/db-admin/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured db-admin local schema, migration and in-process PGLite Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 22,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [6.16650390625, 3.6650390625, 2.8671875],
+    "loadAfter": [7.30029296875, 4.00244140625, 2.98681640625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.18 avg300=0.17 total=795569370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218341\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142212\n",
+      "io": "some avg10=0.00 avg60=0.20 avg300=0.14 total=854481065\nfull avg10=0.00 avg60=0.13 avg300=0.10 total=747522989\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.16 avg300=0.16 total=795591027\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186218341\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178142212\n",
+      "io": "some avg10=0.00 avg60=0.17 avg300=0.13 total=854490774\nfull avg10=0.00 avg60=0.12 avg300=0.10 total=747530348\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 22,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. All22tests across10files pass before and after with zero skips and stable source, including actual in-process PGLite migrations. All90original assertions remain with9public helpers; two native laws retain domains, predicates and floor25. Existing fresh databases, btree_gist extension, two-minute acquisitions and120000ms bodies remain. Decision readback now explicitly orders by sequence. Baseline overlaps an early publisher; after overlaps package proof and census."
+}

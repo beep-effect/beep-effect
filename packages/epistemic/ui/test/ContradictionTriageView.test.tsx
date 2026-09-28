@@ -1,5 +1,4 @@
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 // @vitest-environment jsdom
 
 import { ContradictionCandidate, ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -21,7 +20,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContradictionTriageViewProps } from "@beep/epistemic-ui";
 
 const decodeUnknownContradictionTriageContradictionListPayloadResult = S.decodeUnknownResult(
@@ -31,6 +29,9 @@ const encodeContradictionTriageContradictionListPayloadResult = S.encodeResult(
   ContradictionTriage.ContradictionListPayload
 );
 
+import { it } from "@beep/test-runner";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import type { Root } from "react-dom/client";
 
 declare global {
@@ -411,27 +412,23 @@ const enterTextareaValue = (element: HTMLTextAreaElement, value: string): void =
 };
 
 describe("ContradictionTriageView", { concurrent: false }, () => {
+  const originalActEnvironment = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+  const originalScrollIntoView = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
   let container: HTMLDivElement;
   let root: Root;
 
-  it("round-trips schema-derived queue queries", () => {
-    const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
+  it.prop(
+    "round-trips schema-derived queue queries",
+    [Arbitrary.schema(ContradictionTriage.ContradictionListPayload)],
+    ([query]) => {
+      const equivalent = S.toEquivalence(ContradictionTriage.ContradictionListPayload);
+      const encoded = Result.getOrThrow(encodeContradictionTriageContradictionListPayloadResult(query));
+      const decoded = Result.getOrThrow(decodeUnknownContradictionTriageContradictionListPayloadResult(encoded));
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ContradictionTriage.ContradictionListPayload)]),
-          ([query]) => {
-            const encoded = Result.getOrThrow(encodeContradictionTriageContradictionListPayloadResult(query));
-            const decoded = Result.getOrThrow(decodeUnknownContradictionTriageContradictionListPayloadResult(encoded));
-
-            return equivalent(decoded, query);
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      assertTrue(equivalent(decoded, query));
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   beforeAll(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -771,4 +768,10 @@ describe("ContradictionTriageView", { concurrent: false }, () => {
       expect(proposalFact.className).toContain("whitespace-pre-wrap");
       expect(proposalFact.className).toContain("wrap-anywhere");
     }));
+  afterAll(() => {
+    if (originalScrollIntoView === undefined) Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
+    else Object.defineProperty(HTMLElement.prototype, "scrollIntoView", originalScrollIntoView);
+    if (originalActEnvironment === undefined) Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    else Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", originalActEnvironment);
+  });
 });

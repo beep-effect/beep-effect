@@ -1,0 +1,828 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/repo-utils-repo-utils-before-bun.json"
+  ],
+  "phase": "before",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/package.json",
+      "sha256": "4b9cee123d189e12068d7c1ba4a584493c664f88dfec7e352c99b6688257d6a6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Dependencies.ts",
+      "sha256": "c8f3ffc764be687b423ed74dd6ed11e522aaf6143fd2e45f8dac9ce742467238"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/DependencyIndex.ts",
+      "sha256": "cfcfa9fdc34ab481c528c7e650cca62120e228087fa8c7185c94ccf121c53f44"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "sha256": "0a9a6dd51850bf5137ae79609e0916fb19a66f560d9c02e33c26e73940da6c3b"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Graph.ts",
+      "sha256": "cac3f6affef1ebbd50ad30e056da415d34faf3e2589313ca194c78e891d0e24f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JsonUtils.ts",
+      "sha256": "50a76174a1e682937ff6aa9d8a1d5a2c74e108de0b799456058bb1e4723e21df"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/ProcessArgs.ts",
+      "sha256": "f75f5ce208ee66c200979895c29a51d899b45d381ce9614e63b55c1fda45ff59"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Root.ts",
+      "sha256": "7ad8da2f1670b6c9e51edce6ce9a9727e752c4a853f98856e92ecc1225292bfd"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Sha256Hex.ts",
+      "sha256": "4a2120f8613822df16d896008ae4ac1617dffe079617508083f2b7e9608d7ee6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TsConfig.ts",
+      "sha256": "da57d6f5eac51f029ef9772d2dfd3b3613d4dc5238e8c68f80e0c6edfda9ca7a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/UniqueDeps.ts",
+      "sha256": "6bed89f40a408e00e50e51cca994a9433148099acc42877e1e59b7f5cd5184d4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Workspaces.ts",
+      "sha256": "3fd37151a18dd113af2609af790f1a04813375e8b1865c10f3b5f4c5a369c3b1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/index.ts",
+      "sha256": "3a7433df94484c3bc41a1a28889fd110d81f7f187a9abe59f72d5a853ac41fc7"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts",
+      "sha256": "6a52a8b730ab31acd0a6d5b08cddc79751aadd901879184fa3d004923c6a98ee"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/index.ts",
+      "sha256": "c0ad94a031f4cea93197151fb1996f584c9d3b4c0adc69075e1b943590340144"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "sha256": "1fbc8dbabe71f01333ebb7f469d41790160d5ab30e7c58fe28338f5dedd728e1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+      "sha256": "37c4f71d28faeb9fd26fa85f9fde6fb62522f003c2fa4104f1d932ac4586cbba"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts",
+      "sha256": "f733e14b10154555c2a4ba0ac7ad20b78d42c676b99948408fd38b71c7094277"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/index.ts",
+      "sha256": "517eeb762ad7aedb107bf3ca5e72e109f49e6e9e9ee271bf8522bb84d93e5ebe"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/index.ts",
+      "sha256": "bfe27aefd5b46abe9d97904a4f7fa7be5db3938df596778055330f79cb3447aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts",
+      "sha256": "bb791feb809a646b8ee113d9a8cc1dec3a5353bd8148db3fe38b6de520935866"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
+      "sha256": "981ff992a0a1435de0f54935e32d2f7392628900a88918a07a9ae62421b5e320"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/NoSuchFileError.ts",
+      "sha256": "4b4ee96e4f64b0edaba24dc105013492656a098bacc965e911de629fa1386009"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/OptionInjectionError.ts",
+      "sha256": "c2647337e1bc48a8f06f23385067a1b93bf9dec9a1517655c0ab25924562942d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/index.ts",
+      "sha256": "c568f3a0995bf586dc35c31cf6b21c3ed6315464b1899919c5a4a8ffdabe81cb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
+      "sha256": "ab0dbadf7b4a00d837e5dbcc282dea4430e11ece33cc062c2fe4ac3bfd774c7d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "sha256": "15c7a691081ac69ef3efc95ef503ce9b5fa2267ea34c816517efb4e798056bef"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+      "sha256": "05cfd0d414d564faf9094a4d747b5e03a55e0709ee3d7af3be1a72528214e0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+      "sha256": "901218f39c9dc8feac425036201c66e6a41e583136c2c516bb81eb3110b38eaf"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+      "sha256": "628734b6918aa0182ff45019b9cf18cb26cc1832aa34698a0e8c93fc47d1b9e2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+      "sha256": "f5eee861b50144c53fef42a621fda52dd7d20f9d8db7cf4e2698ed0840b4cd78"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
+      "sha256": "02fc12379729c541532b6deea06157489c634d4f7c467e646460cbce6492ac84"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+      "sha256": "6749400f553216b91e33e175ff41fbc2dd232f83db5be7604db7a1ecbe56437e"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts",
+      "sha256": "f42b424e82b8c22a9582889da2899bd429cd1b6a54c8910dbfe5f0bc2017786a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/index.ts",
+      "sha256": "e1231c12f8b06443b81373a18fac8ca5b4c3844440cdb16cfca73b48fa0d2146"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
+      "sha256": "656e103080c507e04663611e5ff80b8831dccc976f3b3fe9e1b1125181169640"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/index.ts",
+      "sha256": "e63502a71bdd60178f87eadd11afcb9053a96169df443ad76ed2a74a8337d6b2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTDerivability.model.ts",
+      "sha256": "ee05634fabb282e21612768e841daca00d1ad6fad976a967dbc744a6393b0086"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTSignal.model.ts",
+      "sha256": "f3a81b9fd4f9dea2d1837fa6dc12f4b9abd3557ce44ea356534d34e735905117"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ApplicableTo.model.ts",
+      "sha256": "48fff3aa7575594d80080645d8f1be95d12becca6b656f768df73e487c5c5ecc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ArchitecturalLayer.model.ts",
+      "sha256": "da67b70c83bc194ff9f50a03f2ae2b0b91c6cf1fca361ab1aca3c1281a4cf7bb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/CanonicalJSDocSourceMetadata.model.ts",
+      "sha256": "4c1ac3a8cd6530f92bca79fc5aa78c2c0206b8b15743074fc10fb3a3b353dc71"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/DependencyProfile.model.ts",
+      "sha256": "e399dbe9443a1dc09440ba1834e981d1364557e82cc5e299eb817aa220f8a2e4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/HasJSDocApplicableToMapEntry.model.ts",
+      "sha256": "343e3be7bdfe574b365d315caa1d5b03b3cdbd6c6c81acbe3f2d1662e48db0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagAnnotation.model.ts",
+      "sha256": "5efda968cfb5fbcaecf9a722a5ce0febb1300308e10a30c53c37e23fa6b29471"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+      "sha256": "3d49f272624baa69d5854548c926d0930d05d2d69d4aac8c586d9a42efee0273"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/Specification.model.ts",
+      "sha256": "b2a148133c1025240d0a570ccc79016dc7ebce0fea93b596c22cd9dc7d41aa00"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+      "sha256": "2b64baf38b6e8c75404fcd04ea3939182739f890f3ecd04a68fad86566ccf924"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagKind.model.ts",
+      "sha256": "7e4fef889ff7e0d68b4376b22d31304729c692591ae0f193b4c34ff87de96e22"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagParameters.model.ts",
+      "sha256": "a048238186dd0d9c4e0a24416f35b21318357087a799528cd72ad2fcab01b514"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagValue.model.ts",
+      "sha256": "1c8c605719cd697f7f878b8699b5d971bdaa856e876e6c83f35a4593595fa7af"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/index.ts",
+      "sha256": "3841c0e6b9a6516032d11698c15beecf5ac6457ccbebab038e8d442969a8ab3d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/AccessModifierTagValues.ts",
+      "sha256": "a039fdfee448d6624594df1a47a869302045c9055d6dc0107ad1d23fd09ac374"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/ClosureTagValues.ts",
+      "sha256": "84dfefd137f759b3122e187020e377881b05cbd87f1d321c11f3bdbe3cccf2aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/DocumentationTagValues.ts",
+      "sha256": "7d9a5a545cbc89579d675dae5072c3e770dacb3439cd34fd8310826b183d9f75"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/EventDependencyTagValues.ts",
+      "sha256": "c8047fd87ecbcc005a2571f5ac477081581f4ee8702ae3b2992c3566a0c42bd8"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/InlineTagValues.ts",
+      "sha256": "b82842ee16da93a0bf6176ac6b0d40884a6f6f35d45d75d4b91ff5c12861ed55"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/OrganizationalTagValues.ts",
+      "sha256": "cca43329e8ee5c37fada87f3b5002bf9cd6d77c5104a3163992304338e060d82"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/RemainingTagValues.ts",
+      "sha256": "2998a89a17287704586c1dc7b3b356033d31d5e9898e6d59743d4a67aa52e335"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/StructuralTagValues.ts",
+      "sha256": "daa0874099c875271074b6bfd27ebacbfca53ff51b62bfc9eb7da62b19077c23"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TSDocTagValues.ts",
+      "sha256": "de080214c54820622f5e86ddf1ecc4b7d5cfaea2a73bfe78fd254eb3904ec8d2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeDocTagValues.ts",
+      "sha256": "4aa2109fc2a36a323ba152968e0c8dabc8ae738f67cbd6bc3d9d3b13245e5597"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeScriptTagValues.ts",
+      "sha256": "7b0ebcfa0aad667563e5a2e4deb40a991bf8b797980840764750e0fa2e3bb8f5"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/_fields.ts",
+      "sha256": "2863c8ddf01b799bdc4fdaa209d11bf15d86be5a960ab00db6a23678f3caf116"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/index.ts",
+      "sha256": "528b0a0a24a7e03e43d7e84c4cb082807a5ca53569308e00e3a22f030db8bc81"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Dependencies.test.ts",
+      "sha256": "6bada0aa1812b9fbf884e9151b2131b573674a49819d21774482e1db453ec69f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "sha256": "afef66a9ab80c720a46620d25ae3aa3b3cbd29a25308cb89c5c2bbde12e537a7"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
+      "sha256": "e6a7ce865063b2dddaaae4b484a11c8a5c40413283a336e19c826f17b8e88b0d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
+      "sha256": "ee2635612fdf6009809c951636858904e76ff811ca10f3d0a2c6d03fcf63f527"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
+      "sha256": "fda63520f6d881c2751f4623ad75d28e75054331441e7b417463712789cd7996"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
+      "sha256": "6ed975c55433385b8aa5e73d7472d713d40fd953907157d73946fb470f5f8d87"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
+      "sha256": "adcaf410cde887798a240251e4db8a802f179ea5de9f8bd90e935804bcd6d14e"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Sha256Hex.test.ts",
+      "sha256": "08f653ed7940462a019ae9822a29e39514a7b886aafe286e3cc838aea1855c1d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "sha256": "d402ee991bc7208f63630ab1e008d7dca0dedf8019a6a2e4d83e5d27cf5099b3"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts",
+      "sha256": "6dd5eeed8460f2b7be91c79a273d0c037ca4b3958d0de953bd87d9c672e6132f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "sha256": "9b6357a207b9132557ba82ac6f77e8ab8874d6f5687ec478769f77c3cacc5f89"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
+      "sha256": "b7791ad468ff24b93ba0b660e3e61d9edbaa4f2928089c53e8c38dd6548aad1d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.test-support.ts",
+      "sha256": "919a1e7d1c6ebc5ead20230d897943c7dd2dc6c78e09097cddb2d1b169eee943"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "35fbab8ae13254fbde898a02bf822b72796a54acc55aa0f825f050a80c9d0d18"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "sha256": "7c8e8bdf6f6e63c133608fe4889dd90ddd0ba1c2d6553c943036dd2b22c7b1e4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
+      "sha256": "916a4b38a80af926d91d24677c520ebcafa72e69b104a0722093fa5070800d32"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "sha256": "3d1878b7d282d6b3bbbd888834500e89615114b9aa8000e25b6d154601514a4c"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/errors/errors.test.ts",
+      "sha256": "16eb633d8e9e4faf5c897d56b56181041000dd50afffb49d3e34a8440aece551"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "sha256": "05540196634a9ad4b037cc1960f7b7cabd0cec7e83e410bc03a1e28008fb9786"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "sha256": "42e35deaa22e6d45d9e59aa4adb3dd62c34c0306e313990607ab8902dc7135fc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts",
+      "sha256": "330e502b987e3097728436a211c25b9e6370eece539cac1e88645024a41bacce"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "sha256": "cae4afb8e36d9d4fb92e801c62f4adaf59549fc4915da2bb0da84a5f379d59dc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "sha256": "f9347764661794a5bb93d387bb50e61f07ae6f9a1b73a7e883c839997c92a934"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-declaration/ambient.d.ts",
+      "sha256": "5034a2efae2e2ebceebe1064612d4f3ba9c010ab4241f3d6322b7ba4ad1fbc74"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts",
+      "sha256": "d1028593ebace6de4ce09c29b1ddc99de5496ebaa9b9cd2fa0cfcc863bb15688"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/extra.ts",
+      "sha256": "26d799d90f7ce9afa09c7491df60f38cf471ff81eabe52d176eacd61201be813"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/included.ts",
+      "sha256": "a880909ea87fd1670ebd4842d719db457a5d01d6f513d7fc54f458a0b884281f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/broken.ts",
+      "sha256": "4d40d699ed01cc3819fd4d7639a547a8b72e413100eb5c6e47d8cd525d791d91"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/clean.ts",
+      "sha256": "a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-c/src/index.ts",
+      "sha256": "224d0f45e2a5937f9f55158df79d093ae4779d40669cc2a4ca22b1908c9c193d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-b/src/index.ts",
+      "sha256": "b5d546753d33709dff508a6f2c2e547f432267fbb05b68d3da74fa5f7bda9f7a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-a/src/index.ts",
+      "sha256": "037ecd1db38c230c248787e60fd7bfc0cb0101b187b59535b6e7483be762d350"
+    }
+  ],
+  "loadBefore": [14.42431640625, 13.8896484375, 14.01416015625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.35 avg60=0.56 avg300=0.70 total=104440286\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.09 avg300=0.09 total=69211408\nfull avg10=0.00 avg60=0.09 avg300=0.09 total=67340875\n",
+    "io": "some avg10=0.00 avg60=0.04 avg300=0.05 total=665174244\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=607382004\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Configured repo-utils native filesystem, compiler fixtures and repository utilities; no external endpoint selected",
+  "hostTimeoutSeconds": 900,
+  "exit": 0,
+  "hostTimedOut": false,
+  "wholeCommandSeconds": 3.620905915995536,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "f6d5bb03d16693dd569b81cc461111fce5ca96d869668dbda588100ae9076da9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/package.json",
+      "sha256": "4b9cee123d189e12068d7c1ba4a584493c664f88dfec7e352c99b6688257d6a6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Dependencies.ts",
+      "sha256": "c8f3ffc764be687b423ed74dd6ed11e522aaf6143fd2e45f8dac9ce742467238"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/DependencyIndex.ts",
+      "sha256": "cfcfa9fdc34ab481c528c7e650cca62120e228087fa8c7185c94ccf121c53f44"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "sha256": "0a9a6dd51850bf5137ae79609e0916fb19a66f560d9c02e33c26e73940da6c3b"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Graph.ts",
+      "sha256": "cac3f6affef1ebbd50ad30e056da415d34faf3e2589313ca194c78e891d0e24f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JsonUtils.ts",
+      "sha256": "50a76174a1e682937ff6aa9d8a1d5a2c74e108de0b799456058bb1e4723e21df"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/ProcessArgs.ts",
+      "sha256": "f75f5ce208ee66c200979895c29a51d899b45d381ce9614e63b55c1fda45ff59"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Root.ts",
+      "sha256": "7ad8da2f1670b6c9e51edce6ce9a9727e752c4a853f98856e92ecc1225292bfd"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Sha256Hex.ts",
+      "sha256": "4a2120f8613822df16d896008ae4ac1617dffe079617508083f2b7e9608d7ee6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TsConfig.ts",
+      "sha256": "da57d6f5eac51f029ef9772d2dfd3b3613d4dc5238e8c68f80e0c6edfda9ca7a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/UniqueDeps.ts",
+      "sha256": "6bed89f40a408e00e50e51cca994a9433148099acc42877e1e59b7f5cd5184d4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/Workspaces.ts",
+      "sha256": "3fd37151a18dd113af2609af790f1a04813375e8b1865c10f3b5f4c5a369c3b1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/index.ts",
+      "sha256": "3a7433df94484c3bc41a1a28889fd110d81f7f187a9abe59f72d5a853ac41fc7"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts",
+      "sha256": "6a52a8b730ab31acd0a6d5b08cddc79751aadd901879184fa3d004923c6a98ee"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/index.ts",
+      "sha256": "c0ad94a031f4cea93197151fb1996f584c9d3b4c0adc69075e1b943590340144"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "sha256": "1fbc8dbabe71f01333ebb7f469d41790160d5ab30e7c58fe28338f5dedd728e1"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+      "sha256": "37c4f71d28faeb9fd26fa85f9fde6fb62522f003c2fa4104f1d932ac4586cbba"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts",
+      "sha256": "f733e14b10154555c2a4ba0ac7ad20b78d42c676b99948408fd38b71c7094277"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/index.ts",
+      "sha256": "517eeb762ad7aedb107bf3ca5e72e109f49e6e9e9ee271bf8522bb84d93e5ebe"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/index.ts",
+      "sha256": "bfe27aefd5b46abe9d97904a4f7fa7be5db3938df596778055330f79cb3447aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts",
+      "sha256": "bb791feb809a646b8ee113d9a8cc1dec3a5353bd8148db3fe38b6de520935866"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
+      "sha256": "981ff992a0a1435de0f54935e32d2f7392628900a88918a07a9ae62421b5e320"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/NoSuchFileError.ts",
+      "sha256": "4b4ee96e4f64b0edaba24dc105013492656a098bacc965e911de629fa1386009"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/OptionInjectionError.ts",
+      "sha256": "c2647337e1bc48a8f06f23385067a1b93bf9dec9a1517655c0ab25924562942d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/errors/index.ts",
+      "sha256": "c568f3a0995bf586dc35c31cf6b21c3ed6315464b1899919c5a4a8ffdabe81cb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
+      "sha256": "ab0dbadf7b4a00d837e5dbcc282dea4430e11ece33cc062c2fe4ac3bfd774c7d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "sha256": "15c7a691081ac69ef3efc95ef503ce9b5fa2267ea34c816517efb4e798056bef"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+      "sha256": "05cfd0d414d564faf9094a4d747b5e03a55e0709ee3d7af3be1a72528214e0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+      "sha256": "901218f39c9dc8feac425036201c66e6a41e583136c2c516bb81eb3110b38eaf"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+      "sha256": "628734b6918aa0182ff45019b9cf18cb26cc1832aa34698a0e8c93fc47d1b9e2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+      "sha256": "f5eee861b50144c53fef42a621fda52dd7d20f9d8db7cf4e2698ed0840b4cd78"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
+      "sha256": "02fc12379729c541532b6deea06157489c634d4f7c467e646460cbce6492ac84"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+      "sha256": "6749400f553216b91e33e175ff41fbc2dd232f83db5be7604db7a1ecbe56437e"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts",
+      "sha256": "f42b424e82b8c22a9582889da2899bd429cd1b6a54c8910dbfe5f0bc2017786a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/index.ts",
+      "sha256": "e1231c12f8b06443b81373a18fac8ca5b4c3844440cdb16cfca73b48fa0d2146"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
+      "sha256": "656e103080c507e04663611e5ff80b8831dccc976f3b3fe9e1b1125181169640"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TypeScript/models/index.ts",
+      "sha256": "e63502a71bdd60178f87eadd11afcb9053a96169df443ad76ed2a74a8337d6b2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTDerivability.model.ts",
+      "sha256": "ee05634fabb282e21612768e841daca00d1ad6fad976a967dbc744a6393b0086"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ASTSignal.model.ts",
+      "sha256": "f3a81b9fd4f9dea2d1837fa6dc12f4b9abd3557ce44ea356534d34e735905117"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ApplicableTo.model.ts",
+      "sha256": "48fff3aa7575594d80080645d8f1be95d12becca6b656f768df73e487c5c5ecc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/ArchitecturalLayer.model.ts",
+      "sha256": "da67b70c83bc194ff9f50a03f2ae2b0b91c6cf1fca361ab1aca3c1281a4cf7bb"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/CanonicalJSDocSourceMetadata.model.ts",
+      "sha256": "4c1ac3a8cd6530f92bca79fc5aa78c2c0206b8b15743074fc10fb3a3b353dc71"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/DependencyProfile.model.ts",
+      "sha256": "e399dbe9443a1dc09440ba1834e981d1364557e82cc5e299eb817aa220f8a2e4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/HasJSDocApplicableToMapEntry.model.ts",
+      "sha256": "343e3be7bdfe574b365d315caa1d5b03b3cdbd6c6c81acbe3f2d1662e48db0d9"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagAnnotation.model.ts",
+      "sha256": "5efda968cfb5fbcaecf9a722a5ce0febb1300308e10a30c53c37e23fa6b29471"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+      "sha256": "3d49f272624baa69d5854548c926d0930d05d2d69d4aac8c586d9a42efee0273"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/Specification.model.ts",
+      "sha256": "b2a148133c1025240d0a570ccc79016dc7ebce0fea93b596c22cd9dc7d41aa00"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+      "sha256": "2b64baf38b6e8c75404fcd04ea3939182739f890f3ecd04a68fad86566ccf924"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagKind.model.ts",
+      "sha256": "7e4fef889ff7e0d68b4376b22d31304729c692591ae0f193b4c34ff87de96e22"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagParameters.model.ts",
+      "sha256": "a048238186dd0d9c4e0a24416f35b21318357087a799528cd72ad2fcab01b514"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TagValue.model.ts",
+      "sha256": "1c8c605719cd697f7f878b8699b5d971bdaa856e876e6c83f35a4593595fa7af"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/index.ts",
+      "sha256": "3841c0e6b9a6516032d11698c15beecf5ac6457ccbebab038e8d442969a8ab3d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/AccessModifierTagValues.ts",
+      "sha256": "a039fdfee448d6624594df1a47a869302045c9055d6dc0107ad1d23fd09ac374"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/ClosureTagValues.ts",
+      "sha256": "84dfefd137f759b3122e187020e377881b05cbd87f1d321c11f3bdbe3cccf2aa"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/DocumentationTagValues.ts",
+      "sha256": "7d9a5a545cbc89579d675dae5072c3e770dacb3439cd34fd8310826b183d9f75"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/EventDependencyTagValues.ts",
+      "sha256": "c8047fd87ecbcc005a2571f5ac477081581f4ee8702ae3b2992c3566a0c42bd8"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/InlineTagValues.ts",
+      "sha256": "b82842ee16da93a0bf6176ac6b0d40884a6f6f35d45d75d4b91ff5c12861ed55"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/OrganizationalTagValues.ts",
+      "sha256": "cca43329e8ee5c37fada87f3b5002bf9cd6d77c5104a3163992304338e060d82"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/RemainingTagValues.ts",
+      "sha256": "2998a89a17287704586c1dc7b3b356033d31d5e9898e6d59743d4a67aa52e335"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/StructuralTagValues.ts",
+      "sha256": "daa0874099c875271074b6bfd27ebacbfca53ff51b62bfc9eb7da62b19077c23"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TSDocTagValues.ts",
+      "sha256": "de080214c54820622f5e86ddf1ecc4b7d5cfaea2a73bfe78fd254eb3904ec8d2"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeDocTagValues.ts",
+      "sha256": "4aa2109fc2a36a323ba152968e0c8dabc8ae738f67cbd6bc3d9d3b13245e5597"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/TypeScriptTagValues.ts",
+      "sha256": "7b0ebcfa0aad667563e5a2e4deb40a991bf8b797980840764750e0fa2e3bb8f5"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/_fields.ts",
+      "sha256": "2863c8ddf01b799bdc4fdaa209d11bf15d86be5a960ab00db6a23678f3caf116"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/index.ts",
+      "sha256": "528b0a0a24a7e03e43d7e84c4cb082807a5ca53569308e00e3a22f030db8bc81"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Dependencies.test.ts",
+      "sha256": "6bada0aa1812b9fbf884e9151b2131b573674a49819d21774482e1db453ec69f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "sha256": "afef66a9ab80c720a46620d25ae3aa3b3cbd29a25308cb89c5c2bbde12e537a7"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
+      "sha256": "e6a7ce865063b2dddaaae4b484a11c8a5c40413283a336e19c826f17b8e88b0d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
+      "sha256": "ee2635612fdf6009809c951636858904e76ff811ca10f3d0a2c6d03fcf63f527"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
+      "sha256": "fda63520f6d881c2751f4623ad75d28e75054331441e7b417463712789cd7996"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
+      "sha256": "6ed975c55433385b8aa5e73d7472d713d40fd953907157d73946fb470f5f8d87"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
+      "sha256": "adcaf410cde887798a240251e4db8a802f179ea5de9f8bd90e935804bcd6d14e"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Sha256Hex.test.ts",
+      "sha256": "08f653ed7940462a019ae9822a29e39514a7b886aafe286e3cc838aea1855c1d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "sha256": "d402ee991bc7208f63630ab1e008d7dca0dedf8019a6a2e4d83e5d27cf5099b3"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts",
+      "sha256": "6dd5eeed8460f2b7be91c79a273d0c037ca4b3958d0de953bd87d9c672e6132f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "sha256": "9b6357a207b9132557ba82ac6f77e8ab8874d6f5687ec478769f77c3cacc5f89"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
+      "sha256": "b7791ad468ff24b93ba0b660e3e61d9edbaa4f2928089c53e8c38dd6548aad1d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.test-support.ts",
+      "sha256": "919a1e7d1c6ebc5ead20230d897943c7dd2dc6c78e09097cddb2d1b169eee943"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "35fbab8ae13254fbde898a02bf822b72796a54acc55aa0f825f050a80c9d0d18"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "sha256": "7c8e8bdf6f6e63c133608fe4889dd90ddd0ba1c2d6553c943036dd2b22c7b1e4"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
+      "sha256": "916a4b38a80af926d91d24677c520ebcafa72e69b104a0722093fa5070800d32"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "sha256": "3d1878b7d282d6b3bbbd888834500e89615114b9aa8000e25b6d154601514a4c"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/errors/errors.test.ts",
+      "sha256": "16eb633d8e9e4faf5c897d56b56181041000dd50afffb49d3e34a8440aece551"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "sha256": "05540196634a9ad4b037cc1960f7b7cabd0cec7e83e410bc03a1e28008fb9786"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "sha256": "42e35deaa22e6d45d9e59aa4adb3dd62c34c0306e313990607ab8902dc7135fc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts",
+      "sha256": "330e502b987e3097728436a211c25b9e6370eece539cac1e88645024a41bacce"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "sha256": "cae4afb8e36d9d4fb92e801c62f4adaf59549fc4915da2bb0da84a5f379d59dc"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "sha256": "f9347764661794a5bb93d387bb50e61f07ae6f9a1b73a7e883c839997c92a934"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-declaration/ambient.d.ts",
+      "sha256": "5034a2efae2e2ebceebe1064612d4f3ba9c010ab4241f3d6322b7ba4ad1fbc74"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts",
+      "sha256": "d1028593ebace6de4ce09c29b1ddc99de5496ebaa9b9cd2fa0cfcc863bb15688"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/extra.ts",
+      "sha256": "26d799d90f7ce9afa09c7491df60f38cf471ff81eabe52d176eacd61201be813"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/included.ts",
+      "sha256": "a880909ea87fd1670ebd4842d719db457a5d01d6f513d7fc54f458a0b884281f"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/broken.ts",
+      "sha256": "4d40d699ed01cc3819fd4d7639a547a8b72e413100eb5c6e47d8cd525d791d91"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-diagnostics/src/clean.ts",
+      "sha256": "a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-c/src/index.ts",
+      "sha256": "224d0f45e2a5937f9f55158df79d093ae4779d40669cc2a4ca22b1908c9c193d"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-b/src/index.ts",
+      "sha256": "b5d546753d33709dff508a6f2c2e547f432267fbb05b68d3da74fa5f7bda9f7a"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/packages/pkg-a/src/index.ts",
+      "sha256": "037ecd1db38c230c248787e60fd7bfc0cb0101b187b59535b6e7483be762d350"
+    }
+  ],
+  "loadAfter": [16.6328125, 14.3564453125, 14.16455078125],
+  "pressureAfter": {
+    "cpu": "some avg10=0.65 avg60=0.61 avg300=0.71 total=104553661\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.09 avg300=0.09 total=69211611\nfull avg10=0.00 avg60=0.09 avg300=0.09 total=67341075\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.05 total=665178636\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=607384968\n"
+  },
+  "sourceStable": true,
+  "propertyOverridesAbsent": true,
+  "traceOverrideAbsent": true
+}

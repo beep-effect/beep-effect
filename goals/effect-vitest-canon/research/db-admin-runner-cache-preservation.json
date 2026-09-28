@@ -1,0 +1,50 @@
+{
+  "reviewedNodes": 15,
+  "changedDependencyLists": 10,
+  "edges": [
+    {
+      "computation": "@beep/db-admin#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/db-admin#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/db-admin#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/db-admin#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/db-admin#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/db-admin#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/db-admin#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/db-admin#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/db-admin#test:integration:parallel",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/db-admin#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "baf1f5b6eac12904d7c130b477372bcb0ad14ce8fcb2615d011dfa0f3f45e7d5"
+}

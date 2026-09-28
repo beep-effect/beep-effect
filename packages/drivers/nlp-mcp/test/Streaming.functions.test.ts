@@ -6,9 +6,10 @@ import {
   StreamingAllowedRoots,
   streamLines,
 } from "@beep/nlp-mcp/Streaming/TextStream";
+import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { assert, layer } from "@effect/vitest";
+import { assert } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -17,7 +18,7 @@ import * as Stream from "effect/Stream";
 
 const TestLayer = Layer.merge(NodeFileSystem.layer, NodePath.layer);
 
-layer(TestLayer)("streaming function dispatch", (it) => {
+it.layer(TestLayer)("streaming function dispatch", (it) => {
   it.effect(
     "supports data-last text and JSONL operations",
     Effect.fnUntraced(function* () {

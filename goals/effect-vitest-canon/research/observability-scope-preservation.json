@@ -1,0 +1,261 @@
+{
+  "package": "@beep/observability",
+  "phase": "scope",
+  "assertionsPreserved": 177,
+  "propertiesPreserved": 11,
+  "casesPreserved": 80,
+  "files": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "changed": true,
+      "beforeSha": "b9f487367b8c6a8ec25e8676143bb13f4da3afee2aeea8f5bc6709c02bff4e92",
+      "afterSha": "d9ae03d06d90d9780acbeab82f00e974d1f375420927b980607883d52ce95ab6",
+      "assertionCount": 11,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "changed": true,
+      "beforeSha": "04b61ada13b521810b7f6e2e88c0ed29aa070f70dec848f01dcb1c9847fa7b58",
+      "afterSha": "ce52fccf8ca7189803841c803bdce1ff2241cb2f40c86779256d2e1003851478",
+      "assertionCount": 9,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "changed": true,
+      "beforeSha": "030d03be3fee2b4238bc0a583e26fe43f02fc615dd51fde461be3e8fbf57f887",
+      "afterSha": "e8175c4f75b8cba645e9e2f92430986ee8bcfb86c09481357e4d281fdb849dd7",
+      "assertionCount": 46,
+      "propertyCount": 2,
+      "caseCount": 15,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "changed": true,
+      "beforeSha": "7e1cf9602476e892c2930d3d7db2e1641f71861ed2a661d539eb2d90f8d75820",
+      "afterSha": "65f9eec72fbc838bc67c71ffa76987cb8d2f820fd998cbb4c13e9c8e745f01d5",
+      "assertionCount": 4,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "changed": true,
+      "beforeSha": "34f19744de23a063bda67933cd914fd132a93326c51c7fb37990103158752846",
+      "afterSha": "5cb6aff56b2566087a9666375974ca43f3d98b0599f5e93328a1cc370106b5e7",
+      "assertionCount": 3,
+      "propertyCount": 0,
+      "caseCount": 1,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "changed": true,
+      "beforeSha": "6c67018f2c6d1f1aaa6f332ef33abcb2731a2afc583c4a5b595cccf48e99543b",
+      "afterSha": "76c53f2072edeb64cfd8a54f6cebf9b7503ac62221fae329200ec4f9346cf288",
+      "assertionCount": 7,
+      "propertyCount": 2,
+      "caseCount": 3,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "changed": true,
+      "beforeSha": "92c23202ffa4e2f5f74eebe3441f581841e7c14d97913d0e84cb05c9ba3f4656",
+      "afterSha": "f45fc78ba259d1937537268d8b9f53816b5f7b111ce49456d9766d9aa51a1149",
+      "assertionCount": 13,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "changed": true,
+      "beforeSha": "f5e35f8468a53df81cea96ed08aa67ce5569b73e2b57fcd6fc56b0a14378959c",
+      "afterSha": "8047d04f8acb4d905256c43237672c2ee383d7ca0c2b44431b925410131a1fc5",
+      "assertionCount": 9,
+      "propertyCount": 0,
+      "caseCount": 3,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "changed": true,
+      "beforeSha": "4e0003f8789e0f64b253903af2316d7465848f380b74e9549742be979cf42b0c",
+      "afterSha": "24f3dcfbf396c883100918f8fbb24b4c1119c906c63295133cc87aa4ac713a3a",
+      "assertionCount": 10,
+      "propertyCount": 2,
+      "caseCount": 6,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "changed": true,
+      "beforeSha": "7820c6f718057602980b174bd65a6bde3f8b68eab93b340578bc60952823648c",
+      "afterSha": "dc18b6095bd64b81408e776d5fa0a102b47d6fa7efdaca9b17b2d47c6ff2abe4",
+      "assertionCount": 16,
+      "propertyCount": 1,
+      "caseCount": 8,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "changed": true,
+      "beforeSha": "be6687728bbdf5b8a86e6d20c6e6929b9dd332dea2f330e9629f654e5b3b9708",
+      "afterSha": "5e31cb856716ddc888216d5c614a9c53b0fe920d3a68e1bec8e0150cc73b36c2",
+      "assertionCount": 16,
+      "propertyCount": 0,
+      "caseCount": 5,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "changed": false,
+      "beforeSha": "60855691f45745f1a649923ef861514932981e896777a3f387546fbfb99c97cc",
+      "afterSha": "60855691f45745f1a649923ef861514932981e896777a3f387546fbfb99c97cc",
+      "assertionCount": 9,
+      "propertyCount": 2,
+      "caseCount": 4,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "changed": true,
+      "beforeSha": "3e0797392ad16f18e022a884263a6f12d6695b01adc4715837350ece2e5a3c55",
+      "afterSha": "dc66c8b1777283e5c3c055ca6c89b9b6f684906d8fcfbd42659e72b3af5b3eef",
+      "assertionCount": 6,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "changed": true,
+      "beforeSha": "a2a1a68495863e585bbb103d6c88af91ea63f503132a02847958a4479d818a88",
+      "afterSha": "52da22d7d39243613e53635fe874892a77109f3f31194fd1206684e5424984cb",
+      "assertionCount": 10,
+      "propertyCount": 1,
+      "caseCount": 5,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "changed": true,
+      "beforeSha": "e0f3efbea7f2404c835befc7f343c1150fde2aaef2dde6b53b1c3f34053d56d0",
+      "afterSha": "8b39cbdb678a0b6419d3fe34ca7b6e30f146928cd664866a2bb2249d6233b7ea",
+      "assertionCount": 3,
+      "propertyCount": 0,
+      "caseCount": 2,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "changed": false,
+      "beforeSha": "1aea02b58a0ace581776c8e7a151b27dac6196a5b2623aa93372580eb96d50aa",
+      "afterSha": "1aea02b58a0ace581776c8e7a151b27dac6196a5b2623aa93372580eb96d50aa",
+      "assertionCount": 5,
+      "propertyCount": 0,
+      "caseCount": 14,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/browser-safe.ts",
+      "changed": false,
+      "beforeSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "afterSha": "e455cca4d069d678d0e96298150b7f19fc9e5031b1a5721eda5b3a9fea41ced2",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/experimental-server-safe.ts",
+      "changed": false,
+      "beforeSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "afterSha": "ad3d1099e7993a135b68e4dd7a0c2032afd54958ede6e44bb279a98ae5cd50c8",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/fixtures/server-safe.ts",
+      "changed": false,
+      "beforeSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "afterSha": "79d43a16aad5f8be8176c170bc9a744c51ee150e78e8d5d8add4a17ba58a2146",
+      "assertionCount": 0,
+      "propertyCount": 0,
+      "caseCount": 0,
+      "assertionsIdentical": true,
+      "propertiesIdentical": true,
+      "casesIdentical": true
+    }
+  ],
+  "packageProof": {
+    "exitCode": 0,
+    "auditSeconds": 12.0,
+    "docgenSeconds": 4.0
+  },
+  "rootOxlintExitCode": 0,
+  "runtimeProofs": {
+    "node": {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "files": 16,
+      "seconds": 7.178902520994598,
+      "sourceStable": true
+    },
+    "bun": {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "files": 16,
+      "seconds": 3.9209761780002736,
+      "sourceStable": true
+    }
+  }
+}

@@ -1,20 +1,23 @@
+import { it } from "@beep/test-runner";
 import { normalizeHexColorInput } from "@beep/ui/components/color-picker";
 import { findCountryOption, isCountryCode } from "@beep/ui/components/country-select";
 import { formatPhoneDraft, isValidPhoneNumberE164, parsePhoneDraft } from "@beep/ui/components/phone-input";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
 
 describe("@beep/ui form widget helpers", () => {
   it("resolves country metadata by ISO alpha-2 code", () => {
-    expect(isCountryCode("US")).toBe(true);
-    expect(isCountryCode("NOPE")).toBe(false);
+    pipe(isCountryCode("US"), assertTrue);
+    pipe(isCountryCode("NOPE"), assertFalse);
     expect(O.getOrUndefined(findCountryOption("US"))?.label).toBe("United States");
   });
 
   it("formats and parses US phone drafts as E.164", () => {
     expect(formatPhoneDraft("4155552671", "US")).toBe("(415) 555-2671");
     expect(O.getOrUndefined(parsePhoneDraft("4155552671", "US"))).toBe("+14155552671");
-    expect(isValidPhoneNumberE164("+14155552671")).toBe(true);
+    pipe(isValidPhoneNumberE164("+14155552671"), assertTrue);
   });
 
   it("normalizes compact hex colors through @beep/schema", () => {

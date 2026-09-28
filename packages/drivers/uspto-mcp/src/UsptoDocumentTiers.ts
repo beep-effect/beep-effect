@@ -310,8 +310,9 @@ export const projectDocumentsWithinBudget: {
 
   for (const tier of TIER_ORDER) {
     const envelope = toColumnarEnvelope(rows.map((row) => projectFieldTier(row, tier, usptoDocumentFieldTiers)));
-    if (estimateJsonSize(envelope) <= options.budgetBytes) {
-      return DocumentsProjectionOutput.make({ _tag: "Inline", tier, envelope });
+    const inline = DocumentsProjectionOutput.make({ _tag: "Inline", tier, envelope });
+    if (estimateJsonSize(inline) <= options.budgetBytes) {
+      return inline;
     }
   }
 
@@ -320,7 +321,9 @@ export const projectDocumentsWithinBudget: {
   );
   const oversized = OversizedFieldProjection.make({
     value: { columns: minimalEnvelope.columns, rows: minimalEnvelope.rows },
-    sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalEnvelope)),
+    sizeBytes: NonNegativeInt.make(
+      estimateJsonSize(DocumentsProjectionOutput.make({ _tag: "Inline", tier: "minimal", envelope: minimalEnvelope }))
+    ),
   });
   return DocumentsProjectionOutput.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
 });

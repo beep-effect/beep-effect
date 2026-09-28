@@ -1,0 +1,76 @@
+{
+  "package": "@beep/oip-web",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T21:03:00.225000+00:00",
+  "totalMs": 4935.493896484375,
+  "testCount": 57,
+  "files": [
+    {
+      "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+      "ms": 2.12841796875,
+      "tests": 3
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "ms": 4.898193359375,
+      "tests": 10
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "ms": 422.493896484375,
+      "tests": 44
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web round-trips generated OIP site content",
+      "ms": 120.23457800000051
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders brand-compliant footer social links",
+      "ms": 88.53237799999988
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders a shared @beep/ui button",
+      "ms": 47.283024999999725
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders the OIP public headline and contact CTA",
+      "ms": 37.198294000000715
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web provides an optional OIP MUI theme override provider",
+      "ms": 16.977284999999938
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web round-trips generated contact submissions",
+      "ms": 16.09921200000008
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders the progressive theme toggle hook for the static layout script",
+      "ms": 11.51753699999972
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web round-trips generated contact payloads",
+      "ms": 10.408018000000084
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders a server-seeded contact timestamp for progressive form posts",
+      "ms": 8.034122000000025
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web normalizes accepted contact payload fields before provider submission",
+      "ms": 7.390371000000414
+    }
+  ]
+}

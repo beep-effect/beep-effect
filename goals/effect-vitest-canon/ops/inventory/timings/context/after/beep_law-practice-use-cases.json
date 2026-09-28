@@ -1,0 +1,252 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/law-practice-use-cases",
+  "sourceHead": "2f120617b0add2f33fea51c581de70ceefbf3c62",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 6.825603762001265,
+  "bunWholeCommandSeconds": 3.0687644580029882,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [0.931640625, 1.38818359375, 2.4833984375],
+  "loadAfter": [6.302734375, 2.494140625, 2.83544921875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.00 avg300=0.04 total=807266594\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219714\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143544\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.07 total=860633206\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=753034065\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.97 avg60=0.38 avg300=0.12 total=807534547\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219714\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143544\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.06 total=860634001\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=753034380\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "8d90cc819c9f9edbdd58b655957708618fa7a78e347810fd898090f404f0f767"
+    },
+    {
+      "file": "packages/law-practice/use-cases/README.md",
+      "sha256": "eaafd6bcac2f5fbf3f191b50f348cb8e13e920477eceafdee9bb134421aff06b"
+    },
+    {
+      "file": "packages/law-practice/use-cases/docgen.json",
+      "sha256": "5b9a3dd143d50bca0b75f48964436f21c62997e47ffa184eb3a1d5c2285fc72e"
+    },
+    {
+      "file": "packages/law-practice/use-cases/package.json",
+      "sha256": "34c2fb2a0d1beaef476651379ab66c32e53c2629cc9bcaecbdea45ae267ed0b0"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.errors.ts",
+      "sha256": "783fd33b5381fa598c44b2c84ab650f2f185359a1b73ceb45e6b598faee1d8f7"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
+      "sha256": "a258b0013d51b8b01b88a09bc061b06265bd8262fcce634cfd31dcbe34e26f7c"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.service.ts",
+      "sha256": "e32903984075af7f5869458ad2117e0232c62105e2e8a42fa43d350583f8b853"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.values.ts",
+      "sha256": "9f8ae3538a7b99c18863cc72bfade470fe2a6d7a64add57891f158888043c7f8"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/index.ts",
+      "sha256": "43fd1dd4235d77ca8390c93ff3c01ae4ce3e382400c7a0bd134fbd820b0ab39e"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
+      "sha256": "e12502dc17e08fd61fc6ab961e7fd900c01797c6e19420aae4aa05d7641f2b3d"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.reader.ts",
+      "sha256": "2ee2ecf717dc3eb160e601c56edd34376a037e7d843cbb6006197e77e1e86bea"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorRecord/index.ts",
+      "sha256": "57a12d9703128e8017f06d3c3f1552ec99085ea6229f93e1e7a0508d335680af"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",
+      "sha256": "fa5c4ba960ca476868c8d8e828f41560fc984acf3688e7ac98ae022cd7f9e853"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+      "sha256": "558f86471d3ca80900cdcedb8a36777d958a416f3f3b033001f42c33954c9ef2"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+      "sha256": "3250fa2c8eeaa10bde76d18a4ec100b2a4018b2cfc5f71c03d6ed35c46532b5d"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/index.ts",
+      "sha256": "5cfc18faa9407b1235bf70a5febc5d85434fe8e17a8c6b5b609e0da4f78b08a8"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.ports.ts",
+      "sha256": "d139318e18b72f78193a850a3c33c945fa70a55e4fa51014fcdf8830ae1ed643"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.values.ts",
+      "sha256": "e393f8b9996fecc84ddc8c8d7ee9cbad954bf9f25ac96b16978404ed20a544c5"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRecord/index.ts",
+      "sha256": "66fd74ac303f37f2ba52908d163e10e93b8e6f3240a38fa2cd69f57a7e596ef6"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.errors.ts",
+      "sha256": "e2d5606b1b365fb1435c10ca747da500d887351da2d9bb850979e86a219ffac7"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.ports.ts",
+      "sha256": "293caeff75b92767c6fd51ca90efcc0d769b25d81faaf3cec1eb12006a9372aa"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.service.ts",
+      "sha256": "615691a55faed5ec50c8c3a45f3d4a3ef58c517de06ab0988be35578688be80b"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.values.ts",
+      "sha256": "30f2523d6241e98d69edb63e78dc6be9c126b1d1c579238134928e49fd1f2657"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/index.ts",
+      "sha256": "905b9efcdbe7f86e432c79314aff4f508c292590fefd6a44147b85e03c608a57"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionExtractionLabel.ts",
+      "sha256": "1110c44775af2633f10579574d8a0425e08aea96406ec5dcfcd40be15b25e35f"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.candidates.ts",
+      "sha256": "26799d91aed3b77e64cc5765c1922db4750ba421c5ebb0931434c83eb2ac0c7d"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
+      "sha256": "3c928edfc9e2cbc64d977e310d63003561fc9b49eaa74d9951fc6d056040717c"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+      "sha256": "47b4775991e289554e879bf3bab7eb512d16903b463534b012fd149e77205ee8"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/index.ts",
+      "sha256": "37b06856a9b18eeb572bbf582e9a9580f70383fff9b99dae6e6fba50a9b60bee"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PatentClaimCandidate/PatentClaimCandidate.ts",
+      "sha256": "959191e7676734338c4c5ea0f03984345e81bcd72ac7efec13c8deff7ef6eec6"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PatentClaimCandidate/index.ts",
+      "sha256": "900781a119418906516f0f358eabfa357c8e62a1485d4be3876a02f6ac9f6e7f"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "sha256": "3ccdfb7db6b8d4c420096f5af5ffbd90b31395f0c44ffa979ed2cb57af3a92b2"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/Tools.ts",
+      "sha256": "7acf8f3dcfea149c55f661dab92c5363ba50f7d2b5aef61cb88cff0e1227b038"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/index.ts",
+      "sha256": "096ce2a20dd69e5269cd3007430d6154825d90f5f4bac265824880471e9c8000"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/internal/spikeEntity.ts",
+      "sha256": "dbb4eb86b7e613619af346dd98f1cde7efe5aea07ec75acba10ac38906748b18"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/public.ts",
+      "sha256": "bfc037ff4395654d95424fc5993ced9ed697f97f5d2d9d139529fbc394aaedba"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/server.ts",
+      "sha256": "f3d5c79e4cec84ad724eb5e824b55f2f78cf6a34bfd00ff5dc60c76f7e945750"
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/test.ts",
+      "sha256": "58b88b2e6a138ac8ca13c35f7754970023ca4d48f866447d28f53ff4e4f9d63e"
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
+      "sha256": "380b7a24c5c0430edd1736c6d8945343c71cd7499006e7d69fe58201004aa3d6"
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
+      "sha256": "253f1e608f50ee026607ab7aeb53a2c28299487a1ef0f6814728ee2883c9f438"
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/PatentClaimCandidate.test.ts",
+      "sha256": "6f4e7bef382ff96656a7cdc9800f8b53b8b374a245cc5caa25bb0346206e5de7"
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
+      "sha256": "aa41e6d43999d67197b54a4c872dc0cd52668198c3ef138de125b212e8f2c521"
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "302ec340cc46eb8cb40533a87d1551e4946264ff2dae06a389a92051dc34d69c"
+    },
+    {
+      "file": "packages/law-practice/use-cases/tsconfig.check.json",
+      "sha256": "3059196fbe2e11f94bea08fb6b9150b62cc27029dc86d3a2491d50ce35f9a94b"
+    },
+    {
+      "file": "packages/law-practice/use-cases/tsconfig.json",
+      "sha256": "61925f14fd62f8864628864712ce1d4ebf096de539e328fad0ff639c066d4289"
+    },
+    {
+      "file": "packages/law-practice/use-cases/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/law-practice/use-cases/vitest.config.ts",
+      "sha256": "74371247757931dbe82c40787e71e70ee755d7bc4019c6eab17167f3bc0bdc44"
+    }
+  ],
+  "environmentMode": "Configured law-practice-use-cases local schema and contract Vitest tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 70,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [6.302734375, 2.494140625, 2.83544921875],
+    "loadAfter": [6.67919921875, 2.6357421875, 2.87939453125],
+    "pressureBefore": {
+      "cpu": "some avg10=1.97 avg60=0.38 avg300=0.12 total=807534616\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219714\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143544\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.06 total=860634001\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=753034380\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.61 avg60=0.37 avg300=0.12 total=807543588\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219714\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143544\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.06 total=860634289\nfull avg10=0.00 avg60=0.00 avg300=0.06 total=753034654\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 70,
+    "skipped": 0
+  },
+  "interpretation": "Local schema and policy fixture tests:60original tests become70 through11separately named properties replacing one grouped registration. All102original assertions and test titles are conserved; one aggregate Passed check retires. Eleven native inversions expose replay and shrinking. Fixture build-count control fails old54 and passes new27, preserving realWebCrypto and independent scenarios. Source hashes stable, zero skips. Recorded load and pressure contextualize single observations; no causal speedup claim."
+}

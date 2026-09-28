@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/langextract",
+  "sourceHead": "02acc0006af7a8b06df72fa3e3b8791309cbaf92",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.022312432003673,
+  "bunWholeCommandSeconds": 2.868583283998305,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [7.08837890625, 3.62646484375, 3.78076171875],
+  "loadAfter": [7.16162109375, 3.69921875, 3.8037109375],
+  "pressureBefore": {
+    "cpu": "some avg10=2.14 avg60=0.46 avg300=0.15 total=698126464\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=186080727\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=178009046\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=793251701\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=694101799\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.17 avg60=0.42 avg300=0.15 total=698137021\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=186080727\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=178009046\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=793252772\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=694102604\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "a84c3400f46b8b91d5b4b4546dcd1aa6c143d1a3a42841217f642fa7c7913fa9"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/package.json",
+      "sha256": "d47c64f89dcff4cd004067df75e89517834bc994ce086364a2879485161cd329"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "sha256": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.config.ts",
+      "sha256": "6cba364ed99e5fdc5f4d7857159d3237483e9a32a4fc9055241485e04f7ef4c3"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.model.ts",
+      "sha256": "f77f745a3e176ccbf1dea2e99347475ed1b3a85f570827ea58e211692dd6c152"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+      "sha256": "39c4502f237844c4935b670a04fac2f6c45833068c9d2d90e673aaf1cc0985c1"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.behavior.ts",
+      "sha256": "6a6d9b4e318b2d4018f7c3e600a0efca23538c15c42f91f6f15d5df892ac0772"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.config.ts",
+      "sha256": "ac078fa1f779be959dbf3aa8124e116cabfa1bb04d3fd70c20edf31b2017f1fe"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.errors.ts",
+      "sha256": "f790ca75dd218333664a59c0cc1c804cbbc921198b0824d5c3936a80ddadc9a6"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.model.ts",
+      "sha256": "9cdf0e06c6a19de6a8466f21ca38dfcdc6e111fe5504c60ce1c0cc6924ca98a8"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+      "sha256": "839ee8ece5eb0ccaf3f0a90979ecc785b8cad2eebf29986c5226f765bf7b1cce"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts",
+      "sha256": "166bdbb5ec6a70f1a0029d3f6f2a21e2950eca6670c3b8ffbba4181b5e95409f"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/Handoff.model.ts",
+      "sha256": "1c187f8b0774621ca0e332a004451bd90fd0cdf882e360fb481a2bb96460fa92"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+      "sha256": "144fe98f88e7e902c21f6f5e2ebe4dbecd0da6436d33ddffe4fa78b560be6e8f"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.layer.ts",
+      "sha256": "7cd9ec57b86ba3a79e21e1a4ffea3b7d99aa7425eac382ac579dbad3d90ef95e"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.policy.ts",
+      "sha256": "68996c7031238b9a75c0d63eb0dc73c08ff57baf03be2e439f6add9640c87179"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.prompt.ts",
+      "sha256": "dd1f7eb49f484e669fc6a646b31b1b6ef30db5844080bacb53915b94810f9aa1"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
+      "sha256": "c1f23984556b69ed628f9774e819aa2b078789f20bd7c41be406fdf510d5e1d5"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+      "sha256": "b995835bb2948e6be398b97c440bdf748c745b133c34557dd5ebcb184b72b4fa"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Target/Target.model.ts",
+      "sha256": "4fa06d3c2e5794ebcf147b5f35fea4af125760f46124d2cebc079aa16707df27"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+      "sha256": "95401cf76d6eef8813f816c99ddf25ebf4a00c215157a5d3bff8406e1b4be54f"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
+      "sha256": "1077f8b1fa97671797e25922c8eade99b7ab933e86b80a9d09108d9c8535ce49"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.config.ts",
+      "sha256": "6504de7c0e7c71d0facc091529ee9d387b155d4d0a02fddc58f3a4b34dab0acb"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.errors.ts",
+      "sha256": "c9343c923054b78479073990ef886e60ffc3ace053207c88b4f2d2631b7b47d7"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "sha256": "90491cfb18525783afb2b591db44855ec241851dd4d40da641ef0a0326d33e1b"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.normalization.ts",
+      "sha256": "b2edd23ec02ad3f9ec5b0920a5c575b970b6a3a318c3059f5a68d46f5b6f7196"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/index.ts",
+      "sha256": "d2941507249cbe418458e635078e9de4615a3e2ef6c233435f99d707eeac0f89"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/index.ts",
+      "sha256": "22b13faae426f06d99801160039b8ec609554d0673e6012a3db1b418b3403d17"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Alignment.test.ts",
+      "sha256": "c4bec25eb44c6d9f6d8aa4f9d459413a3e4f039e9b1744652e662a176aeeeeec"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Extraction.test.ts",
+      "sha256": "f136fceeca32290d581763a3a124e24273ac927c209979b458b84f8e6f169af5"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Handoff.test.ts",
+      "sha256": "f28c20fcaef527b3621b9b8975d5be07fb7cf85c434be54aa68318207c581212"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+      "sha256": "0685055adb4b7657d91ab5355c19c4945142db83c26b9f5a75132ae0a345d0f5"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/TaggedError.equivalence.test.ts",
+      "sha256": "6881c669ba18e274319f82ed9391de6ddd4d92471264e0a2427696deda0e0532"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanHistory.test.ts",
+      "sha256": "5e88aac43a0c7931dd7abd9ff2660ffb45eb2dd6cce83245491434b535843467"
+    },
+    {
+      "file": "packages/foundation/capability/langextract/test/VerifiedSpanSpike.test.ts",
+      "sha256": "8a6ac7dc563b7ba836ccd8fbd68fe4c086fa7e932aa023825465b15a85c0523f"
+    }
+  ],
+  "environmentMode": "Pure alignment and schema laws, injected model stubs with deterministic TestClock, in-memory history serialization and actual WebCrypto digest. No live provider, disk persistence or credential lookup.",
+  "bunProof": {
+    "passedTests": 98,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [4.71728515625, 3.4013671875, 3.70166015625],
+    "loadAfter": [5.541015625, 3.59423828125, 3.7626953125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.08 avg60=0.27 avg300=0.13 total=698149219\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=186080743\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=178009062\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=793267464\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=694116853\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.05 avg60=0.25 avg300=0.13 total=698155123\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=186080743\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=178009062\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=793268236\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=694117367\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

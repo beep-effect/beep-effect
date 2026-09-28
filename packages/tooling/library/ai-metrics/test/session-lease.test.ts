@@ -7,8 +7,11 @@ import {
   SessionLeaseReconciliationEvidence,
   transitionSessionLease,
 } from "@beep/repo-ai-metrics";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -107,24 +110,19 @@ const reconciliationEvidence = (overrides: Record<string, unknown> = {}) =>
 const reconciliationStatus = (result: SessionLeaseReconciliation) => result.status;
 
 describe("telemetry-v2 session leases", () => {
-  it.effect("round-trips schema-generated leases and liveness events", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)]),
-        ([lease, event]) =>
-          Effect.gen(function* () {
-            const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
-            const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
-            expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
-            expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
+  it.effect.prop(
+    "round-trips schema-generated leases and liveness events",
+    [Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)],
+    Effect.fnUntraced(function* ([lease, event]) {
+      const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
 
-            return true;
-          }),
-        fcRuns(25)
-      );
+      const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
 
-      expect(result._tag).toBe("Passed");
-    })
+      pipe(leaseEquivalent(lease, roundTrippedLease), assertTrue);
+
+      pipe(eventEquivalent(event, roundTrippedEvent), assertTrue);
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("creates a lease only from SessionStart and renews on ordinary activity", () =>

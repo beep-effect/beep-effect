@@ -1,5 +1,6 @@
 import { inspectEditorStateConformance, LexicalConformanceResult } from "@beep/lexical-schema/Lexical.conformance";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 const element = {
   version: 1,

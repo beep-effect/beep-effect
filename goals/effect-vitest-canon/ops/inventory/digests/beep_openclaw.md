@@ -33,3 +33,31 @@ All source/read/row and strict decoder evidence is private beside this digest. E
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## Consolidated P2 completion (2026-09-27)
+
+All saved actionable OpenClaw rows are reconciled. Independent named recorder
+fixtures, canonical assertions, registered codec properties, five independent
+acceptance negatives, and the instrumented runner preserve the original
+assertions, domains, floors and deadlines. Forced concurrent scheduling with
+34 explicit yields passes all 26 recorder-suite cases; shared-recorder controls
+fail eleven original assertions. Native acquisition retains real files, actual
+processes and scoped cleanup. Live clocks are justified by a real ten-second
+driver timeout with handled SIGTERM, escalation, stopped-process and removed-
+directory assertions; the frozen-clock control fails at the outer deadline.
+
+Current Render runSync work added on main is also migrated: real NodeCrypto,
+exact golden JSON/hash and the 25-run generated intent domain remain. The newly
+authored native timeout file is added to the owned census and reviewed in all
+four lenses. Twenty-five current detector rows are justified native-boundary,
+inner-cleanup-observation and pure fixture-hook exceptions. No production
+implementation, provider invocation or secret-resolution operation is added.
+
+Full package audit and docgen pass. Node/Bun final runs pass 67 cases versus the
+65-case baseline; the two additional cases cover independent acceptance
+negatives and actual native timeout/escalation. Whole commands are 15.537s and
+13.434s, with stable hashes and recorded workstation pressure. Those unequal
+workloads cannot establish runner overhead. The final 400-run seed20260708
+property check passes all 54 tests in five property-bearing files. Fixed stage
+labels are absent with tracing off and visible with tracing on; cold npm/runtime
+download branches were not forced. See the completion history and timing context.

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/epistemic-config",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T04:18:06.895000+00:00",
+  "totalMs": 4328.798828125,
+  "testCount": 10,
+  "files": [
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "ms": 7.798828125,
+      "tests": 10
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive defaults to the empty allowlist, which denies every destination",
+      "ms": 6.087875999999596
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive parses a comma-separated destination allowlist",
+      "ms": 5.893114000000423
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive reads an explicitly empty allowlist as deny-all rather than as an error",
+      "ms": 5.878241000000344
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "EpistemicConfigLive keeps malformed configuration in the typed failure channel",
+      "ms": 5.87061999999969
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience classifies loopback destinations as local-workspace",
+      "ms": 5.8638290000008055
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience classifies every other destination as external-network",
+      "ms": 1.798862999999983
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "resolveSinkAudience takes the stricter branch for unparseable destinations",
+      "ms": 1.7665429999997286
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "grant fixtures produces a byte-stable digest across reconstructions",
+      "ms": 1.747784000000138
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "grant fixtures seals a verifiable grant set",
+      "ms": 1.745350000000144
+    },
+    {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "testName": "grant fixtures allowlists exactly the destination the fixture grant names",
+      "ms": 1.7263609999999971
+    }
+  ]
+}

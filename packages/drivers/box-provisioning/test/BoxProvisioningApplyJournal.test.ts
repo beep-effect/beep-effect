@@ -3,10 +3,12 @@ import { BoxAdoptions, BoxApplyJournalApplied, BoxDesiredState, recoverBoxAdopti
 import { BoxProvisioningApplier, BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { BoxObservedState } from "@beep/box-provisioning/BoxProvisioningObserved";
 import { planBoxProvisioning } from "@beep/box-provisioning/BoxProvisioningPlanner";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect, layer } from "@effect/vitest";
-import { Effect, Layer, Ref } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { desiredFixture, observedFixture } from "./fixtures.ts";
@@ -89,7 +91,7 @@ const applyWithJournal = Effect.fn("BoxProvisioningApplyJournalTest.applyWithJou
   return { entries: yield* Ref.get(entries), error, plan };
 });
 
-layer(BunCrypto.layer)("@beep/box-provisioning apply journal", (it) => {
+it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning apply journal", (it) => {
   it.effect(
     "retains every prior Applied entry and the failed folder when folder N fails",
     Effect.fnUntraced(function* () {
@@ -98,8 +100,14 @@ layer(BunCrypto.layer)("@beep/box-provisioning apply journal", (it) => {
       expect(result.error._tag).toBe("BoxError");
       expect(A.map(result.entries, (entry) => entry.phase)).toEqual(["Started", "Applied", "Started", "Failed"]);
       expect(A.map(result.entries, (entry) => entry.sequence)).toEqual([0, 1, 2, 3]);
-      expect(A.every(result.entries, (entry) => entry.planDigest === result.plan.planDigest)).toBe(true);
-      expect(A.every(result.entries, (entry) => entry.attemptId === result.entries[0]?.attemptId)).toBe(true);
+      pipe(
+        A.every(result.entries, (entry) => entry.planDigest === result.plan.planDigest),
+        assertTrue
+      );
+      pipe(
+        A.every(result.entries, (entry) => entry.attemptId === result.entries[0]?.attemptId),
+        assertTrue
+      );
       expect(result.entries[1]?.resourceKind).toBe("folder");
       expect(result.entries[3]?.resourceKind).toBe("folder");
       const applied = result.entries[1];

@@ -1,0 +1,46 @@
+{
+  "reviewedNodes": 14,
+  "changedDependencyLists": 9,
+  "edges": [
+    {
+      "computation": "@beep/semantic-web#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/semantic-web#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantic-web#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantic-web#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantic-web#doctest",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantic-web#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantic-web#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantic-web#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantic-web#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "e04eddef793bd6f1cd7b0db2a656e3352229dac7638c2c201bf30f8da6135cc7"
+}

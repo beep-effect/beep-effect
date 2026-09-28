@@ -1,0 +1,46 @@
+{
+  "reviewedNodes": 14,
+  "changedDependencyLists": 9,
+  "edges": [
+    {
+      "computation": "@beep/dock#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/dock#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/dock#doctest",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/dock#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "bf8ad9f85d57f7df96c2fa3e1627397c2f60d1561acae0edc69f58b3ae29c730"
+}

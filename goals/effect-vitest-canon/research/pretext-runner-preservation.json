@@ -1,0 +1,51 @@
+{
+  "suites": [
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "17c41b9bad0d736213139518db36fbc3c4a40b9820c10362130d2a1d8164a7a8",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "3721bdb9003c1d5fdade30019bc692a7ec88d44c23ea2226f6641978650c3344",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "2750ebcb8a58f48ba59bed2ca9e52ed1ebf746ff34333c49531700189c8ac6df",
+      "instrumented": true
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "bodyTokensUnchanged": true,
+      "sourceSha256": "88d6b95e3a7a8bff844cae17ecb6cb052158236d4c693f38b5aad85c5c30b68f",
+      "instrumented": true
+    }
+  ],
+  "diagnosticProbe": [
+    {
+      "trace": "0",
+      "exit": 0,
+      "start": false,
+      "failureEndAndDuration": false,
+      "caseName": false
+    },
+    {
+      "trace": "1",
+      "exit": 0,
+      "start": true,
+      "failureEndAndDuration": true,
+      "caseName": true
+    }
+  ],
+  "testCounts": {
+    "registered": 25,
+    "passed": 24,
+    "skipped": 1
+  },
+  "sourceStable": true,
+  "packageVerify": "Full audit and docgen pass"
+}

@@ -1,8 +1,10 @@
+import { it } from "@beep/test-runner";
 import { resolveIsMobile } from "@beep/ui/hooks/useMobile";
 import { getStepFactor, NumberInputTestKit, numberToString, toNumber } from "@beep/ui/hooks/useNumberInput";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
 
 describe("@beep/ui hooks/useNumberInput", () => {
   describe("toNumber", () => {
@@ -57,9 +59,9 @@ describe("@beep/ui hooks/useNumberInput", () => {
 
   describe("resolveIsMobile", () => {
     it("unwraps the mobile Option without coercing the container object", () => {
-      expect(resolveIsMobile(O.some(true))).toBe(true);
-      expect(resolveIsMobile(O.some(false))).toBe(false);
-      expect(resolveIsMobile(O.none())).toBe(false);
+      pipe(resolveIsMobile(O.some(true)), assertTrue);
+      pipe(resolveIsMobile(O.some(false)), assertFalse);
+      pipe(resolveIsMobile(O.none()), assertFalse);
     });
   });
 });

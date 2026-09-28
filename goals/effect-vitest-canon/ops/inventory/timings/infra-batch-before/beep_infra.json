@@ -1,0 +1,101 @@
+{
+  "package": "@beep/infra",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T19:37:43.509000+00:00",
+  "totalMs": 3750.01806640625,
+  "testCount": 93,
+  "files": [
+    {
+      "file": "infra/test/AIMetrics.test.ts",
+      "ms": 18.60791015625,
+      "tests": 7
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "ms": 59.6748046875,
+      "tests": 4
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "ms": 81.01806640625,
+      "tests": 11
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "ms": 15.046142578125,
+      "tests": 10
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "ms": 146.96044921875,
+      "tests": 7
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "ms": 15.510009765625,
+      "tests": 6
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "ms": 55.234375,
+      "tests": 41
+    },
+    {
+      "file": "infra/test/Storybook.test.ts",
+      "ms": 8.931640625,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "testName": "@beep/infra CiTurboCache uses Lambda invocation ARNs for the read and write API integrations",
+      "ms": 143.9604250000002
+    },
+    {
+      "file": "infra/test/CiTurboCache.test.ts",
+      "testName": "@beep/infra CiTurboCache accepts absolute ZIP paths and rejects relative or non-ZIP paths",
+      "ms": 126.26746599999979
+    },
+    {
+      "file": "infra/test/CiFleetController.test.ts",
+      "testName": "@beep/infra CiFleetController wires the fail-closed workload identity boundary before runner startup",
+      "ms": 78.01818600000024
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "testName": "@beep/infra AccountCostControls limits resources to account visibility and preserves the existing budget semantics",
+      "ms": 38.67483399999992
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw round-trips OpenClaw config schemas through encoded wire values",
+      "ms": 34.10835099999986
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw models renderer input contracts as schemas",
+      "ms": 34.09601200000043
+    },
+    {
+      "file": "infra/test/OpenClaw.test.ts",
+      "testName": "@beep/infra OpenClaw re-addresses the generation when the deployment intent changes",
+      "ms": 32.17704599999979
+    },
+    {
+      "file": "infra/test/AccountCostControls.test.ts",
+      "testName": "@beep/infra AccountCostControls redacts malformed recipient values at the Pulumi output boundary",
+      "ms": 14.688490999999885
+    },
+    {
+      "file": "infra/test/OipWeb.test.ts",
+      "testName": "@beep/infra OipWeb round-trips OIP config schemas through encoded wire values",
+      "ms": 12.51005699999996
+    },
+    {
+      "file": "infra/test/CiRunners.test.ts",
+      "testName": "@beep/infra CiRunners keeps stack args import-safe",
+      "ms": 12.046261999999842
+    }
+  ]
+}

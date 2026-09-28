@@ -9,33 +9,44 @@ workflows in skills.
 
 Three-step pool order (binding for orchestrators):
 
-1. **Codex pool** — when any admitted Codex account has more than 5% weekly
-   remaining, use the Codex lane (D2, D7, D8).
-2. **Cursor pool** — when Codex is at or below the floor, Cursor is fail-open:
-   launch a Cursor lane on the seat for the tier; hold Cursor lanes when the
-   target bucket shows less than 5% remaining (dashboard check, D7, D17).
-3. **Hold** — when both pools are below floor, queue the lane and notify the
-   operator. Fable children are never the fallback; `grok-4.6` proxy lanes stay
-   reserved for research-class work (D7).
+1. **Opus pool** — every sub-agent, delegation, and Workflow child runs on
+   Claude Opus 5.5 by default: research, review, implementation, exploration,
+   distillation, and QA judging (operator directive 2026-09-24, explicit id
+   since 2026-09-26). It spends the orchestrating session's Anthropic pool.
+2. **Cursor pool** — only when the operator authorizes Cursor volume for a
+   lane: launch it on the seat for the tier; hold Cursor lanes when the target
+   bucket shows less than 5% remaining (dashboard check, D7, D17).
+3. **Hold** — when Opus is rate limited and no Cursor lane was authorized,
+   queue the lane and notify the operator. Fable children are never the
+   fallback; `grok-4.6` proxy lanes stay reserved for research-class work (D7);
+   Codex lanes are explicit opt-in only (below).
 
-**Codex (pool 1).** Use `gpt-6-astra` with `medium` reasoning by default for
-all token-heavy Codex work, including implementation, exploration, review, and distillation.
-Pin both the model and reasoning effort when launching that work:
+**Opus (pool 1).** Pin the explicit id `claude-opus-5-5` on every delegation.
+The `opus` alias is not a stable pin (it resolved to `claude-opus-5` before
+2026-09-25), so never rely on it:
 
-- Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "medium"`.
-- Codex CLI: `--model gpt-6-astra -c 'model_reasoning_effort="medium"'`.
-- Codex plugin/companion: `--model gpt-6-astra --effort medium`.
-- Proxy Workflow children: `model: "gpt-6-astra(medium)"`.
+- Native subagents (Agent tool): `model: "claude-opus-5-5"`.
+- Workflow children: `agent(prompt, { model: "claude-opus-5-5" })`.
+- Proxy sessions (`claudex`, `claudeg`, `claudep`): the same id; the local
+  CLIProxyAPI registry must list it before a proxy child can route it (the
+  `child.heavy` binding in `beep models check` reports the gap).
 
-Preserve the configured lightweight and Grok web research routes for their
-intended work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers;
-it overrides explicit Workflow child models.
+Preserve the configured lightweight (`child.lightweight`) and Grok web
+research routes for their intended work. Do not set
+`CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers; it overrides explicit Workflow
+child models.
 
-This operator instruction (2026-09-09) lowers the 2026-09-08 `xhigh` default
-to `medium` and supersedes earlier model and effort guidance for new
-token-heavy Codex work. Historical reports, captured user
-requests, completed-run provenance, and model-parsing fixtures retain the
-models and effort levels they actually recorded.
+**Codex (opt-in only).** `codex exec`, `/codex:*`, the Codex companion, and
+`gpt-6-astra(medium)` proxy children run only when the operator names Codex
+for a task (the codex-security scan is Codex by nature). When they do run,
+keep the pins: CLI `--model gpt-6-astra -c 'model_reasoning_effort="medium"'`,
+plugin/companion `--model gpt-6-astra --effort medium`, proxy Workflow
+children `model: "gpt-6-astra(medium)"`.
+
+This operator instruction (2026-09-24) replaces the 2026-09-09 Codex-first
+order for new sub-agent work. Historical reports, captured user requests,
+completed-run provenance, and model-parsing fixtures retain the models and
+effort levels they actually recorded.
 
 **Cursor (pool 2).** Volume: `composer-2.5` → `cursor-grok-4.6-xhigh`;
 review: `claude-opus-5-thinking-high` → `gpt-5.6-sol-xhigh`; mechanical:

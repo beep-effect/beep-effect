@@ -1,0 +1,81 @@
+{
+  "package": "@beep/architecture-lab-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:55:11.080000+00:00",
+  "totalMs": 3904.64794921875,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/architecture-lab/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 1.25830078125,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "ms": 28.64794921875,
+      "tests": 13
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkPriority.test.ts",
+      "ms": 0.884765625,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "ms": 8.523681640625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived WorkPriority.WorkPriority",
+      "ms": 19.06246800000008
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived Worker.WorkerStatus",
+      "ms": 18.96848299999965
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived Worker.CreateWorkerInput",
+      "ms": 18.95526299999983
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived Worker.Worker",
+      "ms": 18.952228000000105
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived WorkItem.WorkItemId",
+      "ms": 18.948202000000038
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "testName": "Worker entity creates a product-entity-backed active Worker",
+      "ms": 8.523677000000134
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/Worker.test.ts",
+      "testName": "Worker entity materializes Worker model extras into table indexes",
+      "ms": 8.259951000000001
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived WorkItem.WorkItemTitle",
+      "ms": 7.489884999999958
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived WorkItem.WorkItemStatus",
+      "ms": 7.476685000000089
+    },
+    {
+      "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+      "testName": "WorkItem aggregate round-trips schema-derived WorkItem.CreateWorkItemInput",
+      "ms": 7.470756000000165
+    }
+  ]
+}

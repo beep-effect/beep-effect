@@ -1,0 +1,71 @@
+{
+  "package": "@beep/agents-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T06:21:33.802000+00:00",
+  "totalMs": 4755.838623046875,
+  "testCount": 22,
+  "files": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "ms": 56.838623046875,
+      "tests": 13
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "ms": 22.13330078125,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain round-trips schema-derived agent modes",
+      "ms": 33.19051099999979
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain decodes Agent Skills frontmatter through the derived codec",
+      "ms": 28.096502999999757
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain preserves assistant content exports from the canonical value-object path",
+      "ms": 28.080728999999337
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain round-trips crispened schemas with schema-derived arbitraries",
+      "ms": 28.001186000000416
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain keeps assistant content encoded shape stable",
+      "ms": 27.99944400000004
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain keeps agents source code off removed turn subpath imports",
+      "ms": 20.838635000000068
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance wires ProviderInstance to the agents product-entity identity",
+      "ms": 11.794919000000846
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance rejects token-bearing env-var names and accepts benign ones",
+      "ms": 11.59771499999988
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance round-trips every AuthSnapshot variant through the tagged union",
+      "ms": 11.59487100000024
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance decodes, constructs, and round-trips a ProviderInstance row",
+      "ms": 11.586898999999903
+    }
+  ]
+}

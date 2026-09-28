@@ -1,0 +1,66 @@
+{
+  "sourceCommit": "237412d589859ae72bf36e6318b8636fe88d8580",
+  "configuredRuns": [
+    {
+      "runtime": "node",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "wholeCommandSeconds": 4.52176503699593,
+      "sourceStable": true
+    },
+    {
+      "runtime": "bun",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "wholeCommandSeconds": 2.467965527997876,
+      "sourceStable": true
+    }
+  ],
+  "traceControls": [
+    {
+      "case": "agent",
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "phase": "agent.cancellation",
+      "sourceSha256": "5669d1b8e15dd8d9f05076ba510af2000f558b9ceda2b704d1245b3b6b264cce",
+      "results": {
+        "positive": 0,
+        "negative": 1
+      },
+      "sourceRestored": true
+    },
+    {
+      "case": "client",
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "phase": "client.notifications",
+      "sourceSha256": "88ab2fea3ccef0827647e50f54368299b0e5dbc4c780b1a8c829ecb72a43d277",
+      "results": {
+        "positive": 0,
+        "negative": 1
+      },
+      "sourceRestored": true
+    },
+    {
+      "case": "protocol",
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "phase": "protocol.native-exit",
+      "sourceSha256": "44fc22babb3afe1c0ab331b7169cd2f13977f3928b2e3621ae0e128253c0c1c8",
+      "results": {
+        "positive": 0,
+        "negative": 1
+      },
+      "sourceRestored": true
+    }
+  ],
+  "propertyProof": {
+    "registrations": 3,
+    "runsPerProperty": 400,
+    "seed": 20260708,
+    "status": "passed",
+    "exitCode": 0,
+    "nonselectedCases": 23,
+    "selector": "round-trips"
+  },
+  "scope": "Six existing inventory paths; configured proof also executes later json.test.ts whose lens inventory is deferred."
+}

@@ -22,8 +22,10 @@ import {
 import { ApplyOntologyBatchCommand, ApplyOntologyBatchResult } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
@@ -47,16 +49,19 @@ describe("ontology inspector client actions", () => {
   it.live(
     "derives validation state and decodes object-kind select values in the ontology runtime",
     Effect.fnUntraced(function* () {
-      const registry = AtomRegistry.make();
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const setSubject = setOntologyInspectorInputAtoms("subject");
       const setPredicate = setOntologyInspectorInputAtoms("predicate");
       const setObject = setOntologyInspectorInputAtoms("object");
-      registry.mount(ontologyInspectorFormStateAtom);
-      registry.mount(setSubject);
-      registry.mount(setPredicate);
-      registry.mount(setObject);
-      registry.mount(setOntologyInspectorObjectKindAtom);
-      registry.mount(setOntologyGraphRendererAtom);
+      yield* AtomRegistry.mount(registry, ontologyInspectorFormStateAtom);
+      yield* AtomRegistry.mount(registry, setSubject);
+      yield* AtomRegistry.mount(registry, setPredicate);
+      yield* AtomRegistry.mount(registry, setObject);
+      yield* AtomRegistry.mount(registry, setOntologyInspectorObjectKindAtom);
+      yield* AtomRegistry.mount(registry, setOntologyGraphRendererAtom);
       registry.set(ontologySessionAtom, O.some(session));
       registry.set(setSubject, "not an iri");
       registry.set(setPredicate, "https://example.test/predicate");
@@ -72,16 +77,16 @@ describe("ontology inspector client actions", () => {
 
       const invalid = registry.get(ontologyInspectorFormStateAtom);
       expect(invalid.objectKind).toBe("iri");
-      expect(invalid.showSubjectError).toBe(true);
-      expect(invalid.canApplyTriple).toBe(false);
+      pipe(invalid.showSubjectError, assertTrue);
+      pipe(invalid.canApplyTriple, assertFalse);
 
       registry.set(setSubject, "  https://example.org/padded#Term  ");
       yield* AtomRegistry.getResult(registry, setSubject);
       const valid = registry.get(ontologyInspectorFormStateAtom);
-      expect(valid.subjectValid).toBe(true);
-      expect(valid.predicateValid).toBe(true);
-      expect(valid.objectValid).toBe(true);
-      expect(valid.canApplyGraphGesture).toBe(true);
+      pipe(valid.subjectValid, assertTrue);
+      pipe(valid.predicateValid, assertTrue);
+      pipe(valid.objectValid, assertTrue);
+      pipe(valid.canApplyGraphGesture, assertTrue);
 
       registry.set(setOntologyInspectorObjectKindAtom, "unsupported");
       yield* AtomRegistry.getResult(registry, setOntologyInspectorObjectKindAtom);
@@ -90,7 +95,6 @@ describe("ontology inspector client actions", () => {
       registry.set(setOntologyGraphRendererAtom, true);
       yield* AtomRegistry.getResult(registry, setOntologyGraphRendererAtom);
       expect(registry.get(ontologyGraphRendererAtom)).toBe("graph3d");
-      registry.dispose();
     })
   );
 
@@ -111,9 +115,12 @@ describe("ontology inspector client actions", () => {
           })
         );
       }) as unknown as OntologyClient["Service"]);
-      const registry = registryWithClient(client);
-      registry.mount(applyOntologyInspectorActionAtom);
-      registry.mount(setOntologyInspectorObjectKindAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      yield* AtomRegistry.mount(registry, applyOntologyInspectorActionAtom);
+      yield* AtomRegistry.mount(registry, setOntologyInspectorObjectKindAtom);
       registry.set(ontologySessionAtom, O.some(session));
       registry.set(subjectInputAtom, "  https://example.test/subject  ");
       registry.set(predicateInputAtom, "  https://example.test/predicate  ");
@@ -163,7 +170,6 @@ describe("ontology inspector client actions", () => {
         },
         removeQuad: () => expect.unreachable(),
       });
-      registry.dispose();
     })
   );
 });

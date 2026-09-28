@@ -17,9 +17,11 @@ import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P as MdP, Text } from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
@@ -80,15 +82,21 @@ const completedTimeline = ThreadTimeline.make({
 const FastReceiptPollLayer = ConfigProvider.layer(
   ConfigProvider.fromUnknown({ BEEP_TURN_RECEIPT_POLL_INTERVAL: "2 millis" })
 );
-const registryWithClient = (client: ChatClient["Service"]) =>
-  AtomRegistry.make({
-    initialValues: [
-      [
-        ChatClient.runtime.layer,
-        Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer, FastReceiptPollLayer),
-      ],
-    ],
-  });
+const registryWithClient = Effect.fnUntraced(function* (client: ChatClient["Service"]) {
+  return yield* Effect.acquireRelease(
+    Effect.sync(() =>
+      AtomRegistry.make({
+        initialValues: [
+          [
+            ChatClient.runtime.layer,
+            Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer, FastReceiptPollLayer),
+          ],
+        ],
+      })
+    ),
+    (registry) => Effect.sync(() => registry.dispose())
+  );
+});
 const waitForAtom = Effect.fnUntraced(function* <A>(
   registry: AtomRegistry.AtomRegistry,
   atom: Atom.Atom<A>,
@@ -113,19 +121,30 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "retains unreconciled per-thread replies across view unmounts",
     Effect.fnUntraced(function* () {
       const atom = unreconciledTurnAtoms(threadId);
-      const registry = AtomRegistry.make({ defaultIdleTTL: 1, timeoutResolution: 1 });
-      const unmount = registry.mount(atom);
+      const removable = Atom.make(false);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 1, timeoutResolution: 1 })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const fallback = StreamingTurn.make({ threadId, userContent: content, blocks: [assistantBlock] });
-      registry.set(atom, [fallback]);
-      unmount();
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          yield* AtomRegistry.mount(registry, atom);
+          yield* AtomRegistry.mount(registry, removable);
+          registry.set(removable, true);
+          assertTrue(registry.get(removable));
+          registry.set(atom, [fallback]);
+        })
+      );
 
       yield* Effect.sleep(Duration.millis(20));
+      // The same registry must have swept an ordinary atom during this interval.
+      assertFalse(registry.get(removable));
       expect(registry.get(atom)).toStrictEqual([fallback]);
-      registry.dispose();
     })
   );
 
-  it.live(
+  it.effect(
     "does not mistake a newly persisted user turn for the stopped assistant turn",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
@@ -140,15 +159,15 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
       const draftAtom = draftAtoms(threadId);
-      const unmountTimeline = registry.mount(timelineAtom);
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountDraft = registry.mount(draftAtom);
-      const unmountStreaming = registry.mount(streamingTurnAtom);
-      const unmountActivity = registry.mount(turnActiveAtom);
-      const unmountError = registry.mount(turnErrorAtom);
+      yield* AtomRegistry.mount(registry, timelineAtom);
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, draftAtom);
+      yield* AtomRegistry.mount(registry, streamingTurnAtom);
+      yield* AtomRegistry.mount(registry, turnActiveAtom);
+      yield* AtomRegistry.mount(registry, turnErrorAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
@@ -161,22 +180,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
-      expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
-
-      unmountError();
-      unmountActivity();
-      unmountStreaming();
-      unmountDraft();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
+      assertSome(registry.get(draftAtom), content);
+      pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
     })
   );
 
-  it.live(
+  it.effect(
     "does not restore a cancelled prompt after the server confirms its user row persisted",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
@@ -190,29 +201,22 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const draftAtom = draftAtoms(threadId);
-      const unmountTimeline = registry.mount(threadTimelineAtoms(threadId));
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountDraft = registry.mount(draftAtom);
-      const unmountStreaming = registry.mount(streamingTurnAtom);
-      const unmountError = registry.mount(turnErrorAtom);
+      yield* AtomRegistry.mount(registry, threadTimelineAtoms(threadId));
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, draftAtom);
+      yield* AtomRegistry.mount(registry, streamingTurnAtom);
+      yield* AtomRegistry.mount(registry, turnErrorAtom);
 
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-      expect(registry.get(draftAtom)).toStrictEqual(O.none());
-      expect(registry.get(turnErrorAtom)).toStrictEqual(O.none());
-
-      unmountError();
-      unmountStreaming();
-      unmountDraft();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
+      assertNone(registry.get(streamingTurnAtom));
+      assertNone(registry.get(draftAtom));
+      assertNone(registry.get(turnErrorAtom));
     })
   );
 
@@ -235,16 +239,16 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
       return Effect.die(`unexpected chat RPC: ${tag}`);
     }) as unknown as ChatClient["Service"]);
-    const registry = registryWithClient(client);
+    const registry = yield* registryWithClient(client);
     const timelineAtom = threadTimelineAtoms(threadId);
     const draftAtom = draftAtoms(threadId);
     const draftRevisionAtom = draftRevisionAtoms(threadId);
     const unreconciledAtom = unreconciledTurnAtoms(threadId);
-    const unmountTimeline = registry.mount(timelineAtom);
-    const unmountTurn = registry.mount(runTurnAtom);
-    const unmountDraft = registry.mount(draftAtom);
-    const unmountDraftRevision = registry.mount(draftRevisionAtom);
-    const unmountUnreconciled = registry.mount(unreconciledAtom);
+    yield* AtomRegistry.mount(registry, timelineAtom);
+    yield* AtomRegistry.mount(registry, runTurnAtom);
+    yield* AtomRegistry.mount(registry, draftAtom);
+    yield* AtomRegistry.mount(registry, draftRevisionAtom);
+    yield* AtomRegistry.mount(registry, unreconciledAtom);
 
     yield* AtomRegistry.getResult(registry, timelineAtom);
     registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
@@ -257,7 +261,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     );
     yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
 
-    expect(registry.get(draftAtom)).toStrictEqual(O.none());
+    assertNone(registry.get(draftAtom));
     expect(registry.get(draftRevisionAtom)).toBe(0);
     const [fallback] = registry.get(unreconciledAtom);
     expect(fallback?.userContent).toStrictEqual(content);
@@ -265,28 +269,21 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
     expect(statusReads).toBeGreaterThan(1);
     expect(timelineReads).toBeGreaterThan(1);
+  }, Effect.scoped);
 
-    unmountUnreconciled();
-    unmountDraftRevision();
-    unmountDraft();
-    unmountTurn();
-    unmountTimeline();
-    registry.dispose();
-  });
-
-  it.live("keeps accepted failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps accepted failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("accepted")
   );
 
-  it.live("keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps protocol-unknown failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("protocol_unknown")
   );
 
-  it.live("keeps transport-failed prompts non-sendable while receipt evidence is uncertain", () =>
+  it.effect("keeps transport-failed prompts non-sendable while receipt evidence is uncertain", () =>
     verifyUncertainFailedTurnStatus("transport_failure")
   );
 
-  it.live(
+  it.effect(
     "keeps interrupted prompts non-sendable while receipt evidence is uncertain",
     Effect.fnUntraced(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainInterruptedTurnStatus")(function* (
@@ -307,18 +304,18 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           }
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const timelineAtom = threadTimelineAtoms(threadId);
         const draftAtom = draftAtoms(threadId);
         const draftRevisionAtom = draftRevisionAtoms(threadId);
         const unreconciledAtom = unreconciledTurnAtoms(threadId);
-        const unmountTimeline = registry.mount(timelineAtom);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountDraftRevision = registry.mount(draftRevisionAtom);
-        const unmountUnreconciled = registry.mount(unreconciledAtom);
-        const unmountStreaming = registry.mount(streamingTurnAtom);
-        const unmountError = registry.mount(turnErrorAtom);
+        yield* AtomRegistry.mount(registry, timelineAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, draftRevisionAtom);
+        yield* AtomRegistry.mount(registry, unreconciledAtom);
+        yield* AtomRegistry.mount(registry, streamingTurnAtom);
+        yield* AtomRegistry.mount(registry, turnErrorAtom);
 
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
@@ -326,8 +323,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, Atom.Interrupt);
         yield* waitForAtom(registry, streamingTurnAtom, O.isNone);
 
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(streamingTurnAtom));
+        assertNone(registry.get(draftAtom));
         expect(registry.get(draftRevisionAtom)).toBe(0);
         const [fallback] = registry.get(unreconciledAtom);
         expect(fallback?.userContent).toStrictEqual(content);
@@ -335,17 +332,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         expect(fallback?.blocks).toMatchObject([
           { type: "paragraph", children: [{ type: "text", text: "(stopped)" }] },
         ]);
-        expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
-
-        unmountError();
-        unmountStreaming();
-        unmountUnreconciled();
-        unmountDraftRevision();
-        unmountDraft();
-        unmountTurn();
-        unmountTimeline();
-        registry.dispose();
-      });
+        pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
+      }, Effect.scoped);
 
       yield* verifyUncertainStatus("accepted");
       yield* verifyUncertainStatus("protocol_unknown");
@@ -377,14 +365,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const timelineAtom = threadTimelineAtoms(threadId);
         const draftAtom = draftAtoms(threadId);
         const draftRevisionAtom = draftRevisionAtoms(threadId);
-        const unmountTimeline = registry.mount(timelineAtom);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountDraftRevision = registry.mount(draftRevisionAtom);
+        yield* AtomRegistry.mount(registry, timelineAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, draftRevisionAtom);
 
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
@@ -393,13 +381,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         expect(statusReads).toBe(3);
         expect(registry.get(draftAtom)).toStrictEqual(recoveredStatus === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(recoveredStatus === "not_persisted" ? 1 : 0);
-
-        unmountDraftRevision();
-        unmountDraft();
-        unmountTurn();
-        unmountTimeline();
-        registry.dispose();
-      });
+      }, Effect.scoped);
 
       yield* verifyRecoveredStatus("persisted");
       yield* verifyRecoveredStatus("not_persisted");
@@ -425,32 +407,25 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const timelineAtom = threadTimelineAtoms(threadId);
         const draftAtom = draftAtoms(threadId);
-        const unmountTimeline = registry.mount(timelineAtom);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountStreaming = registry.mount(streamingTurnAtom);
-        const unmountError = registry.mount(turnErrorAtom);
+        yield* AtomRegistry.mount(registry, timelineAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, streamingTurnAtom);
+        yield* AtomRegistry.mount(registry, turnErrorAtom);
 
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
         yield* Deferred.await(timelineRefreshed);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
-        expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
+        assertNone(registry.get(draftAtom));
+        assertNone(registry.get(streamingTurnAtom));
+        pipe(registry.get(turnErrorAtom), O.isSome, assertTrue);
         expect(timelineReads).toBeGreaterThan(1);
-
-        unmountError();
-        unmountStreaming();
-        unmountDraft();
-        unmountTurn();
-        unmountTimeline();
-        registry.dispose();
-      });
+      }, Effect.scoped);
 
       yield* verifyStatus("persisted");
       yield* verifyStatus("user_persisted");
@@ -473,36 +448,30 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
           return Effect.die(`unexpected chat RPC: ${tag}`);
         }) as unknown as ChatClient["Service"]);
-        const registry = registryWithClient(client);
+        const registry = yield* registryWithClient(client);
         const timelineAtom = threadTimelineAtoms(threadId);
         const draftAtom = draftAtoms(threadId);
-        const unmountTimeline = registry.mount(timelineAtom);
-        const unmountTurn = registry.mount(runTurnAtom);
-        const unmountDraft = registry.mount(draftAtom);
-        const unmountUnreconciled = registry.mount(unreconciledTurnAtoms(threadId));
+        yield* AtomRegistry.mount(registry, timelineAtom);
+        yield* AtomRegistry.mount(registry, runTurnAtom);
+        yield* AtomRegistry.mount(registry, draftAtom);
+        yield* AtomRegistry.mount(registry, unreconciledTurnAtoms(threadId));
 
         yield* AtomRegistry.getResult(registry, timelineAtom);
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
 
-        expect(registry.get(draftAtom)).toStrictEqual(O.none());
+        assertNone(registry.get(draftAtom));
         const [fallback] = registry.get(unreconciledTurnAtoms(threadId));
         expect(fallback?.userContent).toStrictEqual(content);
         expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(failed)" }] }]);
-
-        unmountUnreconciled();
-        unmountDraft();
-        unmountTurn();
-        unmountTimeline();
-        registry.dispose();
-      });
+      }, Effect.scoped);
 
       yield* verifyStatus("persisted");
       yield* verifyStatus("user_persisted");
     })
   );
 
-  it.live(
+  it.effect(
     "retains a stopped turn when its durable timeline refresh fails",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
@@ -523,31 +492,25 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
       const draftAtom = draftAtoms(threadId);
-      const unmountTimeline = registry.mount(timelineAtom);
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountDraft = registry.mount(draftAtom);
-      const unmountUnreconciled = registry.mount(unreconciledTurnAtoms(threadId));
+      yield* AtomRegistry.mount(registry, timelineAtom);
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, draftAtom);
+      yield* AtomRegistry.mount(registry, unreconciledTurnAtoms(threadId));
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
       registry.set(runTurnAtom, Atom.Interrupt);
       yield* Deferred.await(timelineRefreshAttempted);
-      yield* Effect.sleep(Duration.millis(25));
+      yield* waitForAtom(registry, unreconciledTurnAtoms(threadId), A.isReadonlyArrayNonEmpty);
 
-      expect(registry.get(draftAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(draftAtom));
       const [fallback] = registry.get(unreconciledTurnAtoms(threadId));
       expect(fallback?.userContent).toStrictEqual(content);
       expect(fallback?.blocks).toMatchObject([{ type: "paragraph", children: [{ type: "text", text: "(stopped)" }] }]);
-
-      unmountUnreconciled();
-      unmountDraft();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
     })
   );
 
@@ -571,13 +534,13 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
-      const unmountTimeline = registry.mount(timelineAtom);
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountStreaming = registry.mount(streamingTurnAtom);
-      const unmountActivity = registry.mount(turnActiveAtom);
-      const unmountError = registry.mount(turnErrorAtom);
+      yield* AtomRegistry.mount(registry, timelineAtom);
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, streamingTurnAtom);
+      yield* AtomRegistry.mount(registry, turnActiveAtom);
+      yield* AtomRegistry.mount(registry, turnErrorAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
@@ -588,20 +551,13 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       expect(localReply).toBeDefined();
       if (localReply === undefined) return;
       expect(localReply.blocks).toStrictEqual([assistantBlock]);
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
-      expect(AsyncResult.isFailure(registry.get(timelineAtom)) && O.isSome(registry.get(turnErrorAtom))).toBe(true);
+      assertTrue(AsyncResult.isFailure(registry.get(timelineAtom)) && O.isSome(registry.get(turnErrorAtom)));
 
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true }).pipe(Effect.exit);
       expect(registry.get(unreconciledTurnAtoms(threadId))).toHaveLength(1);
-
-      unmountError();
-      unmountActivity();
-      unmountStreaming();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
     })
   );
 
@@ -626,7 +582,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
       const unreconciledAtom = unreconciledTurnAtoms(threadId);
       const draftAtom = draftAtoms(threadId);
@@ -671,11 +627,11 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         userContent: content,
         blocks: [assistantBlock],
       });
-      const unmountTimeline = registry.mount(timelineAtom);
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountUnreconciled = registry.mount(unreconciledAtom);
-      const unmountDraft = registry.mount(draftAtom);
-      const unmountDraftRevision = registry.mount(draftRevisionAtom);
+      yield* AtomRegistry.mount(registry, timelineAtom);
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, unreconciledAtom);
+      yield* AtomRegistry.mount(registry, draftAtom);
+      yield* AtomRegistry.mount(registry, draftRevisionAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(unreconciledAtom, [
@@ -694,7 +650,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         acceptedReceiptFallback,
         anotherNotPersistedFallback,
       ]);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
+      assertSome(registry.get(draftAtom), content);
       expect(registry.get(draftRevisionAtom)).toBe(1);
       expect(statusReads).toBeGreaterThanOrEqual(5);
 
@@ -713,15 +669,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true });
 
       expect(registry.get(unreconciledAtom)).toStrictEqual([notPersistedReceiptFallback, receiptFallback]);
-      expect(registry.get(draftAtom)).toStrictEqual(O.some(newerContent));
+      assertSome(registry.get(draftAtom), newerContent);
       expect(registry.get(draftRevisionAtom)).toBe(2);
-
-      unmountDraftRevision();
-      unmountDraft();
-      unmountUnreconciled();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
     })
   );
 
@@ -737,26 +686,20 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
       }) as unknown as ChatClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
-      const unmountTimeline = registry.mount(timelineAtom);
-      const unmountTurn = registry.mount(runTurnAtom);
-      const unmountStreaming = registry.mount(streamingTurnAtom);
-      const unmountActivity = registry.mount(turnActiveAtom);
+      yield* AtomRegistry.mount(registry, timelineAtom);
+      yield* AtomRegistry.mount(registry, runTurnAtom);
+      yield* AtomRegistry.mount(registry, streamingTurnAtom);
+      yield* AtomRegistry.mount(registry, turnActiveAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom, { suspendOnWaiting: true });
 
       expect(timelineReads).toBeGreaterThan(1);
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
+      assertNone(registry.get(streamingTurnAtom));
       expect(registry.get(turnActiveAtom)).toBe(false);
-
-      unmountActivity();
-      unmountStreaming();
-      unmountTurn();
-      unmountTimeline();
-      registry.dispose();
     })
   );
 });

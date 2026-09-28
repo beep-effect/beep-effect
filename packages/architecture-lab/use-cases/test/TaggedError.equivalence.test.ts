@@ -17,7 +17,8 @@ import {
   WorkerRepositoryUnavailable,
 } from "@beep/architecture-lab-use-cases/entities/Worker/server";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(

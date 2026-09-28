@@ -1,0 +1,42 @@
+{
+  "reviewedNodes": 13,
+  "changedDependencyLists": 8,
+  "edges": [
+    {
+      "computation": "@beep/documents-use-cases#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/documents-use-cases#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/documents-use-cases#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/documents-use-cases#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/documents-use-cases#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/documents-use-cases#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/documents-use-cases#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/documents-use-cases#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "a09c6bda5eca53ff3583c0d7e6468a93717a9caa813fe3120b7be3fac704097b"
+}

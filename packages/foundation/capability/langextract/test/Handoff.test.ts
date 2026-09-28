@@ -3,8 +3,10 @@ import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 
@@ -33,7 +35,10 @@ describe("toAnnotatedDocument", () => {
 
     expect(A.length(document.chunks)).toBe(1);
     expect(A.length(document.entities)).toBe(1);
-    expect(O.map(A.head(document.entities), (entity) => entity.canonicalName)).toEqual(O.some("Ada Lovelace"));
+    assertSome(
+      O.map(A.head(document.entities), (entity) => entity.canonicalName),
+      "Ada Lovelace"
+    );
   });
 
   it("emits one mention per aligned extraction carrying the aligned span into the document chunk", () => {
@@ -61,7 +66,10 @@ describe("toAnnotatedDocument", () => {
 
     expect(document.version).toBe("nlp-ir/1.1");
     expect(A.length(document.mentions)).toBe(1);
-    expect(O.map(mention, (m) => m.span)).toEqual(O.some(span));
+    assertSome(
+      O.map(mention, (m) => m.span),
+      span
+    );
     expect(O.map(mention, (m) => Str.slice(m.span.start, m.span.end)(sourceText))).toEqual(
       O.map(mention, (m) => m.text)
     );

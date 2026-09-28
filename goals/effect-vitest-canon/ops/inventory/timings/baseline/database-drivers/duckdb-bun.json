@@ -1,0 +1,368 @@
+{
+  "numTotalTestSuites": 5,
+  "numPassedTestSuites": 5,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 29,
+  "numPassedTests": 29,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790419126861,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DuckDB declared-field equivalence"],
+          "fullName": "DuckDB declared-field equivalence treats field-equal DuckDbError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal DuckDbError instances as equivalent and field-different ones as distinct",
+          "duration": 3.8128820000001724,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790419134485,
+      "endTime": 1790419134488.813,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb preserves encoded schema wire shapes",
+          "status": "passed",
+          "title": "preserves encoded schema wire shapes",
+          "duration": 7.162209000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb round-trips schema-derived DuckDB models",
+          "status": "passed",
+          "title": "round-trips schema-derived DuckDB models",
+          "duration": 44.47907099999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb normalizes unknown failures into typed DuckDB errors",
+          "status": "passed",
+          "title": "normalizes unknown failures into typed DuckDB errors",
+          "duration": 5.792869999999311,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb preserves existing DuckDB errors and supports the data-last normalizer form",
+          "status": "passed",
+          "title": "preserves existing DuckDB errors and supports the data-last normalizer form",
+          "duration": 0.8941080000004149,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb runs statements, queries rows, and exports parquet",
+          "status": "passed",
+          "title": "runs statements, queries rows, and exports parquet",
+          "duration": 164.27313800000047,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb rejects legacy parquet export inside transactions",
+          "status": "passed",
+          "title": "rejects legacy parquet export inside transactions",
+          "duration": 252.28610600000138,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb preserves in-memory state across client operations",
+          "status": "passed",
+          "title": "preserves in-memory state across client operations",
+          "duration": 91.1894599999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb keeps legacy query permits held until interrupted native operations settle",
+          "status": "passed",
+          "title": "keeps legacy query permits held until interrupted native operations settle",
+          "duration": 149.94868099999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb keeps legacy run permits held until interrupted native operations settle",
+          "status": "passed",
+          "title": "keeps legacy run permits held until interrupted native operations settle",
+          "duration": 133.54053399999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb keeps legacy parquet export permits held until interrupted native operations settle",
+          "status": "passed",
+          "title": "keeps legacy parquet export permits held until interrupted native operations settle",
+          "duration": 220.73514299999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb closes a legacy scoped instance when connection acquisition fails",
+          "status": "passed",
+          "title": "closes a legacy scoped instance when connection acquisition fails",
+          "duration": 2.2573360000005778,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb closes a legacy scoped instance even when connection close fails",
+          "status": "passed",
+          "title": "closes a legacy scoped instance even when connection close fails",
+          "duration": 1.238137000000279,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb registers legacy scoped cleanup when first acquisition is interrupted",
+          "status": "passed",
+          "title": "registers legacy scoped cleanup when first acquisition is interrupted",
+          "duration": 28.13753899999938,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb rolls back legacy transactions interrupted after delayed begin",
+          "status": "passed",
+          "title": "rolls back legacy transactions interrupted after delayed begin",
+          "duration": 78.92354200000045,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb does not roll back legacy transactions when begin fails",
+          "status": "passed",
+          "title": "does not roll back legacy transactions when begin fails",
+          "duration": 63.124432999999044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/duckdb"],
+          "fullName": "@beep/duckdb rolls back failed nested transactions on the same connection",
+          "status": "passed",
+          "title": "rolls back failed nested transactions on the same connection",
+          "duration": 408.73798200000056,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient provides the generic SqlClient tag and executes core statement paths",
+          "status": "passed",
+          "title": "provides the generic SqlClient tag and executes core statement paths",
+          "duration": 283.5796050000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient normalizes Date and Uint8Array bind values for generic SQL callers",
+          "status": "passed",
+          "title": "normalizes Date and Uint8Array bind values for generic SQL callers",
+          "duration": 43.62187100000119,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient builds from a caller-owned live connection",
+          "status": "passed",
+          "title": "builds from a caller-owned live connection",
+          "duration": 69.43889600000148,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient closes a created instance when managed connection acquisition fails",
+          "status": "passed",
+          "title": "closes a created instance when managed connection acquisition fails",
+          "duration": 5.295974999999089,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient closes the managed instance even when connection close fails",
+          "status": "passed",
+          "title": "closes the managed instance even when connection close fails",
+          "duration": 1.236324000001332,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient serializes normal statements on the shared connection",
+          "status": "passed",
+          "title": "serializes normal statements on the shared connection",
+          "duration": 116.7852640000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient streams rows through DuckDB streaming results",
+          "status": "passed",
+          "title": "streams rows through DuckDB streaming results",
+          "duration": 147.51392099999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient keeps read permits held until interrupted native operations settle",
+          "status": "passed",
+          "title": "keeps read permits held until interrupted native operations settle",
+          "duration": 363.68492700000024,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient keeps raw permits held until interrupted native operations settle",
+          "status": "passed",
+          "title": "keeps raw permits held until interrupted native operations settle",
+          "duration": 367.56827599999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient exports parquet outside transactions and rejects transaction-scoped exports",
+          "status": "passed",
+          "title": "exports parquet outside transactions and rejects transaction-scoped exports",
+          "duration": 310.5250270000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient commits, rolls back, and reuses the active transaction for nested calls",
+          "status": "passed",
+          "title": "commits, rolls back, and reuses the active transaction for nested calls",
+          "duration": 165.04342499999984,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["DuckDbSqlClient"],
+          "fullName": "DuckDbSqlClient marks the outer transaction rollback-only when a nested transaction fails",
+          "status": "passed",
+          "title": "marks the outer transaction rollback-only when a nested transaction fails",
+          "duration": 87.64079499999934,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790419135106,
+      "endTime": 1790419138744.6409,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/duckdb/test/DuckDb.service.test.ts"
+    }
+  ]
+}

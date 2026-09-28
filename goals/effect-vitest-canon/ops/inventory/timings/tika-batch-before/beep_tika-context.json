@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/tika",
+  "sourceHead": "f7ae3c2e0cd43b617f3f28af1f0c74036b8eeab2",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.420648359999177,
+  "bunWholeCommandSeconds": 2.2675121029897127,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.64501953125, 3.48291015625, 3.00537109375],
+  "loadAfter": [2.833984375, 3.50830078125, 3.01611328125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.04 avg300=0.04 total=706674285\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014581\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797672050\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697940960\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.04 avg300=0.04 total=706680165\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014581\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797672790\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697941628\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "807aa59d805bbd05cd851a8f37f397f3f58c9dd56ee5dc1f35fd584dabcd2adc"
+    },
+    {
+      "file": "packages/drivers/tika/package.json",
+      "sha256": "58d676f18837f393bc1df930aa44de879fe9640956416ceb09b111dac8aecd55"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.config.ts",
+      "sha256": "861695b577d01c956796d7ae8fc643cc571e83b9c2a3cd21fe2da6868759f3d8"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.error-translation.ts",
+      "sha256": "8b0b7bb42036c7d09947c540891ece2a9654267a3f74d3d69ee753108f7cfbd0"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.errors.ts",
+      "sha256": "76bdb35daa11b6d62e20221da683053e8a23f557feacdf1d9c003314a12e16e0"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.response.ts",
+      "sha256": "ff43c24a327d509e7e56ad73093e808d59eb4d00516e7bb91c6ea4bcbe7e3574"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.server.ts",
+      "sha256": "82223fd48be39855caf0aafeda79ce54ae84ee40abe6751620cf7e12e916262d"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.service.ts",
+      "sha256": "879814c2712bc059bfab1849f1d2410a115d29c97fd45b78b363d3aecf893955"
+    },
+    {
+      "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
+      "sha256": "68b1b551fa06ae802bbd351a7ba5ad8adea5c63707b268147167c04bb3210456"
+    },
+    {
+      "file": "packages/drivers/tika/src/index.ts",
+      "sha256": "669dd5a347f15c9ab1a7c9d16640ce501891cc2387d30c465fc471f97460eba3"
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.errors.test.ts",
+      "sha256": "c906890a906314b6322be8eed97c50261634597929f6c1b50744a913ba12c6d4"
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "sha256": "6ff69faf91a11ea6fac302aa66a17134c663e7d1172cb21d31e9001f82c47992"
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "sha256": "f9a2da3b5a1d2c5ec83f1eb5690f6caee0863cf1ae44b05eb1bbf7b42aa0dd74"
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "sha256": "143abfa7bb40851454706092d01654b414c1a57f747cc8eebda27f736cdb16ba"
+    },
+    {
+      "file": "packages/drivers/tika/test/fixtures.ts",
+      "sha256": "703c02ffd17ebc916dc0d25b23790dce48eb26211fc5165829fa16377e28c5aa"
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "sha256": "9fdffa311fc3dccc396e653e9ddb4adc4d34e13966ff95c57d4c1489364df884"
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/live-fixtures.ts",
+      "sha256": "c0791c249e4fd4e624d0350fc4e1673f090b595b5d92a03a4d800f0168147e0c"
+    }
+  ],
+  "environmentMode": "Injected HTTP unit cases; actual child processes over native temporary shell-stub files for tika-app; pure schema laws. Live Tika HTTP parser cases require BEEP_TEST_TIKA_URL. Before migration, an absent live URL is a logged no-op registration and reported pass is not parser execution.",
+  "bunProof": {
+    "passedTests": 70,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.833984375, 3.50830078125, 3.01611328125],
+    "loadAfter": [2.833984375, 3.50830078125, 3.01611328125],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.04 avg300=0.04 total=706680215\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014581\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797672790\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697941628\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.04 avg300=0.04 total=706684068\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186087370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178014581\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=797673071\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=697941882\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 70,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark. Before:11 live registrations were logged no-ops reported passed. After:11 explicit skips; real parser assertions not executed locally."
+}

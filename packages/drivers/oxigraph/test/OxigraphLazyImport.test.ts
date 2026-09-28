@@ -1,19 +1,38 @@
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { expect } from "@effect/vitest";
+import { Effect } from "effect";
+import { vi } from "vitest";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+const engine = vi.hoisted(() => ({ imports: 0, constructions: 0, loadedQuads: 0 }));
+vi.mock("oxigraph", (importOriginal) =>
+  importOriginal<typeof import("oxigraph")>().then((actual) => {
+    engine.imports += 1;
+    return {
+      ...actual,
+      Store: class extends actual.Store {
+        constructor(...args: ConstructorParameters<typeof actual.Store>) {
+          super(...args);
+          engine.constructions += 1;
+        }
+        override add(quad: Parameters<InstanceType<typeof actual.Store>["add"]>[0]): void {
+          engine.loadedQuads += 1;
+          super.add(quad);
+        }
+      },
+    };
+  })
+);
+const importObservation = { imports: engine.imports, constructions: engine.constructions };
 
-describe("@beep/oxigraph lazy service surface", () => {
+it.layer(OxigraphSparqlQueryServiceLive, { timeout: "30 seconds" })("@beep/oxigraph lazy service surface", (it) => {
   it.effect(
     "imports the live layer without constructing an Oxigraph store",
     Effect.fnUntraced(function* () {
       expect(OxigraphSparqlQueryServiceLive).toBeDefined();
+      expect(importObservation).toEqual({ imports: 0, constructions: 0 });
     })
   );
 
@@ -37,10 +56,30 @@ describe("@beep/oxigraph lazy service surface", () => {
       const second = yield* sparql.execute(request);
 
       expect(first).toEqual(second);
+      expect(engine.imports).toBe(1);
+      expect(engine.constructions).toBe(1);
+      expect(engine.loadedQuads).toBe(dataset.quads.length);
       expect(first.profile).toBe("select");
       if (first.profile === "select") {
         expect(first.rows).toHaveLength(1);
       }
-    }, provideScopedLayer(OxigraphSparqlQueryServiceLive))
+
+      const differentDataset = makeDataset([
+        makeQuad(
+          makeNamedNode("https://example.test/bob"),
+          makeNamedNode("https://example.test/name"),
+          makeLiteral("Bob", "http://www.w3.org/2001/XMLSchema#string")
+        ),
+      ]);
+      const different = yield* sparql.execute(
+        SparqlQueryRequest.make({ dataset: differentDataset, profile: "select", query: request.query })
+      );
+      expect(engine.constructions).toBe(2);
+      expect(engine.loadedQuads).toBe(dataset.quads.length + differentDataset.quads.length);
+      expect(different.profile).toBe("select");
+      if (different.profile === "select") {
+        expect(different.rows).toHaveLength(0);
+      }
+    })
   );
 });

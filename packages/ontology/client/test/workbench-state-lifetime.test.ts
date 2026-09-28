@@ -8,11 +8,13 @@ import {
 import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
 // its idle TTL elapses. A tiny TTL reproduces in milliseconds what took the real
@@ -38,10 +40,26 @@ describe("ontology workbench state lifetime", () => {
       // every unsaved change in its change log, the dirty-tracking signature and the
       // redo stack were destroyed in silence, and the workbench came back claiming
       // no file was open. Nothing warned the user; nothing could be undone.
-      const registry = AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+
+      // Prove the same registry actually evicts ordinary state during this wait.
+      const removable = Atom.make(0);
+      const releaseRemovable = yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(removable)),
+        (release) => Effect.sync(release)
+      );
+      registry.set(removable, 1);
+      expect(registry.get(removable)).toBe(1);
+      releaseRemovable();
 
       // The workbench is on screen: something subscribes.
-      const unmount = registry.mount(ontologySessionAtom);
+      const unmount = yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(ontologySessionAtom)),
+        (release) => Effect.sync(release)
+      );
       registry.set(ontologySessionAtom, O.some(openSession));
       registry.set(ontologyPathAtom, O.some(openPath));
       registry.set(ontologySourceAtom, "@prefix ex: <https://example.test/> .");
@@ -54,9 +72,11 @@ describe("ontology workbench state lifetime", () => {
       // ...and stays away longer than the registry's idle TTL.
       yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
 
+      expect(registry.get(removable)).toBe(0);
+
       // Coming back must show the same document, not an empty workbench.
-      expect(registry.get(ontologySessionAtom)).toStrictEqual(O.some(openSession));
-      expect(registry.get(ontologyPathAtom)).toStrictEqual(O.some(openPath));
+      assertSome(registry.get(ontologySessionAtom), openSession);
+      assertSome(registry.get(ontologyPathAtom), openPath);
       expect(registry.get(ontologySourceAtom)).toBe("@prefix ex: <https://example.test/> .");
       expect(registry.get(ontologySavedChangeLogSignatureAtom)).toBe("saved-signature");
     })

@@ -39,11 +39,11 @@ import { PosInt } from "@beep/schema/Int";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Result } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { DateTime, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -259,28 +259,20 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 };
 
 describe("Contradiction candidate row converters", () => {
-  it("round-trips schema-derived canonical belief pairs used by candidate JSONB rows", () => {
-    const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([CanonicalContradictionBeliefPairArbitrary]),
-          ([arbitraryPair]) => {
-            const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
-              Result.getOrThrow,
-              decodeUnknownCanonicalContradictionBeliefPairResult,
-              Result.getOrThrow
-            );
-            expect(equivalent(decoded, arbitraryPair)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round-trips schema-derived canonical belief pairs used by candidate JSONB rows",
+    [CanonicalContradictionBeliefPairArbitrary],
+    ([arbitraryPair]) => {
+      const equivalent = S.toEquivalence(CanonicalContradictionBeliefPair);
+      const decoded = encodeCanonicalContradictionBeliefPairResult(arbitraryPair).pipe(
+        Result.getOrThrow,
+        decodeUnknownCanonicalContradictionBeliefPairResult,
+        Result.getOrThrow
+      );
+      expect(equivalent(decoded, arbitraryPair)).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 
   it("round-trips a candidate only when every persisted seal is valid", () => {
     const insert = Result.getOrThrow(toContradictionCandidateInsert(candidate));
@@ -322,9 +314,9 @@ describe("Contradiction candidate row converters", () => {
       orgId: SharedIdentity.OrganizationId.make(2),
     });
 
-    expect(Result.isFailure(toContradictionReceiptInsert(receipt, futureCandidate))).toBe(true);
-    expect(Result.isFailure(toContradictionReceiptInsert(receipt, differentCandidate))).toBe(true);
-    expect(Result.isFailure(toContradictionReceiptInsert(differentOrganizationReceipt, candidate))).toBe(true);
+    pipe(toContradictionReceiptInsert(receipt, futureCandidate), Result.isFailure, assertTrue);
+    pipe(toContradictionReceiptInsert(receipt, differentCandidate), Result.isFailure, assertTrue);
+    pipe(toContradictionReceiptInsert(differentOrganizationReceipt, candidate), Result.isFailure, assertTrue);
   });
 
   it("rejects a disposition that predates or does not reference its supplied candidate", () => {
@@ -337,14 +329,16 @@ describe("Contradiction candidate row converters", () => {
       id: EpistemicIdentity.ContradictionCandidateId.make(99),
     });
 
-    expect(
-      Result.isFailure(toContradictionDispositionInsert(disposition, { candidate: futureCandidate, edgeVersions: [] }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        toContradictionDispositionInsert(disposition, { candidate: differentCandidate, edgeVersions: [] })
-      )
-    ).toBe(true);
+    pipe(
+      toContradictionDispositionInsert(disposition, { candidate: futureCandidate, edgeVersions: [] }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(disposition, { candidate: differentCandidate, edgeVersions: [] }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("binds a superseded disposition to the candidate proposal and replacement edge chain", () => {
@@ -372,36 +366,42 @@ describe("Contradiction candidate row converters", () => {
       expiredAt: O.none(),
     });
 
-    expect(
-      Result.isSuccess(toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: edges }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(toContradictionDispositionInsert(mismatchedProposal, { candidate, edgeVersions: edges }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(toContradictionDispositionInsert(mismatchedFormer, { candidate, edgeVersions: edges }))
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: [formerEdge] })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        toContradictionDispositionInsert(supersededDisposition, {
-          candidate,
-          edgeVersions: [formerEdge, brokenReplacement],
-        })
-      )
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        toContradictionDispositionInsert(supersededDisposition, {
-          candidate,
-          edgeVersions: [openFormer, replacementEdge],
-        })
-      )
-    ).toBe(true);
+    pipe(
+      toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: edges }),
+      Result.isSuccess,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(mismatchedProposal, { candidate, edgeVersions: edges }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(mismatchedFormer, { candidate, edgeVersions: edges }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(supersededDisposition, { candidate, edgeVersions: [formerEdge] }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(supersededDisposition, {
+        candidate,
+        edgeVersions: [formerEdge, brokenReplacement],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(
+      toContradictionDispositionInsert(supersededDisposition, {
+        candidate,
+        edgeVersions: [openFormer, replacementEdge],
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it("rejects each tampered seal before writing", () => {
@@ -420,7 +420,7 @@ describe("Contradiction candidate row converters", () => {
     ];
 
     for (const [label, tampered] of tamperedCandidates) {
-      expect(Result.isFailure(toContradictionCandidateInsert(tampered)), label).toBe(true);
+      assertTrue(Result.isFailure(toContradictionCandidateInsert(tampered)), label);
     }
   });
 
@@ -442,7 +442,7 @@ describe("Contradiction candidate row converters", () => {
         }),
       "Expected validFrom to be earlier than validTo when validTo is present."
     );
-    expect(Result.isFailure(toContradictionCandidateInsert(unorderedCandidate))).toBe(true);
+    pipe(toContradictionCandidateInsert(unorderedCandidate), Result.isFailure, assertTrue);
   });
 
   it("rejects each tampered seal and a non-canonical pair after reading", () => {
@@ -482,7 +482,7 @@ describe("Contradiction candidate row converters", () => {
     ];
 
     for (const [label, tampered] of tamperedRows) {
-      expect(Result.isFailure(fromContradictionCandidateRow(tampered)), label).toBe(true);
+      assertTrue(Result.isFailure(fromContradictionCandidateRow(tampered)), label);
     }
   });
 });

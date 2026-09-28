@@ -7,8 +7,9 @@ import {
   AiProviderCliProcessResult,
   AiProviderCliProvider,
 } from "@beep/ai-provider-cli";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -158,7 +159,7 @@ describe("@beep/ai-provider-cli", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(AiProviderCli.makeLayerFromRunner(runner))((it) => {
+  it.layer(AiProviderCli.makeLayerFromRunner(runner))((it) => {
     it.effect(
       "maps Claude and Codex CLI exit codes to sanitized auth probes",
       Effect.fnUntraced(function* () {

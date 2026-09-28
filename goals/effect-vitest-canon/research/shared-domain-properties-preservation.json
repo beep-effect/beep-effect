@@ -1,0 +1,253 @@
+{
+  "beforeSha": "c464b24aaf",
+  "files": [
+    {
+      "file": "packages/shared/domain/test/EntityKernel.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "1194b6879623816725812170f51b1d781a6d57f312a2323ae669d507af78ed96"
+    },
+    {
+      "file": "packages/shared/domain/test/IdentityNamespaces.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "e845dbc5e0e2dc7e03f6fb749399a307b65523833586999c612bcf49004fad3b"
+    },
+    {
+      "file": "packages/shared/domain/test/LocalDate.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "3db61693d1cf8808c3f75fea4feef4810f2ff61ccf9ca307cdb9c5e7a84060de"
+    },
+    {
+      "file": "packages/shared/domain/test/OnePasswordReference.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "433765d07897657cbc19ca18b725572a9df7dc0b2fff9e82b5bcdaacf25a8d50"
+    },
+    {
+      "file": "packages/shared/domain/test/Organization.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "de17cb737ec945e55c694ab8a9630863f6cb5a4ce75ba5cd909233f4a888f0a1"
+    },
+    {
+      "file": "packages/shared/domain/test/SchemaParity.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "ab834bbe6d38eeedf130bce53f171dfce599011ab7a68a2d3f45a8b780a9ad20",
+      "laws": [
+        {
+          "kind": "decodeSelf",
+          "schema": "EntityId.EntityIdValue",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "EntityRef.EntityType",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "EntityRef.EntityRef",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "primitives.Ed25519Signature",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "primitives.EncryptionKeyId",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "primitives.HybridLogicalClock",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "primitives.VectorClock",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "SourceKind.SourceKind",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Organization.LicenseTier",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Membership.Role",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Membership.Status",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Principal.SystemComponent",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Rule.Effect",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Rule.Rule",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "Rule.Ruleset",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "ClaimLifecycle.ClaimLifecycle",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "ClaimLifecycle.ClaimLifecycleTransition",
+          "runs": 25
+        },
+        {
+          "kind": "decodeSelf",
+          "schema": "OnePasswordReference",
+          "runs": 10
+        },
+        {
+          "kind": "codec",
+          "schema": "EntityId.Options",
+          "runs": 25
+        },
+        {
+          "kind": "codec",
+          "schema": "EntityId.Definition",
+          "runs": 25
+        },
+        {
+          "kind": "codec",
+          "schema": "Principal.ServiceAccountPrincipal",
+          "runs": 25
+        },
+        {
+          "kind": "codec",
+          "schema": "Principal.AgentPrincipal",
+          "runs": 25
+        },
+        {
+          "kind": "codec",
+          "schema": "Principal.ConnectorAccountPrincipal",
+          "runs": 25
+        },
+        {
+          "kind": "codec",
+          "schema": "Principal.Principal",
+          "runs": 25
+        }
+      ],
+      "schemaDomainsAndFloorsPreserved": true
+    },
+    {
+      "file": "packages/shared/domain/test/StaticProbes.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "a38c8e56337e5136d39a6b73cbefaf3d0db4bd459f1eb8345a528acd72cdf7da"
+    },
+    {
+      "file": "packages/shared/domain/test/TaggedError.equivalence.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "517d8603e77ba4d367214c6ad6c20e79f6c3476d3bc2cf3afda3aa57bf048fa8"
+    },
+    {
+      "file": "packages/shared/domain/test/UserMembership.test.ts",
+      "otherBodyTokensUnchanged": true,
+      "sourceSha256": "3eb9e84e7ec6835940b338ea28e598d9671dff51d4bd6d45e7d06cc65a08a96d"
+    }
+  ],
+  "identity": {
+    "laws": 32,
+    "floor": 10,
+    "oracle": "decode(id), encode(decoded), encoded === id, declared schema equivalence(decoded, id); original labels preserved"
+  },
+  "helperCharacterization": {
+    "source": "packages/tooling/test-kit/test-utils/src/Schema.ts",
+    "decodeSelfOracle": "decodeUnknownEffect(schema)(value); S.is(schema)(value) && S.toEquivalence(schema)(decoded,value)",
+    "codecOracle": "encodeEffect(schema)(value), decodeUnknownEffect(schema)(encoded), S.toEquivalence(schema)(decoded,value)",
+    "nativeSchemaCompilation": "installed @effect/vitest compiles schema inputs with Arbitrary.schema",
+    "existingNativePropertiesUnchanged": 3
+  },
+  "proofs": [
+    {
+      "phase": "properties",
+      "runtime": "node",
+      "casesPassed": 116,
+      "casesFailed": 0,
+      "suites": 8,
+      "wholeCommandSeconds": 3.6201789879996795,
+      "sourceStable": true,
+      "loadBefore": [5.4736328125, 6.447265625, 5.869140625],
+      "loadAfter": [5.51611328125, 6.439453125, 5.8701171875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.29 avg60=0.36 avg300=0.18 total=226978260\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886411\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292430\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695027954\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629550193\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.19 avg60=0.34 avg300=0.18 total=226984696\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886426\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292445\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695028493\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629550579\n"
+      }
+    },
+    {
+      "phase": "properties",
+      "runtime": "bun",
+      "casesPassed": 116,
+      "casesFailed": 0,
+      "suites": 8,
+      "wholeCommandSeconds": 1.5667450799955986,
+      "sourceStable": true,
+      "loadBefore": [5.51611328125, 6.439453125, 5.8701171875],
+      "loadAfter": [5.51611328125, 6.439453125, 5.8701171875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.19 avg60=0.34 avg300=0.18 total=226984713\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886426\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292445\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695028493\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629550579\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.16 avg60=0.33 avg300=0.18 total=226991924\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886870\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292865\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695028744\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629550773\n"
+      }
+    },
+    {
+      "phase": "properties-deep",
+      "runtime": "node",
+      "casesPassed": 110,
+      "casesFailed": 0,
+      "suites": 5,
+      "wholeCommandSeconds": 3.77058481000131,
+      "sourceStable": true,
+      "loadBefore": [5.11865234375, 6.2626953125, 5.8251953125],
+      "loadAfter": [5.11865234375, 6.2626953125, 5.8251953125],
+      "pressureBefore": {
+        "cpu": "some avg10=0.02 avg60=0.23 avg300=0.16 total=227030841\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886945\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292932\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695033077\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629554092\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.01 avg60=0.22 avg300=0.16 total=227041032\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=87886946\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=85292933\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=695033722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=629554507\n"
+      },
+      "runs": 400,
+      "seed": 20260708,
+      "propertyLaws": 59
+    }
+  ]
+}

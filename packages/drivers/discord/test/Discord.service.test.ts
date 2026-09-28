@@ -9,8 +9,9 @@ import {
   DiscordMessageProof,
 } from "@beep/discord";
 import { decodeJsonString } from "@beep/schema/Json";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Context, Effect, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -256,7 +257,7 @@ describe("@beep/discord", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(makeLayer())((it) => {
+  it.layer(makeLayer(), { timeout: "5 seconds" })((it) => {
     it.effect(
       "probes channel liveness and sends a test message with mentions disabled",
       Effect.fnUntraced(function* () {
@@ -287,6 +288,8 @@ describe("@beep/discord", () => {
         expect(message.messageId).toBe(messageId);
         expect(captures[0]?.url).toBe(`https://discord.example.test/api/v10/channels/${channelId}`);
         expect(captures[1]?.url).toBe(`https://discord.example.test/api/v10/channels/${channelId}/messages`);
+        expect(messageCapture.method).toBe("POST");
+        expect(body.content).toBe("P1 proof");
         expect(messageCapture.headers.authorization).toBe("Bot bot-token");
         expect(body.allowed_mentions.parse).toEqual([]);
       })

@@ -6,15 +6,12 @@ import {
   NodeSdkServerOptions,
   ServerObservabilityConfig,
 } from "@beep/observability/server";
+import { it } from "@beep/test-runner";
 import * as OtelTracer from "@effect/opentelemetry/OtelTracer";
+import { describe, expect } from "@effect/vitest";
 import { BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { Duration, Effect, Layer } from "effect";
-import { describe, expect, it } from "vitest";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+import * as A from "effect/Array";
 
 const serverConfig = ServerObservabilityConfig.make({
   serviceName: "beep-server",
@@ -44,24 +41,21 @@ describe("NodeSdk", () => {
     expect(sdkConfig.shutdownTimeout).toStrictEqual(Duration.seconds(3));
   });
 
-  it("provides OpenTelemetry spans when processors are configured", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const exporter = new InMemorySpanExporter();
-
-        yield* Effect.gen(function* () {
-          const otelSpan = yield* OtelTracer.currentOtelSpan;
-          expect(otelSpan).toBeDefined();
-        }).pipe(
-          Effect.withSpan("node-sdk-test"),
-          provideScopedLayer(
-            layerNodeSdkServer(serverConfig, {
-              spanProcessor: [new SimpleSpanProcessor(exporter)],
-            })
-          )
-        );
+  it.layer(
+    Layer.suspend(() =>
+      layerNodeSdkServer(serverConfig, {
+        spanProcessor: [new SimpleSpanProcessor(new InMemorySpanExporter())],
       })
-    ));
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("provides OpenTelemetry spans when processors are configured", () =>
+      Effect.gen(function* () {
+        const otelSpan = yield* OtelTracer.currentOtelSpan;
+        expect(otelSpan).toBeDefined();
+      }).pipe(Effect.withSpan("node-sdk-test"))
+    );
+  });
 
   it("builds trace-only config for Phoenix smoke exports", () => {
     const sdkConfig = makeNodeSdkServerTraceConfig(serverConfig);
@@ -70,43 +64,52 @@ describe("NodeSdk", () => {
     expect(sdkConfig.logRecordProcessor).toEqual([]);
   });
 
-  it("builds trace-only OTLP span export config without metrics or logs", () => {
-    const sdkConfig = makeNodeSdkServerTraceConfig(
-      ServerObservabilityConfig.make({
-        devtoolsEnabled: false,
-        devtoolsUrl: "ws://localhost:34437",
-        environment: "test",
-        minLogLevel: "Info",
-        otlpBaseUrl: "http://127.0.0.1:4318",
-        otlpEnabled: true,
-        otlpResourceAttributes: {},
-        prometheusPrefix: "beep",
-        serviceName: "beep-server",
-        serviceVersion: "0.0.0",
-      })
-    );
-
-    expect(sdkConfig.metricReader).toEqual([]);
-    expect(sdkConfig.logRecordProcessor).toEqual([]);
-    expect(sdkConfig.spanProcessor).toEqual([expect.any(BatchSpanProcessor)]);
-  });
-
-  it("provides spans from the trace-only layer", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const exporter = new InMemorySpanExporter();
-
-        yield* Effect.gen(function* () {
-          const otelSpan = yield* OtelTracer.currentOtelSpan;
-          expect(otelSpan).toBeDefined();
-        }).pipe(
-          Effect.withSpan("node-sdk-trace-only-test"),
-          provideScopedLayer(
-            layerNodeSdkServerTraces(serverConfig, {
-              spanProcessor: [new SimpleSpanProcessor(exporter)],
+  it.effect("builds trace-only OTLP span export config without metrics or logs", () =>
+    Effect.gen(function* () {
+      const sdkConfig = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          makeNodeSdkServerTraceConfig(
+            ServerObservabilityConfig.make({
+              devtoolsEnabled: false,
+              devtoolsUrl: "ws://localhost:34437",
+              environment: "test",
+              minLogLevel: "Info",
+              otlpBaseUrl: "http://127.0.0.1:4318",
+              otlpEnabled: true,
+              otlpResourceAttributes: {},
+              prometheusPrefix: "beep",
+              serviceName: "beep-server",
+              serviceVersion: "0.0.0",
             })
           )
-        );
+        ),
+        (config) =>
+          Effect.forEach(
+            A.ensure(config.spanProcessor ?? []),
+            (processor) => Effect.promise(() => processor.shutdown()),
+            { discard: true }
+          )
+      );
+
+      expect(sdkConfig.metricReader).toEqual([]);
+      expect(sdkConfig.logRecordProcessor).toEqual([]);
+      expect(sdkConfig.spanProcessor).toEqual([expect.any(BatchSpanProcessor)]);
+    })
+  );
+
+  it.layer(
+    Layer.suspend(() =>
+      layerNodeSdkServerTraces(serverConfig, {
+        spanProcessor: [new SimpleSpanProcessor(new InMemorySpanExporter())],
       })
-    ));
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("provides spans from the trace-only layer", () =>
+      Effect.gen(function* () {
+        const otelSpan = yield* OtelTracer.currentOtelSpan;
+        expect(otelSpan).toBeDefined();
+      }).pipe(Effect.withSpan("node-sdk-trace-only-test"))
+    );
+  });
 });

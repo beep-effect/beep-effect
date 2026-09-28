@@ -28,12 +28,12 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { assertSuccess } from "@effect/vitest/utils";
-import { Option as O, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { Option as O, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const decodeParseTurtleResultResult = S.decodeResult(ParseTurtleResult);
@@ -84,30 +84,22 @@ const deepDiscardBudgets: Partial<Record<string, number>> = {
   ApplyOntologyBatchCommand: 10_000,
   ApplyOntologyBatchResult: 50_000,
 };
-
-const assertRoundTrips = <Schema extends S.Codec<unknown, unknown>>(schema: Schema, discardsPerRun: number): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
-          const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
-          expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
-
-          return true;
-        },
-        // Preserve the run count while allowing native partition/quad rejection.
-        { ...fcRuns(25), maxDiscards: fcRuns(25).runs * discardsPerRun }
-      )
-    )._tag
-  ).toBe("Passed");
-};
-
 describe("@beep/ontology-use-cases schema parity", () => {
-  it.each(schemaRoundTripCases)("round-trips schema-derived %s samples", (name, schema) => {
-    assertRoundTrips(schema, deepDiscardBudgets[name] ?? 100);
-  });
+  for (const [name, schema] of schemaRoundTripCases) {
+    const encode = S.encodeResult(schema);
+    const decode = S.decodeUnknownResult(schema);
+    const equivalent = S.toEquivalence(schema);
+    it.prop(
+      `round-trips schema-derived ${name} samples`,
+      [Arbitrary.schema(schema)],
+      ([value]) => {
+        const encoded = Result.getOrThrow(encode(value));
+        const decoded = Result.getOrThrow(decode(encoded));
+        pipe(equivalent(decoded, value), assertTrue);
+      },
+      { arbitrary: { ...fcRuns(25), maxDiscards: fcRuns(25).runs * (deepDiscardBudgets[name] ?? 100) } }
+    );
+  }
 
   it("preserves command and worker protocol encoded wire shapes", () => {
     expect(

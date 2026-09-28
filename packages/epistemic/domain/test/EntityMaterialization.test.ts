@@ -4,7 +4,8 @@ import {
   ContradictionDisposition,
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
 const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>

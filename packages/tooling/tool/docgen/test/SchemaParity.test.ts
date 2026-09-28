@@ -4,10 +4,11 @@ import * as Domain from "@beep/repo-docgen/Domain";
 import * as Printer from "@beep/repo-docgen/Printer";
 import * as ProofManifest from "@beep/repo-docgen/ProofManifest";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const decodeConfigurationConfigurationSchemaResult = S.decodeResult(Configuration.ConfigurationSchema);
@@ -17,21 +18,10 @@ const encodeUnknownProofManifestDocgenProofManifestFileResult = S.encodeUnknownR
   ProofManifest.DocgenProofManifestFile
 );
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 12): void => {
-  const arbitrary = Arbitrary.schema(schema);
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => equivalent(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value),
-        { runs }
-      )
-    )._tag
-  ).toBe("Passed");
+  expect(S.toEquivalence(schema)(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)).toBe(true);
 };
 
 describe("schema parity", () => {
@@ -89,15 +79,30 @@ describe("schema parity", () => {
     });
   });
 
-  it("round-trips schema-derived docgen families", () => {
-    assertSchemaRoundTrip(Domain.Position);
-    assertSchemaRoundTrip(Domain.Doc);
-    assertSchemaRoundTrip(Domain.DocEntry);
-    assertSchemaRoundTrip(Domain.File);
-    assertSchemaRoundTrip(Configuration.ConfigurationSchema);
-    assertSchemaRoundTrip(Configuration.ConfigurationShape);
-    assertSchemaRoundTrip(ProofManifest.DocgenProofManifestFile);
-    assertSchemaRoundTrip(ProofManifest.DocgenProofManifestFingerprint);
-    assertSchemaRoundTrip(Printer.Printable, 4);
-  });
+  it.prop(
+    "round-trips schema-derived docgen families",
+    {
+      position: Arbitrary.schema(Domain.Position),
+      doc: Arbitrary.schema(Domain.Doc),
+      docEntry: Arbitrary.schema(Domain.DocEntry),
+      file: Arbitrary.schema(Domain.File),
+      configuration: Arbitrary.schema(Configuration.ConfigurationSchema),
+      configurationShape: Arbitrary.schema(Configuration.ConfigurationShape),
+      manifestFile: Arbitrary.schema(ProofManifest.DocgenProofManifestFile),
+      fingerprint: Arbitrary.schema(ProofManifest.DocgenProofManifestFingerprint),
+      printable: Arbitrary.schema(Printer.Printable),
+    },
+    (values) => {
+      assertSchemaRoundTrip(Domain.Position, values.position);
+      assertSchemaRoundTrip(Domain.Doc, values.doc);
+      assertSchemaRoundTrip(Domain.DocEntry, values.docEntry);
+      assertSchemaRoundTrip(Domain.File, values.file);
+      assertSchemaRoundTrip(Configuration.ConfigurationSchema, values.configuration);
+      assertSchemaRoundTrip(Configuration.ConfigurationShape, values.configurationShape);
+      assertSchemaRoundTrip(ProofManifest.DocgenProofManifestFile, values.manifestFile);
+      assertSchemaRoundTrip(ProofManifest.DocgenProofManifestFingerprint, values.fingerprint);
+      assertSchemaRoundTrip(Printer.Printable, values.printable);
+    },
+    { arbitrary: fcRuns(12) }
+  );
 });

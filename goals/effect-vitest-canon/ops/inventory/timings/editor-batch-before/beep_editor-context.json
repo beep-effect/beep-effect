@@ -1,0 +1,352 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/editor",
+  "sourceHead": "8dec9f0b7931a39b3996492e52ae9afdf7dfac6e",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 9.730592466003145,
+  "bunWholeCommandSeconds": 7.276119749003556,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.84716796875, 1.7177734375, 1.64306640625],
+  "loadAfter": [5.3017578125, 2.46728515625, 1.88818359375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.00 avg60=0.10 avg300=0.08 total=770034460\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215206\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139205\n",
+    "io": "some avg10=0.00 avg60=0.07 avg300=0.05 total=838016293\nfull avg10=0.00 avg60=0.05 avg300=0.03 total=733115917\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.00 avg60=0.08 avg300=0.08 total=770047370\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215206\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139205\n",
+    "io": "some avg10=0.00 avg60=0.06 avg300=0.05 total=838018356\nfull avg10=0.00 avg60=0.04 avg300=0.03 total=733117662\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "514981cfce33261cb0958bfbc968fc70f9593e628064e19711b0a2e718dd4cc4"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/README.md",
+      "sha256": "0f2d3ad927ad3c627a56cdf968c9a215b3ec666c0a4890d3a913598c16d08cf8"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/docgen.json",
+      "sha256": "4e5ff9def29cfba8582e209fd9b4eeb37f74c5f540bc377cacfb7081145195b9"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/package.json",
+      "sha256": "d0553453ee3ebc90e98175d5ddd9820cd9e30d875fd768a1966c061be475b973"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/Version.ts",
+      "sha256": "5f948ff3d2673a4a7ba1d09356c80461a7143a6b13e4ac877c60b142adb40cc2"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
+      "sha256": "3aeb59b92889732ad499674911d827d0b31220abad5153496f48cf24663ad497"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/catalog.ts",
+      "sha256": "b636c2a69a7ef912957c3119b025e0b20134fd0e755191e0ce990d34cb88b624"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/composer.tsx",
+      "sha256": "dc2b3f787a9d0304f8ff723cb4da16e16edb97a43bdd680dd48d64cc41f7ba60"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/errors.ts",
+      "sha256": "87dabdf4869c41c14ee48dd37e5bc480dd7d2f3305c3963f4c8152267129abaf"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/index.ts",
+      "sha256": "2b37056a3fdf31c7791d0a2993075b0e24c5a5c311e9f1067fb1de4264124f7c"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/profiles.ts",
+      "sha256": "1a75e085f70be24bc6b5f990e4a9074a9885fe1d9f79304c5d0e1e3f4fd1adad"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/projection.ts",
+      "sha256": "684e7bc9ac0318834d95bba757cfc4e1eed58e51b897c3ab0915b0d535f124f2"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/resolver.ts",
+      "sha256": "e173cb7520edbfab0493eaefa6551c9c6013845e021a7338f17fd47811f17cdf"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/runtime.tsx",
+      "sha256": "87441e1addcb36c46b967a5c55af22f658366ca983042a2d1d19e81483c96f96"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/schemas.ts",
+      "sha256": "8527e383284989cd8c40466cd2c85e3f34311691b49680e90a8a927d2a7c574c"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/shortcut-help.tsx",
+      "sha256": "f2bf2a86f20d63930643a80f89422229dc1561d94f1f82414b4ac23208331ea2"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/capability/toolbar.tsx",
+      "sha256": "92e4f54c259c26b2bc03807075f8bb9b7fe0c6138f9469303d5d77b14aec5e7a"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+      "sha256": "5a0c532061fe44e813c0e77b87cc71b38501c772e3018951dd232085c9327aa7"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+      "sha256": "063f97f11e664e7a6821dac0793ed879ad8466f0f61ddf044802aee78732dabe"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/attachments.tsx",
+      "sha256": "7db8a1460cf9cc1e1182cfb142cb0c96945a5ac4fc0d1d7fe22408de3ebfd084"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+      "sha256": "60b43928ce5ce6d738f26b7fde3aebfeebe618079c91470858bec5c4d062afd2"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/code-fence.ts",
+      "sha256": "8ec36dc6462de4ea53896a3f2d0d1f893ad9d779eae26fb346b5832dd354f634"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/commands.ts",
+      "sha256": "2b040b09e670d374eacf28d26e0e9595e80ccf18fc5bc01beb4e887a97820491"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+      "sha256": "ea80fd14afe98e2e3743f98b59cd5723b6678bdf91af205087304c4065fdbbca"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/send.tsx",
+      "sha256": "0cc2602e72949016603878920969e35367116e73991f5abf16dec4290c4060d6"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/slash-items.tsx",
+      "sha256": "586330ab20763f0c73015131430e5b052c0c889ba8dd59b08b799d93558eb8b6"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/toolbar.tsx",
+      "sha256": "2e38dc22cec96ab6952ac10647db8ad0649ac5215727bb271d014e3231fbec84"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "sha256": "7078c924b6f00e33cef15584233d4fb5417ef16ff0d177d7e981b37796ea8572"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/code-block-node.tsx",
+      "sha256": "c3a6334f732111d99bfd44da022f16e42d8d52d2fc0157281b50bbe338c50bc7"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/code-block-view.tsx",
+      "sha256": "745850d5f9cc1605bfc6299dba88528196f7294bb141aff023b6fa21f42bfb7b"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/composer.tsx",
+      "sha256": "4b76be4608841061c22b9a508edb2191c0cc6e819100519b4bcd0bbde9109959"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/index.ts",
+      "sha256": "7211222fa3fc0bcab8317b9b6a995882aaf319187ad49069d965278e12c27dfb"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-node.tsx",
+      "sha256": "7976a7cac6dbd53d5bfcbab87b3f816072e912e8f879ee8c6e49af5a6afc413d"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "sha256": "7e3ba6526cb1bdbab20ff7ef64214b02326c1efb3b19575aa91614143d752406"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/nodes.ts",
+      "sha256": "3468f5332a650eb11e52f48b98b68309a8cc4595d88bc4e77d46a2bfcebda25e"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/runtime.ts",
+      "sha256": "377229f001a045332e76243981526dd73026260bc23811df78eca89580f79f21"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/theme.ts",
+      "sha256": "9a618b25013a52a7d38a05d11ebedd4bba0833763b4187c397a19992d887d743"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/viewer.tsx",
+      "sha256": "de2ebe025c98afd44ac5b4745077274fe5b623fcf992d02cd0f83dca0032e94f"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-embed.tsx",
+      "sha256": "d5b1d5876e4f5c22643deae8b34b09324e0fcaff783d450163e1a50830a4eb50"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
+      "sha256": "ba794c4166af293ed324a042d02372e751379fd37e3a1f8255759853fb2bf6b0"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/capability-profiles.stories.tsx",
+      "sha256": "36ffeb471d8aa2d4ad670e55670873179d418c95749d4dc84f9735ee01c61f9e"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/chat-composer.stories.tsx",
+      "sha256": "cc8a1fac10bcdd7f55ac4838cb5658eb3e9e28d7a74fe182709cce8e1496e7b5"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/editor-composer.stories.tsx",
+      "sha256": "31d9efa661863ead75c496cf0948b0de48da79e3055578af10819e72402a0795"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/editor-viewer.stories.tsx",
+      "sha256": "d44f5a04a0297dd3573fc62521123b7546a96ef6aefe16762cbf73375f8e54a3"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/fixtures.ts",
+      "sha256": "44bd4a45d82ce5253d7069825ef0b415e8b7fefc72e1c30d1e8dd1a3fadc8098"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/stories/tsconfig.json",
+      "sha256": "c2d7ce7734d76cd3cfa73c8ee7ccfdea927bc2ebb93553becbf0335ceef2fb33"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "f553cef62bb2d0e558326783eed8080386053bb1530d3bae7218ccf4ae8d8aba"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/Version.test.ts",
+      "sha256": "8e428381e64e02b26f6814ec40582c440c8a6e4659947733f098a65702837ef9"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-catalog.test.ts",
+      "sha256": "1ea3c42e8523d1f35975f2f7e617f2a45b08f58ca923a033c98a26d5fd057bf8"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-errors.test.ts",
+      "sha256": "d7e69ff6c79520027c403d8148c2714b8e6057fe0a02834303736b51337e92f2"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-projection.test.ts",
+      "sha256": "5e33be1d8c2834be59e1385cb32ca19977b01ea348bd51b24b71f1279b5dfd63"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-resolver.test.ts",
+      "sha256": "e7132739c8f403ac33112ad54293d3e203032bf0d39a935bc549b8c5897e059f"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-review-fixes.test.ts",
+      "sha256": "10a6d418a97518de9fb722184bb0fb4c72e1933dd216e671c10d5522fdc2b43e"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-runtime.test.tsx",
+      "sha256": "293ab0cc6c5d321bd347f8cace7fd1bddc145210702a486d4b677257f3c40b10"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
+      "sha256": "ca2602505fc7d16fa54aadd6d906ea61f418cce9cf29cf22691c79cbc6f75aa0"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
+      "sha256": "a06e0d29df9e77d3da920e2bd5a9f498076119e360c6a45b3799938c4c70bb7b"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/code-fence.test.ts",
+      "sha256": "251f8abd5dc2dadd4f9a5d0c8c37d8b79b27ada8bc5721f6e5f7792e3822566c"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/decorator-node-contracts.test.ts",
+      "sha256": "c807d01e7c5311be0a75e455ec2de4e58566689793bb9aa7fd211932bf525c0d"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
+      "sha256": "5ab0587c8d86e2b51e802747526f2426d9f8babb4e4aee78b293a7e118eeb4bf"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
+      "sha256": "faab699de5af1082eb6dd732f56f86ead230d35f6f72d99def9125d8991b5fef"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/runtime.test.ts",
+      "sha256": "d07d414bfbf270519561453ffae89437d930907a051db190b2c6d2893190eac5"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
+      "sha256": "881eda383a8bf7376fcfcc7c0e824fa074d47e03879ea29555c8bd69bcb3277b"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/table-toolbar-selection.test.ts",
+      "sha256": "5570e8468d031272ba0c0147fdf30a4b686f22f43ca51c98bac20084f7225260"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/typeahead-ids.test.ts",
+      "sha256": "6e7e8bad43a2c68ba02ec5b8ca96382c8a734b957717188070fb2cd07e4e3854"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/typeahead-position.test.ts",
+      "sha256": "5ee14e36b4bddd383cad91f271c443be23b4e9891d7078c4f3a0d5ef10a2ae93"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/tsconfig.check.json",
+      "sha256": "23c58f20bf44232407b12a311ae6a741fa0af8610aa81dac20c57b51b180f7e3"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/tsconfig.json",
+      "sha256": "75cda83a8deb0b2f715d39d46efb4dee42805d571eb3c5bb79e68c01dcac8822"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/tsconfig.stories.json",
+      "sha256": "3376920bb7615dbb1d9ad0e4de3cd29bea70ffd568dae7ecebea5668b5c68782"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/tsconfig.test.json",
+      "sha256": "24fc16aa174d3b55f2a9d6189724bc5ccdd375bb6d3b546852619c547553deb7"
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/vitest.config.ts",
+      "sha256": "7534b05816813aff8337bd4633bd2414424f5e475f97f7732d5883b9b6f28d0c"
+    }
+  ],
+  "environmentMode": "Configured editor Vitest suites, headless Lexical and declared jsdom tests with schema-derived values. No live browser gesture or visual proof claimed. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 449,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [5.3017578125, 2.46728515625, 1.88818359375],
+    "loadAfter": [9.12744140625, 3.41455078125, 2.20458984375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.00 avg60=0.08 avg300=0.08 total=770047384\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215206\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139205\n",
+      "io": "some avg10=0.00 avg60=0.06 avg300=0.05 total=838018356\nfull avg10=0.00 avg60=0.04 avg300=0.03 total=733117662\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.00 avg60=0.07 avg300=0.07 total=770072791\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186215206\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178139205\n",
+      "io": "some avg10=0.00 avg60=0.05 avg300=0.05 total=838022082\nfull avg10=0.00 avg60=0.03 avg300=0.03 total=733120380\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 449,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Configured editor suites pass449 cases before and450 after with no skips.272 original assertions and93 static registrations remain, while six Passed wrappers become native failures covering seven original laws. Original schema domains and floors25 or100 are retained. The added generated typeahead law has floor100. Both phases overlap an early publisher or its termination. Headless Lexical and jsdom assertions do not establish browser gesture or visual acceptance."
+}

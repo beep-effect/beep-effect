@@ -1,8 +1,9 @@
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -70,7 +71,7 @@ const expectConfig = (actual: Configuration.ConfigurationShape, expected: Config
   Effect.sync(() => expect(actual).toEqual(expected));
 
 describe("Configuration", () => {
-  layer(makeTestLayer())((it) =>
+  it.layer(makeTestLayer())((it) =>
     it.effect("uses defaults when configFile is omitted and no docgen.json is present", () =>
       Configuration.load(makeLoadArgs()).pipe(
         Effect.flatMap(
@@ -104,7 +105,7 @@ describe("Configuration", () => {
     )
   );
 
-  layer(
+  it.layer(
     makeTestLayer({
       projectHomepage: "myproject",
       srcLink: "mygithub",
@@ -160,7 +161,7 @@ describe("Configuration", () => {
     )
   );
 
-  layer(makeTestLayer({ projectHomepage: 1 }))((it) =>
+  it.layer(makeTestLayer({ projectHomepage: 1 }))((it) =>
     it.effect(
       "raises a typed error when docgen.json is invalid",
       Effect.fnUntraced(function* () {

@@ -1,3 +1,4 @@
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import {
   CustomEntityExample,
@@ -8,14 +9,10 @@ import {
   WinkEngineRef,
   WinkEngineRefLive,
 } from "@beep/wink";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const WinkEngineRefBundleLive = WinkEngineRefLive.pipe(Layer.provideMerge(WinkEngineLive));
 
@@ -31,8 +28,8 @@ const moneyEntities = WinkEngineCustomEntities.make({
 });
 
 describe("WinkEngineRef", () => {
-  it("returns one shared ref instance per provided live layer", () =>
-    Effect.runPromise(
+  it.layer(WinkEngineRefBundleLive)("returns one shared ref instance per provided live layer", (it) => {
+    it.effect("returns one shared ref instance per provided live layer", () =>
       Effect.gen(function* () {
         const refService1 = yield* WinkEngineRef;
         const refService2 = yield* WinkEngineRef;
@@ -45,11 +42,12 @@ describe("WinkEngineRef", () => {
         const state2 = yield* Ref.get(ref2);
 
         expect(state1.instanceId).toBe(state2.instanceId);
-      }).pipe(provideScopedLayer(WinkEngineRefBundleLive))
-    ));
+      })
+    );
+  });
 
-  it("tracks engine updates through the shared runtime ref", () =>
-    Effect.runPromise(
+  it.layer(WinkEngineRefBundleLive)("tracks engine updates through the shared runtime ref", (it) => {
+    it.effect("tracks engine updates through the shared runtime ref", () =>
       Effect.gen(function* () {
         const engine = yield* WinkEngine;
         const refService = yield* WinkEngineRef;
@@ -62,9 +60,10 @@ describe("WinkEngineRef", () => {
         const tokens = yield* engine.getWinkTokens("I have $100 today.");
 
         expect(updatedState.instanceId).not.toBe(initialState.instanceId);
-        expect(updatedState.customEntities._tag).toBe("Some");
+        assertSome(updatedState.customEntities, moneyEntities);
         expect(O.getOrThrow(updatedState.customEntities).name).toBe("money");
         expect(A.map(tokens, (token) => token.out())).toContain("$");
-      }).pipe(provideScopedLayer(WinkEngineRefBundleLive))
-    ));
+      })
+    );
+  });
 });

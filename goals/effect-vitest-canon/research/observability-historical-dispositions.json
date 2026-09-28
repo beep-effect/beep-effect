@@ -1,0 +1,471 @@
+[
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Boundary.test.ts:38:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "keeps package exports explicit and removes root node ambient types",
+    "currentLine": 62
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Boundary.test.ts:57:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "keeps the root and web entrypoints free from server-only imports",
+    "currentLine": 82
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Boundary.test.ts:89:runPromise@11#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "typechecks browser-safe, server-safe, and experimental-server fixtures",
+    "currentLine": 101
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/CauseRedaction.test.ts:173:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived redaction options",
+    "currentLine": 180
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/CauseRedaction.test.ts:190:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "honors generated redaction bounds and channel rules",
+    "currentLine": 192
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/DevToolsRelay.test.ts:20:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "ingests spans, events, and metrics snapshots",
+    "currentLine": 27
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/ErrorReporting.test.ts:23:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived reporter options",
+    "currentLine": 22
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/ErrorReporting.test.ts:43:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived reporter layer options",
+    "currentLine": 37
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:37:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived HTTP status codes",
+    "currentLine": 38
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:53:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks HTTP API request metrics",
+    "currentLine": 50
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:87:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "observes encoded HttpServerResponse values and schema-derived failure statuses",
+    "currentLine": 83
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Logging.test.ts:46:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived pretty logger configs",
+    "currentLine": 44
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Logging.test.ts:63:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived banner options",
+    "currentLine": 56
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:105:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks duration while preserving a failed effect",
+    "currentLine": 97
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:117:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks duration while preserving interruption",
+    "currentLine": 114
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:129:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks request counters with success labels",
+    "currentLine": 127
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:27:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "measures elapsed milliseconds without changing the value",
+    "currentLine": 28
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:38:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived track duration options",
+    "currentLine": 37
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:57:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks workflow counters on success",
+    "currentLine": 49
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Metric.test.ts:84:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "tracks workflow counters on interruption",
+    "currentLine": 75
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/NodeSdk.test.ts:48:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "provides OpenTelemetry spans when processors are configured",
+    "currentLine": 52
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/NodeSdk.test.ts:95:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "provides spans from the trace-only layer",
+    "currentLine": 108
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Observed.test.ts:62:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "caseName": "schema-derived arbitrary values are members of ObservedCause",
+    "currentLine": 72
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/Observed.test.ts:80:runSync@6#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "caseName": "schema-derived arbitrary values are members of ObservedExit",
+    "currentLine": 81
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/OtlpPacketLab.test.ts:13:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "captures JSON OTLP packets",
+    "currentLine": 9
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/OtlpPacketLab.test.ts:31:runPromise@4#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": "captures protobuf OTLP packets",
+    "currentLine": 28
+  },
+  {
+    "id": "EV001:packages/foundation/capability/observability/test/PhaseProfiler.test.ts:33:runSync@6#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived phase profiles",
+    "currentLine": 33
+  },
+  {
+    "id": "EV003:packages/foundation/capability/observability/test/NodeSdk.test.ts:15:provideScopedLayer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 44
+  },
+  {
+    "id": "EV003:packages/foundation/capability/observability/test/OtlpPacketLab.test.ts:7:provideScopedLayer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 8
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/CauseRedaction.test.ts:205:expect@14#1",
+    "phase": "residual",
+    "fixSha": "51b926f3ca721b0e190086b259cbf311c9e28713",
+    "caseName": "honors generated redaction bounds and channel rules",
+    "currentLine": 192
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/CauseRedaction.test.ts:57:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "redacts an unknown error into a transport-safe summary on the diagnostic channel",
+    "currentLine": 52
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/CauseRedaction.test.ts:79:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "drops all internal detail on the client channel",
+    "currentLine": 78
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/CauseRedaction.test.ts:93:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "supports data-last redaction with schema-backed options",
+    "currentLine": 91
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/DevTools.test.ts:19:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "models span filters and layer options as executable schemas",
+    "currentLine": 13
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/DevTools.test.ts:20:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "models span filters and layer options as executable schemas",
+    "currentLine": 13
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:119:expect@8#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "observes encoded HttpServerResponse values and schema-derived failure statuses",
+    "currentLine": 83
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/Logging.test.ts:36:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "keeps pretty logger constructor defaults on the schema",
+    "currentLine": 33
+  },
+  {
+    "id": "EV006:packages/foundation/capability/observability/test/PhaseProfiler.test.ts:49:expect@4#1",
+    "phase": "assertions",
+    "fixSha": "044c194af973e959b52cef11b53919f486a5ba34",
+    "caseName": "rejects empty phase labels",
+    "currentLine": 45
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/CauseRedaction.test.ts:174:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived redaction options",
+    "currentLine": 180
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/CauseRedaction.test.ts:191:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "honors generated redaction bounds and channel rules",
+    "currentLine": 192
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/ErrorReporting.test.ts:24:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived reporter options",
+    "currentLine": 22
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/ErrorReporting.test.ts:44:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived reporter layer options",
+    "currentLine": 37
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:38:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived HTTP status codes",
+    "currentLine": 38
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/Logging.test.ts:47:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived pretty logger configs",
+    "currentLine": 44
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/Logging.test.ts:64:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived banner options",
+    "currentLine": 56
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/Metric.test.ts:39:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived track duration options",
+    "currentLine": 37
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/Observed.test.ts:63:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "caseName": "schema-derived arbitrary values are members of ObservedCause",
+    "currentLine": 72
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/Observed.test.ts:81:checkEffect@8#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "caseName": "schema-derived arbitrary values are members of ObservedExit",
+    "currentLine": 81
+  },
+  {
+    "id": "EV007:packages/foundation/capability/observability/test/PhaseProfiler.test.ts:34:checkEffect@8#1",
+    "phase": "properties",
+    "fixSha": "a5083044e2725186cd8f0353d6c8bf58f029c98b",
+    "caseName": "round-trips schema-derived phase profiles",
+    "currentLine": 33
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/Boundary.test.ts:5:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 5
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/CauseDiagnostics.test.ts:10:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 9
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/DevTools.test.ts:4:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 3
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/DevToolsRelay.test.ts:6:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 3
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/ErrorReporting.test.ts:7:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 4
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts:18:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 14
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/HttpError.test.ts:3:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 3
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/Metric.test.ts:14:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 11
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/NodeSdk.test.ts:12:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 11
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/Observed.test.ts:6:vitest-import@0#1",
+    "phase": "upstream",
+    "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+    "caseName": null,
+    "currentLine": 4
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/OtlpPacketLab.test.ts:4:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 3
+  },
+  {
+    "id": "EV011:packages/foundation/capability/observability/test/ServerUtilities.test.ts:4:vitest-import@0#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 4
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/CauseRedaction.test.ts:106:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 35
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/CauseRedaction.test.ts:129:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 109
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/CauseRedaction.test.ts:145:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 134
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/Logging.test.ts:100:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 73
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/Logging.test.ts:85:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 27
+  },
+  {
+    "id": "EV014:packages/foundation/capability/observability/test/PhaseProfiler.test.ts:115:it.layer@2#1",
+    "phase": "scope",
+    "fixSha": "384c2a339b9f0a0860ae86aeac7fd577eae026a3",
+    "caseName": null,
+    "currentLine": 25
+  }
+]

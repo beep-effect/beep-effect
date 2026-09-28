@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/nlp-mcp",
+  "sourceHead": "0697449ffb337337a3df56f85fcb814950e6c49f",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.67069055500906,
+  "bunWholeCommandSeconds": 1.6664903790078824,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.94384765625, 3.521484375, 2.5595703125],
+  "loadAfter": [3.50927734375, 3.62939453125, 2.599609375],
+  "pressureBefore": {
+    "cpu": "some avg10=0.65 avg60=0.23 avg300=0.13 total=729104191\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125354\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=809593626\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=708567970\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.44 avg60=0.21 avg300=0.13 total=729117560\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125354\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=809593937\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=708568225\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "82ecddd1d459d4b543ae427f9d6452736bc012cca52bc427f1997f16e5e9c6e1"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/AGENTS.md",
+      "sha256": "c38e4d28cf1f3da2635d076768d9631e980c047a9a92e30b9391da4fc13f9621"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/CLAUDE.md",
+      "sha256": "c38e4d28cf1f3da2635d076768d9631e980c047a9a92e30b9391da4fc13f9621"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/README.md",
+      "sha256": "6173bceb14060d255bb45ea704d512737384765d52d5b70f7378191eb62378d9"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/docgen.json",
+      "sha256": "b78f89d1b86dde0ba6b21391d0691cff03f35d99b329c7b61d9336b31da8b1cd"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/package.json",
+      "sha256": "9e5a43f12b6ba549d1bd77502120b7135ba7d9c5f31bf3654121317c23b4ab4c"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Server.ts",
+      "sha256": "c5f42edfdd593d75f098a5671c9497eee153f281482d71bfaf819fd2ed497628"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "sha256": "a529c1e0d8942b50d4b7eafc39d0cded91c7adfeda5e7d4018f5217201d2c7eb"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+      "sha256": "c761d62805d4c5faaedd73c9867b4793082f5dc2859b6b26840a8d74bc98fc67"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "sha256": "01374500148fda7bb1bd38cf66f9db9eced8804aca860e35388c4dab14f5ec91"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "sha256": "a11f3b85db57224736a03ba9479d9f6e6e0ba7729a30cadee31b775a7dda940e"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+      "sha256": "368620262e39f9604bb866dff757f24751b8cf1cf77709e51875d3adf26ba037"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "sha256": "0ccece0676d86c34af82165cb6dfeba1f2b242ceae4fc3a78146f7936a529523"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/bin.ts",
+      "sha256": "1929067d37ee3f54f1bc972246b851a54687c60595046582d4abd143c7e3032a"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/index.ts",
+      "sha256": "989148213ff9e20df7034bd981d7abb7fac5db2077d772b50949cffd3f2cacb3"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/NlpMcp.equivalence.test.ts",
+      "sha256": "c4739dc723468f9e517f20a995b0e14cd9f81da02c9d278731b335f3fdd67933"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/SanitizedSpan.test.ts",
+      "sha256": "a82a176329d7219f168daf2ab8c0bd25231ac222a0fc04f1253b3f25cc5f6c7f"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Server.test.ts",
+      "sha256": "9fc83afdc3df7e459ecd892ab61897adf268e55a8604f4156e2edcd434bf7221"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.functions.test.ts",
+      "sha256": "6f819ecb77f811f259c0c8c777bec55243e69a7e38bd342950cf6d916c122a3e"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/Streaming.schema.test.ts",
+      "sha256": "86b52c2702a0155a27c9421ae2ffb87038743cc386408cc373f425ac702ce91f"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/test/integration/Streaming.test.ts",
+      "sha256": "80e24c77287e111cbefa46316d3b92d79ae409cc717c20f9190ba9f5d458915d"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.check.json",
+      "sha256": "6319b4ca946c539e815cadbc5dca62695ee8c08966ef49cd0e848ad3fee33e7f"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.json",
+      "sha256": "db9fdefac426066a7c04b28e71a154d2410f05a312c7ec10f0e4cb7b278538e0"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Actual native filesystem/path streaming and installed Wink model remain. The shorter per-use fixture release boundary is retained. An isolated recording HTTP client is supplied at handler-layer construction; its positive probe and SSRF refusals open no sockets. Native schema properties and instrumented registrations retain all original cases. No production implementation changes.",
+  "bunProof": {
+    "passedTests": 37,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.50927734375, 3.62939453125, 2.599609375],
+    "loadAfter": [3.50927734375, 3.62939453125, 2.599609375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.44 avg60=0.21 avg300=0.13 total=729117575\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125354\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=809593937\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=708568225\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.36 avg60=0.20 avg300=0.13 total=729121293\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186199232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178125354\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=809594042\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=708568273\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 37,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 37 registrations before and after with zero skips. Stronger sampling and SSRF assertions add work; three native properties preserve all 37 schema domains and their floors. Timing differences are not causal speedup evidence."
+}

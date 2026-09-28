@@ -7,11 +7,15 @@ import {
   TierGateSettlement,
   TierGateVerdict,
 } from "@beep/mcp-kit";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, it } from "@effect/vitest";
-import { Effect, Fiber, Ref } from "effect";
+import { assert, describe } from "@effect/vitest";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import { Deferred, Effect, Fiber, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import { Tool } from "effect/ai";
+import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -39,18 +43,20 @@ describe("dispatchWithTierGate", () => {
     "refuses fail-closed as a value for an unapproved destructive tool call",
     Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
+      const executions = yield* Ref.make(0);
       const result = yield* dispatchWithTierGate(
         { tool: writeTool, toolCallId: O.some("call-1") },
-        Effect.succeed("this handler must never run")
+        Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
+      assert.strictEqual(yield* Ref.get(executions), 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
         assert.strictEqual(result.audit.tool, "delete_document");
         assert.strictEqual(result.audit.outcome, "refused");
         assert.isTrue(result.audit.destructive);
-        assert.deepStrictEqual(result.audit.toolCallId, O.some("call-1"));
+        assertSome(result.audit.toolCallId, "call-1");
         assert.isString(result.audit.occurredAt);
       }
     })
@@ -60,11 +66,13 @@ describe("dispatchWithTierGate", () => {
     "dispatches an approved destructive tool call and produces both the handler result and a schema-valid audit record",
     Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: ["delete_document"] });
+      const executions = yield* Ref.make(0);
       const result = yield* dispatchWithTierGate(
         { tool: writeTool, toolCallId: O.none() },
-        Effect.succeed("deleted")
+        Ref.update(executions, (count) => count + 1).pipe(Effect.as("deleted"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
+      assert.strictEqual(yield* Ref.get(executions), 1);
       assert.strictEqual(result._tag, "Dispatched");
       if (result._tag === "Dispatched") {
         assert.strictEqual(result.value, "deleted");
@@ -98,11 +106,13 @@ describe("dispatchWithTierGate", () => {
     "refuses a non-destructive write without explicit read-only approval",
     Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
+      const executions = yield* Ref.make(0);
       const result = yield* dispatchWithTierGate(
         { tool: nonReadOnlyWriteTool, toolCallId: O.none() },
-        Effect.succeed("this handler must never run")
+        Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
+      assert.strictEqual(yield* Ref.get(executions), 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
@@ -118,11 +128,13 @@ describe("dispatchWithTierGate", () => {
     "refuses an unannotated tool fail-closed as a value, never a throw",
     Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
+      const executions = yield* Ref.make(0);
       const result = yield* dispatchWithTierGate(
         { tool: unannotatedTool, toolCallId: O.none() },
-        Effect.succeed("this handler must never run")
+        Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
+      assert.strictEqual(yield* Ref.get(executions), 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
@@ -181,11 +193,12 @@ describe("recordOutcome settlement", () => {
     "reports interrupted when an approved dispatch is interrupted",
     Effect.fnUntraced(function* () {
       const { gate, recorded } = yield* recordingGate(["delete_document"]);
-      const fiber = yield* dispatchWithTierGate({ tool: writeTool, toolCallId: O.none() }, Effect.never).pipe(
-        Effect.provideService(TierGate, gate),
-        Effect.forkChild
-      );
-      yield* Effect.yieldNow;
+      const entered = yield* Deferred.make<void>();
+      const fiber = yield* dispatchWithTierGate(
+        { tool: writeTool, toolCallId: O.none() },
+        Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
+      ).pipe(Effect.provideService(TierGate, gate), Effect.forkChild);
+      yield* Deferred.await(entered);
       yield* Fiber.interrupt(fiber);
 
       assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "interrupted", tool: "delete_document" }]);
@@ -196,11 +209,13 @@ describe("recordOutcome settlement", () => {
     "reports no settlement for a refused dispatch — there was no execution to settle",
     Effect.fnUntraced(function* () {
       const { gate, recorded } = yield* recordingGate([]);
+      const executions = yield* Ref.make(0);
       const result = yield* dispatchWithTierGate(
         { tool: writeTool, toolCallId: O.none() },
-        Effect.succeed("this handler must never run")
+        Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, gate));
 
+      assert.strictEqual(yield* Ref.get(executions), 0);
       assert.strictEqual(result._tag, "Refused");
       assert.deepStrictEqual(yield* Ref.get(recorded), []);
     })
@@ -225,7 +240,7 @@ describe("tier-gate schema parity laws", () => {
       occurredAt: "2026-07-01T00:00:00.000Z",
     });
 
-    assert.deepStrictEqual(audit.toolCallId, O.none());
+    assertNone(audit.toolCallId);
   });
 
   it.effect(
@@ -242,7 +257,20 @@ describe("tier-gate schema parity laws", () => {
         })
       );
 
-      assert.isTrue(Exit.isFailure(exit));
+      assertExitFailure(
+        Exit.match(exit, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
     })
   );
 

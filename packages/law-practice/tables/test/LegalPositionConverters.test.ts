@@ -39,9 +39,11 @@ import {
 import { fromPowerExerciseRow, toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
 import { Unknown } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Order, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -247,7 +249,7 @@ describe("LegalPositionRelator converters", () => {
       expect(returned.positionKind).toBe("privilege");
       expect(returned.content.polarity).toBe("act");
       expect(returned.bearer.name).toBe("lessee");
-      expect(O.isNone(returned.grounding.foundingExercise)).toBe(true);
+      assertNone(returned.grounding.foundingExercise);
       expect(sameRelator(returned, relator)).toBe(true);
     })
   );
@@ -255,10 +257,10 @@ describe("LegalPositionRelator converters", () => {
   it("rejects a row carrying no relation, and one missing its asserting interpreter", () => {
     const { assertingInterpreter: _assertingInterpreter, ...unattributed } = relatorInput;
 
-    expect(Result.isFailure(fromLegalPositionRelatorRow({}))).toBe(true);
+    pipe(fromLegalPositionRelatorRow({}), Result.isFailure, assertTrue);
     // A relation with no attributed interpreter is the dangerous near-miss:
     // every audit column is present, so only the entity schema can refuse it.
-    expect(Result.isFailure(fromLegalPositionRelatorRow(unattributed))).toBe(true);
+    pipe(fromLegalPositionRelatorRow(unattributed), Result.isFailure, assertTrue);
   });
 });
 
@@ -303,8 +305,8 @@ describe("ActFrame converters", () => {
   it("rejects a row carrying no reading, and one whose frame names no actor slot", () => {
     const actorless = { ...actFrameInput, slots: [slot("lessor", "recipient")] };
 
-    expect(Result.isFailure(fromActFrameRow({}))).toBe(true);
-    expect(Result.isFailure(fromActFrameRow(actorless))).toBe(true);
+    pipe(fromActFrameRow({}), Result.isFailure, assertTrue);
+    pipe(fromActFrameRow(actorless), Result.isFailure, assertTrue);
   });
 });
 
@@ -339,7 +341,7 @@ describe("PowerExercise converters", () => {
       // renderer could then show an exercise without saying where it stands.
       expect(returned.result.disposition.disposition).toBe("void");
       expect(O.getOrThrow(returned.result.constitution).outcome).toBe("not-constituted");
-      expect(O.isNone(returned.result.permission)).toBe(true);
+      assertNone(returned.result.permission);
       expect(sameExercise(returned, exercise)).toBe(true);
     })
   );
@@ -347,8 +349,8 @@ describe("PowerExercise converters", () => {
   it("rejects a row carrying no attempt, and one with no recorded result", () => {
     const { result: _result, ...resultless } = powerExerciseInput;
 
-    expect(Result.isFailure(fromPowerExerciseRow({}))).toBe(true);
-    expect(Result.isFailure(fromPowerExerciseRow(resultless))).toBe(true);
+    pipe(fromPowerExerciseRow({}), Result.isFailure, assertTrue);
+    pipe(fromPowerExerciseRow(resultless), Result.isFailure, assertTrue);
   });
 });
 
@@ -384,7 +386,7 @@ describe("CorrectionDelta converters", () => {
       expect(returned.candidateRouting).toBe("contradiction-candidate-input");
       expect(returned.reviewerAction).toBe("undetermined");
       expect(returned.validatorReport.findings[0]?.severity).toBe("hard");
-      expect(O.isNone(returned.supersedes)).toBe(true);
+      assertNone(returned.supersedes);
       expect(sameCorrection(returned, delta)).toBe(true);
     })
   );
@@ -392,8 +394,8 @@ describe("CorrectionDelta converters", () => {
   it("rejects a row carrying no correction, and one that touched no element", () => {
     const untargeted = { ...correctionDeltaInput, correctedElements: [] };
 
-    expect(Result.isFailure(fromCorrectionDeltaRow({}))).toBe(true);
-    expect(Result.isFailure(fromCorrectionDeltaRow(untargeted))).toBe(true);
+    pipe(fromCorrectionDeltaRow({}), Result.isFailure, assertTrue);
+    pipe(fromCorrectionDeltaRow(untargeted), Result.isFailure, assertTrue);
   });
 });
 
@@ -416,7 +418,7 @@ describe("LegalOppositionCandidate converters", () => {
       const returned = yield* Effect.fromResult(fromLegalOppositionCandidateRow({ ...insert, id: ROW_ID }));
 
       expect(HashSet.size(returned.candidate.relators)).toBe(2);
-      expect(O.getOrThrow(returned.priorityBasis).forum).toEqual(O.some("N.D. Cal."));
+      assertSome(O.getOrThrow(returned.priorityBasis).forum, "N.D. Cal.");
       // The family never travels without the attorney it belongs to.
       expect(O.getOrThrow(returned.verdictFamily).family).toBe("principle-collision");
       expect(sameCandidate(returned, candidate)).toBe(true);
@@ -433,8 +435,8 @@ describe("LegalOppositionCandidate converters", () => {
 
       // Absence is the derivable fact — which candidates lack a family — so it
       // has to survive the row trip as absence rather than as a placeholder.
-      expect(O.isNone(returned.priorityBasis)).toBe(true);
-      expect(O.isNone(returned.verdictFamily)).toBe(true);
+      assertNone(returned.priorityBasis);
+      assertNone(returned.verdictFamily);
       expect(sameCandidate(returned, candidate)).toBe(true);
     })
   );
@@ -442,8 +444,8 @@ describe("LegalOppositionCandidate converters", () => {
   it("rejects a row naming no pair, and one naming a single relation", () => {
     const single = { ...candidateInput, candidate: { ...candidateInput.candidate, relators: [1] } };
 
-    expect(Result.isFailure(fromLegalOppositionCandidateRow({}))).toBe(true);
-    expect(Result.isFailure(fromLegalOppositionCandidateRow(single))).toBe(true);
+    pipe(fromLegalOppositionCandidateRow({}), Result.isFailure, assertTrue);
+    pipe(fromLegalOppositionCandidateRow(single), Result.isFailure, assertTrue);
   });
 });
 
@@ -526,59 +528,73 @@ describe("set-valued fields across the storage boundary", () => {
 });
 
 describe("converter round trips over the whole schema", () => {
-  /**
-   * The example-based loops above prove the fields a reader cares about. This
-   * proves the loop closes for values nobody thought to write down, which is
-   * where an asymmetric codec on a rarely-populated field would otherwise hide.
-   * The id is reattached from the entity because the converter drops it for the
-   * table sequence to assign.
-   */
   const assertConverterRoundTrips = <
     Schema extends S.Top & { readonly Type: { readonly id: number } },
     Insert extends object,
   >(
     schema: Schema,
     toInsert: (entity: Schema["Type"]) => Result.Result<Insert, S.SchemaError>,
-    fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>
+    fromRow: (row: unknown) => Result.Result<Schema["Type"], S.SchemaError>,
+    entity: Schema["Type"]
   ): void => {
     const equivalent = S.toEquivalence(schema);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(schema),
-          (entity) => {
-            const insert = Result.getOrThrow(toInsert(entity));
-            const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
-            return equivalent(returned, entity);
-          },
-          { runs: 10 }
-        )
-      )._tag
-    ).toBe("Passed");
+    const insert = Result.getOrThrow(toInsert(entity));
+    const returned = Result.getOrThrow(fromRow({ ...insert, id: entity.id }));
+    expect(equivalent(returned, entity)).toBe(true);
   };
 
-  it("round-trips arbitrary stored relations", () => {
-    assertConverterRoundTrips(LegalPositionRelator, toLegalPositionRelatorInsert, fromLegalPositionRelatorRow);
-  });
+  it.prop(
+    "round-trips arbitrary stored relations",
+    { entity: Arbitrary.schema(LegalPositionRelator) },
+    ({ entity }) => {
+      assertConverterRoundTrips(
+        LegalPositionRelator,
+        toLegalPositionRelatorInsert,
+        fromLegalPositionRelatorRow,
+        entity
+      );
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary recorded frames", () => {
-    assertConverterRoundTrips(ActFrame, toActFrameInsert, fromActFrameRow);
-  });
+  it.prop(
+    "round-trips arbitrary recorded frames",
+    { entity: Arbitrary.schema(ActFrame) },
+    ({ entity }) => {
+      assertConverterRoundTrips(ActFrame, toActFrameInsert, fromActFrameRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary attempted exercises", () => {
-    assertConverterRoundTrips(PowerExercise, toPowerExerciseInsert, fromPowerExerciseRow);
-  });
+  it.prop(
+    "round-trips arbitrary attempted exercises",
+    { entity: Arbitrary.schema(PowerExercise) },
+    ({ entity }) => {
+      assertConverterRoundTrips(PowerExercise, toPowerExerciseInsert, fromPowerExerciseRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary appended corrections", () => {
-    assertConverterRoundTrips(CorrectionDelta, toCorrectionDeltaInsert, fromCorrectionDeltaRow);
-  });
+  it.prop(
+    "round-trips arbitrary appended corrections",
+    { entity: Arbitrary.schema(CorrectionDelta) },
+    ({ entity }) => {
+      assertConverterRoundTrips(CorrectionDelta, toCorrectionDeltaInsert, fromCorrectionDeltaRow, entity);
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-  it("round-trips arbitrary screened candidates", () => {
-    assertConverterRoundTrips(
-      LegalOppositionCandidate,
-      toLegalOppositionCandidateInsert,
-      fromLegalOppositionCandidateRow
-    );
-  });
+  it.prop(
+    "round-trips arbitrary screened candidates",
+    { entity: Arbitrary.schema(LegalOppositionCandidate) },
+    ({ entity }) => {
+      assertConverterRoundTrips(
+        LegalOppositionCandidate,
+        toLegalOppositionCandidateInsert,
+        fromLegalOppositionCandidateRow,
+        entity
+      );
+    },
+    { arbitrary: fcRuns(10) }
+  );
 });

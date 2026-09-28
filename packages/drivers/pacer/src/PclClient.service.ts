@@ -15,7 +15,7 @@
 
 import { $PacerId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Result, Schedule, Stream, Tuple } from "effect";
+import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Schedule, Stream, Tuple } from "effect";
 import { constant } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -283,35 +283,24 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
             onSome: deleteCaseReportByPathSegment,
           }).pipe(Effect.tapError((error) => Effect.logWarning(`Pacer PCL report cleanup failed: ${error.reason}`)));
 
-        const withReportCleanup = Effect.fnUntraced(function* <A>(
-          reportId: ReportIdValue,
-          effect: Effect.Effect<A, PacerPclError>
-        ) {
-          const result = yield* Effect.result(effect);
-          yield* cleanupReport(reportId).pipe(Effect.ignore);
-          return yield* Result.match(result, {
-            onFailure: (error) => Effect.fail(error),
-            onSuccess: Effect.succeed,
-          });
-        });
-
         const downloadCases: PclClientShape["downloadCases"] = Effect.fnUntraced(function* (
           payload: CourtCaseSearchDto
         ) {
-          const started = yield* startCaseDownload(payload);
-          return yield* withReportCleanup(
-            started.reportId,
-            Effect.gen(function* () {
-              const reportId = yield* Effect.fromOption(ReportId.decodeUnknownOption(started.reportId), () =>
-                invalidReportIdError()
-              );
-              const completed = yield* pollUntilComplete(reportId);
-              if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
-                return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });
-              }
-              const report = yield* caseDownloadResults(reportId);
-              return O.getOrElse(report.content, () => []);
-            })
+          return yield* Effect.acquireUseRelease(
+            startCaseDownload(payload),
+            (started) =>
+              Effect.gen(function* () {
+                const reportId = yield* Effect.fromOption(ReportId.decodeUnknownOption(started.reportId), () =>
+                  invalidReportIdError()
+                );
+                const completed = yield* pollUntilComplete(reportId);
+                if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
+                  return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });
+                }
+                const report = yield* caseDownloadResults(reportId);
+                return O.getOrElse(report.content, () => []);
+              }),
+            (started) => cleanupReport(started.reportId).pipe(Effect.ignore)
           );
         });
 

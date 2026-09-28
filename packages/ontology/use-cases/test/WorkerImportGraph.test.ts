@@ -1,12 +1,14 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 
 describe("@beep/ontology-use-cases worker import graph", () => {
   it.effect(
     "imports the visualizer worker entrypoint without DOM globals",
     Effect.fnUntraced(function* () {
-      expect("document" in globalThis).toBe(false);
-      expect("window" in globalThis).toBe(false);
+      pipe("document" in globalThis, assertFalse);
+      pipe("window" in globalThis, assertFalse);
 
       const worker = yield* Effect.promise(() => import("@beep/ontology-use-cases/aggregates/Session/worker"));
 
@@ -21,8 +23,8 @@ describe("@beep/ontology-use-cases worker import graph", () => {
   it.effect(
     "imports the ontology toolkit entrypoint without DOM globals",
     Effect.fnUntraced(function* () {
-      expect("document" in globalThis).toBe(false);
-      expect("window" in globalThis).toBe(false);
+      pipe("document" in globalThis, assertFalse);
+      pipe("window" in globalThis, assertFalse);
 
       const tools = yield* Effect.promise(() => import("@beep/ontology-use-cases/tools"));
 

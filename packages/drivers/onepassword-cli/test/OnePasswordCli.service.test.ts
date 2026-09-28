@@ -11,13 +11,15 @@ import {
 } from "@beep/onepassword-cli";
 import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Redacted, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeOnePasswordCliAccountResult = S.decodeResult(OnePasswordCliAccount);
 const decodeOnePasswordCliDiagnosticTextResult = S.decodeResult(OnePasswordCliDiagnosticText);
@@ -218,7 +220,7 @@ describe("@beep/onepassword-cli", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {
+  it.layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {
     it.effect(
       "probes signed-in state and reference metadata without exposing the secret",
       Effect.fnUntraced(function* () {
@@ -238,7 +240,7 @@ describe("@beep/onepassword-cli", () => {
     );
   });
 
-  layer(OnePasswordCli.makeLayerFromRunner(missingRunner))((it) => {
+  it.layer(OnePasswordCli.makeLayerFromRunner(missingRunner))((it) => {
     it.effect(
       "returns typed driver errors for unresolved references",
       Effect.fnUntraced(function* () {
@@ -249,6 +251,39 @@ describe("@beep/onepassword-cli", () => {
         expect(result.operation).toBe("read");
         expect(O.getOrThrow(result.stderr)).toBe("secret not found");
       })
+    );
+  });
+
+  it.layer(
+    OnePasswordCli.makeLayerFromRunner((_command, args) =>
+      Effect.succeed(
+        OnePasswordCliProcessResult.make({
+          exitCode: 0,
+          stderr: "",
+          stdout: Str.concat(
+            "é🔐",
+            O.getOrElse(A.get(args, 1), () => "")
+          ),
+        })
+      )
+    )
+  )((it) => {
+    it.effect.prop(
+      "counts UTF-8 bytes while preserving synthetic Unicode contents and reference metadata",
+      [Arbitrary.schema(OnePasswordReference)],
+      ([reference]) =>
+        Effect.gen(function* () {
+          const onePassword = yield* OnePasswordCli;
+          const expected = Str.concat("é🔐", reference);
+          const value = yield* onePassword.read(reference);
+          const probe = yield* onePassword.probeReference(reference);
+
+          expect(Redacted.value(value)).toBe(expected);
+          expect(probe.byteLength).toBe(new TextEncoder().encode(expected).byteLength);
+          expect(probe.reference).toBe(reference);
+          expect(probe.status).toBe("resolved");
+        }),
+      { arbitrary: fcRuns(50) }
     );
   });
 });

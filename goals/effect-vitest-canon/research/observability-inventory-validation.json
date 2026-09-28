@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "rows": 149,
+  "uniqueIds": 149,
+  "completeHumanFileLensPairs": 76,
+  "admittedFiles": 19,
+  "onExcessProperty": "error",
+  "lineBounds": true,
+  "validPrimitiveIds": true,
+  "rootAndCensusSchemaValid": true,
+  "discardedNone": 0,
+  "graphPin": "14a3f140095fdebbff9162944fe7d4ea83e054e6"
+}

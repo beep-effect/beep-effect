@@ -1,0 +1,9 @@
+{
+  "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+  "testBodyTokensUnchanged": true,
+  "outsideTargetUnchangedExceptProviderImport": true,
+  "realNodeServicesRetained": true,
+  "isolatedLayerBlocks": 1,
+  "hookTimeout": "10 seconds",
+  "sourceSha256": "91c49650e86235b924092e2a491a3fbb79c6707d26e28ded1af4433c07a7b348"
+}

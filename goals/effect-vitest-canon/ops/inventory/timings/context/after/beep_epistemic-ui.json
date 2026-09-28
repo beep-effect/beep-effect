@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/epistemic-ui",
+  "sourceHead": "c7da537e851ffef812dbdb64a6bbfc4771b850f4",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.7261226259870455,
+  "bunWholeCommandSeconds": 2.217336236004485,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.5400390625, 3.48193359375, 3.58544921875],
+  "loadAfter": [3.0185546875, 3.75634765625, 3.673828125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.15 avg60=0.27 avg300=0.26 total=805458812\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219375\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143228\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=858622460\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=751137869\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=4.48 avg60=1.05 avg300=0.42 total=806031187\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219375\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143228\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=858624803\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=751138786\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "80894e6b7d8855c7ca4048e96f8c8d58ea4ed6376f654e30cd3b3931184078ee"
+    },
+    {
+      "file": "packages/epistemic/ui/AGENTS.md",
+      "sha256": "e7fade568464fa63e72de734ce8c9407b2c53f1092c370191ae4e8a05292349b"
+    },
+    {
+      "file": "packages/epistemic/ui/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/epistemic/ui/README.md",
+      "sha256": "e67d2553fb77f5813696b7fc2881b41e813a860e8f4f9c24874d35bae4b37075"
+    },
+    {
+      "file": "packages/epistemic/ui/docgen.json",
+      "sha256": "d6c51834be9e47d88b3a58624341cbce42ecebbe3843946fbb4e4c4620a35dc0"
+    },
+    {
+      "file": "packages/epistemic/ui/package.json",
+      "sha256": "fdbee1c0d53b35d0e22698d0b4051fb0d18d46d4d92e150e47c6c73dc342d22f"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ClaimEvidenceReview/ClaimEvidenceReviewPanel.tsx",
+      "sha256": "098f6634ed76e4c9603c34452fb39656d23f00699ba20075d0df8df23c4d5e08"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriagePanel.tsx",
+      "sha256": "4066e690b2ac98f1c535900b8b7e675d78a8d42d669ebc50019a469fe045b0c9"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/ContradictionTriageView.tsx",
+      "sha256": "85d31503fbac955e4b66b5b3b9c4c4190529aec2ddbbd21e5cab5ef741a122b1"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/EvidenceSourcePanel.tsx",
+      "sha256": "78de8a376b64d29e2486cb7171438d732aa6d6283750852c4fa89dccaef92da7"
+    },
+    {
+      "file": "packages/epistemic/ui/src/ContradictionTriage/index.ts",
+      "sha256": "9cff870e29d65a1098e25ddc3eb1d61c7b236ba69491680198843efd44a81a96"
+    },
+    {
+      "file": "packages/epistemic/ui/src/index.ts",
+      "sha256": "a512a29ef1be79f86843a1ef123e027d1ed4b877f44e7b9c2de3e773c5c9315d"
+    },
+    {
+      "file": "packages/epistemic/ui/stories/ClaimEvidenceReview.stories.tsx",
+      "sha256": "41c9e79a6508519ddfb70abc8a78c5b09b42a74392544fed7b5215e617e04796"
+    },
+    {
+      "file": "packages/epistemic/ui/stories/tsconfig.json",
+      "sha256": "657042d8049c15543f0bcb259f69cc654886fa9b1ad1a721c48a65f753d559db"
+    },
+    {
+      "file": "packages/epistemic/ui/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/epistemic/ui/test/ClaimEvidenceReviewPanel.test.tsx",
+      "sha256": "4e5c051b3c5db53e7d4897981e860acb92c5874ccf7010d319157e54982fb233"
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
+      "sha256": "2e8aee257f04e5efbeb223c618c871a6e9895b6e991f7172784685d17f7f200e"
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "sha256": "16579db76ad6472480f679461d142d42f432e770c005108d5f3e502ea99c9831"
+    },
+    {
+      "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
+      "sha256": "6c8fee9eae0527357196b6874fea9d8ce37d15abc1d4bb90d63a49af930fc98f"
+    },
+    {
+      "file": "packages/epistemic/ui/tsconfig.check.json",
+      "sha256": "2101183d2b421dfc40a6bb283187321fedb6d11a8c14fd02ba137b90a0645877"
+    },
+    {
+      "file": "packages/epistemic/ui/tsconfig.json",
+      "sha256": "8b76d7d7da7a23b5abe784271a5f89afe8c2cad42a4c476cf739a47d8aaca3a9"
+    },
+    {
+      "file": "packages/epistemic/ui/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4"
+    },
+    {
+      "file": "packages/epistemic/ui/vitest.config.ts",
+      "sha256": "1be62d72d2126472cd4f2e37310a4563c6469d7a020bd17f79c9299bfaffb21c"
+    }
+  ],
+  "environmentMode": "Configured epistemic-ui jsdom React interaction and static server-rendering tests. No external endpoint is contacted. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 19,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.0185546875, 3.75634765625, 3.673828125],
+    "loadAfter": [3.89794921875, 3.9267578125, 3.7294921875],
+    "pressureBefore": {
+      "cpu": "some avg10=4.48 avg60=1.05 avg300=0.42 total=806031202\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219375\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143228\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=858624803\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=751138786\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=3.85 avg60=1.05 avg300=0.43 total=806037383\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186219375\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178143228\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=858624869\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=751138844\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 19,
+    "skipped": 0
+  },
+  "interpretation": "Configured jsdom React interaction and static server-rendering proof, not browser or transport execution. All19tests pass before and after with zero skips and stable source hashes. All125original assertions remain, one aggregate Passed retires. Queue property floor25 and existing confidence property floor50 retain domains and predicates; two native inversion controls expose replay/shrink. Both DOM suites restore original act-environment descriptors; view restores scrollIntoView. Four descriptor-state controls fail old and pass new. Single contextual observations with recorded load/pressure, not causal benchmarks."
+}

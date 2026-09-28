@@ -4,8 +4,10 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, pipe } from "effect";
+import { it } from "@beep/test-runner";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
@@ -41,25 +43,20 @@ const validationRequest = (dataset = violatingDataset): ShaclValidationRequest =
     maxResults: O.none(),
   });
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const runValidation = Effect.fn("ShaclEngineValidation.runValidation")(function* (request: ShaclValidationRequest) {
   const service = yield* ShaclValidationService;
   return yield* service.validate(request);
 });
 
-describe("@beep/shacl real shacl-engine validation", () => {
+it.layer(ShaclValidationServiceLive, { timeout: "30 seconds" })("@beep/shacl real shacl-engine validation", (it) => {
   it.effect(
     "reports focusNode and path for hasValue plus minCount violations",
     Effect.fnUntraced(function* () {
-      const result = yield* pipe(runValidation(validationRequest()), provideScopedLayer(ShaclValidationServiceLive));
+      const result = yield* runValidation(validationRequest());
 
-      expect(result.conforms).toBe(false);
+      pipe(result.conforms, assertFalse);
       expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.truncated).toBe(false);
+      pipe(result.truncated, assertFalse);
 
       const violation = result.violations[0];
       expect(violation?.focusNode).toBe(material.value);
@@ -70,14 +67,11 @@ describe("@beep/shacl real shacl-engine validation", () => {
   it.effect(
     "returns zero violations for a conforming data graph",
     Effect.fnUntraced(function* () {
-      const result = yield* pipe(
-        runValidation(validationRequest(makeDataset([makeQuad(material, RDF_TYPE, OWL_CLASS)]))),
-        provideScopedLayer(ShaclValidationServiceLive)
-      );
+      const result = yield* runValidation(validationRequest(makeDataset([makeQuad(material, RDF_TYPE, OWL_CLASS)])));
 
-      expect(result.conforms).toBe(true);
+      pipe(result.conforms, assertTrue);
       expect(result.violations).toHaveLength(0);
-      expect(result.truncated).toBe(false);
+      pipe(result.truncated, assertFalse);
     })
   );
 });

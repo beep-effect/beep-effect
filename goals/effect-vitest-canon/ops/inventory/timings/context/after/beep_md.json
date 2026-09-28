@@ -1,0 +1,206 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/md-html-main-node.json"
+  ],
+  "phase": "html-main-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "8cafb4ff92bbcb1473d028af18c9604693b2bd744c564b7f98478a7fd1114283"
+    },
+    {
+      "file": "packages/foundation/modeling/md/package.json",
+      "sha256": "a507d823ee881cd1fadd49e37e56fbd517ae2ae166fabfcd55f0023106832854"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.behavior.ts",
+      "sha256": "bf50b67f1b10ba07a01f530d4cfafbc8382654701041a5d789d0a3f1bd323232"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
+      "sha256": "364d900c5a3f88fd7d7abcbd01d0ab59070bd24e931d97373d5fe79e60b309f1"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "sha256": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.html.ts",
+      "sha256": "fe48c8c8acd5023398d76eb80af2964b38bfcb7446c9cffb6824b6e88408b322"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "sha256": "0887f65318d5ecf71eee9eefe8a2ef8ac85362a33ccc42aa5d49f32ed1167371"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.render.ts",
+      "sha256": "4932551b6eb2af215f4c236ec38da582fa062c266307df0603f8ea0a5779b685"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.safe.ts",
+      "sha256": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.ts",
+      "sha256": "c78a4605f6be4832d3faa66679a923afe7d457ff7637cf524fa4fa8dbf1845c2"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Version.ts",
+      "sha256": "ee59fbf3f61b86e5ae9eeee22d0e177b82136e1a6b8fc4cf0c6eb695851b39b4"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/index.ts",
+      "sha256": "2e4845d19208155895204ba33cb4ee297436429d9c6a89d3ffd423238eb23f1c"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts",
+      "sha256": "7584ba35b3613a11597b853d220623c6ab64ad2f31d281efb8b004294d237659"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts",
+      "sha256": "065ccd15f561f90a5cc14d925b4675272c079caf5f288f64540eb48bfccb5499"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts",
+      "sha256": "9712d7bdbb486aec36804646b0a3d509aa6fbdff67f664bc6f488948d08301b1"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts",
+      "sha256": "10da246a14c3abca4aed033064afb41f316915c4a1bc75ce0fba0181afe0ac4d"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/ConformanceLedger.test.ts",
+      "sha256": "8fa1a701039bc3d6723fd45a3876719cf1e94fc2d76fa7b7b990bb0ba81fbc5c"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
+      "sha256": "34646f6f00265c567384e4345c67afa0a6186151230253af2813de3f591edfa4"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+      "sha256": "3c39e846a73774dc338f7471765664703f5e7ad275646d00adf8b3b28f37cd0a"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "sha256": "4eb6439964dd0ab543992a8ed848a5085f5e5159683d424dc7d18101cfb30f65"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts",
+      "sha256": "536cb39211e9ff6d5dcbdf1d04ef631d8b21f0eb563120941e7b5c2b1a0a4e49"
+    }
+  ],
+  "loadBefore": [7.68505859375, 6.2529296875, 6.2978515625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.15 avg60=0.35 avg300=0.19 total=57857454\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.47 avg60=0.32 avg300=0.08 total=59989479\nfull avg10=0.47 avg60=0.32 avg300=0.08 total=58796637\n",
+    "io": "some avg10=0.00 avg60=0.04 avg300=0.05 total=651386827\nfull avg10=0.00 avg60=0.02 avg300=0.00 total=597567267\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "exit": 0,
+  "wholeCommandSeconds": 5.247432890995697,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "8cafb4ff92bbcb1473d028af18c9604693b2bd744c564b7f98478a7fd1114283"
+    },
+    {
+      "file": "packages/foundation/modeling/md/package.json",
+      "sha256": "a507d823ee881cd1fadd49e37e56fbd517ae2ae166fabfcd55f0023106832854"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.behavior.ts",
+      "sha256": "bf50b67f1b10ba07a01f530d4cfafbc8382654701041a5d789d0a3f1bd323232"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
+      "sha256": "364d900c5a3f88fd7d7abcbd01d0ab59070bd24e931d97373d5fe79e60b309f1"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "sha256": "a6af6dc79755114c2bf347eeb7fa65b779f7f6891f9fd9b43689d4317c41960e"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.html.ts",
+      "sha256": "fe48c8c8acd5023398d76eb80af2964b38bfcb7446c9cffb6824b6e88408b322"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "sha256": "0887f65318d5ecf71eee9eefe8a2ef8ac85362a33ccc42aa5d49f32ed1167371"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.render.ts",
+      "sha256": "4932551b6eb2af215f4c236ec38da582fa062c266307df0603f8ea0a5779b685"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.safe.ts",
+      "sha256": "8752ad8b63d4ca1a498afc468f52700b43030f0111f2ae53512fe9ec2518b101"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.ts",
+      "sha256": "c78a4605f6be4832d3faa66679a923afe7d457ff7637cf524fa4fa8dbf1845c2"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Version.ts",
+      "sha256": "ee59fbf3f61b86e5ae9eeee22d0e177b82136e1a6b8fc4cf0c6eb695851b39b4"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/index.ts",
+      "sha256": "2e4845d19208155895204ba33cb4ee297436429d9c6a89d3ffd423238eb23f1c"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts",
+      "sha256": "7584ba35b3613a11597b853d220623c6ab64ad2f31d281efb8b004294d237659"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts",
+      "sha256": "065ccd15f561f90a5cc14d925b4675272c079caf5f288f64540eb48bfccb5499"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts",
+      "sha256": "9712d7bdbb486aec36804646b0a3d509aa6fbdff67f664bc6f488948d08301b1"
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts",
+      "sha256": "10da246a14c3abca4aed033064afb41f316915c4a1bc75ce0fba0181afe0ac4d"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/ConformanceLedger.test.ts",
+      "sha256": "8fa1a701039bc3d6723fd45a3876719cf1e94fc2d76fa7b7b990bb0ba81fbc5c"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
+      "sha256": "34646f6f00265c567384e4345c67afa0a6186151230253af2813de3f591edfa4"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+      "sha256": "3c39e846a73774dc338f7471765664703f5e7ad275646d00adf8b3b28f37cd0a"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "sha256": "4eb6439964dd0ab543992a8ed848a5085f5e5159683d424dc7d18101cfb30f65"
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts",
+      "sha256": "536cb39211e9ff6d5dcbdf1d04ef631d8b21f0eb563120941e7b5c2b1a0a4e49"
+    }
+  ],
+  "loadAfter": [7.65966796875, 6.29443359375, 6.31103515625],
+  "pressureAfter": {
+    "cpu": "some avg10=0.08 avg60=0.32 avg300=0.18 total=57865581\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.25 avg60=0.29 avg300=0.07 total=59989482\nfull avg10=0.25 avg60=0.29 avg300=0.07 total=58796640\n",
+    "io": "some avg10=0.00 avg60=0.04 avg300=0.05 total=651387080\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=597567469\n"
+  },
+  "sourceStable": true
+}

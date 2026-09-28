@@ -4,7 +4,8 @@ import {
   OntologyGraphProjection,
   OntologyGraphProjectionStats,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 
 const pathProjection = (nodeCount: number, revision: number): OntologyGraphProjection => {

@@ -13,9 +13,10 @@ import {
   QaCaptureError,
   Witness,
 } from "@beep/qa-capture";
+import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect, layer } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient, HttpBody, HttpClient } from "effect/http";
 import * as S from "effect/Schema";
@@ -32,14 +33,14 @@ const TestLayer = Layer.mergeAll(
 const decodeEventsAccepted = S.decodeUnknownEffect(S.fromJsonString(EventsAccepted));
 const decodeMarkAccepted = S.decodeUnknownEffect(S.fromJsonString(MarkAccepted));
 
-layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) => {
+it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) => {
   it.effect(
     "collects NDJSON events end to end and cleans up on scope close",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const eventsPath = path.join(tmpDir, "round-1", "events.ndjson");
         const handlePath = path.join(tmpDir, "current.json");
 
@@ -133,8 +134,130 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
         // On-disk seqs are the canonical rewrite: strictly monotone from 1.
         expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
+      }),
+    15000
+  );
+  it.effect(
+    "owns canonical sequencing across repeated and out-of-order page batches",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const eventsPath = path.join(tmpDir, "round-1", "events.ndjson");
+        const handlePath = path.join(tmpDir, "current.json");
 
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
+        const down = PointerDownEvent.make({
+          button: 0,
+          kind: "pointer-down",
+          pointerId: 1,
+          selectorPath: '[data-qa="dock-sash"]',
+          seq: 1,
+          tEpochMs: 1753838000000,
+          x: 120,
+          y: 240,
+        });
+        const marker = MarkerEvent.make({
+          kind: "marker",
+          label: "scenario:start",
+          seq: 2,
+          tEpochMs: 1753838000100,
+        });
+        const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
+        const batch = [...validLines, "this is not json"].join("\n");
+        const secondPage = [
+          MarkerEvent.make({ ...marker, seq: 8, label: "second-page:first" }),
+          MarkerEvent.make({ ...marker, seq: 2, label: "second-page:second" }),
+          MarkerEvent.make({ ...marker, seq: 8, label: "second-page:third" }),
+        ];
+
+        // This shorter scope is the subject of the cleanup assertions below:
+        // the collector must finish before we inspect its files and handle.
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const collector = yield* Collector;
+            const running = yield* collector.serve(
+              CollectorServeOptions.make({
+                allowedOrigins: [appOrigin],
+                eventsPath,
+                handlePath: O.some(handlePath),
+                port: 0,
+                round: 1,
+                sessionDir: path.join(tmpDir, "round-1"),
+                sessionId: "qa-collector-test",
+              })
+            );
+            expect(running.port).toBeGreaterThan(0);
+            expect(yield* fs.exists(handlePath)).toBe(true);
+
+            const base = `http://127.0.0.1:${running.port}`;
+
+            const witnessResponse = yield* HttpClient.get(`${base}/witness.js`);
+            expect(yield* witnessResponse.text).toBe(witnessStub);
+
+            const eventsResponse = yield* HttpClient.post(`${base}/events`, {
+              body: HttpBody.text(batch, "text/plain;charset=UTF-8"),
+              headers: { origin: appOrigin },
+            });
+            expect(eventsResponse.headers["access-control-allow-origin"]).toBe(appOrigin);
+            const preflight = yield* HttpClient.options(`${base}/events`, {
+              headers: { origin: appOrigin, "access-control-request-method": "POST" },
+            });
+            expect(preflight.status).toBe(204);
+            expect(preflight.headers["access-control-allow-origin"]).toBe(appOrigin);
+            const unrelatedOrigin = yield* HttpClient.get(`${base}/health`, {
+              headers: { origin: "https://unrelated.example" },
+            });
+            // A single allowed origin is emitted as a constant; it must never
+            // reflect the unrelated caller or allow every origin.
+            expect(unrelatedOrigin.headers["access-control-allow-origin"]).toBe(appOrigin);
+            const accepted = yield* Effect.flatMap(eventsResponse.text, decodeEventsAccepted);
+            expect(accepted.accepted).toBe(2);
+            expect(accepted.rejected).toBe(1);
+
+            const secondLines = yield* Effect.forEach(secondPage, (event) => encodeActionEventJson(event));
+            const secondResponse = yield* HttpClient.post(`${base}/events`, {
+              body: HttpBody.text([...secondLines, "still not json"].join("\n"), "text/plain;charset=UTF-8"),
+              headers: { origin: appOrigin },
+            });
+            const secondAccepted = yield* Effect.flatMap(secondResponse.text, decodeEventsAccepted);
+            expect(secondAccepted.accepted).toBe(3);
+            expect(secondAccepted.rejected).toBe(1);
+            const markResponse = yield* HttpClient.post(`${base}/mark`, {
+              body: HttpBody.jsonUnsafe({ label: "agent:checkpoint" }),
+            });
+            const marked = yield* Effect.flatMap(markResponse.text, decodeMarkAccepted);
+            // Five accepted events across two page batches precede the server mark.
+            expect(marked.seq).toBe(6);
+
+            const stopFiber = yield* Effect.forkChild(running.awaitStop);
+            yield* HttpClient.post(`${base}/stop`, { body: HttpBody.text("", "text/plain") });
+            yield* Fiber.join(stopFiber);
+
+            expect(yield* running.eventsWritten).toBe(6);
+            expect(yield* running.rejectedCount).toBe(2);
+          })
+        );
+
+        // Scope closed: the writer drained and the handle file is gone.
+        expect(yield* fs.exists(handlePath)).toBe(false);
+        const written = yield* fs.readFileString(eventsPath);
+        const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(A.length(lines)).toBe(6);
+        const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line));
+        expect(A.map(decoded, (event) => event.kind)).toEqual([
+          "pointer-down",
+          "marker",
+          "marker",
+          "marker",
+          "marker",
+          "marker",
+        ]);
+        // On-disk seqs are the canonical rewrite: strictly monotone from 1.
+        expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3, 4, 5, 6]);
+        expect(pipe(decoded, A.slice({ start: 2, end: 5 }))).toEqual(
+          A.map(secondPage, (event, index) => MarkerEvent.make({ ...event, seq: index + 3 }))
+        );
       }),
     15000
   );
@@ -145,7 +268,7 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
         // The test runner's parent process is guaranteed alive and foreign.
@@ -182,8 +305,6 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         // The live owner's handle survives the refused takeover.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
         expect(remaining.sessionId).toBe("qa-live-foreign");
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
       }),
     15000
   );
@@ -194,7 +315,7 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
         // A finished child process yields a pid that is provably dead.
@@ -247,8 +368,6 @@ layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) =
         // Teardown of the reclaimer must not delete the successor's handle.
         const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
         expect(remaining.sessionId).toBe("qa-successor");
-
-        yield* fs.remove(tmpDir, { force: true, recursive: true });
       }),
     15000
   );

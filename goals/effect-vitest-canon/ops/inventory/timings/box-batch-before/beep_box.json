@@ -1,0 +1,71 @@
+{
+  "package": "@beep/box",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:58:18.077000+00:00",
+  "totalMs": 3920.711669921875,
+  "testCount": 31,
+  "files": [
+    {
+      "file": "packages/drivers/box/test/Box.equivalence.test.ts",
+      "ms": 1.3291015625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "ms": 57.711669921875,
+      "tests": 30
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box accepts future Box enum values generated as open unions",
+      "ms": 32.6360709999999
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box decodes generated collection fields through their suspended schemas",
+      "ms": 32.4126140000003
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box keeps only the strict conflict projection from API failure context",
+      "ms": 32.38167599999997
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box retains only the schema error class without issue text",
+      "ms": 32.37515600000006
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips handwritten schema values without encoded-shape drift",
+      "ms": 32.36587099999997
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box bridges SDK byte downloads into Effect streams",
+      "ms": 12.058654999999817
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box aborts byte download setup when interrupted before the SDK returns",
+      "ms": 8.711590000000342
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box decodes every Box provisioning discovery surface",
+      "ms": 8.686141000000134
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box fails byte downloads when the SDK returns no stream",
+      "ms": 8.509437000000162
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box exposes the provisioning mutation operations required by the reconciler",
+      "ms": 8.507614000000103
+    }
+  ]
+}

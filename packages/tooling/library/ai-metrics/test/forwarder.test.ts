@@ -4,10 +4,11 @@ import {
   AiMetricsForwarderRunResult,
   AiMetricsForwarderTimerInput,
 } from "@beep/repo-ai-metrics/forwarder";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, Redacted } from "effect";
 import * as Base64 from "effect/encoding/Base64";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const encodeForwarderInput = S.encodeUnknownEffect(AiMetricsForwarderInput);
@@ -23,7 +24,7 @@ describe("@beep/repo-ai-metrics forwarder schema invariants", () => {
       });
       const encodedInput = yield* encodeForwarderInput(input);
 
-      expect(O.isNone(input.hashSalt)).toBe(true);
+      assertNone(input.hashSalt);
       expect(encodedInput).not.toHaveProperty("hashSalt");
       expect(encodedInput).not.toHaveProperty("dataRoot");
       expect(encodedInput).not.toHaveProperty("sinceEpochMillis");

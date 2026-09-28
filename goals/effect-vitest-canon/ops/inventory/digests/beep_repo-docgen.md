@@ -50,3 +50,15 @@ Root-reviewed P1 inventory; P2 remains gated.
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+
+## Consolidated P2 closeout (2026-09-27)
+
+The inventory above is historical. Saved actionable findings are fixed and
+native boundaries explicitly excepted. Real compiler/fixture scope cleanup is
+verified on normal completion, failure and interruption. Parser service scope
+preserves serial shared-project semantics. Native properties preserve nine
+domains and equivalence, with environment floor/seed and one total deadline.
+All 107 current tests pass Node/Bun and complete package audit/docgen passes.
+See history/2026-09-27-docgen-reconciliation.md. Final consolidated PR proof and
+the later remainder census remain outstanding.

@@ -1,31 +1,23 @@
 import * as Composition from "@beep/nlp-processing/Backend/Composition";
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { PosInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
->(schema: Schema) {
-  const equals = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.all([Arbitrary.schema(schema)]),
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(schema)(value);
-        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-        expect(equals(decoded, value)).toBe(true);
-
-        return true;
-      }),
-    fcRuns(50)
-  );
-  expect(result._tag).toBe("Passed");
+>(schema: Schema, value: Schema["Type"], label: string) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
 const baseCapabilities: Backend.BackendCapabilities = {
@@ -85,13 +77,17 @@ describe("withFallback", () => {
 });
 
 describe("withCaching", () => {
-  it.effect("round-trips schema-derived cache options and applies defaults", () =>
-    Effect.gen(function* () {
-      yield* assertSchemaRoundTrip(Composition.CachingOptions);
-      const defaults = Composition.CachingOptions.make({});
-      expect(defaults.capacity).toBe(1024);
-      expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
-    })
+  it.effect.prop(
+    "round-trips schema-derived cache options and applies defaults",
+    { CachingOptions: Arbitrary.schema(Composition.CachingOptions) },
+    (values) =>
+      Effect.gen(function* () {
+        yield* assertSchemaRoundTrip(Composition.CachingOptions, values.CachingOptions, "Composition.CachingOptions");
+        const defaults = Composition.CachingOptions.make({});
+        expect(defaults.capacity).toBe(1024);
+        expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(
@@ -120,12 +116,12 @@ describe("selectByCapability", () => {
     const a = stub("a", baseCapabilities, () => Effect.succeed([]));
     const b = stub("b", { ...baseCapabilities, ner: true }, () => Effect.succeed([]));
     const picked = Composition.selectByCapability([a, b], "ner");
-    expect(O.isSome(picked)).toBe(true);
+    pipe(picked, O.isSome, assertTrue);
     expect(O.getOrThrow(picked).name).toBe("b");
   });
 
   it("returns none when no backend supports the capability", () => {
     const a = stub("a", baseCapabilities, () => Effect.succeed([]));
-    expect(O.isNone(Composition.selectByCapability([a], "ner"))).toBe(true);
+    assertNone(Composition.selectByCapability([a], "ner"));
   });
 });

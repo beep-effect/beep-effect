@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/agents-client",
+  "sourceHead": "ddbe49183f4daccdd02dbfd661a86f198b864d16",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.2228478680044645,
+  "bunWholeCommandSeconds": 1.9167243690026226,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [2.10205078125, 2.64599609375, 2.361328125],
+  "loadAfter": [2.41455078125, 2.7021484375, 2.38134765625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.13 avg60=0.21 avg300=0.14 total=745604395\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202157\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128136\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=820233070\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=717857796\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.09 avg60=0.20 avg300=0.14 total=745613130\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202157\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128136\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=820233546\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=717858118\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "544e0fe928cd4ce3432e8b4a569648150f5dabeeef3614aa502cd5e207bb1cec"
+    },
+    {
+      "file": "packages/agents/client/AGENTS.md",
+      "sha256": "14100740363c6efe3d0d2fc0cf27ae53b21996c5562e0d555b80fa17919b7d6c"
+    },
+    {
+      "file": "packages/agents/client/CHANGELOG.md",
+      "sha256": "bf7e44f3261da5c92bb29e6f105cbaec35958424b91aec74f0c2b3190ca1a8b1"
+    },
+    {
+      "file": "packages/agents/client/CLAUDE.md",
+      "sha256": "14100740363c6efe3d0d2fc0cf27ae53b21996c5562e0d555b80fa17919b7d6c"
+    },
+    {
+      "file": "packages/agents/client/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/agents/client/README.md",
+      "sha256": "fd267f4addce48a5b27d471f5dab53c7601adf6023f851c993f6ca87382c1f5c"
+    },
+    {
+      "file": "packages/agents/client/docgen.json",
+      "sha256": "a43715dc0745bd33a04da8dc933595d4cf09cf8cb68bba8e11bff97bcda902b5"
+    },
+    {
+      "file": "packages/agents/client/package.json",
+      "sha256": "7cc9e697e943e230b9e7c4b3c397b09f45874d61f10de07a3155dcf0923eedae"
+    },
+    {
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "sha256": "d32245d16d29e3244a8e7dea20297a70e77ff51b65a15e996a10e4ab354697b6"
+    },
+    {
+      "file": "packages/agents/client/src/Chat.layer.ts",
+      "sha256": "78c314252132b903c5b3c43792f85d259deff01cd0c522848d8456bd66f6efb5"
+    },
+    {
+      "file": "packages/agents/client/src/ClientObservability.ts",
+      "sha256": "f9df85c5aecc646db0664f2e4f49f4e89c037b915531acd4adb257318d080282"
+    },
+    {
+      "file": "packages/agents/client/src/ProviderInstance.atoms.ts",
+      "sha256": "4a716996641aa8921352c86bca004fba67426319dcecd59a1b3152c84cd367ca"
+    },
+    {
+      "file": "packages/agents/client/src/ProviderInstance.service.ts",
+      "sha256": "d7bf22191831ace128973ea204c04001ca22155b0d1d008f8e82735f43777b1e"
+    },
+    {
+      "file": "packages/agents/client/src/index.ts",
+      "sha256": "bffaf107917485ec4f5479d900c33a9532230bee8c30bb984198a0c4f19ca0f4"
+    },
+    {
+      "file": "packages/agents/client/src/internal/BrowserHttpUrl.ts",
+      "sha256": "76e5301527a8942b6c0881e3a19d834a4e631bd3d4031b6e84393b61d1e80469"
+    },
+    {
+      "file": "packages/agents/client/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/agents/client/test/Chat.layer.test.ts",
+      "sha256": "6aabaea7d7c28818b4c3545c21c76f7db4c998475fa0822d04e500593e48f2c6"
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "sha256": "9a2d8e0f7f6ee052aadde8ed93428a1ffe563ba35d3451c6ed0b2fb4d223cb23"
+    },
+    {
+      "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
+      "sha256": "b343a39ca451f74284b70b8fbc829f1008d8de5bfad07a71aba7c935ebb9d4b4"
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "sha256": "ee0b20d9e73a8ed5824aed70f614ecb8caf82e5b8742ad3e87c5ceb49972b2a1"
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "sha256": "5bbcaaf2471779b8ae7e47736f1fceec07d3acdafde51a723bf6c34558b93441"
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "sha256": "ea56d65840701606b8beb565d9fc4e1f7e2c0f9f9741c1d87a01f97da1d7b548"
+    },
+    {
+      "file": "packages/agents/client/tsconfig.check.json",
+      "sha256": "8560bdcb90e3daa9a0dbcbd442c425d2394c1da684fa7e6b3f7d84378df4ad8f"
+    },
+    {
+      "file": "packages/agents/client/tsconfig.json",
+      "sha256": "58e59a459b33b4acf41da5dcba400b4d12e0b86efb34c3a47b79ec74f067eb8f"
+    },
+    {
+      "file": "packages/agents/client/tsconfig.test.json",
+      "sha256": "96f1dbd18e9bd787573dd996eb5494e7e551be59f569b7f0b1c168f5e5c8c9b4"
+    },
+    {
+      "file": "packages/agents/client/vitest.config.ts",
+      "sha256": "7c01ee659fb18ea08d735090400d8281a2c36ff8d045b007b67a4a6030d27548"
+    }
+  ],
+  "environmentMode": "Actual Agents Client registries, RpcTest transport and configured storage capability with instrumented registrations. Scoped disposal, completion witnesses and exact-key restoration preserve original contracts. Idle cases retain native timers and removable controls. No browser navigation or live-server proof claimed.",
+  "bunProof": {
+    "passedTests": 23,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [2.41455078125, 2.7021484375, 2.38134765625],
+    "loadAfter": [3.1826171875, 2.85693359375, 2.43310546875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.09 avg60=0.20 avg300=0.14 total=745613137\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202157\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128136\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=820233546\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=717858118\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.07 avg60=0.19 avg300=0.14 total=745618428\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186202157\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178128136\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.01 total=820233546\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=717858119\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 23,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes execute all 23 test cases before and after with zero skips. One native property retains six independent schema-derived inputs, original codec laws and the 10-run floor, with configurable run count and replay seed. Timing differences are not causal speedup evidence."
+}

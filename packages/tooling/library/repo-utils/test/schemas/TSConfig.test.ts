@@ -9,8 +9,10 @@ import {
   TSConfig,
   TSConfigCompilerOptions,
 } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -29,30 +31,24 @@ describe("TSConfig schema", () => {
       const result = decodeTSConfig({});
 
       expect(result).toBeInstanceOf(TSConfig);
-      expect(result.compilerOptions).toEqual(O.none());
-      expect(result.extends).toEqual(O.none());
-      expect(result.references).toEqual(O.none());
+      assertNone(result.compilerOptions);
+      assertNone(result.extends);
+      assertNone(result.references);
     });
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived compiler options through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([TSConfigCompilerOptionsArbitrary]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeTSConfigFieldsCompilerOptions(value);
-              const decoded = yield* decodeTSConfigFieldsCompilerOptions(encoded);
+      [TSConfigCompilerOptionsArbitrary],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeTSConfigFieldsCompilerOptions(value);
+          const decoded = yield* decodeTSConfigFieldsCompilerOptions(encoded);
 
-              expect(decoded).toEqual(value);
+          expect(decoded).toEqual(value);
 
-              return true;
-            }),
-          fcRuns(20)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
     it("decodes references and collapses nullable fields to Option.none", () => {
@@ -70,18 +66,18 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(result.include).toEqual(O.none());
+      assertNone(result.include);
       expect(result.references).toEqual(O.some([{ path: "./packages/repo-utils" }]));
-      expect(result.typeAcquisition).toEqual(O.none());
-      expect(O.isSome(result.compilerOptions)).toBe(true);
+      assertNone(result.typeAcquisition);
+      result.compilerOptions.pipe(O.isSome, assertTrue);
       if (O.isSome(result.compilerOptions)) {
-        expect(result.compilerOptions.value.module).toEqual(O.some("nodenext"));
-        expect(result.compilerOptions.value.outDir).toEqual(O.none());
-        expect(result.compilerOptions.value.types).toEqual(O.none());
+        assertSome(result.compilerOptions.value.module, "nodenext");
+        assertNone(result.compilerOptions.value.outDir);
+        assertNone(result.compilerOptions.value.types);
       }
-      expect(O.isSome(result["ts-node"])).toBe(true);
+      result["ts-node"].pipe(O.isSome, assertTrue);
       if (O.isSome(result["ts-node"])) {
-        expect(result["ts-node"].value.compiler).toEqual(O.none());
+        assertNone(result["ts-node"].value.compiler);
       }
     });
 
@@ -136,28 +132,26 @@ describe("TSConfig schema", () => {
         }`);
 
         expect(result).toBeInstanceOf(TSConfig);
-        expect(result.extends).toEqual(O.some("./tsconfig.base.json"));
-        expect(result.files).toEqual(O.some(["src/index.ts"]));
+        assertSome(result.extends, "./tsconfig.base.json");
+        assertSome(result.files, ["src/index.ts"]);
 
-        expect(O.isSome(result.compilerOptions)).toBe(true);
+        result.compilerOptions.pipe(O.isSome, assertTrue);
         if (O.isSome(result.compilerOptions)) {
           const compilerOptions = result.compilerOptions.value;
 
-          expect(compilerOptions.module).toEqual(O.some("nodenext"));
-          expect(compilerOptions.moduleResolution).toEqual(O.some("bundler"));
-          expect(compilerOptions.target).toEqual(O.some("es2022"));
-          expect(compilerOptions.noEmit).toEqual(O.some(true));
-          expect(compilerOptions.paths).toEqual(
-            O.some({
-              "@app/*": ["src/*"],
-              "@generated/*": null,
-            })
-          );
-          expect(compilerOptions.types).toEqual(O.some(["node", "vitest"]));
-          expect(compilerOptions.jsx).toEqual(O.some("react-jsx"));
-          expect(compilerOptions.rewriteRelativeImportExtensions).toEqual(O.some(true));
-          expect(compilerOptions.verbatimModuleSyntax).toEqual(O.some(true));
-          expect(O.isSome(compilerOptions.plugins)).toBe(true);
+          assertSome(compilerOptions.module, "nodenext");
+          assertSome(compilerOptions.moduleResolution, "bundler");
+          assertSome(compilerOptions.target, "es2022");
+          assertSome(compilerOptions.noEmit, true);
+          assertSome(compilerOptions.paths, {
+            "@app/*": ["src/*"],
+            "@generated/*": null,
+          });
+          assertSome(compilerOptions.types, ["node", "vitest"]);
+          assertSome(compilerOptions.jsx, "react-jsx");
+          assertSome(compilerOptions.rewriteRelativeImportExtensions, true);
+          assertSome(compilerOptions.verbatimModuleSyntax, true);
+          compilerOptions.plugins.pipe(O.isSome, assertTrue);
           if (O.isSome(compilerOptions.plugins)) {
             const firstPlugin = compilerOptions.plugins.value[0] as {
               readonly name: string;
@@ -168,35 +162,35 @@ describe("TSConfig schema", () => {
           }
         }
 
-        expect(O.isSome(result.watchOptions)).toBe(true);
+        result.watchOptions.pipe(O.isSome, assertTrue);
         if (O.isSome(result.watchOptions)) {
-          expect(result.watchOptions.value.watchFile).toEqual(O.some("useFsEvents"));
+          assertSome(result.watchOptions.value.watchFile, "useFsEvents");
         }
 
-        expect(O.isSome(result.buildOptions)).toBe(true);
+        result.buildOptions.pipe(O.isSome, assertTrue);
         if (O.isSome(result.buildOptions)) {
-          expect(result.buildOptions.value.verbose).toEqual(O.some(true));
+          assertSome(result.buildOptions.value.verbose, true);
         }
 
-        expect(O.isSome(result.typeAcquisition)).toBe(true);
+        result.typeAcquisition.pipe(O.isSome, assertTrue);
         if (O.isSome(result.typeAcquisition)) {
-          expect(result.typeAcquisition.value.enable).toEqual(O.some(true));
-          expect(result.typeAcquisition.value.include).toEqual(O.some(["vitest"]));
+          assertSome(result.typeAcquisition.value.enable, true);
+          assertSome(result.typeAcquisition.value.include, ["vitest"]);
         }
 
-        expect(O.isSome(result["ts-node"])).toBe(true);
+        result["ts-node"].pipe(O.isSome, assertTrue);
         if (O.isSome(result["ts-node"])) {
           const tsNode = result["ts-node"].value;
 
-          expect(tsNode.transpiler).toEqual(O.some(["tsx", { esm: true }]));
-          expect(tsNode.moduleTypes).toEqual(O.some({ "**/*.cts": "cjs" }));
-          expect(O.isSome(tsNode.compilerOptions)).toBe(true);
+          assertSome(tsNode.transpiler, ["tsx", { esm: true }]);
+          assertSome(tsNode.moduleTypes, { "**/*.cts": "cjs" });
+          tsNode.compilerOptions.pipe(O.isSome, assertTrue);
           if (O.isSome(tsNode.compilerOptions)) {
             const tsNodeCompilerOptions = tsNode.compilerOptions.value as {
               readonly module: O.Option<string>;
               readonly customFlag?: { readonly mode: string };
             };
-            expect(tsNodeCompilerOptions.module).toEqual(O.some("nodenext"));
+            assertSome(tsNodeCompilerOptions.module, "nodenext");
             expect(tsNodeCompilerOptions.customFlag).toEqual({ mode: "safe" });
           }
         }
@@ -225,7 +219,10 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(O.isSome(result.compilerOptions)).toBe(true);
+      result.compilerOptions.pipe(O.isSome, assertTrue);
+      if (O.isSome(result.compilerOptions)) {
+        result.compilerOptions.value.plugins.pipe(O.isSome, assertTrue);
+      }
       if (O.isSome(result.compilerOptions) && O.isSome(result.compilerOptions.value.plugins)) {
         const firstPlugin = result.compilerOptions.value.plugins.value[0] as {
           readonly customSetting?: { readonly namespace: string };
@@ -233,7 +230,10 @@ describe("TSConfig schema", () => {
         expect(firstPlugin.customSetting).toEqual({ namespace: "styled" });
       }
 
-      expect(O.isSome(result["ts-node"])).toBe(true);
+      result["ts-node"].pipe(O.isSome, assertTrue);
+      if (O.isSome(result["ts-node"])) {
+        result["ts-node"].value.compilerOptions.pipe(O.isSome, assertTrue);
+      }
       if (O.isSome(result["ts-node"]) && O.isSome(result["ts-node"].value.compilerOptions)) {
         const compilerOptions = result["ts-node"].value.compilerOptions.value as {
           readonly customOption?: { readonly jsxRuntime: string };
@@ -268,8 +268,8 @@ describe("TSConfig schema", () => {
       });
       const compilerOptions = O.getOrThrow(result.compilerOptions);
 
-      expect(compilerOptions.target).toEqual(O.some("es2025"));
-      expect(compilerOptions.lib).toEqual(O.some(libraries));
+      assertSome(compilerOptions.target, "es2025");
+      assertSome<unknown>(compilerOptions.lib, libraries);
     });
   });
 
@@ -284,27 +284,29 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(topLevel)).toBe(true);
+      assertTrue(Exit.isFailure(topLevel));
       expect(renderSchemaFailure(topLevel)).toContain("Expected no excess property");
       expect(renderSchemaFailure(topLevel)).toContain('["unexpected"]');
-      expect(Exit.isFailure(nested)).toBe(true);
+      assertTrue(Exit.isFailure(nested));
       expect(renderSchemaFailure(nested)).toContain("Expected no excess property");
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
     });
 
-    it("rejects prototype-polluting keys at the strict record boundary", () => {
-      const parsed = Effect.runSync(jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}'));
-      const result = decodeTSConfigExit(parsed);
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(renderSchemaFailure(result)).toContain('["__proto__"]');
-    });
+    it.effect("rejects prototype-polluting keys at the strict record boundary", () =>
+      Effect.gen(function* () {
+        const parsed = yield* jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}');
+        const result = decodeTSConfigExit(parsed);
+        assertTrue(Exit.isFailure(result));
+        expect(renderSchemaFailure(result)).toContain('["__proto__"]');
+      })
+    );
 
     it("rejects duplicate uniqueItems arrays", () => {
       const exit = decodeTSConfigExit({
         files: ["src/index.ts", "src/index.ts"],
       });
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(renderSchemaFailure(exit)).toContain("Array items must be unique");
     });
 
@@ -317,7 +319,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(renderSchemaFailure(exit)).toContain("allowImportingTsExtensions");
       expect(renderSchemaFailure(exit)).toContain("moduleResolution");
     });
@@ -330,7 +332,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(renderSchemaFailure(exit)).toContain("reactNamespace");
       expect(renderSchemaFailure(exit)).toContain("jsx");
     });
@@ -342,7 +344,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(renderSchemaFailure(exit)).toContain("maxNodeModuleJsDepth");
       expect(renderSchemaFailure(exit)).toContain("allowJs");
     });
@@ -361,9 +363,9 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(negative)).toBe(true);
+      assertTrue(Exit.isFailure(negative));
       expect(renderSchemaFailure(negative)).toContain("maxNodeModuleJsDepth");
-      expect(Exit.isFailure(fractional)).toBe(true);
+      assertTrue(Exit.isFailure(fractional));
       expect(renderSchemaFailure(fractional)).toContain("maxNodeModuleJsDepth");
     });
 
@@ -377,7 +379,7 @@ describe("TSConfig schema", () => {
         },
       });
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(renderSchemaFailure(exit)).toContain("experimentalReplAwait");
       expect(renderSchemaFailure(exit)).toContain("ES2018");
     });

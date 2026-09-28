@@ -9,6 +9,7 @@ import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
 import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
 import { makeDrizzle, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
@@ -16,7 +17,8 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -50,7 +52,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin epistemic-contradiction migration PgLite integration", () => {});
 } else {
   describe("db-admin epistemic-contradiction migration PgLite integration", { concurrent: false }, () => {
-    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+    it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "migrates the tenant-bound append-only evidence-verification sidecar",
         Effect.fnUntraced(function* () {
@@ -521,7 +523,7 @@ if (!shouldRunPgliteIntegration) {
             (mutation) => Effect.map(Effect.flip(mutation), (failure) => inspect(failure, { depth: 10 })),
             { concurrency: 1 }
           );
-          expect(A.every(mutationFailures, Str.includes("append-only"))).toBe(true);
+          pipe(A.every(mutationFailures, Str.includes("append-only")), assertTrue);
         }),
         120_000
       );

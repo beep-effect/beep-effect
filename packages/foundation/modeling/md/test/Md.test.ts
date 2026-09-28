@@ -65,6 +65,7 @@ import {
   renderWithUnsafe,
 } from "@beep/md/Md.render";
 import {
+  DocumentSafetyViolation,
   DuplicateFootnoteDefinitionSafetyViolation,
   decodeSafeDocument,
   decodeSafeDocumentUnsafe,
@@ -75,8 +76,10 @@ import {
   SafeDocument,
 } from "@beep/md/Md.safe";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -105,6 +108,7 @@ const encodeDocumentResult = S.encodeResult(Document);
 const encodeInlineResult = S.encodeResult(Inline);
 const encodeSafeDocumentResult = S.encodeResult(SafeDocument);
 const encodeUnknownDocumentResult = S.encodeUnknownResult(Document);
+const isDocumentSafetyViolations = S.is(S.NonEmptyArray(DocumentSafetyViolation));
 const isDuplicateFootnoteDefinitionSafetyViolation = S.is(DuplicateFootnoteDefinitionSafetyViolation);
 const isHtmlProjectionSafetyViolation = S.is(HtmlProjectionSafetyViolation);
 
@@ -148,6 +152,10 @@ const expectRenderFailure = <Output>(
   result: Result.Result<Output, RenderError>,
   assertion: (error: RenderError) => void
 ): void => {
+  assertFailure(
+    Result.mapError(result, (error) => error._tag),
+    "RenderError"
+  );
   Result.match(result, {
     onFailure: assertion,
     onSuccess: () => expect.fail("Expected render adapter to fail"),
@@ -211,7 +219,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
 
 > Hello World!`;
 
-    expect(Result.getOrThrow(Md.render(markdown))).toBe(rendered);
+    assertSuccess<string, RenderError>(Md.render(markdown), rendered);
     expect(Md.renderUnsafe(markdown)).toBe(rendered);
   });
 
@@ -327,7 +335,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.p(Md.a("javascript:alert(1)", "unsafe")),
     ]);
 
-    expect(Result.isFailure(refineSafeDocument(unsafe))).toBe(true);
+    assertFailure(Result.mapError(refineSafeDocument(unsafe), isDocumentSafetyViolations), true);
   });
 
   it("rejects values that cannot complete the total SafeDocument to SafeHtml projection", () => {
@@ -338,7 +346,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     ];
 
     for (const document of incompatible) {
-      expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+      assertFailure(Result.mapError(refineSafeDocument(document), isDocumentSafetyViolations), true);
     }
   });
 
@@ -348,7 +356,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     });
     const safe = refineSafeDocument(document);
 
-    expect(Result.isSuccess(safe)).toBe(true);
+    assertSuccess(safe, SafeDocument.make(document));
     expect(() => renderSafeHtml(Result.getOrThrow(safe))).not.toThrow();
   });
 
@@ -363,7 +371,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     const duplicateIssues = issues.filter(isDuplicateFootnoteDefinitionSafetyViolation);
     const projectionIssues = issues.filter(isHtmlProjectionSafetyViolation);
 
-    expect(duplicateIssues).toMatchObject([
+    const expectedDuplicates = [
       { identifier: "duplicate", path: ["children", 0, "identifier"] },
       {
         identifier: "duplicate",
@@ -371,35 +379,46 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       },
       { identifier: "duplicate", path: ["children", 2, "children", 0, "identifier"] },
       { identifier: "duplicate", path: ["children", 3, "children", 0, "identifier"] },
-    ]);
+    ];
+    expect(duplicateIssues).toMatchObject(expectedDuplicates);
     expect(projectionIssues).toHaveLength(duplicateIssues.length);
     expect(projectionIssues.every((issue) => issue.rule === "duplicateId")).toBe(true);
-    expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+    assertFailure(
+      Result.mapError(refineSafeDocument(document), (issues) =>
+        A.map(A.filter(issues, isDuplicateFootnoteDefinitionSafetyViolation), ({ identifier, path }) => ({
+          identifier,
+          path,
+        }))
+      ),
+      expectedDuplicates
+    );
 
-    const unique = refineSafeDocument(Md.make([Md.footnoteDef("first", "One"), Md.footnoteDef("second", "Two")]));
-    expect(Result.isSuccess(unique)).toBe(true);
+    const uniqueDocument = Md.make([Md.footnoteDef("first", "One"), Md.footnoteDef("second", "Two")]);
+    const unique = refineSafeDocument(uniqueDocument);
+    assertSuccess(unique, SafeDocument.make(uniqueDocument));
     expect(() => renderSafeHtml(Result.getOrThrow(unique))).not.toThrow();
   });
 
-  it("rejects every schema-derived duplicate footnote identifier", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([FootnoteIdentifierArbitrary]),
-          ([identifier]) => {
-            const document = Md.make([Md.footnoteDef(identifier, "One"), Md.footnoteDef(identifier, "Two")]);
-            const duplicateIssues = documentSafetyIssues(document).filter(isDuplicateFootnoteDefinitionSafetyViolation);
+  it.prop(
+    "rejects every schema-derived duplicate footnote identifier",
+    [FootnoteIdentifierArbitrary],
+    ([identifier]) => {
+      const document = Md.make([Md.footnoteDef(identifier, "One"), Md.footnoteDef(identifier, "Two")]);
+      const duplicateIssues = documentSafetyIssues(document).filter(isDuplicateFootnoteDefinitionSafetyViolation);
 
-            expect(duplicateIssues).toHaveLength(2);
-            expect(duplicateIssues.every((issue) => issue.identifier === identifier)).toBe(true);
-            expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+      expect(duplicateIssues).toHaveLength(2);
+      expect(duplicateIssues.every((issue) => issue.identifier === identifier)).toBe(true);
+      assertFailure(
+        Result.mapError(refineSafeDocument(document), (issues) =>
+          A.map(A.filter(issues, isDuplicateFootnoteDefinitionSafetyViolation), ({ identifier }) => identifier)
+        ),
+        [identifier, identifier]
+      );
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("rejects a heading outline that the safe HTML projection cannot render", () => {
     const document = Md.make([Md.h2(""), Md.h5("")]);
@@ -412,24 +431,31 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
         rule: "headingOutline",
       },
     ]);
-    expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
-    expect(Result.isFailure(decodeSafeDocument(Result.getOrThrow(encodeUnknownDocumentResult(document))))).toBe(true);
+    assertFailure(
+      Result.mapError(refineSafeDocument(document), (issues) =>
+        A.map(A.filter(issues, isHtmlProjectionSafetyViolation), ({ _tag, path, rule }) => ({ _tag, path, rule }))
+      ),
+      [{ _tag: "HtmlProjection", path: ["children.1"], rule: "headingOutline" }]
+    );
+    assertFailure(
+      Result.mapError(
+        decodeSafeDocument(Result.getOrThrow(encodeUnknownDocumentResult(document))),
+        (error) => error._tag
+      ),
+      "SchemaError"
+    );
   });
 
-  it("renders every schema-derived SafeDocument without failing", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([SafeDocumentArbitrary]),
-          ([document]) => {
-            expect(() => renderSafeHtml(document)).not.toThrow();
+  it.prop(
+    "renders every schema-derived SafeDocument without failing",
+    [SafeDocumentArbitrary],
+    ([document]) => {
+      expect(() => renderSafeHtml(document)).not.toThrow();
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "builds and validates schema-first AST nodes",
@@ -448,7 +474,13 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       expect(yield* decodePre(yield* encodePre(tsPre))).toEqual(tsPre);
       expect(yield* decodeCodeFenceLanguage("ts")).toBe("ts");
       const invalidLanguage = yield* Effect.exit(decodeCodeFenceLanguage("ts bad"));
-      expect(Exit.isFailure(invalidLanguage)).toBe(true);
+      assertExitFailure(
+        Exit.match(invalidLanguage, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) => Exit.failCause(Cause.map(cause, (error) => error._tag)),
+        }),
+        Cause.fail("SchemaError")
+      );
       // Pre.language now folds non-conforming legacy info strings to None at decode,
       // so a free-form "ts bad" token drops out instead of being preserved.
       expect(yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
@@ -458,54 +490,44 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     })
   );
 
-  it("round-trips schema-derived Markdown AST nodes", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([InlineArbitrary, BlockArbitrary, DocumentArbitrary]),
-          ([inline, block, document]) => {
-            const decodedInline = Result.getOrThrow(decodeInlineResult(Result.getOrThrow(encodeInlineResult(inline))));
-            const decodedBlock = Result.getOrThrow(decodeBlockResult(Result.getOrThrow(encodeBlockResult(block))));
-            const decodedDocument = Result.getOrThrow(
-              decodeDocumentResult(Result.getOrThrow(encodeDocumentResult(document)))
-            );
+  it.prop(
+    "round-trips schema-derived Markdown AST nodes",
+    [InlineArbitrary, BlockArbitrary, DocumentArbitrary],
+    ([inline, block, document]) => {
+      const decodedInline = Result.getOrThrow(decodeInlineResult(Result.getOrThrow(encodeInlineResult(inline))));
+      const decodedBlock = Result.getOrThrow(decodeBlockResult(Result.getOrThrow(encodeBlockResult(block))));
+      const decodedDocument = Result.getOrThrow(
+        decodeDocumentResult(Result.getOrThrow(encodeDocumentResult(document)))
+      );
 
-            expect(decodedInline).toEqual(inline);
-            expect(decodedBlock).toEqual(block);
-            expect(decodedDocument).toEqual(document);
-            expect(renderMarkdownInline(decodedInline)).toEqual(expect.any(String));
-            expect(renderMarkdownBlock(decodedBlock)).toEqual(expect.any(String));
-            expect(Result.isSuccess(Md.render(decodedDocument))).toBe(true);
+      expect(decodedInline).toEqual(inline);
+      expect(decodedBlock).toEqual(block);
+      expect(decodedDocument).toEqual(document);
+      expect(renderMarkdownInline(decodedInline)).toEqual(expect.any(String));
+      expect(renderMarkdownBlock(decodedBlock)).toEqual(expect.any(String));
+      assertSuccess(
+        Result.map(Md.render(decodedDocument), (rendered) => typeof rendered),
+        "string"
+      );
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("bounds derived child-list arbitraries without constraining Markdown documents", () => {
-    const childListArbitrary = Arbitrary.schema(
-      S.Union([InlineChildren, BlockChildren, ListItemChildren, ListChildren, TaskItemChildren])
-    );
+  it.prop(
+    "bounds derived child-list arbitraries without constraining Markdown documents",
+    [Arbitrary.schema(S.Union([InlineChildren, BlockChildren, ListItemChildren, ListChildren, TaskItemChildren]))],
+    ([children]) => {
+      expect(children.length).toBeLessThanOrEqual(2);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([childListArbitrary]),
-          ([children]) => {
-            expect(children.length).toBeLessThanOrEqual(2);
+      const text = Text.make({ value: "unbounded domain" });
+      assertSuccess(decodeInlineChildrenResult([text, text, text]), [text, text, text]);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed");
-
-    const text = Text.make({ value: "unbounded domain" });
-    expect(Result.isSuccess(decodeInlineChildrenResult([text, text, text]))).toBe(true);
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)", () => {
     // Regression: a real Option in an encoded node must survive a JSON string
@@ -532,27 +554,21 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(doc);
   });
 
-  it("every encoded document survives a JSON boundary", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([DocumentArbitrary]),
-          ([document]) => {
-            const encoded = Result.getOrThrow(encodeDocumentResult(document));
-            const json = Result.getOrThrow(encodeJsonResult(encoded));
+  it.prop(
+    "every encoded document survives a JSON boundary",
+    [DocumentArbitrary],
+    ([document]) => {
+      const encoded = Result.getOrThrow(encodeDocumentResult(document));
+      const json = Result.getOrThrow(encodeJsonResult(encoded));
 
-            // JavaScript JSON stringification normalizes -0 to 0, so compare against
-            // the exact document value representable after the JSON boundary.
-            expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(
-              normalizeDocumentForJsonBoundary(document)
-            );
+      // JavaScript JSON stringification normalizes -0 to 0, so compare against
+      // the exact document value representable after the JSON boundary.
+      expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(normalizeDocumentForJsonBoundary(document));
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(50) }
+  );
 
   it("renders inline Markdown and HTML variants with escaped text by default", () => {
     expect(renderMarkdownInline(Md.text("# title <tag>."))).toBe("\\# title \\<tag\\>\\.");
@@ -656,7 +672,8 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
 ${Md.h3("Inside")}
 `;
 
-    expect(Result.getOrThrow(Md.render(Md.make([paragraph, paragraphArray, emptyLeadingTemplate])))).toBe(
+    assertSuccess<string, RenderError>(
+      Md.render(Md.make([paragraph, paragraphArray, emptyLeadingTemplate])),
       "Hello **world**!\n\nHello **world**!\n\n`x`"
     );
     expect(renderMarkdownBlock(quote)).toBe("> ### Inside\n> \n> plain block");
@@ -886,7 +903,8 @@ Demo video`);
     expect(escapeHtmlUrlAttribute("file:///tmp/a")).toBe("#");
 
     const markdownAdapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec });
-    expect(Result.getOrThrow(renderWith(markdownAdapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])))).toBe(
+    assertSuccess<string, RenderError>(
+      renderWith(markdownAdapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])),
       "[File](#)"
     );
     const namedSlashMarkdown = Result.getOrThrow(
@@ -901,7 +919,8 @@ Demo video`);
     expect(micromark(controlSeparatedSlashMarkdown)).toBe('<p><a href="#">External</a></p>');
 
     const htmlAdapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicySpec });
-    expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
+    assertSuccess<string, RenderError>(
+      renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])),
       '<p><a href="#">Artifact</a></p>'
     );
     const rawMarkdownDocument = Md.make([Md.p(Md.rawMarkdown("<trusted>"))]);
@@ -1046,7 +1065,10 @@ Demo video`);
       ]),
     ]);
     const encodedHostile = Result.getOrThrow(encodeDocumentResult(hostile));
-    expect(Result.isFailure(decodeSafeDocument(encodedHostile))).toBe(true);
+    assertFailure(
+      Result.mapError(decodeSafeDocument(encodedHostile), (error) => error._tag),
+      "SchemaError"
+    );
     expect(() => decodeSafeDocumentUnsafe(encodedHostile)).toThrow();
     expect(documentSafetyIssues(hostile)).toMatchObject([
       { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawMarkdown" },
@@ -1078,7 +1100,19 @@ Demo video`);
         observedNodes: MAX_SAFE_DOCUMENT_NODES + 1,
       },
     ]);
-    expect(Result.isFailure(refineSafeDocument(overLimit))).toBe(true);
+    assertFailure(
+      Result.mapError(refineSafeDocument(overLimit), (issues) =>
+        A.map(
+          A.filter(issues, DocumentSafetyViolation.guards.DocumentComplexity),
+          ({ _tag, maxNodes, observedNodes }) => ({
+            _tag,
+            maxNodes,
+            observedNodes,
+          })
+        )
+      ),
+      [{ _tag: "DocumentComplexity", maxNodes: MAX_SAFE_DOCUMENT_NODES, observedNodes: MAX_SAFE_DOCUMENT_NODES + 1 }]
+    );
   });
 
   it("ignores forged scalar children and stops reading once the global AST-node budget is exceeded", () => {
@@ -1102,23 +1136,19 @@ Demo video`);
     ]);
   });
 
-  it("keeps canonical URL-policy sanitization at a fixed point", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.String)]),
-          ([destination]) => {
-            const once = sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec);
-            const twice = sanitizeUrlDestinationWithPolicy(once, BrowserSafeUrlPolicySpec);
+  it.prop(
+    "keeps canonical URL-policy sanitization at a fixed point",
+    [Arbitrary.schema(S.String)],
+    ([destination]) => {
+      const once = sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec);
+      const twice = sanitizeUrlDestinationWithPolicy(once, BrowserSafeUrlPolicySpec);
 
-            expect(twice).toBe(once);
+      expect(twice).toBe(once);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("renders later table rows when the first row has no cells", () => {
     const table = Table.make({
@@ -1151,8 +1181,14 @@ Demo video`);
     Effect.fnUntraced(function* () {
       const decoded = Md.youtube("M7lc1UVf-VE");
 
-      expect(Result.isSuccess(decoded)).toBe(true);
-      expect(Result.isFailure(Md.youtube("https://youtu.be/M7lc1UVf-VE"))).toBe(true);
+      assertSuccess(
+        Result.map(decoded, (youtube) => youtube._tag),
+        "youtube"
+      );
+      assertFailure(
+        Result.mapError(Md.youtube("https://youtu.be/M7lc1UVf-VE"), (error) => error._tag),
+        "SchemaError"
+      );
       expect((yield* Md.youtubeEffect("M7lc1UVf-VE"))._tag).toBe("youtube");
       expect(Md.youtubeUnsafe("M7lc1UVf-VE")._tag).toBe("youtube");
     })
@@ -1163,19 +1199,19 @@ Demo video`);
     Effect.fnUntraced(function* () {
       const doc = markdownHtmlDoc();
 
-      expect(Result.getOrThrow(renderWith(MarkdownAdapter, doc))).toBe("# Hello\n\nWorld");
+      assertSuccess<string, RenderError>(renderWith(MarkdownAdapter, doc), "# Hello\n\nWorld");
       expect(renderWithUnsafe(MarkdownAdapter, doc)).toBe("# Hello\n\nWorld");
       expect(renderUnsafe(doc)).toBe("# Hello\n\nWorld");
       expect(renderHtmlUnsafe(doc)).toBe("<h1>Hello</h1>\n<p>World</p>");
       expect(renderPlainTextUnsafe(doc)).toBe("Hello\nWorld");
-      expect(Result.getOrThrow(renderPlainText(doc))).toBe("Hello\nWorld");
-      expect(Result.getOrThrow(Md.renderWith(MarkdownAdapter, doc))).toBe("# Hello\n\nWorld");
+      assertSuccess(renderPlainText(doc), "Hello\nWorld");
+      assertSuccess<string, RenderError>(Md.renderWith(MarkdownAdapter, doc), "# Hello\n\nWorld");
       expect(Md.renderWithUnsafe(MarkdownAdapter, doc)).toBe("# Hello\n\nWorld");
-      expect(Result.getOrThrow(Md.renderWith(HtmlFragmentAdapter, doc))).toBe("<h1>Hello</h1>\n<p>World</p>");
-      expect(Result.getOrThrow(Md.renderWith(PlainTextAdapter, doc))).toBe("Hello\nWorld");
-      expect(Result.getOrThrow(Md.renderHtml(doc))).toBe("<h1>Hello</h1>\n<p>World</p>");
+      assertSuccess<string, RenderError>(Md.renderWith(HtmlFragmentAdapter, doc), "<h1>Hello</h1>\n<p>World</p>");
+      assertSuccess(Md.renderWith(PlainTextAdapter, doc), "Hello\nWorld");
+      assertSuccess<string, RenderError>(Md.renderHtml(doc), "<h1>Hello</h1>\n<p>World</p>");
       expect(Md.renderHtmlUnsafe(doc)).toBe("<h1>Hello</h1>\n<p>World</p>");
-      expect(Result.getOrThrow(Md.renderPlainText(doc))).toBe("Hello\nWorld");
+      assertSuccess(Md.renderPlainText(doc), "Hello\nWorld");
       expect(Md.renderPlainTextUnsafe(doc)).toBe("Hello\nWorld");
 
       const effectAdapter: EffectRenderAdapter<string> = {
@@ -1200,6 +1236,13 @@ Demo video`);
       };
       const throwingEffect = yield* Effect.exit(renderEffectWith(throwingEffectAdapter, doc));
 
+      assertExitFailure(
+        Exit.match(throwingEffect, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) => Exit.failCause(Cause.map(cause, (error) => error._tag)),
+        }),
+        Cause.fail("RenderError")
+      );
       expectExitCause(throwingEffect, "Render adapter effect-throw failed. sync effect boom");
       expect(() => renderEffectWithUnsafe(throwingEffectAdapter, doc)).toThrow("sync effect boom");
     })
@@ -1342,19 +1385,20 @@ Demo video`);
   // SchemaUtils.withCodecStatics instead of free-floating `S.is(...)` walls.
   // These Arbitrary.schema laws pin that the colocated `.is` static agrees with
   // the schema it derives from, so the absorption cannot silently drift.
-  it("colocated escape-schema guards agree with their schemas", () => {
+  describe("colocated escape-schema guards agree with their schemas", () => {
     // Mirrors the module-private StringArray schema in Md.escape.ts.
     const StringArraySchema = S.Array(S.String);
     const stringArrayArbitrary = Arbitrary.schema(StringArraySchema);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([stringArrayArbitrary]), ([values]) => {
-          expect(isStringArray(values)).toBe(true);
+    it.prop(
+      "recognizes every schema-derived string array",
+      [stringArrayArbitrary],
+      ([values]) => {
+        expect(isStringArray(values)).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
+        return true;
+      },
+      { arbitrary: fcRuns(100) }
+    );
 
     // Any destination normalizing to an active unsafe protocol is neutralized
     // to "#" by the colocated UnsafeUrlProtocolDestination.is guard.
@@ -1362,15 +1406,16 @@ Demo video`);
       Arbitrary.schema(S.Literals(["javascript:", "vbscript:", "data:"])),
       Arbitrary.schema(S.String),
     ]).pipe(Arbitrary.map(([protocol, rest]) => `${protocol}${rest}`));
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([unsafeDestinationArbitrary]), ([destination]) => {
-          expect(sanitizeUrlDestination(destination)).toBe("#");
+    it.prop(
+      "neutralizes every generated unsafe protocol destination",
+      [unsafeDestinationArbitrary],
+      ([destination]) => {
+        expect(sanitizeUrlDestination(destination)).toBe("#");
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
+        return true;
+      },
+      { arbitrary: fcRuns(100) }
+    );
   });
 });
 

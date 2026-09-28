@@ -21,13 +21,13 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { activeResizeObserverCount, resize } from "@beep/dock-react/internal/ResizeObserverHarness";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import React from "react";
-import { afterEach, describe, expect, vi } from "vitest";
 import type { DockAtomGraph, DockPanelProps } from "@beep/dock-react";
 
 const group1 = GroupId.make("group-1");
@@ -78,7 +78,7 @@ const makeWorkspace = (
 
 const makeGraph = (
   workspace = makeWorkspace([textPanel(panel1Id, "One", "first"), textPanel(panel2Id, "Two", "second")])
-) => makeDockAtoms(workspace);
+) => Effect.acquireRelease(makeDockAtoms(workspace), (graph) => Effect.sync(() => graph.dispose()));
 
 let operationId = 0;
 const dispatch = (graph: DockAtomGraph, command: ActivatePanelCommand | MovePanelCommand): void => {
@@ -127,7 +127,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       expect(O.getOrThrow(graph.registry.get(graph.activePanelAtom(group1))).id).toBe(panel4Id);
       expect(screen.getByRole("tab", { name: /Four/ }).getAttribute("data-active")).toBe("true");
-      graph.dispose();
     })
   );
 
@@ -142,7 +141,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       const pane = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-group-id='group-1']");
       expect(pane?.style.width).toBe("800px");
       expect(pane?.style.height).toBe("400px");
-      graph.dispose();
     })
   );
 
@@ -160,7 +158,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       fireEvent.click(screen.getByRole("button", { name: "Close One" }));
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).kind).toBe("empty");
-      graph.dispose();
     })
   );
 
@@ -184,7 +181,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       yield* graph.awaitIdle;
       yield* Effect.promise(() => waitFor(() => expect(movingNode.parentElement?.isConnected).toBe(false)));
       expect(alwaysTarget?.isConnected).toBe(true);
-      graph.dispose();
     })
   );
 
@@ -195,17 +191,19 @@ describe("DockviewReact", { concurrent: false }, () => {
         title: "Missing",
         view: ComponentPanelView.make({ renderer: RendererKey.make("not-registered"), input: {} }),
       });
-      const graph = yield* makeGraph(makeWorkspace([missing]));
-      const view = render(<DockviewReact graph={graph} components={{}} />);
-      sizeRoot();
-      expect((yield* Effect.promise(() => screen.findByRole("alert"))).textContent).toContain("not-registered");
-      view.unmount();
-      graph.dispose();
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const graph = yield* makeGraph(makeWorkspace([missing]));
+          const view = render(<DockviewReact graph={graph} components={{}} />);
+          sizeRoot();
+          expect((yield* Effect.promise(() => screen.findByRole("alert"))).textContent).toContain("not-registered");
+          view.unmount();
+        })
+      );
 
-      const empty = yield* makeDockAtoms();
+      const empty = yield* Effect.acquireRelease(makeDockAtoms(), (graph) => Effect.sync(() => graph.dispose()));
       render(<DockviewReact graph={empty} components={{}} watermarkComponent={() => <div>Watermark</div>} />);
       expect(screen.getByText("Watermark").isConnected).toBe(true);
-      empty.dispose();
     })
   );
 
@@ -220,7 +218,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       render(<DockviewReact graph={graph} components={{}} />);
       sizeRoot();
       expect((yield* Effect.promise(() => screen.findByRole("alert"))).textContent).toContain("constructor");
-      graph.dispose();
     })
   );
 
@@ -236,7 +233,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       render(<DockviewReact graph={graph} components={{}} tabComponents={{}} />);
       sizeRoot();
       expect((yield* Effect.promise(() => screen.findByRole("tab"))).textContent).toContain("Inherited Tab");
-      graph.dispose();
     })
   );
 
@@ -256,7 +252,6 @@ describe("DockviewReact", { concurrent: false }, () => {
       expect(onReady).toHaveBeenCalledTimes(1);
       expect(dispose).not.toHaveBeenCalled();
       expect(activeResizeObserverCount()).toBe(0);
-      graph.dispose();
     })
   );
 });

@@ -1159,7 +1159,8 @@ const directWaitFunction = (owner: MorphNode, state: DetectorState, seen: Readon
 
 const directWaitExecution = (node: MorphNode, state: DetectorState, seen: ReadonlyArray<MorphNode> = []): boolean => {
   const owner = waitFunctionOwner(node);
-  if (O.isNone(owner) || A.contains(seen, owner.value)) return false;
+  // Syntax nodes are graph identities, not values for structural equality.
+  if (O.isNone(owner) || A.some(seen, (visited) => visited === owner.value)) return false;
   if (
     O.exists(state.harness.enclosingTest(node), ({ callback, mode }) => callback === owner.value && mode === "effect")
   )

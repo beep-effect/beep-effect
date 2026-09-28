@@ -1,11 +1,12 @@
+import { it } from "@beep/test-runner";
 import { VERSION } from "@beep/ui";
 import { ChartContainer, ChartTooltipContent } from "@beep/ui/components/chart";
 import { Input } from "@beep/ui/components/input";
 import { Textarea } from "@beep/ui/components/textarea";
 import { cn } from "@beep/ui/lib/utils";
+import { describe, expect } from "@effect/vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
 
 const renderChartTooltip = (formatter?: () => React.ReactNode) =>
   renderToStaticMarkup(

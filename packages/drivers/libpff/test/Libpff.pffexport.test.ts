@@ -15,9 +15,10 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -31,11 +32,6 @@ const decodeContentDigest = S.decodeEffect(ContentDigest);
 const decodeOperationId = S.decodeEffect(OperationId);
 const decodePffexportEngineConfig = S.decodeEffect(PffexportEngineConfig);
 const decodePosixPath = S.decodeEffect(PosixPath);
-
-const testLayer = NodeServices.layer;
-
-const provideTestLayer = provideScopedLayer(testLayer);
-
 const decodeMessageRecord = S.decodeUnknownEffect(S.fromJsonString(PffexportMessageRecord));
 const PffexportMessageRecordArbitrary = Arbitrary.schema(PffexportMessageRecord);
 const fixtureDigestHex = "166df44db090f14dbb3ec7730fc17e78c170477163a6c913e5485d075c4b92d0";
@@ -144,6 +140,8 @@ for arg in "$@"; do
   if [ "$prev" = "-t" ]; then target="$arg"; fi
   prev="$arg"
 done
+trap 'printf terminated > "$target.cancelled"; exit 143' TERM
+printf ready > "$target.ready"
 sleep 1
 printf 'late write' > "$target.late"
 `;
@@ -292,21 +290,21 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
 });
 
 describe("makePffexportFileProcessingEngine", () => {
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
-    ([record]) => {
-      const json = Effect.runSync(encodePffexportMessageRecordJson(record));
-      const decoded = Effect.runSync(decodeMessageRecord(json));
-      expect(Effect.runSync(encodePffexportMessageRecordJson(decoded))).toBe(json);
-    },
+    Effect.fnUntraced(function* ([record]) {
+      const json = yield* encodePffexportMessageRecordJson(record);
+      const decoded = yield* decodeMessageRecord(json);
+      expect(yield* encodePffexportMessageRecordJson(decoded)).toBe(json);
+    }),
     { arbitrary: fcRuns(25) }
   );
 
-  it.effect(
-    "exports directly from a file locator when the caller omits source bytes",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("exports directly from a file locator when the caller omits source bytes", (it) => {
+    it.effect(
+      "exports directly from a file locator when the caller omits source bytes",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const config = yield* decodePffexportEngineConfig({
           exportRoot,
@@ -323,47 +321,47 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.sourceArtifactId).toBe(operation.source.id);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "isolates a file-locator export inside bubblewrap when configured",
-    Effect.fnUntraced(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const bwrapPath = "/usr/bin/bwrap";
-        if (!(yield* fs.exists(bwrapPath))) return;
-        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({
-            bwrapPath: O.some(bwrapPath),
-            exportRoot,
-            pffexportPath: stubPath,
-          })
-        );
-        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
-        const result = yield* engine.exportArchive(
-          ExportArchiveOperation.make({
-            ...operation,
-            source: SourceArtifact.make(sourceWithoutBytes),
-          })
-        );
+    (it) => {
+      it.effect("isolates a file-locator export inside bubblewrap when configured", (context) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const bwrapPath = "/usr/bin/bwrap";
+          if (!(yield* fs.exists(bwrapPath))) {
+            return yield* Effect.sync(() => context.skip("bubblewrap binary is absent at /usr/bin/bwrap"));
+          }
+          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({
+              bwrapPath: O.some(bwrapPath),
+              exportRoot,
+              pffexportPath: stubPath,
+            })
+          );
+          const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+          const result = yield* engine.exportArchive(
+            ExportArchiveOperation.make({
+              ...operation,
+              source: SourceArtifact.make(sourceWithoutBytes),
+            })
+          );
 
-        expect(result.children.length).toBeGreaterThan(0);
-        expect(result.warnings).toStrictEqual([]);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(result.children.length).toBeGreaterThan(0);
+          expect(result.warnings).toStrictEqual([]);
+        })
+      );
+    }
   );
 
-  it.effect(
-    "binds an external shebang interpreter prefix into the sandbox",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("binds an external shebang interpreter prefix into the sandbox", (it) => {
+    it.effect(
+      "binds an external shebang interpreter prefix into the sandbox",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -396,61 +394,60 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "uses a standard-root env interpreter without an additional runtime bind",
-    Effect.fnUntraced(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-        const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
-        const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
-        yield* fs.writeFileString(
-          stubPath,
-          stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -S -a pffexport -u BEEP_UNUSED bash")
-        );
-        yield* fs.chmod(stubPath, 0o755);
-        yield* fs.writeFileString(
-          bwrapPath,
-          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`).replace(
-            'exec "$mapped_command" "${mapped[@]}"',
-            `if [ "$mapped_command" = "/usr/bin/env" ] && [ "\${mapped[0]}" = "-S" ]; then
+    (it) => {
+      it.effect(
+        "uses a standard-root env interpreter without an additional runtime bind",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+          const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
+          const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
+          yield* fs.writeFileString(
+            stubPath,
+            stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -S -a pffexport -u BEEP_UNUSED bash")
+          );
+          yield* fs.chmod(stubPath, 0o755);
+          yield* fs.writeFileString(
+            bwrapPath,
+            bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`).replace(
+              'exec "$mapped_command" "${mapped[@]}"',
+              `if [ "$mapped_command" = "/usr/bin/env" ] && [ "\${mapped[0]}" = "-S" ]; then
   exec /bin/bash "\${mapped[2]}" "\${mapped[@]:3}"
 fi
 exec "$mapped_command" "\${mapped[@]}"`
-          )
-        );
-        yield* fs.chmod(bwrapPath, 0o755);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
-        );
-        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+            )
+          );
+          yield* fs.chmod(bwrapPath, 0o755);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
+          );
+          const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
 
-        const result = yield* engine.exportArchive(
-          ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) })
-        );
+          const result = yield* engine.exportArchive(
+            ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) })
+          );
 
-        expect(result.children.length).toBeGreaterThan(0);
-        const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
-        expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
-        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n-a pffexport -u BEEP_UNUSED bash\n${stubPath}\n`);
-        expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(result.children.length).toBeGreaterThan(0);
+          const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
+          expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
+          expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n-a pffexport -u BEEP_UNUSED bash\n${stubPath}\n`);
+          expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
+        })
+      );
+    }
   );
 
-  it.effect(
-    "fails closed when a sandboxed executable cannot be resolved",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("fails closed when a sandboxed executable cannot be resolved", (it) => {
+    it.effect(
+      "fails closed when a sandboxed executable cannot be resolved",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -471,16 +468,14 @@ exec "$mapped_command" "\${mapped[@]}"`
           .pipe(Effect.flip);
 
         expect(error.reason).toBe("engine-unavailable");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "binds an external canonical target reached through a covered shebang symlink",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("binds an external canonical target reached through a covered shebang symlink", (it) => {
+    it.effect(
+      "binds an external canonical target reached through a covered shebang symlink",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -495,7 +490,7 @@ exec "$mapped_command" "\${mapped[@]}"`
         yield* fs.copy("/bin/bash", interpreterPath);
         yield* fs.chmod(interpreterPath, 0o755);
         yield* Effect.acquireRelease(fs.symlink(interpreterPath, coveredInterpreterPath), () =>
-          fs.remove(coveredInterpreterPath).pipe(Effect.ignore)
+          fs.remove(coveredInterpreterPath).pipe(Effect.orDie)
         );
         yield* fs.writeFileString(
           launcherPath,
@@ -521,80 +516,79 @@ exec "$mapped_command" "\${mapped[@]}"`
         );
 
         expect(result.children.length).toBeGreaterThan(0);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "invokes an env-selected interpreter through its canonical path-sensitive prefix",
-    Effect.fnUntraced(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-        const fixtureRoot = path.dirname(stubPath);
-        const interpreterPrefix = path.join(fixtureRoot, "interpreter");
-        const commandName = `${path.basename(fixtureRoot)} bash`;
-        const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
-        const commandDirectory = path.dirname(process.execPath);
-        const commandPath = path.join(commandDirectory, commandName);
-        const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
-        const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
-        const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
-        yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
-        yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
-        yield* fs.copy("/bin/bash", interpreterPath);
-        yield* fs.chmod(interpreterPath, 0o755);
-        yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
-          fs.remove(commandPath).pipe(Effect.ignore)
-        );
-        const splitString = `'${commandName}' -c 'exec /bin/bash "$0" "$@"'`;
-        yield* fs.writeFileString(
-          launcherPath,
-          stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env -S ${splitString}`)
-        );
-        yield* fs.chmod(launcherPath, 0o755);
-        yield* fs.writeFileString(
-          bwrapPath,
-          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
-        );
-        yield* fs.chmod(bwrapPath, 0o755);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({
-            bwrapPath: O.some(bwrapPath),
-            exportRoot,
-            pffexportPath: launcherPath,
-          })
-        );
-        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+    (it) => {
+      it.effect(
+        "invokes an env-selected interpreter through its canonical path-sensitive prefix",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+          const fixtureRoot = path.dirname(stubPath);
+          const interpreterPrefix = path.join(fixtureRoot, "interpreter");
+          const commandName = `${path.basename(fixtureRoot)} bash`;
+          const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
+          const commandDirectory = path.dirname(process.execPath);
+          const commandPath = path.join(commandDirectory, commandName);
+          const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
+          const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
+          const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
+          yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
+          yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
+          yield* fs.copy("/bin/bash", interpreterPath);
+          yield* fs.chmod(interpreterPath, 0o755);
+          yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
+            fs.remove(commandPath).pipe(Effect.orDie)
+          );
+          const splitString = `'${commandName}' -c 'exec /bin/bash "$0" "$@"'`;
+          yield* fs.writeFileString(
+            launcherPath,
+            stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env -S ${splitString}`)
+          );
+          yield* fs.chmod(launcherPath, 0o755);
+          yield* fs.writeFileString(
+            bwrapPath,
+            bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
+          );
+          yield* fs.chmod(bwrapPath, 0o755);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({
+              bwrapPath: O.some(bwrapPath),
+              exportRoot,
+              pffexportPath: launcherPath,
+            })
+          );
+          const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
 
-        const result = yield* engine.exportArchive(
-          ExportArchiveOperation.make({
-            ...operation,
-            source: SourceArtifact.make(sourceWithoutBytes),
-          })
-        );
+          const result = yield* engine.exportArchive(
+            ExportArchiveOperation.make({
+              ...operation,
+              source: SourceArtifact.make(sourceWithoutBytes),
+            })
+          );
 
-        expect(result.children.length).toBeGreaterThan(0);
-        const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
-        expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
-        expect(bwrapArguments).toContain("--setenv\nPATH\n");
-        expect(bwrapArguments).toContain(":/usr/bin:/bin\n");
-        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n${splitString}\n${launcherPath}\n`);
-        expect(bwrapArguments).not.toContain(`--\n${interpreterPath}\n`);
-        expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(result.children.length).toBeGreaterThan(0);
+          const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
+          expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
+          expect(bwrapArguments).toContain("--setenv\nPATH\n");
+          expect(bwrapArguments).toContain(":/usr/bin:/bin\n");
+          expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n${splitString}\n${launcherPath}\n`);
+          expect(bwrapArguments).not.toContain(`--\n${interpreterPath}\n`);
+          expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
+        })
+      );
+    }
   );
 
-  it.effect(
-    "rejects malformed or unavailable sandbox shebang interpreters",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("rejects malformed or unavailable sandbox shebang interpreters", (it) => {
+    it.effect(
+      "rejects malformed or unavailable sandbox shebang interpreters",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const cases = [
@@ -638,16 +632,14 @@ exec "$mapped_command" "\${mapped[@]}"`
 
           expect(error.reason, name).toBe(expectedReason);
         }
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects non-file sources without bytes and direct extraction",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("rejects non-file sources without bytes and direct extraction", (it) => {
+    it.effect(
+      "rejects non-file sources without bytes and direct extraction",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -674,16 +666,14 @@ exec "$mapped_command" "\${mapped[@]}"`
 
         expect(exportError.reason).toBe("archive-export-failed");
         expect(extractError.reason).toBe("unsupported-file-format");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "reports a successful pffexport run that produces no children",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("reports a successful pffexport run that produces no children", (it) => {
+    it.effect(
+      "reports a successful pffexport run that produces no children",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(emptyOutputStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -693,16 +683,14 @@ exec "$mapped_command" "\${mapped[@]}"`
 
         expect(result.children).toStrictEqual([]);
         expect(result.warnings).toContain("pffexport produced no exported children for this archive.");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "assembles a headers-only message without an exported body",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("assembles a headers-only message without an exported body", (it) => {
+    it.effect(
+      "assembles a headers-only message without an exported body",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(headersOnlyStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -711,16 +699,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         const result = yield* engine.exportArchive(operation);
 
         expect(result.children.some((child) => child.relativePath.endsWith("/Message.eml"))).toBe(false);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps filesystem failures at each export traversal boundary",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("maps filesystem failures at each export traversal boundary", (it) => {
+    it.effect(
+      "maps filesystem failures at each export traversal boundary",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         for (const failurePoint of [
@@ -789,16 +775,14 @@ exec "$mapped_command" "\${mapped[@]}"`
 
           expect(error.reason, failurePoint).toBe("archive-export-failed");
         }
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "resolves and binds a bare pffexport executable outside sandbox runtime roots",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("resolves and binds a bare pffexport executable outside sandbox runtime roots", (it) => {
+    it.effect(
+      "resolves and binds a bare pffexport executable outside sandbox runtime roots",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -808,7 +792,7 @@ exec "$mapped_command" "\${mapped[@]}"`
         const commandName = path.basename(path.dirname(stubPath));
         const commandPath = path.resolve(import.meta.dirname, "../../../..", "node_modules", ".bin", commandName);
         yield* Effect.acquireRelease(fs.symlink(stubPath, commandPath), () =>
-          fs.remove(commandPath).pipe(Effect.ignore)
+          fs.remove(commandPath).pipe(Effect.orDie)
         );
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
@@ -827,16 +811,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         );
 
         expect(result.children.length).toBeGreaterThan(0);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "exports children, assembles EML artifacts, and writes JSONL metadata records",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("exports children, assembles EML artifacts, and writes JSONL metadata records", (it) => {
+    it.effect(
+      "exports children, assembles EML artifacts, and writes JSONL metadata records",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -901,16 +883,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         expect(sentRecord.folderPath).toBe("Top of Personal Folders/Sent Items");
         expect(sentRecord.attachments).toHaveLength(0);
         expect(sentRecord.eml?.relativePath.endsWith("Message.eml")).toBe(true);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "walks both recovered target trees when the export mode selects them",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("walks both recovered target trees when the export mode selects them", (it) => {
+    it.effect(
+      "walks both recovered target trees when the export mode selects them",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportMode: "recovered", exportRoot, pffexportPath: stubPath })
@@ -923,16 +903,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         expect(result.children.some((child) => child.relativePath.includes(".recovered/"))).toBe(true);
         expect(result.children.some((child) => child.relativePath.includes(".export/"))).toBe(false);
         expect(result.children.some((child) => child.relativePath.endsWith("/Message.eml"))).toBe(true);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "walks all three target trees under the all export mode",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("walks all three target trees under the all export mode", (it) => {
+    it.effect(
+      "walks all three target trees under the all export mode",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportMode: "all", exportRoot, pffexportPath: stubPath })
@@ -943,16 +921,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         expect(result.children.some((child) => child.relativePath.includes(".export/"))).toBe(true);
         expect(result.children.some((child) => child.relativePath.includes(".orphans/"))).toBe(true);
         expect(result.children.some((child) => child.relativePath.includes(".recovered/"))).toBe(true);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "re-encodes an over-long body line as base64 in the assembled EML",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("re-encodes an over-long body line as base64 in the assembled EML", (it) => {
+    it.effect(
+      "re-encodes an over-long body line as base64 in the assembled EML",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(overlongBodyStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -974,16 +950,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         expect(Result.getOrElse(Base64.decodeString(payload.split("\r\n").join("")), () => "")).toBe(
           `<p>${"x".repeat(1200)}</p>`
         );
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "never overwrites an engine-owned Message.eml and keeps children unique",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("never overwrites an engine-owned Message.eml and keeps children unique", (it) => {
+    it.effect(
+      "never overwrites an engine-owned Message.eml and keeps children unique",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(collidingStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1006,16 +980,14 @@ exec "$mapped_command" "\${mapped[@]}"`
         const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
         expect(record.eml).toBeUndefined();
         expect(record.body?.relativePath.endsWith("Message.txt")).toBe(true);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps a signal-killed pffexport process to archive-export-failed",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("maps a signal-killed pffexport process to archive-export-failed", (it) => {
+    it.effect(
+      "maps a signal-killed pffexport process to archive-export-failed",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(signalStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1026,44 +998,49 @@ exec "$mapped_command" "\${mapped[@]}"`
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("archive-export-failed");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
   // it.live: the timeout races a real subprocess, and the frozen TestClock of
   // it.effect would never fire Effect.timeoutOrElse against it.
-  it.live(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "maps a hung pffexport process to operation-timed-out",
-    Effect.fnUntraced(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
-        const engine = yield* makePffexportFileProcessingEngine(
-          yield* decodePffexportEngineConfig({
-            exportRoot,
-            pffexportPath: stubPath,
-            timeoutMillis: 250,
-          })
-        );
+    (it) => {
+      it.effect(
+        "maps a hung pffexport process to operation-timed-out",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { exportRoot, operation, stubPath } = yield* fixture(sleepingStub);
+          const engine = yield* makePffexportFileProcessingEngine(
+            yield* decodePffexportEngineConfig({
+              exportRoot,
+              pffexportPath: stubPath,
+              timeoutMillis: 250,
+            })
+          );
 
-        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-        expect(error.reason).toBe("operation-timed-out");
-        yield* Effect.sleep("1250 millis");
-        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`))).toBe(false);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(error.reason).toBe("operation-timed-out");
+          // Positive child observations prove the export started and handled
+          // cancellation; the original late-write absence check remains below.
+          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.ready`))).toBe("ready");
+          expect(yield* fs.readFileString(path.join(exportRoot, `${operation.source.id}.cancelled`))).toBe(
+            "terminated"
+          );
+          yield* Effect.sleep("1250 millis");
+          expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.late`))).toBe(false);
+        })
+      );
+    }
   );
 
-  it.effect(
-    "skips EML assembly with warnings when the materialization budget is exceeded",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("skips EML assembly with warnings when the materialization budget is exceeded", (it) => {
+    it.effect(
+      "skips EML assembly with warnings when the materialization budget is exceeded",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1083,64 +1060,64 @@ exec "$mapped_command" "\${mapped[@]}"`
         const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
         expect(record.eml).toBeUndefined();
         expect(record.body?.relativePath.endsWith("Message.txt")).toBe(true);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
+  it.layer(NodeServices.layer)(
     "continues evaluating later messages after an oversized item exceeds the budget",
-    Effect.fnUntraced(
-      function* () {
-        const { operation, exportRoot, stubPath } = yield* fixture(unevenBudgetStub);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
-        );
+    (it) => {
+      it.effect(
+        "continues evaluating later messages after an oversized item exceeds the budget",
+        Effect.fnUntraced(function* () {
+          const { operation, exportRoot, stubPath } = yield* fixture(unevenBudgetStub);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+          );
 
-        const result = yield* engine.exportArchive(
-          ExportArchiveOperation.make({ ...operation, maxMaterializedBytes: 1024 })
-        );
-        const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
+          const result = yield* engine.exportArchive(
+            ExportArchiveOperation.make({ ...operation, maxMaterializedBytes: 1024 })
+          );
+          const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
 
-        expect(emlChildren).toHaveLength(1);
-        expect(emlChildren[0]?.relativePath).toContain("Message00002/Message.eml");
-        expect(
-          result.warnings.filter((warning) => warning.includes("materialization budget was exceeded"))
-        ).toHaveLength(1);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(emlChildren).toHaveLength(1);
+          expect(emlChildren[0]?.relativePath).toContain("Message00002/Message.eml");
+          expect(
+            result.warnings.filter((warning) => warning.includes("materialization budget was exceeded"))
+          ).toHaveLength(1);
+        })
+      );
+    }
   );
 
-  it.effect(
+  it.layer(NodeServices.layer)(
     "requires the quota sandbox and retains no output when a ceiling is configured",
-    Effect.fnUntraced(
-      function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
-        const config = yield* decodePffexportEngineConfig({
-          exportRoot,
-          maxOutputBytes: 1,
-          pffexportPath: stubPath,
-        });
-        const engine = yield* makePffexportFileProcessingEngine(config);
+    (it) => {
+      it.effect(
+        "requires the quota sandbox and retains no output when a ceiling is configured",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+          const config = yield* decodePffexportEngineConfig({
+            exportRoot,
+            maxOutputBytes: 1,
+            pffexportPath: stubPath,
+          });
+          const engine = yield* makePffexportFileProcessingEngine(config);
 
-        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-        expect(error.reason).toBe("archive-export-failed");
-        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
+          expect(error.reason).toBe("archive-export-failed");
+          expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+        })
+      );
+    }
   );
 
-  it.effect(
-    "maps quota exhaustion before host publication to an output-limit failure",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("maps quota exhaustion before host publication to an output-limit failure", (it) => {
+    it.effect(
+      "maps quota exhaustion before host publication to an output-limit failure",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
@@ -1184,16 +1161,14 @@ exec "$@"
         expect(sandboxArguments).toContain("--size\n1\n--tmpfs\n/output\n");
         expect(sandboxArguments).not.toContain(`${exportRoot}\n/output\n`);
         expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "publishes repeated validated quota handoffs after each sandbox exits",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("publishes repeated validated quota handoffs after each sandbox exits", (it) => {
+    it.effect(
+      "publishes repeated validated quota handoffs after each sandbox exits",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
@@ -1247,16 +1222,14 @@ exec "$@"
         expect(secondResult.children.length).toBe(firstResult.children.length);
         expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`))).toBe(true);
         expect(A.some(yield* fs.readDirectory(exportRoot), Str.startsWith(".pffexport-quota-"))).toBe(false);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects symbolic links in untrusted pffexport output",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("rejects symbolic links in untrusted pffexport output", (it) => {
+    it.effect(
+      "rejects symbolic links in untrusted pffexport output",
+      Effect.fnUntraced(function* () {
         const { operation, exportRoot, stubPath } = yield* fixture(symlinkOutputStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1265,16 +1238,14 @@ exec "$@"
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("archive-export-failed");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "fails on stale export outputs under the default existing-export policy",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("fails on stale export outputs under the default existing-export policy", (it) => {
+    it.effect(
+      "fails on stale export outputs under the default existing-export policy",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -1287,39 +1258,38 @@ exec "$@"
 
         expect(error.reason).toBe("archive-export-failed");
         expect(error.details).toBeUndefined();
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
   for (const existingExportPolicy of ["fail", "replace"] as const) {
-    it.effect(
+    it.layer(NodeServices.layer)(
       `fails while another export claims the same target under the ${existingExportPolicy} policy`,
-      Effect.fnUntraced(
-        function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-          yield* fs.makeDirectory(path.join(exportRoot, `${operation.source.id}.claim`), { recursive: true });
-          const engine = yield* makePffexportFileProcessingEngine(
-            PffexportEngineConfig.make({ existingExportPolicy, exportRoot, pffexportPath: stubPath })
-          );
+      (it) => {
+        it.effect(
+          `fails while another export claims the same target under the ${existingExportPolicy} policy`,
+          Effect.fnUntraced(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+            yield* fs.makeDirectory(path.join(exportRoot, `${operation.source.id}.claim`), { recursive: true });
+            const engine = yield* makePffexportFileProcessingEngine(
+              PffexportEngineConfig.make({ existingExportPolicy, exportRoot, pffexportPath: stubPath })
+            );
 
-          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+            const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-          expect(error.reason).toBe("archive-export-failed");
-        },
-        Effect.scoped,
-        provideTestLayer
-      )
+            expect(error.reason).toBe("archive-export-failed");
+          })
+        );
+      }
     );
   }
 
-  it.effect(
-    "replaces stale export outputs when configured and releases the claim",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("replaces stale export outputs when configured and releases the claim", (it) => {
+    it.effect(
+      "replaces stale export outputs when configured and releases the claim",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
@@ -1336,16 +1306,14 @@ exec "$@"
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.children.some((child) => child.relativePath.includes("stale-junk"))).toBe(false);
         expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.claim`))).toBe(false);
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps non-zero pffexport exits to archive-export-failed",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("maps non-zero pffexport exits to archive-export-failed", (it) => {
+    it.effect(
+      "maps non-zero pffexport exits to archive-export-failed",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(failingStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1357,16 +1325,14 @@ exec "$@"
 
         expect(error.reason).toBe("archive-export-failed");
         expect(error.details).toStrictEqual({ exitCode: "2" });
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "maps a missing pffexport binary to engine-unavailable",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("maps a missing pffexport binary to engine-unavailable", (it) => {
+    it.effect(
+      "maps a missing pffexport binary to engine-unavailable",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation } = yield* fixture(stubPffexport);
         const engine = yield* makeMissingBinaryEngine(exportRoot);
 
@@ -1375,16 +1341,14 @@ exec "$@"
         const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
         expect(error.reason).toBe("engine-unavailable");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "classifies bounded process diagnostics without retaining raw stderr",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("classifies bounded process diagnostics without retaining raw stderr", (it) => {
+    it.effect(
+      "classifies bounded process diagnostics without retaining raw stderr",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(corruptFailingStub);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
@@ -1394,16 +1358,14 @@ exec "$@"
 
         expect(error.details).toStrictEqual({ exitCode: "2", processClassification: "corrupt" });
         expect(error.message).not.toContain("input archive is corrupt");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "classifies password and codepage process diagnostics",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("classifies password and codepage process diagnostics", (it) => {
+    it.effect(
+      "classifies password and codepage process diagnostics",
+      Effect.fnUntraced(function* () {
         for (const [diagnostic, expectedClassification] of [
           ["archive is password encrypted", "password"],
           ["unsupported code page", "codepage"],
@@ -1418,16 +1380,14 @@ exec "$@"
 
           expect(error.details).toStrictEqual({ exitCode: "2", processClassification: expectedClassification });
         }
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 
-  it.effect(
-    "rejects non-pst formats without spawning",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(NodeServices.layer)("rejects non-pst formats without spawning", (it) => {
+    it.effect(
+      "rejects non-pst formats without spawning",
+      Effect.fnUntraced(function* () {
         const { exportRoot, operation } = yield* fixture(stubPffexport);
         const engine = yield* makeMissingBinaryEngine(exportRoot);
 
@@ -1436,9 +1396,7 @@ exec "$@"
           .pipe(Effect.flip);
 
         expect(error.reason).toBe("unsupported-file-format");
-      },
-      Effect.scoped,
-      provideTestLayer
-    )
-  );
+      })
+    );
+  });
 });

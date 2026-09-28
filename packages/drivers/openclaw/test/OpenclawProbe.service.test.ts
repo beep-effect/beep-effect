@@ -12,10 +12,15 @@ import {
 } from "@beep/openclaw/Openclaw.models";
 import { coordinateOpenclawLiveAcceptance, probeOpenclawLocalModels } from "@beep/openclaw/OpenclawProbe.service";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 const validInput = OpenclawLiveAcceptanceInput.make({
   channelAccounts: [
@@ -117,4 +122,65 @@ describe("@beep/openclaw live acceptance probes", () => {
       )
     );
   });
+  it.prop(
+    "rejects each invalid acceptance component independently",
+    {
+      suffix: Arbitrary.schema(S.NonEmptyString),
+      warningCount: Arbitrary.schema(NonNegativeInt.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(100))),
+    },
+    ({ suffix, warningCount }) => {
+      expect(coordinateOpenclawLiveAcceptance(validInput)._tag).toBe("Passed");
+      expect(
+        coordinateOpenclawLiveAcceptance(
+          OpenclawLiveAcceptanceInput.make({
+            ...validInput,
+            hostedTurn: OpenclawAgentTurn.make({ ...validInput.hostedTurn, provider: O.some(`wrong-${suffix}`) }),
+          })
+        ),
+        "hosted provider mismatch"
+      ).toMatchObject({ _tag: "Failed", step: "hosted-model" });
+      expect(
+        coordinateOpenclawLiveAcceptance(
+          OpenclawLiveAcceptanceInput.make({
+            ...validInput,
+            localModelId: `missing-${suffix}`,
+          })
+        ),
+        "local model absent"
+      ).toMatchObject({ _tag: "Failed", step: "local-model" });
+      expect(
+        coordinateOpenclawLiveAcceptance(
+          OpenclawLiveAcceptanceInput.make({
+            ...validInput,
+            skillTurn: OpenclawAgentTurn.make({ ...validInput.skillTurn, text: O.some(`wrong-${suffix}`) }),
+          })
+        ),
+        "skill sentinel mismatch"
+      ).toMatchObject({ _tag: "Failed", step: "skill" });
+      expect(
+        coordinateOpenclawLiveAcceptance(
+          OpenclawLiveAcceptanceInput.make({
+            ...validInput,
+            restoredReload: OpenclawSecretsReloaded.make({ warningCount }),
+          })
+        ),
+        "reload warnings"
+      ).toMatchObject({ _tag: "Failed", step: "reload" });
+      expect(
+        coordinateOpenclawLiveAcceptance(
+          OpenclawLiveAcceptanceInput.make({
+            ...validInput,
+            channelAccounts: [
+              OpenclawChannelAccountStatus.make({
+                ...O.getOrThrow(A.head(validInput.channelAccounts)),
+                probeOk: O.some(false),
+              }),
+            ],
+          })
+        ),
+        "telegram probe rejected"
+      ).toMatchObject({ _tag: "Failed", step: "telegram" });
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

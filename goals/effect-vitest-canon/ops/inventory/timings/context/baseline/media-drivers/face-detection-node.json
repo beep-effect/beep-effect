@@ -1,0 +1,111 @@
+{
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/media-drivers-face-detection-before-node.json"
+  ],
+  "phase": "before-node",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/face-detection/package.json",
+      "sha256": "dc2b3836e0bf424d9ec3043480b9b2b55003650a6e56da21548be593abd08f50"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+      "sha256": "c4c8b701e6f3db0e52b9d9e6bad07938ffebae2057af155ed85efb1b968a675c"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+      "sha256": "691690763032ad9967f849d24731e5d1ab1e2e357931f90b17b30690a0d1161d"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+      "sha256": "b9f17a8fddb21fe8c6589b2e1f0b0c82174100dd19974e20ed1b59145bb396bf"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/index.ts",
+      "sha256": "aa93abdb0ff05394551c5c70b52166c871fd9c9b938f8455bfc59783d6de0d74"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.equivalence.test.ts",
+      "sha256": "fb07d9dbf4c8993a424df8bfc621b16eba2f8b0b93927177d931b584646728bd"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "sha256": "87894786275d8b91406c0e326136b97fc7235c57312135f35ac83b9979ee72ec"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "sha256": "371589b4a888417aeac4bce54722ac629d39dade85a32f77e25d3c98118780ec"
+    }
+  ],
+  "loadBefore": [12.38330078125, 11.4814453125, 12.8369140625],
+  "pressureBefore": {
+    "cpu": "some avg10=0.05 avg60=0.08 avg300=0.22 total=2632973544\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.18 avg60=0.16 avg300=0.04 total=225033243\nfull avg10=0.18 avg60=0.16 avg300=0.04 total=195738270\n",
+    "io": "some avg10=0.00 avg60=0.03 avg300=0.09 total=1017193208\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=690785118\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Inherited runner environment; tests use local fixtures; no provider credentials resolved",
+  "exit": 0,
+  "wholeCommandSeconds": 4.471213747994625,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "ba9dffbc75bec25ac0037c356a086d734b881ad56d99e30f0c282b336d6501ee"
+    },
+    {
+      "file": "packages/drivers/face-detection/package.json",
+      "sha256": "dc2b3836e0bf424d9ec3043480b9b2b55003650a6e56da21548be593abd08f50"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+      "sha256": "c4c8b701e6f3db0e52b9d9e6bad07938ffebae2057af155ed85efb1b968a675c"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+      "sha256": "691690763032ad9967f849d24731e5d1ab1e2e357931f90b17b30690a0d1161d"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+      "sha256": "b9f17a8fddb21fe8c6589b2e1f0b0c82174100dd19974e20ed1b59145bb396bf"
+    },
+    {
+      "file": "packages/drivers/face-detection/src/index.ts",
+      "sha256": "aa93abdb0ff05394551c5c70b52166c871fd9c9b938f8455bfc59783d6de0d74"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.equivalence.test.ts",
+      "sha256": "fb07d9dbf4c8993a424df8bfc621b16eba2f8b0b93927177d931b584646728bd"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "sha256": "87894786275d8b91406c0e326136b97fc7235c57312135f35ac83b9979ee72ec"
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "sha256": "371589b4a888417aeac4bce54722ac629d39dade85a32f77e25d3c98118780ec"
+    }
+  ],
+  "loadAfter": [12.51318359375, 11.5234375, 12.84326171875],
+  "pressureAfter": {
+    "cpu": "some avg10=0.03 avg60=0.07 avg300=0.21 total=2632995242\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.12 avg60=0.15 avg300=0.04 total=225033316\nfull avg10=0.12 avg60=0.15 avg300=0.04 total=195738325\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.09 total=1017196047\nfull avg10=0.00 avg60=0.01 avg300=0.05 total=690787114\n"
+  },
+  "sourceStable": true
+}

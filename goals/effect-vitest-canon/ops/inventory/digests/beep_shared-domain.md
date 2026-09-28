@@ -31,3 +31,21 @@ Root-reviewed P1 inventory; P2 remains gated.
 Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
 
 Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).
+
+## P2 reconciliation — 2026-09-26
+
+The preceding gating prose records the historical P1 audit. This admitted P2
+wave completes scope, assertions, native properties, flake review and runner
+adoption in that order, with a final seven-Result assertion correction.
+All 41 distinct historical/root detector IDs are retained: two runtime-boundary
+removals are credited to upstream PR #1200; the remaining 39 to this wave.
+The resource finding is fixed and all 35 bounded no-findings reviews remain.
+There are zero current detector findings and zero runner exceptions. Root
+inventory removes exactly 28 admitted rows; unrelated rows and ledger files
+are preserved. The 36 file/lens pairs cover all nine admitted files.
+
+The public preservation receipts record original bodies, assertions, domains,
+floors, native resource subjects and diagnostics. Native registration expands
+two bundled cases into 56 individually named laws; configured execution has
+116 cases and 59 property laws. No production source or schema changed.
+Hosted proof and merge readiness remain separate from this local reconciliation.

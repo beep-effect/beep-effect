@@ -19,9 +19,11 @@ import {
   SkillMarkdownProjection,
   verifySkillArtifact,
 } from "@beep/skill-contract";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -161,7 +163,7 @@ describe("@beep/skill-contract SkillProjection", () => {
           denied: ({ reasons }) => reasons,
         })
       ).toEqual(["rerender-mismatch", "frontmatter-missing"]);
-      expect(Result.isFailure(unterminated)).toBe(true);
+      pipe(unterminated, Result.isFailure, assertTrue);
       expect(Result.isFailure(unterminated) ? unterminated.failure.reasons : []).toEqual(["frontmatter-missing"]);
     })
   );
@@ -200,21 +202,16 @@ describe("@beep/skill-contract SkillProjection", () => {
     })
   );
 
-  it("allows every schema-derived contract after render and verification", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SkillContract)]),
-          ([candidate]) => {
-            const committed = Result.getOrThrow(renderSkillMarkdown(candidate));
-            const verdict = Effect.runSync(verifySkillArtifact({ committed, contract: candidate }));
+  it.effect.prop(
+    "allows every schema-derived contract after render and verification",
+    [Arbitrary.schema(SkillContract)],
+    ([candidate]) =>
+      Effect.gen(function* () {
+        const committed = Result.getOrThrow(renderSkillMarkdown(candidate));
+        const verdict = yield* verifySkillArtifact({ committed, contract: candidate });
 
-            expect(verdict.verdict).toBe("allowed");
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(verdict.verdict).toBe("allowed");
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

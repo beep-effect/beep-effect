@@ -1,0 +1,8 @@
+{
+  "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+  "beforeSha256": "5853c9b85a5f69a0df89c75e5fb736eee3a36d2b221bd04f9c40cb43ba2200ff",
+  "afterSha256": "851617d04b62cdc53e608370620859640c4ba2e00da2831664b0110721a9cb16",
+  "directOptionAssertions": 2,
+  "inverseEqualsOriginal": true,
+  "noInventedPayload": true
+}

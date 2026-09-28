@@ -22,8 +22,12 @@ import {
   Start,
   Usage,
 } from "@beep/rdf/Prov";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { DateTime, Effect, Exit, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -52,6 +56,10 @@ const decodeRevision = decodeUnknown(Revision);
 const decodeSoftwareAgent = decodeUnknown(SoftwareAgent);
 const decodeStart = decodeUnknown(Start);
 const decodeUsage = decodeUnknown(Usage);
+const isProvDateTime = S.is(ProvDateTime);
+const equivalentProvDateTime = S.toEquivalence(ProvDateTime);
+const encodeProvDateTimeResult = S.encodeResult(ProvDateTime);
+const decodeProvDateTimeResult = S.decodeResult(ProvDateTime);
 
 const rawBundle = {
   lifecycle: {
@@ -83,10 +91,10 @@ describe("ProvO", () => {
     Effect.gen(function* () {
       const decoded = yield* decodeProvO(rawBundle);
 
-      expect("records" in decoded).toBe(true);
+      pipe("records" in decoded, assertTrue);
       if ("records" in decoded) {
         expect(decoded.records).toHaveLength(3);
-        expect(O.isSome(decoded.lifecycle)).toBe(true);
+        pipe(decoded.lifecycle, O.isSome, assertTrue);
       }
     })
   );
@@ -110,8 +118,8 @@ describe("ProvO", () => {
         used: ["thing:alice"],
       });
 
-      expect(O.isSome(activity.startedAtTime)).toBe(true);
-      expect(O.isSome(activity.endedAtTime)).toBe(true);
+      pipe(activity.startedAtTime, O.isSome, assertTrue);
+      pipe(activity.endedAtTime, O.isSome, assertTrue);
       expect(yield* decodeProvDateTime("2026-03-08T12:00:00Z")).toBeDefined();
     })
   );
@@ -188,14 +196,18 @@ describe("ProvO", () => {
 
   it.effect("rejects invalid provenance values for the current schema surface", () =>
     Effect.gen(function* () {
-      expect(Exit.isFailure(yield* Effect.exit(decodeProvO({ provType: "Bundle" })))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeCollection({ id: "collection:1", provType: "Collection" })))).toBe(
-        true
+      pipe(yield* Effect.exit(decodeProvO({ provType: "Bundle" })), Exit.isFailure, assertTrue);
+      pipe(
+        yield* Effect.exit(decodeCollection({ id: "collection:1", provType: "Collection" })),
+        Exit.isFailure,
+        assertTrue
       );
-      expect(Exit.isFailure(yield* Effect.exit(decodeUsage({ provType: "Usage", activity: "activity:ingest" })))).toBe(
-        true
+      pipe(
+        yield* Effect.exit(decodeUsage({ provType: "Usage", activity: "activity:ingest" })),
+        Exit.isFailure,
+        assertTrue
       );
-      expect(Exit.isFailure(yield* Effect.exit(decodeObjectRef("not valid whitespace ref")))).toBe(true);
+      pipe(yield* Effect.exit(decodeObjectRef("not valid whitespace ref")), Exit.isFailure, assertTrue);
     })
   );
 
@@ -204,7 +216,48 @@ describe("ProvO", () => {
       const decoded = yield* decodeProvBundle(rawBundle);
 
       expect(decoded.records).toHaveLength(3);
-      expect(O.isSome(decoded.lifecycle)).toBe(true);
+      pipe(decoded.lifecycle, O.isSome, assertTrue);
     })
   );
 });
+
+it("bounds decoded PROV timestamps to the existing four-digit canonical year format", () => {
+  for (const epoch of [-62167219200000, 253402300799999]) {
+    const instant = DateTime.makeUnsafe(epoch);
+    pipe(instant, isProvDateTime, assertTrue);
+    pipe(encodeProvDateTimeResult(instant), Result.isSuccess, assertTrue);
+  }
+  for (const epoch of [-62167219200001, 253402300800000]) {
+    const instant = DateTime.makeUnsafe(epoch);
+    pipe(instant, isProvDateTime, assertFalse);
+    pipe(encodeProvDateTimeResult(instant), Result.isFailure, assertTrue);
+    expect(() =>
+      Usage.make({
+        activity: ObjectRef.make("activity:1"),
+        entity: ObjectRef.make("entity:1"),
+        atTime: O.some(instant),
+      })
+    ).toThrow();
+  }
+});
+
+it("applies PROV timestamp boundaries after timezone normalization", () => {
+  for (const input of ["0000-01-01T01:00:00+01:00", "9999-12-31T22:59:59.999-01:00"]) {
+    const value = Result.getOrThrow(decodeProvDateTimeResult(input));
+    pipe(encodeProvDateTimeResult(value), Result.isSuccess, assertTrue);
+  }
+  for (const input of ["0000-01-01T00:00:00+00:01", "9999-12-31T23:59:59.999-00:01"]) {
+    pipe(decodeProvDateTimeResult(input), Result.isFailure, assertTrue);
+  }
+});
+
+it.prop(
+  "round-trips source-derived PROV timestamps through the canonical wire format",
+  [Arbitrary.schema(ProvDateTime)],
+  ([instant]) => {
+    const encoded = Result.getOrThrow(encodeProvDateTimeResult(instant));
+    const decoded = Result.getOrThrow(decodeProvDateTimeResult(encoded));
+    pipe(equivalentProvDateTime(decoded, instant), assertTrue);
+  },
+  { arbitrary: fcRuns(100) }
+);

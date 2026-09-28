@@ -8,12 +8,13 @@ import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime";
 import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema";
 import * as Md from "@beep/md/Md.model";
 import "@testing-library/jest-dom/vitest";
-import { describe, expect, it } from "@effect/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { afterEach } from "vitest";
 
 afterEach(cleanup);
 const chord = (event: KeyboardEvent, platform: "apple" | "windows-linux") =>
@@ -92,7 +93,7 @@ describe("capability runtime", { concurrent: false }, () => {
       // A mouse press on a toolbar button must not steal the editor's focus
       // (the mousedown is cancelled) and the click runs the command.
       const mouseDownCancelled = !fireEvent.mouseDown(bold);
-      expect(mouseDownCancelled).toBe(true);
+      pipe(mouseDownCancelled, assertTrue);
       fireEvent.click(bold);
       expect(document.querySelector("[contenteditable='true']")).not.toBeNull();
       yield* Effect.void;
@@ -114,7 +115,7 @@ describe("capability runtime", { concurrent: false }, () => {
     })
   );
 
-  it.effect(
+  it.live(
     "guards underline while allowing bold",
     Effect.fnUntraced(function* () {
       type State = Parameters<NonNullable<React.ComponentProps<typeof CapabilityComposer>["onSerializedChange"]>>[0];
@@ -136,17 +137,36 @@ describe("capability runtime", { concurrent: false }, () => {
       fireEvent.click(editable);
       const underline = new KeyboardEvent("keydown", { key: "u", code: "KeyU", ctrlKey: true, cancelable: true });
       const bold = new KeyboardEvent("keydown", { key: "b", code: "KeyB", ctrlKey: true, cancelable: true });
-      editable.dispatchEvent(underline);
-      editable.dispatchEvent(bold);
-      expect(underline.defaultPrevented).toBe(true);
-      expect(bold.defaultPrevented).toBe(true);
+      yield* Effect.promise(() =>
+        act(() => {
+          const selection = window.getSelection();
+          expect(selection).not.toBeNull();
+          selection?.selectAllChildren(editable);
+          document.dispatchEvent(new Event("selectionchange"));
+          return Promise.resolve();
+        })
+      );
+      yield* Effect.promise(() =>
+        act(() => {
+          editable.dispatchEvent(underline);
+          editable.dispatchEvent(bold);
+          return Promise.resolve();
+        })
+      );
+      pipe(underline.defaultPrevented, assertTrue);
+      pipe(bold.defaultPrevented, assertTrue);
       const hasBit = (state: State, bit: number): boolean =>
         A.some(
           state.root.children,
           (block) =>
             "children" in block && A.some(block.children, (node) => node.type === "text" && (node.format & bit) !== 0)
         );
-      expect(O.exists(latest, (state) => hasBit(state, 8))).toBe(false);
+      yield* Effect.promise(() => waitFor(() => pipe(latest, O.isSome, assertTrue)));
+      pipe(hasBit(O.getOrThrow(latest), 1), assertTrue);
+      pipe(
+        O.exists(latest, (state) => hasBit(state, 8)),
+        assertFalse
+      );
       yield* Effect.void;
     })
   );
@@ -161,6 +181,15 @@ describe("capability runtime", { concurrent: false }, () => {
       const projected = editorStateToDocument(first);
       const second = yield* documentToEditorState(projected);
       expect(editorStateToDocument(second)).toEqual(canonical);
+      const firstMount = render(<CapabilityComposer profile={referenceProfiles.documentProof} initialState={first} />);
+      expect(within(firstMount.container).getByRole("heading", { name: "Proof" })).toBeInTheDocument();
+      firstMount.unmount();
+      expect(firstMount.container).toBeEmptyDOMElement();
+      const secondMount = render(
+        <CapabilityComposer profile={referenceProfiles.documentProof} initialState={second} />
+      );
+      expect(within(secondMount.container).getByRole("heading", { name: "Proof" })).toBeInTheDocument();
+      expect(within(secondMount.container).getByRole("textbox")).toHaveTextContent("Proof");
     })
   );
 });

@@ -1,0 +1,14 @@
+{
+  "ecfr": {
+    "passed": 10,
+    "suites": 2,
+    "seed": 20260708,
+    "shuffled": true
+  },
+  "govinfo": {
+    "passed": 8,
+    "suites": 3,
+    "seed": 20260708,
+    "shuffled": true
+  }
+}

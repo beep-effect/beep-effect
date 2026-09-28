@@ -8,9 +8,11 @@ import {
 } from "@beep/editor/capability/projection";
 import { resolveEditorProfile } from "@beep/editor/capability/resolver";
 import { KeyChord } from "@beep/editor/capability/schemas";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 
 describe("capability projections", () => {
   it.effect(
@@ -25,9 +27,34 @@ describe("capability projections", () => {
       const help = projectShortcutHelp(resolved, "windows-linux");
 
       expect(A.length(help)).toBe(A.length(resolved.commands));
-      expect(A.every(toolbar, (command) => A.contains(commandIds, command.id))).toBe(true);
-      expect(A.every(slash, (item) => A.contains(commandIds, item.key))).toBe(true);
-      expect(A.every(help, (entry) => A.contains(commandIds, entry.commandId))).toBe(true);
+      expect(toolbar.length).toBeGreaterThan(0);
+      expect(slash.length).toBeGreaterThan(0);
+      expect(help.length).toBeGreaterThan(0);
+      expect(A.map(toolbar, (command) => command.id)).toEqual(
+        A.map(
+          A.filter(resolved.commands, (command) => A.contains(command.surfaces, "toolbar")),
+          (command) => command.id
+        )
+      );
+      expect(A.map(slash, (item) => item.key)).toEqual(
+        A.map(
+          A.filter(resolved.commands, (command) => A.contains(command.surfaces, "slash-menu")),
+          (command) => command.id
+        )
+      );
+      expect(A.map(help, (entry) => entry.commandId)).toEqual(commandIds);
+      pipe(
+        A.every(toolbar, (command) => A.contains(commandIds, command.id)),
+        assertTrue
+      );
+      pipe(
+        A.every(slash, (item) => A.contains(commandIds, item.key)),
+        assertTrue
+      );
+      pipe(
+        A.every(help, (entry) => A.contains(commandIds, entry.commandId)),
+        assertTrue
+      );
     })
   );
 

@@ -1,0 +1,111 @@
+{
+  "package": "@beep/ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T20:16:46.831000+00:00",
+  "totalMs": 3775.108642578125,
+  "testCount": 52,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
+      "ms": 28.318603515625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/FormWidgets.test.ts",
+      "ms": 4.108642578125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ReactInvariant.equivalence.test.ts",
+      "ms": 1.125244140625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "ms": 36.316162109375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
+      "ms": 2.544677734375,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "ms": 41.053955078125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/theme-components.test.ts",
+      "ms": 2.015625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/theme-provider.test.ts",
+      "ms": 0.984619140625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "ms": 15.748291015625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/url.test.ts",
+      "ms": 1.60107421875,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity formats every schema-accepted precision in both number input consumers",
+      "ms": 41.05385800000022
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity round-trips exported schema models through encoded form",
+      "ms": 40.24849700000004
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "testName": "VerifiedSourceTextViewer marks the exact UTF-16 range intersecting the current page",
+      "ms": 36.31615099999999
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "testName": "VerifiedSourceTextViewer renders a page without a mark when the anchor does not intersect it",
+      "ms": 36.11032299999988
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "testName": "VerifiedSourceTextViewer marks exactly the half-open UTF-16 intersection for generated valid ranges",
+      "ms": 36.10708899999963
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "testName": "VerifiedSourceTextViewer marks only the visible portion of an anchor spanning page boundaries",
+      "ms": 36.09388799999988
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "testName": "VerifiedSourceTextViewer omits marks for exactly touching boundaries and empty ranges",
+      "ms": 36.075950999999804
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity rejects unsupported precision before either fixed-point consumer",
+      "ms": 19.930045000000064
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity applies schema defaults and precision checks at construction boundaries",
+      "ms": 19.919678000000204
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity preserves nullable and optional encoded compatibility at UI boundaries",
+      "ms": 19.897313999999824
+    }
+  ]
+}

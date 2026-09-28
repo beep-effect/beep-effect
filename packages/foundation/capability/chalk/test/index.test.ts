@@ -16,12 +16,17 @@ import browserChalk, {
 } from "@beep/chalk/Chalk.browser";
 import { AnsiRenderLevel, ColorModelName, StyleChannel, StyleName } from "@beep/chalk/internal/ChalkSchema";
 import { createSupportsColor } from "@beep/chalk/internal/SupportsColor";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Equal from "effect/Equal";
-import * as Result from "effect/Result";
+import * as Exit from "effect/Exit";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { ChalkInstance, ColorSupportLevel as ColorSupportLevelType } from "@beep/chalk";
 
@@ -171,49 +176,62 @@ describe("@beep/chalk", () => {
       expect((yield* decodeChalkOptions({ level: 3 })).level).toBe(3);
       expect(isColorSupportLevel(2)).toBe(true);
       expect(isColorSupportLevel(4)).toBe(false);
-      const invalid = yield* Effect.result(decodeUnknownChalkConstructorOptions({ level: 4 }));
-      expect(Result.isFailure(invalid)).toBe(true);
-      if (Result.isFailure(invalid)) {
-        expect(invalid.failure.message).toContain("integer from 0 to 3");
+      const invalid = yield* Effect.exit(decodeUnknownChalkConstructorOptions({ level: 4 }));
+      assertExitFailure(
+        Exit.match(invalid, {
+          onSuccess: Exit.succeed,
+          onFailure: (cause) =>
+            Exit.failCause(
+              Cause.fromReasons(
+                A.map(cause.reasons, (reason) =>
+                  Cause.isFailReason(reason) ? Cause.makeFailReason(reason.error._tag) : reason
+                )
+              )
+            ),
+        }),
+        Cause.fail("SchemaError")
+      );
+      if (Exit.isFailure(invalid)) {
+        for (const reason of invalid.cause.reasons) {
+          if (Cause.isFailReason(reason)) {
+            expect(reason.error.message).toContain("integer from 0 to 3");
+          }
+        }
       }
     })
   );
 
-  it.effect(
-    "round-trips schema-derived values through their encoded shapes",
-    Effect.fnUntraced(function* () {
-      const schemas = [
-        AnsiRenderLevel,
-        ChalkConstructorOptions,
-        ChalkOptions,
-        ColorInfo,
-        ColorModelName,
-        ColorName,
-        ColorSupport,
-        ColorSupportLevel,
-        ModifierName,
-        StyleChannel,
-        StyleName,
-      ] as const;
+  const schemas = {
+    AnsiRenderLevel,
+    ChalkConstructorOptions,
+    ChalkOptions,
+    ColorInfo,
+    ColorModelName,
+    ColorName,
+    ColorSupport,
+    ColorSupportLevel,
+    ModifierName,
+    StyleChannel,
+    StyleName,
+  };
 
-      for (const schema of schemas) {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(schema)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* S.encodeEffect(schema)(value);
-              const decoded = yield* S.decodeEffect(schema)(encoded);
-              expect(Equal.equals(decoded, value)).toBe(true);
+  for (const [name, schema] of R.toEntries(schemas)) {
+    const encode = S.encodeEffect(schema);
+    const decode = S.decodeEffect(schema);
 
-              return true;
-            }),
-          fcRuns(50)
-        );
-
-        expect(result._tag).toBe("Passed");
-      }
-    })
-  );
+    it.effect.prop(
+      `round-trips ${name} through its encoded shape`,
+      [Arbitrary.schema(schema)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encode(value);
+          const decoded = yield* decode(encoded);
+          expect(Equal.equals(decoded, value)).toBe(true);
+          return true;
+        }),
+      { arbitrary: fcRuns(50) }
+    );
+  }
 });
 
 describe("supportsColor detection", () => {

@@ -1,0 +1,91 @@
+{
+  "package": "@beep/ffmpeg",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T12:05:24.057000+00:00",
+  "totalMs": 4600.5126953125,
+  "testCount": 45,
+  "files": [
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "ms": 26.13232421875,
+      "tests": 11
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "ms": 75.1875,
+      "tests": 17
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
+      "ms": 1.497314453125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
+      "ms": 2.5576171875,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "ms": 52.326416015625,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "ms": 691.5126953125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture cuts clips and round-trips BEEP_QA_SESSION_ID container metadata via ffprobe",
+      "ms": 690.5126770000002
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture renders gif and contact sheet artifacts with real byte sizes",
+      "ms": 473.11199899999974
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture extracts pts-accurate timestamped frames from the luma-ramp golden clip",
+      "ms": 239.30148299999973
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture round-trips schema-modeled capture payloads",
+      "ms": 58.09816099999989
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "testName": "@beep/ffmpeg extracts frames into final names and writes the default manifest",
+      "ms": 52.02890100000013
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "testName": "@beep/ffmpeg probes video metadata through the fake child-process layer",
+      "ms": 45.19885000000022
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "testName": "@beep/ffmpeg round-trips schema-modeled public payloads",
+      "ms": 41.4537220000002
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture extracts timestamped frames and writes the frames-at manifest",
+      "ms": 38.61776400000008
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture fails extract-frames-at without partial commits",
+      "ms": 35.55367500000011
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "testName": "@beep/ffmpeg keeps Option-modeled optional metadata encoded as omitted keys",
+      "ms": 34.61146299999973
+    }
+  ]
+}

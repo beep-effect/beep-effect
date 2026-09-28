@@ -1,0 +1,54 @@
+{
+  "reviewedNodes": 16,
+  "changedDependencyLists": 11,
+  "edges": [
+    {
+      "computation": "@beep/pandoc-ast#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/pandoc-ast#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pandoc-ast#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pandoc-ast#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pandoc-ast#doctest",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pandoc-ast#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pandoc-ast#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pandoc-ast#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/pandoc-ast#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pandoc-ast#test:integration:parallel",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/pandoc-ast#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "1ce20193f30e78b69b3142fd8c9e9db5cd4bf36049c852562e88d4ffcf551e71"
+}

@@ -1,0 +1,137 @@
+{
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 4,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 8,
+  "numPassedTests": 8,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790410841656,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["HubSpot declared-field equivalence"],
+          "fullName": "HubSpot declared-field equivalence treats field-equal HubSpotError instances as equivalent and field-different ones as distinct",
+          "status": "passed",
+          "title": "treats field-equal HubSpotError instances as equivalent and field-different ones as distinct",
+          "duration": 1.976361999999881,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["HubSpot declared-field equivalence"],
+          "fullName": "HubSpot declared-field equivalence treats defect-only differences as equivalent",
+          "status": "passed",
+          "title": "treats defect-only differences as equivalent",
+          "duration": 1.6766509999999926,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790410842756,
+      "endTime": 1790410842757.9763,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot keeps encoded HubSpot schema wire shapes byte-identical",
+          "status": "passed",
+          "title": "keeps encoded HubSpot schema wire shapes byte-identical",
+          "duration": 57.10441999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot round-trips schema-derived HubSpot payloads through encoded form",
+          "status": "passed",
+          "title": "round-trips schema-derived HubSpot payloads through encoded form",
+          "duration": 56.81268100000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot submits a form through the secure Forms API endpoint",
+          "status": "passed",
+          "title": "submits a form through the secure Forms API endpoint",
+          "duration": 56.91331600000012,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot maps non-success responses to typed driver errors",
+          "status": "passed",
+          "title": "maps non-success responses to typed driver errors",
+          "duration": 56.89892299999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot upserts contacts through the CRM batch endpoint",
+          "status": "passed",
+          "title": "upserts contacts through the CRM batch endpoint",
+          "duration": 56.897451000000046,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": ["@beep/hubspot"],
+          "fullName": "@beep/hubspot maps upsert response status failures with email context",
+          "status": "passed",
+          "title": "maps upsert response status failures with email context",
+          "duration": 1.5725809999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790410842779,
+      "endTime": 1790410842837.5725,
+      "status": "passed",
+      "message": "",
+      "name": "packages/drivers/hubspot/test/HubSpot.service.test.ts"
+    }
+  ]
+}

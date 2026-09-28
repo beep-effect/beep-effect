@@ -1,7 +1,9 @@
 import { decodeEditorStateForRuntime, decodeEditorStateForRuntimeResult } from "@beep/editor/runtime";
 import { TextDetailMask, TextFormatMask, TextNode } from "@beep/lexical-schema/Lexical.model";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
@@ -43,13 +45,13 @@ describe("@beep/editor runtime admission", () => {
   it("admits valid raw wire and untouched schema-decoded state", () => {
     const decoded = decodedValidState();
 
-    expect(Result.isSuccess(decodeEditorStateForRuntimeResult(validWire))).toBe(true);
-    expect(Result.isSuccess(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(validWire), Result.isSuccess, assertTrue);
+    pipe(decodeEditorStateForRuntimeResult(decoded), Result.isSuccess, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Success");
   });
 
   it("rejects an empty root that Lexical cannot apply at runtime", () => {
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(emptyWire))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(emptyWire), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(emptyWire))._tag).toBe("Failure");
   });
 
@@ -57,7 +59,7 @@ describe("@beep/editor runtime admission", () => {
     const decoded = decodedValidState();
     appendRootChild(decoded, null);
 
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(decoded), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
   });
 
@@ -69,7 +71,7 @@ describe("@beep/editor runtime admission", () => {
       version: 2,
     });
 
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(decoded), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
   });
 
@@ -86,7 +88,7 @@ describe("@beep/editor runtime admission", () => {
       })
     );
 
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(decoded), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
   });
 
@@ -101,9 +103,9 @@ describe("@beep/editor runtime admission", () => {
     const paragraph = O.getOrThrow(A.head(decoded.root.children));
     Reflect.set(paragraph, "$", O.some({ plugin: 1n }));
 
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(raw))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(raw), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(raw))._tag).toBe("Failure");
-    expect(Result.isFailure(decodeEditorStateForRuntimeResult(decoded))).toBe(true);
+    pipe(decodeEditorStateForRuntimeResult(decoded), Result.isFailure, assertTrue);
     expect(Effect.runSyncExit(decodeEditorStateForRuntime(decoded))._tag).toBe("Failure");
   });
 });

@@ -1,8 +1,12 @@
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { WorkItem } from "@beep/architecture-lab-use-cases/public";
 import * as WorkItemServer from "@beep/architecture-lab-use-cases/server";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
@@ -45,7 +49,14 @@ describe("WorkItem use-cases", () => {
     "creates and lists work items through the repository port",
     Effect.fnUntraced(function* () {
       const workItemId = yield* decodeWorkItemId("work-item-1");
-      const useCases = WorkItemServer.WorkItem.makeWorkItemUseCases(makeRepository(workItemId));
+      const createdInput = yield* Ref.make(O.none<DomainWorkItem.WorkItem>());
+      const useCases = WorkItemServer.WorkItem.makeWorkItemUseCases({
+        ...makeRepository(workItemId),
+        create: Effect.fn("ArchitectureWorkItemTest.create")(function* (workItem: DomainWorkItem.WorkItem) {
+          yield* Ref.set(createdInput, O.some(workItem));
+          return workItem;
+        }),
+      });
 
       const created = yield* useCases.create(
         WorkItem.CreateWorkItemCommand.make({ id: workItemId, title: "Document topology" })
@@ -54,6 +65,9 @@ describe("WorkItem use-cases", () => {
 
       expect(created.id).toBe(workItemId);
       expect(listed).toHaveLength(1);
+      assertSome(yield* Ref.get(createdInput), created);
+      expect(listed[0]?.id).toBe(workItemId);
+      expect(listed[0]?.title).toBe("Document topology");
     })
   );
 

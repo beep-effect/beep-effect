@@ -1,8 +1,10 @@
 import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair";
 import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, pipe } from "effect";
 import * as A from "effect/Array";
 import { Response } from "effect/ai";
 import * as O from "effect/Option";
@@ -46,7 +48,7 @@ describe("BlockRepair", () => {
       expect(repaired.outputTokens).toBe(2);
 
       const first = A.head(repaired.blocks);
-      expect(O.isSome(first)).toBe(true);
+      pipe(first, O.isSome, assertTrue);
       if (O.isSome(first)) {
         expect(first.value.index).toBe(0);
         expect(first.value.block.type).toBe("paragraph");
@@ -99,7 +101,7 @@ describe("BlockRepair", () => {
 
       expect(A.length(repaired.blocks)).toBe(1);
       const first = A.head(repaired.blocks);
-      expect(O.isSome(first)).toBe(true);
+      pipe(first, O.isSome, assertTrue);
       if (O.isSome(first)) {
         expect(first.value.index).toBe(0);
         expect(first.value.block.type).toBe("paragraph");
@@ -116,10 +118,10 @@ describe("BlockRepair", () => {
       );
       const exit = yield* Effect.exit(repair([invalidParagraph]));
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
+        pipe(error, O.isSome, assertTrue);
         if (O.isSome(error)) {
           expect(BlockRepairFailed.is(error.value)).toBe(true);
         }
@@ -133,10 +135,10 @@ describe("BlockRepair", () => {
       const repair = makeRepairInvalidBlocks(() => Effect.succeed(repairCallResult('{"repairs":"not-an-array"}')));
       const exit = yield* Effect.exit(repair([invalidParagraph]));
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
+        pipe(error, O.isSome, assertTrue);
         if (O.isSome(error)) {
           expect(BlockRepairFailed.is(error.value)).toBe(true);
           expect(error.value.message).toContain("envelope failed validation");
@@ -151,10 +153,10 @@ describe("BlockRepair", () => {
       const repair = makeRepairInvalidBlocks(() => Effect.succeed(repairCallResult('{"repairs":[]}', -1, 2)));
       const exit = yield* Effect.exit(repair([invalidParagraph]));
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const error = Cause.findErrorOption(exit.cause);
-        expect(O.isSome(error)).toBe(true);
+        pipe(error, O.isSome, assertTrue);
         if (O.isSome(error)) {
           expect(BlockRepairFailed.is(error.value)).toBe(true);
           expect(error.value.message).toContain("invalid usage metadata");

@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/repo-ai-metrics",
+  "sourceHead": "fd2b52f8983da15756c33c08c80490bdc63e3790",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 12.73785807400418,
+  "bunWholeCommandSeconds": 8.22764714799996,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.17724609375, 1.212890625, 2.12158203125],
+  "loadAfter": [3.92724609375, 1.8125, 2.30810546875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.10 avg60=0.11 avg300=0.02 total=757447920\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186211768\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178135953\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=831202586\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=727229008\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.26 avg60=0.15 avg300=0.04 total=757568591\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186211769\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178135954\n",
+    "io": "some avg10=0.41 avg60=0.09 avg300=0.02 total=831322538\nfull avg10=0.29 avg60=0.06 avg300=0.01 total=727318688\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "e4603c57a70859cd3b06303d71cc993cb8db08dd15b3cf9f3f56b5f0926956a5"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/CHANGELOG.md",
+      "sha256": "3165afca7df7dd343557a2307a85e8987e2b8880298e012896607f20707f06bc"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/README.md",
+      "sha256": "382415ff8b7943db4fbf61c6fccdfbce7830bc9c39893b896000bfb748a34d92"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/docgen.json",
+      "sha256": "f228e11cc855b7d3c395bf2d8f87275f986eb532dc6c4ba17b7a908cbc8ef341"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/package.json",
+      "sha256": "e052b34d5a80481ce98e6cf70aacee4efcdfe03ed4783dc39854edcf89d23653"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "sha256": "5d420800a0c40cae8d21c1bd5cba491cffe6539666eed8c73142766687f33c9e"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/archive.ts",
+      "sha256": "4e1ed04c06e6e84631bdab283397b5d4de59f22f94d0cccc9d5ef55de694d41c"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/circuit-breaker.ts",
+      "sha256": "f7bbeaa5853d7d69b08cce6307bd648ce9896f44a481421c036f2586d7261a12"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/compose.ts",
+      "sha256": "604bfcbf2859978e213d4b055f35864776bbdd16a046d00ce30efa0f1afa8c5c"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "sha256": "0057374003fceeb5e829a70be77dfb9356c7490f9bc49e22f20e9152f6eba3ba"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "sha256": "0e8e6d9e27cd5a01781fcf95f376d82e3b485ce8761b285bc9889c2f0572324d"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
+      "sha256": "540e7924a460a7ecbf881fbe9300ea35b249c1f0b1a6dbfeb571858313140f36"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/duckdb.ts",
+      "sha256": "05e86e12510b793f746916049a743231acc81ae1023e3e84e6288c413e51b087"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/file-inventory.ts",
+      "sha256": "3eb66ee652dc2e3bf5c1fd3b4e0862604b82dbebfb436aba1c6b74393dbed92d"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/flight-record.ts",
+      "sha256": "b291a506a5377d35a23eca899299323e39aa09235146f7627df4ee9228691988"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "sha256": "c9103a9dcd7f52c14ba730d5bfce35128b2024ddb79dfcbc0aa31f7d095017ed"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/harness-ledger.ts",
+      "sha256": "eb35aa7d50577edb94c1e515e52ab12711e746a965f0d8f86069cd5dfd4f183f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
+      "sha256": "bcd60c2811f209470dfecaa560dd5bb852ad0715f7d50ca071d44d20ebd15044"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "sha256": "447f65d89bcfbaa40161b3bdcde38000a1509b0410e323161b56085677a4529f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/index.ts",
+      "sha256": "ca0a751125ff15d1c1e8f6b165055e51de9e8a0829e2763e5dca966bf78377af"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/ingest-manifest.ts",
+      "sha256": "ab15e3792ebc1952cf854c1065c6f94818ed6057b6adc6c47f6492d4f8f17fe3"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
+      "sha256": "a6d29fbf499073582beedbc89ebecedee388b663694ef7b39cde709ee20a71ae"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/install.ts",
+      "sha256": "44b64a332e439e3ad094b89a46aaf52edd75f4936c1cac869da63f67d50a9c66"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/file-info.ts",
+      "sha256": "c17a55b84287ed03420bb3ad8aaa64ef495a063d781f64612b5a2ce6f7f75967"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/jsonl-discovery.ts",
+      "sha256": "18c2f4961e16eff8ea93c9edd1f674b9853dc243cfb0f1b89001e90730902fec"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts",
+      "sha256": "ee0cded9d04ffd8f347ed2ffd86f3bee10e822a93b4c0beeec1ce8a30949142d"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
+      "sha256": "076a962201291fba6b2e8534bb7a4471bbb23d5e8959eea2d626b47a1ac2c73f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/models.ts",
+      "sha256": "2dac11d497c2d23dfaad6ab052cc340abfdff2787185d11cd30ad321d8522817"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+      "sha256": "fe9b72da87a827f452f56c5500e1b0775345c12367bffcb226a212e164f54ada"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/privacy.ts",
+      "sha256": "f7ebb11023453ea19cec0c23d99d4732e996cc2fa9e04a8af213655c833f66aa"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/retention.ts",
+      "sha256": "11d4d9a37d0a3142bbed4b192eda88cbe4d69150ad5c652a79245a5b764b561f"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+      "sha256": "9858b8bfcfd4e3583ee2726e50b5fbb11e8633feda8c8fec947be13107fbe5b4"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/sequence-break.ts",
+      "sha256": "004f1741a8b7a74a2bba198cef406b3122340f8b2cb8fb485b10ad7d4652b10e"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/session-lease.ts",
+      "sha256": "d372a7c3404a1c10757d265c55b962ca5d00453fdb547e8635fdd0f0e3612611"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/shell.ts",
+      "sha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/source-discovery.ts",
+      "sha256": "0b623e129f19969f0d2dcb17407ae47307f9fea3fc0c13b2155651648d74f8a9"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/telemetry-v2-store.ts",
+      "sha256": "6d7e88ec3958bd88b8745c817d169ffd18fcef4b01b9e66177cfd180b82ff985"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/telemetry-v2.ts",
+      "sha256": "c137d000bef96755ea660eb39dbe1f33ab4c777afedf63bad3180f0479d32703"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
+      "sha256": "e5ec48e56b830075454231141886363aa1b579a8d969da07d616afabbfd5a386"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/TaggedErrors.equivalence.test.ts",
+      "sha256": "a7e5e74179e254d0ef56704b6b12dce2bc49a0ff0127585f56a18702e35758c1"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness-laws.test.ts",
+      "sha256": "9e108bfd969fbf41e9c7f197f1c00161cdb8f8543c9230b559f4bf6a1f9fc237"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "sha256": "3a82dda4151267f42fa78679730c4284d1a408e29d433659977adddf76a31439"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/archive.test.ts",
+      "sha256": "0df2270d5a234d6f13b0710fcf088749f0b6febac9445a704b1036fadffb2fa1"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts",
+      "sha256": "f558d6aff3c3c5716f691e17f19b4f84cc2caae9f333fc823548565efe445f7a"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "sha256": "0b42e72127c29a529b446deb3dd9e91d1bf2605d677171207694628c62f84ce6"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/data-root.test.ts",
+      "sha256": "f92f6f66c926446671b9720f3baca3429045145865e68ad084d1fb9d56d21f80"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/duckdb.test.ts",
+      "sha256": "e663f65e3d2d5340e2655ca0f9d3e6e3ba95ba0c2561f52c1ac2486211bc42ad"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts",
+      "sha256": "39b7b033645f4a2701fbd5d717ad5e08c891c648d0a2f5c671535136333790a9"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "sha256": "b36ef78ef53dbe9536d182cb5cc5dd5d39e30f715c70ed44fc0eba9c02015807"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/fixtures/telemetry-v2/flight-record.json",
+      "sha256": "f366671fc8a041f513bd7da83cb2ea83bc7312f78d79ae928603c35d2aefadf0"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/fixtures/telemetry-v2/ingest-enumeration.json",
+      "sha256": "0e218d0db4d713985715e9ba40afa7a84a7b89ba5d7d7f795a2ed284413a571a"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/fixtures/telemetry-v2/ingest-manifest.json",
+      "sha256": "d52bacec58b3671b2cff90e47c420d45cd340b81d69aa12b6b512b7eccb30e3a"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/forwarder.test.ts",
+      "sha256": "b3e597bbb891dfd2bf2f888701524bdccb120a4d358b2b86c5e4fdc9ed913752"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/harness-ledger.test.ts",
+      "sha256": "5cf869341e6d8d1bd20b5cba4f5e8cc900dd40660b3a010c1e658b3d9bbd74e9"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "sha256": "69264b72831fb909416e2ae367220a14a8b5d5377172fc46b904964633ead32e"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "sha256": "9aa78e15ab1ad5a6511d6a8f0f9ef7ecbe15ac85510a821349a423a2ba18abfe"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "sha256": "9d164eb4a431b9434a3dfd16d39b5872b6f053f6f0db668e3d9ad772b0d26319"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "sha256": "1a04ccef9f759f6d0fbec7d908972cb6a34cdab72255531afd68a795d3f7492d"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/install.test.ts",
+      "sha256": "4eb1f73ec1947a2bab5d225f9c1b7ef980f79bf366ac4e2cef892ca9946b2f73"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/mirror.test.ts",
+      "sha256": "ea825f224a40c7dcd66910e80365ae6aed291eb71f03c8102ac760cd3b8d1b95"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/otlp.test.ts",
+      "sha256": "11dd8c47a5faf1e4c0a05a31c85dd36976662d509254f3d40db5fd9909bdcdc1"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/privacy.test.ts",
+      "sha256": "5b052296501eec93f6b70b0e212b549101a1913fae523217f2601d039b6956c2"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/retention.test.ts",
+      "sha256": "50a5910558cb42f8fbad6470748ef0e744ca89fc68fa21715602de1add8e2a4e"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/scorecard.test.ts",
+      "sha256": "2d2020a5737bc58aad130f29e378371ef93c3a3d92716e7a8e6b4f525143edeb"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "sha256": "fa27b689b82a5723c77739000e5119703cc62ec40b8194f3a4ef3a385f388203"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
+      "sha256": "55ec64e9b250f6480ddf407e26737438bc90c9e97840e5641d01eca42a75e0d6"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/source-discovery.test.ts",
+      "sha256": "6195e6486bc95460d4c87ed8fc5bd26ecd5143e7cf26029b924e2b3814301526"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts",
+      "sha256": "34fb68d68453aa15fdf441f3c2cfa088b085ebdb075e57bc92f2e476c7fd8d5c"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts",
+      "sha256": "224f1c823a25a72c9df01764686bac4334cdc1bb20d56f1f2f77fef2d1192b8b"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/tsconfig.check.json",
+      "sha256": "ecaad92d5c8c9f72e3cdafcd261d1dcdc8d6c704887500601ff0cd35676ebef5"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/tsconfig.json",
+      "sha256": "32cac963876344b13b03d64865bda832a21368060932d554f146b90610c5dcd5"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/tsconfig.test.json",
+      "sha256": "a75fb483faa0db9c1e828904eb6e863ea775d0412c9bbc6a90c035a7ced02a46"
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/vitest.config.ts",
+      "sha256": "240105169241cdac1e1f342de7219f1055b57b07b1bdc0f98d77c28ad7430c9c"
+    }
+  ],
+  "environmentMode": "Actual AI metrics fixtures, host FileSystem permissions and links, native DuckDB, isolated shell writers and fake notifier transports. Preserve temporary HOME/evidence roots, process joins/drains and per-case database lifetime. No live provider, secret, or notification transport claim. Single observation under recorded load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 390,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [3.8740234375, 1.9716796875, 2.34814453125],
+    "loadAfter": [3.7236328125, 1.97216796875, 2.34619140625],
+    "pressureBefore": {
+      "cpu": "some avg10=0.63 avg60=0.27 avg300=0.07 total=757708784\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186211769\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178135954\n",
+      "io": "some avg10=0.08 avg60=0.10 avg300=0.02 total=831358112\nfull avg10=0.02 avg60=0.04 avg300=0.00 total=727341285\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.50 avg60=0.29 avg300=0.08 total=757789312\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186211989\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178136169\n",
+      "io": "some avg10=0.03 avg60=0.09 avg300=0.02 total=831368326\nfull avg10=0.01 avg60=0.03 avg300=0.00 total=727349123\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 390,
+    "skipped": 0
+  },
+  "interpretation": "Single contextual observations under recorded workstation load, not a causal benchmark. Both runtimes pass377 original cases before and390 after with zero skips. The13 additional registrations comprise one real shard-order test and12 independently reported codec laws; original fixed wire assertions remain. Node12.738s versus11.586s and Bun8.228s versus8.879s do not establish a causal speedup. The after measurements overlap the early publisher and retain load/PSI evidence."
+}

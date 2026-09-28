@@ -16,9 +16,12 @@
  * disabled, asserts the markdown stack stays out of the graph, and then
  * evaluates the bundle in this DOM-less runtime.
  */
+
+import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { expect, layer } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { build } from "esbuild";
@@ -52,59 +55,62 @@ const dynamicModuleLoaderLayer = Layer.succeed(
 
 const testPlatformLayer = Layer.mergeAll(NodeServices.layer, dynamicModuleLoaderLayer);
 
-layer(testPlatformLayer)("@beep/ontology-use-cases worker import graph (browser conditions)", (it) => {
-  it.effect(
-    "bundles and evaluates the worker entrypoint under Vite-dev-like browser resolution",
-    Effect.fnUntraced(function* () {
-      expect("document" in globalThis).toBe(false);
-      expect("window" in globalThis).toBe(false);
+it.layer(testPlatformLayer, { timeout: "30 seconds" })(
+  "@beep/ontology-use-cases worker import graph (browser conditions)",
+  (it) => {
+    it.effect(
+      "bundles and evaluates the worker entrypoint under Vite-dev-like browser resolution",
+      Effect.fnUntraced(function* () {
+        pipe("document" in globalThis, assertFalse);
+        pipe("window" in globalThis, assertFalse);
 
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const dynamicModules = yield* DynamicModuleLoader;
-      const packageRoot = yield* path.fromFileUrl(PACKAGE_ROOT);
-      const result = yield* Effect.tryPromise(() =>
-        build({
-          entryPoints: [WORKER_ENTRY],
-          absWorkingDir: packageRoot,
-          bundle: true,
-          write: false,
-          format: "esm",
-          platform: "browser",
-          // Vite dev serves the whole graph unbundled and runs every module's
-          // top-level code; tree-shaking would hide exactly the leaks that
-          // crash real dev workers.
-          treeShaking: false,
-          metafile: true,
-          logLevel: "silent",
-        })
-      );
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const dynamicModules = yield* DynamicModuleLoader;
+        const packageRoot = yield* path.fromFileUrl(PACKAGE_ROOT);
+        const result = yield* Effect.tryPromise(() =>
+          build({
+            entryPoints: [WORKER_ENTRY],
+            absWorkingDir: packageRoot,
+            bundle: true,
+            write: false,
+            format: "esm",
+            platform: "browser",
+            // Vite dev serves the whole graph unbundled and runs every module's
+            // top-level code; tree-shaking would hide exactly the leaks that
+            // crash real dev workers.
+            treeShaking: false,
+            metafile: true,
+            logLevel: "silent",
+          })
+        );
 
-      const inputs = Object.keys(result.metafile.inputs);
+        const inputs = Object.keys(result.metafile.inputs);
 
-      // The precise regression: the browser build of this micromark dependency
-      // calls `document.createElement` at module top level.
-      const domCharacterReference = inputs.filter((input) =>
-        input.includes("decode-named-character-reference/index.dom.js")
-      );
-      expect(domCharacterReference).toEqual([]);
+        // The precise regression: the browser build of this micromark dependency
+        // calls `document.createElement` at module top level.
+        const domCharacterReference = inputs.filter((input) =>
+          input.includes("decode-named-character-reference/index.dom.js")
+        );
+        expect(domCharacterReference).toEqual([]);
 
-      // The class of regression: the worker needs no markdown support, so any
-      // micromark module in the graph is a barrel leak (worker.ts's docstring
-      // requires the entrypoint stay free of root package barrels).
-      const markdownStack = inputs.filter((input) => /node_modules\/micromark(-[^/]+)?\//.test(input));
-      expect(markdownStack).toEqual([]);
+        // The class of regression: the worker needs no markdown support, so any
+        // micromark module in the graph is a barrel leak (worker.ts's docstring
+        // requires the entrypoint stay free of root package barrels).
+        const markdownStack = inputs.filter((input) => /node_modules\/micromark(-[^/]+)?\//.test(input));
+        expect(markdownStack).toEqual([]);
 
-      // Strongest form: the bundle's top-level code must run where no DOM
-      // exists, exactly like a fresh module worker.
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-worker-graph-" });
-      const bundlePath = path.join(dir, "worker-graph.mjs");
-      yield* fs.writeFileString(bundlePath, result.outputFiles[0]?.text ?? "");
-      const bundleUrl = yield* path.toFileUrl(bundlePath);
-      const moduleExports = yield* dynamicModules.load(bundleUrl.href);
-      expect(P.hasProperty(moduleExports, "WorkerCommand")).toBe(true);
-      expect(P.hasProperty(moduleExports, "buildOntologyGraphProjection")).toBe(true);
-    }),
-    120_000
-  );
-});
+        // Strongest form: the bundle's top-level code must run where no DOM
+        // exists, exactly like a fresh module worker.
+        const dir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-worker-graph-" });
+        const bundlePath = path.join(dir, "worker-graph.mjs");
+        yield* fs.writeFileString(bundlePath, result.outputFiles[0]?.text ?? "");
+        const bundleUrl = yield* path.toFileUrl(bundlePath);
+        const moduleExports = yield* dynamicModules.load(bundleUrl.href);
+        pipe(P.hasProperty(moduleExports, "WorkerCommand"), assertTrue);
+        pipe(P.hasProperty(moduleExports, "buildOntologyGraphProjection"), assertTrue);
+      }),
+      120_000
+    );
+  }
+);

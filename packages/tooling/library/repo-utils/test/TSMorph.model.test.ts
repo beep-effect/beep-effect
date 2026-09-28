@@ -53,10 +53,12 @@ import {
   InternalTsMorphProject,
   InternalTsMorphSourceFile,
 } from "@beep/repo-utils/TSMorph/TSMorph.model";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Layer, Option as O } from "effect";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, Option as O } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
@@ -92,11 +94,6 @@ const decodeProjectScopeIdParts = S.decodeUnknownEffect(ProjectScopeIdParts);
 const decodeLineNumber = S.decodeUnknownEffect(LineNumber);
 const decodeColumnNumber = S.decodeUnknownEffect(ColumnNumber);
 const decodeSearchLimit = S.decodeUnknownEffect(TsMorphSearchLimit);
-const platformLayer = Layer.mergeAll(NodeServices.layer);
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 const decodeSymbol = S.decodeUnknownEffect(Symbol);
 const decodeTsMorphProjectScopeRequest = S.decodeUnknownEffect(TsMorphProjectScopeRequest);
 const decodeTsMorphProjectScope = S.decodeUnknownEffect(TsMorphProjectScope);
@@ -157,8 +154,8 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeTsConfigFilePath("packages/foo/tsconfig.build.json")).toBe(
           "packages/foo/tsconfig.build.json"
         );
-        expect(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig.ts")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig#dev.json")))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig.ts"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig#dev.json"))));
       })
     );
 
@@ -168,12 +165,12 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeTypeScriptImplementationFilePath("src/main.ts")).toBe("src/main.ts");
         expect(yield* decodeTypeScriptImplementationFilePath("src/component.tsx")).toBe("src/component.tsx");
         expect(yield* decodeTypeScriptImplementationFilePath("src/module.mts")).toBe("src/module.mts");
-        expect(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/types.d.ts")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/main.js")))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/types.d.ts"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/main.js"))));
 
         expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.ts")).toBe("src/types.d.ts");
         expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.mts")).toBe("src/types.d.mts");
-        expect(Exit.isFailure(yield* Effect.exit(decodeTypeScriptDeclarationFilePath("src/main.ts")))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptDeclarationFilePath("src/main.ts"))));
 
         expect(yield* decodeTypeScriptFilePath("src/main.ts")).toBe("src/main.ts");
         expect(yield* decodeTypeScriptFilePath("src/types.d.ts")).toBe("src/types.d.ts");
@@ -184,9 +181,9 @@ describe("TSMorph model taxonomy", () => {
       "keeps SymbolFilePath implementation-only and delimiter-safe",
       Effect.fnUntraced(function* () {
         expect(yield* decodeSymbolFilePath("src/main.ts")).toBe("src/main.ts");
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/types.d.ts")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src::main.ts")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/main#one.ts")))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/types.d.ts"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src::main.ts"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/main#one.ts"))));
       })
     );
   });
@@ -253,57 +250,45 @@ describe("TSMorph model taxonomy", () => {
       })
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived project identity parts through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ProjectIdentityParts)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeProjectIdentityParts(value);
-              const decoded = yield* decodeProjectIdentityParts(encoded);
+      [Arbitrary.schema(ProjectIdentityParts)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeProjectIdentityParts(value);
+          const decoded = yield* decodeProjectIdentityParts(encoded);
 
-              expect(decoded).toEqual(value);
-              expect(yield* decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
+          expect(decoded).toEqual(value);
+          expect(yield* decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
 
-              return true;
-            }),
-          { runs: 20 }
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
 
-    it.effect(
+    it.effect.prop(
       "round-trips schema-derived symbol identity parts through the encoded wire shape",
-      Effect.fnUntraced(function* () {
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SymbolIdentityParts)]),
-          ([value]) =>
-            Effect.gen(function* () {
-              const encoded = yield* encodeSymbolIdentityParts(value);
-              const decoded = yield* decodeSymbolIdentityParts(encoded);
+      [Arbitrary.schema(SymbolIdentityParts)],
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* encodeSymbolIdentityParts(value);
+          const decoded = yield* decodeSymbolIdentityParts(encoded);
 
-              expect(decoded).toEqual(value);
-              expect(yield* decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
+          expect(decoded).toEqual(value);
+          expect(yield* decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
 
-              return true;
-            }),
-          { runs: 20 }
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(20) }
     );
   });
 
-  describe("effectful transformations", () => {
+  it.layer(NodeCrypto.layer, { timeout: "10 seconds" })("effectful transformations", (it) => {
     it.effect("derives content hashes from source text", () =>
       Effect.gen(function* () {
         const hash = yield* decodeContentHashFromSourceText("export const a = 1;\n");
         expect(hash).toMatch(/^[0-9a-f]{64}$/);
-      }).pipe(provideScopedLayer(platformLayer))
+      })
     );
   });
 
@@ -322,9 +307,9 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeInternalProject(project)).toBe(project);
         expect(yield* decodeInternalSourceFile(sourceFile)).toBe(sourceFile);
         expect(yield* decodeInternalNode(classDeclaration)).toBe(classDeclaration);
-        expect(Exit.isFailure(yield* Effect.exit(decodeInternalProject({})))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeInternalSourceFile({})))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeInternalNode({})))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalProject({}))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalSourceFile({}))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalNode({}))));
       })
     );
   });
@@ -335,36 +320,27 @@ describe("TSMorph model taxonomy", () => {
       Effect.fnUntraced(function* () {
         expect(yield* decodeSymbolQualifiedName("UserService")).toBe("UserService");
         expect(yield* decodeSymbolQualifiedName("UserService.login")).toBe("UserService.login");
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.#login")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.[Symbol.iterator]")))).toBe(
-          true
-        );
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.#login"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.[Symbol.iterator]"))));
 
         expect(yield* decodeSymbolKind("MethodDeclaration")).toBe("MethodDeclaration");
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("QualifiedName")))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("Identifier")))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("QualifiedName"))));
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("Identifier"))));
       })
     );
 
-    it.effect(
+    it.effect.prop(
       "decodes every schema-derived SymbolId and round-trips it identically",
-      Effect.fnUntraced(function* () {
-        const arbitrary = Arbitrary.schema(SymbolId);
-        const result = yield* Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([symbolId]) =>
-            Effect.gen(function* () {
-              const decoded = yield* decodeSymbolId(symbolId);
-              expect(decoded).toBe(symbolId);
-              expect(yield* decodeSymbolIdParts(symbolId)).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
+      [Arbitrary.schema(SymbolId)],
+      ([symbolId]) =>
+        Effect.gen(function* () {
+          const decoded = yield* decodeSymbolId(symbolId);
+          expect(decoded).toBe(symbolId);
+          expect(yield* decodeSymbolIdParts(symbolId)).toEqual([...(yield* decodeSymbolIdParts(decoded))]);
 
-              return true;
-            }),
-          fcRuns(50)
-        );
-
-        expect(result._tag).toBe("Passed");
-      })
+          return true;
+        }),
+      { arbitrary: fcRuns(50) }
     );
 
     it.effect(
@@ -420,7 +396,7 @@ describe("TSMorph model taxonomy", () => {
           referencePolicy: "workspaceOnly",
         });
 
-        expect(O.isNone(request.repoRootPath)).toBe(true);
+        assertNone(request.repoRootPath);
 
         const scope = yield* decodeTsMorphProjectScope({
           scopeId: "packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly",

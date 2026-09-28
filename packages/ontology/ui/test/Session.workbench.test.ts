@@ -15,9 +15,11 @@ import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, pipe } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import type { ChangeEvent } from "react";
 
 const sessionId = SessionId.make("session-1");
@@ -26,11 +28,6 @@ type TreeItem = {
   readonly id: string;
   readonly children?: ReadonlyArray<TreeItem>;
 };
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const collectTreeItemIds = (items: ReadonlyArray<TreeItem>): ReadonlyArray<string> =>
   pipe(
@@ -49,12 +46,12 @@ describe("documentToolbarState", () => {
     });
 
     expect(state.openLabel).toBe("Open");
-    expect(state.openBusy).toBe(false);
-    expect(state.openDisabled).toBe(false);
+    pipe(state.openBusy, assertFalse);
+    pipe(state.openDisabled, assertFalse);
     expect(state.saveLabel).toBe("Save");
-    expect(state.saveDisabled).toBe(true);
+    pipe(state.saveDisabled, assertTrue);
     expect(state.previewLabel).toBe("Preview");
-    expect(state.previewDisabled).toBe(true);
+    pipe(state.previewDisabled, assertTrue);
     expect(state.sessionHint).toBe("Open a document first");
   });
 
@@ -80,8 +77,8 @@ describe("documentToolbarState", () => {
       dirty: false,
     });
 
-    expect(state.saveDisabled).toBe(false);
-    expect(state.previewDisabled).toBe(false);
+    pipe(state.saveDisabled, assertFalse);
+    pipe(state.previewDisabled, assertFalse);
     expect(state.sessionHint).toBeUndefined();
     expect(state.badge.label).toBe("Saved");
     expect(state.badge.variant).toBe("secondary");
@@ -110,8 +107,8 @@ describe("documentToolbarState", () => {
     });
 
     expect(state.openLabel).toBe("Opening…");
-    expect(state.openBusy).toBe(true);
-    expect(state.openDisabled).toBe(true);
+    pipe(state.openBusy, assertTrue);
+    pipe(state.openDisabled, assertTrue);
   });
 
   it("marks an in-flight save busy without disturbing its siblings", () => {
@@ -124,10 +121,10 @@ describe("documentToolbarState", () => {
     });
 
     expect(state.saveLabel).toBe("Saving…");
-    expect(state.saveBusy).toBe(true);
-    expect(state.saveDisabled).toBe(true);
-    expect(state.openDisabled).toBe(false);
-    expect(state.previewDisabled).toBe(false);
+    pipe(state.saveBusy, assertTrue);
+    pipe(state.saveDisabled, assertTrue);
+    pipe(state.openDisabled, assertFalse);
+    pipe(state.previewDisabled, assertFalse);
   });
 
   it("marks an in-flight preview busy and disabled even with a session open", () => {
@@ -140,8 +137,8 @@ describe("documentToolbarState", () => {
     });
 
     expect(state.previewLabel).toBe("Previewing…");
-    expect(state.previewBusy).toBe(true);
-    expect(state.previewDisabled).toBe(true);
+    pipe(state.previewBusy, assertTrue);
+    pipe(state.previewDisabled, assertTrue);
   });
 });
 
@@ -152,42 +149,44 @@ describe("OntologyWorkbench hierarchy", () => {
     expect(valueFromEvent(event)).toBe("https://example.org/pizza#Pizza");
   });
 
-  it.effect(
-    "renders inferred transitive subclass closure as unique tree item ids",
-    Effect.fnUntraced(function* () {
-      const pizza = makeNamedNode("https://example.org/pizza#Pizza");
-      const margherita = makeNamedNode("https://example.org/pizza#Margherita");
-      const neapolitanMargherita = makeNamedNode("https://example.org/pizza#NeapolitanMargherita");
-      const m1 = makeNamedNode("https://example.org/pizza#m1");
-      const subClassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
-      const session = createSession(
-        CreateSessionInput.make({
-          id: sessionId,
-          baseDataset: makeDataset([
-            makeQuad(pizza, RDF_TYPE, OWL_CLASS),
-            makeQuad(margherita, RDF_TYPE, OWL_CLASS),
-            makeQuad(margherita, subClassOf, pizza),
-            makeQuad(neapolitanMargherita, RDF_TYPE, OWL_CLASS),
-            makeQuad(neapolitanMargherita, subClassOf, margherita),
-            makeQuad(m1, RDF_TYPE, neapolitanMargherita),
-          ]),
-        })
-      );
-      const reasoner = yield* OntologyReasoner;
-      const inference = yield* reasoner.infer(InferOntologySessionInput.make({ session }));
-      const snapshot = buildOntologySnapshotWithInference(session, inference);
-      const neapolitan = pipe(
-        snapshot.resources,
-        A.findFirst((resource) => resource.iri === neapolitanMargherita.value),
-        O.getOrThrow
-      );
-      const itemIds = collectTreeItemIds(ontologyTreeItemsFor(snapshot, "all"));
+  it.layer(OntologyReasonerLive, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "renders inferred transitive subclass closure as unique tree item ids",
+      Effect.fnUntraced(function* () {
+        const pizza = makeNamedNode("https://example.org/pizza#Pizza");
+        const margherita = makeNamedNode("https://example.org/pizza#Margherita");
+        const neapolitanMargherita = makeNamedNode("https://example.org/pizza#NeapolitanMargherita");
+        const m1 = makeNamedNode("https://example.org/pizza#m1");
+        const subClassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
+        const session = createSession(
+          CreateSessionInput.make({
+            id: sessionId,
+            baseDataset: makeDataset([
+              makeQuad(pizza, RDF_TYPE, OWL_CLASS),
+              makeQuad(margherita, RDF_TYPE, OWL_CLASS),
+              makeQuad(margherita, subClassOf, pizza),
+              makeQuad(neapolitanMargherita, RDF_TYPE, OWL_CLASS),
+              makeQuad(neapolitanMargherita, subClassOf, margherita),
+              makeQuad(m1, RDF_TYPE, neapolitanMargherita),
+            ]),
+          })
+        );
+        const reasoner = yield* OntologyReasoner;
+        const inference = yield* reasoner.infer(InferOntologySessionInput.make({ session }));
+        const snapshot = buildOntologySnapshotWithInference(session, inference);
+        const neapolitan = pipe(
+          snapshot.resources,
+          A.findFirst((resource) => resource.iri === neapolitanMargherita.value),
+          O.getOrThrow
+        );
+        const itemIds = collectTreeItemIds(ontologyTreeItemsFor(snapshot, "all"));
 
-      expect(inference.inferredDataset.quads).toHaveLength(3);
-      expect(inference.inferredDataset.quads[0]?.graph.value).toBe(graphPartitionIri("inferred"));
-      expect(neapolitan.parentIris).toEqual(expect.arrayContaining([margherita.value, pizza.value]));
-      expect(itemIds).toEqual(A.dedupe(itemIds));
-      expect(A.filter(itemIds, (id) => id === neapolitanMargherita.value)).toHaveLength(1);
-    }, provideScopedLayer(OntologyReasonerLive))
-  );
+        expect(inference.inferredDataset.quads).toHaveLength(3);
+        expect(inference.inferredDataset.quads[0]?.graph.value).toBe(graphPartitionIri("inferred"));
+        expect(neapolitan.parentIris).toEqual(expect.arrayContaining([margherita.value, pizza.value]));
+        expect(itemIds).toEqual(A.dedupe(itemIds));
+        expect(A.filter(itemIds, (id) => id === neapolitanMargherita.value)).toHaveLength(1);
+      })
+    );
+  });
 });

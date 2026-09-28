@@ -1,25 +1,9 @@
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
-import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
-import { expect } from "vitest";
 
-export const expectSchemaRoundTrip = <A, E>(schema: S.Codec<A, E, never, never>): void => {
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          const encoded = Effect.runSync(S.encodeUnknownEffect(schema)(value));
-          const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
-
-          expect(equivalent(decoded, value)).toBe(true);
-
-          return true;
-        },
-        { runs: 25 }
-      )
-    )._tag
-  ).toBe("Passed");
-};
+export const expectSchemaRoundTrip = Effect.fnUntraced(function* <A, E>(schema: S.Codec<A, E, never, never>, value: A) {
+  const encoded = yield* S.encodeUnknownEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  assertTrue(S.toEquivalence(schema)(decoded, value));
+});

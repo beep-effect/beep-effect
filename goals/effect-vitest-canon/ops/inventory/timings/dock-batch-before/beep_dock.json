@@ -1,0 +1,121 @@
+{
+  "package": "@beep/dock",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T16:36:24.795000+00:00",
+  "totalMs": 4454.433837890625,
+  "testCount": 112,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "ms": 23.469970703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "ms": 311.433837890625,
+      "tests": 19
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "ms": 19.451904296875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "ms": 31.189208984375,
+      "tests": 18
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "ms": 9.810546875,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "ms": 16.60205078125,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "ms": 14.487548828125,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "ms": 10.3154296875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "ms": 15.71240234375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
+      "ms": 1.861083984375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
+      "ms": 1.6064453125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
+      "ms": 3.425537109375,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "DockEngine owns discriminants, defaults, and pure queries on model companions",
+      "ms": 300.1358170000003
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "dock snapshot codec properties round-trips arbitrary snapshots through the JSON codec",
+      "ms": 298.09297999999944
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms owns one registry lifetime and refreshes service-backed persistence",
+      "ms": 22.780041999999412
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms serializes rapid typed and unknown commands without cancellation or stale writes",
+      "ms": 22.571239999999307
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms publishes every rapid completion to the ordered host feed",
+      "ms": 22.554474000000482
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms does not publish live state for an explicit unchanged outcome",
+      "ms": 22.544558999999936
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms keeps state unchanged for malformed input and a missing snapshot",
+      "ms": 22.537097000000358
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology clamps anchored boxes to a sensible minimum inside the container",
+      "ms": 20.494952000000012
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology schema-rejects duplicate identities across docked and floating roots",
+      "ms": 20.291087999999945
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "anchored box codec properties round-trips arbitrary anchored boxes through their codec",
+      "ms": 20.26301499999954
+    }
+  ]
+}

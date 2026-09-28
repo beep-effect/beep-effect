@@ -1,6 +1,8 @@
 import { ontologyGraphErrorAtom, ontologyGraphWorkerBridgeAtom } from "@beep/ontology-client/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Schedule } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Duration, Effect, pipe, Schedule } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import { vi } from "vitest";
@@ -66,18 +68,25 @@ describe("ontology graph worker command encoding", () => {
           )
         ),
         () =>
-          Effect.gen(function* () {
-            const registry = AtomRegistry.make();
-            registry.mount(ontologyGraphWorkerBridgeAtom);
-            registry.get(ontologyGraphWorkerBridgeAtom);
-            yield* waitUntil("graph error surfaced", () => O.isSome(registry.get(ontologyGraphErrorAtom)));
+          Effect.scoped(
+            Effect.gen(function* () {
+              const registry = yield* Effect.acquireRelease(
+                Effect.sync(() => AtomRegistry.make()),
+                (registry) => Effect.sync(() => registry.dispose())
+              );
+              yield* AtomRegistry.mount(registry, ontologyGraphWorkerBridgeAtom);
+              registry.get(ontologyGraphWorkerBridgeAtom);
+              yield* waitUntil("graph error surfaced", () => O.isSome(registry.get(ontologyGraphErrorAtom)));
 
-            expect(O.getOrElse(registry.get(ontologyGraphErrorAtom), () => "")).toBe(
-              "The graph worker command could not be encoded for the worker boundary."
-            );
-            expect(workers.every((worker) => worker.messages.length === 0)).toBe(true);
-            registry.dispose();
-          }),
+              expect(O.getOrElse(registry.get(ontologyGraphErrorAtom), () => "")).toBe(
+                "The graph worker command could not be encoded for the worker boundary."
+              );
+              pipe(
+                workers.every((worker) => worker.messages.length === 0),
+                assertTrue
+              );
+            })
+          ),
         () => Effect.sync(() => vi.unstubAllGlobals())
       );
     })

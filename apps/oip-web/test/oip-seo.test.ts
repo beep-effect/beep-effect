@@ -1,8 +1,10 @@
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import { describe, expect, it } from "vitest";
 import {
   decodeOipSiteContentResult,
   makeJsonLdGraph,
@@ -44,6 +46,7 @@ const withSocials = (socials: ReadonlyArray<SocialLink>): OipSiteContent =>
 const sameAsUrls = (content: OipSiteContent): ReadonlyArray<string> => {
   const graph = makeJsonLdGraph(content);
   const legalService = A.findFirst(graph["@graph"], (node) => node["@type"] === "LegalService");
+  pipe(legalService, O.isSome, assertTrue);
   return O.match(legalService, {
     onNone: () => A.empty<string>(),
     onSome: (node) => ("sameAs" in node && A.isArray(node.sameAs) ? node.sameAs : A.empty<string>()),
@@ -105,7 +108,7 @@ describe("OipSeo social.active filter (CSF-043)", () => {
       label: "OIP on Instagram",
     });
 
-    expect(social.active).toBe(true);
+    pipe(social.active, assertTrue);
     expect(sameAsUrls(withSocials([social]))).toContain("https://www.instagram.com/oip.law/");
   });
 
@@ -124,10 +127,10 @@ describe("OipSeo social.active filter (CSF-043)", () => {
       ],
     });
 
-    expect(Result.isSuccess(decoded)).toBe(true);
+    pipe(decoded, Result.isSuccess, assertTrue);
     const content = Result.getOrThrow(decoded);
     const social = O.getOrThrow(A.head(content.socials));
-    expect(social.active).toBe(true);
+    pipe(social.active, assertTrue);
     expect(sameAsUrls(content)).toContain("https://www.instagram.com/oip.law/");
   });
 
@@ -174,10 +177,13 @@ describe("OipSeo social.active filter (CSF-043)", () => {
   it("matches the approved launch content sanity check", () => {
     // oipSiteContent ships every profile active, so the live Instagram URL and
     // the X handle both surface, and discord stays out of sameAs.
-    const seoUrls = Effect.runSync(Effect.sync(() => sameAsUrls(OipSiteContent.make({ ...oipSiteContent }))));
+    const seoUrls = sameAsUrls(OipSiteContent.make({ ...oipSiteContent }));
 
     expect(seoUrls).toContain("https://www.instagram.com/oip.law/");
-    expect(A.some(seoUrls, (url) => url.includes("discord"))).toBe(false);
+    pipe(
+      A.some(seoUrls, (url) => url.includes("discord")),
+      assertFalse
+    );
     expect(oipTwitterHandle(OipSiteContent.make({ ...oipSiteContent }))).toBe("@opiplaw");
   });
 

@@ -1,10 +1,12 @@
 import { selectedThreadAtom } from "@beep/agents-client/Chat.atoms";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import { Atom, AtomRegistry } from "effect/reactivity";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
 // its idle TTL elapses. A tiny TTL reproduces in milliseconds what took the real
@@ -23,17 +25,29 @@ describe("selected thread lifetime", () => {
       // which the chat surface reads as "follow the list", so the user came back to
       // the most-recently-updated thread instead of the one they had open, and
       // whatever they typed next went to the wrong conversation.
-      const registry = AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
 
-      const unmount = registry.mount(selectedThreadAtom);
-      registry.set(selectedThreadAtom, O.some(olderThread));
+      const removable = Atom.make(false);
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          yield* AtomRegistry.mount(registry, selectedThreadAtom);
+          yield* AtomRegistry.mount(registry, removable);
+          registry.set(removable, true);
+          assertTrue(registry.get(removable));
+          registry.set(selectedThreadAtom, O.some(olderThread));
+        })
+      );
 
       // The user switches surface; the chat subtree unmounts...
-      unmount();
       // ...and browses elsewhere for longer than the idle TTL.
       yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
 
-      expect(registry.get(selectedThreadAtom)).toStrictEqual(O.some(olderThread));
+      // The same registry must have swept an ordinary atom during this interval.
+      assertFalse(registry.get(removable));
+      assertSome(registry.get(selectedThreadAtom), olderThread);
     })
   );
 });

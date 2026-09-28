@@ -1,0 +1,155 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/architecture-lab-use-cases",
+  "sourceHead": "3f7667fc4bccb198300f52b189861a29821c51ea",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.42126742900291,
+  "bunWholeCommandSeconds": 3.0704121839953586,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [10.19677734375, 7.0390625, 6.451171875],
+  "loadAfter": [12.66357421875, 7.60302734375, 6.63720703125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.50 avg60=0.33 avg300=0.23 total=668072263\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.24 avg60=0.09 avg300=0.02 total=168153965\nfull avg10=0.24 avg60=0.09 avg300=0.02 total=160413564\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781298493\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684323518\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.33 avg60=0.31 avg300=0.23 total=668082502\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.16 avg60=0.08 avg300=0.02 total=168154685\nfull avg10=0.16 avg60=0.08 avg300=0.02 total=160414259\n",
+    "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781299675\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684324346\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "36014928e93218db21312aa068f7732898e0351b2fb2e61c86ffe2ef023a3129"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/package.json",
+      "sha256": "d661ba15f7203b1a645446a350bbbc8a361c5197d13753609997dea985e4d573"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.commands.ts",
+      "sha256": "9d761de968f4e4e1e55e436ca532f5891e100b543b48d444b654df38a71a563b"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
+      "sha256": "d0962a90b47ba02e528dc2ce9017cf6c9d0a2a7b2a867259b68c95229e047796"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.repository.ts",
+      "sha256": "eb62838bec558834b105f2150c7f3619bd71c3e0719c62d76a7e4e233a3c4944"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
+      "sha256": "740afbadd42c176f6d72f132795cab3dc13d7fdccc456a7c4bcaa4b166b79071"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.use-cases.ts",
+      "sha256": "e64ff81a33306cb47f33c3a124ceffecccad0aef3c324252bf6563ac708522c8"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/index.ts",
+      "sha256": "eab82e7bceda538c681ba5253406d4bff1efc005cb0a69ff292fa5987d002c40"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/server.ts",
+      "sha256": "13aaa4a966ad39a0eb0f401aee191cd6eea8e7738d59514cb0cf50562626cebe"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.commands.ts",
+      "sha256": "8981c4401e00596c2c06f5ac3084878d2432769dc9512614d33f0348ac35ff4e"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.errors.ts",
+      "sha256": "4adf007bb9e766595fe25a66782ea5dbd6db838f1b133cfc5e9ec6f82a2ee841"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.repository.ts",
+      "sha256": "9ca82682d665b961cf65a07ad775190d37f491b3f15f526173206a116d1cabe4"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
+      "sha256": "bb0cea171296dbf9aaad180045b2e4906b8681e5f8e2b7f7f8ebe44816f09253"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.use-cases.ts",
+      "sha256": "00503520c87981755034e72f04fd0690c0c8e2527690bb712fadc7eecd7f1377"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/index.ts",
+      "sha256": "242b3fb05d7057678858424c100409a32dd96e43f73775fdc6a5b75bab398b7a"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/server.ts",
+      "sha256": "afe30f24a5a2654ed5a313f7a24458c6aa02faf5db5fc453325c43e77ed4481d"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/index.ts",
+      "sha256": "492245d50ca10652caa79bfbee26a3bf75e783c4111352f45a7c169c6ac5d2f9"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/index.ts",
+      "sha256": "2fbb939205fd2bdd231b00fba0080cc9e48398e0e63c7ba23e22351e1fe37c58"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/public.ts",
+      "sha256": "11519cafb97ddc3e4f32c7952abe71fe33a527801f92fa8c3613c233859c58ae"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/server.ts",
+      "sha256": "ff55613416337c480e687226efa3559157c0d107e0685584a87b2a8ef71f8f29"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "sha256": "283d76b1435ecd642f643d6637724846771ceb79ddc3a52c1cca3b7387b226ee"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
+      "sha256": "00c398b3db94ceb1f25a13d9f4c59864eebd0fc89713b3e2603be3d3a1ccbb61"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "sha256": "91e2512bfac0032376e67ad0c1a8c5975aea315e7f66ba545fc3673e4a451c5b"
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "sha256": "dffe9e734ed85c1178ef0cdcd23d2866cb38b0a0238b5dd559f578f451ddf687"
+    }
+  ],
+  "environmentMode": "Architecture-lab configured suites; server integration uses actual in-process PGlite, btree_gist and migrations with original deadlines; no external socket or substitute repository.",
+  "bunProof": {
+    "passedTests": 26,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [12.66357421875, 7.60302734375, 6.63720703125],
+    "loadAfter": [12.4501953125, 7.64306640625, 6.6552734375],
+    "pressureBefore": {
+      "cpu": "some avg10=0.33 avg60=0.31 avg300=0.23 total=668082510\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.16 avg60=0.08 avg300=0.02 total=168154685\nfull avg10=0.16 avg60=0.08 avg300=0.02 total=160414259\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781299675\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684324346\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=1.13 avg60=0.45 avg300=0.26 total=668201764\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.29 avg60=0.11 avg300=0.02 total=168196802\nfull avg10=0.11 avg60=0.08 avg300=0.02 total=160444564\n",
+      "io": "some avg10=0.00 avg60=0.02 avg300=0.10 total=781307324\nfull avg10=0.00 avg60=0.01 avg300=0.06 total=684327075\n"
+    }
+  },
+  "interpretation": "Single contextual observations under recorded workstation load; not a causal benchmark."
+}

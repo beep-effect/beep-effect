@@ -1,0 +1,96 @@
+{
+  "beforeSha": "5d334a8f9df32535f826d454ecdbc760917d1354",
+  "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+  "sourceSha256": "ab70e865f2f61e15f608b19bf22303038e67198f5b0a4272a8c20b0f64db2d7d",
+  "onlySourceReplacement": {
+    "before": "expect(O.isNone(safe.detail)).toBe(true);",
+    "after": "assertNone(safe.detail);"
+  },
+  "propertyInputsFloorsAndBranchPreserved": true,
+  "packageVerify": {
+    "exit": 0,
+    "auditSeconds": 9.2,
+    "docgenSeconds": 3.4
+  },
+  "runs": [
+    {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [9.9482421875, 6.1630859375, 6.6826171875],
+      "loadAfter": [10.734375, 6.4677734375, 6.77685546875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.39 avg60=0.21 avg300=0.14 total=218813021\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=87430987\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=84850571\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629006\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627652986\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.21 avg60=0.19 avg300=0.13 total=218839053\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=87430987\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=84850571\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629290\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627653234\n"
+      },
+      "wholeCommandSeconds": 5.924902437000128,
+      "sourceStable": true,
+      "exit": 0,
+      "phase": "residual-assertion",
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [10.734375, 6.4677734375, 6.77685546875],
+      "loadAfter": [10.734375, 6.4677734375, 6.77685546875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.21 avg60=0.19 avg300=0.13 total=218839132\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=87430987\nfull avg10=0.00 avg60=0.00 avg300=0.02 total=84850571\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629290\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627653234\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.32 avg60=0.21 avg300=0.14 total=218870122\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=87431104\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=84850688\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629585\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627653479\n"
+      },
+      "wholeCommandSeconds": 3.4701696789998095,
+      "sourceStable": true,
+      "exit": 0,
+      "phase": "residual-assertion",
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "runtime": {
+        "node": "v24.20.0",
+        "bun": "1.4.2"
+      },
+      "loadBefore": [10.734375, 6.4677734375, 6.77685546875],
+      "loadAfter": [10.755859375, 6.54345703125, 6.7998046875],
+      "pressureBefore": {
+        "cpu": "some avg10=0.32 avg60=0.21 avg300=0.14 total=218870139\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=87431104\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=84850688\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629585\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627653479\n"
+      },
+      "pressureAfter": {
+        "cpu": "some avg10=0.21 avg60=0.20 avg300=0.14 total=218878938\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+        "memory": "some avg10=0.00 avg60=0.00 avg300=0.01 total=87431104\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=84850688\n",
+        "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=692629829\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=627653642\n"
+      },
+      "wholeCommandSeconds": 3.7706294450035784,
+      "sourceStable": true,
+      "exit": 0,
+      "phase": "residual-assertion-400",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "propertyCount": 13,
+      "minimumRuns": 400,
+      "seed": 20260708,
+      "selection": "Shared config selects seven property-bearing suites; 52 cases include all thirteen native laws"
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 import { OxigraphSparqlError } from "@beep/oxigraph";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const sameOxigraphSparqlError = S.toEquivalence(OxigraphSparqlError);
@@ -10,7 +13,7 @@ describe("Oxigraph declared-field equivalence", () => {
     const b = OxigraphSparqlError.make({ message: "query failed", reason: "queryFailed" });
     const c = OxigraphSparqlError.make({ message: "query failed", reason: "datasetLoadFailed" });
 
-    expect(sameOxigraphSparqlError(a, b)).toBe(true);
-    expect(sameOxigraphSparqlError(a, c)).toBe(false);
+    pipe(sameOxigraphSparqlError(a, b), assertTrue);
+    pipe(sameOxigraphSparqlError(a, c), assertFalse);
   });
 });

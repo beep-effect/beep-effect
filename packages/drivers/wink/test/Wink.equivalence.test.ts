@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { WinkEngineError } from "@beep/wink";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const sameWinkEngineError = S.toEquivalence(WinkEngineError);

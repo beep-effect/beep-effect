@@ -11,12 +11,13 @@ import {
 } from "@beep/langextract/VerifiedSpan";
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
@@ -266,7 +267,7 @@ describe("verified-span hostile-text contract", () => {
 
       expect(strict).toEqual([{ endChar: 27, quote: "“Affirmed.”", startChar: 16 }]);
       expect(fuzzyFailure.reason).toBe("not-found");
-      expect(fuzzyFailure.candidateIndex).toEqual(O.some(NonNegativeInt.make(0)));
+      assertSome(fuzzyFailure.candidateIndex, NonNegativeInt.make(0));
     })
   );
 
@@ -282,7 +283,7 @@ describe("verified-span hostile-text contract", () => {
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("limit-exceeded");
-      expect(failure.candidateIndex).toEqual(O.none());
+      assertNone(failure.candidateIndex);
     })
   );
 
@@ -368,40 +369,34 @@ describe("verified-span hostile-text contract", () => {
         startChar: NonNegativeInt.make(2),
       })
     ).toThrow();
-    expect(
-      Result.isFailure(
-        decodeTextOffsetRangeResult({
-          end: 1,
-          start: 2,
-          unit: "unicode-code-point",
-        })
-      )
-    ).toBe(true);
-    expect(Result.isFailure(decodeUtf16TextRangeResult({ endChar: 0, startChar: 0 }))).toBe(true);
+    pipe(
+      decodeTextOffsetRangeResult({
+        end: 1,
+        start: 2,
+        unit: "unicode-code-point",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+    pipe(decodeUtf16TextRangeResult({ endChar: 0, startChar: 0 }), Result.isFailure, assertTrue);
   });
 
-  it("derives only ordered, round-trippable ranges from both schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(TextOffsetRange), Arbitrary.schema(Utf16TextRange)]),
-          ([offsetRange, utf16Range]) => {
-            const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
-            const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
-            const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
-            const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
+  it.prop(
+    "derives only ordered, round-trippable ranges from both schemas",
+    { offsetRange: Arbitrary.schema(TextOffsetRange), utf16Range: Arbitrary.schema(Utf16TextRange) },
+    ({ offsetRange, utf16Range }) => {
+      const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
+      const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
+      const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
+      const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
 
-            expect(offsetRange.start).toBeLessThan(offsetRange.end);
-            expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
-            expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
-            expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(offsetRange.start).toBeLessThan(offsetRange.end);
+      expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
+      expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
+      expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.

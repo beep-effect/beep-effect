@@ -1,8 +1,9 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { fromWorkerRow, toWorkerInsert, workerTable } from "@beep/architecture-lab-tables/entities/Worker";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
@@ -55,21 +56,16 @@ describe("Worker table", () => {
     })
   );
 
-  it("round-trips schema-derived Workers through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WorkerArbitrary]),
-          ([worker]) => {
-            const insert = toWorkerInsert(worker);
-            const decoded = fromWorkerRow({ ...insert, id: worker.id });
+  it.effect.prop(
+    "round-trips schema-derived Workers through the row converters",
+    [WorkerArbitrary],
+    ([worker]) =>
+      Effect.sync(() => {
+        const insert = toWorkerInsert(worker);
+        const decoded = fromWorkerRow({ ...insert, id: worker.id });
 
-            expect(WorkerEquivalence(decoded, worker)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+        expect(WorkerEquivalence(decoded, worker)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 });

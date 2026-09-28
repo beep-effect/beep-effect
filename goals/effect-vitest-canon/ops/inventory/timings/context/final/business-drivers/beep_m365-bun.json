@@ -1,0 +1,120 @@
+{
+  "command": [
+    "bunx",
+    "--bun",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private-output>/business-m365-runner-final-bun.json"
+  ],
+  "phase": "runner-final-bun",
+  "sourceBefore": [
+    {
+      "file": "bun.lock",
+      "sha256": "7f2819b899f6fd54821857b738fbf8f73029d65cf2976321f0ed6af47b1f52de"
+    },
+    {
+      "file": "packages/drivers/m365/package.json",
+      "sha256": "d613fd49fdf0ee32771c7accdc4c475cb5157feff9d6110941df9acb68206e92"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.auth.ts",
+      "sha256": "f5512644673269c89a0319b05a602bcb47b0063823a0086ef70470650751b518"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.config.ts",
+      "sha256": "1d0f5b282fea07f0296dd940e1c0848b125741b585ca7c2dee4e07291e2c56bc"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.errors.ts",
+      "sha256": "4a7d5e60000431fb40eaa6ecada071414fd519d4e223e24d6c8773aadb7141a8"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.schemas.ts",
+      "sha256": "4063e1c7fa2ed873bd81e6dbb995d807a5c7c7035dd6ab9a7e99196625ddac07"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.service.ts",
+      "sha256": "5ee031acba83aebc5ba20780642f3beefd10a73fed4c63142338d1905dab37a0"
+    },
+    {
+      "file": "packages/drivers/m365/src/index.ts",
+      "sha256": "4cdf2bb05c3bffceaf9fffa2bc774e6fefc087f24ee797ee8d55b0cf82df9dba"
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "sha256": "aac32d5b72ebfec2e50df4dedfc5749e45d4e149af0b508ad9f253314e9e89b9"
+    },
+    {
+      "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
+      "sha256": "12919f2f05d08d91dfbfc67c6103b96136a89c0c362eff2f1ba54b4cadae47fd"
+    }
+  ],
+  "loadBefore": [29.2919921875, 36.71923828125, 30.27099609375],
+  "pressureBefore": {
+    "cpu": "some avg10=1.96 avg60=5.46 avg300=7.31 total=2509118778\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.02 avg60=0.05 avg300=0.20 total=208454899\nfull avg10=0.02 avg60=0.05 avg300=0.18 total=181263440\n",
+    "io": "some avg10=0.00 avg60=0.09 avg300=0.43 total=980545888\nfull avg10=0.00 avg60=0.04 avg300=0.27 total=668918850\n"
+  },
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "environmentMode": "Optional M365 live gate disabled with blank M365_LIVE_SITE_ID; no live-provider proof",
+  "exit": 0,
+  "wholeCommandSeconds": 1.464901266997913,
+  "sourceAfter": [
+    {
+      "file": "bun.lock",
+      "sha256": "7f2819b899f6fd54821857b738fbf8f73029d65cf2976321f0ed6af47b1f52de"
+    },
+    {
+      "file": "packages/drivers/m365/package.json",
+      "sha256": "d613fd49fdf0ee32771c7accdc4c475cb5157feff9d6110941df9acb68206e92"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.auth.ts",
+      "sha256": "f5512644673269c89a0319b05a602bcb47b0063823a0086ef70470650751b518"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.config.ts",
+      "sha256": "1d0f5b282fea07f0296dd940e1c0848b125741b585ca7c2dee4e07291e2c56bc"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.errors.ts",
+      "sha256": "4a7d5e60000431fb40eaa6ecada071414fd519d4e223e24d6c8773aadb7141a8"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.schemas.ts",
+      "sha256": "4063e1c7fa2ed873bd81e6dbb995d807a5c7c7035dd6ab9a7e99196625ddac07"
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.service.ts",
+      "sha256": "5ee031acba83aebc5ba20780642f3beefd10a73fed4c63142338d1905dab37a0"
+    },
+    {
+      "file": "packages/drivers/m365/src/index.ts",
+      "sha256": "4cdf2bb05c3bffceaf9fffa2bc774e6fefc087f24ee797ee8d55b0cf82df9dba"
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "sha256": "aac32d5b72ebfec2e50df4dedfc5749e45d4e149af0b508ad9f253314e9e89b9"
+    },
+    {
+      "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
+      "sha256": "12919f2f05d08d91dfbfc67c6103b96136a89c0c362eff2f1ba54b4cadae47fd"
+    }
+  ],
+  "loadAfter": [27.9072265625, 36.30859375, 30.1728515625],
+  "pressureAfter": {
+    "cpu": "some avg10=1.61 avg60=5.28 avg300=7.26 total=2509121919\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.01 avg60=0.05 avg300=0.20 total=208454989\nfull avg10=0.01 avg60=0.05 avg300=0.18 total=181263509\n",
+    "io": "some avg10=0.00 avg60=0.09 avg300=0.43 total=980546485\nfull avg10=0.00 avg60=0.04 avg300=0.27 total=668919342\n"
+  },
+  "sourceStable": true
+}

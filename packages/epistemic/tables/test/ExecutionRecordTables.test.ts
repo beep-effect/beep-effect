@@ -15,7 +15,8 @@ import {
   toExecutionDecisionInsert,
   toExecutionOutcomeInsert,
 } from "@beep/epistemic-tables/values/ExecutionRecord";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

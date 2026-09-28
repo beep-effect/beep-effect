@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/pretext",
+  "sourceHead": "4475746c3753d86e9be9799a738606d84bb8802c",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 3.921201546996599,
+  "bunWholeCommandSeconds": 1.4661738080030773,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [15.63232421875, 25.3662109375, 21.912109375],
+  "loadAfter": [16.54296875, 25.3935546875, 21.939453125],
+  "pressureBefore": {
+    "cpu": "some avg10=0.10 avg60=0.87 avg300=5.25 total=334088394\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.05 avg60=0.13 avg300=0.46 total=124447718\nfull avg10=0.05 avg60=0.11 avg300=0.35 total=120238913\n",
+    "io": "some avg10=0.00 avg60=0.06 avg300=0.31 total=733409927\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=657251785\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.96 avg60=1.00 avg300=5.22 total=334240907\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.03 avg60=0.12 avg300=0.46 total=124459023\nfull avg10=0.03 avg60=0.10 avg300=0.35 total=120249694\n",
+    "io": "some avg10=0.00 avg60=0.06 avg300=0.30 total=733415962\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=657254594\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "8c8db02154156c1c94908ab612abddcfc577dbae277afd5ff82a63a6288f874f"
+    },
+    {
+      "file": "packages/drivers/pretext/package.json",
+      "sha256": "4e82a4f66de5c9958b9080340d13608f9f6b92ac240876178d367e37d8411257"
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.errors.ts",
+      "sha256": "401a7aaa35fd77edc6879d8177c3873822838c268ec1421106e98352af8c6d55"
+    },
+    {
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "sha256": "9a0bec88800fe309d3f790976203b85d73191b66d2500d905570c5d4395b59be"
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.service.ts",
+      "sha256": "03502fd429ff320c95725cd0f9878aacf898e597dbb5b18bbbe8f0147e147786"
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.test-layer.ts",
+      "sha256": "108c86256c3a063a9a6b83bda706e219614510ff1dd61f8d56975c2093dc6aa5"
+    },
+    {
+      "file": "packages/drivers/pretext/src/browser.ts",
+      "sha256": "4948a0e12d38ba9eac882fa4c832ae99abd6b156f0ed41450a1f27b63e601e4f"
+    },
+    {
+      "file": "packages/drivers/pretext/src/index.ts",
+      "sha256": "802f8ec6e40772f1004c20a156ba6fd2c2417e021437916236619b4a9db479d5"
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "sha256": "17c41b9bad0d736213139518db36fbc3c4a40b9820c10362130d2a1d8164a7a8"
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "sha256": "3721bdb9003c1d5fdade30019bc692a7ec88d44c23ea2226f6641978650c3344"
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "sha256": "2750ebcb8a58f48ba59bed2ca9e52ed1ebf746ff34333c49531700189c8ac6df"
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "sha256": "88d6b95e3a7a8bff844cae17ecb6cb052158236d4c693f38b5aad85c5c30b68f"
+    }
+  ],
+  "rawReporterSha256": "2715e7b77153afc29367b8f51e63e5a949dbcf50f0d6a4969883a17ca3efd6f8",
+  "rawLogSha256": "21783a367ecd9e4a9a901a5983bd3bfc24307c222c699af4ae722fb81dec1564",
+  "acceptance": "One configured Node and Bun observation each:24 passed,1 existing native browser skip,4 suites. Load/pressure retained without normalization or best-of selection. Native browser harness failed before valid execution and earns no proof credit."
+}

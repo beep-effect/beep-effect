@@ -1,0 +1,81 @@
+{
+  "package": "@beep/architecture-lab-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-27T08:55:24.671000+00:00",
+  "totalMs": 4040.341796875,
+  "testCount": 26,
+  "files": [
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "ms": 30.341796875,
+      "tests": 16
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 1.912353515625,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "ms": 9.042724609375,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "ms": 7.0322265625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived CreateWorkItemCommand",
+      "ms": 15.200980000000072
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived AssignWorkItemCommand",
+      "ms": 15.100285999999869
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived CompleteWorkItemCommand",
+      "ms": 15.092642999999953
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived ReopenWorkItemCommand",
+      "ms": 15.088987999999972
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived ArchiveWorkItemCommand",
+      "ms": 15.085583000000042
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases creates and lists work items through the repository port",
+      "ms": 9.042667000000165
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases redacts repository unavailable details at the public action boundary",
+      "ms": 8.77176899999995
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases translates repository not-found failures to public failures",
+      "ms": 8.746450000000095
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases keeps archive terminal at the use-case boundary",
+      "ms": 8.733430000000226
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips schema-derived GetWorkItemQuery",
+      "ms": 7.98147199999994
+    }
+  ]
+}
