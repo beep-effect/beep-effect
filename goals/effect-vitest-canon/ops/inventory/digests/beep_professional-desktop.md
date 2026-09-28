@@ -122,3 +122,13 @@ After Benjamin acknowledges the complete P1 inventory and Grok review: scope, as
 Root fully reviewed all three reports and digests, verified their artifact/source hashes and complete read receipts, and validated the exact whole-package union through the public strict decoder. All 59 files have all four lenses and no package pairs are missing. This accepts the P1 source inventory only. Full campaign completeness, independent Grok review and Benjamin's acknowledgement remain required before P2.
 
 Evidence: [resource rows](../resource/beep_professional-desktop.jsonl), [flake rows](../flake/beep_professional-desktop.jsonl), [property rows](../property/beep_professional-desktop.jsonl), [observability rows](../observability/beep_professional-desktop.jsonl), [timing index](../timings/baseline-index.json), [configured subsets](../timings/configured-subsets.json), and [hosted history](../hosted-history-summary.json).
+
+## PR 1323 interruption regression
+
+The PGlite permission fixture now has a shared bracket and an interruption
+regression: ten integration tests pass on Node and Bun, and dropping the
+restoration finalizer fails the mode-before-cleanup observation. Two new,
+reasoned lifetime exceptions are appended without changing historical row IDs.
+The detector ledger contains 204 rows: 153 fixed and 51 exceptions. This update
+supplements the earlier source audit; final package and hosted proof remain open.
+See [the repair proof](../../../research/pr1323-readiness-and-interruption-proof.md).

@@ -236,7 +236,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
       const requested = yield* Ref.get(checkArgs);
       expect(A.length(requested)).toBe(3);
       expect(A.map(requested, A.last)).toStrictEqual(
-        A.replicate(O.some("name,state,bucket,link,workflow,completedAt,startedAt"), 3)
+        A.replicate(O.some("name,state,bucket,link,workflow,completedAt,startedAt,description"), 3)
       );
       assertSome(
         O.map(

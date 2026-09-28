@@ -5040,3 +5040,16 @@ original whole-cohort timeout or final package acceptance.
   manager because the tool shell lacked its runtime-directory and bus address.
   An explicit user-bus environment made the same launch succeed. Preserving that
   environment across Desktop continuations would avoid this repeat friction.
+
+- The PR #1312 readiness defect is being repaired in #1323: status and watch
+  now share a check policy that blocks failed and pending optional checks.
+  Both collectors preserve check descriptions; only an optional Vercel
+  deployment with an explicit deployment-rate-limit retry message is exempt.
+  Count-only failures without matching evidence remain blocking. Regression
+  tests cover heavy failures/pending checks, absent or unrelated descriptions,
+  required-check failures, and old serialized records. Verification is pending.
+- PR #1323 review identified missing interruption proof for the PGlite
+  permission bracket. The shared test helper now has a regression that interrupts
+  a populated mode-0 directory, observes restored mode 0700 before root cleanup,
+  then checks that the root is gone. A mutation that drops restoration must fail
+  that observation; this supplements the existing ordinary-failure assertions.

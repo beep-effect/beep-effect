@@ -100,6 +100,7 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetCheckBlocksMerge,
   yeetCheckRecordText,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
@@ -138,6 +139,7 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
 class WatchCheckRow extends S.Class<WatchCheckRow>($I`WatchCheckRow`)(
   {
     bucket: S.String,
+    description: S.String.pipe(S.optionalKey),
     link: S.NullOr(S.String),
     name: S.String,
     state: S.String,
@@ -216,7 +218,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
 > {
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow"],
+    ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow,description"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
   if (result.exitCode !== 0 && !NO_CHECKS_REPORTED.test(result.output)) {
@@ -400,8 +402,21 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   const closeoutRun = O.exists(closeout, (report) =>
     O.exists(report.reviewedHeadSha, (reviewedHeadSha) => reviewedHeadSha === view.headRefOid)
   );
+  const checks = A.map(checkRows, (row) => {
+    const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
+    return YeetWatchCheck.make({
+      name: row.name,
+      description: yeetCheckRecordText(row.description),
+      outcome: classifyYeetCheckOutcome(signal),
+      required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
+      link: O.getOrNull(yeetCheckRecordText(row.link)),
+      signal,
+      workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
+    });
+  });
   const requiredChecksGreen =
     A.isReadonlyArrayNonEmpty(requiredCheckRows) &&
+    !A.some(checks, yeetCheckBlocksMerge) &&
     A.every(requiredCheckRows, (row) => {
       const outcome = classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state }));
       return YeetCheckOutcome.is.pass(outcome) || YeetCheckOutcome.is.skip(outcome);
@@ -428,17 +443,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   });
 
   return YeetWatchSnapshot.make({
-    checks: A.map(checkRows, (row) => {
-      const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
-      return YeetWatchCheck.make({
-        name: row.name,
-        outcome: classifyYeetCheckOutcome(signal),
-        required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
-        link: O.getOrNull(yeetCheckRecordText(row.link)),
-        signal,
-        workflow: O.getOrNull(yeetCheckRecordText(row.workflow)),
-      });
-    }),
+    checks,
     headSha: view.headRefOid,
     mergeable: view.mergeable ?? "UNKNOWN",
     mergeStateStatus,
