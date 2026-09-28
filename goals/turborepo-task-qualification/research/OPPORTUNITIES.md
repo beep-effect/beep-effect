@@ -2229,3 +2229,18 @@ excludes other orchestration directories but not `.turbo`. Evidence:
 `research/current-pilot-orchestration-inputs.json`. A pilot-scoped generated-log
 exclusion plus a perturbation regression would prevent this digest drift.
 Task caching is disabled; this finding does not establish unsafe reuse.
+
+### 2026-09-28 — Runner loss and local coverage attribution
+
+PR #1324 Heavy Lint Policy and Coverage Regression failed with the GitHub
+annotation “The self-hosted runner lost communication with the server.” Lint
+Policy's job log returned HTTP 404. One targeted Lint Policy retry was requested;
+Coverage's retry remains deferred while that workflow is active. A runner-health
+receipt and durable job logs would prevent treating this as a code diagnostic.
+
+The local early-publish proof separately exited 1 at `quality:coverage`, with
+11 file-level regressions across Pretext, Professional Desktop, repo-cli and
+Schema. None of those package surfaces or the baseline changed directly in this
+branch. Base/runtime reproduction is still required to distinguish inherited
+coverage from environmental variation; no baseline was lowered. Preserve the
+runtime profile and exact uncovered branches with future baseline receipts.

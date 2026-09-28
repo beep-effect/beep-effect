@@ -1,0 +1,34 @@
+{
+  "authority": "Selected test-delta source review only; no runtime pass claimed",
+  "revision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "sources": [
+    {
+      "path": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "sha256": "58e183f6153ea828bcfe3ec10d9c89ec9bf742e5988429f6c638436777d25c99"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "sha256": "db56873bee352299fa98f4f94cfe033ab2b90ebdb0bfcbe3a97323a5e4b72600"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "sha256": "90fbfeb25540feb334a43b66261c6537fa9ce74e18aa3bda9aa0f45448b0f0c6"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "076a7aee4a95e753415154c9ccfbc8a846fe119ba6b9d37af4f13276c6920970"
+    }
+  ],
+  "observations": [
+    "Repo-utils suites move to @beep/test-runner it.layer with explicit ten-second layer timeouts and import.meta.url fixture paths.",
+    "Workspace filesystem cases use scoped temporary directories; Path is acquired in the test instead of constructing a layer with Effect.runSync at module load.",
+    "The missing-root workspace case uses MemoryFileSystem; its present-root control returns before native globbing, so it does not prove memory-backed native glob behavior.",
+    "Qualification tuple serialization moves from direct Arbitrary.checkEffect to it.prop with fcRuns(40); the generator, runner configuration, shrinking and seed controls remain material inputs.",
+    "Qualification policy adds accepted scoped evidence paths and rejects traversal, empty segments, newline suffixes, invalid scope and URL paths.",
+    "Assertion helpers and lifecycle diagnostic labels change; source similarity is not proof of identical test execution or failure reporting."
+  ],
+  "limits": [
+    "Selected changed hunks reviewed; exhaustive harness/transitive semantics remain unproven.",
+    "No test results are inferred from reading these tests."
+  ]
+}

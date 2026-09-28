@@ -1,0 +1,58 @@
+{
+  "authority": "Focused behavioral regressions for uncovered paths; whole-proof result pending",
+  "baseRevision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "sources": [
+    {
+      "path": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+      "sha256": "05831bdbdf8e7854b655ac7ffaec9c57792319d29670cb10484da24f180ddd94"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "sha256": "b760cf0950a252b9bba9ca60a1f55ef765b5d4e6b986f778d4576e81d809e7a5"
+    },
+    {
+      "path": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+      "sha256": "e8a892c9631ea1a833b2d2723ce3ee570349f028632c2fd9c797f48ca9efb9cc"
+    }
+  ],
+  "behaviors": [
+    "Legacy static installation replaces a different configurable property while retaining descriptor behavior.",
+    "A checkout with a relative gitdir and no commondir keeps its ledger inside the separate Git directory.",
+    "Successful and failed sync states render accessible status messages and permit another attempt."
+  ],
+  "focusedVerification": [
+    {
+      "suite": "codecStatics",
+      "testsPassed": 13,
+      "exitCode": 0
+    },
+    {
+      "suite": "proof-ledger",
+      "testsPassed": 18,
+      "exitCode": 0
+    },
+    {
+      "suite": "vault-sync-disconnected-note",
+      "testsPassed": 12,
+      "exitCode": 0
+    }
+  ],
+  "coverageObservations": {
+    "staticDescriptorsReturnLine69": "executed in isolated named regression",
+    "artifactPathsCommonDirLine367": "both branch outcomes executed: 5 and 1",
+    "vaultSyncPanelLines199And204": "each executed once"
+  },
+  "packageVerification": {
+    "@beep/schema": "audit and docgen passed",
+    "@beep/repo-cli": "running",
+    "@beep/professional-desktop": "audit and docgen passed"
+  },
+  "productionSourceChanged": false,
+  "baselineChanged": false,
+  "limits": [
+    "Focused coverage changes the measured population; do not compare its aggregate percentages to whole-package floors.",
+    "Full coverage ratchet and exact-head Yeet proof remain required.",
+    "Review attachment and pilot source bindings must be refreshed after the test changes.",
+    "No cache qualification credit is claimed."
+  ]
+}

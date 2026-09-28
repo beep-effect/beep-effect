@@ -2333,3 +2333,45 @@ addition/mutation changes them; cleanup restores the baseline. The input count
 returns to 769. [The repair receipt](research/current-pilot-orchestration-repair.json)
 records all seven checks and full identity package audit/docgen success.
 Historical runtime pilot evidence must be renewed for the changed configuration.
+
+### Current ordinary runtime replay after generated-log exclusion
+
+The ordinary CLI completed a fresh MISS and two local HITs at revision
+`2ec13b831b` with Turbo 2.11.4, Bun 1.4.2 and Node v24.20.0. Separate retained
+artifact review confirms identical input maps and hashed environment, fresh
+execution of the three uncached dependencies on each run, and a single task-log
+archive whose bytes match the overlay log and selected task output.
+[The runtime receipt](research/current-ordinary-runtime-review.json) preserves
+binary hashes and raw-evidence retention references. Only the disposable identity
+overlay enabled caching. This renews the bounded ordinary local-replay observation;
+three fresh/fresh pairs, signed remote comparisons, canary and shadow acceptance
+remain incomplete.
+
+### Remaining current source-delta reviews
+
+The proof metadata, bootstrap configuration, selected remaining source and test
+changes, and lock/boundary-policy deltas now have compact bounded reviews.
+[The worklist](research/current-review-worklist.json) links all 44 structural
+delta entries to explicit reviews. This is review bookkeeping, not complete
+semantic coverage. The lockfile still requires runtime/materialization evidence,
+and historical input-digest changes outside the pilot remain unattributed.
+
+### Pretext coverage repair attribution
+
+The unchanged Pretext package reproduces the full-proof browser-file coverage
+loss when run directly, without Turbo. Explicit Safari, Chromium-on-iOS and
+Firefox profile cases remove the host-navigator dependency from those assertions.
+[The repair receipt](research/current-pretext-coverage-repair.json) records all
+four file metrics meeting their existing floors and a passing full Pretext
+package audit/docgen. Production source and baselines are unchanged. The other
+three coverage failures and full exact-head proof remain open.
+
+### Remaining coverage regressions: explicit behavioral controls
+
+Focused Schema, repo-cli and Desktop suites pass with new cases for configurable
+legacy statics, separate Git directories without `commondir`, and successful or
+failed sync status messages. [The repair receipt](research/current-remaining-coverage-repairs.json)
+records executed lines/branches and keeps full coverage acceptance pending.
+Schema and Desktop package audit/docgen passed; repo-cli package verification is
+running at this checkpoint. No production source or baseline changed. The next
+census attachment must include the changed tests; prior reviews remain historical.

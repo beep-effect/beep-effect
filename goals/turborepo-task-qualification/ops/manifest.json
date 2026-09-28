@@ -400,7 +400,16 @@
     "research/current-reference-refresh-review.json",
     "research/current-review-attachment.json",
     "research/current-pilot-orchestration-inputs.json",
-    "research/current-pilot-orchestration-repair.json"
+    "research/current-pilot-orchestration-repair.json",
+    "research/current-proof-metadata-review.json",
+    "research/current-bootstrap-config-review.json",
+    "research/current-remaining-source-review.json",
+    "research/current-test-source-review.json",
+    "research/current-lock-and-fallow-review.json",
+    "research/current-review-worklist.json",
+    "research/current-ordinary-runtime-review.json",
+    "research/current-pretext-coverage-repair.json",
+    "research/current-remaining-coverage-repairs.json"
   ],
   "agentLaunchers": [
     {
