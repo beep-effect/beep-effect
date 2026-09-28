@@ -4,6 +4,10 @@ import shared from "../../../vitest.shared.ts";
 export default mergeConfig(
   shared,
   defineConfig({
-    test: {},
+    test: {
+      // Tests here mock modules (BoundedShaclValidator.test.ts); keep every file in its own worker
+      // even under coverage (vitest.shared.ts shares the graph there by default).
+      isolate: true,
+    },
   })
 );

@@ -63,6 +63,7 @@ const LedgerRow = S.Struct({
   delivery: S.Struct({ status: S.String, outcome: S.optionalKey(S.String), reason: S.optionalKey(S.String) }),
 });
 const decodeLedgerRow = S.decodeUnknownEffect(S.fromJsonString(LedgerRow));
+const isPrNumber = S.is(PrNumber);
 const ledgerRows = (text: string) =>
   Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerRow(line));
 
@@ -386,7 +387,7 @@ it.layer(platform, { timeout: "30 seconds" })("W9 descriptor rendering", (it) =>
       Effect.gen(function* () {
         const decoded = yield* YeetPrWaveDescriptorJson.decode(yield* YeetPrWaveDescriptorJson.encode(descriptor));
         expect(decoded).toStrictEqual(descriptor);
-        expect(S.is(PrNumber)(decoded.prNumber)).toBe(true);
+        expect(isPrNumber(decoded.prNumber)).toBe(true);
       })
   );
 

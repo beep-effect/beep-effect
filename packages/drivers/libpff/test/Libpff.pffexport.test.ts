@@ -18,7 +18,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -289,7 +289,7 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
   return yield* fs.readFileString(path.join(exportRoot, relativePath));
 });
 
-describe("makePffexportFileProcessingEngine", () => {
+describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
   it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
@@ -409,6 +409,13 @@ describe("makePffexportFileProcessingEngine", () => {
           const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
           const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
           const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
+          // The engine resolves the env interpreter from the host PATH; pin it to the standard roots so a
+          // workstation shell with a non-standard bash first on PATH (e.g. a nix-store bash) cannot leak in.
+          // The test opts out of `concurrent` so no concurrent sibling observes the pinned PATH.
+          yield* Effect.acquireRelease(
+            Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
+            () => Effect.sync(() => vi.unstubAllEnvs())
+          );
           yield* fs.writeFileString(
             stubPath,
             stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -S -a pffexport -u BEEP_UNUSED bash")
@@ -439,7 +446,8 @@ exec "$mapped_command" "\${mapped[@]}"`
           expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
           expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n-a pffexport -u BEEP_UNUSED bash\n${stubPath}\n`);
           expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
-        })
+        }),
+        { concurrent: false }
       );
     }
   );
