@@ -399,7 +399,8 @@
     "research/current-sweep-ordering-review.json",
     "research/current-reference-refresh-review.json",
     "research/current-review-attachment.json",
-    "research/current-pilot-orchestration-inputs.json"
+    "research/current-pilot-orchestration-inputs.json",
+    "research/current-pilot-orchestration-repair.json"
   ],
   "agentLaunchers": [
     {

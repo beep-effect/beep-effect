@@ -2323,3 +2323,13 @@ lint dry plan includes two ignored sibling `utils/.turbo` logs via `utils/**`.
 identities without their contents. Caching remains disabled. Next: exclude
 orchestration logs at the pilot boundary, verify source invalidation still works,
 and renew affected pilot evidence. Other changed input maps need attribution.
+
+### Pilot generated-log exclusion and semantic controls
+
+Identity lint now excludes `.turbo` directories in its task-scoped inputs and
+keeps caching disabled. Six actual Turbo dry plans establish that generated-log
+addition/mutation preserves both inputs and task hash, while sibling source
+addition/mutation changes them; cleanup restores the baseline. The input count
+returns to 769. [The repair receipt](research/current-pilot-orchestration-repair.json)
+records all seven checks and full identity package audit/docgen success.
+Historical runtime pilot evidence must be renewed for the changed configuration.
