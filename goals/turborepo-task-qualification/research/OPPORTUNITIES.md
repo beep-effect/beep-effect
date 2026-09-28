@@ -2282,3 +2282,20 @@ The private collector now reuses the existing `FsUtilsLive` plus platform
 layer composition; checking the required service environment before launching
 would have prevented the failed diagnostic attempt. The failure is retained
 with the private cross-root evidence.
+
+### Superseded queued proofs and Storybook setup failure
+
+Early publication left four queued full-proof requests for superseded commits.
+After verifying their live queued tickets, process identities and absence of
+active leases, the four requests were gracefully interrupted. Their published
+commits and logs remain intact; the running proof and latest request were
+preserved. Coalescing superseded queued publication requests would prevent
+redundant heavy work without changing proof ownership.
+
+The older running proof subsequently stopped at Storybook: one Chromium shard
+reported `Failed to fetch dynamically imported module` for Storybook setup.
+Three other shards passed. No Storybook or UI source file differs from the
+base in this branch. The failure occurred during module loading, not a story
+assertion; its cause is not yet established. Coverage was skipped after the
+red. The already-running newer proof will supply the next observation; no
+production repair or baseline change is justified from this failure alone.

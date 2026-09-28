@@ -2434,3 +2434,13 @@ two frozen checkouts. Full snapshots reproduce both native digests and differ on
 bytes and digest. Two native-addon `config.gypi` files carry different
 `local_prefix` paths. An identical-dependency overlay control is still needed.
 Cross-root portability remains unproven; the cache key has not been weakened.
+
+### Runtime-matrix attachment renewal
+
+At `992c629f00`, canonical census validation accepts 1,025 source bindings,
+82 reviews and six artifacts. The population remains 144 workspaces, 3,473
+graph nodes and 1,970 executable nodes. The
+[attachment receipt](research/current-runtime-matrix-attachment.json) records
+the renamed coverage-receipt field and five newly attached runtime reviews.
+All 21 unresolved obligations remain explicit. Local runtime observations
+retain frozen revision `7f53b4a840`; byte binding does not renew them at HEAD.
