@@ -66,113 +66,113 @@
     "file": "apps/labs/semantica/test/App.test.tsx",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 328,
-    "lines": 11
+    "bytes": 372,
+    "lines": 12
   },
   {
     "file": "apps/labs/semantica/test/C0Input.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 16184,
-    "lines": 377
+    "bytes": 16154,
+    "lines": 389
   },
   {
     "file": "apps/labs/semantica/test/C0Slice.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 11857,
-    "lines": 250
+    "bytes": 10882,
+    "lines": 240
   },
   {
     "file": "apps/labs/semantica/test/Canary.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 6711,
-    "lines": 176
+    "bytes": 6837,
+    "lines": 180
   },
   {
     "file": "apps/labs/semantica/test/Evaluator.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 17095,
-    "lines": 473
+    "bytes": 17031,
+    "lines": 475
   },
   {
     "file": "apps/labs/semantica/test/Extractor.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 16470,
-    "lines": 429
+    "bytes": 16533,
+    "lines": 425
   },
   {
     "file": "apps/labs/semantica/test/Fixtures.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 15337,
-    "lines": 365
+    "bytes": 14825,
+    "lines": 354
   },
   {
     "file": "apps/labs/semantica/test/Gold.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 24639,
-    "lines": 565
+    "bytes": 23822,
+    "lines": 570
   },
   {
     "file": "apps/labs/semantica/test/GoldSource.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 12033,
-    "lines": 297
+    "bytes": 11255,
+    "lines": 281
   },
   {
     "file": "apps/labs/semantica/test/Ledger.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 4053,
-    "lines": 91
+    "bytes": 4121,
+    "lines": 87
   },
   {
     "file": "apps/labs/semantica/test/Projection.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 15171,
-    "lines": 367
+    "bytes": 14748,
+    "lines": 364
   },
   {
     "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 1850,
-    "lines": 37
+    "bytes": 1687,
+    "lines": 36
   },
   {
     "file": "apps/labs/semantica/test/ProviderCache.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 34713,
-    "lines": 790
+    "bytes": 34992,
+    "lines": 813
   },
   {
     "file": "apps/labs/semantica/test/Reasoning.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 9177,
-    "lines": 204
+    "bytes": 9013,
+    "lines": 196
   },
   {
     "file": "apps/labs/semantica/test/Schema.test.ts",
     "package": "@beep/semantica",
     "kind": "test",
-    "bytes": 51184,
-    "lines": 1449
+    "bytes": 51509,
+    "lines": 1473
   },
   {
     "file": "apps/labs/semantica/test/helpers/CrashProbeChild.ts",
     "package": "@beep/semantica",
     "kind": "support",
-    "bytes": 3759,
-    "lines": 101
+    "bytes": 3939,
+    "lines": 107
   },
   {
     "file": "apps/labs/semantica/test/helpers/EyeOracleChild.ts",

@@ -1,83 +1,83 @@
 {
   "package": "@beep/semantica",
   "runner": "node-vitest",
-  "capturedAt": "2026-09-28T02:29:52.276000+00:00",
-  "totalMs": 12039.581298828125,
+  "capturedAt": "2026-09-28T02:49:22.387000+00:00",
+  "totalMs": 11833.162353515625,
   "testCount": 133,
   "files": [
     {
       "file": "apps/labs/semantica/test/App.test.tsx",
-      "ms": 113.385986328125,
+      "ms": 199.599853515625,
       "tests": 1
     },
     {
       "file": "apps/labs/semantica/test/C0Input.test.ts",
-      "ms": 190.02294921875,
+      "ms": 176.02490234375,
       "tests": 14
     },
     {
       "file": "apps/labs/semantica/test/C0Slice.test.ts",
-      "ms": 2963.491455078125,
+      "ms": 2864.510498046875,
       "tests": 2
     },
     {
       "file": "apps/labs/semantica/test/Canary.test.ts",
-      "ms": 32.8740234375,
+      "ms": 29.458984375,
       "tests": 9
     },
     {
       "file": "apps/labs/semantica/test/Evaluator.test.ts",
-      "ms": 21.83056640625,
+      "ms": 15.09033203125,
       "tests": 5
     },
     {
       "file": "apps/labs/semantica/test/Extractor.test.ts",
-      "ms": 33.44287109375,
+      "ms": 33.715087890625,
       "tests": 10
     },
     {
       "file": "apps/labs/semantica/test/Fixtures.test.ts",
-      "ms": 59.298583984375,
+      "ms": 64.81005859375,
       "tests": 10
     },
     {
       "file": "apps/labs/semantica/test/Gold.test.ts",
-      "ms": 113.15478515625,
+      "ms": 128.63525390625,
       "tests": 13
     },
     {
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "ms": 33.019287109375,
+      "ms": 24.6318359375,
       "tests": 5
     },
     {
       "file": "apps/labs/semantica/test/Ledger.test.ts",
-      "ms": 1537.67919921875,
+      "ms": 1571.83935546875,
       "tests": 2
     },
     {
       "file": "apps/labs/semantica/test/Projection.test.ts",
-      "ms": 63.059326171875,
+      "ms": 66.04296875,
       "tests": 4
     },
     {
       "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
-      "ms": 7.696533203125,
+      "ms": 14.976806640625,
       "tests": 1
     },
     {
       "file": "apps/labs/semantica/test/ProviderCache.test.ts",
-      "ms": 460.80908203125,
+      "ms": 464.162841796875,
       "tests": 18
     },
     {
       "file": "apps/labs/semantica/test/Reasoning.test.ts",
-      "ms": 7111.581298828125,
+      "ms": 7029.162353515625,
       "tests": 3
     },
     {
       "file": "apps/labs/semantica/test/Schema.test.ts",
-      "ms": 42.20458984375,
+      "ms": 37.831787109375,
       "tests": 36
     }
   ],
@@ -85,52 +85,52 @@
     {
       "file": "apps/labs/semantica/test/Reasoning.test.ts",
       "testName": "C2 declarative reasoner recovers projection-relevant state committed before SIGKILL",
-      "ms": 7111.5813339999995
+      "ms": 7029.162419
     },
     {
       "file": "apps/labs/semantica/test/C0Slice.test.ts",
       "testName": "C0 F1 live-to-replay slice runs real F1-only sources without a corpus root and replays to an equal report digest",
-      "ms": 2963.4913419999993
-    },
-    {
-      "file": "apps/labs/semantica/test/Ledger.test.ts",
-      "testName": "C0 ledger rejects a reused primary key whose canonical payload digest differs",
-      "ms": 1536.6790810000002
+      "ms": 2863.5104219999994
     },
     {
       "file": "apps/labs/semantica/test/Ledger.test.ts",
       "testName": "C0 ledger is idempotent for byte-identical content-addressed rows",
-      "ms": 1536.4596029999993
+      "ms": 1571.8392599999997
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "testName": "C0 ledger rejects a reused primary key whose canonical payload digest differs",
+      "ms": 1571.019918
     },
     {
       "file": "apps/labs/semantica/test/Reasoning.test.ts",
       "testName": "C2 declarative reasoner matches every committed conclusion and bounded restricted EYE proof",
-      "ms": 931.6798440000002
+      "ms": 895.7163479999999
     },
     {
       "file": "apps/labs/semantica/test/ProviderCache.test.ts",
       "testName": "C0 provider cache and language-model boundary is write-once, caches misses, replays hits, and keeps offline misses typed",
-      "ms": 460.8091089999998
-    },
-    {
-      "file": "apps/labs/semantica/test/C0Input.test.ts",
-      "testName": "C0 F1 input services preserves slice-back and UTF-16 boundaries across generated Unicode layouts",
-      "ms": 176.02304899999945
-    },
-    {
-      "file": "apps/labs/semantica/test/C0Input.test.ts",
-      "testName": "C0 F1 input services chunks every parsed F1 text with exact global UTF-16 anchors",
-      "ms": 146.49838199999976
-    },
-    {
-      "file": "apps/labs/semantica/test/C0Input.test.ts",
-      "testName": "C0 F1 input services matches all nine declared parse outcomes and verifies every parsed anchor",
-      "ms": 145.1415619999998
+      "ms": 464.1627349999999
     },
     {
       "file": "apps/labs/semantica/test/App.test.tsx",
       "testName": "@beep/semantica renders the desktop shell",
-      "ms": 113.38598000000002
+      "ms": 199.59975799999984
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services preserves slice-back and UTF-16 boundaries across generated Unicode layouts",
+      "ms": 164.02486700000009
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services chunks every parsed F1 text with exact global UTF-16 anchors",
+      "ms": 136.87684799999988
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services matches all nine declared parse outcomes and verifies every parsed anchor",
+      "ms": 135.73181399999976
     }
   ]
 }

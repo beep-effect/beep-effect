@@ -1,7 +1,7 @@
 {
   "schemaVersion": "effect-vitest-p2-timing-context/v1",
   "package": "@beep/semantica",
-  "sourceHead": "cb3008d0fcc2545d99592b9f215ab3a2b5d6344e",
+  "sourceHead": "f1ccfc9a2c677c4c1851d4bfa60dc901eeec7212",
   "runtime": {
     "node": "v24.20.0",
     "bun": "1.4.2"
@@ -14,20 +14,20 @@
     "--reporter=json",
     "--outputFile=<private absolute raw report>"
   ],
-  "wholeCommandSeconds": 12.386092081986135,
-  "bunWholeCommandSeconds": 8.979453036008636,
+  "wholeCommandSeconds": 12.186573969986057,
+  "bunWholeCommandSeconds": 8.729047972999979,
   "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
-  "loadBefore": [2.31591796875, 2.9599609375, 2.4755859375],
-  "loadAfter": [13.47509765625, 5.564453125, 3.34521484375],
+  "loadBefore": [3.99267578125, 3.3974609375, 2.986328125],
+  "loadAfter": [10.0537109375, 4.75732421875, 3.43603515625],
   "pressureBefore": {
-    "cpu": "some avg10=0.03 avg60=0.09 avg300=0.13 total=814860955\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186223484\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178146483\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=863612772\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=755614860\n"
+    "cpu": "some avg10=0.17 avg60=0.17 avg300=0.14 total=817925654\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224719\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147698\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865086743\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756858398\n"
   },
   "pressureAfter": {
-    "cpu": "some avg10=2.38 avg60=0.98 avg300=0.34 total=815536634\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186223484\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178146483\n",
-    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=863620324\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=755620053\n"
+    "cpu": "some avg10=2.36 avg60=1.06 avg300=0.35 total=818624156\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865090971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756860661\n"
   },
   "limits": {
     "RLIMIT_NOFILE": [1048576, 1048576],
@@ -538,43 +538,43 @@
     },
     {
       "file": "apps/labs/semantica/test/C0Input.test.ts",
-      "sha256": "bc4c9f91f65dc39dc8b612224be79c37a264a418fb691879fe9ad06e053de4c5"
+      "sha256": "cb9183cbeb5f6de28de7bed547c0a159b78e11dcbbedd28cfa8479f2f1356fc8"
     },
     {
       "file": "apps/labs/semantica/test/C0Slice.test.ts",
-      "sha256": "96c429056b2edf49044623099035f21786ac74aef9981deb4189437182e3a290"
+      "sha256": "14016f80dc9f7b19c3c03bd02bbf9108257abc4f7268681891649aafc44ee55f"
     },
     {
       "file": "apps/labs/semantica/test/Canary.test.ts",
-      "sha256": "c56d9f860b514182362115c1400b2fb5fecac78aeb060dd6a800a690c10e9276"
+      "sha256": "74158ce206ed664809256ec41a7efe977cf220e6ffd385a54986240ae2350cc7"
     },
     {
       "file": "apps/labs/semantica/test/Evaluator.test.ts",
-      "sha256": "5faa198d6a9f3d6d6a98e2f774fb5ed7c7ab2a3693f1776690a4994cb9c424cb"
+      "sha256": "cf6a0b6ab63bfb28c04544b505d05b1fc163bf4912f37b13ea815fb6dbaa066c"
     },
     {
       "file": "apps/labs/semantica/test/Extractor.test.ts",
-      "sha256": "4a0e08d1cad4ba553619b3b2d643c05ba9475ba1f64947f217b2474461a95549"
+      "sha256": "1695fd639d1e351e729e53009bb91bc84a8f99db49c733f694fa4171542053ff"
     },
     {
       "file": "apps/labs/semantica/test/Fixtures.test.ts",
-      "sha256": "5d1a352b3365d93daca17af322df8b9b79c53b2b470caeedb250f007b098332e"
+      "sha256": "738e5e8703c59fb30b2887bb51e45edd9c4b24babc8db7d46b5e623e3af95c03"
     },
     {
       "file": "apps/labs/semantica/test/Gold.test.ts",
-      "sha256": "fafcf4b303a1d067fb1ef16bbe6fb56bcb4e439dad53444b2add207142f91b44"
+      "sha256": "f9cd7d90975322bc3ec56a0c117ce0896139d0f9b6d6ed720ced461cf5c72d9d"
     },
     {
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "sha256": "bf5a14fb959e336179448f27cae239a170eeed8b9b5ec943c8a56258f54e5fa8"
+      "sha256": "504b3f68d5cc3e20e727095ab253a757b2f51c1d6966f0effa433daf13908725"
     },
     {
       "file": "apps/labs/semantica/test/Ledger.test.ts",
-      "sha256": "ac21a5534614375a8308415e8f8cf183264417c908f63f2dea81cb13db30748e"
+      "sha256": "a8c63490ae7a8eb4f0c9caf749224f75f14503c101f63a1bd1b29dd1f4031355"
     },
     {
       "file": "apps/labs/semantica/test/Projection.test.ts",
-      "sha256": "fa8ffe3845a14495cc755acab6bc6a808aa8d78953f808ae66b337b6e1c2807a"
+      "sha256": "7849f38abadb2aae1d335bd8368fa39e22364292544f1362928bb9527a56b39d"
     },
     {
       "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
@@ -582,15 +582,15 @@
     },
     {
       "file": "apps/labs/semantica/test/ProviderCache.test.ts",
-      "sha256": "e1a609828aacd2eed4217a463d21d17a4090f96ff2cca004b1c2c69fccf66e13"
+      "sha256": "7a11dc15b1a7144cf74a36a8a562566aca0c003c4dd029adaaad93ef0a662f55"
     },
     {
       "file": "apps/labs/semantica/test/Reasoning.test.ts",
-      "sha256": "f8e50bb541547ed835f0ea5832c2cee5919eac5e15b040595b2ceb9fd2bd89bd"
+      "sha256": "5a2ec4ee98fa57fbbcb473183792352f0418f59ca11e47a72d10d8658b7468dc"
     },
     {
       "file": "apps/labs/semantica/test/Schema.test.ts",
-      "sha256": "2cf9721fefaf78cbea2fbc6876324343dbd83a60561355f772b9d0274ae5a97c"
+      "sha256": "b2084b7208d46689a354a899596d823f173d09078286d32d501e631a0d009917"
     },
     {
       "file": "apps/labs/semantica/test/helpers/CrashProbeChild.ts",
@@ -627,17 +627,17 @@
     "skippedTests": 0,
     "failedTests": 0,
     "sourceStable": true,
-    "loadBefore": [13.47509765625, 5.564453125, 3.34521484375],
-    "loadAfter": [13.7578125, 5.75439453125, 3.4189453125],
+    "loadBefore": [10.0537109375, 4.75732421875, 3.43603515625],
+    "loadAfter": [9.208984375, 4.74951171875, 3.44775390625],
     "pressureBefore": {
-      "cpu": "some avg10=2.38 avg60=0.98 avg300=0.34 total=815536646\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186223484\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178146483\n",
-      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=863620324\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=755620053\n"
+      "cpu": "some avg10=2.36 avg60=1.06 avg300=0.35 total=818624185\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865090971\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756860661\n"
     },
     "pressureAfter": {
-      "cpu": "some avg10=1.06 avg60=0.85 avg300=0.33 total=815564009\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186223632\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178146630\n",
-      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=863628094\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=755625729\n"
+      "cpu": "some avg10=1.06 avg60=0.92 avg300=0.34 total=818652797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186224722\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178147702\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=865097222\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=756865025\n"
     }
   },
   "nodeOutcomes": {
