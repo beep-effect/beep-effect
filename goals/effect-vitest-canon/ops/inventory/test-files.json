@@ -311,8 +311,8 @@
     "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3427,
-    "lines": 77
+    "bytes": 3976,
+    "lines": 87
   },
   {
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",

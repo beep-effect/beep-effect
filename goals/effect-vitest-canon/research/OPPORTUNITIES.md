@@ -4524,3 +4524,12 @@ test. A response-only turn now witnesses completion and UI application before
 the unchanged receipt assertions run; the same control correctly fails. Similar
 refresh tests should distinguish seeded content from the newly applied response,
 without adding sleeps or relying only on RPC invocation counts.
+
+## Idle-lifetime tests need an eviction witness
+
+Waiting longer than an idle TTL does not prove the registry collected anything.
+The composer-send test passed with its TTL extended beyond the unchanged wait.
+It now witnesses an unmounted state resetting in the same registry before the
+original Send assertion. The handler itself must remain mounted; the saved lens
+sketch's suggestion to witness handler disposal would contradict the fixed
+lifetime contract. Removing that production mount still fails the test.
