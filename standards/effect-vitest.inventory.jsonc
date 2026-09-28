@@ -56588,13 +56588,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:apps/professional-desktop/test/tauri-ipc-socket.test.ts:152:scoped@46#1",
+      "id": "EV004:apps/professional-desktop/test/tauri-ipc-socket.test.ts:137:scoped@46#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
-      "line": 152,
-      "endLine": 152,
+      "line": 137,
+      "endLine": 137,
       "symbol": "scoped",
       "occurrence": "v2:59152681983ba7b77999d5da2efb9c612c5901e366d572e82790ab41277e9be4",
       "class": "inner-helper-scope-lifetime-review",
@@ -56606,7 +56606,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-residual-judgments-proof.md. The reader acquisition is deliberately scoped before flipping its failure and inspecting the error. A partial-acquisition control registers the first listener and fails the second: the short scope releases the first listener before inspection; removing it fails the release-count assertion. The outer socket service remains in public it.layer."
     },
     {
       "id": "EV004:apps/professional-desktop/test/tauri-ipc-socket.test.ts:21:scoped@4#1",
@@ -60451,7 +60452,8 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-residual-judgments-proof.md. The failed Result is the explicit subject: both cases assert failure polarity, the ContradictionQaSeedError family, and the exact conflict reason, then verify preserved user files and unchanged database rows. Capturing failure permits those post-failure checks. The existing wrong-error-family control fails the strengthened source-conflict witness; do not fabricate a full expected error payload to replace a partial family/reason contract."
     },
     {
       "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:355:result@32#1",
@@ -60472,7 +60474,8 @@
       "severity": "minor",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-residual-judgments-proof.md. The failed Result is the explicit subject: both cases assert failure polarity, the ContradictionQaSeedError family, and the exact conflict reason, then verify preserved user files and unchanged database rows. Capturing failure permits those post-failure checks. The existing wrong-error-family control fails the strengthened source-conflict witness; do not fabricate a full expected error payload to replace a partial family/reason contract."
     },
     {
       "id": "EV005:packages/tooling/tool/cli/test/corpus-command.test.ts:1763:result@33#1",
@@ -94294,13 +94297,13 @@
       "status": "open"
     },
     {
-      "id": "EV012:apps/professional-desktop/test/chat-ui.test.tsx:43:vi.mock@0#1",
+      "id": "EV012:apps/professional-desktop/test/chat-ui.test.tsx:45:vi.mock@0#1",
       "lens": "resource",
       "ruleId": "EV012",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/chat-ui.test.tsx",
-      "line": 43,
-      "endLine": 47,
+      "line": 45,
+      "endLine": 49,
       "symbol": "vi.mock",
       "occurrence": "v2:58eb7e53457d9b63680e0db935a8a2eab12169b9d6e52d2efd4e26cbc7d8a31f",
       "class": "unproven-module-mock-review",
@@ -94312,7 +94315,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-residual-judgments-proof.md. The hoisted Vitest module mock observes the imperative toast.error export imported directly by the React UI. It is not an Effect service that a test Layer can replace. Tests assert safe toast text and atom clearing through the real components; serial suites and afterEach cleanup/clearAllMocks own shared state. Keep this narrow UI-module boundary mock."
     },
     {
       "id": "EV012:packages/tooling/tool/cli/test/codex-findings-packet-encode-failure.test.ts:10:vi.mock@0#1",

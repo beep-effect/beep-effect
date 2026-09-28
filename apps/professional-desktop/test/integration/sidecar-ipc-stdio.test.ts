@@ -98,83 +98,81 @@ const waitForSidecarBoot = Effect.fn("SidecarIpc.waitForBoot")(function* (stderr
   yield* Deferred.await(ready);
 });
 
-const ipcStdioProgram = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const dbDir = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "ipc-stdio-" }), (path) =>
-    fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
-  );
-  const ontologyWorkspaceRoot = yield* Effect.acquireRelease(
-    fs.makeTempDirectory({ prefix: "ipc-stdio-ontology-" }),
-    (path) => fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
-  );
-
-  // This child scope closes after process termination, draining stderr before
-  // either temporary directory is removed.
-  const stderrScope = yield* Scope.fork(yield* Effect.scope);
-  // Boot the real sidecar; join its exit when the scope closes.
-  const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
-  const proc = yield* Effect.acquireRelease(
-    Effect.sync(() =>
-      Bun.spawn([sidecarBinaryPath], {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          CHAT_TRANSPORT: "ipc",
-          CHAT_AGENT: "fixture",
-          CHAT_DB_PATH: dbDir,
-          ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
-        },
-        stdin: "pipe",
-        stdout: "pipe",
-        stderr: "pipe",
-      })
-    ),
-    (child) => Effect.sync(() => child.kill()).pipe(Effect.andThen(Effect.promise(() => child.exited)))
-  );
-  yield* waitForSidecarBoot(proc.stderr).pipe(Scope.provide(stderrScope), Effect.timeout("20 seconds"));
-
-  // Bridge the child's stdio into an Effect Socket: stdout → inbound frames,
-  // stdin ← outbound frames (verbatim ndjson, encoded UTF-8 by fromTransformStream).
-  const writable = new WritableStream<Uint8Array>({
-    write(chunk) {
-      proc.stdin.write(chunk);
-      proc.stdin.flush();
-    },
-  });
-  const socketStream: Socket.InputTransformStream = { readable: proc.stdout, writable };
-  const SocketLive = Layer.effect(Socket.Socket, Socket.fromTransformStream(Effect.succeed(socketStream)));
-  const ProtocolLive = RpcClient.layerProtocolSocket().pipe(Layer.provide([RpcSerialization.layerNdjson, SocketLive]));
-  const context = yield* Layer.build(ProtocolLive);
-
-  const program = Effect.gen(function* () {
-    const client = yield* RpcClient.make(ChatRpcs);
-    const workspaceId = yield* decodeWorkspaceId(1);
-
-    const thread = yield* client.CreateThread({ workspaceId, title: "ipc stdio" });
-    expect(thread.title).toBe("ipc stdio");
-
-    const blocks = yield* client
-      .SendMessage({ threadId: thread.id, content: userDocument("hello over stdio"), requestId: "ipc-stdio-test" })
-      .pipe(Stream.runCollect, Effect.map(Chunk.fromIterable));
-    expect(Chunk.size(blocks)).toBeGreaterThan(0);
-  });
-
-  // PGlite migrations are already complete; the streamed turn still gets
-  // headroom for the fixture agent and RPC framing.
-  yield* program.pipe(Effect.provide(context), Effect.timeout("30 seconds"));
-});
-
-const ipcStdio = Effect.scoped(
+const IpcStdioLive = Layer.unwrap(
   Effect.gen(function* () {
-    const context = yield* Layer.build(BunFileSystem.layer);
-    yield* ipcStdioProgram.pipe(Effect.provide(context));
+    const fs = yield* FileSystem.FileSystem;
+    const dbDir = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "ipc-stdio-" }), (path) =>
+      fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
+    );
+    const ontologyWorkspaceRoot = yield* Effect.acquireRelease(
+      fs.makeTempDirectory({ prefix: "ipc-stdio-ontology-" }),
+      (path) => fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
+    );
+
+    // This child scope closes after process termination, draining stderr before
+    // either temporary directory is removed.
+    const stderrScope = yield* Scope.fork(yield* Effect.scope);
+    // Boot the real sidecar; join its exit when the scope closes.
+    const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
+    const proc = yield* Effect.acquireRelease(
+      Effect.sync(() =>
+        Bun.spawn([sidecarBinaryPath], {
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            CHAT_TRANSPORT: "ipc",
+            CHAT_AGENT: "fixture",
+            CHAT_DB_PATH: dbDir,
+            ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
+          },
+          stdin: "pipe",
+          stdout: "pipe",
+          stderr: "pipe",
+        })
+      ),
+      (child) => Effect.sync(() => child.kill()).pipe(Effect.andThen(Effect.promise(() => child.exited)))
+    );
+    yield* waitForSidecarBoot(proc.stderr).pipe(Scope.provide(stderrScope), Effect.timeout("20 seconds"));
+
+    // Bridge the child's stdio into an Effect Socket: stdout → inbound frames,
+    // stdin ← outbound frames (verbatim ndjson, encoded UTF-8 by fromTransformStream).
+    const writable = new WritableStream<Uint8Array>({
+      write(chunk) {
+        proc.stdin.write(chunk);
+        proc.stdin.flush();
+      },
+    });
+    const socketStream: Socket.InputTransformStream = { readable: proc.stdout, writable };
+    const SocketLive = Layer.effect(Socket.Socket, Socket.fromTransformStream(Effect.succeed(socketStream)));
+    const ProtocolLive = RpcClient.layerProtocolSocket().pipe(
+      Layer.provide([RpcSerialization.layerNdjson, SocketLive])
+    );
+    return ProtocolLive;
   })
-);
+).pipe(Layer.provide(BunFileSystem.layer));
+
+const ipcStdioProgram = Effect.gen(function* () {
+  const client = yield* RpcClient.make(ChatRpcs);
+  const workspaceId = yield* decodeWorkspaceId(1);
+
+  const thread = yield* client.CreateThread({ workspaceId, title: "ipc stdio" });
+  expect(thread.title).toBe("ipc stdio");
+
+  const blocks = yield* client
+    .SendMessage({ threadId: thread.id, content: userDocument("hello over stdio"), requestId: "ipc-stdio-test" })
+    .pipe(Stream.runCollect, Effect.map(Chunk.fromIterable));
+  expect(Chunk.size(blocks)).toBeGreaterThan(0);
+});
 
 if (!shouldRun) {
   describe.skip("Professional desktop sidecar ipc stdio (set BEEP_TEST_SIDECAR_IPC=1)", () => {});
 } else {
   describe("Professional desktop sidecar ipc stdio", { concurrent: false }, () => {
-    it.live("streams a fixture turn over the stdio rpc transport", () => ipcStdio);
+    it.layer(IpcStdioLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+      // Boot retains its 20-second deadline; RPC work retains its 30-second deadline.
+      it.effect("streams a fixture turn over the stdio rpc transport", () =>
+        ipcStdioProgram.pipe(Effect.timeout("30 seconds"))
+      );
+    });
   });
 }

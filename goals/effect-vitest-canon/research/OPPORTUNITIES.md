@@ -4730,3 +4730,21 @@ it solely because both helpers mention schema round trips would silently change
 the tested contract. Helper documentation and future reuse searches should name
 the exact direction and equivalence law, and migrations should retain the
 production schemas and count/seed controls.
+
+## Layered live-clock tests use the non-live tester surface
+
+The IPC fixture migration initially called it.live inside an it.layer callback.
+The enabled test failed registration and package typechecking identified
+MethodsNonLive: the layer callback exposes it.effect, not it.live. For a native
+process fixture, use excludeTestServices: true on the public layer and it.effect
+inside it. This retains the live clock without invoking an unavailable method.
+A migration example pairing these two choices would prevent this API mistake.
+
+## Partial listener acquisition deserves a permanent regression case
+
+The Tauri reader's existing failure case rejects the first listener. A temporary
+resource-lens control allowed that listener to register and rejected the second,
+then checked release before error inspection. The current short scope passed;
+removing it failed. A dedicated permanent case for partial listener acquisition
+would protect this cleanup order more directly than the existing first-listener
+failure case. The probe was removed to preserve the original case and its input.

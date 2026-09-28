@@ -451,8 +451,8 @@
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 7222,
-    "lines": 180
+    "bytes": 7192,
+    "lines": 178
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
