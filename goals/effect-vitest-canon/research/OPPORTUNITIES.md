@@ -4477,3 +4477,11 @@ The existing `fcRuns(100)` helper preserves that floor while forwarding the
 `BEEP_FC_NUM_RUNS` maximum and `BEEP_FC_SEED` pin. A syntax migration alone does
 not establish property-budget preservation; inspect the live options and observe
 the generated case count and replay sequence.
+
+## Retry limits need a positive retry witness
+
+The SurfaceBoundary test checked that Reload left a failure card visible and
+caused no more than eight renders. A blocked click also satisfied both assertions.
+A positive render-count increase now proves a new attempt before the unchanged
+upper-bound check. The click-propagation control passed the original test and
+failed the strengthened one; no production retry behavior was changed.

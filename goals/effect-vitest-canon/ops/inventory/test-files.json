@@ -556,8 +556,8 @@
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4966,
-    "lines": 116
+    "bytes": 5043,
+    "lines": 117
   },
   {
     "file": "apps/professional-desktop/test/sync-atoms.test.ts",
