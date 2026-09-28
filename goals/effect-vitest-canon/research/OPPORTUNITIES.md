@@ -4388,3 +4388,11 @@ were suspended and missing unlisten calls after IPC reader acquisition. Register
 registry release at acquisition and attach independently closeable child scopes
 to the test parent. Explicit early-close assertions should remain in place; they
 prove behavior that end-of-test cleanup alone cannot establish.
+
+## Intake and sidebar registries shared success-only cleanup
+
+The saved resource review found sixteen registry lifetimes whose cleanup followed
+assertions. Failure controls after sidebar persistence and during overlapping
+intake batches reproduced missing disposal. All sixteen acquisitions now register
+release in the public test scope. Preserve explicit mount releases in idle-TTL
+regressions; replacing those with end-of-test cleanup would weaken their subject.

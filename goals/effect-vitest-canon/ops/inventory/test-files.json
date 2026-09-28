@@ -374,8 +374,8 @@
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18743,
-    "lines": 472
+    "bytes": 20243,
+    "lines": 502
   },
   {
     "file": "apps/professional-desktop/test/intake-refusal.test.ts",
@@ -542,8 +542,8 @@
     "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3231,
-    "lines": 83
+    "bytes": 3330,
+    "lines": 84
   },
   {
     "file": "apps/professional-desktop/test/spike-schema.test.ts",

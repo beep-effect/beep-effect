@@ -59,7 +59,10 @@ describe("completed sidebar layouts", () => {
     "persist only completed user interactions through the storage runtime",
     Effect.fnUntraced(function* () {
       localStorage.clear();
-      const registry = AtomRegistry.make();
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.mount(sidebarPercentAtom);
       registry.mount(persistSidebarLayoutAtom);
 
@@ -76,8 +79,6 @@ describe("completed sidebar layouts", () => {
       });
       yield* AtomRegistry.getResult(registry, persistSidebarLayoutAtom);
       expect(registry.get(sidebarPercentAtom)).toBe(31);
-
-      registry.dispose();
     })
   );
 });
