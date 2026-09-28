@@ -2591,3 +2591,15 @@ successful task-log bytes. The canary uses its own writable cache and retains
 its own evidence bundle. This closes the selected static exclusion control
 for both clients; it does not establish concurrent-mutation safety, alternate
 Git layouts, updated-dependency runtime evidence or signed-remote acceptance.
+
+### Input-control attachment refresh
+
+The [canonical attachment](research/current-input-controls-attachment.json)
+passes at `37c597297b`, retaining 144 workspaces, 3,473 graph nodes and
+1,970 executable nodes. It binds 1,025 sources, 96 reviews and six artifacts
+with 23 unresolved obligations. Existing source and artifact hashes are
+unchanged; only the Undici chronology review changed, with both publication
+endpoints now explicit. Six new receipts attach stable/canary configuration
+controls, native I/O and Git routing attribution, stable/canary Git exclusion
+controls, and packet verification. Their recorded boundaries remain intact;
+this is attachment acceptance, not semantic closure or tuple promotion.
