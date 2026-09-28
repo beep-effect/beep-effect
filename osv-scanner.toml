@@ -21,14 +21,14 @@
 # is a comment-only note key.
 
 # effect is pinned to a pkg.pr.new snapshot of Effect-TS/effect main (commit
-# 330b7475e2, 111 commits after 4.0.0-rc.117) until 4.0.0-rc.118 publishes. OSV
-# cannot parse the URL as a version, so it matches GHSA-38f7-945m-qr2g (fixed in
-# 3.20.0), which only affects the effect 3.x line. Scoped to that exact artifact;
-# retire the override at the rc.118 catalog bump.
+# e5f7d12af9, one commit after the 4.0.0-rc.118 tag). OSV cannot parse the URL
+# as a version, so it matches GHSA-38f7-945m-qr2g (fixed in 3.20.0), which only
+# affects the effect 3.x line. Scoped to that exact artifact; re-key it at every
+# snapshot bump and retire it if the catalog ever returns to a plain version.
 [[PackageOverrides]]
 name = "effect"
-version = "https://pkg.pr.new/Effect-TS/effect/effect@330b7475e2135bb9bc6aad1df5d513d32299ebc1"
+version = "https://pkg.pr.new/Effect-TS/effect/effect@e5f7d12af9abef188f7dc39b0207af1801b03ffd"
 ecosystem = "npm"
 ignore = true
 effectiveUntil = 2026-10-31T00:00:00Z
-reason = "pkg.pr.new snapshot of effect main (4.0.0-rc.117+111); GHSA-38f7-945m-qr2g is a 3.x advisory and OSV cannot version-match the URL pin. Retire at the rc.118 bump."
+reason = "pkg.pr.new snapshot of effect main (4.0.0-rc.118+1); GHSA-38f7-945m-qr2g is a 3.x advisory and OSV cannot version-match the URL pin. Re-key at every snapshot bump."
