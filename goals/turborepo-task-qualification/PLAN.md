@@ -2187,3 +2187,24 @@ planner scripts need recovery or reproduction. The old attachment is not
 accepted for this head. The [delta receipt](research/current-main-census-delta.json)
 records these limits; semantic review must explain the changed graph before
 renewing coverage. Historical runtime evidence retains its original pins.
+
+### Current planner reproduction and dependency attribution
+
+At `40055f7c04`, the tracked CI/Quality and Yeet planner scripts reproduce
+all four historical projections byte-for-byte under explicit local and hosted
+environments. The 122 changed workspace manifests each add test-runner as a
+dev dependency; all 2,074 nodes with changed dependency membership gain a
+test-runner edge. Thirty-six changed TypeScript source bindings differ only
+by the exact process-module import path replacement. This classifies those
+edits without proving equivalence between Effect versions. See the
+[bounded review](research/current-main-planner-review.json). Broader semantic
+review and signed-remote acceptance remain open.
+
+### Source attachment restoration — 2026-09-28
+
+The canonical census command accepts the restored attachment at `40055f7c04`:
+1,020 source bindings, six historical artifacts, 56 reviews and 18 unresolved
+obligations. Exact-hash recovery restored 53 historical review receipts and
+all three private producers. Two missing reviews remain explicitly unavailable.
+The attachment refreshes source identity only; it does not renew semantic or
+runtime acceptance. See [the receipt](research/current-attachment-restoration.json).
