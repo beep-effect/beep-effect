@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import { vi } from "vitest";
 import {
   cancelManualVaultPathAtoms,
@@ -66,19 +66,19 @@ const configuredRegistryWithClient = (client: DesktopIntakeClient["Service"]) =>
     ],
   });
 
-const pollSchedule = Schedule.spaced(Duration.millis(10)).pipe(
-  Schedule.upTo({ duration: Duration.seconds(3), times: 300 })
-);
-
 const waitForState = (
   registry: AtomRegistry.AtomRegistry,
   predicate: (state: DocumentIntakeState) => boolean
 ): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    predicate(registry.get(documentIntakeStateAtoms(workspaceId)))
-      ? Effect.void
-      : Effect.fail("document intake state has not reached the expected value")
-  ).pipe(Effect.retry(pollSchedule));
+  AtomRegistry.toStream(registry, documentIntakeStateAtoms(workspaceId)).pipe(
+    Stream.filter(predicate),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("document intake state has not reached the expected value"),
+    })
+  );
 
 const waitForSelection = (
   registry: AtomRegistry.AtomRegistry,

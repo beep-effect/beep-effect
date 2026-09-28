@@ -19,11 +19,11 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import { Atom, AtomRegistry, Reactivity } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { composerSurfaceAtoms, dispatchTurnWithConfirm } from "@/chat/ui/Composer.atoms";
@@ -61,12 +61,14 @@ const makeRegistry = (): AtomRegistry.AtomRegistry => {
 };
 
 const waitForTurnStart = (registry: AtomRegistry.AtomRegistry): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    registry.get(turnActiveAtom) ? Effect.void : Effect.fail("composer turn has not started")
-  ).pipe(
-    Effect.retry(
-      Schedule.spaced(Duration.millis(10)).pipe(Schedule.upTo({ duration: Duration.seconds(3), times: 300 }))
-    )
+  AtomRegistry.toStream(registry, turnActiveAtom).pipe(
+    Stream.filter(identity),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("composer turn has not started"),
+    })
   );
 
 describe("dispatchTurnWithConfirm", () => {

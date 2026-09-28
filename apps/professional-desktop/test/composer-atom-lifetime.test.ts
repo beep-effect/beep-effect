@@ -10,7 +10,7 @@ import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import { composerSerializedChangeHandlerAtoms } from "@/chat/ui/Composer.atoms";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
@@ -20,14 +20,14 @@ const draft = Md.Document.make({
 });
 
 const waitForDraft = (registry: AtomRegistry.AtomRegistry): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    O.exists(registry.get(draftAtoms(threadId)), Equal.equals(draft))
-      ? Effect.void
-      : Effect.fail("composer draft runtime action has not completed")
-  ).pipe(
-    Effect.retry(
-      Schedule.spaced(Duration.millis(10)).pipe(Schedule.upTo({ duration: Duration.seconds(3), times: 300 }))
-    )
+  AtomRegistry.toStream(registry, draftAtoms(threadId)).pipe(
+    Stream.filter(O.exists(Equal.equals(draft))),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("composer draft runtime action has not completed"),
+    })
   );
 
 describe("composer delegated runtime action lifetime", () => {

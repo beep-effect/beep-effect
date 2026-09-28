@@ -11,7 +11,7 @@ import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import {
   DesktopSyncClient,
   VaultSyncCommand,
@@ -29,14 +29,14 @@ const waitForPanelState = (
   workspaceId: WorkspaceIdentity.WorkspaceId,
   predicate: (state: VaultSyncPanelState) => boolean
 ): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    predicate(registry.get(vaultSyncPanelStateAtoms(workspaceId)))
-      ? Effect.void
-      : Effect.fail("vault sync panel state has not reached the expected variant")
-  ).pipe(
-    Effect.retry(
-      Schedule.spaced(Duration.millis(10)).pipe(Schedule.upTo({ duration: Duration.seconds(3), times: 300 }))
-    )
+  AtomRegistry.toStream(registry, vaultSyncPanelStateAtoms(workspaceId)).pipe(
+    Stream.filter(predicate),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("vault sync panel state has not reached the expected variant"),
+    })
   );
 
 const registryWithClient = (client: DesktopSyncClient["Service"]) =>

@@ -4649,3 +4649,16 @@ that terminal confirmation were immediately restored; no interrupted proof was
 credited. Edits were reapplied only after canonical job wait returned terminated.
 The cancellation command's completion boundary should be explicit to prevent
 mistaking an in-progress stop for permission to mutate its checkout.
+
+## State waits should observe registry events
+
+Four Desktop atom wait helpers repeatedly read registry state on ten-millisecond
+retry schedules. AtomRegistry.toStream provides current state plus later changes
+and scoped unsubscription. Filtering the original predicate and taking one value
+retains the three-second timeout while removing polling. The test context stays
+live for the watchdog because the registry owns an independent runtime.
+
+The interruption probe initially used a single Effect.yieldNow as a readiness
+barrier and observed no subscription yet. Waiting for the stream predicate's
+first invocation gives an actual subscription-processing witness before the
+interrupt. Scheduler yields should not be treated as proof of readiness.

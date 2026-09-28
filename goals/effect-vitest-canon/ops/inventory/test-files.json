@@ -290,15 +290,15 @@
     "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2398,
+    "bytes": 2374,
     "lines": 58
   },
   {
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 9449,
-    "lines": 218
+    "bytes": 9450,
+    "lines": 220
   },
   {
     "file": "apps/professional-desktop/test/composer-policy.test.ts",
@@ -374,7 +374,7 @@
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 20265,
+    "bytes": 20221,
     "lines": 502
   },
   {
@@ -563,7 +563,7 @@
     "file": "apps/professional-desktop/test/sync-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5966,
+    "bytes": 5942,
     "lines": 128
   },
   {
