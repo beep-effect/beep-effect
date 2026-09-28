@@ -41,8 +41,9 @@ The private ledger plan matches 181 historical rows by exact occurrence and
 one remaining row by unique identical file/rule/class/symbol/evidence after
 all other duplicate copies are assigned. Sixteen captured findings have no
 remaining historical row to assign; some repeat evidence whose older copies
-already map uniquely to other current findings. They will receive separate
-fixed records after the source commit is saved, preserving existing identities.
+already map uniquely to other current findings. They now have separate fixed
+records. All 198 records reference source commit
+`484ab21b075e36bad965961ff196ffa74615ebfd`, preserving existing identities.
 
 ## Proof status
 

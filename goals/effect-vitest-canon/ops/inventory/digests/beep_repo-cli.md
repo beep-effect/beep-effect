@@ -417,3 +417,16 @@ The ratchet reports 4,079 findings with zero introduced; no baseline exception
 was added. The CLI detector ledger now has 3,428 unique rows: 672 fixed,
 seven exceptions and 2,749 open. Final timing and package proof status is in
 [the comparison proof](../../../research/cli-option-none-equality-proof.md).
+
+
+## Option.some comparisons
+
+Commit `484ab21b075e36bad965961ff196ffa74615ebfd` migrates 198 comparisons in 31 files.
+The ledger fixes 182 existing rows and captures 16 additional fixed findings.
+One existing row is matched by the sole remaining identical evidence pair
+after exact occurrence matches assign the other duplicates. The asymmetric
+matcher retains its partial-object comparison; optional subjects preserve
+single evaluation and failure on undefined. The CLI detector ledger contains
+3,444 unique rows: 870 fixed, seven exceptions and 2,567 open. The zero-new
+ratchet reports 3,881 remaining findings. Timing and full package proof status
+is explicit in [the comparison proof](../../../research/cli-option-some-equality-proof.md).
