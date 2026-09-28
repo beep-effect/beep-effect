@@ -1890,6 +1890,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui"
         ],
@@ -1901,6 +1902,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/ui"
         ]
