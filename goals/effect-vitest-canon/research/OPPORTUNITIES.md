@@ -4588,3 +4588,22 @@ The compiler's strictEffectProvide diagnostic also rejects a pure Layer.succeed
 stub passed to Effect.provide in a body. Supplying the same local kernel service
 with Effect.provideService avoids that diagnostic and preserves the test-owned
 capture Ref. No suppression or broader shared fixture was needed.
+
+## Registration fixtures can separate adapters from captured test state
+
+Contradiction registration repeated the same crypto adapter in six test bodies,
+while ontology registration built effectful handlers around local input fixtures
+and counters. Crypto can be suite-owned without sharing those inputs. The single
+ontology case now exposes its original counters through a public layer fixture,
+keeping the RPC client scoped to the test. Compiler checks caught the new service
+key convention and an unnecessary nested generator after provision moved; both
+were corrected without diagnostic suppression. Dynamic contradiction handler
+providers still require their own migration and are not closed by this batch.
+
+The registration imports moved two schema-first exception anchors by one line.
+`bun run lint:schema-first` reported both as stale plus untracked replacements;
+`bun run beep lint schema-first --write` replaced their reviewed exception
+statuses and reasons with generic advisory entries. Restoring the original
+metadata while updating only the two locations preserves the existing review.
+A location-only refresh should retain exception metadata when the complete
+finding identity apart from its location is unchanged.

@@ -318,8 +318,8 @@
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18513,
-    "lines": 509
+    "bytes": 18957,
+    "lines": 513
   },
   {
     "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
@@ -479,8 +479,8 @@
     "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5461,
-    "lines": 133
+    "bytes": 6017,
+    "lines": 160
   },
   {
     "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
