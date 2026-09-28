@@ -4945,78 +4945,78 @@
     "file": "packages/ontology/client/test/Session.atoms.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 22397,
-    "lines": 564
+    "bytes": 24120,
+    "lines": 589
   },
   {
     "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 803,
-    "lines": 15
+    "bytes": 924,
+    "lines": 18
   },
   {
     "file": "packages/ontology/client/test/auto-open.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 6231,
-    "lines": 163
+    "bytes": 6895,
+    "lines": 178
   },
   {
     "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 8278,
-    "lines": 213
+    "bytes": 13026,
+    "lines": 322
   },
   {
     "file": "packages/ontology/client/test/failure-messages.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 3537,
-    "lines": 84
+    "bytes": 3990,
+    "lines": 97
   },
   {
     "file": "packages/ontology/client/test/graph-centrality.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 2916,
-    "lines": 76
+    "bytes": 3264,
+    "lines": 85
   },
   {
     "file": "packages/ontology/client/test/graph-labels.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 2196,
-    "lines": 66
+    "bytes": 2232,
+    "lines": 67
   },
   {
     "file": "packages/ontology/client/test/inspector-actions.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 7360,
-    "lines": 169
+    "bytes": 7819,
+    "lines": 175
   },
   {
     "file": "packages/ontology/client/test/stale-read.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 3824,
-    "lines": 95
+    "bytes": 4007,
+    "lines": 101
   },
   {
     "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 3002,
-    "lines": 65
+    "bytes": 3672,
+    "lines": 84
   },
   {
     "file": "packages/ontology/client/test/worker-wire.test.ts",
     "package": "@beep/ontology-client",
     "kind": "test",
-    "bytes": 3639,
-    "lines": 89
+    "bytes": 4295,
+    "lines": 109
   },
   {
     "file": "packages/ontology/config/test/Config.test.ts",
@@ -7866,5 +7866,12 @@
     "kind": "test",
     "bytes": 18113,
     "lines": 414
+  },
+  {
+    "file": "packages/ontology/client/test/worker-command-encode-failure.test.ts",
+    "package": "@beep/ontology-client",
+    "kind": "test",
+    "bytes": 3429,
+    "lines": 94
   }
 ]
