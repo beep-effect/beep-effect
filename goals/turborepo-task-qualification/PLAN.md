@@ -2579,3 +2579,15 @@ review verifies stream hashes, absent failure archives and identical successful
 archive logs. Shared host exclusions remain unchanged. This stable-only result
 retains the frozen dependency profile; canary, concurrent mutation, alternate
 Git layouts and signed-remote acceptance remain separate obligations.
+
+### Exact canary Git exclusion control
+
+The [separate canary receipt](research/current-git-exclusion-canary-control.json)
+passes all nine Git exclusion outcomes under `2.11.5-canary.2`. Binary pins
+match the retained canary configuration control. Independent review verifies
+stream hashes, native-input equality for the comment-only mutation, changed
+runtime binding, restoration hits, absent failure archives and identical
+successful task-log bytes. The canary uses its own writable cache and retains
+its own evidence bundle. This closes the selected static exclusion control
+for both clients; it does not establish concurrent-mutation safety, alternate
+Git layouts, updated-dependency runtime evidence or signed-remote acceptance.
