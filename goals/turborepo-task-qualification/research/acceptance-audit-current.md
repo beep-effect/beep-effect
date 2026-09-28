@@ -30,10 +30,13 @@ The [cross-root preflight](./current-cross-root-preflight.json) found different
 installed-dependency digests despite matching source inputs and executable
 pins. Complete snapshots reproduce the native environment digests. Matching
 only two native-addon build configuration files did not recover the original
-task hash; that failed control remains private retained evidence. A complete
-read-only dependency-view control and its snapshot diagnostic are queued.
-Neither failure is treated as successful portability, and the identity rules
-have not been weakened to force a hit.
+task hash; that failed control remains private retained evidence. The [stable shared-dependency control](./current-cross-root-shared-view-stable.json)
+now passes: a fresh miss and two hits using the first root’s archive at a
+second root with the identical installed dependency tree mounted read-only.
+Inputs, hashed environment and profile bytes agree; the pass-through profile
+path differs. This proves only that bounded setup, not independent-installation
+portability. The [exact canary control](./current-cross-root-shared-view-canary.json) also passes independently. The identity rules have not been
+weakened to force a hit.
 
 The conformance and trust packets remain paused in the current checkout.
 A current task-inventory search found no signed-evidence owner among the

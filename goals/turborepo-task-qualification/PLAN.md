@@ -2444,3 +2444,18 @@ graph nodes and 1,970 executable nodes. The
 the renamed coverage-receipt field and five newly attached runtime reviews.
 All 21 unresolved obligations remain explicit. Local runtime observations
 retain frozen revision `7f53b4a840`; byte binding does not renew them at HEAD.
+
+### Cross-root replay with identical installed dependencies
+
+The [stable control](research/current-cross-root-shared-view-stable.json)
+passes at frozen source `7f53b4a840`: fresh miss, foreign-archive hit and
+repeated hit at a second checkout root. The same installed dependency tree
+is mounted read-only; the CLI computes its own toolchain digest. Input maps,
+hashed environment and profile bytes agree, while the absolute pass-through
+profile path differs. Exact archive and 53-byte task-log equality are retained
+with a manifest of 1,548 observation files. Independent-installation portability
+is still unproven. Matching only the two native-addon config files left a
+different dependency digest and task hash. The [exact canary control](research/current-cross-root-shared-view-canary.json)
+also passed through admission in a separate namespace, with its own reviewed
+archive, native version checks and retention manifest. These frozen observations do not
+renew proof for the later security lockfile update or grant signed-remote credit.
