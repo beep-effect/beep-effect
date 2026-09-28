@@ -1,5 +1,21 @@
 # @beep/repo-cli four-lens source audit
 
+## 2026-09-28 runner import reconciliation
+
+Commit `ed7b494e14fb5b2e5890e1f790276ba9a9d95f63` fixes 56 existing EV011 rows.
+The remaining row in that 57-file batch retains only native `vi` for static mock
+hoisting and carries a reasoned exception. Every historical detector ID is
+preserved. The batch's exact 1,004-test cohort passes under Node and Bun, and
+AST comparison confirms all non-import statements remain unchanged. Evidence:
+`research/cli-runner-imports-proof.md` and its referenced receipts.
+
+Other CLI changes in the same commit include scoped cwd acquisition and smaller
+assertion/fixture migrations; their row reconciliation is still pending. The
+full CLI package audit and docgen passed after the cwd repair. The broader CLI
+inventory, final main delta, full goal proof, and hosted acceptance remain open.
+
+Historical evidence follows unchanged.
+
 All 249 census files are reviewed: 192 tests and 57 support or declaration files.
 Thirteen disjoint chunks cover all 996 file/lens pairs. The inventory contains
 103 open review proposals (51 major and 52 minor) and 893 file-specific
