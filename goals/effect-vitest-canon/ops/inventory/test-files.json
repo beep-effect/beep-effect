@@ -1123,78 +1123,78 @@
     "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 37185,
-    "lines": 1026
+    "bytes": 37888,
+    "lines": 1034
   },
   {
     "file": "packages/documents/server/test/DocumentIntake.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 9227,
-    "lines": 198
+    "bytes": 9634,
+    "lines": 201
   },
   {
     "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 6752,
-    "lines": 180
+    "bytes": 7600,
+    "lines": 201
   },
   {
     "file": "packages/documents/server/test/SyncConflictServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5247,
-    "lines": 147
+    "bytes": 5857,
+    "lines": 153
   },
   {
     "file": "packages/documents/server/test/SyncCursorServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 3585,
-    "lines": 101
+    "bytes": 4133,
+    "lines": 108
   },
   {
     "file": "packages/documents/server/test/SyncItemServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5977,
-    "lines": 167
+    "bytes": 6563,
+    "lines": 180
   },
   {
     "file": "packages/documents/server/test/SyncOperationServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 7072,
-    "lines": 185
+    "bytes": 7766,
+    "lines": 192
   },
   {
     "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 12926,
-    "lines": 307
+    "bytes": 13570,
+    "lines": 318
   },
   {
     "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 22704,
-    "lines": 539
+    "bytes": 25528,
+    "lines": 602
   },
   {
     "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 14103,
-    "lines": 340
+    "bytes": 15555,
+    "lines": 371
   },
   {
     "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 13230,
-    "lines": 306
+    "bytes": 14777,
+    "lines": 342
   },
   {
     "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
@@ -7901,5 +7901,12 @@
     "kind": "support",
     "bytes": 1881,
     "lines": 48
+  },
+  {
+    "file": "packages/documents/server/test/SyncRepositoryDriverFailure.pglite.test.ts",
+    "package": "@beep/documents-server",
+    "kind": "test",
+    "bytes": 6223,
+    "lines": 147
   }
 ]

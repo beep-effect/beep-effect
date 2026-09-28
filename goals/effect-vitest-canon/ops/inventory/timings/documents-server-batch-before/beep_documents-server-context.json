@@ -1,0 +1,269 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/documents-server",
+  "sourceHead": "c90b51ae3b5f658cf61b4558fbe3102a7c30e965",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 6.328047404000245,
+  "bunWholeCommandSeconds": 3.570012367000345,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [6.484375, 4.1748046875, 5.3046875],
+  "loadAfter": [7.40673828125, 4.40478515625, 5.373046875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.58 avg60=0.29 avg300=0.10 total=66975542\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=3156700\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2956698\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=21178749\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16480024\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=1.29 avg60=0.50 avg300=0.15 total=67105378\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=3156773\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2956772\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=21185792\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16485151\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "5aa8ffadc60e0e50f307397e89f9aebb8076edf05423f2029fc4a66a628c989e"
+    },
+    {
+      "file": "packages/documents/server/AGENTS.md",
+      "sha256": "a0b0f9ab9dad16ce462ed0a3b2ae93e2dcecc282e033c9c94b76834670cb5199"
+    },
+    {
+      "file": "packages/documents/server/LICENSE",
+      "sha256": "adc37366f403835c1470ab2df93d3837d4719372fc1ef8593d922e06f033f8b2"
+    },
+    {
+      "file": "packages/documents/server/README.md",
+      "sha256": "fd200c0968286ba6201fb309761c35ffcfab3caaeba9e27221fb37856d3b31e7"
+    },
+    {
+      "file": "packages/documents/server/docgen.json",
+      "sha256": "f73f94ce62ab6964138da92ef797e2daa32496e29e8c42ab2217f3a5d5feacd3"
+    },
+    {
+      "file": "packages/documents/server/package.json",
+      "sha256": "f0b8cc79a4d4f0892f6b0150e176b691e09d4f46a4bc50a13b261522d46c54c8"
+    },
+    {
+      "file": "packages/documents/server/src/Layer.ts",
+      "sha256": "b79037db16062244628ffa6b0ee151b7199f79afb437de8fbddee4271f2f3a5d"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
+      "sha256": "eac2ddd70b55fdfce19d82a4d15597947958704a70cc383c021fe555adc8cf4d"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingDecisionHeuristic.ts",
+      "sha256": "797b0bc91eeb5e3d13d9f4d31e7dbdfbcaeeefd5b4a635d1d188bedc2d129ee7"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+      "sha256": "c0e095b12ddfcb845e6f33392f96b880ee3af640f17dd040085c97d3b84f93e3"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.ts",
+      "sha256": "83a46d4051a0e0266acaf704cfb9f6a9d850a02f3cb284c4af3b003ea94d544b"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+      "sha256": "75499c1166c94cc35ca9135af4494c3d3b31748e44dd347ba9d141b204c8939c"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/index.ts",
+      "sha256": "a8167d98e7f10e7188c25b0867fb10696c94b5cb38353bba41f45bc5c55ea84f"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
+      "sha256": "8f2a9d1dfbf1176870c7c52d1f6a31d62c28664e20265d7275f01f3923bba34d"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
+      "sha256": "9b5a48704ad296daf4506069fbd90b248e22554903e4bce7d488df6c131e6d04"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSync.config.ts",
+      "sha256": "8a7bb49865db9c31860b0a3b3933d7eaab925d142be3878433c140da9e21b9e7"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "sha256": "abba2373867fa544580b30ed6e99b43b21fdbdb47d3c5e49199ebd80244b4249"
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/index.ts",
+      "sha256": "2ca6dbcd850b20bf36bdd66dc930aa0b2aa4152b1a4198cf2c0979ab4d2ad8db"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncConflict/SyncConflict.layer.ts",
+      "sha256": "5f69a028dc64b182e47312dd91f76817872e4f8d693dd7f253c4d5aa47bac6a2"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncConflict/SyncConflict.repo.ts",
+      "sha256": "b4827808162037f045befd4663dd31141d89b7b6b7da382a5517a8818b8c1912"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncConflict/index.ts",
+      "sha256": "8d135ad0ae685b290ec04587ff52a6cbdf3a68eea8161d98b729485af0cf5d82"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncCursor/SyncCursor.layer.ts",
+      "sha256": "e8309bdc094ccf2ecf156c6fdc64e9c54e0c7ef098839fd48e90fc4c525c47e5"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncCursor/SyncCursor.repo.ts",
+      "sha256": "f908f63bf23e735fbd51b974ab94b14a4ecdfc159716a7230a10a4b9585807cc"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncCursor/index.ts",
+      "sha256": "8849f8fb917da2ebca64681a09d0e42bde80df364b18c8e9a195478f872b3a7d"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncItem/SyncItem.layer.ts",
+      "sha256": "d075e9e95fd902b4e8e365e9453131267a2a3ff79210acc6a909ca4097546116"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncItem/SyncItem.repo.ts",
+      "sha256": "fe96d058c1e8d48947adab89ced281479fbb1b85053d92ab896ae33cc7b7cf4b"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncItem/index.ts",
+      "sha256": "0013fdd4d88a5cc5c3be2b1a03f1a94adf5c13b8b9f669d8ce9dd53b4f22ff9e"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncOperation/SyncOperation.layer.ts",
+      "sha256": "edf124115f46bcab567071e71d260e1447dd0f6ea678b4e493d05feb221b35c6"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncOperation/SyncOperation.repo.ts",
+      "sha256": "3f118c9062f7e123770ff57a61a09958483dda742d0a68a63a9c74c0b6a00591"
+    },
+    {
+      "file": "packages/documents/server/src/entities/SyncOperation/index.ts",
+      "sha256": "7eae6906a24f1bedde204736a7b960776efcfad06b93763b58ef2f65489650db"
+    },
+    {
+      "file": "packages/documents/server/src/entities/index.ts",
+      "sha256": "9a4e0fa81e12015f45c895110dc8c8ed461a9df72e3aeb11c8b0b994fe66e341"
+    },
+    {
+      "file": "packages/documents/server/src/entities/internal/RepoSupport.ts",
+      "sha256": "576410ef0019169fdf6ab6c14ef9cd0ea6c1218babca44c723d5ebfa7afa9676"
+    },
+    {
+      "file": "packages/documents/server/src/index.ts",
+      "sha256": "ee103e9b062313684354154883858554421345a907ee8588930ad5cf1eea651a"
+    },
+    {
+      "file": "packages/documents/server/src/test.ts",
+      "sha256": "66d11ba64f8fdd922ebaea4e0308c0e268508f2bb51866961276c531bd0291f8"
+    },
+    {
+      "file": "packages/documents/server/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "sha256": "e5f70618b213bcfcca81df97dff06f08bfb166ef41ca8a197a52e82d2392dc61"
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "sha256": "5f81f88a124bfd3019e9ad143d46ab6b31d8e66ce765dbdbaba7a14025d1647e"
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "sha256": "cfcafb342da217deafaffb24db9ff0662e6100139bc28157a6bbe17cb423edea"
+    },
+    {
+      "file": "packages/documents/server/test/SyncConflictServer.test.ts",
+      "sha256": "5f212daa6620a10a50458546e9eb12fc544d2efb514c7571988853f2766e6c9a"
+    },
+    {
+      "file": "packages/documents/server/test/SyncCursorServer.test.ts",
+      "sha256": "cfae9672ee77800ed5c15bdcff5ce3b89c348067d5537dce951a27d12740cab6"
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "sha256": "17b68671a0658c0b53dcd4fd092bb36457ef825c208806c114c28d7bec4f8511"
+    },
+    {
+      "file": "packages/documents/server/test/SyncOperationServer.test.ts",
+      "sha256": "fcb121de7f2bdecb84f066034fb2e953cc5167e8b6ba4981a6a3ab1098e62198"
+    },
+    {
+      "file": "packages/documents/server/test/SyncRepositoryDriverFailure.pglite.test.ts",
+      "sha256": "6e6b9733b23d885becbd7a3c7ee0e0d0b1f830f88a859d4ebafa119894d5dad7"
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "sha256": "9ee34d3c70a7a02ff1de7424d076458ea97714278336681a508fcb5377255477"
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "sha256": "a31c15adaaf93993e8b960d5c04ddfd8760ed9fe5a204e491483643f5f8c7b15"
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "sha256": "a3aab588a21ea997d8f67bd2893aaba1f80c80b4dfcf4d7bef6d5cce2c26c584"
+    },
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "sha256": "9df8b4c30497a504e04d310bc4fe89495cafe29c09368da93960fbcf2a6d7002"
+    },
+    {
+      "file": "packages/documents/server/tsconfig.check.json",
+      "sha256": "93e061a6ab6a9e1377f8db7d5054be4a2f7b8b4f1d2076e1e28cbccdc04bf0eb"
+    },
+    {
+      "file": "packages/documents/server/tsconfig.json",
+      "sha256": "72e7b0691a9508b4d9b677f2bc03b67f4111c9fcc90dc34fb4cc1ba55fed1b5a"
+    },
+    {
+      "file": "packages/documents/server/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/documents/server/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Documents Server unit selection excludes test/integration. Native filesystem cases run where registered in this selection; no live Box credential or model-provider call is claimed. Host load and pressure are recorded, not a causal performance claim.",
+  "bunProof": {
+    "passedTests": 91,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [7.40673828125, 4.40478515625, 5.373046875],
+    "loadAfter": [7.45458984375, 4.46484375, 5.38720703125],
+    "pressureBefore": {
+      "cpu": "some avg10=1.29 avg60=0.50 avg300=0.15 total=67105418\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.01 avg300=0.00 total=3156773\nfull avg10=0.00 avg60=0.01 avg300=0.00 total=2956772\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=21185822\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16485168\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.86 avg60=0.47 avg300=0.15 total=67125031\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3156788\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=2956785\n",
+      "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=21199908\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16494471\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 91,
+    "skipped": 0
+  },
+  "interpretation": "Baseline rc117 has 91 unit cases; final rc118 has 97, all passing without skips on Node and Bun with stable sources. Preservation covers 364 assertions, 97 original titles and 33 fixture initializers; eight aggregate Passed assertions become seventeen native laws with original schema domains and floors. Nine native PGlite integration cases have separate evidence. Dependency versions, case counts and host load differ, so these observations cannot establish causal speedup."
+}

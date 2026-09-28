@@ -2,8 +2,8 @@
 
 This batch addresses the saved 157 actions: 147 detector findings, six resource
 findings, three assertion findings and one configuration-dependent test. The
-adjacent driver-failure suite also receives review. Source verification is
-complete; source publication and inventory reconciliation are still pending.
+adjacent driver-failure suite also receives review. Source is published at `eb97a1f6fcb3d362b18b1c379354dd99f87b5ae1`;
+inventory reconciliation is complete.
 This is a package milestone within the active goal.
 
 ## Preserved subjects and ownership
@@ -70,8 +70,7 @@ runner dependency to the nine affected lists across fourteen owned nodes.
 
 ## Remaining goal gates
 
-Inventory/census reconciliation and publication of timing artifacts follow the
-source commit. The saved downstream packages, actual desktop HTTP authorization
+The saved downstream packages, actual desktop HTTP authorization
 regression, moving-main remainder, empty detector baseline, final adversarial
 review and full repository/hosted closeout remain required.
 
@@ -106,3 +105,22 @@ they do not establish the goal's final empty-baseline requirement.
 The six root policy checks pass again on rc.118. Fallow uses origin/main as its
 explicit comparison base. Schema-first required only the SHACL exception's
 relocated line anchor; its original disposition and rationale are unchanged.
+
+## Ledger closeout
+
+All 157 saved actions have a published fix or a specific resource/subject
+judgment. Reconciliation retains 259 historical detector rows, including rows
+that previously existed only in the root baseline, and nineteen current
+candidates with individual reasons. The adjacent driver-failure file receives
+all four human review lenses; both ignored-rollback gaps have fixed rows.
+
+The census covers twelve owned files. All 683 unrelated ledger files retain
+their hashes, and unrelated root/census objects retain their raw text. Strict
+schema validation passes with no excess properties, invalid rows or duplicate
+IDs: 5,030 root findings and 15,183 historical ledger rows. Four public timing
+and context artifacts record the separate baseline and final observations.
+
+The remaining saved queue contains four packages and 272 actions: Law Practice
+Server 58, Practice KG MCP 10, Professional Desktop 203 and Epistemic Use Cases
+one actual HTTP authorization regression. This count is not a goal completion
+percentage; final main-delta inventory and all acceptance gates remain.
