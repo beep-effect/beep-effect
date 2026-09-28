@@ -75,6 +75,9 @@ const stepFor = (state: SweepGitState, id: SweepStepId): SweepPlanStep =>
 const blockerText = (state: SweepGitState, id: SweepStepId): ReadonlyArray<string> =>
   A.map(sweepStepBlockers(stepFor(state, id)), (blocker) => blocker.description);
 
+const liveCheckout = (head: string): string =>
+  `HEAD ${head} is main or the swept branch feat/merge-loop; another branch is a live checkout the sweep leaves alone`;
+
 const emptyPlan = SweepPlan.make({
   schemaVersion: "yeet-sweep-plan/v1",
   createdAt,
@@ -334,12 +337,57 @@ describe("end state", () => {
     expect(step.action).toBe("git switch 'main'");
   });
 
-  it("requires a clean worktree and a free main to switch back", () => {
+  it("requires a movable HEAD, a clean worktree, and a free main to switch back", () => {
     const step = stepFor(stateWith({ headBranch: "feat/merge-loop" }), "end-state");
     expect(A.map(step.preconditions, (observed) => observed.description)).toEqual([
+      liveCheckout("feat/merge-loop"),
       "worktree is clean",
       "main is not checked out in another worktree",
     ]);
+  });
+});
+
+// Receipt 2026-09-28: `yeet sweep --retire` switched a shared clone from a live
+// branch to `main` under another session's running verify. The
+// worktree-mutating steps move HEAD only off the swept branch, and the install
+// follows the switch so it resolves `main`'s bun.lock.
+describe("live checkout rail", () => {
+  const onLiveBranch = stateWith({ headBranch: "@chore/get-main-green" });
+  const onSweptBranch = stateWith({ headBranch: "feat/merge-loop" });
+  const stepIndex = (state: SweepGitState, id: SweepStepId): number =>
+    O.getOrThrow(A.findFirstIndex(buildSweepPlan(state, createdAt).steps, (step) => step.id === id));
+
+  it("plans lockfile-install after end-state so the install resolves main's bun.lock", () => {
+    expect(stepIndex(mergedState, "end-state")).toBeLessThan(stepIndex(mergedState, "lockfile-install"));
+  });
+
+  it("asks nothing extra of a clone already on main", () => {
+    expect(stepFor(mergedState, "end-state").preconditions).toEqual([]);
+    expect(blockerText(mergedState, "lockfile-install")).toEqual([]);
+  });
+
+  it("still moves a clone off the swept branch and then installs", () => {
+    expect(blockerText(onSweptBranch, "end-state")).toEqual([]);
+    expect(blockerText(onSweptBranch, "lockfile-install")).toEqual([]);
+    expect(stepFor(onSweptBranch, "end-state").action).toBe("git switch 'main'");
+  });
+
+  it("skips both worktree-mutating steps for a clone on another branch and names that HEAD", () => {
+    expect(blockerText(onLiveBranch, "end-state")).toEqual([liveCheckout("@chore/get-main-green")]);
+    expect(blockerText(onLiveBranch, "lockfile-install")).toEqual([liveCheckout("@chore/get-main-green")]);
+  });
+
+  it("never turns a live checkout into an operator handoff", () => {
+    expect(stepFor(onLiveBranch, "end-state").requiresOperator).toBe(false);
+    expect(stepFor(onLiveBranch, "lockfile-install").requiresOperator).toBe(false);
+  });
+
+  it("leaves the ref-only steps untouched by a live checkout", () => {
+    expect(blockerText(onLiveBranch, "fetch-prune")).toEqual([]);
+    expect(stepFor(onLiveBranch, "ff-main").action).toBe("git fetch origin 'main:main'");
+    expect(blockerText(onLiveBranch, "ff-main")).toEqual([]);
+    expect(blockerText(onLiveBranch, "delete-local-branch")).toEqual([]);
+    expect(blockerText(onLiveBranch, "delete-remote-branch")).toEqual([]);
   });
 });
 
@@ -488,6 +536,43 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
 
 const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
   Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
+
+// The same clone as `mergedSweepStubs`, parked on `head` instead of main; the
+// sweeping worktree is the one holding that branch.
+const cloneOn = (head: string, tip: string): ReadonlyArray<readonly [string, CommandStub]> => [
+  ["git rev-parse --abbrev-ref HEAD", ok(head)],
+  ["git worktree list --porcelain", ok(`worktree /repo\nHEAD ${tip}\nbranch refs/heads/${head}`)],
+  ...mergedSweepStubs,
+];
+
+// Runs the sweep through a spawner that records every command line, so a test
+// can assert what the clone was and was not subjected to.
+const recordedSweep = Effect.fnUntraced(function* (root: string) {
+  const spawned = yield* Ref.make(A.empty<string>());
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const recording = ChildProcessSpawner.make((command) =>
+    Effect.gen(function* () {
+      if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
+      yield* Ref.update(spawned, A.append(A.join([command.command, ...command.args], " ")));
+      return yield* spawner.spawn(command);
+    })
+  );
+  const report = yield* executeSweep(sweepContext(root)).pipe(
+    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recording)
+  );
+  return { report, spawned: yield* Ref.get(spawned) };
+});
+
+const outcomeOf = (report: SweepReport, id: SweepStepId) =>
+  O.getOrThrow(A.findFirst(report.steps, (step) => step.id === id)).outcome;
+
+const skipReason = (report: SweepReport, id: SweepStepId): string => {
+  const outcome = outcomeOf(report, id);
+  return outcome.status === "skipped" ? outcome.reason : `<${outcome.status}>`;
+};
+
+const spawnIndex = (spawned: ReadonlyArray<string>, commandLine: string): number =>
+  O.getOrThrow(A.findFirstIndex(spawned, (line) => line === commandLine));
 
 describe("executeSweep", () => {
   it.layer(sweepTestLayer([["git merge-base --is-ancestor", ok("")], ...mergedSweepStubs]), { timeout: "30 seconds" })(
@@ -685,6 +770,55 @@ describe("executeSweep", () => {
         sweepTestLayer([
           ["git ls-remote origin refs/heads/feat/merge-loop", ok("ffff9999eeee8888\trefs/heads/feat/merge-loop")],
           ...mergedSweepStubs,
+        ])
+      )
+    )
+  );
+
+  it.effect("moves a clone off the swept branch, then installs against main", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const { report, spawned } = yield* recordedSweep(root);
+        const endState = outcomeOf(report, "end-state");
+        expect(endState.status).toBe("executed");
+        expect(endState.status === "executed" ? endState.detail : O.none()).toEqual(O.some("switched to main"));
+        expect(outcomeOf(report, "lockfile-install").status).toBe("executed");
+        // The switch precedes the install, so the install resolves main's bun.lock.
+        expect(spawnIndex(spawned, "git switch main")).toBeLessThan(spawnIndex(spawned, "bun install"));
+      })
+    ).pipe(provideScopedLayer(sweepTestLayer(cloneOn("feat/merge-loop", mergedTip))))
+  );
+
+  it.effect("leaves a clone on another branch where it stands and says which HEAD blocked it", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const { report, spawned } = yield* recordedSweep(root);
+        expect(skipReason(report, "end-state")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
+        expect(skipReason(report, "lockfile-install")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
+        expect(spawned).not.toContain("git switch main");
+        expect(spawned).not.toContain("bun install");
+        // The ref-only steps still ran against that clone.
+        expect(spawned).toContain("git fetch --prune origin");
+        expect(spawned).toContain("git fetch origin main:main");
+      })
+    ).pipe(provideScopedLayer(sweepTestLayer(cloneOn("@chore/get-main-green", "cccc3333dddd4444"))))
+  );
+
+  it.effect("skips the install when the switch to main fails at run time", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const { report, spawned } = yield* recordedSweep(root);
+        expect(skipReason(report, "end-state")).toContain("git switch 'main' failed (exit 1)");
+        expect(skipReason(report, "lockfile-install")).toContain("end-state did not leave the clone on main");
+        expect(skipReason(report, "lockfile-install")).toContain("skipped: git switch 'main' failed");
+        expect(spawned).toContain("git switch main");
+        expect(spawned).not.toContain("bun install");
+      })
+    ).pipe(
+      provideScopedLayer(
+        sweepTestLayer([
+          ["git switch main", { exitCode: 1, output: "error: your local changes would be overwritten by checkout" }],
+          ...cloneOn("feat/merge-loop", mergedTip),
         ])
       )
     )

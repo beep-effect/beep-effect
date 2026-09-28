@@ -57,8 +57,10 @@ bun run beep refs install-timer --refresh
 ```
 
 Run them from a checkout that already contains the merged renderer change (the
-owning clone after `bun run beep yeet sweep --retire`, or any fresh worktree).
-`--refresh` fails with "install first" when nothing is installed.
+owning clone once `bun run beep yeet sweep --retire` has left it on `main`, or
+any fresh worktree; a clone the sweep left on another live branch does not
+carry the merge). `--refresh` fails with "install first" when nothing is
+installed.
 
 ## Who runs this
 
@@ -94,7 +96,10 @@ that session spawned into the lane (MCP servers, tool shells, background jobs);
 anything else holding the lane (a desktop terminal panel, an editor, another
 session) still refuses it, and the error names each holder and prints the
 working form. Run it as the last command of the session, from inside the lane,
-and step the shell into the swept clone afterwards:
+and step the shell into the swept clone afterwards. The clone is returned to
+`main` only when it already stands on `main`; a clone on another live branch
+keeps its checkout and receives ref-only updates (no `git switch`, no
+`bun install`), so the trailing `cd` may land on that branch:
 
 ```bash
 CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"

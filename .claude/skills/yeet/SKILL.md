@@ -246,8 +246,11 @@ bun run beep yeet monitor --watch --until-event
 ```
 
 - Reset the clone after a merge (prune refs, fast-forward `main`, delete the
-  merged branch locally and remotely, reinstall when `bun.lock` moved, end on
-  `main`). Inspect the plan before running it:
+  merged branch locally and remotely, return to `main`, then reinstall when
+  `bun.lock` moved). The checkout is moved to `main` only from the merged
+  branch itself; a clone standing on any other branch is a live checkout, so
+  `end-state` and `lockfile-install` skip with that HEAD named in the plan and
+  only the ref-only steps run. Inspect the plan before running it:
 
 ```bash
 bun run beep yeet sweep --plan
@@ -262,8 +265,11 @@ bun run beep yeet sweep
   `main` lives in the owning clone and the merged branch is checked out right
   here. `--retire` is the post-merge closeout for that case: it archive-retires
   this worktree (dirty files and unpushed commits preserved under the residue
-  root), deletes the branch, then sweeps the owning clone. It refuses until the
-  PR is MERGED and heads this branch, so running it early is safe:
+  root), deletes the branch, then sweeps the owning clone. A clone parked on a
+  branch other than `main` keeps that checkout: the sweep updates refs only,
+  because a `git switch` or `bun install` there could land under another
+  session's running verify (receipt 2026-09-28). It refuses until the PR is
+  MERGED and heads this branch, so running it early is safe:
 
 ```bash
 bun run beep yeet sweep --retire --plan
