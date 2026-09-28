@@ -4542,3 +4542,11 @@ overlapping cases; four explicit serial suite options removed that overlap
 without changing any test body. Shared cleanup ownership should be reviewed
 whenever async UI tests inherit global concurrency. This control proves overlap,
 not a naturally reproduced toast flake.
+
+## Debounce delay is not a persistence completion signal
+
+The dock-shell regression sampled storage once after a 600 ms sleep while the
+400 ms debounced save ran in a detached registry. It now observes the exact
+snapshot key within the same 600 ms bound and verifies storage starts empty.
+Suppressing the save dispatch fails the bounded wait. The real debounce and
+original final assertion remain; no reproduced ambient timing failure is claimed.

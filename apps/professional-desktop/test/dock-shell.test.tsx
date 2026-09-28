@@ -3,7 +3,7 @@ import { SaveDockSnapshot } from "@beep/dock/Dock.protocol";
 import { validateWorkspace } from "@beep/dock/Dock.reducer";
 import { it } from "@beep/test-runner";
 import { afterEach, describe, expect } from "@effect/vitest";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/reactivity";
 import { App } from "@/App";
@@ -107,6 +107,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
   it.live(
     "persists automatically once workspace changes settle (debounced binding)",
     Effect.fnUntraced(function* () {
+      expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).toBeNull();
       const graph = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
       const release = yield* Effect.acquireRelease(
         Effect.sync(() => graph.registry.mount(dockPersistenceBindingAtom(graph))),
@@ -115,9 +116,17 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       const workspace = graph.registry.get(graph.workspaceAtom);
       graph.registry.set(graph.operationAtom, panelOperation(workspace, "ontology-source"));
       yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, { suspendOnWaiting: true });
-      // Wait past the debounce quiet period; the mounted binding owns the save.
-      yield* Effect.sleep("600 millis");
-      const stored = globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY);
+      // Observe the mounted binding's completed write within the original 600 ms budget.
+      const stored = yield* Effect.promise(() =>
+        waitFor(
+          () => {
+            const snapshot = globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY);
+            expect(snapshot).not.toBeNull();
+            return snapshot;
+          },
+          { timeout: 600 }
+        )
+      );
       release();
       graph.dispose();
       expect(stored).not.toBeNull();

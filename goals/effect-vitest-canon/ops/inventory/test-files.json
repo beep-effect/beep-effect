@@ -332,8 +332,8 @@
     "file": "apps/professional-desktop/test/dock-shell.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8680,
-    "lines": 204
+    "bytes": 8959,
+    "lines": 213
   },
   {
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
