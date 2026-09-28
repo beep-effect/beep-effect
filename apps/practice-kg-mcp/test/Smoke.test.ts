@@ -6,7 +6,9 @@
  * host's "imports the bin module without launching" proof. `bin.ts` is left
  * out: its module graph loads the PGlite wasm at import time.
  */
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as P from "effect/Predicate";
 
@@ -15,7 +17,7 @@ describe("@beep/practice-kg-mcp entrypoints", () => {
     "imports the compiled-host smoke module without running it",
     Effect.fnUntraced(function* () {
       const smoke = yield* Effect.promise(() => import("../src/smoke.ts"));
-      expect(P.isObject(smoke)).toBe(true);
+      assertTrue(P.isObject(smoke));
     })
   );
 });

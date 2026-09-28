@@ -29,8 +29,9 @@ import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecord";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -186,7 +187,7 @@ const ids = <Entity extends { readonly id: number }>(records: ReadonlyArray<Enti
   A.map(records, (record) => record.id);
 
 describe("@beep/law-practice-server candor record repository", () => {
-  layer(Layer.fresh(CandorRecordRepositoryInMemory))("tenant isolation", (it) => {
+  it.layer(Layer.fresh(CandorRecordRepositoryInMemory), { timeout: "10 seconds" })("tenant isolation", (it) => {
     it.effect("never returns another organization's records for the same filing", () =>
       Effect.gen(function* () {
         const repository = yield* CandorRecordRepository;
@@ -209,72 +210,81 @@ describe("@beep/law-practice-server candor record repository", () => {
     );
   });
 
-  layer(Layer.fresh(CandorRecordRepositoryInMemory))("appending each record kind", (it) => {
-    it.effect(
-      "reads every appended kind back scoped to the filing it was recorded for",
-      Effect.fnUntraced(function* () {
-        const repository = yield* CandorRecordRepository;
-        yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+  it.layer(Layer.fresh(CandorRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "appending each record kind",
+    (it) => {
+      it.effect(
+        "reads every appended kind back scoped to the filing it was recorded for",
+        Effect.fnUntraced(function* () {
+          const repository = yield* CandorRecordRepository;
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
 
-        const filing = yield* decodeFiling(FILING_A);
-        const events = yield* repository.listEvents(filing);
-        const dispositions = yield* repository.listDispositions(filing);
-        const submissionFacts = yield* repository.listSubmissionFacts(filing);
-        const snapshot = yield* repository.readSnapshot(filing);
+          const filing = yield* decodeFiling(FILING_A);
+          const events = yield* repository.listEvents(filing);
+          const dispositions = yield* repository.listDispositions(filing);
+          const submissionFacts = yield* repository.listSubmissionFacts(filing);
+          const snapshot = yield* repository.readSnapshot(filing);
 
-        expect(ids(events)).toEqual([1]);
-        expect(ids(dispositions)).toEqual([101]);
-        expect(ids(submissionFacts)).toEqual([201]);
-        expect(ids(snapshot.events)).toEqual([1]);
-        expect(ids(snapshot.dispositions)).toEqual([101]);
+          expect(ids(events)).toEqual([1]);
+          expect(ids(dispositions)).toEqual([101]);
+          expect(ids(submissionFacts)).toEqual([201]);
+          expect(ids(snapshot.events)).toEqual([1]);
+          expect(ids(snapshot.dispositions)).toEqual([101]);
 
-        // Round-tripping the recorded surface, not just the row count: the
-        // disposition must still name the exact observation it answers.
-        expect(A.map(dispositions, (disposition) => disposition.disposes.eventId)).toEqual([1]);
-        expect(A.map(events, (event) => event.grounding.source.textDigest)).toEqual([SOURCE_A.digest]);
-      })
-    );
-  });
+          // Round-tripping the recorded surface, not just the row count: the
+          // disposition must still name the exact observation it answers.
+          expect(A.map(dispositions, (disposition) => disposition.disposes.eventId)).toEqual([1]);
+          expect(A.map(events, (event) => event.grounding.source.textDigest)).toEqual([SOURCE_A.digest]);
+        })
+      );
+    }
+  );
 
-  layer(Layer.fresh(CandorRecordRepositoryInMemory))("scoping reads by citing application", (it) => {
-    it.effect(
-      "never returns a second filing's records",
-      Effect.fnUntraced(function* () {
-        const repository = yield* CandorRecordRepository;
-        yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
-        yield* appendFiling(repository, FILING_B, 2, SOURCE_B);
+  it.layer(Layer.fresh(CandorRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "scoping reads by citing application",
+    (it) => {
+      it.effect(
+        "never returns a second filing's records",
+        Effect.fnUntraced(function* () {
+          const repository = yield* CandorRecordRepository;
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+          yield* appendFiling(repository, FILING_B, 2, SOURCE_B);
 
-        const filingA = yield* decodeFiling(FILING_A);
-        const filingB = yield* decodeFiling(FILING_B);
+          const filingA = yield* decodeFiling(FILING_A);
+          const filingB = yield* decodeFiling(FILING_B);
 
-        expect(ids(yield* repository.listEvents(filingA))).toEqual([1]);
-        expect(ids(yield* repository.listDispositions(filingA))).toEqual([101]);
-        expect(ids(yield* repository.listSubmissionFacts(filingA))).toEqual([201]);
+          expect(ids(yield* repository.listEvents(filingA))).toEqual([1]);
+          expect(ids(yield* repository.listDispositions(filingA))).toEqual([101]);
+          expect(ids(yield* repository.listSubmissionFacts(filingA))).toEqual([201]);
 
-        expect(ids(yield* repository.listEvents(filingB))).toEqual([2]);
-        expect(ids(yield* repository.listDispositions(filingB))).toEqual([102]);
-        expect(ids(yield* repository.listSubmissionFacts(filingB))).toEqual([202]);
-      })
-    );
-  });
+          expect(ids(yield* repository.listEvents(filingB))).toEqual([2]);
+          expect(ids(yield* repository.listDispositions(filingB))).toEqual([102]);
+          expect(ids(yield* repository.listSubmissionFacts(filingB))).toEqual([202]);
+        })
+      );
+    }
+  );
 
-  layer(Layer.fresh(CandorRecordRepositoryInMemory))("ordering reads of one filing", (it) => {
-    it.effect(
-      "returns each kind by id ascending whatever order it was appended in",
-      Effect.fnUntraced(function* () {
-        const repository = yield* CandorRecordRepository;
+  it.layer(Layer.fresh(CandorRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "ordering reads of one filing",
+    (it) => {
+      it.effect(
+        "returns each kind by id ascending whatever order it was appended in",
+        Effect.fnUntraced(function* () {
+          const repository = yield* CandorRecordRepository;
 
-        // Appended highest id first, so append order and id order disagree and
-        // a store that simply replayed insertions would fail here.
-        yield* appendFiling(repository, FILING_A, 3, SOURCE_B);
-        yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+          // Appended highest id first, so append order and id order disagree and
+          // a store that simply replayed insertions would fail here.
+          yield* appendFiling(repository, FILING_A, 3, SOURCE_B);
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
 
-        const filing = yield* decodeFiling(FILING_A);
+          const filing = yield* decodeFiling(FILING_A);
 
-        expect(ids(yield* repository.listEvents(filing))).toEqual([1, 3]);
-        expect(ids(yield* repository.listDispositions(filing))).toEqual([101, 103]);
-        expect(ids(yield* repository.listSubmissionFacts(filing))).toEqual([201, 203]);
-      })
-    );
-  });
+          expect(ids(yield* repository.listEvents(filing))).toEqual([1, 3]);
+          expect(ids(yield* repository.listDispositions(filing))).toEqual([101, 103]);
+          expect(ids(yield* repository.listSubmissionFacts(filing))).toEqual([201, 203]);
+        })
+      );
+    }
+  );
 });

@@ -1,12 +1,13 @@
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
 import { makeDrizzle, makeDrizzleLayer, migrateBundle } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -64,16 +65,14 @@ const migrateEpistemicUsage = Effect.fnUntraced(function* () {
 const UsageRecordSinkLayer = UsageRecordSinkDrizzle.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makeInProcessPgliteLayer()),
-  Layer.provideMerge(BunCrypto.layer),
-  Layer.provideMerge(BunFileSystem.layer),
-  Layer.provideMerge(BunPath.layer)
+  Layer.provideMerge(BunCrypto.layer)
 );
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("Professional desktop UsageRecordSink Drizzle PgLite integration", () => {});
 } else {
   describe("Professional desktop UsageRecordSink Drizzle PgLite integration", { concurrent: false }, () => {
-    layer(UsageRecordSinkLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(UsageRecordSinkLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "preserves legacy activity provenance and persists a finalized turn UsageRecord",
         Effect.fnUntraced(function* () {
@@ -137,16 +136,16 @@ if (!shouldRunPgliteIntegration) {
           const rows = yield* db.select().from(UsageRecordTable.Table);
           expect(rows).toHaveLength(2);
           const appended = A.findFirst(rows, (row) => row.publicId === usageAppendInput.publicId);
-          expect(O.isSome(appended)).toBe(true);
+          pipe(appended, O.isSome, assertTrue);
           if (O.isSome(appended)) {
             expect(appended.value.provider).toBe("fixture");
             expect(appended.value.model).toBe("fixture-model");
 
             const decoded = yield* Effect.fromResult(UsageRecordTable.fromUsageRecordRow(appended.value));
             expect(decoded.provider).toBe("fixture");
-            expect(O.isNone(decoded.activityId)).toBe(true);
+            assertNone(decoded.activityId);
             expect(O.getOrNull(decoded.inputTokens)).toBe(12);
-            expect(O.isNone(decoded.unitCount)).toBe(true);
+            assertNone(decoded.unitCount);
           }
         }),
         pgliteIntegrationTimeoutMillis

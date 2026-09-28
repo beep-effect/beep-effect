@@ -1,14 +1,18 @@
+import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 import { pickVaultDirectoryOnHost } from "../src/intake/VaultDirectoryPickerOrchestrator";
 
 const encoder = new TextEncoder();
+const pickerLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 
 const mockHandle = (result: { stdout?: string; code?: number }) =>
   ChildProcessSpawner.makeHandle({
@@ -45,7 +49,7 @@ const mockSpawnerLayer = (
   );
 
 describe("pickVaultDirectoryOnHost", () => {
-  layer(
+  it.layer(
     mockSpawnerLayer((command) => {
       assert.strictEqual(command.command, "kdialog");
       assert.deepStrictEqual(command.args, [
@@ -58,7 +62,8 @@ describe("pickVaultDirectoryOnHost", () => {
       assert.strictEqual(command.options.stdout, "pipe");
       assert.strictEqual(command.options.stderr, "ignore");
       return { stdout: "/home/user/vault1\n" };
-    })
+    }),
+    { timeout: pickerLayerTimeout }
   )("with a kdialog selection", (it) => {
     it.effect(
       "returns the picked path from kdialog stdout",
@@ -69,40 +74,49 @@ describe("pickVaultDirectoryOnHost", () => {
     );
   });
 
-  layer(mockSpawnerLayer(() => ({ code: 1 })))("with a cancelled dialog", (it) => {
+  it.layer(
+    mockSpawnerLayer(() => ({ code: 1 })),
+    { timeout: pickerLayerTimeout }
+  )("with a cancelled dialog", (it) => {
     it.effect(
       "returns None",
       Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isTrue(O.isNone(selected));
+        assertNone(selected);
       })
     );
   });
 
-  layer(mockSpawnerLayer(() => ({ stdout: "  \n" })))("with a clean exit but no selection", (it) => {
+  it.layer(
+    mockSpawnerLayer(() => ({ stdout: "  \n" })),
+    { timeout: pickerLayerTimeout }
+  )("with a clean exit but no selection", (it) => {
     it.effect(
       "returns None",
       Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isTrue(O.isNone(selected));
+        assertNone(selected);
       })
     );
   });
 
-  layer(mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
-    "with kdialog missing and zenity available",
-    (it) => {
-      it.effect(
-        "falls back to zenity",
-        Effect.fnUntraced(function* () {
-          const selected = yield* pickVaultDirectoryOnHost("/home/user");
-          assert.deepStrictEqual(selected, O.some("/home/user/vault2"));
-        })
-      );
-    }
-  );
+  it.layer(
+    mockSpawnerLayer((command) => (command.command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })),
+    { timeout: pickerLayerTimeout }
+  )("with kdialog missing and zenity available", (it) => {
+    it.effect(
+      "falls back to zenity",
+      Effect.fnUntraced(function* () {
+        const selected = yield* pickVaultDirectoryOnHost("/home/user");
+        assert.deepStrictEqual(selected, O.some("/home/user/vault2"));
+      })
+    );
+  });
 
-  layer(mockSpawnerLayer(() => "missing"))("with no picker command available", (it) => {
+  it.layer(
+    mockSpawnerLayer(() => "missing"),
+    { timeout: pickerLayerTimeout }
+  )("with no picker command available", (it) => {
     it.effect(
       "fails with a client-safe error",
       Effect.fnUntraced(function* () {

@@ -14,9 +14,9 @@
 //     npx vitest run test/integration/EdgeAuthority.pg.test.ts
 //   docker rm -f beep-epistemic-pg
 //
-// Real time is measured by the DATABASE (`SELECT pg_sleep`): the layer() tester runs under
-// the TestClock, where Effect.sleep would never wake, and pg_sleep additionally holds the
-// contended row lock on its own connection for the whole delay.
+// The blocker observes both writer backend IDs waiting on database locks before
+// releasing its row. The bounded observer uses database-time polling and a live
+// watchdog; TestClock cannot establish native PostgreSQL contention.
 import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
@@ -27,14 +27,17 @@ import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/Candidat
 import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { RecordEdgeFact, SupersedeEdgeFact, SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Config, Deferred, Effect, Layer, pipe, Redacted, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EdgeAuthorityError, EdgeAuthorityRepositoryShape } from "@beep/epistemic-use-cases/EdgeAuthority";
 
@@ -214,10 +217,9 @@ if (externalUrl.length === 0) {
   describe.skip("Epistemic EdgeAuthority external Postgres races — BEEP_EPISTEMIC_PG_URL not set", () => {});
 } else {
   describe("Epistemic EdgeAuthority external Postgres races", { concurrent: false }, () => {
-    layer(makeExternalLayer(), { timeout: "5 minutes" })((it) => {
-      it.effect(
-        "resets the database and applies the epistemic-edge migration on real Postgres",
-        Effect.fnUntraced(function* () {
+    it.layer(
+      Layer.effectDiscard(
+        Effect.gen(function* () {
           const sql = yield* currentSql;
           // The whole db-admin folder is applied, so the reset drops everything it owns
           // and the journal with it; the lane is then re-runnable against one container.
@@ -227,6 +229,14 @@ if (externalUrl.length === 0) {
 
           const db = yield* makeDrizzle();
           yield* migrate(db, { migrationsFolder, migrationsSchema });
+        })
+      ).pipe(Layer.provideMerge(makeExternalLayer())),
+      { timeout: "5 minutes" }
+    )((it) => {
+      it.effect(
+        "resets the database and applies the epistemic-edge migration on real Postgres",
+        Effect.fnUntraced(function* () {
+          const sql = yield* currentSql;
 
           const constraints = yield* sql<{ readonly conname: string }>`
             SELECT conname FROM pg_constraint
@@ -262,6 +272,8 @@ if (externalUrl.length === 0) {
           yield* writers[0].record(yield* recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000));
 
           const lockHeld = yield* Deferred.make<void>();
+          const firstPid = yield* Deferred.make<number>();
+          const secondPid = yield* Deferred.make<number>();
           const blocker = sql.withTransaction(
             Effect.gen(function* () {
               yield* sql`
@@ -270,8 +282,12 @@ if (externalUrl.length === 0) {
                 FOR UPDATE
               `;
               yield* Deferred.succeed(lockHeld, undefined);
-              // The database is the timer: both writers park on this lock for the delay.
-              yield* sql`SELECT pg_sleep(0.25)`;
+              const [firstWriterPid, secondWriterPid] = yield* Effect.all([
+                Deferred.await(firstPid),
+                Deferred.await(secondPid),
+              ]);
+              expect(firstWriterPid).not.toBe(secondWriterPid);
+              yield* expectBothWritersWaiting(sql, firstWriterPid, secondWriterPid);
             })
           );
 
@@ -281,10 +297,20 @@ if (externalUrl.length === 0) {
               Deferred.await(lockHeld).pipe(
                 Effect.andThen(
                   contend(writers, (writer, index) =>
-                    supersedeFact(scenario.identity, { amount: `15${index}` }, 2_000 + index).pipe(
-                      Effect.orDie,
-                      Effect.flatMap((fact) => writer.supersede(fact))
-                    )
+                    sql
+                      .withTransaction(
+                        Effect.gen(function* () {
+                          // Pin each writer to the connection whose PID we acknowledge.
+                          const rows = yield* sql<{ readonly pid: number }>`SELECT pg_backend_pid()::int AS pid`;
+                          const backend = yield* requireHead(rows, "the writer backend PID");
+                          yield* Deferred.succeed(index === 0 ? firstPid : secondPid, backend.pid);
+                          return yield* supersedeFact(scenario.identity, { amount: `15${index}` }, 2_000 + index).pipe(
+                            Effect.orDie,
+                            Effect.flatMap((fact) => writer.supersede(fact))
+                          );
+                        })
+                      )
+                      .pipe(Effect.catchTag("SqlError", Effect.die))
                   )
                 )
               ),
@@ -297,7 +323,7 @@ if (externalUrl.length === 0) {
           expect(A.length(successes)).toBe(1);
           expect(A.map(successes, (version) => version.version)).toEqual([2]);
           expect(A.length(failures)).toBe(1);
-          expect(A.every(failures, SupersessionConflict.is)).toBe(true);
+          pipe(A.every(failures, SupersessionConflict.is), assertTrue);
 
           const versions = yield* sql<{ readonly n: number }>`
             SELECT COUNT(*)::int AS n FROM epistemic_edge_version WHERE logical_key = ${scenario.logicalKey}
@@ -309,7 +335,10 @@ if (externalUrl.length === 0) {
 
           expect(A.map(versions, (row) => row.n)).toEqual([2]);
           expect(A.map(openHead, (row) => row.version)).toEqual([2]);
-          expect(A.every(openHead, (row) => row.supersedes_id !== null)).toBe(true);
+          pipe(
+            A.every(openHead, (row) => row.supersedes_id !== null),
+            assertTrue
+          );
         }),
         120_000
       );
@@ -334,14 +363,12 @@ if (externalUrl.length === 0) {
 
           expect(A.length(successes)).toBe(1);
           expect(A.length(failures)).toBe(1);
-          expect(A.every(failures, SupersessionConflict.is)).toBe(true);
-          // Both creators derive version 1 over an empty key, so the btree unique index on
-          // (logical_key, version) is what actually catches the loser here — the open-head
-          // index never gets the chance. That name is a lost race too, and the mapping says
-          // so; the raw-SQL spike could not surface it because it hard-coded distinct
-          // versions per writer.
+          pipe(A.every(failures, SupersessionConflict.is), assertTrue);
+          // Both creators derive version 1 and the same public ID. Either
+          // unique index can reject the loser before another backstop does;
+          // every equivalent duplicate must retain the typed conflict.
           expect(inspect(failures, { depth: 12 })).toMatch(
-            /epistemic_edge_(?:open_head_idx|no_overlap|logical_version_unique)/u
+            /epistemic_edge_(?:open_head_idx|no_overlap|logical_version_unique|version_public_id_unique_idx)/u
           );
 
           const rows = yield* sql<{ readonly n: number }>`

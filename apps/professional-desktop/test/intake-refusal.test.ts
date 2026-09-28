@@ -1,4 +1,7 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import { intakeRefusal } from "@/intake/Intake.atoms";
 
@@ -11,7 +14,7 @@ describe("what intake refuses, before it reads a byte", () => {
     // exist — so it produced a rationale about nothing at all, in earnest.
     const refusal = intakeRefusal({ name: "empty.txt", size: 0 });
 
-    expect(O.isSome(refusal)).toBe(true);
+    pipe(refusal, O.isSome, assertTrue);
     expect(O.getOrElse(refusal, () => "")).toContain("empty");
   });
 
@@ -22,6 +25,6 @@ describe("what intake refuses, before it reads a byte", () => {
   });
 
   it("accepts an ordinary document", () => {
-    expect(intakeRefusal({ name: "contract.pdf", size: 4 * MEGABYTE })).toStrictEqual(O.none());
+    assertNone(intakeRefusal({ name: "contract.pdf", size: 4 * MEGABYTE }));
   });
 });

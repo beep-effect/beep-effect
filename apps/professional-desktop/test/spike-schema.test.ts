@@ -1,6 +1,8 @@
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -57,7 +59,7 @@ describe("spike state schemas", () => {
       const invalidSizeExits = yield* Effect.forEach(invalidSizes, (input) =>
         Effect.exit(decodeCosmosSpikeSize(input))
       );
-      expect(A.every(invalidSizeExits, Exit.isFailure)).toBe(true);
+      pipe(A.every(invalidSizeExits, Exit.isFailure), assertTrue);
 
       const validProbe = {
         backend: "sigma",
@@ -69,22 +71,20 @@ describe("spike state schemas", () => {
       };
       yield* decodeCosmosSpikeProbeContract(validProbe);
       const invalidProbe = yield* Effect.exit(decodeCosmosSpikeProbeContract({ ...validProbe, projectedNodeCount: 0 }));
-      expect(Exit.isFailure(invalidProbe)).toBe(true);
+      pipe(invalidProbe, Exit.isFailure, assertTrue);
     })
   );
 
-  it("derives only valid Cosmos spike counts from the production schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(CosmosSpikeSize),
-          (size) =>
-            isSyntheticProjectionCount(size.edgeCount) &&
-            isSyntheticProjectionNodeCount(size.elementCount) &&
-            isSyntheticProjectionNodeCount(size.nodeCount),
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "derives only valid Cosmos spike counts from the production schema",
+    { size: CosmosSpikeSize },
+    ({ size }) => {
+      expect(
+        isSyntheticProjectionCount(size.edgeCount) &&
+          isSyntheticProjectionNodeCount(size.elementCount) &&
+          isSyntheticProjectionNodeCount(size.nodeCount)
+      ).toBe(true);
+    },
+    { arbitrary: fcRuns(25) }
+  );
 });

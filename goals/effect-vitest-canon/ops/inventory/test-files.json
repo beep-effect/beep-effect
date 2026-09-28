@@ -220,316 +220,316 @@
     "file": "apps/practice-kg-mcp/test/Host.test.ts",
     "package": "@beep/practice-kg-mcp",
     "kind": "test",
-    "bytes": 3780,
-    "lines": 86
+    "bytes": 5013,
+    "lines": 110
   },
   {
     "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
     "package": "@beep/practice-kg-mcp",
     "kind": "test",
-    "bytes": 2086,
-    "lines": 37
+    "bytes": 2164,
+    "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/App.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1768,
-    "lines": 45
+    "bytes": 1812,
+    "lines": 46
   },
   {
     "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1132,
-    "lines": 23
+    "bytes": 1168,
+    "lines": 24
   },
   {
     "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5405,
-    "lines": 111
+    "bytes": 5441,
+    "lines": 112
   },
   {
     "file": "apps/professional-desktop/test/UsagePricing.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1277,
-    "lines": 37
+    "bytes": 1347,
+    "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3211,
-    "lines": 82
+    "bytes": 3412,
+    "lines": 85
   },
   {
     "file": "apps/professional-desktop/test/chat-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 30207,
-    "lines": 636
+    "bytes": 33651,
+    "lines": 714
   },
   {
     "file": "apps/professional-desktop/test/chat-ui.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 10759,
-    "lines": 248
+    "bytes": 10904,
+    "lines": 250
   },
   {
     "file": "apps/professional-desktop/test/code-block.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2115,
+    "bytes": 2126,
     "lines": 47
   },
   {
     "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2261,
-    "lines": 54
+    "bytes": 2374,
+    "lines": 58
   },
   {
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6204,
-    "lines": 151
+    "bytes": 9450,
+    "lines": 220
   },
   {
     "file": "apps/professional-desktop/test/composer-policy.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5338,
+    "bytes": 5349,
     "lines": 142
   },
   {
     "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3416,
-    "lines": 77
+    "bytes": 3976,
+    "lines": 87
   },
   {
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18311,
-    "lines": 501
+    "bytes": 19123,
+    "lines": 523
   },
   {
     "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1299,
+    "bytes": 1310,
     "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/dock-shell.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8056,
-    "lines": 195
+    "bytes": 8961,
+    "lines": 213
   },
   {
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 57422,
-    "lines": 1353
+    "bytes": 58690,
+    "lines": 1388
   },
   {
     "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1606,
+    "bytes": 1617,
     "lines": 33
   },
   {
     "file": "apps/professional-desktop/test/failure-message.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2042,
-    "lines": 60
+    "bytes": 2132,
+    "lines": 64
   },
   {
     "file": "apps/professional-desktop/test/failure-observability.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 743,
-    "lines": 18
+    "bytes": 787,
+    "lines": 19
   },
   {
     "file": "apps/professional-desktop/test/fps-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1517,
-    "lines": 46
+    "bytes": 1787,
+    "lines": 53
   },
   {
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18683,
-    "lines": 470
+    "bytes": 20401,
+    "lines": 506
   },
   {
     "file": "apps/professional-desktop/test/intake-refusal.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1101,
-    "lines": 27
+    "bytes": 1210,
+    "lines": 30
   },
   {
     "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1047,
-    "lines": 28
+    "bytes": 1083,
+    "lines": 29
   },
   {
     "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 12657,
-    "lines": 316
+    "bytes": 13157,
+    "lines": 311
   },
   {
     "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6192,
-    "lines": 156
+    "bytes": 6107,
+    "lines": 155
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6258,
-    "lines": 135
+    "bytes": 6135,
+    "lines": 132
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6996,
-    "lines": 170
+    "bytes": 6869,
+    "lines": 167
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 12934,
-    "lines": 304
+    "bytes": 16016,
+    "lines": 367
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2411,
-    "lines": 61
+    "bytes": 2545,
+    "lines": 65
   },
   {
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 28896,
-    "lines": 588
+    "bytes": 29996,
+    "lines": 609
   },
   {
     "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 25098,
-    "lines": 531
+    "bytes": 27305,
+    "lines": 553
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6610,
-    "lines": 174
+    "bytes": 7192,
+    "lines": 178
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3604,
-    "lines": 78
+    "bytes": 3746,
+    "lines": 81
   },
   {
     "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
     "package": "@beep/professional-desktop",
     "kind": "support",
-    "bytes": 12157,
-    "lines": 264
+    "bytes": 15126,
+    "lines": 335
   },
   {
     "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8521,
+    "bytes": 8532,
     "lines": 194
   },
   {
     "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5303,
-    "lines": 130
+    "bytes": 6017,
+    "lines": 160
   },
   {
     "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3356,
+    "bytes": 3347,
     "lines": 86
   },
   {
     "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18259,
-    "lines": 493
+    "bytes": 19049,
+    "lines": 513
   },
   {
     "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1089,
-    "lines": 23
+    "bytes": 1133,
+    "lines": 24
   },
   {
     "file": "apps/professional-desktop/test/professional-atom-provider.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 603,
-    "lines": 18
+    "bytes": 647,
+    "lines": 19
   },
   {
     "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1923,
+    "bytes": 1925,
     "lines": 55
   },
   {
     "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2276,
-    "lines": 49
+    "bytes": 5437,
+    "lines": 112
   },
   {
     "file": "apps/professional-desktop/test/schema-parity.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 11416,
-    "lines": 255
+    "bytes": 11615,
+    "lines": 261
   },
   {
     "file": "apps/professional-desktop/test/setup.dom.ts",
@@ -542,106 +542,106 @@
     "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3187,
-    "lines": 81
+    "bytes": 3330,
+    "lines": 84
   },
   {
     "file": "apps/professional-desktop/test/spike-schema.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3511,
+    "bytes": 3479,
     "lines": 90
   },
   {
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4955,
-    "lines": 116
+    "bytes": 5043,
+    "lines": 117
   },
   {
     "file": "apps/professional-desktop/test/sync-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5764,
-    "lines": 124
+    "bytes": 5942,
+    "lines": 128
   },
   {
     "file": "apps/professional-desktop/test/sync-retry.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1378,
-    "lines": 35
+    "bytes": 1908,
+    "lines": 42
   },
   {
     "file": "apps/professional-desktop/test/table-layout.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2365,
+    "bytes": 2376,
     "lines": 59
   },
   {
     "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2354,
-    "lines": 49
+    "bytes": 2548,
+    "lines": 52
   },
   {
     "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5891,
-    "lines": 157
+    "bytes": 5319,
+    "lines": 142
   },
   {
     "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4943,
-    "lines": 107
+    "bytes": 4987,
+    "lines": 108
   },
   {
     "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6162,
-    "lines": 162
+    "bytes": 6437,
+    "lines": 167
   },
   {
     "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4454,
-    "lines": 123
+    "bytes": 4548,
+    "lines": 126
   },
   {
     "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4156,
-    "lines": 115
+    "bytes": 4772,
+    "lines": 128
   },
   {
     "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 7532,
-    "lines": 164
+    "bytes": 8241,
+    "lines": 197
   },
   {
     "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1924,
-    "lines": 46
+    "bytes": 2796,
+    "lines": 61
   },
   {
     "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4052,
-    "lines": 107
+    "bytes": 4088,
+    "lines": 108
   },
   {
     "file": "apps/todox/test/app.test.tsx",
@@ -1123,78 +1123,78 @@
     "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 37185,
-    "lines": 1026
+    "bytes": 37888,
+    "lines": 1034
   },
   {
     "file": "packages/documents/server/test/DocumentIntake.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 9227,
-    "lines": 198
+    "bytes": 9634,
+    "lines": 201
   },
   {
     "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 6752,
-    "lines": 180
+    "bytes": 7600,
+    "lines": 201
   },
   {
     "file": "packages/documents/server/test/SyncConflictServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5247,
-    "lines": 147
+    "bytes": 5857,
+    "lines": 153
   },
   {
     "file": "packages/documents/server/test/SyncCursorServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 3585,
-    "lines": 101
+    "bytes": 4133,
+    "lines": 108
   },
   {
     "file": "packages/documents/server/test/SyncItemServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 5977,
-    "lines": 167
+    "bytes": 6563,
+    "lines": 180
   },
   {
     "file": "packages/documents/server/test/SyncOperationServer.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 7072,
-    "lines": 185
+    "bytes": 7766,
+    "lines": 192
   },
   {
     "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 12926,
-    "lines": 307
+    "bytes": 13570,
+    "lines": 318
   },
   {
     "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 22704,
-    "lines": 539
+    "bytes": 25528,
+    "lines": 602
   },
   {
     "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 14103,
-    "lines": 340
+    "bytes": 15555,
+    "lines": 371
   },
   {
     "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
     "package": "@beep/documents-server",
     "kind": "test",
-    "bytes": 13230,
-    "lines": 306
+    "bytes": 14777,
+    "lines": 342
   },
   {
     "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
@@ -2523,99 +2523,99 @@
     "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 8851,
-    "lines": 226
+    "bytes": 9565,
+    "lines": 238
   },
   {
     "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 6899,
-    "lines": 204
+    "bytes": 7046,
+    "lines": 207
   },
   {
     "file": "packages/epistemic/server/test/EpistemicServer.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 1605,
-    "lines": 41
+    "bytes": 1841,
+    "lines": 47
   },
   {
     "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 17351,
-    "lines": 369
+    "bytes": 17477,
+    "lines": 374
   },
   {
     "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 16415,
-    "lines": 362
+    "bytes": 16959,
+    "lines": 388
   },
   {
     "file": "packages/epistemic/server/test/IdentityShaclProjection.e2e.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 4133,
-    "lines": 96
+    "bytes": 4196,
+    "lines": 97
   },
   {
     "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 19363,
-    "lines": 519
+    "bytes": 20103,
+    "lines": 561
   },
   {
     "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 26801,
-    "lines": 638
+    "bytes": 26835,
+    "lines": 643
   },
   {
     "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 55504,
-    "lines": 1330
+    "bytes": 56609,
+    "lines": 1397
   },
   {
     "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 16216,
-    "lines": 378
+    "bytes": 17829,
+    "lines": 417
   },
   {
     "file": "packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 23399,
-    "lines": 600
+    "bytes": 23835,
+    "lines": 625
   },
   {
     "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 11171,
-    "lines": 267
+    "bytes": 11615,
+    "lines": 280
   },
   {
     "file": "packages/epistemic/server/test/integration/ExecutionLedger.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 23333,
-    "lines": 570
+    "bytes": 23794,
+    "lines": 582
   },
   {
     "file": "packages/epistemic/server/test/integration/GovernedTierGate.pglite.test.ts",
     "package": "@beep/epistemic-server",
     "kind": "test",
-    "bytes": 10393,
-    "lines": 238
+    "bytes": 10475,
+    "lines": 240
   },
   {
     "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
@@ -4819,64 +4819,64 @@
     "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 7383,
-    "lines": 212
+    "bytes": 7337,
+    "lines": 218
   },
   {
     "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 23108,
-    "lines": 499
+    "bytes": 23186,
+    "lines": 501
   },
   {
     "file": "packages/law-practice/server/test/CandorRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 11775,
-    "lines": 280
+    "bytes": 12072,
+    "lines": 290
   },
   {
     "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 50296,
-    "lines": 1196
+    "bytes": 50676,
+    "lines": 1218
   },
   {
     "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 8700,
-    "lines": 181
+    "bytes": 8862,
+    "lines": 182
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 22564,
-    "lines": 490
+    "bytes": 23679,
+    "lines": 511
   },
   {
     "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 14123,
-    "lines": 332
+    "bytes": 14461,
+    "lines": 343
   },
   {
     "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 46964,
-    "lines": 1020
+    "bytes": 51966,
+    "lines": 1126
   },
   {
     "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 2638,
-    "lines": 53
+    "bytes": 2759,
+    "lines": 56
   },
   {
     "file": "packages/law-practice/server/test/fixture.ts",
@@ -7887,5 +7887,33 @@
     "kind": "test",
     "bytes": 7391,
     "lines": 169
+  },
+  {
+    "file": "packages/epistemic/server/test/EpistemicRepositoryDriverFailure.pglite.test.ts",
+    "package": "@beep/epistemic-server",
+    "kind": "test",
+    "bytes": 4093,
+    "lines": 95
+  },
+  {
+    "file": "packages/epistemic/server/test/integration/PostgresLock.test-kit.ts",
+    "package": "@beep/epistemic-server",
+    "kind": "support",
+    "bytes": 1881,
+    "lines": 48
+  },
+  {
+    "file": "packages/documents/server/test/SyncRepositoryDriverFailure.pglite.test.ts",
+    "package": "@beep/documents-server",
+    "kind": "test",
+    "bytes": 6223,
+    "lines": 147
+  },
+  {
+    "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+    "package": "@beep/practice-kg-mcp",
+    "kind": "test",
+    "bytes": 959,
+    "lines": 23
   }
 ]

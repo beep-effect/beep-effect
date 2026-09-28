@@ -17,9 +17,11 @@ import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { ExecutionLedger, ExecutionLedgerConstraintViolation } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
@@ -97,7 +99,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Epistemic ExecutionLedger repository PgLite integration", () => {});
 } else {
   describe("Epistemic ExecutionLedger repository PgLite integration", { concurrent: false }, () => {
-    layer(ExecutionLedgerTestLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(ExecutionLedgerTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "appends a chained run, reads it back intact, and settles the allowed decisions",
         Effect.fnUntraced(function* () {
@@ -135,7 +137,7 @@ if (!shouldRunPgliteIntegration) {
               onSome: Effect.succeed,
             })
           );
-          expect(verifyOutcomeBinding(settled, first)).toBe(true);
+          pipe(verifyOutcomeBinding(settled, first), assertTrue);
 
           // The unsettled predicate is scoped to allowed decisions: the denied
           // seq-1 decision has no outcome row and must NOT be reported.
@@ -169,7 +171,7 @@ if (!shouldRunPgliteIntegration) {
           // aborts the surrounding pglite transaction chain.
           const violation = yield* Effect.flip(ledger.appendDecision(first));
 
-          expect(ExecutionLedgerConstraintViolation.is(violation)).toBe(true);
+          pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
           if (ExecutionLedgerConstraintViolation.is(violation)) {
             expect(violation.constraintName).toBe("epistemic_execution_decision_pk");
           }
@@ -193,7 +195,7 @@ if (!shouldRunPgliteIntegration) {
 
           const violation = yield* Effect.flip(ledger.appendOutcome(orphan));
 
-          expect(ExecutionLedgerConstraintViolation.is(violation)).toBe(true);
+          pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
           if (ExecutionLedgerConstraintViolation.is(violation)) {
             expect(violation.constraintName).toBe("epistemic_execution_outcome_decision_fk");
           }
@@ -226,7 +228,7 @@ if (!shouldRunPgliteIntegration) {
           });
           const violation = yield* Effect.flip(ledger.appendOutcome(duplicate));
 
-          expect(ExecutionLedgerConstraintViolation.is(violation)).toBe(true);
+          pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
           if (ExecutionLedgerConstraintViolation.is(violation)) {
             expect(violation.constraintName).toBe("epistemic_execution_outcome_pk");
           }
@@ -284,7 +286,7 @@ if (!shouldRunPgliteIntegration) {
           });
           const violation = yield* Effect.flip(ledger.appendOutcome(fabricated));
 
-          expect(ExecutionLedgerConstraintViolation.is(violation)).toBe(true);
+          pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
           if (ExecutionLedgerConstraintViolation.is(violation)) {
             expect(violation.constraintName).toBe("epistemic_execution_outcome_decision_verdict_fk");
           }
@@ -497,28 +499,31 @@ if (!shouldRunPgliteIntegration) {
           // earn itself: mutate a sealed field mid-chain and the verifier must
           // name the exact index.
           const sql = yield* rawSql;
-          yield* sql`DROP TRIGGER epistemic_execution_decision_append_only ON epistemic_execution_decision`;
-          yield* sql`
+          yield* Effect.acquireUseRelease(
+            sql`DROP TRIGGER epistemic_execution_decision_append_only ON epistemic_execution_decision`,
+            () =>
+              Effect.gen(function* () {
+                yield* sql`
             UPDATE epistemic_execution_decision
             SET destination_digest = ${"9".repeat(64)}
             WHERE run_key = ${runKey} AND seq = 1
           `;
 
-          const tampered = yield* ledger.readDecisions(runKey);
-          expect(tampered).toHaveLength(3);
-          const verification = verifyExecutionDecisionChain(tampered, runKey);
-          expect(verification.result).toBe("chain-broken");
-          if (verification.result === "chain-broken") {
-            expect(verification.atIndex).toBe(1);
-          }
-
-          // Restore the trigger so later suites against this database keep the
-          // guard they expect.
-          yield* sql`
+                const tampered = yield* ledger.readDecisions(runKey);
+                expect(tampered).toHaveLength(3);
+                const verification = verifyExecutionDecisionChain(tampered, runKey);
+                expect(verification.result).toBe("chain-broken");
+                if (verification.result === "chain-broken") {
+                  expect(verification.atIndex).toBe(1);
+                }
+              }),
+            () =>
+              sql`
             CREATE TRIGGER epistemic_execution_decision_append_only
               BEFORE UPDATE OR DELETE ON epistemic_execution_decision
               FOR EACH ROW EXECUTE FUNCTION epistemic_execution_ledger_block_mutation()
-          `;
+          `.pipe(Effect.orDie)
+          );
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -540,30 +545,35 @@ if (!shouldRunPgliteIntegration) {
           yield* ledger.appendOutcome(outcome);
 
           const sql = yield* rawSql;
-          yield* sql`DROP TRIGGER epistemic_execution_outcome_append_only ON epistemic_execution_outcome`;
-          // Rewrite history: a failed execution becomes a completed one.
-          yield* sql`
+          yield* Effect.acquireUseRelease(
+            sql`DROP TRIGGER epistemic_execution_outcome_append_only ON epistemic_execution_outcome`,
+            () =>
+              Effect.gen(function* () {
+                // Rewrite history: a failed execution becomes a completed one.
+                yield* sql`
             UPDATE epistemic_execution_outcome
             SET settlement = 'completed'
             WHERE run_key = ${runKey}
           `;
 
-          const outcomes = yield* ledger.readOutcomes(runKey);
-          const forged = yield* pipe(
-            A.head(outcomes),
-            O.match({
-              onNone: () => Effect.die("expected the forged outcome to read back"),
-              onSome: Effect.succeed,
-            })
-          );
-          expect(forged.settlement).toBe("completed");
-          expect(verifyOutcomeBinding(forged, first)).toBe(false);
-
-          yield* sql`
+                const outcomes = yield* ledger.readOutcomes(runKey);
+                const forged = yield* pipe(
+                  A.head(outcomes),
+                  O.match({
+                    onNone: () => Effect.die("expected the forged outcome to read back"),
+                    onSome: Effect.succeed,
+                  })
+                );
+                expect(forged.settlement).toBe("completed");
+                pipe(verifyOutcomeBinding(forged, first), assertFalse);
+              }),
+            () =>
+              sql`
             CREATE TRIGGER epistemic_execution_outcome_append_only
               BEFORE UPDATE OR DELETE ON epistemic_execution_outcome
               FOR EACH ROW EXECUTE FUNCTION epistemic_execution_ledger_block_mutation()
-          `;
+          `.pipe(Effect.orDie)
+          );
         }),
         pgliteIntegrationTimeoutMillis
       );

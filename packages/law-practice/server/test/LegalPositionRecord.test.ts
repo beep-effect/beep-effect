@@ -36,8 +36,9 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -196,7 +197,7 @@ const underFrame = (frame: number, org = 1) =>
   ActFrameRecordScope.make({ frame: LawPractice.ActFrameId.make(frame), orgId: Shared.OrganizationId.make(org) });
 
 describe("@beep/law-practice-server legal position record repository", () => {
-  layer(Layer.fresh(LegalPositionRecordRepositoryInMemory))("tenant isolation", (it) => {
+  it.layer(Layer.fresh(LegalPositionRecordRepositoryInMemory), { timeout: "10 seconds" })("tenant isolation", (it) => {
     it.effect(
       "never returns another organization's records",
       Effect.fnUntraced(function* () {
@@ -223,73 +224,82 @@ describe("@beep/law-practice-server legal position record repository", () => {
     );
   });
 
-  layer(Layer.fresh(LegalPositionRecordRepositoryInMemory))("appending each record kind", (it) => {
-    it.effect(
-      "reads every appended kind back scoped to where it was recorded",
-      Effect.fnUntraced(function* () {
-        const repository = yield* LegalPositionRecordRepository;
-        yield* appendEveryKind(repository, 1);
+  it.layer(Layer.fresh(LegalPositionRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "appending each record kind",
+    (it) => {
+      it.effect(
+        "reads every appended kind back scoped to where it was recorded",
+        Effect.fnUntraced(function* () {
+          const repository = yield* LegalPositionRecordRepository;
+          yield* appendEveryKind(repository, 1);
 
-        const relators = yield* repository.listRelators(tenant(1));
-        const frames = yield* repository.listFrames(tenant(1));
-        const exercises = yield* repository.listExercises(underFrame(101));
-        const corrections = yield* repository.listCorrections(underFrame(101));
-        const candidates = yield* repository.listOppositionCandidates(tenant(1));
+          const relators = yield* repository.listRelators(tenant(1));
+          const frames = yield* repository.listFrames(tenant(1));
+          const exercises = yield* repository.listExercises(underFrame(101));
+          const corrections = yield* repository.listCorrections(underFrame(101));
+          const candidates = yield* repository.listOppositionCandidates(tenant(1));
 
-        expect(ids(relators)).toEqual([1]);
-        expect(ids(frames)).toEqual([101]);
-        expect(ids(exercises)).toEqual([201]);
-        expect(ids(corrections)).toEqual([301]);
-        expect(ids(candidates)).toEqual([401]);
+          expect(ids(relators)).toEqual([1]);
+          expect(ids(frames)).toEqual([101]);
+          expect(ids(exercises)).toEqual([201]);
+          expect(ids(corrections)).toEqual([301]);
+          expect(ids(candidates)).toEqual([401]);
 
-        // Round-tripping the recorded surface, not just the row count. An
-        // exercise that lost its disposition would be authority laundering, and
-        // a candidate that lost half its pair would name nothing.
-        expect(A.map(exercises, (exercise) => exercise.result.disposition.disposition)).toEqual(["undetermined"]);
-        expect(A.map(candidates, (candidate) => HashSet.size(candidate.candidate.relators))).toEqual([2]);
-        expect(A.map(frames, (frame) => HashSet.size(frame.derivationKind.kinds))).toEqual([2]);
-      })
-    );
-  });
+          // Round-tripping the recorded surface, not just the row count. An
+          // exercise that lost its disposition would be authority laundering, and
+          // a candidate that lost half its pair would name nothing.
+          expect(A.map(exercises, (exercise) => exercise.result.disposition.disposition)).toEqual(["undetermined"]);
+          expect(A.map(candidates, (candidate) => HashSet.size(candidate.candidate.relators))).toEqual([2]);
+          expect(A.map(frames, (frame) => HashSet.size(frame.derivationKind.kinds))).toEqual([2]);
+        })
+      );
+    }
+  );
 
-  layer(Layer.fresh(LegalPositionRecordRepositoryInMemory))("scoping reads by act frame", (it) => {
-    it.effect(
-      "never returns a second frame's exercises or corrections",
-      Effect.fnUntraced(function* () {
-        const repository = yield* LegalPositionRecordRepository;
-        yield* appendEveryKind(repository, 1);
-        yield* appendEveryKind(repository, 2);
+  it.layer(Layer.fresh(LegalPositionRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "scoping reads by act frame",
+    (it) => {
+      it.effect(
+        "never returns a second frame's exercises or corrections",
+        Effect.fnUntraced(function* () {
+          const repository = yield* LegalPositionRecordRepository;
+          yield* appendEveryKind(repository, 1);
+          yield* appendEveryKind(repository, 2);
 
-        expect(ids(yield* repository.listExercises(underFrame(101)))).toEqual([201]);
-        expect(ids(yield* repository.listCorrections(underFrame(101)))).toEqual([301]);
+          expect(ids(yield* repository.listExercises(underFrame(101)))).toEqual([201]);
+          expect(ids(yield* repository.listCorrections(underFrame(101)))).toEqual([301]);
 
-        expect(ids(yield* repository.listExercises(underFrame(102)))).toEqual([202]);
-        expect(ids(yield* repository.listCorrections(underFrame(102)))).toEqual([302]);
+          expect(ids(yield* repository.listExercises(underFrame(102)))).toEqual([202]);
+          expect(ids(yield* repository.listCorrections(underFrame(102)))).toEqual([302]);
 
-        // Both frames belong to the same tenant, so the tenant-wide reads see
-        // both while the frame-keyed reads never mix them.
-        expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 102]);
-      })
-    );
-  });
+          // Both frames belong to the same tenant, so the tenant-wide reads see
+          // both while the frame-keyed reads never mix them.
+          expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 102]);
+        })
+      );
+    }
+  );
 
-  layer(Layer.fresh(LegalPositionRecordRepositoryInMemory))("ordering reads of one scope", (it) => {
-    it.effect(
-      "returns each kind by id ascending whatever order it was appended in",
-      Effect.fnUntraced(function* () {
-        const repository = yield* LegalPositionRecordRepository;
+  it.layer(Layer.fresh(LegalPositionRecordRepositoryInMemory), { timeout: "10 seconds" })(
+    "ordering reads of one scope",
+    (it) => {
+      it.effect(
+        "returns each kind by id ascending whatever order it was appended in",
+        Effect.fnUntraced(function* () {
+          const repository = yield* LegalPositionRecordRepository;
 
-        // Appended highest id first, so append order and id order disagree and
-        // a store that simply replayed insertions would fail here.
-        yield* appendEveryKind(repository, 3);
-        yield* appendEveryKind(repository, 1);
+          // Appended highest id first, so append order and id order disagree and
+          // a store that simply replayed insertions would fail here.
+          yield* appendEveryKind(repository, 3);
+          yield* appendEveryKind(repository, 1);
 
-        expect(ids(yield* repository.listRelators(tenant(1)))).toEqual([1, 3]);
-        expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 103]);
-        expect(ids(yield* repository.listOppositionCandidates(tenant(1)))).toEqual([401, 403]);
-      })
-    );
-  });
+          expect(ids(yield* repository.listRelators(tenant(1)))).toEqual([1, 3]);
+          expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 103]);
+          expect(ids(yield* repository.listOppositionCandidates(tenant(1)))).toEqual([401, 403]);
+        })
+      );
+    }
+  );
 
   describe("tenant scoping over arbitrary records", () => {
     // Schema-derived rather than hand-written, so the tenant split is proved
@@ -318,15 +328,16 @@ describe("@beep/law-practice-server legal position record repository", () => {
       );
     });
 
-    it.prop(
+    it.effect.prop(
       "returns exactly the relations recorded under each organization, id ascending",
       [S.Array(relators).check(S.isMaxLength(12))],
-      ([recorded]) => {
-        for (const { expected, read } of Effect.runSync(readPerOrganization(recorded))) {
-          expect(read).toEqual(expected);
-        }
-      },
-      { arbitrary: { runs: 10 } }
+      ([recorded]) =>
+        Effect.gen(function* () {
+          for (const { expected, read } of yield* readPerOrganization(recorded)) {
+            expect(read).toEqual(expected);
+          }
+        }),
+      { arbitrary: fcRuns(10) }
     );
   });
 });

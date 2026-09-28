@@ -2,10 +2,10 @@ import { EditorViewer } from "@beep/editor/viewer";
 import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
 import "@testing-library/jest-dom/vitest";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, describe, expect } from "vitest";
 
 // The wide table the reviewers used: twelve columns, each holding one long unbroken
 // token. Nothing here can wrap without wrapping *inside* a word.

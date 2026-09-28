@@ -1048,6 +1048,13 @@ const detectBooleanDataShape = (
     false,
     imports
   );
+  if (
+    (route.replacement.primitive === "utils.assertTrue" &&
+      isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", ["assertTrue"])) ||
+    (route.replacement.primitive === "utils.assertFalse" &&
+      isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", ["assertFalse"]))
+  )
+    return;
   findings.push(makeFinding({ ruleId: "EV006", node: call, file, owner, symbol: member, ...route }));
 };
 

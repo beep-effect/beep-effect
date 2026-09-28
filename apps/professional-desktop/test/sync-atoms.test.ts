@@ -1,7 +1,8 @@
 import { VaultSyncActionError } from "@beep/documents-use-cases/public";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -10,8 +11,7 @@ import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
-import * as Schedule from "effect/Schedule";
-import { describe, expect } from "vitest";
+import * as Stream from "effect/Stream";
 import {
   DesktopSyncClient,
   VaultSyncCommand,
@@ -29,14 +29,14 @@ const waitForPanelState = (
   workspaceId: WorkspaceIdentity.WorkspaceId,
   predicate: (state: VaultSyncPanelState) => boolean
 ): Effect.Effect<void, string> =>
-  Effect.suspend(() =>
-    predicate(registry.get(vaultSyncPanelStateAtoms(workspaceId)))
-      ? Effect.void
-      : Effect.fail("vault sync panel state has not reached the expected variant")
-  ).pipe(
-    Effect.retry(
-      Schedule.spaced(Duration.millis(10)).pipe(Schedule.upTo({ duration: Duration.seconds(3), times: 300 }))
-    )
+  AtomRegistry.toStream(registry, vaultSyncPanelStateAtoms(workspaceId)).pipe(
+    Stream.filter(predicate),
+    Stream.take(1),
+    Stream.runDrain,
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(3),
+      orElse: () => Effect.fail("vault sync panel state has not reached the expected variant"),
+    })
   );
 
 const registryWithClient = (client: DesktopSyncClient["Service"]) =>
@@ -59,7 +59,10 @@ describe("vault sync command atoms", () => {
         tag === "TriggerVaultSync"
           ? Deferred.await(Equal.equals(payload.workspaceId, workspaceA) ? releaseA : releaseB)
           : Effect.die(`unexpected vault sync RPC: ${tag}`)) as unknown as DesktopSyncClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const actionA = vaultSyncCommandAtoms(workspaceA);
       const actionB = vaultSyncCommandAtoms(workspaceB);
       registry.mount(vaultSyncPanelStateAtoms(workspaceA));
@@ -80,7 +83,6 @@ describe("vault sync command atoms", () => {
       yield* waitForPanelState(registry, workspaceA, VaultSyncPanelState.guards.succeeded);
       yield* AtomRegistry.getResult(registry, actionA);
       yield* AtomRegistry.getResult(registry, actionB);
-      registry.dispose();
     })
   );
 
@@ -98,7 +100,10 @@ describe("vault sync command atoms", () => {
             ? recordCall.pipe(Effect.andThen(Deferred.await(releaseReview)))
             : Effect.die(`unexpected vault sync RPC: ${tag}`);
       }) as unknown as DesktopSyncClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const action = vaultSyncCommandAtoms(workspaceA);
       registry.mount(vaultSyncPanelStateAtoms(workspaceA));
       registry.mount(action);
@@ -118,7 +123,6 @@ describe("vault sync command atoms", () => {
       const finalState = registry.get(vaultSyncPanelStateAtoms(workspaceA));
       expect(VaultSyncPanelState.guards.failed(finalState) ? finalState.message : "").toBe("Review failed safely.");
       yield* AtomRegistry.getResult(registry, action);
-      registry.dispose();
     })
   );
 });

@@ -6,7 +6,8 @@ import {
   SerializeTurtleResult,
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed";

@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@beep/pglite": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/sql-pg": "catalog:",

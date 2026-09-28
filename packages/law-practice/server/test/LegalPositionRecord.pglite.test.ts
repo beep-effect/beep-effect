@@ -39,13 +39,14 @@ import {
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -299,7 +300,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("law-practice Drizzle legal position record repository PgLite integration", () => {});
 } else {
   describe("law-practice Drizzle legal position record repository PgLite integration", { concurrent: false }, () => {
-    layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })(
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })(
       "appending and reading each record kind",
       (it) => {
         it.effect(
@@ -362,7 +363,7 @@ if (!shouldRunPgliteIntegration) {
       }
     );
 
-    layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("tenant isolation in SQL", (it) => {
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("tenant isolation in SQL", (it) => {
       it.effect(
         "never returns another organization's records for the same act and norm",
         Effect.fnUntraced(function* () {
@@ -403,7 +404,7 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one scope", (it) => {
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one scope", (it) => {
       it.effect(
         "returns each kind by id ascending whatever order it was appended in",
         Effect.fnUntraced(function* () {
@@ -435,11 +436,31 @@ if (!shouldRunPgliteIntegration) {
             later.claim.id,
           ]);
 
-          // The frame-keyed reads order within one frame the same way; each
-          // frame here holds one exercise and one correction, so the ordering
-          // that matters for them is the id the rewind assigned.
+          // Preserve the original singleton frame identities before checking
+          // ordering among multiple records within a separate frame.
           expect(ids(yield* repository.listExercises(underFrame(earlier.frame.id, 1)))).toEqual([earlier.exercise.id]);
           expect(ids(yield* repository.listExercises(underFrame(later.frame.id, 1)))).toEqual([later.exercise.id]);
+
+          const orderedFrame = yield* repository.recordFrame(yield* frameFixture(3, 1));
+          yield* setNextRowId(301);
+          const highExercise = yield* repository.recordExercise(yield* exerciseFixture(301, orderedFrame.id, 1));
+          const highCorrection = yield* repository.recordCorrection(yield* correctionFixture(301, orderedFrame.id, 1));
+          yield* setNextRowId(201);
+          const lowExercise = yield* repository.recordExercise(yield* exerciseFixture(201, orderedFrame.id, 1));
+          const lowCorrection = yield* repository.recordCorrection(yield* correctionFixture(201, orderedFrame.id, 1));
+
+          expect(highExercise.id).toBe(301);
+          expect(lowExercise.id).toBe(201);
+          expect(highCorrection.id).toBe(301);
+          expect(lowCorrection.id).toBe(201);
+          expect(ids(yield* repository.listExercises(underFrame(orderedFrame.id, 1)))).toEqual([
+            lowExercise.id,
+            highExercise.id,
+          ]);
+          expect(ids(yield* repository.listCorrections(underFrame(orderedFrame.id, 1)))).toEqual([
+            lowCorrection.id,
+            highCorrection.id,
+          ]);
         }),
         PgliteIntegrationTimeout
       );
@@ -447,7 +468,7 @@ if (!shouldRunPgliteIntegration) {
 
     // Its own database: the reads below are expected to fail, and an implicit
     // transaction pglite host rolls the whole session chain back afterwards.
-    layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("driver failures", (it) => {
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("driver failures", (it) => {
       it.effect(
         "reports an unreadable table as a typed repository failure naming that table",
         Effect.fnUntraced(function* () {

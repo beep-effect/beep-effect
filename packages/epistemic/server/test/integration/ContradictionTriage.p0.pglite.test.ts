@@ -8,12 +8,14 @@ import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
@@ -404,8 +406,14 @@ const runFirstScope = Effect.fnUntraced(function* () {
   expect(yield* openAt(1_500, 1_500)).toHaveLength(1);
   const unchangedA = yield* repository.readAsOf(asOf(identityA, 1_500, 1_900));
   const unchangedB = yield* repository.readAsOf(asOf(identityB, 1_500, 1_900));
-  expect(O.map(unchangedA, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
-  expect(O.map(unchangedB, (edge) => edge.fact.amount)).toStrictEqual(O.some("150"));
+  assertSome(
+    O.map(unchangedA, (edge) => edge.fact.amount),
+    "100"
+  );
+  assertSome(
+    O.map(unchangedB, (edge) => edge.fact.amount),
+    "150"
+  );
 
   const replacement = yield* db.transaction((tx) =>
     Effect.gen(function* () {
@@ -425,24 +433,35 @@ const runFirstScope = Effect.fnUntraced(function* () {
       return next;
     })
   );
-  expect(replacement.supersedesId).toStrictEqual(O.some(beliefA.id));
+  assertSome(replacement.supersedesId, beliefA.id);
   expect(yield* openAt(1_500, 1_999)).toHaveLength(1);
   expect(yield* openAt(1_500, 2_000)).toHaveLength(0);
 
   const historicalA = yield* repository.readAsOf(asOf(identityA, 1_500, 1_500));
   const correctedA = yield* repository.readAsOf(asOf(identityA, 1_500, 2_500));
   const stillOpenB = yield* repository.readAsOf(asOf(identityB, 1_500, 2_500));
-  expect(O.map(historicalA, (edge) => edge.fact.amount)).toStrictEqual(O.some("100"));
-  expect(O.map(correctedA, (edge) => edge.fact.amount)).toStrictEqual(O.some("125"));
-  expect(O.map(stillOpenB, (edge) => edge.fact.amount)).toStrictEqual(O.some("150"));
+  assertSome(
+    O.map(historicalA, (edge) => edge.fact.amount),
+    "100"
+  );
+  assertSome(
+    O.map(correctedA, (edge) => edge.fact.amount),
+    "125"
+  );
+  assertSome(
+    O.map(stillOpenB, (edge) => edge.fact.amount),
+    "150"
+  );
 
   const lateB = yield* repository.record(recordFact(identityB, { amount: "140" }, 2_600, 500));
   expect(lateB.version).toBe(2);
-  expect(O.map(yield* repository.readAsOf(asOf(identityB, 750, 3_000)), (edge) => edge.fact.amount)).toStrictEqual(
-    O.some("140")
+  assertSome(
+    O.map(yield* repository.readAsOf(asOf(identityB, 750, 3_000)), (edge) => edge.fact.amount),
+    "140"
   );
-  expect(O.map(yield* repository.readAsOf(asOf(identityB, 1_500, 3_000)), (edge) => edge.fact.amount)).toStrictEqual(
-    O.some("150")
+  assertSome(
+    O.map(yield* repository.readAsOf(asOf(identityB, 1_500, 3_000)), (edge) => edge.fact.amount),
+    "150"
   );
 
   const rejectedKey = yield* candidateKey(
@@ -509,26 +528,34 @@ const runSecondScope = Effect.fnUntraced(function* (written: FirstScopeResult) {
     replacementEdgeVersionId: written.replacementId,
     status: "superseded",
   });
-  expect(O.map(correctedA, (edge) => edge.fact.amount)).toStrictEqual(O.some("125"));
-  expect(O.map(standingB, (edge) => edge.fact.amount)).toStrictEqual(O.some("150"));
+  assertSome(
+    O.map(correctedA, (edge) => edge.fact.amount),
+    "125"
+  );
+  assertSome(
+    O.map(standingB, (edge) => edge.fact.amount),
+    "150"
+  );
 });
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("Contradiction-triage P0 fixture gate", () => {});
 } else {
   describe("Contradiction-triage P0 fixture gate", { concurrent: false }, () => {
-    it.effect(
-      "passes identity, symmetry, suppression, visibility, transition, ordering, competing-lineage, and restart gates",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-contradiction-p0-" });
-        const dataDir = path.join(tempDir, "pgdata");
+    it.layer(TempDirServices, { timeout: "10 seconds" })("native services", (it) => {
+      it.effect(
+        "passes identity, symmetry, suppression, visibility, transition, ordering, competing-lineage, and restart gates",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-contradiction-p0-" });
+          const dataDir = path.join(tempDir, "pgdata");
 
-        const written = yield* runFirstScope().pipe(provideScopedLayer(makePersistentLayer(dataDir)));
-        yield* runSecondScope(written).pipe(provideScopedLayer(makePersistentLayer(dataDir)));
-      }, provideScopedLayer(TempDirServices)),
-      300_000
-    );
+          const written = yield* runFirstScope().pipe(provideScopedLayer(makePersistentLayer(dataDir)));
+          yield* runSecondScope(written).pipe(provideScopedLayer(makePersistentLayer(dataDir)));
+        }),
+        300_000
+      );
+    });
   });
 }

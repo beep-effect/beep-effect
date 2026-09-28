@@ -1,0 +1,90 @@
+{
+  "reanchored": 14,
+  "reason": "Only surrounding EV002/EV009 identities changed after the 42 assertion conversions; exact finding evidence and ordered peer counts match the pre-edit scan. Status and remediation obligations are unchanged.",
+  "rows": [
+    {
+      "oldId": "EV002:apps/professional-desktop/test/contradiction-sidecar-registration.test.ts:385:provideBunCrypto@7#1",
+      "newId": "EV002:apps/professional-desktop/test/contradiction-sidecar-registration.test.ts:388:provideBunCrypto@7#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:131:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:134:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:132:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:135:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:134:provideScopedLayer@7#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:137:provideScopedLayer@7#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:266:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:269:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:267:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:270:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:269:provideScopedLayer@7#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:272:provideScopedLayer@7#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:299:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:300:provideScopedLayer@8#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:303:provideScopedLayer@8#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:302:provideScopedLayer@7#1",
+      "newId": "EV002:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:305:provideScopedLayer@7#1",
+      "statusRetained": "open",
+      "rule": "EV002"
+    },
+    {
+      "oldId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:115:it.live@2#1",
+      "newId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:117:it.live@2#1",
+      "statusRetained": "open",
+      "rule": "EV009"
+    },
+    {
+      "oldId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:69:it.live@2#1",
+      "newId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:71:it.live@2#1",
+      "statusRetained": "open",
+      "rule": "EV009"
+    },
+    {
+      "oldId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:90:it.live@2#1",
+      "newId": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:92:it.live@2#1",
+      "statusRetained": "open",
+      "rule": "EV009"
+    },
+    {
+      "oldId": "EV009:apps/professional-desktop/test/intake-atoms.test.ts:388:it.live@2#1",
+      "newId": "EV009:apps/professional-desktop/test/intake-atoms.test.ts:390:it.live@2#1",
+      "statusRetained": "open",
+      "rule": "EV009"
+    }
+  ]
+}

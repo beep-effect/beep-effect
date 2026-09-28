@@ -602,3 +602,14 @@ The remaining work stays in the single consolidated PR #1307, following
 Benjamin's earlier consolidation and autonomous-merge instructions. Merge after
 final goal acceptance, hosted checks and review closure; do not merge an interim
 checkpoint merely because a package proof passes.
+
+
+## 2026-09-28 — merge the current checkpoint and continue in a follow-up PR
+
+The user requested that the published head of #1307 remain unchanged while its
+remaining heavy jobs finish, and then confirmed its merge. This supersedes the
+earlier instruction to keep all remaining work in #1307. The Epistemic Server
+batch and subsequent goal work continue on `codex/effect-vitest-followup` from
+merge commit `c2b75455dff12367794abd4ebf52136f52553c15`. The checkpoint merge
+does not close the goal or waive any remaining inventory, empty-baseline,
+adversarial-review, verification or hosted acceptance requirements.

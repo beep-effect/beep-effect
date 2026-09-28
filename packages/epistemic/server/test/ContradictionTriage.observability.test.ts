@@ -12,8 +12,8 @@ import { SourceTextResolver } from "@beep/file-processing/SourceText";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
-import { provideScopedLayer } from "@beep/test-utils";
-import { assert, describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
 import { Crypto, DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -127,11 +127,11 @@ const makeRecordingTracer = (): {
   return { captured, tracer };
 };
 
-const runList = (fail: boolean, tracer: Tracer.Tracer) =>
+const runList = (tracer: Tracer.Tracer) =>
   Effect.gen(function* () {
     const service = yield* ContradictionTriageService;
     return yield* service.listCandidates(payload);
-  }).pipe(provideScopedLayer(makeServiceLayer(fail)), Effect.withTracer(tracer));
+  }).pipe(Effect.withTracer(tracer));
 
 const onlySpan = (captured: ReadonlyArray<Tracer.NativeSpan>, name: string): Tracer.NativeSpan => {
   const matches = A.filter(captured, (span) => Eq.equals(span.name, name));
@@ -175,30 +175,33 @@ const assertTopology = (captured: ReadonlyArray<Tracer.NativeSpan>) => {
 };
 
 describe("ContradictionTriage observability", () => {
-  it.effect(
-    "emits one action, port, and technical adapter span with a bounded success outcome",
-    Effect.fnUntraced(function* () {
-      const { captured, tracer } = makeRecordingTracer();
+  it.layer(makeServiceLayer(false), { timeout: "10 seconds" })("successful listing", (it) => {
+    it.effect(
+      "emits one action, port, and technical adapter span with a bounded success outcome",
+      Effect.fnUntraced(function* () {
+        const { captured, tracer } = makeRecordingTracer();
 
-      yield* runList(false, tracer);
+        yield* runList(tracer);
 
-      const action = assertTopology(captured);
-      assert.strictEqual(action.attributes.get("epistemic.contradiction.outcome"), "listed");
-      assert.isFalse(action.attributes.has("epistemic.contradiction.failure_reason"));
-    })
-  );
+        const action = assertTopology(captured);
+        assert.strictEqual(action.attributes.get("epistemic.contradiction.outcome"), "listed");
+        assert.isFalse(action.attributes.has("epistemic.contradiction.failure_reason"));
+      })
+    );
+  });
+  it.layer(makeServiceLayer(true), { timeout: "10 seconds" })("failed listing", (it) => {
+    it.effect(
+      "records a bounded failure outcome without leaking adapter details",
+      Effect.fnUntraced(function* () {
+        const { captured, tracer } = makeRecordingTracer();
 
-  it.effect(
-    "records a bounded failure outcome without leaking adapter details",
-    Effect.fnUntraced(function* () {
-      const { captured, tracer } = makeRecordingTracer();
+        const error = yield* Effect.flip(runList(tracer));
 
-      const error = yield* Effect.flip(runList(true, tracer));
-
-      assert.strictEqual(error.reason, "unavailable");
-      const action = assertTopology(captured);
-      assert.strictEqual(action.attributes.get("epistemic.contradiction.outcome"), "failed");
-      assert.strictEqual(action.attributes.get("epistemic.contradiction.failure_reason"), "unavailable");
-    })
-  );
+        assert.strictEqual(error.reason, "unavailable");
+        const action = assertTopology(captured);
+        assert.strictEqual(action.attributes.get("epistemic.contradiction.outcome"), "failed");
+        assert.strictEqual(action.attributes.get("epistemic.contradiction.failure_reason"), "unavailable");
+      })
+    );
+  });
 });

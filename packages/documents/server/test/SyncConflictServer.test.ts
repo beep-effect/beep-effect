@@ -12,34 +12,15 @@ import {
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
-};
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const ghostConflictId = Documents.SyncConflictId.make(99);
@@ -54,6 +35,12 @@ const conflictSeed = (remoteEventId: O.Option<string>) =>
     resolutionStatus: "open",
     workspaceId,
   });
+const encodeSyncConflictSeed = S.encodeResult(SyncConflictSeed);
+const decodeSyncConflictSeed = S.decodeUnknownResult(SyncConflictSeed);
+const equivalentSyncConflictSeed = S.toEquivalence(SyncConflictSeed);
+const encodeSyncConflict = S.encodeResult(DomainSyncConflict.SyncConflict);
+const decodeSyncConflict = S.decodeUnknownResult(DomainSyncConflict.SyncConflict);
+const equivalentSyncConflict = S.toEquivalence(DomainSyncConflict.SyncConflict);
 
 describe("SyncConflict server repository", () => {
   it.effect(
@@ -121,27 +108,46 @@ describe("SyncConflict server repository", () => {
       const error = yield* Effect.flip(
         repository.markReviewed(MarkSyncConflictReviewedInput.make({ conflictId: ghostConflictId }))
       );
-      expect(SyncConflictRepositoryNotFound.is(error)).toBe(true);
+      pipe(SyncConflictRepositoryNotFound.is(error), assertTrue);
       if (SyncConflictRepositoryNotFound.is(error)) {
         expect(error.conflictId).toBe(ghostConflictId);
       }
     })
   );
 
-  it.effect(
-    "resolves the repository through the in-memory layer",
-    Effect.fnUntraced(function* () {
-      const open = yield* SyncConflictRepository.pipe(
-        Effect.flatMap((repository) => repository.listOpen(listOpenInput)),
-        provideScopedLayer(SyncConflictRepositoryInMemoryLayer)
-      );
+  it.layer(Layer.fresh(SyncConflictRepositoryInMemoryLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "resolves the repository through the in-memory layer",
+      Effect.fnUntraced(function* () {
+        const open = yield* SyncConflictRepository.pipe(
+          Effect.flatMap((repository) => repository.listOpen(listOpenInput))
+        );
 
-      expect(open).toEqual([]);
-    })
-  );
+        expect(open).toEqual([]);
+      })
+    );
+  });
 
-  it("round-trips schema-derived sync conflicts and seeds", () => {
-    assertSchemaArbitraryRoundTrip(DomainSyncConflict.SyncConflict);
-    assertSchemaArbitraryRoundTrip(SyncConflictSeed);
+  describe("round-trips schema-derived sync conflicts and seeds", () => {
+    it.prop(
+      "DomainSyncConflict.SyncConflict",
+      { value: Arbitrary.schema(DomainSyncConflict.SyncConflict) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncConflict(value));
+        const decoded = Result.getOrThrow(decodeSyncConflict(encoded));
+        assertTrue(equivalentSyncConflict(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncConflictSeed",
+      { value: Arbitrary.schema(SyncConflictSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncConflictSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncConflictSeed(encoded));
+        assertTrue(equivalentSyncConflictSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
   });
 });

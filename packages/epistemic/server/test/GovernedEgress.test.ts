@@ -14,9 +14,11 @@ import {
 } from "@beep/epistemic-domain/values/ExecutionRecord";
 import { GovernedEgressOptions, makeGovernedEgressFetch } from "@beep/epistemic-server/GovernedEgress";
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Ref } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Deferred, Duration, Effect, pipe, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { ExecutionLedgerShape } from "@beep/epistemic-use-cases/ExecutionLedger";
@@ -146,8 +148,8 @@ const attemptEgress = (harness: Harness, url: string) =>
 // so it stays honest in a test that also makes allowed requests.
 const expectDenied = Effect.fn("GovernedEgressTest.expectDenied")(function* (harness: Harness, url: string) {
   const outcome = yield* attemptEgress(harness, url);
-  expect(outcome.rejected).toBe(true);
-  expect(A.contains(harness.attempted, url)).toBe(false);
+  pipe(outcome.rejected, assertTrue);
+  pipe(A.contains(harness.attempted, url), assertFalse);
 });
 
 describe("GovernedEgress", () => {
@@ -170,7 +172,7 @@ describe("GovernedEgress", () => {
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("completed");
-      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
       // Redirects are not followed: authorizing the first hop would otherwise
       // authorize wherever that hop chose to send the request next.
       expect(harness.redirectModes).toEqual(["error"]);
@@ -182,13 +184,13 @@ describe("GovernedEgress", () => {
       const harness = yield* makeHarness({ failFetch: true });
       const result = yield* attemptEgress(harness, allowedUrl);
 
-      expect(result.rejected).toBe(true);
+      pipe(result.rejected, assertTrue);
       const decisions = yield* Ref.get(harness.decisions);
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(decisions).toHaveLength(1);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("failed");
-      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
     })
   );
 
@@ -197,13 +199,13 @@ describe("GovernedEgress", () => {
       const harness = yield* makeHarness({ throwFetch: true });
       const result = yield* attemptEgress(harness, allowedUrl);
 
-      expect(result.rejected).toBe(true);
+      pipe(result.rejected, assertTrue);
       const decisions = yield* Ref.get(harness.decisions);
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(decisions).toHaveLength(1);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("failed");
-      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
       expect(yield* harness.ledger.readUnsettledAllowed(decisions[0]!.runKey)).toHaveLength(0);
     })
   );
@@ -258,7 +260,7 @@ describe("GovernedEgress", () => {
         )
       );
 
-      expect(EgressDenied.is(error)).toBe(true);
+      pipe(EgressDenied.is(error), assertTrue);
       // Field-free by construction: there is nothing on it for an agent to read.
       expect(Object.keys(error as object).filter((key) => key !== "_tag")).toEqual([]);
     })
@@ -300,7 +302,10 @@ describe("GovernedEgress", () => {
       expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
       expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "denied", "allowed"]);
       const runKey = decisions[0]!.runKey;
-      expect(A.every(decisions, (record) => record.runKey === runKey)).toBe(true);
+      pipe(
+        A.every(decisions, (record) => record.runKey === runKey),
+        assertTrue
+      );
       expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
     })
   );

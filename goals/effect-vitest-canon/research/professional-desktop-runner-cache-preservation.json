@@ -1,0 +1,58 @@
+{
+  "reviewedNodes": 17,
+  "changedDependencyLists": 12,
+  "edges": [
+    {
+      "computation": "@beep/professional-desktop#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/professional-desktop#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#codegen",
+      "addedDependency": "@beep/test-runner#codegen"
+    },
+    {
+      "computation": "@beep/professional-desktop#coverage",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#dev",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/professional-desktop#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/professional-desktop#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/professional-desktop#test:integration",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#test:integration:parallel",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/professional-desktop#test:property",
+      "addedDependency": "@beep/test-runner#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "4adc004ec529af4477846727110bdf62c92adfd94793246e2f6e9ca9e9f64e50"
+}

@@ -1,0 +1,76 @@
+{
+  "package": "@beep/practice-kg-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T08:27:56.778000+00:00",
+  "totalMs": 4196.8466796875,
+  "testCount": 12,
+  "files": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "ms": 23.8466796875,
+      "tests": 8
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+      "ms": 3781.842041015625,
+      "tests": 1
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "ms": 2.119873046875,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+      "testName": "@beep/practice-kg-mcp entrypoints imports the compiled-host smoke module without running it",
+      "ms": 3781.8420540000006
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (native) loads a portable bundle manifest and preserves an optional corpus root",
+      "ms": 23.003044999999474
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (native) maps missing and invalid manifests to sanitized typed host errors",
+      "ms": 22.84667400000035
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (native) rejects parseable JSON that does not satisfy the production manifest schema",
+      "ms": 22.740469999999732
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (native) omits the corpus root when the caller does not provide one",
+      "ms": 22.671534000000065
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (memory) loads a portable bundle manifest and preserves an optional corpus root",
+      "ms": 13.50839300000007
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (memory) maps missing and invalid manifests to sanitized typed host errors",
+      "ms": 2.0567470000005414
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (memory) omits the corpus root when the caller does not provide one",
+      "ms": 1.9702149999993708
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host (memory) rejects parseable JSON that does not satisfy the production manifest schema",
+      "ms": 1.374166000000514
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores PackageFailure cause and compares diagnostic fields",
+      "ms": 1.3511809999999969
+    }
+  ]
+}

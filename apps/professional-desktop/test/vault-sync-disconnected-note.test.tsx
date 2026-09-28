@@ -1,14 +1,14 @@
 import { VaultSyncPanel } from "@/sync/VaultSyncPanel";
 import "@testing-library/jest-dom/vitest";
 import { DmsMirrorDisconnectReason, VaultSyncStatus } from "@beep/documents-use-cases/public";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { AsyncResult } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { afterEach } from "vitest";
 import { vaultSyncConflictsAtom, vaultSyncStatusAtom } from "@/sync/Sync.atoms";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";

@@ -1,12 +1,15 @@
 import { PracticeKgClaimsError, PracticeKgProjectionError } from "@beep/law-practice-server";
 import { CandorPromotionSubjectResolutionError } from "@beep/law-practice-server/CandorPromotionGate";
 import { PromotionGateRequest, PromotionSubjectRef, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {
-  expect(same(first, second)).toBe(true);
-  expect(same(first, different)).toBe(false);
+  pipe(same(first, second), assertTrue);
+  pipe(same(first, different), assertFalse);
 };
 
 describe("law-practice server tagged-error declared equivalence", () => {

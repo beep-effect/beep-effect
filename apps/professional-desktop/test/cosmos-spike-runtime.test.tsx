@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, render, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, describe, expect, vi } from "vitest";
 import { CosmosSpike } from "@/spikes/CosmosSpike";
 
 describe("Cosmos spike runtime failure", () => {

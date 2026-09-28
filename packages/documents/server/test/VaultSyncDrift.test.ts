@@ -15,10 +15,11 @@ import {
 import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { FindSyncItemByPathInput, SyncItemRepository } from "@beep/documents-use-cases/entities/SyncItem/server";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -61,245 +62,257 @@ const findTrackedItem = (relPath: string) =>
   );
 
 describe("@beep/documents-server VaultSyncEngine drift detection", () => {
-  it.effect(
-    "classifies unattributed remote delete, move, rename and unknown events inside the mirror",
-    Effect.fnUntraced(function* () {
-      const engine = yield* VaultSyncEngine;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const root = yield* makeVaultRoot();
-      yield* engine.syncOnce(syncInput(root));
-      const eventTypes: ReadonlyArray<"deleted" | "moved" | "renamed" | "unknown"> = [
-        "deleted",
-        "moved",
-        "renamed",
-        "unknown",
-      ];
-      for (const eventType of eventTypes) {
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "classifies unattributed remote delete, move, rename and unknown events inside the mirror",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* engine.syncOnce(syncInput(root));
+        const eventTypes: ReadonlyArray<"deleted" | "moved" | "renamed" | "unknown"> = [
+          "deleted",
+          "moved",
+          "renamed",
+          "unknown",
+        ];
+        for (const eventType of eventTypes) {
+          yield* handle.injectRemoteEvent(
+            DmsRemoteEvent.make({
+              eventId: `foreign-${eventType}`,
+              eventType,
+              itemKind: O.some("file"),
+              name: O.some(`${eventType}.txt`),
+              parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
+              remoteId: O.some(RemoteItemId.make(`untracked-${eventType}`)),
+              payload: { origin: "foreign" },
+            })
+          );
+        }
+        const status = yield* engine.syncOnce(syncInput(root));
+        const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+        expect(status.openConflicts).toBe(4);
+        expect(A.map(conflicts, (conflict) => [O.getOrNull(conflict.remoteEventId), conflict.conflictKind])).toEqual(
+          expect.arrayContaining(A.map(eventTypes, (eventType) => [`foreign-${eventType}`, "remoteUnknown"]))
+        );
+        expect(A.length(conflicts)).toBe(4);
+      })
+    );
+  });
+
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "classifies foreign remote events, ignores echoes, and dedupes across polls",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "watched.txt", "watched body");
+        const pushStatus = yield* engine.syncOnce(syncInput(root));
+        expect(pushStatus.openConflicts).toBe(0);
+
+        const tracked = yield* findTrackedItem("watched.txt");
+        // Foreign edit of an unknown remote item under the mirror root.
         yield* handle.injectRemoteEvent(
           DmsRemoteEvent.make({
-            eventId: `foreign-${eventType}`,
-            eventType,
+            eventId: "foreign-evt-create",
+            eventType: "edited",
             itemKind: O.some("file"),
-            name: O.some(`${eventType}.txt`),
+            name: O.some("mystery.txt"),
             parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
-            remoteId: O.some(RemoteItemId.make(`untracked-${eventType}`)),
-            payload: { origin: "foreign" },
+            payload: { origin: "test" },
+            remoteId: O.some(RemoteItemId.make("fx-9999")),
           })
         );
-      }
-      const status = yield* engine.syncOnce(syncInput(root));
-      const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
-      expect(status.openConflicts).toBe(4);
-      expect(A.map(conflicts, (conflict) => [O.getOrNull(conflict.remoteEventId), conflict.conflictKind])).toEqual(
-        expect.arrayContaining(A.map(eventTypes, (eventType) => [`foreign-${eventType}`, "remoteUnknown"]))
-      );
-      expect(A.length(conflicts)).toBe(4);
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        // Remote event without any item identifier: unattributable account
+        // noise, ignored by design (never recorded as a conflict).
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({ eventId: "foreign-evt-unknown", eventType: "unknown", payload: { origin: "test" } })
+        );
+        // Unknown remote item whose parent is outside the mirror: invisible.
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-evt-outside",
+            eventType: "created",
+            itemKind: O.some("file"),
+            name: O.some("elsewhere.txt"),
+            parentRemoteId: O.some(RemoteItemId.make("fx-elsewhere")),
+            payload: { origin: "test" },
+            remoteId: O.some(RemoteItemId.make("fx-8888")),
+          })
+        );
+        // Remote rename of the tracked item that mismatches our pushed state.
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-evt-rename",
+            eventType: "renamed",
+            itemKind: O.some("file"),
+            name: O.some("hijacked.txt"),
+            payload: { origin: "test" },
+            remoteId: tracked.remoteId,
+          })
+        );
 
-  it.effect(
-    "classifies foreign remote events, ignores echoes, and dedupes across polls",
-    Effect.fnUntraced(function* () {
-      const engine = yield* VaultSyncEngine;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const root = yield* makeVaultRoot();
-      yield* writeVaultFile(root, "watched.txt", "watched body");
-      const pushStatus = yield* engine.syncOnce(syncInput(root));
-      expect(pushStatus.openConflicts).toBe(0);
+        const status = yield* engine.syncOnce(syncInput(root));
+        const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+        const kindByEventId = A.map(conflicts, (conflict) => [
+          O.getOrNull(conflict.remoteEventId),
+          conflict.conflictKind,
+        ]);
 
-      const tracked = yield* findTrackedItem("watched.txt");
-      // Foreign edit of an unknown remote item under the mirror root.
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-create",
-          eventType: "edited",
-          itemKind: O.some("file"),
-          name: O.some("mystery.txt"),
-          parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
-          payload: { origin: "test" },
-          remoteId: O.some(RemoteItemId.make("fx-9999")),
-        })
-      );
-      // Remote event without any item identifier: unattributable account
-      // noise, ignored by design (never recorded as a conflict).
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({ eventId: "foreign-evt-unknown", eventType: "unknown", payload: { origin: "test" } })
-      );
-      // Unknown remote item whose parent is outside the mirror: invisible.
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-outside",
-          eventType: "created",
-          itemKind: O.some("file"),
-          name: O.some("elsewhere.txt"),
-          parentRemoteId: O.some(RemoteItemId.make("fx-elsewhere")),
-          payload: { origin: "test" },
-          remoteId: O.some(RemoteItemId.make("fx-8888")),
-        })
-      );
-      // Remote rename of the tracked item that mismatches our pushed state.
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-rename",
-          eventType: "renamed",
-          itemKind: O.some("file"),
-          name: O.some("hijacked.txt"),
-          payload: { origin: "test" },
-          remoteId: tracked.remoteId,
-        })
-      );
+        expect(status.openConflicts).toBe(2);
+        expect(status.conflictItems).toBe(1);
+        expect(kindByEventId).toContainEqual(["foreign-evt-create", "remoteCreate"]);
+        expect(kindByEventId).toContainEqual(["foreign-evt-rename", "remoteRename"]);
+        // Unattributable and outside-mirror events never become conflicts.
+        expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-unknown");
+        expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-outside");
+        const renameConflict = yield* Effect.fromOption(
+          A.findFirst(conflicts, (conflict) => O.contains(conflict.remoteEventId, "foreign-evt-rename"))
+        );
+        expect(O.getOrNull(renameConflict.localRelPath)).toBe("watched.txt");
+        expect(O.getOrNull(renameConflict.syncItemId)).toBe(tracked.id);
 
-      const status = yield* engine.syncOnce(syncInput(root));
-      const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
-      const kindByEventId = A.map(conflicts, (conflict) => [
-        O.getOrNull(conflict.remoteEventId),
-        conflict.conflictKind,
-      ]);
+        // Replaying the same provider event id must not open a second conflict.
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-evt-rename",
+            eventType: "renamed",
+            itemKind: O.some("file"),
+            name: O.some("hijacked.txt"),
+            payload: { origin: "test" },
+            remoteId: tracked.remoteId,
+          })
+        );
+        const replayStatus = yield* engine.syncOnce(syncInput(root));
+        expect(replayStatus.openConflicts).toBe(2);
+      })
+    );
+  });
 
-      expect(status.openConflicts).toBe(2);
-      expect(status.conflictItems).toBe(1);
-      expect(kindByEventId).toContainEqual(["foreign-evt-create", "remoteCreate"]);
-      expect(kindByEventId).toContainEqual(["foreign-evt-rename", "remoteRename"]);
-      // Unattributable and outside-mirror events never become conflicts.
-      expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-unknown");
-      expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-outside");
-      const renameConflict = yield* Effect.fromOption(
-        A.findFirst(conflicts, (conflict) => O.contains(conflict.remoteEventId, "foreign-evt-rename"))
-      );
-      expect(O.getOrNull(renameConflict.localRelPath)).toBe("watched.txt");
-      expect(O.getOrNull(renameConflict.syncItemId)).toBe(tracked.id);
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "flags a remote delete as a conflict and keeps the local file untouched",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const fs = yield* FileSystem.FileSystem;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const path = yield* Path.Path;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "kept.txt", "kept body");
+        yield* engine.syncOnce(syncInput(root));
 
-      // Replaying the same provider event id must not open a second conflict.
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-rename",
-          eventType: "renamed",
-          itemKind: O.some("file"),
-          name: O.some("hijacked.txt"),
-          payload: { origin: "test" },
-          remoteId: tracked.remoteId,
-        })
-      );
-      const replayStatus = yield* engine.syncOnce(syncInput(root));
-      expect(replayStatus.openConflicts).toBe(2);
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        const tracked = yield* findTrackedItem("kept.txt");
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-evt-delete",
+            eventType: "deleted",
+            itemKind: O.some("file"),
+            name: O.some("kept.txt"),
+            payload: { origin: "test" },
+            remoteId: tracked.remoteId,
+          })
+        );
 
-  it.effect(
-    "flags a remote delete as a conflict and keeps the local file untouched",
-    Effect.fnUntraced(function* () {
-      const engine = yield* VaultSyncEngine;
-      const fs = yield* FileSystem.FileSystem;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const path = yield* Path.Path;
-      const root = yield* makeVaultRoot();
-      yield* writeVaultFile(root, "kept.txt", "kept body");
-      yield* engine.syncOnce(syncInput(root));
+        const status = yield* engine.syncOnce(syncInput(root));
+        const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
 
-      const tracked = yield* findTrackedItem("kept.txt");
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-delete",
-          eventType: "deleted",
-          itemKind: O.some("file"),
-          name: O.some("kept.txt"),
-          payload: { origin: "test" },
-          remoteId: tracked.remoteId,
-        })
-      );
+        expect(status.openConflicts).toBe(1);
+        expect(A.map(conflicts, (conflict) => conflict.conflictKind)).toEqual(["remoteDelete"]);
+        // One-way push posture: remote drift never mutates the local vault.
+        expect(yield* fs.readFileString(path.join(root, "kept.txt"))).toBe("kept body");
+      })
+    );
+  });
 
-      const status = yield* engine.syncOnce(syncInput(root));
-      const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "marks a reviewed conflict and removes it from the open listing",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "reviewed.txt", "reviewed body");
+        yield* engine.syncOnce(syncInput(root));
+        const tracked = yield* findTrackedItem("reviewed.txt");
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-evt-review",
+            eventType: "moved",
+            itemKind: O.some("file"),
+            name: O.some("reviewed.txt"),
+            parentRemoteId: O.some(RemoteItemId.make("fx-8888")),
+            payload: { origin: "test" },
+            remoteId: tracked.remoteId,
+          })
+        );
+        yield* engine.syncOnce(syncInput(root));
+        const open = yield* engine.listOpenConflicts(listConflictsInput);
+        const conflict = yield* Effect.fromOption(A.head(open));
+        expect(conflict.conflictKind).toBe("remoteMove");
 
-      expect(status.openConflicts).toBe(1);
-      expect(A.map(conflicts, (conflict) => conflict.conflictKind)).toEqual(["remoteDelete"]);
-      // One-way push posture: remote drift never mutates the local vault.
-      expect(yield* fs.readFileString(path.join(root, "kept.txt"))).toBe("kept body");
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        const reviewed = yield* engine.markConflictReviewed(
+          MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId })
+        );
 
-  it.effect(
-    "marks a reviewed conflict and removes it from the open listing",
-    Effect.fnUntraced(function* () {
-      const engine = yield* VaultSyncEngine;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const root = yield* makeVaultRoot();
-      yield* writeVaultFile(root, "reviewed.txt", "reviewed body");
-      yield* engine.syncOnce(syncInput(root));
-      const tracked = yield* findTrackedItem("reviewed.txt");
-      yield* handle.injectRemoteEvent(
-        DmsRemoteEvent.make({
-          eventId: "foreign-evt-review",
-          eventType: "moved",
-          itemKind: O.some("file"),
-          name: O.some("reviewed.txt"),
-          parentRemoteId: O.some(RemoteItemId.make("fx-8888")),
-          payload: { origin: "test" },
-          remoteId: tracked.remoteId,
-        })
-      );
-      yield* engine.syncOnce(syncInput(root));
-      const open = yield* engine.listOpenConflicts(listConflictsInput);
-      const conflict = yield* Effect.fromOption(A.head(open));
-      expect(conflict.conflictKind).toBe("remoteMove");
+        expect(reviewed.resolutionStatus).toBe("reviewed");
+        expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
+      })
+    );
+  });
 
-      const reviewed = yield* engine.markConflictReviewed(
-        MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId })
-      );
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "survives an engine restart without duplicate pushes and resumes the stored cursor",
+      Effect.fnUntraced(function* () {
+        const cursorRepository = yield* SyncCursorRepository;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "matters/persisted.txt", "persisted body");
 
-      expect(reviewed.resolutionStatus).toBe("reviewed");
-      expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        const engineA = yield* makeVaultSyncEngine();
+        const first = yield* engineA.syncOnce(syncInput(root));
+        expect(first.currentItems).toBe(2);
+        const storedCursor = yield* cursorRepository
+          .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
+          .pipe(Effect.flatMap(Effect.fromOption));
 
-  it.effect(
-    "survives an engine restart without duplicate pushes and resumes the stored cursor",
-    Effect.fnUntraced(function* () {
-      const cursorRepository = yield* SyncCursorRepository;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const root = yield* makeVaultRoot();
-      yield* writeVaultFile(root, "matters/persisted.txt", "persisted body");
+        // A fresh engine instance over the same repositories and remote fixture.
+        const engineB = yield* makeVaultSyncEngine();
+        const second = yield* engineB.syncOnce(syncInput(root));
+        const counts = yield* handle.counts;
+        const positions = yield* handle.requestedStreamPositions;
 
-      const engineA = yield* makeVaultSyncEngine();
-      const first = yield* engineA.syncOnce(syncInput(root));
-      expect(first.currentItems).toBe(2);
-      const storedCursor = yield* cursorRepository
-        .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
-        .pipe(Effect.flatMap(Effect.fromOption));
+        expect(second.currentItems).toBe(2);
+        expect(second.queuedOperations).toBe(0);
+        expect(counts.ensureFolder).toBe(1);
+        expect(counts.uploadFile).toBe(1);
+        expect(counts.uploadFileVersion).toBe(0);
+        expect(positions).toEqual([O.none(), O.some(storedCursor.streamPosition)]);
+      })
+    );
+  });
 
-      // A fresh engine instance over the same repositories and remote fixture.
-      const engineB = yield* makeVaultSyncEngine();
-      const second = yield* engineB.syncOnce(syncInput(root));
-      const counts = yield* handle.counts;
-      const positions = yield* handle.requestedStreamPositions;
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "records a remote poll failure on the durable cursor without failing the sync pass",
+      Effect.fnUntraced(function* () {
+        const cursorRepository = yield* SyncCursorRepository;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        const engine = yield* makeVaultSyncEngine();
 
-      expect(second.currentItems).toBe(2);
-      expect(second.queuedOperations).toBe(0);
-      expect(counts.ensureFolder).toBe(1);
-      expect(counts.uploadFile).toBe(1);
-      expect(counts.uploadFileVersion).toBe(0);
-      expect(positions).toEqual([O.none(), O.some(storedCursor.streamPosition)]);
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        yield* engine.syncOnce(syncInput(root));
+        yield* handle.failNext("pollEvents", false);
+        yield* engine.syncOnce(syncInput(root));
 
-  it.effect(
-    "records a remote poll failure on the durable cursor without failing the sync pass",
-    Effect.fnUntraced(function* () {
-      const cursorRepository = yield* SyncCursorRepository;
-      const handle = yield* DmsMirrorFixtureHandle;
-      const root = yield* makeVaultRoot();
-      const engine = yield* makeVaultSyncEngine();
+        const cursor = yield* cursorRepository
+          .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
+          .pipe(Effect.flatMap(Effect.fromOption));
 
-      yield* engine.syncOnce(syncInput(root));
-      yield* handle.failNext("pollEvents", false);
-      yield* engine.syncOnce(syncInput(root));
-
-      const cursor = yield* cursorRepository
-        .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
-        .pipe(Effect.flatMap(Effect.fromOption));
-
-      expect(cursor.status).toBe("error");
-      expect(cursor.lastError).toEqual(O.some("fixture injected pollEvents failure"));
-    }, provideScopedLayer(SyncDriftTestLayer))
-  );
+        expect(cursor.status).toBe("error");
+        assertSome<string>(cursor.lastError, "fixture injected pollEvents failure");
+      })
+    );
+  });
 });

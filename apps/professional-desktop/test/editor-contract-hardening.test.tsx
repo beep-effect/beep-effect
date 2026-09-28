@@ -20,10 +20,14 @@ import { documentSafetyIssues, refineSafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, vi } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -32,7 +36,6 @@ import * as Result from "effect/Result";
 import { AsyncResult, AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
-import { afterEach, beforeEach, vi } from "vitest";
 import {
   composerDocumentSafetyGateAtoms,
   composerSerializedChangeHandlerAtoms,
@@ -282,11 +285,16 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const context = yield* Effect.context<never>();
       const runPromise = Effect.runPromiseWith(context);
       const runSync = Effect.runSyncWith(context);
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        scheduleTask,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            scheduleTask,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       let editor: ReturnType<typeof createEditor> | undefined;
       const firstRevoke = yield* Deferred.make<void>();
       vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:pending-unmount");
@@ -304,7 +312,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
           ) : null}
         </RegistryContext.Provider>
       );
-      const view = render(mounted(true));
+      const view = yield* Effect.acquireRelease(
+        Effect.sync(() => render(mounted(true))),
+        (view) => Effect.sync(view.unmount)
+      );
       fireEvent.click(screen.getByRole("button", { name: "Capture editor instance" }));
       const input = view.container.querySelector<HTMLInputElement>('input[type="file"]');
       expect(input).not.toBeNull();
@@ -330,7 +341,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(editor).toBeDefined();
       if (editor !== undefined) {
         expect(registry.get(attachmentsAtom(editor))).toEqual([]);
-        expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+        assertNone(registry.get(attachmentFailureAtom(editor)));
       }
 
       view.unmount();
@@ -344,12 +355,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const editor = createEditor({ namespace: "attachment-disposal-boundary" });
       const onAttach = vi.fn();
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        initialValues: [[onAttachAtom(editor), onAttach]],
-        scheduleTask,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            initialValues: [[onAttachAtom(editor), onAttach]],
+            scheduleTask,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const attachmentSizes: Array<number> = [];
       let disposed = false;
       let postDisposeGets = 0;
@@ -382,6 +398,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       registry.mount(captureAttachmentsFn);
       registry.mount(onAttachAtom(editor));
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       registry.mount(attachmentSweepBindingAtom(editor));
       registry.subscribe(
         attachmentsAtom(editor),
@@ -417,12 +434,17 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const onAttach = vi.fn((files: ReadonlyArray<File>): void | Promise<void> =>
         files[0]?.name === "rapid-remount.png" ? port.pipe(Deferred.await, runPromise) : undefined
       );
-      const registry = AtomRegistry.make({
-        defaultIdleTTL: 20,
-        initialValues: [[onAttachAtom(editor), onAttach]],
-        scheduleTask: scheduler.schedule,
-        timeoutResolution: 1,
-      });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          AtomRegistry.make({
+            defaultIdleTTL: 20,
+            initialValues: [[onAttachAtom(editor), onAttach]],
+            scheduleTask: scheduler.schedule,
+            timeoutResolution: 1,
+          })
+        ),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const createObjectUrl = vi
         .spyOn(URL, "createObjectURL")
         .mockReturnValueOnce("blob:rapid-remount")
@@ -432,6 +454,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       registry.mount(onAttachAtom(editor));
       const binding = attachmentSweepBindingAtom(editor);
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       const releaseFirstMount = registry.mount(binding);
       registry.set(captureAttachmentsFn, {
         editor,
@@ -453,6 +476,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       });
 
       editor.setRootElement(document.createElement("div"));
+      yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       const releaseSecondMount = registry.mount(binding);
       scheduler.flush();
       expect(createObjectUrl).toHaveBeenCalledTimes(1);
@@ -472,7 +496,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
         waitFor(() => expect(AsyncResult.isSuccess(registry.get(captureAttachmentsFn))).toBe(true))
       );
 
-      expect(O.isNone(registry.get(attachmentFailureAtom(editor)))).toBe(true);
+      assertNone(registry.get(attachmentFailureAtom(editor)));
       expect(registry.get(attachmentsAtom(editor))[0]?.file.name).toBe("new-mount.png");
       expect(revokeObjectUrl).toHaveBeenCalledTimes(1);
 
@@ -534,20 +558,31 @@ describe("editor contract hardening", { concurrent: false }, () => {
     })
   );
 
-  it("treats a mention failure notice as a visible typeahead surface even without options", () => {
-    const editor = createEditor({ namespace: "typeahead-failure-ownership" });
-    const root = document.createElement("div");
-    const notice = document.createElement("div");
-    notice.setAttribute(TYPEAHEAD_MENU_ATTRIBUTE, editor.getKey());
-    document.body.append(root, notice);
-    editor.setRootElement(root);
+  it.effect(
+    "treats a mention failure notice as a visible typeahead surface even without options",
+    Effect.fnUntraced(function* () {
+      const editor = createEditor({ namespace: "typeahead-failure-ownership" });
+      const root = document.createElement("div");
+      const notice = document.createElement("div");
+      notice.setAttribute(TYPEAHEAD_MENU_ATTRIBUTE, editor.getKey());
+      yield* Effect.acquireRelease(
+        Effect.sync(() => document.body.append(root, notice)),
+        () =>
+          Effect.sync(() => {
+            editor.setRootElement(null);
+            root.remove();
+            notice.remove();
+          })
+      );
+      editor.setRootElement(root);
 
-    expect(isTypeaheadMenuVisible(editor)).toBe(true);
+      expect(isTypeaheadMenuVisible(editor)).toBe(true);
 
-    editor.setRootElement(null);
-    root.remove();
-    notice.remove();
-  });
+      editor.setRootElement(null);
+      root.remove();
+      notice.remove();
+    })
+  );
 
   it.effect(
     "keeps Enter owned by a rejected mention lookup instead of sending",
@@ -1069,13 +1104,13 @@ describe("editor contract hardening", { concurrent: false }, () => {
       "src",
       "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE"
     );
-    expect(
-      Result.isFailure(
-        decodeYouTubeWatchRequestResult({
-          url: "https://evil.example/?v=M7lc1UVf-VE",
-        })
-      )
-    ).toBe(true);
+    pipe(
+      decodeYouTubeWatchRequestResult({
+        url: "https://evil.example/?v=M7lc1UVf-VE",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
   });
 
   it.effect.prop(
@@ -1085,7 +1120,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const encoded = yield* encodeComposerFeatures(features);
       expect(yield* decodeComposerFeatures(encoded)).toEqual(features);
       expect(["enter", "modifierEnter"]).toContain(features.sendOn);
-    })
+    }),
+    { arbitrary: fcRuns(100) }
   );
 
   it("shows incompatible future wire as escaped read-only text", () => {
@@ -1207,7 +1243,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
         ],
       });
 
-      expect(Result.isSuccess(refineSafeDocument(content))).toBe(true);
+      pipe(refineSafeDocument(content), Result.isSuccess, assertTrue);
       const initialState = yield* documentToEditorState(content);
       const view = render(<ChatComposer namespace="safe-nested-link-seed" initialState={initialState} />);
       const editor = yield* Effect.promise(() => view.findByRole("combobox", { name: "Message composer" }));
@@ -1283,7 +1319,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
           }),
         ],
       });
-      const registry = AtomRegistry.make({ defaultIdleTTL: 30_000 });
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 30_000 })),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(unsafe);
       const changeHandlerAtom = composerSerializedChangeHandlerAtoms(threadId)(unsafe);
       registry.mount(gateAtom);
@@ -1293,7 +1332,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(initialGate.message).toMatch(/link or embedded URL outside the safe destination policy/u);
 
       registry.get(changeHandlerAtom)(yield* documentToEditorState(corrected));
-      yield* Effect.promise(() => waitFor(() => expect(O.isNone(registry.get(gateAtom))).toBe(true)));
+      yield* Effect.promise(() => waitFor(() => assertNone(registry.get(gateAtom))));
       registry.dispose();
     })
   );

@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom/vitest";
 import { SaveDockSnapshot } from "@beep/dock/Dock.protocol";
 import { validateWorkspace } from "@beep/dock/Dock.reducer";
-import { it } from "@effect/vitest";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/reactivity";
-import { afterEach, describe, expect } from "vitest";
 import { App } from "@/App";
 import {
   DESKTOP_PANELS,
@@ -68,7 +68,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
   it.effect(
     "round-trips the workspace through the localStorage snapshot store",
     Effect.fnUntraced(function* () {
-      const first = yield* makeDesktopDockGraph;
+      const first = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
       const initial = first.registry.get(first.workspaceAtom);
       first.registry.set(first.operationAtom, panelOperation(initial, "ontology-source"));
       yield* first.awaitIdle;
@@ -79,7 +79,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).not.toBeNull();
 
       // A fresh boot restores the saved layout instead of the default.
-      const second = yield* makeDesktopDockGraph;
+      const second = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
       const restored = second.registry.get(second.workspaceAtom);
       second.dispose();
 
@@ -93,7 +93,7 @@ describe("Desktop dock shell", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       globalThis.localStorage.setItem(DOCK_SNAPSHOT_KEY, "not a dock snapshot");
 
-      const graph = yield* makeDesktopDockGraph;
+      const graph = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
       const workspace = graph.registry.get(graph.workspaceAtom);
       const panels = graph.registry.get(graph.panelsAtom);
       graph.dispose();
@@ -104,17 +104,29 @@ describe("Desktop dock shell", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "persists automatically once workspace changes settle (debounced binding)",
     Effect.fnUntraced(function* () {
-      const graph = yield* makeDesktopDockGraph;
-      const release = graph.registry.mount(dockPersistenceBindingAtom(graph));
+      expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).toBeNull();
+      const graph = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
+      const release = yield* Effect.acquireRelease(
+        Effect.sync(() => graph.registry.mount(dockPersistenceBindingAtom(graph))),
+        (release) => Effect.sync(release)
+      );
       const workspace = graph.registry.get(graph.workspaceAtom);
       graph.registry.set(graph.operationAtom, panelOperation(workspace, "ontology-source"));
       yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, { suspendOnWaiting: true });
-      // Wait past the debounce quiet period; the mounted binding owns the save.
-      yield* Effect.sleep("600 millis");
-      const stored = globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY);
+      // Observe the mounted binding's completed write within the original 600 ms budget.
+      const stored = yield* Effect.promise(() =>
+        waitFor(
+          () => {
+            const snapshot = globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY);
+            expect(snapshot).not.toBeNull();
+            return snapshot;
+          },
+          { timeout: 600 }
+        )
+      );
       release();
       graph.dispose();
       expect(stored).not.toBeNull();
@@ -132,8 +144,14 @@ describe("Desktop dock shell", { concurrent: false }, () => {
           reloadRequested = true;
         })
       );
-      const registry = AtomRegistry.make();
-      const release = registry.mount(resetDockSnapshotAtom);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      const release = yield* Effect.acquireRelease(
+        Effect.sync(() => registry.mount(resetDockSnapshotAtom)),
+        (release) => Effect.sync(release)
+      );
       registry.set(resetDockSnapshotAtom, void 0);
       yield* AtomRegistry.getResult(registry, resetDockSnapshotAtom);
 

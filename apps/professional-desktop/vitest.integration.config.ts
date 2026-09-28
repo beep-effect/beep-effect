@@ -7,9 +7,14 @@ export default mergeConfig(
   defineConfig({
     assetsInclude: ["**/*.data", "**/*.wasm", "**/*.tar.gz"],
     resolve: {
-      alias: {
-        "@": fileURLToPath(new URL("./src", import.meta.url)),
-      },
+      alias: [
+        { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
+        {
+          // Bun embeds these file imports; Vite must return asset URLs under Node.
+          find: /^(.*\/@electric-sql\/pglite\/dist\/.*\.(?:wasm|data|tar\.gz))$/,
+          replacement: "$1?url",
+        },
+      ],
     },
     test: {
       environment: "node",
