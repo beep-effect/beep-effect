@@ -411,7 +411,8 @@
     "research/current-pretext-coverage-repair.json",
     "research/current-remaining-coverage-repairs.json",
     "research/current-runtime-repairs-attachment.json",
-    "research/current-stable-fresh-pairs.json"
+    "research/current-stable-fresh-pairs.json",
+    "research/current-canary-fresh-pairs.json"
   ],
   "agentLaunchers": [
     {
@@ -475,5 +476,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 77 reviews and 6 artifacts with 20 unresolved obligations. Three stable local fresh/fresh pairs and twelve replay controls pass at frozen revision 7f53b4a840. Exact-canary comparisons, signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified."
+  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 77 reviews and 6 artifacts with 20 unresolved obligations. Stable 2.11.4 and exact canary 2.11.5-canary.2 each pass three local fresh/fresh pairs and twelve replay controls at frozen revision 7f53b4a840. Source-invalidation renewal is pending. Signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified."
 }

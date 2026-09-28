@@ -2401,3 +2401,16 @@ is admitted through the scheduler and remains pending at this checkpoint.
 The earlier repo-cli package verification has now completed: full audit and
 docgen passed, with the repaired proof-ledger test hash unchanged. Whole-proof
 coverage and hosted readiness remain separate gates.
+
+### Exact-canary three-pair comparison
+
+At the same frozen revision `7f53b4a840`, Turbo `2.11.5-canary.2` completed
+three isolated fresh/fresh pairs and twelve local replay controls. Its native
+version was checked in every summary; the host stable binary remained unchanged.
+The [canary receipt](research/current-canary-fresh-pairs.json) independently
+verifies the nine comparisons per pair and common task identity across all six
+executions. Its distinct retention manifest hashes 9,282 files. Stable and
+canary evidence remain separate; neither grants signed-remote or shadow credit.
+Current source-invalidation and failed-task non-reuse controls are queued through
+admission. Complete semantic closure and the remaining acceptance matrix are
+still required before promotion.
