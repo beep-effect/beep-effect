@@ -1577,6 +1577,59 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       })
   );
 
+  it.effect("requires canonical absence assertions through proven pipe stages", () =>
+    Effect.gen(function* () {
+      for (const assertion of [
+        "value.pipe(O.isNone, assertTrue)",
+        "value.pipe(O.isSome, assertFalse)",
+        "pipe(value, O.isNone, assertTrue)",
+        "pipe(value, O.isSome, assertFalse)",
+      ]) {
+        const rows = A.filter(
+          yield* findings(
+            `import { pipe } from "effect/Function"; import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("absence", () => ${assertion});`
+          ),
+          (row) => row.ruleId === "EV006"
+        );
+        deepStrictEqual(
+          A.map(rows, (row) => row.replacement.primitive),
+          ["utils.assertNone"]
+        );
+      }
+      for (const assertion of [
+        "value.pipe(O.isSome, assertTrue)",
+        "value.pipe(O.isNone, assertFalse)",
+        "value.pipe(X.isFailure, assertTrue)",
+        "value.pipe(O.isNone, consume)",
+      ]) {
+        assertFalse(
+          yield* hasRule(
+            `import { assertTrue, assertFalse } from "@effect/vitest/utils"; it("valid", () => ${assertion});`,
+            "EV006"
+          )
+        );
+      }
+      assertFalse(
+        yield* hasRule(
+          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => value.pipe(O.isNone, assertTrue));',
+          "EV006"
+        )
+      );
+      for (const body of [
+        'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (O) => value.pipe(O.isNone, assertTrue));',
+        'import { pipe } from "effect/Function"; import { assertTrue } from "@effect/vitest/utils"; it("shadow", (pipe) => pipe(value, O.isNone, assertTrue));',
+      ]) {
+        assertFalse(yield* hasRule(body, "EV006"));
+      }
+      assertTrue(
+        yield* hasRule(
+          'import { pipe as flowValue } from "effect/Function"; import { assertFalse as checkFalse } from "@effect/vitest/utils"; it("alias", () => flowValue(value, O.isSome, checkFalse));',
+          "EV006"
+        )
+      );
+    })
+  );
+
   it.effect.each([
     { root: "@effect/platform-node", services: "NodeServices", path: "NodePath", spawner: "NodeChildProcessSpawner" },
     { root: "@effect/platform-bun", services: "BunServices", path: "BunPath", spawner: "BunChildProcessSpawner" },

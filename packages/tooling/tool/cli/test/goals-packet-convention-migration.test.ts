@@ -31,7 +31,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -308,7 +308,7 @@ describe("manifest translation", () => {
       })
     ).toBe(true);
     const plan = planManifestTranslation(unreadable);
-    plan.translation.pipe(O.isNone, assertTrue);
+    plan.translation.pipe(assertNone);
     expect(plan.issues[0]?.message).toBe("translated candidate does not parse as a JSON object");
   });
 
@@ -323,7 +323,7 @@ describe("manifest translation", () => {
       })
     );
     expect(plan.issues).toStrictEqual([]);
-    plan.translation.pipe(O.isNone, assertTrue);
+    plan.translation.pipe(assertNone);
   });
 
   it("blocks unknown future declarations instead of downgrading them", () => {
@@ -336,7 +336,7 @@ describe("manifest translation", () => {
         completionGate,
       })
     );
-    plan.translation.pipe(O.isNone, assertTrue);
+    plan.translation.pipe(assertNone);
     expect(plan.issues[0]?.message).toContain("not a recognized string migration source");
   });
 
@@ -349,7 +349,7 @@ describe("manifest translation", () => {
           completionGate,
         })
       );
-      plan.translation.pipe(O.isNone, assertTrue);
+      plan.translation.pipe(assertNone);
       expect(plan.issues[0]?.message).toContain("not a recognized string migration source");
     });
   }
@@ -362,7 +362,7 @@ describe("manifest translation", () => {
         completionGate,
       })
     );
-    plan.translation.pipe(O.isNone, assertTrue);
+    plan.translation.pipe(assertNone);
     expect(plan.issues[0]?.message).toContain("not a canonical goal status");
   });
 
@@ -374,7 +374,7 @@ describe("manifest translation", () => {
         completionGate: {},
       })
     );
-    malformedGate.translation.pipe(O.isNone, assertTrue);
+    malformedGate.translation.pipe(assertNone);
     expect(malformedGate.issues[0]?.message).toContain("does not decode as GoalManifest");
 
     const malformedPhase = planManifestTranslation(
@@ -385,7 +385,7 @@ describe("manifest translation", () => {
         phases: [{ id: "P0", status: "not-a-phase-status" }],
       })
     );
-    malformedPhase.translation.pipe(O.isNone, assertTrue);
+    malformedPhase.translation.pipe(assertNone);
     expect(malformedPhase.issues[0]?.message).toContain("does not decode as GoalManifest");
   });
 
@@ -398,7 +398,7 @@ describe("manifest translation", () => {
         completionGate,
       })
     );
-    plan.translation.pipe(O.isNone, assertTrue);
+    plan.translation.pipe(assertNone);
     expect(plan.issues[0]?.message).toContain("disagrees");
   });
 
@@ -774,7 +774,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(derived.forks).toStrictEqual([]);
       expect(derived.revision).toBe(4);
       expect(yield* fs.exists(`${packetPath}/ops/trace.json`)).toBe(true);
-      (yield* applier.apply(locator)).pipe(O.isNone, assertTrue);
+      (yield* applier.apply(locator)).pipe(assertNone);
     })
   );
 
@@ -825,7 +825,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const derived = foldPacketEvents({ packet: "forked", root: "goals", events: repaired.events });
       expect(repaired.issues).toStrictEqual([]);
       expect(derived.forks).toStrictEqual([]);
-      (yield* applier.apply(locator)).pipe(O.isNone, assertTrue);
+      (yield* applier.apply(locator)).pipe(assertNone);
     })
   );
 
@@ -1362,7 +1362,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         expect(body.ordinal).toBe(2);
       }
       expect(yield* fs.exists(`${packetPath}/ops/trace.json`)).toBe(true);
-      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z")).pipe(O.isNone, assertTrue);
+      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z")).pipe(assertNone);
     })
   );
 
@@ -1400,7 +1400,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       if (O.isNone(recovery)) return;
       yield* applyPacketGenesisSeed(recovery.value);
       expect(yield* fs.readFileString(recovery.value.tracePath)).toBe(recovery.value.traceText);
-      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z")).pipe(O.isNone, assertTrue);
+      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-26T00:00:00.000Z")).pipe(assertNone);
     })
   );
 
@@ -1564,7 +1564,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         })
       );
       expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
-      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z")).pipe(O.isNone, assertTrue);
+      (yield* planPacketGenesisSeed(packet, manifest, "2026-08-28T00:00:00.000Z")).pipe(assertNone);
       const foreignTrace = '{"foreign":true}\n';
       yield* fs.writeFileString(retry.tracePath, foreignTrace);
       const foreignRecovery = yield* planPacketGenesisSeed(packet, manifest, "2026-08-29T00:00:00.000Z");

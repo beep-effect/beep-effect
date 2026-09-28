@@ -219,10 +219,10 @@ describe("yeet resume", () => {
         path.join(sessions, "123.json"),
         '{"pid":123,"sessionId":"session-local-only","cwd":"/workspace"}'
       );
-      (yield* isClaudeSessionLive(makeRecord({ harness: "codex" }), sessions, proc)).pipe(O.isNone, assertTrue);
+      (yield* isClaudeSessionLive(makeRecord({ harness: "codex" }), sessions, proc)).pipe(assertNone);
       const withoutSession = PrSessionRecord.make({ ...makeRecord(), sessionId: O.none() });
-      (yield* isClaudeSessionLive(withoutSession, sessions, proc)).pipe(O.isNone, assertTrue);
-      (yield* isClaudeSessionLive(makeRecord(), sessions, proc)).pipe(O.isNone, assertTrue);
+      (yield* isClaudeSessionLive(withoutSession, sessions, proc)).pipe(assertNone);
+      (yield* isClaudeSessionLive(makeRecord(), sessions, proc)).pipe(assertNone);
     }).pipe(provideScopedLayer(TestLayer))
   );
 

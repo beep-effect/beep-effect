@@ -2,7 +2,7 @@ import { fcRuns } from "@beep/fc-runs";
 import { FileInfo, FileInfoType } from "@beep/schema/FileInfo";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as ByteSize from "effect/ByteSize";
@@ -47,9 +47,9 @@ describe("FileInfo", () => {
 
     expect(info.type).toBe("File");
     expect(info.size).toBe(12n);
-    pipe(info.mtime, O.isNone, assertTrue);
-    pipe(info.ino, O.isNone, assertTrue);
-    pipe(info.blksize, O.isNone, assertTrue);
+    pipe(info.mtime, assertNone);
+    pipe(info.ino, assertNone);
+    pipe(info.blksize, assertNone);
   });
 
   it("constructs every entry kind with a matching type", () => {
@@ -70,8 +70,8 @@ describe("FileInfo", () => {
       });
 
       expect(info.type).toBe("Directory");
-      pipe(info.birthtime, O.isNone, assertTrue);
-      pipe(info.blocks, O.isNone, assertTrue);
+      pipe(info.birthtime, assertNone);
+      pipe(info.blocks, assertNone);
     })
   );
 

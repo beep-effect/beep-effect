@@ -1,7 +1,7 @@
 import { makeStatusCauseError, StatusCauseFields, statusCauseInput } from "@beep/schema/StatusCauseError";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import { Option as O, pipe } from "effect";
 import * as S from "effect/Schema";
 
@@ -88,6 +88,6 @@ describe("StatusCauseError", () => {
     expect(error).toBeInstanceOf(BeepStatusError);
     expect(isBeepStatusError(error)).toBe(true);
     expect(error.status).toBe(500);
-    pipe(error.cause, O.isNone, assertTrue);
+    pipe(error.cause, assertNone);
   });
 });

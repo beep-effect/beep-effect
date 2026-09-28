@@ -12,7 +12,7 @@ import {
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -113,7 +113,7 @@ describe("doctest analyzer", () => {
   it("chooses a safe upstream name delimiter and rejects both delimiters", () => {
     expect(O.getOrUndefined(quotedDoctestName("Decode none"))).toBe('name="Decode none"');
     expect(O.getOrUndefined(quotedDoctestName('Decode "none"'))).toBe("name='Decode \"none\"'");
-    quotedDoctestName("Decode \"none\" and 'some'").pipe(O.isNone, assertTrue);
+    quotedDoctestName("Decode \"none\" and 'some'").pipe(assertNone);
   });
 });
 
@@ -134,10 +134,10 @@ describe("doctest rewrite planning", () => {
   });
 
   it("uses the real upstream transform as the assertion oracle", () => {
-    validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1).pipe(O.isNone, assertTrue);
+    validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1).pipe(assertNone);
     validateDoctestAssertions("// => 2", "fixture.ts", 1).pipe(O.isSome, assertTrue);
     validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1).pipe(O.isSome, assertTrue);
-    validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1).pipe(O.isNone, assertTrue);
+    validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1).pipe(assertNone);
   });
 
   it("plans canonical metadata and rewrites without mutating the analyzed source", () => {

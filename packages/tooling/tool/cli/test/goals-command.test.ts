@@ -16,7 +16,7 @@ import {
   rewriteReadmeLifecycleToken,
 } from "@beep/repo-cli/test/Goals";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -79,7 +79,7 @@ describe("goals status migration mapping", () => {
       expect(O.getOrNull(migrateGoalStatusToken(canonical))).toBe(canonical);
       expect(canonical in GOAL_STATUS_MIGRATIONS).toBe(false);
     }
-    migrateGoalStatusToken("not-a-status").pipe(O.isNone, assertTrue);
+    migrateGoalStatusToken("not-a-status").pipe(assertNone);
   });
 
   it("maps every legacy phase-status token from the census", () => {
@@ -103,7 +103,7 @@ describe("goals status migration mapping", () => {
     for (const [legacy, canonical] of expectations) {
       expect(O.getOrNull(migrateGoalPhaseStatusToken(legacy))).toBe(canonical);
     }
-    migrateGoalPhaseStatusToken("wat").pipe(O.isNone, assertTrue);
+    migrateGoalPhaseStatusToken("wat").pipe(assertNone);
     expect("complete" in GOAL_PHASE_STATUS_MIGRATIONS).toBe(false);
   });
 });
@@ -247,16 +247,16 @@ describe("README helpers", () => {
   });
 
   it("refuses READMEs without a recognizable Lifecycle line", () => {
-    rewriteReadmeLifecycleToken("## Status\n\nActive\n", "paused").pipe(O.isNone, assertTrue);
-    readmeLifecycleToken("## Status\n\nActive\n").pipe(O.isNone, assertTrue);
+    rewriteReadmeLifecycleToken("## Status\n\nActive\n", "paused").pipe(assertNone);
+    readmeLifecycleToken("## Status\n\nActive\n").pipe(assertNone);
   });
 
   it("extracts a one-line mission only when cleanly extractable", () => {
     const readme = "# T\n\n## Mission\n\nLine one\nline two.\n\nSecond paragraph.\n\n## Next\n";
     expect(O.getOrNull(readmeMissionLine(readme))).toBe("Line one line two.");
     const long = `# T\n\n## Mission\n\n${"x".repeat(301)}\n`;
-    readmeMissionLine(long).pipe(O.isNone, assertTrue);
-    readmeMissionLine("# T\n\n## Overview\n\nNo mission.\n").pipe(O.isNone, assertTrue);
+    readmeMissionLine(long).pipe(assertNone);
+    readmeMissionLine("# T\n\n## Overview\n\nNo mission.\n").pipe(assertNone);
   });
 });
 
@@ -308,7 +308,7 @@ describe("renderPortfolioIndex", () => {
 describe("parseGoalManifestText", () => {
   it("accepts JSON objects and rejects non-object or broken JSON", () => {
     parseGoalManifestText('{ "a": 1 }').pipe(O.isSome, assertTrue);
-    parseGoalManifestText("[1, 2]").pipe(O.isNone, assertTrue);
-    parseGoalManifestText("not json").pipe(O.isNone, assertTrue);
+    parseGoalManifestText("[1, 2]").pipe(assertNone);
+    parseGoalManifestText("not json").pipe(assertNone);
   });
 });

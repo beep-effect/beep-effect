@@ -10,7 +10,7 @@ import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertExitSuccess, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertExitSuccess, assertNone, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Exit from "effect/Exit";
@@ -332,18 +332,18 @@ describe("withEmptyArrayDefaults", () => {
 
 describe("withNoneDefault", () => {
   it("defaults an omitted optional-key Option field to None at construction time", () => {
-    pipe(OptionalLabelNode.make({}).label, O.isNone, assertTrue);
+    pipe(OptionalLabelNode.make({}).label, assertNone);
     assertSome(OptionalLabelNode.make({ label: O.some("x") }).label, "x");
   });
 
   it("defaults an omitted nullable Option field to None at construction time", () => {
-    pipe(NullableDirectionNode.make({}).direction, O.isNone, assertTrue);
+    pipe(NullableDirectionNode.make({}).direction, assertNone);
   });
 
   it.effect(
     "leaves the decode contract intact (missing optional key still decodes to None)",
     Effect.fnUntraced(function* () {
-      pipe((yield* decodeOptionalLabelNodeEffect({})).label, O.isNone, assertTrue);
+      pipe((yield* decodeOptionalLabelNodeEffect({})).label, assertNone);
       assertSome((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label, "x");
     })
   );
@@ -393,7 +393,7 @@ describe("withCodecStatics", () => {
     expect(Slug.decodeUnknownSync("post")).toBe("post");
     expect(() => Slug.decodeUnknownSync("")).toThrow();
     assertSome(Slug.decodeUnknownOption("post"), "post");
-    pipe(Slug.decodeUnknownOption(""), O.isNone, assertTrue);
+    pipe(Slug.decodeUnknownOption(""), assertNone);
   });
 
   it("preserves statics when identity annotations run later in the pipeline", () => {
@@ -403,6 +403,6 @@ describe("withCodecStatics", () => {
     );
 
     expect(Tagged.is("post")).toBe(true);
-    pipe(Tagged.decodeUnknownOption(""), O.isNone, assertTrue);
+    pipe(Tagged.decodeUnknownOption(""), assertNone);
   });
 });

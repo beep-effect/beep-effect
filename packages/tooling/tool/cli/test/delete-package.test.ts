@@ -19,7 +19,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as Exit from "effect/Exit";
@@ -548,7 +548,7 @@ describe("delete-package baseline writers", () => {
     for (const step of DeletePackageBaselineWriters.steps) {
       if (!Str.equivalence(step.label, "fallow health baseline")) {
         expect(step.exitPolicy).toBe("zero-only");
-        step.verifiedOutput.pipe(O.isNone, assertTrue);
+        step.verifiedOutput.pipe(assertNone);
       }
     }
   });

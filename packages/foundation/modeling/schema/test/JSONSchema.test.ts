@@ -25,7 +25,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -223,7 +223,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     });
 
     it("ExtensionKey rejects canonical keywords and accepts extension names", () => {
-      pipe(decodeExtensionKeyOption("type"), O.isNone, assertTrue);
+      pipe(decodeExtensionKeyOption("type"), assertNone);
       pipe(decodeExtensionKeyOption("x-vendor"), O.isSome, assertTrue);
     });
 
@@ -267,8 +267,8 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       "defaults make() to empty options and an empty extensions bag",
       Effect.fnUntraced(function* () {
         const node = Node.make({});
-        pipe(node.type, O.isNone, assertTrue);
-        pipe(node.$ref, O.isNone, assertTrue);
+        pipe(node.type, assertNone);
+        pipe(node.$ref, assertNone);
         expect(node.extensions).toEqual({});
         expect(yield* encodeNode(node)).toEqual({});
       })
@@ -550,14 +550,14 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       expect(O.getOrThrow(resolveLocalRef("#/$defs/caf%C3%A9", defs))).toEqual({ kind: "utf8" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/til~0de", defs))).toEqual({ kind: "tilde" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/100%25", defs))).toEqual({ kind: "percent" });
-      pipe(resolveLocalRef("#/$defs/Missing", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/definitions/User", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/$defs/a/b", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/$defs/a%2Fb", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/$defs/", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/$defs/bad~2escape", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("#/$defs/%", defs), O.isNone, assertTrue);
-      pipe(resolveLocalRef("https://example.com/schema.json", defs), O.isNone, assertTrue);
+      pipe(resolveLocalRef("#/$defs/Missing", defs), assertNone);
+      pipe(resolveLocalRef("#/definitions/User", defs), assertNone);
+      pipe(resolveLocalRef("#/$defs/a/b", defs), assertNone);
+      pipe(resolveLocalRef("#/$defs/a%2Fb", defs), assertNone);
+      pipe(resolveLocalRef("#/$defs/", defs), assertNone);
+      pipe(resolveLocalRef("#/$defs/bad~2escape", defs), assertNone);
+      pipe(resolveLocalRef("#/$defs/%", defs), assertNone);
+      pipe(resolveLocalRef("https://example.com/schema.json", defs), assertNone);
     });
 
     it.effect(
@@ -566,8 +566,8 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         const hit = yield* decodeNode({ $ref: "#/$defs/User", $defs: { User: { type: "object" } } });
         const target = O.getOrThrow(resolveNodeRef(hit));
         expect(typeof target === "boolean" ? target : O.getOrThrow(target.type)).toBe("object");
-        pipe(resolveNodeRef(yield* decodeNode({ $ref: "#/$defs/User" })), O.isNone, assertTrue);
-        pipe(resolveNodeRef(yield* decodeNode({ $defs: { User: {} } })), O.isNone, assertTrue);
+        pipe(resolveNodeRef(yield* decodeNode({ $ref: "#/$defs/User" })), assertNone);
+        pipe(resolveNodeRef(yield* decodeNode({ $defs: { User: {} } })), assertNone);
       })
     );
 
@@ -585,7 +585,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
           schema: { type: "null" },
           definitions: {},
         });
-        pipe(resolveDocumentRef(bare), O.isNone, assertTrue);
+        pipe(resolveDocumentRef(bare), assertNone);
       })
     );
   });

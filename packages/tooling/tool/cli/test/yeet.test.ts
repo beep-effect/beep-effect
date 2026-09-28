@@ -1604,7 +1604,7 @@ describe("yeet planner", () => {
     const extracted = jsonObjectTextFromMixedOutputForTesting(hostile);
     const elapsedMs = globalThis.performance.now() - startedAt;
 
-    extracted.pipe(O.isNone, assertTrue);
+    extracted.pipe(assertNone);
     expect(elapsedMs).toBeLessThan(1000);
   });
 
@@ -4451,7 +4451,7 @@ describe("yeet publish scope helpers", () => {
     );
 
     expect(verdict.pushed).toBe(false);
-    verdict.attemptId.pipe(O.isNone, assertTrue);
+    verdict.attemptId.pipe(assertNone);
   });
 
   {
@@ -4823,7 +4823,7 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
           const lease = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]);
 
-          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isNone, assertTrue);
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(assertNone);
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
@@ -4932,7 +4932,7 @@ describe("yeet publish scope helpers", () => {
             otherOriginLockPath,
             tempContext,
             "bun run beep yeet verify"
-          )).pipe(O.isNone, assertTrue);
+          )).pipe(assertNone);
 
           if (O.isSome(first)) {
             yield* releaseProofLock(first.value);
@@ -5533,7 +5533,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "PRRT_a,PRRT_b",
     });
-    ok.error.pipe(O.isNone, assertTrue);
+    ok.error.pipe(assertNone);
     expect(ok.intents.map((intent) => `${intent.kind}:${intent.threadId}`)).toEqual([
       "reply:PRRT_a",
       "resolve:PRRT_a",
@@ -5661,16 +5661,16 @@ describe("yeet base ref safety", () => {
   it("refuses option-like and refspec-injecting base refs", () => {
     // Regression for the git fetch option injection: the stripped branch must not
     // be reparsable as a fetch option (--upload-pack=...) or a second refspec.
-    safeOriginBranchFromBaseForTesting("origin/--upload-pack=sh -c 'id' #").pipe(O.isNone, assertTrue);
-    safeOriginBranchFromBaseForTesting("origin/-rf").pipe(O.isNone, assertTrue);
-    safeOriginBranchFromBaseForTesting("origin/main:refs/heads/evil").pipe(O.isNone, assertTrue);
-    safeOriginBranchFromBaseForTesting("origin/has space").pipe(O.isNone, assertTrue);
-    safeOriginBranchFromBaseForTesting("origin/..evil").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("origin/--upload-pack=sh -c 'id' #").pipe(assertNone);
+    safeOriginBranchFromBaseForTesting("origin/-rf").pipe(assertNone);
+    safeOriginBranchFromBaseForTesting("origin/main:refs/heads/evil").pipe(assertNone);
+    safeOriginBranchFromBaseForTesting("origin/has space").pipe(assertNone);
+    safeOriginBranchFromBaseForTesting("origin/..evil").pipe(assertNone);
   });
 
   it("ignores non-origin base refs so they fall back to rev-parse", () => {
-    safeOriginBranchFromBaseForTesting("main").pipe(O.isNone, assertTrue);
-    safeOriginBranchFromBaseForTesting("HEAD~1").pipe(O.isNone, assertTrue);
+    safeOriginBranchFromBaseForTesting("main").pipe(assertNone);
+    safeOriginBranchFromBaseForTesting("HEAD~1").pipe(assertNone);
   });
 });
 

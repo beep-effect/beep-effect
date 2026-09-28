@@ -241,7 +241,7 @@ describe("Secure header schemas", () => {
       assertNone(yield* ExpectCTHeader.createValue().pipe(Effect.orDie));
       assertNone(yield* ExpectCTHeader.createValue(false).pipe(Effect.orDie));
       assertSome(yield* ExpectCTHeader.createValue(true).pipe(Effect.orDie), "max-age=86400");
-      pipe(yield* ExpectCTHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* ExpectCTHeader.create(false).pipe(Effect.orDie), assertNone);
       pipe(
         yield* Effect.flip(
           ExpectCTHeader.createValue([
@@ -294,7 +294,7 @@ describe("Secure header schemas", () => {
 
       assertSome(yield* ForceHttpsRedirectHeader.createValue().pipe(Effect.orDie), "max-age=63072000");
       assertSome(yield* ForceHttpsRedirectHeader.createValue(true).pipe(Effect.orDie), "max-age=63072000");
-      pipe(yield* ForceHttpsRedirectHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* ForceHttpsRedirectHeader.create(false).pipe(Effect.orDie), assertNone);
     })
   );
 
@@ -320,7 +320,7 @@ describe("Secure header schemas", () => {
       assertSome(yield* FrameGuardHeader.createValue().pipe(Effect.orDie), "deny");
       assertNone(yield* FrameGuardHeader.createValue(false).pipe(Effect.orDie));
       assertSome(yield* FrameGuardHeader.createValue("sameorigin").pipe(Effect.orDie), "sameorigin");
-      pipe(yield* FrameGuardHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* FrameGuardHeader.create(false).pipe(Effect.orDie), assertNone);
       pipe(
         yield* Effect.flip(FrameGuardHeader.createValue(["allow-from", { uri: "not-a-url" }] as never)),
         isFrameGuardError,
@@ -365,9 +365,9 @@ describe("Secure header schemas", () => {
       assertNone(yield* NoOpenHeader.createValue(false).pipe(Effect.orDie));
       assertNone(yield* NoSniffHeader.createValue(false).pipe(Effect.orDie));
       assertNone(yield* PermittedCrossDomainPoliciesHeader.createValue(false).pipe(Effect.orDie));
-      pipe(yield* NoOpenHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
-      pipe(yield* NoSniffHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
-      pipe(yield* PermittedCrossDomainPoliciesHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* NoOpenHeader.create(false).pipe(Effect.orDie), assertNone);
+      pipe(yield* NoSniffHeader.create(false).pipe(Effect.orDie), assertNone);
+      pipe(yield* PermittedCrossDomainPoliciesHeader.create(false).pipe(Effect.orDie), assertNone);
       assertSome(yield* PermittedCrossDomainPoliciesHeader.createValue("all").pipe(Effect.orDie), "all");
 
       pipe(yield* Effect.flip(NoOpenHeader.createValue("invalid" as never)), isNoOpenError, assertTrue);
@@ -448,7 +448,7 @@ describe("Secure header schemas", () => {
         yield* PermissionsPolicyHeader.createValue(option).pipe(Effect.orDie),
         'autoplay=*, fullscreen=(self "https://example.com"), payment=("https://pay.example")'
       );
-      pipe(yield* PermissionsPolicyHeader.create({ directives: {} }).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* PermissionsPolicyHeader.create({ directives: {} }).pipe(Effect.orDie), assertNone);
     })
   );
 
@@ -570,8 +570,8 @@ describe("Secure header schemas", () => {
       expectHeader(yield* decodeContentSecurityPolicyHeader(false), "Content-Security-Policy", undefined);
       assertNone(yield* ContentSecurityPolicyHeader.createValue().pipe(Effect.orDie));
       assertNone(yield* ContentSecurityPolicyHeader.createValue(false).pipe(Effect.orDie));
-      pipe(yield* ContentSecurityPolicyHeader.create().pipe(Effect.orDie), O.isNone, assertTrue);
-      pipe(yield* ContentSecurityPolicyHeader.create(false).pipe(Effect.orDie), O.isNone, assertTrue);
+      pipe(yield* ContentSecurityPolicyHeader.create().pipe(Effect.orDie), assertNone);
+      pipe(yield* ContentSecurityPolicyHeader.create(false).pipe(Effect.orDie), assertNone);
 
       const emptyDecode = yield* Effect.flip(decodeContentSecurityPolicyHeader({ directives: {} }));
       pipe(emptyDecode, S.isSchemaError, assertTrue);

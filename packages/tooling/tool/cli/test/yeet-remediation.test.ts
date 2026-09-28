@@ -28,7 +28,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -272,12 +272,12 @@ describe("loadYeetRemediationWave", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
         const statePath = yield* yeetDispatchStatePath(root);
         yield* fs.makeDirectory(`${root}/.beep/inbox`, { recursive: true });
         yield* fs.writeFileString(statePath, "garbage");
-        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
 
         const json = yield* YeetRemediationWaveJson.encode(wave());
         yield* fs.writeFileString(statePath, `${json}\n`);
@@ -444,7 +444,7 @@ describe("dispatchYeetCheckFailure", () => {
 
         yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT);
 
-        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
@@ -462,7 +462,7 @@ describe("dispatchYeetCheckFailure", () => {
         );
 
         expect(A.length(yield* readInboxRows(root))).toBe(0);
-        (yield* loadYeetRemediationWave(root)).pipe(O.isNone, assertTrue);
+        (yield* loadYeetRemediationWave(root)).pipe(assertNone);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);

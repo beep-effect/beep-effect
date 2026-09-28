@@ -25,7 +25,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -111,8 +111,8 @@ describe("canonical encoding and digests", () => {
       expect(parsed.value.type).toBe("status-set");
       expect(parsed.value.id).toBe(digest);
     }
-    parsePacketEventFileName("notes.md").pipe(O.isNone, assertTrue);
-    parsePacketEventFileName(`2-status-set-${digest}.json`).pipe(O.isNone, assertTrue);
+    parsePacketEventFileName("notes.md").pipe(assertNone);
+    parsePacketEventFileName(`2-status-set-${digest}.json`).pipe(assertNone);
   });
 
   it(
@@ -585,7 +585,7 @@ describe("planForkRepair", () => {
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
           ]);
           const plan = yield* planForkRepair({ packet: "demo", root: "goals", events });
-          plan.pipe(O.isNone, assertTrue);
+          plan.pipe(assertNone);
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000

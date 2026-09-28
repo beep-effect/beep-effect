@@ -26,7 +26,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -787,7 +787,7 @@ describe("knowledge semantic-delta gate semantics", () => {
 
       expect(A.length(report.unchanged)).toBe(1);
       expect(report.introduced).toEqual([]);
-      knowledgeSemanticDeltaFailure(report).pipe(O.isNone, assertTrue);
+      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
     })
   );
 
@@ -798,7 +798,7 @@ describe("knowledge semantic-delta gate semantics", () => {
       );
 
       expect(A.length(report.resolved)).toBe(1);
-      knowledgeSemanticDeltaFailure(report).pipe(O.isNone, assertTrue);
+      knowledgeSemanticDeltaFailure(report).pipe(assertNone);
     })
   );
 });
@@ -1565,7 +1565,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
 
       assert.strictEqual(degraded.probePolicy, "skipped-base-boot-failure");
       assert.deepEqual(degraded.introduced, []);
-      knowledgeSemanticDeltaFailure(degraded).pipe(O.isNone, assertTrue);
+      knowledgeSemanticDeltaFailure(degraded).pipe(assertNone);
       assert.deepEqual(sortedKinds(probed.introduced), ["index-drift"]);
       knowledgeSemanticDeltaFailure(probed).pipe(O.isSome, assertTrue);
     })

@@ -8,7 +8,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -53,9 +53,9 @@ describe("DirectoryHandle", () => {
       expected.pipe(O.isSome, assertTrue);
       expect(sameDirectoryIdentity(O.getOrThrow(bound).identity, O.getOrThrow(expected))).toBe(true);
 
-      (yield* openDirectoryHandle(link)).pipe(O.isNone, assertTrue);
-      (yield* openDirectoryHandle(file)).pipe(O.isNone, assertTrue);
-      (yield* openDirectoryHandle(path.join(root, "missing"))).pipe(O.isNone, assertTrue);
+      (yield* openDirectoryHandle(link)).pipe(assertNone);
+      (yield* openDirectoryHandle(file)).pipe(assertNone);
+      (yield* openDirectoryHandle(path.join(root, "missing"))).pipe(assertNone);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );
 

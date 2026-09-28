@@ -1,4 +1,4 @@
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 
 // Effect's default ConfigProvider snapshots the ambient environment once, at
 // the first config read in this (isolated) test file. Set the values the
@@ -151,8 +151,8 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
   });
 
   it("drops non-matching and malformed lines", () => {
-    decodeSchemaFirstPolicyFindingLine("plain output line").pipe(O.isNone, assertTrue);
-    decodeSchemaFirstPolicyFindingLine(`${SchemaFirstPolicyIssuePrefix}{not json`).pipe(O.isNone, assertTrue);
+    decodeSchemaFirstPolicyFindingLine("plain output line").pipe(assertNone);
+    decodeSchemaFirstPolicyFindingLine(`${SchemaFirstPolicyIssuePrefix}{not json`).pipe(assertNone);
   });
 
   it("encodes to compact JSON with no prefix", () => {
@@ -181,7 +181,7 @@ describe("JsonStringCodec", () => {
   });
 
   it("decodeOption yields None on malformed input", () => {
-    codec.decodeOption("nope").pipe(O.isNone, assertTrue);
+    codec.decodeOption("nope").pipe(assertNone);
     codec.decodeOption('{"x":1,"y":2}').pipe(O.isSome, assertTrue);
   });
 
@@ -242,7 +242,7 @@ describe("EnvConfig readers", () => {
 
   it("configStringOptionSync reads present and absent snapshot values", () => {
     assertSome(configStringOptionSync("BEEP_SI_STR"), "value");
-    configStringOptionSync(UNSET).pipe(O.isNone, assertTrue);
+    configStringOptionSync(UNSET).pipe(assertNone);
   });
 
   it("configStringEqualsSync compares present and absent snapshot values", () => {
@@ -283,7 +283,7 @@ describe("EnvConfig readers", () => {
       const missing = provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         configStringOption("TOKEN")
       );
-      (yield* missing).pipe(O.isNone, assertTrue);
+      (yield* missing).pipe(assertNone);
     })
   );
 
@@ -336,7 +336,7 @@ describe("Github plumbing", () => {
         onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
       })
     );
-    result.pipe(O.isNone, assertTrue);
+    result.pipe(assertNone);
   });
 
   it("nextCursor yields the next cursor when a page follows", () => {
@@ -494,7 +494,7 @@ describe("readOptionalRedactedConfigString", () => {
       const missing = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         readOptionalRedactedConfigString("TOKEN")
       );
-      missing.pipe(O.isNone, assertTrue);
+      missing.pipe(assertNone);
     })
   );
 });

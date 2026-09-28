@@ -8,7 +8,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -230,7 +230,7 @@ describe("run scope", () => {
         const path = yield* Path.Path;
         yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nprintf 'Description=session-4.scope\\n'\n");
         const owner = yield* readRunScopeOwnerRoot("session-4.scope").pipe(configured({ PATH: root }));
-        owner.pipe(O.isNone, assertTrue);
+        owner.pipe(assertNone);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -241,7 +241,7 @@ describe("run scope", () => {
         const path = yield* Path.Path;
         yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nexit 5\n");
         const owner = yield* readRunScopeOwnerRoot("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
-        owner.pipe(O.isNone, assertTrue);
+        owner.pipe(assertNone);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

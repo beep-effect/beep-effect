@@ -31,7 +31,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -647,7 +647,7 @@ describe("knowledge refs check gate", () => {
         "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(0);
-      knowledgeRefsCheckFailure(report).pipe(O.isNone, assertTrue);
+      knowledgeRefsCheckFailure(report).pipe(assertNone);
       expect(renderKnowledgeRefsCheckSection(report)).toBe("check: 0 live gated observation(s)");
     })
   );

@@ -16,7 +16,7 @@ import {
 } from "@beep/schema/FileTypeChecker";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Match, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -123,13 +123,13 @@ describe("FileTypeChecker schemas", () => {
   it("owns constructor, decoding, and encoding defaults", () => {
     const madeSignature = FileSignature.make({ sequence: [0x50, 0x4b] });
     expect(madeSignature).toMatchObject({ offset: 0, skippedBytes: [], compatibleExtensions: [] });
-    pipe(madeSignature.description, O.isNone, assertTrue);
+    pipe(madeSignature.description, assertNone);
 
     const decodedSignature = Result.getOrThrow(decodeFileSignatureResult({ sequence: [0x50, 0x4b] }));
     expect(decodedSignature.offset).toBe(0);
     expect(decodedSignature.skippedBytes).toEqual([]);
     expect(decodedSignature.compatibleExtensions).toEqual([]);
-    pipe(decodedSignature.description, O.isNone, assertTrue);
+    pipe(decodedSignature.description, assertNone);
     expect(Result.getOrThrow(encodeUnknownFileSignatureResult(decodedSignature))).toEqual({
       sequence: [0x50, 0x4b],
       offset: 0,
@@ -332,13 +332,13 @@ describe("detectFile", () => {
   it("returns none for empty, invalid, detached, unknown, truncated, and inconclusive input", () => {
     const detached = new ArrayBuffer(4);
     detached.transfer();
-    pipe(detectFile([]), O.isNone, assertTrue);
-    pipe(detectFile([256]), O.isNone, assertTrue);
-    pipe(detectFile(detached), O.isNone, assertTrue);
-    pipe(detectFile([1, 2, 3, 4]), O.isNone, assertTrue);
-    pipe(detectFile(pngBytes, DetectFileOptions.make({ chunkSize: pngBytes.length - 1 })), O.isNone, assertTrue);
-    pipe(detectFile([0, 0, 0]), O.isNone, assertTrue);
-    pipe(detectFile([0x1a, 0x45, 0xdf, 0xa3]), O.isNone, assertTrue);
+    pipe(detectFile([]), assertNone);
+    pipe(detectFile([256]), assertNone);
+    pipe(detectFile(detached), assertNone);
+    pipe(detectFile([1, 2, 3, 4]), assertNone);
+    pipe(detectFile(pngBytes, DetectFileOptions.make({ chunkSize: pngBytes.length - 1 })), assertNone);
+    pipe(detectFile([0, 0, 0]), assertNone);
+    pipe(detectFile([0x1a, 0x45, 0xdf, 0xa3]), assertNone);
   });
 
   it("honors skipped positions independently of significant signature bytes", () => {
@@ -347,7 +347,7 @@ describe("detectFile", () => {
     const changedSignificantByte = pipe(A.replace(wav, 8, 0xff), O.getOrThrow);
     expect(O.getOrThrow(detectFile(wav)).extension).toBe("wav");
     expect(O.getOrThrow(detectFile(changedSkippedByte)).extension).toBe("wav");
-    pipe(detectFile(changedSignificantByte), O.isNone, assertTrue);
+    pipe(detectFile(changedSignificantByte), assertNone);
   });
 
   it("respects exact chunk boundaries and explicitly enlarged high-offset windows", () => {
@@ -355,9 +355,9 @@ describe("detectFile", () => {
       if (Num.Equivalence(signature.offset, 0)) continue;
       const sample = baseSampleFromSignature(signature);
       const boundary = signature.offset + signature.sequence.length + signature.skippedBytes.length;
-      pipe(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary - 1 })), O.isNone, assertTrue);
+      pipe(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary - 1 })), assertNone);
       expect(O.getOrThrow(detectFile(sample, DetectFileOptions.make({ chunkSize: boundary }))).extension).toBe("zip");
-      if (boundary > 64) pipe(detectFile(sample), O.isNone, assertTrue);
+      if (boundary > 64) pipe(detectFile(sample), assertNone);
     }
   });
 
@@ -370,7 +370,7 @@ describe("detectFile", () => {
       expect(O.getOrThrow(detectFile(sampleFromSignature("heic", signature))).extension).toBe("heic");
     }
     const ebml = baseSampleFromSignature(FileTypeCatalog.webm.signatures[0]);
-    pipe(detectFile(pipe(ebml, A.appendAll(webmDocType), A.appendAll(matroskaDocType))), O.isNone, assertTrue);
+    pipe(detectFile(pipe(ebml, A.appendAll(webmDocType), A.appendAll(matroskaDocType))), assertNone);
   });
 });
 

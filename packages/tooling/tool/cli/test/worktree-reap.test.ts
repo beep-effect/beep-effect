@@ -15,7 +15,7 @@ import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -179,7 +179,7 @@ describe("worktree reap", () => {
         expect(report.schemaVersion).toBe("worktree-reap/v1");
         expect(report.candidates).toHaveLength(8);
         expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
-        candidateAt(report, merged).skipReason.pipe(O.isNone, assertTrue);
+        candidateAt(report, merged).skipReason.pipe(assertNone);
         candidateAt(report, merged).bytes.pipe(O.isSome, assertTrue);
         expect(candidateAt(report, dirty).reapClass).toBe("merged-pr");
         expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
@@ -258,7 +258,7 @@ describe("worktree reap", () => {
 
         expect(candidateAt(report, occupied).reapClass).toBe("merged-pr");
         expect(O.getOrThrow(candidateAt(report, occupied).skipReason)).toBe("live-session");
-        candidateAt(report, occupied).bytes.pipe(O.isNone, assertTrue);
+        candidateAt(report, occupied).bytes.pipe(assertNone);
       })
     )
   );
@@ -309,7 +309,7 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(O.isNone, assertTrue);
+        candidate.skipReason.pipe(assertNone);
         expect(report.retiredCount).toBe(1);
         expect(report.reclaimedBytes).toBeGreaterThan(0);
         expect(yield* fs.exists(merged)).toBe(false);
@@ -343,8 +343,8 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(O.isNone, assertTrue);
-        candidate.bytes.pipe(O.isNone, assertTrue);
+        candidate.skipReason.pipe(assertNone);
+        candidate.bytes.pipe(assertNone);
         expect(report.reclaimedBytes).toBe(0);
         expect(A.some(report.warnings, Str.includes("size-probe-failed"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(false);
@@ -418,7 +418,7 @@ describe("worktree reap", () => {
 
         const candidate = candidateAt(report, merged);
         expect(candidate.retired).toBe(true);
-        candidate.skipReason.pipe(O.isNone, assertTrue);
+        candidate.skipReason.pipe(assertNone);
         expect(A.some(report.warnings, Str.includes("retirement-cleanup-failed"))).toBe(true);
         expect(yield* fs.exists(merged)).toBe(false);
       })

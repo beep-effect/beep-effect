@@ -27,7 +27,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -124,8 +124,8 @@ describe("internal/cli/RunMode", () => {
 describe("internal/cli/UnknownProbe", () => {
   it("narrows non-array objects, rejecting arrays and primitives", () => {
     asRecord({ a: 1 }).pipe(O.isSome, assertTrue);
-    asRecord([1, 2]).pipe(O.isNone, assertTrue);
-    asRecord("nope").pipe(O.isNone, assertTrue);
+    asRecord([1, 2]).pipe(assertNone);
+    asRecord("nope").pipe(assertNone);
     expect(isUnknownRecord({ a: 1 })).toBe(true);
     expect(isUnknownRecord([1, 2])).toBe(false);
     expect(isUnknownRecord(null)).toBe(false);
@@ -134,8 +134,8 @@ describe("internal/cli/UnknownProbe", () => {
   it("reads present properties data-first and data-last, rejecting arrays and missing keys", () => {
     assertSome(unknownRecordProperty({ name: "beep" }, "name"), "beep");
     assertSome(unknownRecordProperty("name")({ name: "beep" }), "beep");
-    unknownRecordProperty({ name: "beep" }, "missing").pipe(O.isNone, assertTrue);
-    unknownRecordProperty([1, 2], "0").pipe(O.isNone, assertTrue);
+    unknownRecordProperty({ name: "beep" }, "missing").pipe(assertNone);
+    unknownRecordProperty([1, 2], "0").pipe(assertNone);
   });
 
   it("lists sorted keys and treats arrays and non-objects as empty", () => {

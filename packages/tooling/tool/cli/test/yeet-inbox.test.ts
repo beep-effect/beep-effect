@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -258,8 +258,8 @@ describe("renderYeetInboxRowLine", () => {
   );
 
   it("rejects garbage instead of decaying to a partial row", () => {
-    YeetInboxRowJson.decodeOption("not json").pipe(O.isNone, assertTrue);
-    YeetInboxRowJson.decodeOption('{"kind":"check-failed"}').pipe(O.isNone, assertTrue);
+    YeetInboxRowJson.decodeOption("not json").pipe(assertNone);
+    YeetInboxRowJson.decodeOption('{"kind":"check-failed"}').pipe(assertNone);
   });
 });
 

@@ -53,6 +53,7 @@ const VITEST_MODULES = ["@effect/vitest", "vitest"];
 
 // A fixed dispatch index avoids scanning the full member list for every call.
 const detectorCallMembers = HashSet.fromIterable([
+  "pipe",
   "runPromise",
   "runSync",
   "runFork",
@@ -1042,8 +1043,36 @@ const detectBooleanDataShape = (
   state: DetectorState
 ): void => {
   const { imports, makeFinding, findings, file, owner } = state;
+  if (!inTest) return;
+  const pipeStage = O.getOrUndefined(terminalPipeStage(call, imports));
+  const arguments_ = call.getArguments();
+  const predicateStage = arguments_[arguments_.length - 2];
+  if (Node.isExpression(pipeStage) && Node.isExpression(predicateStage)) {
+    const absence = A.findFirst(
+      [
+        { predicate: "isNone", assertion: "assertTrue", truth: true },
+        { predicate: "isSome", assertion: "assertFalse", truth: false },
+      ],
+      ({ predicate, assertion }) =>
+        isProvenanceExpression(predicateStage, imports, OPTION_MODULES, "Option", [predicate]) &&
+        isProvenanceExpression(pipeStage, imports, ["@effect/vitest/utils"], "utils", [assertion])
+    );
+    if (O.isSome(absence)) {
+      findings.push(
+        makeFinding({
+          ruleId: "EV006",
+          node: call,
+          file,
+          owner,
+          symbol: member,
+          judgment: false,
+          replacement: predicateAssertionReplacement("Option", absence.value.predicate, absence.value.truth),
+        })
+      );
+      return;
+    }
+  }
   if (
-    !inTest ||
     !isBooleanAssertion(call, imports) ||
     !A.some(call.getArguments(), (argument) => containsDataShape(argument, imports))
   )

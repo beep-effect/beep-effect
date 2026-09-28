@@ -3,10 +3,9 @@ import { HttpStatusCode as RootHttpStatusCode } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeHttpStatusHttpStatus1XXEffect = S.decodeEffect(HttpStatus.HttpStatus1XX);
@@ -23,8 +22,8 @@ describe("HttpStatus", () => {
     expect(RootHttpStatusCode).toBe(HttpStatus.HttpStatusCode);
     assertSome<number>(HttpStatus.HttpStatusCode.decodeUnknownOption(100), 100);
     assertSome<number>(HttpStatus.HttpStatusCode.decodeUnknownOption(599), 599);
-    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(99), O.isNone, assertTrue);
-    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(600), O.isNone, assertTrue);
+    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(99), assertNone);
+    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(600), assertNone);
   });
 
   it.effect(
