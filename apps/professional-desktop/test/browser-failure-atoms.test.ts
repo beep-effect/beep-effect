@@ -37,7 +37,7 @@ const registryWithDelayedLogger = (annotations: Array<Record<string, unknown>>) 
 };
 
 describe("browser failure atoms", () => {
-  it.live(
+  it.effect(
     "observes a handled AsyncResult failure through the professional runtime",
     Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];

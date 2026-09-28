@@ -145,7 +145,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "leaves state unchanged when the operator cancels the picker",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -165,7 +165,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "surfaces a client-safe picker failure",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -195,7 +195,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "opens the manual path form when the sidecar picker fails",
     Effect.fnUntraced(function* () {
       const prompt = vi.spyOn(window, "prompt");
@@ -217,7 +217,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "persists a manually entered vault path and settles back to idle",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
@@ -236,7 +236,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "keeps the manual form open with guidance when the submitted path is empty",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
@@ -257,7 +257,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "keeps the manual form open with the persistence failure message",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
@@ -283,7 +283,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "ignores a manual submission when the form is not open",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
@@ -302,7 +302,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "cancelling the manual form returns to the idle onboarding card",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of(((tag: string) =>
@@ -319,7 +319,7 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "stores the public workspace-vault failure message",
     Effect.fnUntraced(function* () {
       Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
@@ -441,7 +441,7 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "owns drag state and boundary narrowing inside the runtime",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of((() =>
@@ -474,7 +474,7 @@ describe("intake DOM event runtime actions", { concurrent: false }, () => {
     })
   );
 
-  it.live(
+  it.effect(
     "prevents configured drops and delegates the file batch inside the runtime",
     Effect.fnUntraced(function* () {
       const client = DesktopIntakeClient.of((() =>

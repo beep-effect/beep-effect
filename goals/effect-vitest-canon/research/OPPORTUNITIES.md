@@ -4634,3 +4634,18 @@ while the assertion-preservation check passed. Matching the owned entries by
 file, rule, symbol, candidate class, expression, and case order allowed a narrow
 identity reanchor; both entries remain open. Location/structure migration needs
 a reviewed identity mapping rather than a whole-baseline refresh.
+
+## Awaited atom completion does not require a live test clock
+
+The intake and browser-failure suites used it.live for twelve cases that await
+AtomRegistry.getResult without sleeping or polling in the test fiber. The exact
+same bodies pass under it.effect. Guidance should distinguish the standalone
+registry runtime's clock from the test context's clock; asynchronous work alone
+is not a reason to disable the test clock.
+
+During this batch, publisher cancellation spent about a minute in systemd's
+final-sigterm phase after the main process exited. Wrapper edits applied before
+that terminal confirmation were immediately restored; no interrupted proof was
+credited. Edits were reapplied only after canonical job wait returned terminated.
+The cancellation command's completion boundary should be explicit to prevent
+mistaking an in-progress stop for permission to mutate its checkout.

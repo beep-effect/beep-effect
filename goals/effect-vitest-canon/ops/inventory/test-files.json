@@ -262,7 +262,7 @@
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3413,
+    "bytes": 3415,
     "lines": 86
   },
   {
@@ -374,7 +374,7 @@
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 20243,
+    "bytes": 20265,
     "lines": 502
   },
   {
