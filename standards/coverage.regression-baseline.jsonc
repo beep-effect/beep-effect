@@ -19525,15 +19525,15 @@
     },
     "@beep/pretext": {
       "path": "packages/drivers/pretext",
-      "lines": 80.39,
-      "statements": 78.5,
-      "branches": 62.85,
-      "functions": 68.08,
+      "lines": 81.81,
+      "statements": 80.76,
+      "branches": 68.57,
+      "functions": 72.34,
       "uncovered": {
-        "lines": 20,
-        "statements": 23,
-        "branches": 13,
-        "functions": 15
+        "lines": 18,
+        "statements": 20,
+        "branches": 11,
+        "functions": 13
       },
       "files": {
         "packages/drivers/pretext/src/Pretext.errors.ts": {
@@ -19585,15 +19585,15 @@
           }
         },
         "packages/drivers/pretext/src/browser.ts": {
-          "lines": 58.33,
-          "statements": 53.84,
-          "branches": 36.84,
-          "functions": 38.88,
+          "lines": 63.88,
+          "statements": 61.53,
+          "branches": 47.36,
+          "functions": 50,
           "uncovered": {
-            "lines": 15,
-            "statements": 18,
-            "branches": 12,
-            "functions": 11
+            "lines": 13,
+            "statements": 15,
+            "branches": 10,
+            "functions": 9
           }
         },
         "packages/drivers/pretext/src/index.ts": {
