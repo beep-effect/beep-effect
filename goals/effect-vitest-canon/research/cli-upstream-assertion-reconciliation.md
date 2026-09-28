@@ -23,5 +23,5 @@ One historical EV006 record remains open: the cheap-gates collect-all test
 uses an `if (Exit.isSuccess(exit))` branch with `assert.fail`. Its failure
 check is preserved, but canonical Boolean-helper migration remains to do.
 The CLI ledger now contains 1,046 fixed, 7 exception and 2,404 open records.
-Full verification of the preceding compound-assertion source batch is still
-running; no new package pass is claimed here.
+Full verification of the preceding compound-assertion source batch passed:
+audit 778.7 seconds and docgen 21.4 seconds.

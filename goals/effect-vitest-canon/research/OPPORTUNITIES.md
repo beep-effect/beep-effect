@@ -5218,3 +5218,19 @@ casts. Future preparation should classify receivers and preserve the
 version/tag facts already asserted by surrounding tests. Receipt:
 `cli-assertion-closeout-typecheck.log` and its generated diagnostic artifact;
 the final artifact has exit zero and empty diagnostics.
+
+### Typed-failure batch proof command and receipt ergonomics
+
+During CLI assertion verification, invoking `bun run package-test-typecheck`
+from the repository root failed because that generated task belongs to the
+CLI workspace. The corrected workspace invocation produced an empty diagnostic
+artifact with exit code zero. A package-aware wrapper or examples carrying
+an explicit workspace directory would prevent this routing mistake. Receipt:
+`cli-typed-failure-typecheck.log`.
+
+Timing context receipts include hashes for every tracked CLI source file.
+Printing the complete context while recovering a finished proof produced a
+large, truncated tool result. Recovery should allowlist terminal fields
+(exit, timeout, duration, source stability) and test totals, leaving the full
+hash map on disk. This is reporting friction; the four timing runs retained
+stable source and identical registrations.

@@ -51,7 +51,8 @@ ledger. It now has 3,457 unique records: 1,040 fixed, 7 exception and 2,410
 open. Seven historical EV006 records remain pending provenance reconciliation.
 No status was inferred solely from a missing detector finding.
 
-Full CLI package verification is running and has not yet been credited.
+Full CLI package verification passes: audit 778.7 seconds and docgen
+21.4 seconds. Source remained unchanged throughout that proof.
 PR1323 remains frozen; hosted follow-up proof and remaining goal work are
 outstanding. Private receipts use `cli-compound-assertions-*`,
 `cli-partial-assertions-*`, `cli-assertion-closeout-*` and
