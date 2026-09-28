@@ -92,6 +92,19 @@ Edit `.claude/settings.json` selectively:
   and `15000`. Restore the committed values for the affected hooks.
 - Preserve unrelated settings, including any intentional footer-link setting,
   and leave local backup files alone.
+- Keep the resolver prefix on every hook command. Each command starts with
+  `d="$(git rev-parse --show-toplevel 2>/dev/null)"; [ -n "$d" ] && [ -d "$d/.claude/hooks" ] || d="${CLAUDE_PROJECT_DIR:-$PWD}"; export CLAUDE_PROJECT_DIR="$d"`
+  because Claude Code pins `CLAUDE_PROJECT_DIR` to the launch directory for the
+  whole session, including after `/cd`. Without it, a session that started
+  elsewhere and moved into this checkout fires every hook against the launch
+  directory (`/bin/sh: .../.claude/hooks/hook-pulse.sh: No such file or
+  directory` on each tool call and stop), and a session that moved between two
+  live checkouts keeps reading and writing the launch checkout's inbox. The
+  prefix takes the checkout that contains the hook's working directory whenever
+  that checkout carries `.claude/hooks`, and falls back to the variable only
+  when the working directory is outside such a checkout (a reference clone, a
+  scratch directory). Script paths stay double-quoted. Initialization rewrites
+  drop the prefix; restore it.
 
 Do not replace the whole settings file just to remove these additions. Review
 the resulting diff, then format the edited JSON:
