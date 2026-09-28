@@ -432,7 +432,7 @@ describe("ProofLedger", () => {
     // and that directory's `commondir` is `../..`.
     const cloneWithLanes = Effect.fn("ProofLedgerTest.cloneWithLanes")(function* (
       names: ReadonlyArray<string>,
-      relativeGitdir = false
+      relativeGitdir: boolean
     ) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -461,7 +461,7 @@ describe("ProofLedger", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const { clone, ledgerPath } = yield* cloneWithLanes([]);
+        const { clone, ledgerPath } = yield* cloneWithLanes([], false);
         expect(yield* resolveProofLedgerLocation(clone)).toStrictEqual(
           ProofLedgerLocation.make({ originRoot: clone, ledgerRoot: clone, ledgerPath })
         );
@@ -473,7 +473,7 @@ describe("ProofLedger", () => {
     it.effect(
       "resolves a linked worktree to its owning clone through gitdir and commondir",
       Effect.fnUntraced(function* () {
-        const absolute = yield* cloneWithLanes(["lane-a"]);
+        const absolute = yield* cloneWithLanes(["lane-a"], false);
         const laneA = A.getUnsafe(absolute.lanes, 0);
         expect(yield* resolveProofLedgerLocation(laneA)).toStrictEqual(
           ProofLedgerLocation.make({ originRoot: laneA, ledgerRoot: absolute.clone, ledgerPath: absolute.ledgerPath })
@@ -527,7 +527,7 @@ describe("ProofLedger", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const { clone, lanes, ledgerPath } = yield* cloneWithLanes(["lane-a", "lane-b"]);
+        const { clone, lanes, ledgerPath } = yield* cloneWithLanes(["lane-a", "lane-b"], false);
         const laneA = A.getUnsafe(lanes, 0);
         const laneB = A.getUnsafe(lanes, 1);
         const fromA = yield* ProofLedger.make(laneA);
