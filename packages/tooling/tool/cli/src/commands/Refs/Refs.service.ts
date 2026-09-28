@@ -11,6 +11,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as FileSystem from "effect/FileSystem";
+import { constFalse } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Headers from "effect/http/Headers";
@@ -37,11 +38,13 @@ import {
   MemberRefreshReport,
   ReferenceWorkspaceCheck,
   ReferenceWorkspaceManifest,
+  RefsRefreshPreflight,
   RefsRefreshStatus,
   RefsTimerOptions,
   RefsTimerUnit,
 } from "./Refs.schemas.ts";
 import type * as Crypto from "effect/Crypto";
+import type * as Duration from "effect/Duration";
 import type { ChildProcessSpawner } from "effect/process";
 import type { ReferenceMember } from "./Refs.schemas.ts";
 
@@ -85,8 +88,10 @@ export interface ReferenceWorkspaceShape {
    * Pulls and rebuilds every member, then writes the receipt.
    *
    * **Details**
-   * Needs an `HttpClient` only for the deep-member model cooldown preflight.
-   * The other operations never touch the network.
+   * Runs the owner's `scripts/graft/apply-dist-patches.sh --check` once first;
+   * unless it passes, every deep member builds structurally and reports
+   * `skipped-preflight`. Needs an `HttpClient` only for the deep-member model
+   * cooldown preflight. The other operations never touch the network.
    */
   readonly refresh: (
     home: string,
@@ -125,6 +130,10 @@ export class ReferenceWorkspace extends Context.Service<ReferenceWorkspace, Refe
 ) {}
 
 const unitBase = "beep-refs-refresh";
+/** The beep deep refresh unit; refs orders after it so two deep passes never share the proxy. */
+const beepDeepRefreshUnit = "beep-graft-deep-refresh.service";
+/** Room kept in a member detail for the patch-kit prefix ahead of the check output tail. */
+const PATCH_KIT_DETAIL_MAX_CHARS = MEMBER_REFRESH_DETAIL_MAX_CHARS - 128;
 const unitPath = "%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin";
 const outputBound = OutputBound.make({ maxChars: 8 * 1024 * 1024, truncatedNotice: "\n[beep refs] output truncated" });
 const ioError = (path: string, message: string) => (cause: unknown) =>
@@ -178,7 +187,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     cwd: string,
     command: string,
     args: ReadonlyArray<string>,
-    deep = false
+    deep = false,
+    timeout: Duration.Input = deep === true ? "5 hours" : "15 minutes"
   ) {
     const ambientPath = yield* readAmbientPath(cwd);
     return yield* runCaptured({
@@ -191,7 +201,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       tee: false,
       extendEnv: deep === true || command === "notify-send" || command === "systemctl",
       env: { HOME: home, PATH: ambientPath, CI: "true", GRAFT_NO_GITIGNORE: "1" },
-      timeout: deep === true ? "5 hours" : "15 minutes",
+      timeout,
       forceKillAfter: "30 seconds",
     }).pipe(Effect.provide(context), Effect.mapError(ioError(cwd, `${command} failed to run.`)));
   });
@@ -275,6 +285,27 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     );
   });
 
+  // The deep tier depends on the repo's Graft dist patches (they change what the graph
+  // contains). Check them once before member work, like the beep deep refresh does, but degrade
+  // instead of aborting: exit 1 is `missing`; an absent script, a spawn failure, a timeout, or any
+  // other exit is `unavailable`.
+  const patchKitScript = path.join(owner, "scripts", "graft", "apply-dist-patches.sh");
+  const checkPatchKit = Effect.fn("ReferenceWorkspace.checkPatchKit")(function* (home: string) {
+    const bounded = (text: string) => O.some(Str.slice(-PATCH_KIT_DETAIL_MAX_CHARS)(text));
+    const present = yield* fs.exists(patchKitScript).pipe(Effect.orElseSucceed(constFalse));
+    if (!present)
+      return RefsRefreshPreflight.make({ patchKit: "unavailable", detail: bounded(`${patchKitScript} not found`) });
+    const result = yield* step(home, owner, patchKitScript, ["--check"], false, "5 minutes").pipe(Effect.result);
+    if (result._tag === "Failure")
+      return RefsRefreshPreflight.make({ patchKit: "unavailable", detail: bounded(result.failure.message) });
+    const { exitCode, output } = result.success;
+    if (exitCode === 0) return RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() });
+    return RefsRefreshPreflight.make({
+      patchKit: exitCode === 1 ? "missing" : "unavailable",
+      detail: bounded(Str.isNonEmpty(output) ? output : `${patchKitScript} --check exited ${exitCode}`),
+    });
+  });
+
   const plan: ReferenceWorkspaceShape["plan"] = Effect.fn("ReferenceWorkspace.plan")(function* (_home, root) {
     const manifest = yield* readManifest();
     const lines = yield* Effect.forEach(
@@ -295,6 +326,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     );
     return [
       `Reference workspace: ${root}`,
+      `preflight: ${patchKitScript} --check; deep members build structural unless it passes`,
       ...A.flatten(lines),
       `link ${path.join(owner, manifest.workspaceLink)} -> ${root}`,
       `build ${root}: GRAFT_NO_GITIGNORE=1 graft build`,
@@ -348,6 +380,10 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       if (!isPositiveInteger(jobs))
         return yield* ReferenceWorkspaceError.make({ path: root, message: "--jobs must be a positive integer." });
       const manifest = yield* readManifest();
+      const preflight = yield* checkPatchKit(home);
+      const patchKitOk = preflight.patchKit === "ok";
+      const preflightTail = O.match(preflight.detail, { onNone: () => "", onSome: (tail) => `: ${tail}` });
+      const preflightDetail = `graft dist patch kit ${preflight.patchKit}; deep pass skipped${preflightTail}`;
       const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
         const gitDir = path.join(cwd, ".git");
         const gitInfo = yield* fs
@@ -410,13 +446,16 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           yield* ensureGraftExcludes(cwd);
           const sync = yield* syncMember();
           if (sync._tag === "skipped") return report(sync.outcome);
-          const cooldown = member.tier === "deep" ? yield* probeCooldown() : O.none<string>();
-          // While the model cools down, keep the structural wiring fresh and skip the paid pass.
-          const tier = O.isSome(cooldown) ? "structural" : member.tier;
+          // Without the dist patches, or while the model cools down, keep the structural wiring
+          // fresh and skip the paid pass. Only a member still deep after the preflight is probed.
+          const skippedByPreflight = member.tier === "deep" && !patchKitOk;
+          const cooldown = member.tier === "deep" && !skippedByPreflight ? yield* probeCooldown() : O.none<string>();
+          const tier = skippedByPreflight || O.isSome(cooldown) ? "structural" : member.tier;
           const build = yield* step(home, cwd, "graft", buildArgs(member, jobs, tier), tier === "deep").pipe(
             Effect.catchTag("ReferenceWorkspaceError", capturedFailure)
           );
           if (build.exitCode !== 0) return report("build-failed", stepDetail("graft", build));
+          if (skippedByPreflight) return report("skipped-preflight", detailOf(preflightDetail));
           if (O.isSome(cooldown)) return report("skipped-cooldown", O.flatMap(cooldown, detailOf));
           return report(
             sync.changed ? "pulled" : "unchanged",
@@ -447,6 +486,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           exitCode: check.exitCode,
           output: check.output,
         }),
+        preflight: O.some(preflight),
       });
       const stateDir = path.join(home, ".local", "state", "beep", "refs");
       const statusPath = path.join(stateDir, "last-refresh.json");
@@ -457,8 +497,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       yield* fs.rename(temporary, statusPath);
       // Intentional skips (dirty or off-main members are never reset, R9) are recorded in the
       // status file but do not page: critical notification is reserved for pull/build failures,
-      // a model cooldown that skipped a deep pass, a deep member that built without coverage,
-      // and a failed workspace build or check.
+      // a failed patch-kit preflight, a model cooldown that skipped a deep pass, a deep member
+      // that built without coverage, and a failed workspace build or check.
       const reachedBuild = (report: MemberRefreshReport) =>
         report.outcome === "pulled" || report.outcome === "unchanged";
       const degraded = A.some(
@@ -467,6 +507,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           report.outcome === "pull-failed" ||
           report.outcome === "build-failed" ||
           report.outcome === "skipped-cooldown" ||
+          report.outcome === "skipped-preflight" ||
           O.exists(report.coverage, (coverage) => coverage.covered < coverage.total || coverage.failedFiles > 0)
       );
       const missingCoverage = A.some(
@@ -475,7 +516,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           member.tier === "deep" &&
           O.exists(HashMap.get(reports, member.name), (report) => reachedBuild(report) && O.isNone(report.coverage))
       );
-      if (degraded || missingCoverage || build.exitCode !== 0 || check.exitCode !== 0) {
+      if (!patchKitOk || degraded || missingCoverage || build.exitCode !== 0 || check.exitCode !== 0) {
         yield* Effect.ignore(
           step(home, home, "notify-send", [
             "--urgency=critical",
@@ -502,6 +543,10 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           [
             "[Unit]",
             "Description=beep reference workspace refresh",
+            // Ordering only: a oneshot start job stays pending until ExecStart exits, so a
+            // running beep deep pass delays this one. No Wants=/Requires=, so refs still runs
+            // when the beep unit is not installed.
+            `After=${beepDeepRefreshUnit}`,
             "",
             "[Service]",
             "Type=oneshot",

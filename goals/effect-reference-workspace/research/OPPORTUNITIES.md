@@ -36,3 +36,18 @@
   or `unchanged` for both members, with coverage and no `detail`.
 - **Proposal:** Once the timer has a clean night after PR #1311 lands, the operator adds its date
   and both members' coverage here. Status: open.
+
+## The 02:30 beep deep pass and the 03:30 refs run overlapped
+
+- **Work:** The 2026-09-28 nightly runs of `beep-graft-deep-refresh.service` (02:30) and
+  `beep-refs-refresh.service` (03:30).
+- **Friction:** The beep deep pass was still running at 03:31 when the refs run started, so two
+  deep builds shared the model proxy. The one-hour gap between the timers assumed the first pass
+  finishes. Separately, `beep refs refresh` had no Graft dist patch-kit check, so a Graft upgrade
+  that dropped the repo patches would have degraded the reference graph without a signal.
+- **Evidence:** Both units were active at 03:31 on 2026-09-28. The graft deep refresh already runs
+  `scripts/graft/apply-dist-patches.sh --check` as a preflight, and the refs refresh did not.
+- **Proposal:** Shipped on `feat/refs-preflight-spacing`. The refs service unit now carries
+  `After=beep-graft-deep-refresh.service`, so its oneshot start job waits for a running beep pass.
+  The refs refresh runs the patch-kit check once, records `preflight.patchKit` in the receipt, and
+  downgrades deep members to `skipped-preflight` when it does not pass.

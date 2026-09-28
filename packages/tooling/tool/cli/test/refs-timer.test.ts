@@ -18,6 +18,7 @@ describe("reference refresh timer", () => {
             [
               "[Unit]",
               "Description=beep reference workspace refresh",
+              "After=beep-graft-deep-refresh.service",
               "",
               "[Service]",
               "Type=oneshot",
@@ -50,6 +51,8 @@ describe("reference refresh timer", () => {
               "",
             ].join("\n")
           );
+          // Ordering only: refs must still run when the beep deep unit is not installed.
+          expect(units[0]?.text).not.toMatch(/^(?:Wants|Requires|BindsTo|Requisite)=/mu);
           expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
         })
       );
