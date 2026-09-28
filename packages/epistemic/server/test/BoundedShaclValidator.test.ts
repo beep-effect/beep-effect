@@ -5,16 +5,31 @@ import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import {
-  ShaclValidationRequest,
-  ShaclValidationService,
-  ShaclValidationViolation,
-} from "@beep/semantic-web/services/shacl-validation";
+import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { vi } from "vitest";
+
+// Every schema's `make` is a lazily cached, non-configurable own property, so
+// `vi.spyOn(ShaclValidationViolation, "make")` cannot install once any test has
+// built a violation. Count constructions through the layer's own import instead:
+// the wrapper inherits the schema and shadows only `make`.
+const violationMake = vi.hoisted(() => vi.fn<(input: never) => unknown>());
+vi.mock("@beep/semantic-web/services/shacl-validation", (importOriginal) =>
+  importOriginal<typeof import("@beep/semantic-web/services/shacl-validation")>().then((original) => {
+    violationMake.mockImplementation(original.ShaclValidationViolation.make);
+    return {
+      ...original,
+      ShaclValidationViolation: Object.defineProperty(Object.create(original.ShaclValidationViolation), "make", {
+        enumerable: true,
+        value: violationMake,
+      }),
+    };
+  })
+);
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
 const encodeDataset = S.encodeEffect(Dataset);
@@ -132,18 +147,16 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
             { properties: [{ minCount: 1, path: makeNamedNode("https://schema.org/url") }] },
           ],
         });
-        const makeViolation = vi.spyOn(ShaclValidationViolation, "make");
-        yield* Effect.gen(function* () {
-          const limited = yield* service.validate(request);
-          expect(limited.violations).toHaveLength(1);
-          expect(limited.truncated).toBe(true);
-          expect(makeViolation).toHaveBeenCalledTimes(1);
-          makeViolation.mockClear();
-          const unlimited = yield* service.validate(ShaclValidationRequest.make({ ...request, maxResults: O.none() }));
-          expect(unlimited.violations).toHaveLength(3);
-          expect(unlimited.truncated).toBe(false);
-          expect(makeViolation).toHaveBeenCalledTimes(3);
-        }).pipe(Effect.ensuring(Effect.sync(() => makeViolation.mockRestore())));
+        violationMake.mockClear();
+        const limited = yield* service.validate(request);
+        expect(limited.violations).toHaveLength(1);
+        expect(limited.truncated).toBe(true);
+        expect(violationMake).toHaveBeenCalledTimes(1);
+        violationMake.mockClear();
+        const unlimited = yield* service.validate(ShaclValidationRequest.make({ ...request, maxResults: O.none() }));
+        expect(unlimited.violations).toHaveLength(3);
+        expect(unlimited.truncated).toBe(false);
+        expect(violationMake).toHaveBeenCalledTimes(3);
       })
     );
 
