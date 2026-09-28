@@ -7,9 +7,10 @@
  * or a git SHA. The time-to-certainty packet (decisions.md rulings 1–7) fixes
  * the shape: the reuse key is a tier-independent action digest over the lane
  * command, the sorted env profile, the lane's input digest, and the epoch
- * salt; the ledger is a per-checkout append-only NDJSON file; enforcement
- * starts with attempt-to-attempt reuse inside the pre-push tier and only
- * after shadow mode records zero disagreements over a ratified sample.
+ * salt; the ledger is a per-clone append-only NDJSON file, shared by the
+ * clone's linked worktrees (ruling 71); enforcement starts with
+ * attempt-to-attempt reuse inside the pre-push tier and only after shadow mode
+ * records zero disagreements over a ratified sample.
  *
  * This module carries the schemas only. The ledger service, the shadow
  * recorder, and the reuse decision live beside it and decode through these
@@ -516,7 +517,7 @@ export class ProofLedgerShadowRow extends S.Class<ProofLedgerShadowRow>($I`Proof
 ) {}
 
 /**
- * Any row of the per-checkout proof ledger.
+ * Any row of the per-clone proof ledger (shared by the clone's worktrees).
  *
  * **Example** (Decode a ledger row)
  *
@@ -545,7 +546,8 @@ export class ProofLedgerShadowRow extends S.Class<ProofLedgerShadowRow>($I`Proof
 export const ProofLedgerRow = S.Union([ProofLedgerFactRow, ProofLedgerShadowRow]).pipe(
   $I.annoteSchema("ProofLedgerRow", {
     title: "Proof Ledger Row",
-    description: "One append-only row of the per-checkout proof ledger: a recorded fact or a shadow decision.",
+    description:
+      "One append-only row of the per-clone proof ledger, shared by the clone's worktrees: a recorded fact or a shadow decision.",
   })
 );
 

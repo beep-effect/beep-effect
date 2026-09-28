@@ -1976,10 +1976,11 @@ const LaneInputPackages = S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefau
  * names of the Turbo tasks its input digest folds, with root tasks (`//#…`)
  * contributing nothing. It is observation data, never part of the reuse key
  * (time-to-certainty ruling 68); the proof ledger's changed-package tripwire
- * intersects it with the attempt's changed packages. A lane that resolved no
- * Turbo digest — undeclared inputs, a failed step, no lane ledger — carries an
- * empty scope, and both the constructor and a decode of a report written
- * before the field existed default it to empty.
+ * intersects it with the attempt's changed packages. A failed lane resolves
+ * its digest and scope like a passed one (ruling 72). A lane that resolved no
+ * Turbo digest — undeclared inputs, no lane ledger — carries an empty scope,
+ * and both the constructor and a decode of a report written before the field
+ * existed default it to empty.
  *
  * **Example** (Record a completed lane)
  *

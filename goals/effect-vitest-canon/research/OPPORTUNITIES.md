@@ -4953,3 +4953,20 @@ Source tracing locates the policy gap in
 names. A repair must cover optional heavy pending/failing results while retaining
 an evidence-backed Vercel rate-limit exception; broadly ignoring Vercel failures
 or merely renaming the required-check criterion would not satisfy the rule.
+
+## Hosted scheduler property failure exposed active-recovery deletion
+
+PR #1312 Property Laws failed the scheduler replacement-restoration case with
+`NotFound: FileSystem.readFile (.../journal.lock)`. The scheduler source and
+test were unchanged from main. One-shot Node/Bun reproductions passed, but
+an event-controlled interleaving reproduced the failure: a follower reaches
+orphan sweeping after the winner moves a replacement into its tombstone and
+before restoration. The sweep deletes the live adopter's tombstone and claim.
+
+The repair checks existing adopter ownership before sweeping recovery sidecars.
+The existing regression now pins that interleaving with Deferred barriers,
+retaining its title and assertions. It fails before the source repair with the
+hosted missing-lock error. The independent control also reproduces a lost
+replacement before repair. Full scheduler tests and package proof are required
+before claiming the repair green. This production repair is covered by the
+operator's standing authorization to fix discovered defects and record them.

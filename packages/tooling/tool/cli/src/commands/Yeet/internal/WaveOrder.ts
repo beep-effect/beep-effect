@@ -413,7 +413,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
  */
 export const GATE_ORDER_SOURCE = CacheEvidenceReference.make({
   path: ECONOMICS_SOURCE_PATH,
-  sha256: Sha256Hex.make("37e854ef859c00e4930cb1b23cfba5989a2947c121a9f0bc88c30e2fc2785230"),
+  sha256: Sha256Hex.make("f69f77ab80820defd38bb2aa66562e5bf0aaad308eeab6a7e10fcb9d2e2b7d9d"),
 });
 
 const costSource = (laneId: string, costBasis: GateOrderCostBasis, sourceKey: O.Option<string>): GateOrderCostSource =>

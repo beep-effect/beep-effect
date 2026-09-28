@@ -9,15 +9,15 @@ import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Path, pipe } from "effect";
+import { Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import type { FileSystem } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
@@ -253,12 +253,167 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
 });
 
 /**
- * Resolve the checkout-scoped append-only proof ledger path.
+ * Where one checkout's proof facts are read from and appended to (ruling 71).
  *
  * **Details**
  *
- * The ledger shares Yeet's `.beep/yeet` artifact root but is not scoped to a
- * branch or run because proof facts describe inputs and epochs, not Git refs.
+ * `originRoot` is the checkout that ran — a primary clone or a linked
+ * worktree — and stays the facts' `provenance.originKey`. `ledgerRoot` is the
+ * owning clone, so every lane cut from one clone shares one sample and a
+ * `yeet sweep --retire` of a lane never deletes it. `ledgerPath` is
+ * `<ledgerRoot>/.beep/yeet/proof-ledger.ndjson`, and `ledgerRoot` is the
+ * containment root the ledger reads and appends through.
+ *
+ * **Example** (A lane's ledger lives in its clone)
+ *
+ * ```ts
+ * import { ProofLedgerLocation } from "@beep/repo-cli/test/Yeet"
+ *
+ * const location = ProofLedgerLocation.make({
+ *   originRoot: "/work/repo-worktrees/lane-a",
+ *   ledgerRoot: "/work/repo",
+ *   ledgerPath: "/work/repo/.beep/yeet/proof-ledger.ndjson",
+ * })
+ * console.log(location.ledgerRoot) // "/work/repo"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofLedgerLocation extends S.Class<ProofLedgerLocation>($I`ProofLedgerLocation`)(
+  {
+    originRoot: S.NonEmptyString,
+    ledgerRoot: S.NonEmptyString,
+    ledgerPath: S.NonEmptyString,
+  },
+  $I.annote("ProofLedgerLocation", {
+    description:
+      "The checkout that ran, the owning clone whose proof ledger it shares, and that ledger's path (ruling 71).",
+  })
+) {}
+
+const GITFILE_PREFIX = "gitdir:";
+
+// A linked worktree's `.git` is a one-line file `gitdir: <path>`.
+const gitfileTarget = (contents: string): O.Option<string> =>
+  pipe(
+    Str.trim(contents),
+    O.liftPredicate(Str.startsWith(GITFILE_PREFIX)),
+    O.map(flow(Str.slice(Str.length(GITFILE_PREFIX)), Str.trim)),
+    O.filter(Str.isNonEmpty)
+  );
+
+const readGitMetadata = (fs: FileSystem.FileSystem, file: string) =>
+  fs.readFileString(file).pipe(Effect.mapError(YeetCommandError.new(`Failed to read Git metadata "${file}".`)));
+
+// Mirrors `git rev-parse --path-format=absolute --git-common-dir` without
+// spawning git, then steps from the common dir to the clone that owns it.
+const owningCloneRoot = Effect.fnUntraced(function* (
+  repoRoot: string
+): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const originRoot = path.resolve(repoRoot);
+  const dotGit = path.join(originRoot, ".git");
+  const present = yield* fs
+    .exists(dotGit)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Git metadata "${dotGit}".`)));
+  if (!present) {
+    return originRoot;
+  }
+  const info = yield* fs
+    .stat(dotGit)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Git metadata "${dotGit}".`)));
+  if (info.type !== "File") {
+    return originRoot;
+  }
+  const target = gitfileTarget(yield* readGitMetadata(fs, dotGit));
+  if (O.isNone(target)) {
+    return yield* YeetCommandError.make({
+      message: `Git metadata "${dotGit}" is a file without a "gitdir:" line.`,
+      file: dotGit,
+    });
+  }
+  const gitDir = path.resolve(originRoot, target.value);
+  const commonDirFile = path.join(gitDir, "commondir");
+  const hasCommonDir = yield* fs
+    .exists(commonDirFile)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect Git metadata "${commonDirFile}".`)));
+  const commonDir = hasCommonDir ? path.resolve(gitDir, Str.trim(yield* readGitMetadata(fs, commonDirFile))) : gitDir;
+  // `<clone>/.git` gives the clone. A common dir with any other name (a bare
+  // `<name>.git`, a separated git dir) keeps the ledger inside itself: its
+  // parent may hold other repositories, and they must not share one sample.
+  return path.basename(commonDir) === ".git" ? path.dirname(commonDir) : commonDir;
+});
+
+/**
+ * Resolve where a checkout's proof ledger lives: in the owning clone (ruling 71).
+ *
+ * **Details**
+ *
+ * Resolution reads the filesystem the way
+ * `git rev-parse --path-format=absolute --git-common-dir` does, without
+ * spawning git:
+ *
+ * - `<repoRoot>/.git` is a directory: the checkout is a primary clone and owns
+ *   its ledger, at the same path as before ruling 71.
+ * - `<repoRoot>/.git` is a `gitdir: <path>` file (a linked worktree): the Git
+ *   dir resolves against `repoRoot`, the common dir is that Git dir's
+ *   `commondir` file resolved against the Git dir (or the Git dir itself when
+ *   there is no such file), and the owning clone follows from the common dir (below).
+ * - No `.git` at all: the checkout owns its ledger (test roots, non-git
+ *   directories).
+ *
+ * When the common dir is `<clone>/.git`, the owning clone is its parent, the
+ * clone's checkout. A bare or separated common dir (one not named `.git`, such
+ * as `/srv/repo.git` or a `--separate-git-dir` target) is itself the ledger
+ * root, so `/srv/repo.git` keeps its ledger under `/srv/repo.git/.beep/yeet`:
+ * the directory that holds a bare repository may hold others, and they must
+ * not share one sample.
+ *
+ * A `.git` file without a `gitdir:` line, or Git metadata that cannot be read,
+ * fails with {@link YeetCommandError}; the verdict path logs that and skips the
+ * shadow pass rather than splitting the sample silently.
+ *
+ * **Example** (Resolve a checkout's ledger location)
+ *
+ * ```ts
+ * import { resolveProofLedgerLocation } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(resolveProofLedgerLocation("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Checkout that ran: a primary clone, a linked worktree, or a plain directory.
+ * @returns The checkout, its owning clone, and the shared ledger path.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveProofLedgerLocation = Effect.fn("Yeet.resolveProofLedgerLocation")(function* (
+  repoRoot: string
+): Effect.fn.Return<ProofLedgerLocation, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const ledgerRoot = yield* owningCloneRoot(repoRoot);
+  return ProofLedgerLocation.make({
+    originRoot: path.resolve(repoRoot),
+    ledgerRoot,
+    ledgerPath: path.join(ledgerRoot, ".beep", "yeet", "proof-ledger.ndjson"),
+  });
+});
+
+/**
+ * Resolve the append-only proof ledger path a checkout reads and writes.
+ *
+ * **Details**
+ *
+ * The path projection of {@link resolveProofLedgerLocation}: the ledger lives
+ * in the owning clone's `.beep/yeet` artifact root. When the Git common dir is
+ * `<clone>/.git`, the owning clone is its parent, the clone's checkout, so a
+ * linked worktree resolves to its clone's ledger and a primary clone to its
+ * own; a bare or separated common dir (not named `.git`, such as
+ * `/srv/repo.git`) keeps the ledger inside itself, under
+ * `/srv/repo.git/.beep/yeet`. It is not scoped to a branch or run because
+ * proof facts describe inputs and epochs, not Git refs.
  *
  * **Example** (Resolve a checkout ledger)
  *
@@ -269,16 +424,15 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
  * console.log(Effect.isEffect(proofLedgerPathForCheckout("/repo"))) // true
  * ```
  *
- * @param repoRoot - Checkout root that owns the proof history.
- * @returns Path to `.beep/yeet/proof-ledger.ndjson` in that checkout.
+ * @param repoRoot - Checkout that ran: a primary clone, a linked worktree, or a plain directory.
+ * @returns Path to `.beep/yeet/proof-ledger.ndjson` in the owning clone.
  * @category utilities
  * @since 0.0.0
  */
 export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForCheckout")(function* (
   repoRoot: string
-): Effect.fn.Return<string, never, Path.Path> {
-  const path = yield* Path.Path;
-  return path.join(repoRoot, ".beep", "yeet", "proof-ledger.ndjson");
+): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  return (yield* resolveProofLedgerLocation(repoRoot)).ledgerPath;
 });
 
 /**
