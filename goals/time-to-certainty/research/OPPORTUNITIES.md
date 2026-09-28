@@ -2805,3 +2805,24 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   `introduced=0 resolved=0`.
 - Prevention: a `--write --files <paths>` (or package-scoped) mode that refreshes only the rows of
   the named files.
+
+## 2026-09-28 — the pre-commit biome fix silently reverted a type fix, and the gate that caught it was not local
+
+- Doing: fixing two findings Heavy Check and Heavy Lint Policy raised on PR #1321: a defaulted
+  generator parameter (`relativeGitdir = false` in an `Effect.fn` test fixture) that the Effect
+  test typecheck infers as `any` (`effect(strictBooleanExpressions)`, TS377029), and an inline
+  Schema compile in a test (oxlint `beep(no-inline-schema-compile)`).
+- Evidence: the first fix annotated the parameter `relativeGitdir: boolean = false`. Biome's
+  `lint/style/noInferrableTypes` calls that annotation trivially inferred, and the lefthook
+  `pre-commit` biome command runs `--write` with `stage_fixed: true`, so the commit (e9ed4b412d)
+  went out with the annotation stripped and the type error still in it; the commit message said
+  otherwise. Neither gate is in the local loop the PR ran: `bunx turbo run check` and
+  `quality package-verify --quick` passed, and the package-level `quality test-tsgo-package` stayed
+  green even with the defect in place. Only the root `bun run beep quality test-tsgo` (the
+  synthetic test config with Effect diagnostics) reproduced the hosted error, and oxlint runs only
+  in the Lint Policy lane.
+- Prevention: make the flag a required `boolean` (no default), which satisfies both rules (landed
+  as c3d5f46f9b). Run `bun run beep quality test-tsgo` and `bunx oxlint --quiet
+  --disable-nested-config <changed files>` before pushing test changes in `@beep/repo-cli`; and
+  either turn off `noInferrableTypes` for defaulted generator parameters or have the pre-commit
+  hook fail instead of rewriting a staged file the author did not ask it to fix.
