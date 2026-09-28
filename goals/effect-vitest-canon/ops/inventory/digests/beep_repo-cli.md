@@ -12,7 +12,7 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 98 fixed rows, seven reviewed exceptions and 3,316 open rows, with all
+contains 260 fixed rows, seven reviewed exceptions and 3,154 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
@@ -28,6 +28,13 @@ Commit `c7763ea32d` fixes 14 more detector findings in the QA command, reply
 schema and verdict JSON suites. All 48 registrations pass on Node and Bun;
 full package audit/docgen passed. See
 [the assertion proof](../../../research/cli-schema-assertions-proof.md).
+
+Commit `8140304195` fixes 162 exactly matched historical detector rows in the
+49-file predicate batch. All 1,509 registrations pass before and after on both
+runtimes, and full package audit/docgen passed. Eighteen other removed current
+findings do not have an exact historical ledger match and remain for explicit
+reconciliation; no historical row was closed by inference. See
+[the predicate proof](../../../research/cli-predicate-assertions-proof.md).
 
 Historical evidence follows unchanged.
 

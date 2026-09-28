@@ -51,3 +51,16 @@ Private receipts: `cli-predicate-batch-proposal.json`,
 `cli-predicate-batch-ratchet-final.log`, and the preserved original failed
 baseline and ratchet logs. Full CLI package verification passed: audit 672.9 seconds and docgen 19.8
 seconds. These results do not establish final repository proof or goal completion.
+
+
+After saving the batch in `8140304195`, main commit `980b4cd44c` merged without
+conflicts. The overlapping `quality-tasks.test.ts` suite passes all 254 tests
+under Node (11.26 seconds) and Bun (7.10 seconds). The post-merge ratchet still
+reports 4,489 findings, zero introduced and 525 resolved. These focused checks
+supplement the pre-merge package proof; final merged-branch proof remains open.
+
+The historical CLI detector ledger closes 162 exact matches using file, rule,
+occurrence, evidence and duplicate ordinal, citing the batch commit. Eighteen
+other removed current findings lack an exact historical match and remain for
+explicit reconciliation. All 3,421 ledger rows retain unique IDs and pass the
+strict finding schema.
