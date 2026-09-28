@@ -33,8 +33,8 @@ or exception is added to the baseline.
 Ninety-three removals match unique existing open ledger rows. Four assertions
 have no historical match by file, rule and evidence: the median pickup result,
 the coverage selector, and malformed lockfile version reads for turbo and Biome.
-Their captured findings will receive separate fixed records after the source
-commit is saved. Existing identities remain intact.
+Their captured findings now have separate fixed records. All 97 records
+reference source commit `f1ac7e358e413e6dcc0b0e95ee52965b512f6a9f`. Existing identities remain intact.
 
 ## Verification
 
@@ -46,9 +46,12 @@ not stand in for final-source proof.
 
 The final generated package-test-typecheck artifact reports exit zero with
 empty diagnostics. The reconciled ratchet passes with 4,079 findings, zero introduced and 938
-resolved baseline findings, scanning 1,217 files in 10.34 seconds. Final-source
-Node/Bun comparison and full CLI package audit/docgen are running; their
-results are not yet claimed.
+resolved baseline findings, scanning 1,217 files in 10.34 seconds. The final
+after cohort passes 1,182 tests on Node in 130.688501169 seconds and Bun in
+86.570207997 seconds, with zero failures/skips and stable source hashes.
+All four before/final-after runs have identical file/title registration
+multiplicities. Full CLI package audit/docgen remains active; its result is
+not yet claimed.
 Runtime versions, limits, load and CPU/memory/I/O pressure are recorded with
 each timed run. Concurrent workstation work prevents a causal performance
 claim from these samples.
