@@ -1761,3 +1761,20 @@ explicit operator path inputs; its frozen census, layout rulings, manifest
 default, and move preconditions remain intact. Run the whole-tree reference
 check before merging new goal packets to avoid spreading this failure to
 unrelated branches.
+
+### 2026-09-28 — Native sandbox startup cannot resolve protected socket paths
+
+After approval to enforce census file-write confinement, the custom Grok
+sandbox refused startup while resolving the root-owned Podman socket path.
+Hiding that path exposed a second mount preparation failure for containerd;
+an isolated runtime directory still ended in a sandbox application refusal.
+These attempts launched no census and supplied no coverage evidence.
+
+The replacement uses an explicit Bubblewrap read-only host mount with narrow
+runtime and report-directory write grants. A real file-tool probe read a graft
+card and wrote its allowed output, while direct outside writes, a symlink to
+an outside fixture, and a repository fixture all failed with a read-only
+filesystem error. Both outside fixtures retained their original bytes. The
+runner still requires complete input binding and independent approval before
+launch. A provider-free mount probe before any model call would expose this
+host compatibility failure earlier.
