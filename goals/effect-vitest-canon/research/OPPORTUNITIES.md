@@ -4396,3 +4396,12 @@ assertions. Failure controls after sidebar persistence and during overlapping
 intake batches reproduced missing disposal. All sixteen acquisitions now register
 release in the public test scope. Preserve explicit mount releases in idle-TTL
 regressions; replacing those with end-of-test cleanup would weaken their subject.
+
+## Dock graph and binding ownership crossed failure paths
+
+Dock tests disposed graphs and mount bindings explicitly only after successful
+waits. Registering parent-scope cleanup preserves those early releases while
+covering failures before them. A temporary graph-cleanup control initially matched
+past a formatter-collapsed acquisition and instrumented the wrong callback; the
+probe was corrected before accepting evidence. Mutation controls should validate
+their insertion location structurally, not just count a text match.
