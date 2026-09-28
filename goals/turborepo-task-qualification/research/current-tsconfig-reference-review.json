@@ -1,0 +1,29 @@
+{
+  "authority": "Parsed configuration comparison with prior source bytes matched to archived SHA-256; no task execution",
+  "revision": "4f18a2fa4c54db70bdb1138be757e8e561abda14",
+  "counts": {
+    "changedTypeScriptProjectConfigs": 244,
+    "onlyProjectReferencesChanged": 243,
+    "rootAliasOnly": 1
+  },
+  "baselineMethod": "240 strict-JSON files matched cafc1f8eb9; four exceptional baselines were recovered from file history by SHA-256 and parsed with installed TypeScript.",
+  "referenceEffects": [
+    "Project references add test-runner dependencies and smaller test-utils, fc-runs and schema edges. These participate in compiler build ordering and input discovery.",
+    "No non-reference settings changed in the 243 non-root project configs."
+  ],
+  "rootAlias": {
+    "key": "@beep/repo-cli/commands/HarnessLedger",
+    "value": [
+      "./packages/tooling/tool/cli/src/commands/HarnessLedger/index.ts"
+    ],
+    "otherRootChanges": false
+  },
+  "rawComparisonSha256": "0b647452e3a6551596338c497580a56a1859d9609da559c9a2124354f749617d",
+  "exceptionComparisonSha256": "0733b1602908bffb12595253af1d4f498310d5b60b0aeed9cf707380d68030d6",
+  "limits": [
+    "Configuration source review only; referenced source semantics, resolution under every execution profile and runtime behavior remain unproven.",
+    "Does not establish equivalence between Effect versions or renew the signed-remote pilot."
+  ],
+  "sourceManifestSha256": "3c2a169586cf331978e90d7b6072e85c46724945c3c1fa62ae67e94ddf051d47",
+  "sourceManifestCount": 244
+}

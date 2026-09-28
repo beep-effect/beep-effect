@@ -1,0 +1,52 @@
+{
+  "authority": "Bounded source review and existing sweep plan/schema tests with subprocess test doubles",
+  "revision": "25bbf1d59d9692fd9a2569439422a7fc75339632",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "8800ff9fc0da274f1b09e0991974cb6890855e9fd36313a5c4a44cca1389f567"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "sha256": "6dca8fe3a1bf38d784716d7608ecc4eb113ccc493e5cb7eb7966338934fdf95e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/yeet-sweep-schemas.test.ts",
+      "sha256": "37786d578e3e08524f0ced76ba1bda7e7f5b6a2fa4c90706352a3161e4fdbbee"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "sha256": "7d33b8415fc51880d68b27c20e9deff9bc391f570334e0b91d48e14131cca257"
+    }
+  ],
+  "reviewedBehavior": [
+    "A clone on a branch other than main or the swept branch blocks checkout switching and installation; ref-only steps retain their independent preconditions.",
+    "The planned end-state step precedes lockfile-install. Execution accumulates outcomes sequentially and installation requires an executed end-state outcome.",
+    "A failed switch prevents installation. When the observed checkout is already on main, end-state records success without a fresh HEAD probe.",
+    "The installation decision rechecks the lockfile update window after ref refresh; unknown starting tips or unreadable comparison conservatively request installation.",
+    "Individual skipped and needs-operator outcomes are encoded in the report; a successful sweep command alone does not prove every step executed."
+  ],
+  "semanticInputs": [
+    "Observed HEAD, branch/base tips, merged PR state, worktree ownership and cleanliness",
+    "Live Git command outcomes, ref refresh, lockfile differences and dependency installation environment",
+    "Prior step outcomes, filesystem state and clock"
+  ],
+  "effects": [
+    "May fetch/update/delete refs, switch checkout, install dependencies and invoke tmpfs cleanup in production",
+    "Writes a sweep report; focused tests use temporary filesystem fixtures and subprocess stubs"
+  ],
+  "verification": {
+    "command": "bun --no-env-file run --cwd packages/tooling/tool/cli beep:test test/yeet-sweep-plan.test.ts test/yeet-sweep-schemas.test.ts --maxWorkers=1",
+    "filesPassed": 2,
+    "testsPassed": 82,
+    "vitestVersion": "5.0.1",
+    "logSha256": "b0785eeb291eaab0019b0984a63af430f4a33a73c06bf52ca5b6cf0e406e1fc6",
+    "evidence": "Completed Vitest summary; inherited tool session exit status was unavailable after context compaction."
+  },
+  "limits": [
+    "No real lane retirement, checkout switch or dependency installation was performed for this review.",
+    "The observed state is not a lock: another process can change HEAD or files after observation. Tests do not establish cross-process exclusion or crash durability.",
+    "A clone observed on main can still host another running process; branch identity alone is not process ownership.",
+    "This mutable, externally effectful operation is not qualified for task-result replay."
+  ]
+}

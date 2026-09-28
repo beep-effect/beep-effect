@@ -2164,3 +2164,172 @@ root scripts and global configuration are unchanged. Input summaries changed
 for 55 nodes. Eighteen Yeet source bindings were refreshed and Converge.ts
 was newly attached. This source-only refresh explicitly leaves semantic review
 and planner reproduction open; it does not renew historical runtime evidence.
+
+### Planner reproduction after PR #1270
+
+[The planner comparison](research/main-1270-planner-review.json) reproduces the
+finite local and hosted scenarios at `f806118ec2`. CI/Quality projections are
+unchanged. Two Yeet remote-status scenarios per environment request additional
+check metadata; all other projected values remain equal. This closes the
+bounded planner reproduction item while preserving the event-convergence,
+wave-handling, monitor-state and exhaustive interpreter review obligations.
+No runtime evidence is renewed and no tuple is qualified.
+
+### Current-main census after PR #1268 retirement — 2026-09-28
+
+The merged lane was retired with its unpublished planner receipt preserved.
+A fresh lane at `980b4cd44c` reproduces 144 workspaces, 3,473 graph nodes and
+1,970 executable tasks under Turbo 2.11.4. Commands and effective task
+configuration are unchanged, but dependency membership differs for 2,074
+nodes and input digests differ for 3,448. Of the previous 1,019 reviewed
+source references, 526 retain their hashes, 490 changed, and three private
+planner scripts need recovery or reproduction. The old attachment is not
+accepted for this head. The [delta receipt](research/current-main-census-delta.json)
+records these limits; semantic review must explain the changed graph before
+renewing coverage. Historical runtime evidence retains its original pins.
+
+### Current planner reproduction and dependency attribution
+
+At `40055f7c04`, the tracked CI/Quality and Yeet planner scripts reproduce
+all four historical projections byte-for-byte under explicit local and hosted
+environments. The 122 changed workspace manifests each add test-runner as a
+dev dependency; all 2,074 nodes with changed dependency membership gain a
+test-runner edge. Thirty-six changed TypeScript source bindings differ only
+by the exact process-module import path replacement. This classifies those
+edits without proving equivalence between Effect versions. See the
+[bounded review](research/current-main-planner-review.json). Broader semantic
+review and signed-remote acceptance remain open.
+
+### Source attachment restoration — 2026-09-28
+
+The canonical census command accepts the restored attachment at `40055f7c04`:
+1,020 source bindings, six historical artifacts, 56 reviews and 18 unresolved
+obligations. Exact-hash recovery restored 53 historical review receipts and
+all three private producers. Two missing reviews remain explicitly unavailable.
+The attachment refreshes source identity only; it does not renew semantic or
+runtime acceptance. See [the receipt](research/current-attachment-restoration.json).
+
+### Complete changed TypeScript project-config comparison
+
+All 244 changed TypeScript project configs were compared against hash-matched
+historical bytes. The 243 non-root configs differ only in project references;
+the root config adds only the HarnessLedger path alias. Four exceptional
+baselines were recovered from Git history and parsed with TypeScript JSONC
+support. [The review](research/current-tsconfig-reference-review.json) records
+the source hashes and limits. Referenced source semantics and runtime
+qualification remain open.
+
+### Changed Turbo and package-manifest comparison
+
+All eleven changed Turbo configs differ only in the schema URL. All 124
+changed package manifests were compared with hash-matched baseline bytes:
+122 change development dependencies only, the CLI changes exports and publish
+configuration, and the root changes catalog versions, one override and four
+patch-registration entries. No scripts changed. The
+[configuration review](research/current-package-turbo-review.json) preserves
+the toolchain changes as unresolved semantic inputs; unchanged task settings
+do not establish runtime equivalence or qualification.
+
+### Source migration classification and selected Effect APIs
+
+Hash-matched baselines were recovered for 70 remaining source files. Parser
+comparison finds 31 with unchanged non-import syntax and 39 with changed
+non-import syntax. Comments and formatting are excluded from that comparison,
+so it is not a runtime equivalence claim. The
+[selective migration review](research/current-source-migration-review.json)
+confirms an identical byte-to-hex helper for three hashing callers, while
+recording schema-representation and JSON Schema differences in the prefix
+filter rename. The remaining caller and dependency semantics stay open.
+
+### Vitest configuration delta and working-directory controls
+
+Eight clean-environment configuration evaluations cover the changed oip-web
+and Epistemic configs across unit, coverage and doctest profiles, plus two
+repository-root cwd controls. Isolation overrides remain true; oip-web's
+eleven provider env overrides are empty; merged setup arrays retain shared
+setup. Transform-cache placement follows process.cwd(), so the root controls
+share the root cache path. [The review](research/current-vitest-config-review.json)
+records configuration observations only, with worker execution, cache races
+and runtime qualification still unproven.
+
+### Failed-lane input observations and reuse rejection
+
+The changed Quality/Yeet handoff retains failed-lane digests and package
+scopes as observations. The ledger still rejects exact failed facts with
+`prior-failed`. All 27 tests in the two existing digest/ledger suites pass.
+[The bounded review](research/current-failed-lane-digest-review.json) records
+fresh-summary, filesystem, task-selection and ledger inputs; it does not
+replace full proof or establish real signed-remote qualification.
+
+### Shadow comparison recording and enforcement sample
+
+All 29 existing proof-shadow tests pass. The recorder looks up prior facts
+before appending its observation batch, and counts hit-versus-failed rows as
+disagreements. The enforcement sample is restricted by stage/profile and the
+optional timestamp bound, while headline totals retain all rows. The
+[review](research/current-proof-shadow-review.json) preserves the distinction
+between this shadow report, hosted proof, and signed task qualification.
+
+### Clone ledger location and append boundary
+
+The real linked-worktree resolver matches Git's common-directory ownership
+and ledger path. Source review records malformed/incomplete row handling,
+exclusive creation and checked hard-link append, with no cross-process lock.
+The prior focused ledger test source still matches its passing receipt.
+[The storage review](research/current-proof-ledger-storage-review.json) keeps
+concurrent-write, incomplete-tail recovery and crash-durability limits open.
+
+### Detached monitor wave escalation
+
+All 17 existing notifier tests pass with subprocess test doubles. The
+[escalation review](research/current-monitor-escalation-review.json) records
+policy/job gating, owner liveness, exclusive claims, launch retry and per-loop
+settlement. Claim or launch acknowledgement is not notification delivery.
+No real worker or owner-session action was launched by this review.
+
+### Sweep checkout and installation ordering
+
+The existing sweep plan/schema suites report 82 passing tests across two files.
+[The bounded review](research/current-sweep-ordering-review.json) records live-branch
+preconditions, sequential outcomes and installation suppression after a failed
+checkout switch. Subprocess fixtures establish those branches; no real retirement
+was run. Observation races and process ownership remain outside this evidence,
+and command success alone does not mean all sweep steps executed.
+
+### Reference refresh preflight and external verdicts
+
+The changed reference refresh was reviewed against its patch-kit and provider
+cooldown branches. All 36 existing tests across refresh, schema and timer suites
+pass with isolated fixtures. [The review](research/current-reference-refresh-review.json)
+records live Git/provider inputs, maintenance writes, bounded failure details
+and the difference between rendered timer ordering and a runtime guarantee.
+It supplies census semantics without running a real refresh or granting reuse.
+
+### Current review attachment accepted by the census
+
+The canonical census accepts 1,020 source bindings, 67 reviews and six artifacts
+at revision `3979bcfc70`. All previous reference hashes and newly attached review
+source hashes match. The population remains 144 workspaces, 3,473 graph nodes and
+1,970 executable nodes. [The attachment receipt](research/current-review-attachment.json)
+records exact request/output hashes and comparison results. Nineteen obligations
+remain explicit; attachment acceptance is not semantic closure or qualification.
+
+### Pilot input-map contamination found during attachment refresh
+
+Twenty nodes changed input digests while command, configuration and dependency
+fields stayed identical; seventeen changed input counts. The current identity
+lint dry plan includes two ignored sibling `utils/.turbo` logs via `utils/**`.
+[The finding](research/current-pilot-orchestration-inputs.json) records their input
+identities without their contents. Caching remains disabled. Next: exclude
+orchestration logs at the pilot boundary, verify source invalidation still works,
+and renew affected pilot evidence. Other changed input maps need attribution.
+
+### Pilot generated-log exclusion and semantic controls
+
+Identity lint now excludes `.turbo` directories in its task-scoped inputs and
+keeps caching disabled. Six actual Turbo dry plans establish that generated-log
+addition/mutation preserves both inputs and task hash, while sibling source
+addition/mutation changes them; cleanup restores the baseline. The input count
+returns to 769. [The repair receipt](research/current-pilot-orchestration-repair.json)
+records all seven checks and full identity package audit/docgen success.
+Historical runtime pilot evidence must be renewed for the changed configuration.

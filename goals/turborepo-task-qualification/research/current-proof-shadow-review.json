@@ -1,0 +1,42 @@
+{
+  "authority": "Bounded shadow-recording/report source review and existing focused fixture suite",
+  "revision": "66a750800da0dd0bf5a5347e18cf1c2e0f24c3a9",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      "sha256": "dd11f7f02911cb5e19923c43df849ac50f56126af492aa91369c574d62fc51ff"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/proof-shadow.test.ts",
+      "sha256": "760e5b801d1131fb799ded35ba28764d929b7ed3c1312955fe7fb3948be0a6df"
+    }
+  ],
+  "reviewedBehavior": [
+    "Only passed or failed lane executions become fresh shadow observations; reused and not-run lanes are excluded.",
+    "The recorder derives keys and performs lookupAll before appending the batch of observations and facts.",
+    "A hit decision paired with a failed observation is a disagreement.",
+    "Known changed packages block reuse when they intersect lane package scope. An unavailable changed set blocks scoped lanes; this does not manufacture scope for undeclared inputs.",
+    "The enforcement report selects its configured stage/profile pair and optional recordedAt >= since bound. Invalid timestamps are excluded from a bounded sample.",
+    "Headline counts retain all rows. Enforcement readiness uses only the filtered sample and configured attempt, branch and disagreement thresholds."
+  ],
+  "inputs": [
+    "Lane run reports including status, command, declared input digest and package scope",
+    "Existing clone proof ledger and proof epoch",
+    "Changed-package report or unavailable result",
+    "Current time, attempt identity, branch, stage and environment profile",
+    "Report since bound and enforcement thresholds"
+  ],
+  "limits": [
+    "One batch reads decisions before its own append; cross-process locking, atomicity and races are not proven here.",
+    "An enforcement-ready shadow report is not completion of this qualification goal or signed remote evidence.",
+    "Complete Git discovery, epoch, persistence and downstream decision semantics remain outside this bounded review."
+  ],
+  "verification": {
+    "command": "bun --no-env-file run --cwd packages/tooling/tool/cli beep:test test/proof-shadow.test.ts --maxWorkers=1",
+    "filesPassed": 1,
+    "testsPassed": 29,
+    "exitCode": 0,
+    "vitestVersion": "5.0.1",
+    "logSha256": "55fdd7495c4b6ba9bfa1275b3dc6559750bd0fcc232df0925019e80f9123177e"
+  }
+}

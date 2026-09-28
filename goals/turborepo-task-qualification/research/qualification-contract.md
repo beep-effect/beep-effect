@@ -13,6 +13,16 @@ and capture-safety verdicts. Neither source review nor a local cache hit can
 satisfy those imports. The sole writer for the qualification source files and
 this packet is this task; sibling source files remain outside its write scope.
 
+## Current consumer checkpoint — 2026-09-28
+
+[The restored attachment](./current-attachment-restoration.json) at `40055f7c04`
+binds 1,020 sources, six artifacts and 56 reviews, retaining 18 unresolved
+obligations. The Turbo 2.11.4 census contains 144 workspaces, 3,473 graph nodes
+and 1,970 executable computations. This replaces the attachment counts below;
+the earlier runtime receipts retain their original toolchain and source pins.
+Two historical reviews remain unavailable. Current source identity, finite
+planner parity and historical byte recovery do not establish runtime qualification.
+
 ## Consumer checkpoint — 2026-09-25
 
 The source census was regenerated at `8caad510d2`: 144 workspaces, 3,473 graph
