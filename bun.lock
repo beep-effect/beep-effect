@@ -172,6 +172,9 @@
         "unpdf": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@tauri-apps/cli": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",

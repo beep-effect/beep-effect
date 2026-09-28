@@ -13,12 +13,12 @@ import {
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { describe, expect } from "@effect/vitest";
 import { Duration, Effect, Equal, Layer, Option, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as EmbeddingModel from "effect/ai/EmbeddingModel";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { verifyGNeighbors, verifyGSparql } from "@/layers/CanaryC1Live";
 import { ActiveEmbeddingIdentityLive, EmbedderRuntimeLive } from "@/layers/EmbedderLive";
@@ -46,15 +46,14 @@ import { VectorProjection } from "@/services/VectorProjection";
 
 const decodeEmbeddingVectorType = S.decodeEffect(S.toType(EmbeddingVector));
 
+import { it } from "@beep/test-runner";
+import { provideScopedLayer } from "@beep/test-utils";
+import { assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import type { ProviderCacheEntry } from "@/schema/ProviderCache";
 
 const sha = (digit: string): Sha256Hex => Sha256Hex.make(Str.repeat(64)(digit));
 const chunkId = (digit: string): ChunkId => ChunkId.make(Str.repeat(64)(digit));
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const embeddingModel = (dimension: PosInt) =>
   ModelIdentity.make({
     artifactHash: sha("a"),
@@ -89,163 +88,159 @@ const config = Layer.succeed(
 );
 
 describe("C1 vector projection", () => {
-  it("co-locates alternate dimensions and scopes exact kNN by full model identity", () =>
-    Effect.runPromise(
-      provideScopedLayer(
-        VectorProjectionLive.pipe(
-          Layer.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
-          Layer.provide(BunCrypto.layer)
-        )
-      )(
-        Effect.gen(function* () {
-          const projection = yield* VectorProjection;
-          const model3 = embeddingModel(PosInt.make(3));
-          const model4 = embeddingModel(PosInt.make(4));
-          const queryId = chunkId("1");
-          const neighborId = chunkId("2");
-          const vectors = yield* Effect.all([
-            vector(model3, queryId, [1, 0, 0]),
-            vector(model3, neighborId, [0.9, 0.1, 0]),
-            vector(model4, queryId, [1, 0, 0, 0]),
-            vector(model4, neighborId, [0.8, 0.2, 0, 0]),
-          ]);
+  it.layer(
+    VectorProjectionLive.pipe(
+      Layer.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))),
+      Layer.provide(BunCrypto.layer)
+    ),
+    { timeout: "30 seconds", excludeTestServices: true }
+  )((it) => {
+    it.effect("co-locates alternate dimensions and scopes exact kNN by full model identity", () =>
+      Effect.gen(function* () {
+        const projection = yield* VectorProjection;
+        const model3 = embeddingModel(PosInt.make(3));
+        const model4 = embeddingModel(PosInt.make(4));
+        const queryId = chunkId("1");
+        const neighborId = chunkId("2");
+        const vectors = yield* Effect.all([
+          vector(model3, queryId, [1, 0, 0]),
+          vector(model3, neighborId, [0.9, 0.1, 0]),
+          vector(model4, queryId, [1, 0, 0, 0]),
+          vector(model4, neighborId, [0.8, 0.2, 0, 0]),
+        ]);
 
-          yield* projection.rebuild(vectors);
-          const neighbors3 = yield* projection.neighbors(A.getUnsafe(vectors, 0), PosInt.make(3));
-          const neighbors4 = yield* projection.neighbors(A.getUnsafe(vectors, 2), PosInt.make(3));
+        yield* projection.rebuild(vectors);
+        const neighbors3 = yield* projection.neighbors(A.getUnsafe(vectors, 0), PosInt.make(3));
+        const neighbors4 = yield* projection.neighbors(A.getUnsafe(vectors, 2), PosInt.make(3));
 
-          expect(neighbors3.dimension).toBe(3);
-          expect(neighbors4.dimension).toBe(4);
-          expect(neighbors3.modelKey).not.toBe(neighbors4.modelKey);
-          expect(A.map(neighbors3.neighbors, (neighbor) => neighbor.chunk)).toEqual([neighborId]);
-          expect(A.map(neighbors4.neighbors, (neighbor) => neighbor.chunk)).toEqual([neighborId]);
-        })
-      )
-    ));
+        expect(neighbors3.dimension).toBe(3);
+        expect(neighbors4.dimension).toBe(4);
+        expect(neighbors3.modelKey).not.toBe(neighbors4.modelKey);
+        expect(A.map(neighbors3.neighbors, (neighbor) => neighbor.chunk)).toEqual([neighborId]);
+        expect(A.map(neighbors4.neighbors, (neighbor) => neighbor.chunk)).toEqual([neighborId]);
+      })
+    );
+  });
 });
 
 describe("C1 committed projection gate", () => {
-  it("fails typed on empty and mismatched G-projection witnesses", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const model = embeddingModel(PosInt.make(3));
-        const queryChunk = chunkId("1");
-        const neighborChunk = chunkId("2");
-        const expectation = GProjectionExpectation.make({
-          knn: { neighborChunk, queryChunk, rank: PosInt.make(1) },
-          model,
-          paper: CorpusPaperId.make("057e356e94f8"),
-          schemaVersion: "g-projection/v1",
-          sparql: [
-            SparqlExpectation.make({
-              expectedCount: PosInt.make(1),
-              id: "claims",
-              query: "SELECT ?claim WHERE { ?claim ?p ?o }",
-            }),
-          ],
-        });
-        const emptyKnn = KnnQueryResult.make({
-          dimension: PosInt.make(3),
-          modelKey: sha("b"),
-          neighbors: [],
-          queryChunk,
-        });
-        const wrongKnn = KnnQueryResult.make({
-          ...emptyKnn,
-          neighbors: [KnnNeighbor.make({ chunk: chunkId("3"), distance: 0.1, rank: PosInt.make(1) })],
-        });
-        const wrongSparql = [SparqlResultWitness.make({ count: NonNegativeInt.make(0), id: "claims", rows: [] })];
+  it.live("fails typed on empty and mismatched G-projection witnesses", () =>
+    Effect.gen(function* () {
+      const model = embeddingModel(PosInt.make(3));
+      const queryChunk = chunkId("1");
+      const neighborChunk = chunkId("2");
+      const expectation = GProjectionExpectation.make({
+        knn: { neighborChunk, queryChunk, rank: PosInt.make(1) },
+        model,
+        paper: CorpusPaperId.make("057e356e94f8"),
+        schemaVersion: "g-projection/v1",
+        sparql: [
+          SparqlExpectation.make({
+            expectedCount: PosInt.make(1),
+            id: "claims",
+            query: "SELECT ?claim WHERE { ?claim ?p ?o }",
+          }),
+        ],
+      });
+      const emptyKnn = KnnQueryResult.make({
+        dimension: PosInt.make(3),
+        modelKey: sha("b"),
+        neighbors: [],
+        queryChunk,
+      });
+      const wrongKnn = KnnQueryResult.make({
+        ...emptyKnn,
+        neighbors: [KnnNeighbor.make({ chunk: chunkId("3"), distance: 0.1, rank: PosInt.make(1) })],
+      });
+      const wrongSparql = [SparqlResultWitness.make({ count: NonNegativeInt.make(0), id: "claims", rows: [] })];
 
-        const emptyFailure = yield* verifyGNeighbors(expectation)(emptyKnn).pipe(Effect.flip);
-        const mismatchFailure = yield* verifyGNeighbors(expectation)(wrongKnn).pipe(Effect.flip);
-        const sparqlFailure = yield* verifyGSparql(expectation)(wrongSparql).pipe(Effect.flip);
+      const emptyFailure = yield* verifyGNeighbors(expectation)(emptyKnn).pipe(Effect.flip);
+      const mismatchFailure = yield* verifyGNeighbors(expectation)(wrongKnn).pipe(Effect.flip);
+      const sparqlFailure = yield* verifyGSparql(expectation)(wrongSparql).pipe(Effect.flip);
 
-        expect(emptyFailure.reason).toBe("expectation-mismatch");
-        expect(mismatchFailure.reason).toBe("expectation-mismatch");
-        expect(sparqlFailure.reason).toBe("expectation-mismatch");
-      })
-    ));
+      expect(emptyFailure.reason).toBe("expectation-mismatch");
+      expect(mismatchFailure.reason).toBe("expectation-mismatch");
+      expect(sparqlFailure.reason).toBe("expectation-mismatch");
+    })
+  );
 });
 
 describe("C1 embedding cache", () => {
-  it("writes actual provider vectors live, replays them offline, and degrades only cache misses", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const model = embeddingModel(PosInt.make(3));
-        const providerCalls = yield* Ref.make(0);
-        const entries = yield* Ref.make<ReadonlyArray<ProviderCacheEntry>>([]);
-        const keyEquivalence = S.toEquivalence(ProviderCacheKey);
-        const cache = ProviderCache.of({
-          lookup: Effect.fn("ProviderCache.lookup")((key) =>
-            Ref.get(entries).pipe(
-              Effect.map((stored) => A.findFirst(stored, (entry) => keyEquivalence(entry.key, key)))
-            )
-          ),
-          store: Effect.fn("ProviderCache.store")((entry) => Ref.update(entries, (stored) => A.append(stored, entry))),
-        });
-        const liveModel = Layer.merge(
-          Layer.effect(
-            EmbeddingModel.EmbeddingModel,
-            EmbeddingModel.make({
-              embedMany: ({ inputs }) =>
-                Ref.update(providerCalls, (count) => count + 1).pipe(
-                  Effect.as({
-                    results: A.map(inputs, (input) => [Str.length(input), 1, 0]),
-                    usage: { inputTokens: A.length(inputs) },
-                  })
-                ),
-            })
-          ),
-          Layer.succeed(EmbeddingModel.Dimensions, 3)
+  it.live("writes actual provider vectors live, replays them offline, and degrades only cache misses", () =>
+    Effect.gen(function* () {
+      const model = embeddingModel(PosInt.make(3));
+      const providerCalls = yield* Ref.make(0);
+      const entries = yield* Ref.make<ReadonlyArray<ProviderCacheEntry>>([]);
+      const keyEquivalence = S.toEquivalence(ProviderCacheKey);
+      const cache = ProviderCache.of({
+        lookup: Effect.fn("ProviderCache.lookup")((key) =>
+          Ref.get(entries).pipe(Effect.map((stored) => A.findFirst(stored, (entry) => keyEquivalence(entry.key, key))))
+        ),
+        store: Effect.fn("ProviderCache.store")((entry) => Ref.update(entries, (stored) => A.append(stored, entry))),
+      });
+      const liveModel = Layer.merge(
+        Layer.effect(
+          EmbeddingModel.EmbeddingModel,
+          EmbeddingModel.make({
+            embedMany: ({ inputs }) =>
+              Ref.update(providerCalls, (count) => count + 1).pipe(
+                Effect.as({
+                  results: A.map(inputs, (input) => [Str.length(input), 1, 0]),
+                  usage: { inputTokens: A.length(inputs) },
+                })
+              ),
+          })
+        ),
+        Layer.succeed(EmbeddingModel.Dimensions, 3)
+      );
+      const liveConfig = LabConfig.of({
+        corpusRoot: Option.none(),
+        embeddingDimension: PosInt.make(3),
+        embeddingModel: model.name,
+        embeddingRevision: model.revision,
+        extractionTimeout: Duration.minutes(15),
+        extractorModel: "stub-extractor-20260826",
+        goldDirectory: "fixtures/gold/v1",
+        goldGenerationTimeout: Duration.minutes(45),
+        goldModel: "stub-gold-20260826",
+        ledgerRoot: ".beep/semantica/ledger",
+        mode: "live",
+        offline: false,
+        projectionTimeout: Duration.seconds(30),
+        providerCacheDirectory: ".beep/semantica/provider-cache",
+      });
+      const input = EmbeddingInput.make({ chunk: chunkId("8"), text: "semantic projection" });
+      const miss = EmbeddingInput.make({ chunk: chunkId("9"), text: "offline miss" });
+      const support = (selected: typeof liveConfig) =>
+        Layer.mergeAll(
+          ActiveEmbeddingIdentityLive(model),
+          BunCrypto.layer,
+          Layer.succeed(LabConfig, selected),
+          Layer.succeed(ProviderCache, cache)
         );
-        const liveConfig = LabConfig.of({
-          corpusRoot: Option.none(),
-          embeddingDimension: PosInt.make(3),
-          embeddingModel: model.name,
-          embeddingRevision: model.revision,
-          extractionTimeout: Duration.minutes(15),
-          extractorModel: "stub-extractor-20260826",
-          goldDirectory: "fixtures/gold/v1",
-          goldGenerationTimeout: Duration.minutes(45),
-          goldModel: "stub-gold-20260826",
-          ledgerRoot: ".beep/semantica/ledger",
-          mode: "live",
-          offline: false,
-          projectionTimeout: Duration.seconds(30),
-          providerCacheDirectory: ".beep/semantica/provider-cache",
-        });
-        const input = EmbeddingInput.make({ chunk: chunkId("8"), text: "semantic projection" });
-        const miss = EmbeddingInput.make({ chunk: chunkId("9"), text: "offline miss" });
-        const support = (selected: typeof liveConfig) =>
-          Layer.mergeAll(
-            ActiveEmbeddingIdentityLive(model),
-            BunCrypto.layer,
-            Layer.succeed(LabConfig, selected),
-            Layer.succeed(ProviderCache, cache)
-          );
-        const live = EmbedderRuntimeLive(liveModel).pipe(Layer.provide(support(liveConfig)));
-        const liveBatch = yield* provideScopedLayer(live)(
-          Embedder.pipe(Effect.flatMap((service) => service.embed([input])))
-        );
+      const live = EmbedderRuntimeLive(liveModel).pipe(Layer.provide(support(liveConfig)));
+      const liveBatch = yield* provideScopedLayer(live)(
+        Embedder.pipe(Effect.flatMap((service) => service.embed([input])))
+      );
 
-        const replayConfig = LabConfig.of({ ...liveConfig, mode: "replay", offline: true });
-        const poisonProvider = Layer.merge(
-          Layer.effect(EmbeddingModel.EmbeddingModel, Effect.die("replay acquired the live provider")),
-          Layer.succeed(EmbeddingModel.Dimensions, 3)
-        );
-        const replay = EmbedderRuntimeLive(poisonProvider).pipe(Layer.provide(support(replayConfig)));
-        const replayBatch = yield* provideScopedLayer(replay)(
-          Embedder.pipe(Effect.flatMap((service) => service.embed([input, miss])))
-        );
+      const replayConfig = LabConfig.of({ ...liveConfig, mode: "replay", offline: true });
+      const poisonProvider = Layer.merge(
+        Layer.effect(EmbeddingModel.EmbeddingModel, Effect.die("replay acquired the live provider")),
+        Layer.succeed(EmbeddingModel.Dimensions, 3)
+      );
+      const replay = EmbedderRuntimeLive(poisonProvider).pipe(Layer.provide(support(replayConfig)));
+      const replayBatch = yield* provideScopedLayer(replay)(
+        Embedder.pipe(Effect.flatMap((service) => service.embed([input, miss])))
+      );
 
-        expect(yield* Ref.get(providerCalls)).toBe(1);
-        expect(liveBatch.vectors).toHaveLength(1);
-        expect(liveBatch.degraded).toHaveLength(0);
-        expect(replayBatch.vectors).toEqual(liveBatch.vectors);
-        expect(replayBatch.degraded).toHaveLength(1);
-        expect(A.getUnsafe(replayBatch.degraded, 0).reason).toBe("cache-miss");
-      })
-    ));
+      expect(yield* Ref.get(providerCalls)).toBe(1);
+      expect(liveBatch.vectors).toHaveLength(1);
+      expect(liveBatch.degraded).toHaveLength(0);
+      expect(replayBatch.vectors).toEqual(liveBatch.vectors);
+      expect(replayBatch.degraded).toHaveLength(1);
+      expect(A.getUnsafe(replayBatch.degraded, 0).reason).toBe("cache-miss");
+    })
+  );
 });
 
 const document = DocumentId.make(Str.repeat(64)("3"));
@@ -333,35 +328,37 @@ const snapshot = LedgerSnapshot.make({
 });
 
 describe("C1 RDF projection", () => {
-  it("rebuilds ledger claims into non-empty timeout-bounded SPARQL results identically", () =>
-    Effect.runPromise(
-      provideScopedLayer(RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(config)))(
-        Effect.gen(function* () {
-          const projection = yield* RdfProjection;
-          const expectations = [
-            SparqlExpectation.make({
-              expectedCount: PosInt.make(3),
-              id: "all",
-              query:
-                "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/EvidenceClaim> } ORDER BY ?claim",
-            }),
-            SparqlExpectation.make({
-              expectedCount: PosInt.make(1),
-              id: "relations",
-              query:
-                "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/RelationClaim> } ORDER BY ?claim",
-            }),
-          ];
-          const first = yield* projection.rebuild(snapshot);
-          const firstResults = yield* projection.query(first, expectations);
-          const second = yield* projection.rebuild(snapshot);
-          const secondResults = yield* projection.query(second, expectations);
+  it.layer(RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(config)), {
+    timeout: "30 seconds",
+    excludeTestServices: true,
+  })((it) => {
+    it.effect("rebuilds ledger claims into non-empty timeout-bounded SPARQL results identically", () =>
+      Effect.gen(function* () {
+        const projection = yield* RdfProjection;
+        const expectations = [
+          SparqlExpectation.make({
+            expectedCount: PosInt.make(3),
+            id: "all",
+            query:
+              "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/EvidenceClaim> } ORDER BY ?claim",
+          }),
+          SparqlExpectation.make({
+            expectedCount: PosInt.make(1),
+            id: "relations",
+            query:
+              "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/RelationClaim> } ORDER BY ?claim",
+          }),
+        ];
+        const first = yield* projection.rebuild(snapshot);
+        const firstResults = yield* projection.query(first, expectations);
+        const second = yield* projection.rebuild(snapshot);
+        const secondResults = yield* projection.query(second, expectations);
 
-          expect(A.map(firstResults, (result) => result.count)).toEqual([3, 1]);
-          expect(first.serializedQuads.length).toBeGreaterThan(0);
-          expect(Equal.equals(first.serializedQuads, second.serializedQuads)).toBe(true);
-          expect(Equal.equals(firstResults, secondResults)).toBe(true);
-        })
-      )
-    ));
+        expect(A.map(firstResults, (result) => result.count)).toEqual([3, 1]);
+        expect(first.serializedQuads.length).toBeGreaterThan(0);
+        pipe(Equal.equals(first.serializedQuads, second.serializedQuads), assertTrue);
+        pipe(Equal.equals(firstResults, secondResults), assertTrue);
+      })
+    );
+  });
 });

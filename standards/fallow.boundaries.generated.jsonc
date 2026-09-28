@@ -3578,6 +3578,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/wink",
           "@beep/xai"
         ],
@@ -3599,6 +3601,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/wink",
           "@beep/xai"
         ]

@@ -11,12 +11,15 @@ import {
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { F1FixtureId } from "@/fixtures/F1";
 import { bCubedF1, EvaluatorLive, exactF1, pairwiseF1 } from "@/layers/EvaluatorLive";
@@ -112,12 +115,6 @@ const files = [
   GoldFile.make({ labels: [], paperId, proposer, subset: "entity", version: "gold/v1" }),
   GoldFile.make({ labels: [], paperId, proposer, subset: "relation", version: "gold/v1" }),
 ];
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 type EntityMetricSpec = {
   readonly cluster: string;
   readonly endChar: number;
@@ -329,7 +326,7 @@ describe("C0 evaluator metric math", () => {
     expect(bCubedF1(predicted, expected)).toBeCloseTo(2 / 3);
   });
 
-  it("keeps identical relation text in different documents as distinct metric keys", () => {
+  it.effect("keeps identical relation text in different documents as distinct metric keys", () => {
     const papers = A.take(paperIds, 2);
     const firstPaper = A.getUnsafe(papers, 0);
     const secondPaper = A.getUnsafe(papers, 1);
@@ -361,23 +358,24 @@ describe("C0 evaluator metric math", () => {
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
 
-    return Effect.runPromise(
-      provideScopedLayer(Layer.merge(BunServices.layer, evaluator))(
-        Effect.gen(function* () {
-          const service = yield* Evaluator;
-          const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
-          const relation = A.findFirst(
-            report.metrics,
-            (metric) => metric.name === "rebel-end-to-end-triple-f1" && metric.lane === "hosted"
-          );
+    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
+      Effect.gen(function* () {
+        const service = yield* Evaluator;
+        const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
+        const relation = A.findFirst(
+          report.metrics,
+          (metric) => metric.name === "rebel-end-to-end-triple-f1" && metric.lane === "hosted"
+        );
 
-          expect(O.map(relation, (metric) => metric.value)).toEqual(O.some(0.5));
-        })
-      )
+        assertSome<number>(
+          O.map(relation, (metric) => metric.value),
+          0.5
+        );
+      })
     );
   });
 
-  it("scores provider cluster assignments instead of normalized entity surfaces", () => {
+  it.effect("scores provider cluster assignments instead of normalized entity surfaces", () => {
     const selectedRun = metricRun([paperId]);
     const source = w1Document(DocumentId.make(Str.repeat(64)("a")), paperId);
     const predictedEntities = [
@@ -405,69 +403,70 @@ describe("C0 evaluator metric math", () => {
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
 
-    return Effect.runPromise(
-      provideScopedLayer(Layer.merge(BunServices.layer, evaluator))(
-        Effect.gen(function* () {
-          const service = yield* Evaluator;
-          const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
-          const pairwise = A.findFirst(
-            report.metrics,
-            (metric) => metric.name === "pairwise-f1" && metric.lane === "hosted"
-          );
-          const bCubed = A.findFirst(report.metrics, (metric) => metric.name === "b-cubed" && metric.lane === "hosted");
+    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
+      Effect.gen(function* () {
+        const service = yield* Evaluator;
+        const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
+        const pairwise = A.findFirst(
+          report.metrics,
+          (metric) => metric.name === "pairwise-f1" && metric.lane === "hosted"
+        );
+        const bCubed = A.findFirst(report.metrics, (metric) => metric.name === "b-cubed" && metric.lane === "hosted");
 
-          expect(O.map(pairwise, (metric) => metric.value)).toEqual(O.some(0));
-          expect(O.map(bCubed, (metric) => metric.value)).toEqual(O.some(2 / 3));
-        })
-      )
+        assertSome<number>(
+          O.map(pairwise, (metric) => metric.value),
+          0
+        );
+        assertSome<number>(
+          O.map(bCubed, (metric) => metric.value),
+          2 / 3
+        );
+      })
     );
   });
 
-  it("counts hosted degradation on a fixture declared parseable", () => {
+  it.effect("counts hosted degradation on a fixture declared parseable", () => {
     const goldSource = Layer.succeed(
       GoldSource,
       GoldSource.of({ load: Effect.fn("GoldSource.fixtureDegraded")(() => Effect.succeed(files)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
 
-    return Effect.runPromise(
-      provideScopedLayer(Layer.merge(BunServices.layer, evaluator))(
-        Effect.gen(function* () {
-          const service = yield* Evaluator;
-          const report = yield* service.score(run, snapshot, [fixtureHostedDegraded]);
+    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
+      Effect.gen(function* () {
+        const service = yield* Evaluator;
+        const report = yield* service.score(run, snapshot, [fixtureHostedDegraded]);
 
-          expect(A.headNonEmpty(report.documents).extraction.hosted).toBe("provider-unavailable");
-          expect(report.unexpectedDegraded).toBe(1);
-        })
-      )
+        expect(A.headNonEmpty(report.documents).extraction.hosted).toBe("provider-unavailable");
+        expect(report.unexpectedDegraded).toBe(1);
+      })
     );
   });
 
-  it("loads injected F1-only gold and emits all ten C0 coordinates", () => {
+  it.effect("loads injected F1-only gold and emits all ten C0 coordinates", () => {
     const goldSource = Layer.succeed(
       GoldSource,
       GoldSource.of({ load: Effect.fn("GoldSource.stub")(() => Effect.succeed(files)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
 
-    return Effect.runPromise(
-      provideScopedLayer(Layer.merge(BunServices.layer, evaluator))(
-        Effect.gen(function* () {
-          const service = yield* Evaluator;
-          const report = yield* service.score(run, snapshot, []);
+    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
+      Effect.gen(function* () {
+        const service = yield* Evaluator;
+        const report = yield* service.score(run, snapshot, []);
 
-          expect(report.metrics).toHaveLength(10);
-          expect(report.documents).toHaveLength(1);
-          expect(report.unexpectedDegraded).toBe(1);
-          expect(A.filter(report.metrics, (metric) => metric.status === "unsupported")).toHaveLength(2);
-          expect(
-            A.every(
-              A.filter(report.metrics, (metric) => metric.status === "scored"),
-              (metric) => metric.support === 1 && metric.value === 1
-            )
-          ).toBe(true);
-        })
-      )
+        expect(report.metrics).toHaveLength(10);
+        expect(report.documents).toHaveLength(1);
+        expect(report.unexpectedDegraded).toBe(1);
+        expect(A.filter(report.metrics, (metric) => metric.status === "unsupported")).toHaveLength(2);
+        pipe(
+          A.every(
+            A.filter(report.metrics, (metric) => metric.status === "scored"),
+            (metric) => metric.support === 1 && metric.value === 1
+          ),
+          assertTrue
+        );
+      })
     );
   });
 });

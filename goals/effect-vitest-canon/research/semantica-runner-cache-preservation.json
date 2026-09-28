@@ -1,0 +1,66 @@
+{
+  "reviewedNodes": 10,
+  "changedDependencyLists": 7,
+  "edges": [
+    {
+      "computation": "@beep/semantica#audit",
+      "addedDependency": "@beep/test-runner#audit"
+    },
+    {
+      "computation": "@beep/semantica#audit",
+      "addedDependency": "@beep/test-utils#audit"
+    },
+    {
+      "computation": "@beep/semantica#build",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantica#build",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/semantica#check",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantica#check",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/semantica#dev",
+      "addedDependency": "@beep/test-runner#build"
+    },
+    {
+      "computation": "@beep/semantica#dev",
+      "addedDependency": "@beep/test-utils#build"
+    },
+    {
+      "computation": "@beep/semantica#lint:deprecated-apis",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantica#lint:deprecated-apis",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/semantica#package-test-typecheck",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantica#package-test-typecheck",
+      "addedDependency": "@beep/test-utils#transit"
+    },
+    {
+      "computation": "@beep/semantica#test",
+      "addedDependency": "@beep/test-runner#transit"
+    },
+    {
+      "computation": "@beep/semantica#test",
+      "addedDependency": "@beep/test-utils#transit"
+    }
+  ],
+  "onlyOwnedDependenciesAndReviewChanged": true,
+  "noQualificationPromotion": true,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "basisSha256": "32b6f077432452ec508d026acaa5f5724eb46fba2a576c5b3c41b597d11b7b81"
+}

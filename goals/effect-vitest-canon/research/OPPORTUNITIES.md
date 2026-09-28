@@ -3752,3 +3752,13 @@ the prior justified exception with an advisory and reordered unrelated entries.
 The final edit preserves every original entry and reason, changing only the owned
 line location. Stable advisory identities independent of line offsets, with
 exception preservation during regeneration, would prevent this repair.
+
+### Full detector rescan after a package-local resource refinement
+
+While finishing Semantica, `beep lint effect-vitest --rows <output>` spent
+more than three minutes in its full-repository scan before the final resource
+review identified two unnecessary platform layers and two private wrappers.
+The preliminary scan was terminated and is not accepted as proof; the final
+source receives a fresh full scan. The command exposes no package selection.
+A supported package-local diagnostic mode, with full scanning retained for the
+ratchet acceptance gate, would make iterative remediation cheaper.
