@@ -1,6 +1,6 @@
 {
   "advisory": "GHSA-3wwx-pv8p-q78v",
-  "advisoryPublishedAt": "2026-09-28T21:42:37Z",
+  "advisoryPublishedAt": "2026-09-04T14:20:33Z",
   "hostedFailure": {
     "run": 36490053175,
     "job": 109156481683,
@@ -45,5 +45,8 @@
     "Package-specific OSV queries do not replace the full hosted security gate.",
     "Older local proof was intentionally stopped before dependency mutation; a new complete proof is required.",
     "Frozen runtime pilot receipts retain source 7f53b4a840 and their original dependency profile."
-  ]
+  ],
+  "advisoryPublicationSource": "https://api.github.com/repos/nodejs/undici/security-advisories/GHSA-3wwx-pv8p-q78v",
+  "globalAdvisoryPublishedAt": "2026-09-28T21:42:37Z",
+  "globalAdvisoryPublicationSource": "https://api.github.com/advisories/GHSA-3wwx-pv8p-q78v"
 }

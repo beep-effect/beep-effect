@@ -2370,3 +2370,14 @@ a baseline hit after restoring the reviewed profile.
 Prevention: distinguish configuration changes accepted by the command contract
 from changes rejected by its profile-integrity gate when defining expected
 experiment outcomes. Do not bypass that gate to manufacture a miss.
+
+### Advisory chronology needs endpoint provenance
+
+PR #1327 review of `current-undici-remediation.json` exposed ambiguous
+publication metadata: the maintainer advisory API reports
+`2026-09-04T14:20:33Z`, while the global GitHub advisory API reports
+`2026-09-28T21:42:37Z` for the same GHSA. Both live endpoints were checked.
+The receipt now distinguishes the two timestamps and links each endpoint.
+Recording endpoint provenance with the original observation would have
+prevented the ambiguous chronology; the affected versions and remediation
+are unchanged.
