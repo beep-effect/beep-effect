@@ -1,0 +1,10 @@
+{
+  "savedActionsReviewed": 10,
+  "currentExceptions": 4,
+  "historicalDetectorRows": 12,
+  "unrelatedLedgerHashesPreserved": 683,
+  "unrelatedRootAndCensusRawObjectsPreserved": true,
+  "ownedCensusFiles": 3,
+  "newCensusFile": "apps/practice-kg-mcp/test/Smoke.test.ts",
+  "fixSha": "3f47e60b0f5ea0f32163f2964b30baa4983e3a94"
+}

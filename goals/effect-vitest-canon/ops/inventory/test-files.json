@@ -220,15 +220,15 @@
     "file": "apps/practice-kg-mcp/test/Host.test.ts",
     "package": "@beep/practice-kg-mcp",
     "kind": "test",
-    "bytes": 3780,
-    "lines": 86
+    "bytes": 5013,
+    "lines": 110
   },
   {
     "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
     "package": "@beep/practice-kg-mcp",
     "kind": "test",
-    "bytes": 2086,
-    "lines": 37
+    "bytes": 2164,
+    "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/App.test.tsx",
@@ -7908,5 +7908,12 @@
     "kind": "test",
     "bytes": 6223,
     "lines": 147
+  },
+  {
+    "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+    "package": "@beep/practice-kg-mcp",
+    "kind": "test",
+    "bytes": 959,
+    "lines": 23
   }
 ]

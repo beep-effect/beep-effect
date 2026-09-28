@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/practice-kg-mcp",
+  "sourceHead": "3f47e60b0f5ea0f32163f2964b30baa4983e3a94",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--exclude=test/integration/**",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 5.124705957998231,
+  "bunWholeCommandSeconds": 2.468463117002102,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [13.548828125, 13.28515625, 17.34912109375],
+  "loadAfter": [14.1455078125, 13.41357421875, 17.369140625],
+  "pressureBefore": {
+    "cpu": "some avg10=2.40 avg60=1.24 avg300=0.93 total=292594750\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10121501\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9259714\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.34 total=56449280\nfull avg10=0.00 avg60=0.00 avg300=0.22 total=41468191\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=3.04 avg60=1.55 avg300=1.01 total=292850445\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10121502\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9259716\n",
+    "io": "some avg10=0.00 avg60=0.01 avg300=0.33 total=56449772\nfull avg10=0.00 avg60=0.00 avg300=0.22 total=41468565\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "apps/practice-kg-mcp/AGENTS.md",
+      "sha256": "02e09a91c4667839017b477b045f7dc334f9a1c33b184ee39eed163aab84d022"
+    },
+    {
+      "file": "apps/practice-kg-mcp/CLAUDE.md",
+      "sha256": "02e09a91c4667839017b477b045f7dc334f9a1c33b184ee39eed163aab84d022"
+    },
+    {
+      "file": "apps/practice-kg-mcp/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "apps/practice-kg-mcp/README.md",
+      "sha256": "722a9c4b151317cf14687198278f9bc25a00a88d7d9e9cf75de1b99da80b1bf1"
+    },
+    {
+      "file": "apps/practice-kg-mcp/docgen.json",
+      "sha256": "3bc0bc2091eed88210fced18871ad6035a5aaac676c3db1cb1f773f3977a680d"
+    },
+    {
+      "file": "apps/practice-kg-mcp/package.json",
+      "sha256": "ecdd3daf2598cd76e60fa2ebee28e70fea95945826fa611d2ef592a518a64cfd"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/PracticeKgMcp.errors.ts",
+      "sha256": "34ae36e432641cdc594077a4d357eb353951bf39cdaf7ada528b44fd62de750e"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/assets.d.ts",
+      "sha256": "1b7933ee7650d3ec9bb21519879eabf8b1bd55a690f7452a6035c6b44c4fdd44"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/bin.ts",
+      "sha256": "aa4d301a7284eb133496d801cc3ecaa14a1ca95a82361da657624c5361179352"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/build.ts",
+      "sha256": "937b1169897af39c36c7d5b9b9b53c92158683893f91164269b8536bb0e416dd"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/claims.ts",
+      "sha256": "808afa1236a676aaa4183bbc257c17e70816afba9fa341bddb91717984d75932"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/entrypoint.ts",
+      "sha256": "ec6dd9167572e75766e586588a11bce2c4f84baf2725b6fcbccd5ea667e7eb24"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/package.ts",
+      "sha256": "4dd7d5364bb99c6cf20514e2f38f18dc52c09b825020d19f9463366e83bacac1"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/runtime/DuckDb.ts",
+      "sha256": "bf78a53b02edaa31c1459a1b0567bc36f98d0cc10c603bb4166976d161a6940b"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/runtime/Host.ts",
+      "sha256": "c2611b88363b8a8c5b402e3590d8ec266a935928df75135ffc453760de8b7ff2"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/runtime/Layer.ts",
+      "sha256": "9a33b63357b0a3d42417f3c3493fc12478ff79da5745c6690b0f6f49e3ac4650"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/runtime/Pglite.ts",
+      "sha256": "d1f070c20be1c998f6072ebf4cc9bb748d402e464c12a3b3987ff41dd7b0d982"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/runtime/index.ts",
+      "sha256": "d682374ce3e33988282599a0ed4929a76743648fec7b817e17546f04f1897d48"
+    },
+    {
+      "file": "apps/practice-kg-mcp/src/smoke.ts",
+      "sha256": "03135f74063d827c5e4761e1a30964c561cbeceb4a2f60cfed4e0c388fd02905"
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "sha256": "dc012c89fc689410e848270abde83bd1f33d6e07fc95d368370d7030758914fd"
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Smoke.test.ts",
+      "sha256": "2f731022df1b109935f7c300c37ad2f9a4e0d4032299cce0a30888c6a7165c1c"
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "sha256": "364839c54b652ecb759816dceb693e54db80a5c29a4819caedfd19c9f188ace3"
+    },
+    {
+      "file": "apps/practice-kg-mcp/tsconfig.check.json",
+      "sha256": "8031c905224f2ef8c640bc93ba33c84b47625eb97699ed114867dded1b9fc759"
+    },
+    {
+      "file": "apps/practice-kg-mcp/tsconfig.json",
+      "sha256": "721f121e61a6def5bfc10f9ebb094ee1ae164aeb1b6d2f457a3b6c495d962a4b"
+    },
+    {
+      "file": "apps/practice-kg-mcp/tsconfig.test.json",
+      "sha256": "87784c09f083bc7173819ea7dfbb681ac51d4e917551627992f41fbd07e77a15"
+    },
+    {
+      "file": "apps/practice-kg-mcp/vitest.config.ts",
+      "sha256": "1c91de273953e9b0d1a7509838fece73aaaea76cfe83ed41d0d176632a7de8b6"
+    },
+    {
+      "file": "bun.lock",
+      "sha256": "716461f7674b50a0845af03cb5f7b2f4c219b691eeef4888fca77aa3fbc033df"
+    }
+  ],
+  "environmentMode": "Practice KG MCP package unit selection; manifest-loading and error-equivalence subjects only, not native database or MCP startup coverage. Host load and pressure are recorded, not a causal performance claim.",
+  "bunProof": {
+    "passedTests": 12,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [14.1455078125, 13.41357421875, 17.369140625],
+    "loadAfter": [14.1455078125, 13.41357421875, 17.369140625],
+    "pressureBefore": {
+      "cpu": "some avg10=3.04 avg60=1.55 avg300=1.01 total=292850579\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10121502\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9259716\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.33 total=56449772\nfull avg10=0.00 avg60=0.00 avg300=0.22 total=41468565\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=2.85 avg60=1.57 avg300=1.02 total=292899999\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10121734\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9259906\n",
+      "io": "some avg10=0.00 avg60=0.01 avg300=0.33 total=56449940\nfull avg10=0.00 avg60=0.00 avg300=0.21 total=41468673\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 12,
+    "skipped": 0
+  },
+  "interpretation": "The baseline has seven passes and no skips; final has twelve passes and no skips, adding native/memory adapter comparison and structural-invalid manifest assertions. AST preservation retains 13 assertions, seven titles, ten fixture initializers and original deadlines. Host load, caches and case count differ; timings do not establish causal speedup."
+}

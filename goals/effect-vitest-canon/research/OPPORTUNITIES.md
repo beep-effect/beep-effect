@@ -4259,3 +4259,16 @@ decoding: the original loader suite passes, while the new native and memory
 cases fail. Sources are restored after the control. Full package audit and
 Docgen passed before the instrumented-runner migration; its post-migration proof
 is tracked separately.
+
+## Practice KG smoke census delta
+
+While closing the saved Practice KG inventory, the current package contained
+`test/Smoke.test.ts`, added on main after the saved two-file census. The closeout
+adds this third file and its four lens judgments while preserving unrelated rows.
+A package-local comparison of tracked tests against census paths before closeout
+would catch this drift without restarting the full repository inventory. The
+smoke assertion proves guarded module import only, not compiled host execution.
+
+The closeout initially tried `bun run lint:effect-vitest`, which is not a root
+script. The canonical command is `bun run beep lint effect-vitest`. Keep saved
+operator recipes aligned with the CLI to avoid failed alias guesses.

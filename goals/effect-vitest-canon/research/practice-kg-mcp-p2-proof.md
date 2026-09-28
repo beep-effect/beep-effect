@@ -29,5 +29,15 @@ speedup claim.
 Four current detector candidates have specific judgments: three immediately
 asserted typed failure Results and the deliberately retained native adapter.
 Runner dependency review changes seven owned dependency lists, preserving all
-unrelated cache configuration and qualification. Saved-ledger reconciliation,
-public timing artifacts and hosted readiness remain separate closeout work.
+unrelated cache configuration and qualification. Saved-ledger reconciliation closes all ten saved action items and accounts for
+12 historical detector records. The four current exceptions remain explicit.
+The census now includes all three test files, including the smoke-module test
+added on main, with a four-lens review. All 683 unrelated ledger hashes and
+unrelated root/census objects are preserved. Strict root, ledger, census and
+timing schemas pass; no owned action row remains open.
+
+Four public timing/context artifacts retain Node/Bun outcomes and workstation
+load receipts. Every recorded source hash was checked against baseline
+`7f21ee48fd863f969bbf823d1cd0b916224a230c` and source repair
+`3f47e60b0f5ea0f32163f2964b30baa4983e3a94`, following tracked symlink targets.
+Hosted readiness remains a separate gate.
