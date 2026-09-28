@@ -20,10 +20,12 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $McpKitId.create("FieldTier");
@@ -202,23 +204,32 @@ export const projectFieldTier: {
   ): Record<string, unknown> => stripNulls(pickFields(value, fieldNamesOf(tiers[tier])))
 );
 
+const encodeJsonSizeInput = S.encodeResult(UnknownFromJsonString);
+const jsonSizeEncoder = new TextEncoder();
+
 /**
- * Estimates a value's serialized JSON size in bytes/characters, used as a
- * proxy for a caller's token/size budget.
+ * Measures the UTF-8 byte length of a value serialized as compact JSON.
  *
- * **Example** (Estimate object JSON size)
+ * **Details**
+ *
+ * Non-ASCII characters consume their encoded byte length rather than their
+ * JavaScript string length. The synchronous boundary throws a schema error
+ * when the value cannot be serialized as JSON.
+ *
+ * **Example** (Measure object JSON size)
  *
  * ```ts
  * import { estimateJsonSize } from "@beep/mcp-kit"
  *
  * console.log(estimateJsonSize({ a: 1 }))
- * // 8
+ * // 7
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const estimateJsonSize = (value: unknown): number => JSON.stringify(value).length;
+export const estimateJsonSize = (value: unknown): number =>
+  jsonSizeEncoder.encode(Result.getOrThrowWith(encodeJsonSizeInput(value), identity)).byteLength;
 
 const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options);
 

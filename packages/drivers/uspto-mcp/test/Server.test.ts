@@ -1,4 +1,3 @@
-import { expect } from "@effect/vitest";
 /**
  * Fixture proofs for the USPTO MCP proving host, mirroring
  * `packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts`'s
@@ -13,7 +12,9 @@ import { expect } from "@effect/vitest";
 import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { conformance2026, connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { PosInt } from "@beep/schema";
-import { assertSchemaArbitraryDecodesToSelf, fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
 import {
   DocumentsProjectionOutput,
@@ -33,7 +34,8 @@ import {
   UsptoToolkitHandlersLive,
   usptoDocumentFieldTiers,
 } from "@beep/uspto-mcp";
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { McpServerClient } from "effect/ai/McpSchema";
@@ -41,7 +43,9 @@ import * as McpServer from "effect/ai/McpServer";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
+const encodeUnknownJson = S.encodeEffect(UnknownFromJsonString);
 const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);
 const decodeDocumentsProjectionOutputJson = S.decodeEffect(S.fromJsonString(DocumentsProjectionOutput));
 const decodeStructInlineSchemaJson = S.decodeEffect(S.fromJsonString(S.Struct({ error: S.String, envVar: S.String })));
@@ -161,28 +165,22 @@ const textOf = (result: {
   return first?.text as string;
 };
 
-const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
+const schemaRoundTrips = Effect.fnUntraced(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
-  options?: { readonly runs?: number }
-): void => {
-  const arbitrary = Arbitrary.schema(schema);
-  const encode = S.encodeEffect(schema);
-  const decode = S.decodeUnknownEffect(schema);
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  return Equal.equals(decoded, value);
+});
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          const encoded = Effect.runSync(encode(value));
-          const decoded = Effect.runSync(decode(encoded));
-          return Equal.equals(decoded, value);
-        },
-        fcRuns(options?.runs ?? 20)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+const schemaDecodesToSelf = Effect.fnUntraced(function* <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
+) {
+  const decoded = yield* S.decodeUnknownEffect(schema)(value);
+  return S.is(schema)(value) && S.toEquivalence(schema)(decoded, value);
+});
 
 describe("uspto-mcp fixture proofs", () => {
   it.effect(
@@ -195,53 +193,126 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
+  it.layer(buildLayer({}, respondWith(applicationEnvelope)), { timeout: "10 seconds" })("credential absent", (it) => {
+    it.effect(
+      "returns the api_key_required envelope when USPTO_API_KEY is absent",
+      Effect.fnUntraced(function* () {
+        const result = yield* callSearch();
+
+        assert.isFalse(result.isError);
+        const decoded = yield* decodeStructInlineSchemaJson(textOf(result));
+        assert.strictEqual(decoded.error, "api_key_required");
+        assert.strictEqual(decoded.envVar, "USPTO_API_KEY");
+      })
+    );
+  });
+
+  it.layer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(applicationEnvelope)), {
+    timeout: "10 seconds",
+  })("credential present", (it) => {
+    it.effect(
+      "returns real @beep/uspto data when USPTO_API_KEY is present",
+      Effect.fnUntraced(function* () {
+        const result = yield* callSearch();
+
+        assert.isFalse(result.isError);
+        const decoded = yield* decodeApplicationMetadataArray(textOf(result));
+        assert.strictEqual(decoded.length, 1);
+        assert.strictEqual(decoded[0]?.applicationNumberText, "16138242");
+        assert.strictEqual(decoded[0]?.inventionTitle, "Adjustable widget assembly");
+      })
+    );
+  });
+
+  it.layer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(largeDocumentsEnvelope)), {
+    timeout: "10 seconds",
+  })("document budget", (it) => {
+    it.effect(
+      "reshapes a large documentBag response under a configured budget via a named field tier",
+      Effect.fnUntraced(function* () {
+        const result = yield* callGetDocuments();
+
+        assert.isFalse(result.isError);
+        const raw = textOf(result);
+
+        // The complete-tier payload for 200 documents comfortably exceeds the
+        // default 8000-byte budget; the response must have been reshaped down
+        // to a smaller named tier rather than returned inline in full.
+        const projection = yield* decodeDocumentsProjectionOutputJson(raw);
+
+        assert.strictEqual(projection._tag, "Inline");
+        if (projection._tag === "Inline") {
+          assert.isTrue(
+            projection.tier === "balanced" || projection.tier === "minimal",
+            `tier was: ${projection.tier}`
+          );
+        }
+        assert.isAtMost(raw.length, 8000);
+      })
+    );
+  });
+});
+
+describe("uspto-mcp UTF-8 response budgets", () => {
+  // These replacements affect only document identifiers, preserving the 200-row
+  // fixture and its document metadata/download URLs.
+  for (const { label, identifierPrefix, expected } of [
+    { label: "multibyte identifiers", identifierPrefix: "文档-", expected: "Inline" },
+    { label: "oversized multibyte identifiers", identifierPrefix: Str.repeat(20)("界") + "-", expected: "Fetchable" },
+  ]) {
+    const body = Str.replaceAll('"DOC-', '"' + identifierPrefix)(largeDocumentsEnvelope);
+    it.layer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(body)), { timeout: "10 seconds" })(
+      label,
+      (it) =>
+        it.effect(
+          "honors the 8000-byte budget for 200 documents",
+          Effect.fnUntraced(function* () {
+            const result = yield* callGetDocuments();
+            assert.isFalse(result.isError);
+            const raw = textOf(result);
+            const projection = yield* decodeDocumentsProjectionOutputJson(raw);
+            assert.strictEqual(projection._tag, expected);
+            assert.isAtMost(new TextEncoder().encode(raw).byteLength, 8000);
+            if (projection._tag === "Inline") {
+              assert.strictEqual(projection.envelope.rows.length, LARGE_DOCUMENT_COUNT);
+              assert.isTrue(projection.tier === "balanced" || projection.tier === "minimal");
+            } else {
+              assert.isAbove(projection.handle.sizeBytes, 8000);
+              assert.strictEqual(projection.handle.tier, "minimal");
+            }
+          })
+        )
+    );
+  }
+
   it.effect(
-    "returns the api_key_required envelope when USPTO_API_KEY is absent",
+    "includes the Inline wrapper at the exact ASCII budget boundary",
     Effect.fnUntraced(function* () {
-      const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));
-
-      assert.isFalse(result.isError);
-      const decoded = yield* decodeStructInlineSchemaJson(textOf(result));
-      assert.strictEqual(decoded.error, "api_key_required");
-      assert.strictEqual(decoded.envVar, "USPTO_API_KEY");
-    })
-  );
-
-  it.effect(
-    "returns real @beep/uspto data when USPTO_API_KEY is present",
-    Effect.fnUntraced(function* () {
-      const result = yield* callSearch().pipe(
-        provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(applicationEnvelope)))
-      );
-
-      assert.isFalse(result.isError);
-      const decoded = yield* decodeApplicationMetadataArray(textOf(result));
-      assert.strictEqual(decoded.length, 1);
-      assert.strictEqual(decoded[0]?.applicationNumberText, "16138242");
-      assert.strictEqual(decoded[0]?.inventionTitle, "Adjustable widget assembly");
-    })
-  );
-
-  it.effect(
-    "reshapes a large documentBag response under a configured budget via a named field tier",
-    Effect.fnUntraced(function* () {
-      const result = yield* callGetDocuments().pipe(
-        provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(largeDocumentsEnvelope)))
-      );
-
-      assert.isFalse(result.isError);
-      const raw = textOf(result);
-
-      // The complete-tier payload for 200 documents comfortably exceeds the
-      // default 8000-byte budget; the response must have been reshaped down
-      // to a smaller named tier rather than returned inline in full.
-      const projection = yield* decodeDocumentsProjectionOutputJson(raw);
-
-      assert.strictEqual(projection._tag, "Inline");
-      if (projection._tag === "Inline") {
-        assert.isTrue(projection.tier === "balanced" || projection.tier === "minimal", `tier was: ${projection.tier}`);
-      }
-      assert.isAtMost(raw.length, 8000);
+      const documents = [UsptoDocumentReference.make({ documentIdentifier: "DOC-1" })];
+      const expected: (typeof DocumentsProjectionOutput)["Encoded"] = {
+        _tag: "Inline",
+        tier: "minimal",
+        envelope: { columns: ["documentIdentifier"], rows: [["DOC-1"]] },
+      };
+      const wire = yield* encodeUnknownJson(expected);
+      const exactBytes = new TextEncoder().encode(wire).byteLength;
+      const options = (budgetBytes: number) =>
+        ProjectDocumentsWithinBudgetOptions.make({
+          budgetBytes: PosInt.make(budgetBytes),
+          mintFetchableHandle: MintFetchableHandle.implementSync((oversized) =>
+            FetchableHandle.make({
+              handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+              expiresAt: "2026-07-01T01:00:00.000Z",
+              sizeBytes: oversized.sizeBytes,
+              tier: "minimal",
+            })
+          ),
+        });
+      const exact = projectDocumentsWithinBudget(documents, options(exactBytes));
+      assert.deepEqual(yield* encodeDocumentsProjectionOutput(exact), expected);
+      const tooSmall = projectDocumentsWithinBudget(documents, options(exactBytes - 1));
+      assert.strictEqual(tooSmall._tag, "Fetchable");
+      if (tooSmall._tag === "Fetchable") assert.strictEqual(tooSmall.handle.sizeBytes, exactBytes);
     })
   );
 });
@@ -320,29 +391,155 @@ describe("uspto-mcp schema parity", () => {
 });
 
 describe("uspto-mcp schema-derived arbitraries", () => {
-  it("only generates UsptoApplicationMetadata values that round-trip through their schema", () => {
-    assertSchemaArbitraryDecodesToSelf(UsptoApplicationMetadata);
-    assertSchemaArbitraryRoundTrips(UsptoApplicationMetadata);
-  });
+  it.effect.prop(
+    "only generates UsptoApplicationMetadata values that round-trip through their schema",
+    [Arbitrary.schema(UsptoApplicationMetadata)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoApplicationMetadata, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("only generates DocumentsProjectionOutput values that round-trip through their schema", () => {
-    assertSchemaArbitraryDecodesToSelf(DocumentsProjectionOutput);
-    assertSchemaArbitraryRoundTrips(DocumentsProjectionOutput);
-  });
+  it.effect.prop(
+    "UsptoApplicationMetadata arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoApplicationMetadata)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoApplicationMetadata, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
 
-  it("only generates package-owned tool schemas that round-trip through themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(UsptoToolErrorReason);
-    assertSchemaArbitraryRoundTrips(UsptoToolErrorReason);
-    assertSchemaArbitraryDecodesToSelf(UsptoToolError);
-    assertSchemaArbitraryRoundTrips(UsptoToolError);
-    assertSchemaArbitraryRoundTrips(UsptoMcpFailure);
-    assertSchemaArbitraryDecodesToSelf(UsptoSearchApplicationsParams);
-    assertSchemaArbitraryRoundTrips(UsptoSearchApplicationsParams);
-    assertSchemaArbitraryDecodesToSelf(UsptoGetDocumentsParams);
-    assertSchemaArbitraryRoundTrips(UsptoGetDocumentsParams);
-    assertSchemaArbitraryDecodesToSelf(UsptoMcpServerConfig);
-    assertSchemaArbitraryRoundTrips(UsptoMcpServerConfig);
-  });
+  it.effect.prop(
+    "only generates DocumentsProjectionOutput values that round-trip through their schema",
+    [Arbitrary.schema(DocumentsProjectionOutput)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(DocumentsProjectionOutput, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "DocumentsProjectionOutput arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(DocumentsProjectionOutput)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(DocumentsProjectionOutput, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "only generates package-owned tool schemas that round-trip through themselves",
+    [Arbitrary.schema(UsptoToolErrorReason)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoToolErrorReason, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "UsptoToolErrorReason arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoToolErrorReason)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoToolErrorReason, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "UsptoToolError arbitrary values decode to themselves",
+    [Arbitrary.schema(UsptoToolError)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoToolError, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "UsptoToolError arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoToolError)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoToolError, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "UsptoMcpFailure arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoMcpFailure)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoMcpFailure, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "UsptoSearchApplicationsParams arbitrary values decode to themselves",
+    [Arbitrary.schema(UsptoSearchApplicationsParams)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoSearchApplicationsParams, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "UsptoSearchApplicationsParams arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoSearchApplicationsParams)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoSearchApplicationsParams, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "UsptoGetDocumentsParams arbitrary values decode to themselves",
+    [Arbitrary.schema(UsptoGetDocumentsParams)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoGetDocumentsParams, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "UsptoGetDocumentsParams arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoGetDocumentsParams)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoGetDocumentsParams, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "UsptoMcpServerConfig arbitrary values decode to themselves",
+    [Arbitrary.schema(UsptoMcpServerConfig)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaDecodesToSelf(UsptoMcpServerConfig, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "UsptoMcpServerConfig arbitrary values retain exact Equal round-trip",
+    [Arbitrary.schema(UsptoMcpServerConfig)],
+    ([value]) =>
+      Effect.gen(function* () {
+        assertTrue(yield* schemaRoundTrips(UsptoMcpServerConfig, value));
+      }),
+    { arbitrary: fcRuns(20) }
+  );
 });
 
 // The host as the kit conformance runner sees it: registrations only, with
@@ -366,7 +563,7 @@ const usptoConformanceHost = {
 conformance2026(usptoConformanceHost);
 
 describe("uspto-mcp through the kit client", () => {
-  layer(layerConformanceHttp(usptoConformanceHost))("over streamable HTTP", (it) => {
+  it.layer(layerConformanceHttp(usptoConformanceHost), { timeout: "10 seconds" })("over streamable HTTP", (it) => {
     it.effect("carries an array success in text content and emits no structuredContent", () =>
       Effect.gen(function* () {
         // `uspto_search_applications` succeeds with an array. The 2026-07-28

@@ -3875,6 +3875,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/uspto-mcp"
@@ -3883,6 +3884,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/uspto-mcp"

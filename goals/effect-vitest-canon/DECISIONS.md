@@ -582,3 +582,23 @@ Benjamin authorized fixing the reproduced `Str.mapPrefix` and `Str.mapPostfix`
 curried-form bugs as a narrow exception to the production-code non-goal. Preserve
 the existing two-argument APIs and add actual curried parity tests. This approval
 does not authorize unrelated production changes or waive other inventory findings.
+
+## 2026-09-27 — Production defect repair authorization
+
+Benjamin authorized fixing production defects identified during this goal without
+requesting further approval, provided each repair is recorded in the goal. This
+supersedes the earlier production-code non-goal and individual source-repair
+approval requirement for defects found through this work. Record the observed
+failure, affected contract, implementation and verification evidence; preserve
+unrelated behavior and the goal's test, inventory and quality requirements.
+
+This authorization covers the pending UTF-8 response-budget defect in the MCP
+helper/USPTO projector, the Box generator's unused cancellation parameter, and
+the recorded malformed-endpoint classification defect. Revalidate each finding
+against current source before repairing it. A green focused test remains
+supporting evidence rather than whole-goal acceptance.
+
+The remaining work stays in the single consolidated PR #1307, following
+Benjamin's earlier consolidation and autonomous-merge instructions. Merge after
+final goal acceptance, hosted checks and review closure; do not merge an interim
+checkpoint merely because a package proof passes.

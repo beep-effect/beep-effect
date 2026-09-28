@@ -3784,3 +3784,14 @@ the original source and pass with `Effect.acquireUseRelease`, including a failed
 best-effort deletion. The operator approved this narrow production repair in
 PR #1307. Resource cleanup tests should cover cancellation and defects alongside
 success and typed failures, with acquisition barriers instead of elapsed sleeps.
+
+### Unicode and envelope accounting in response budgets
+
+The USPTO saved inventory's byte-budget concern reproduced with 200 valid
+multibyte document identifiers: an 8,000-byte budget admitted a 13,779-byte inline
+response. The shared estimator counted UTF-16 string units, and the projector
+omitted its response wrapper. An ASCII boundary independently admitted 5,779
+bytes under a 5,733-byte limit. Independent encoded-byte oracles and exact
+wrapper-boundary tests would have prevented both gaps. The standing production
+repair authorization covers the fix; details and verification are recorded in
+`uspto-byte-budget-repair.md`.

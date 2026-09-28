@@ -54,6 +54,17 @@ const mintFetchableHandle = (oversized: { readonly sizeBytes: number }): Fetchab
   });
 
 describe("field-tier projector", () => {
+  it.each([
+    { value: "ASCII", bytes: 7 },
+    { value: "é😀", bytes: 8 },
+    { value: "e\u0301", bytes: 5 },
+    { value: "界", bytes: 5 },
+    { value: "\ud800", bytes: 8 },
+    { value: { value: "é😀" }, bytes: 18 },
+  ])("measures compact JSON UTF-8 bytes: $bytes", ({ value, bytes }) => {
+    assert.strictEqual(estimateJsonSize(value), bytes);
+  });
+
   it("names minimal/balanced/complete as actual Schema.Struct variants", () => {
     assert.deepStrictEqual(Object.keys(documentTiers.minimal.fields).sort(), ["documentId", "title"]);
     assert.isTrue(S.isSchema(documentTiers.minimal));
