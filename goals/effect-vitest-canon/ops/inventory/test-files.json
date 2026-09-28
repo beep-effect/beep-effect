@@ -2215,8 +2215,8 @@
     "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
     "package": "@beep/uspto-mcp",
     "kind": "test",
-    "bytes": 13719,
-    "lines": 343
+    "bytes": 22689,
+    "lines": 585
   },
   {
     "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
@@ -2845,8 +2845,8 @@
     "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
     "package": "@beep/mcp-kit",
     "kind": "test",
-    "bytes": 4919,
-    "lines": 142
+    "bytes": 5964,
+    "lines": 169
   },
   {
     "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",

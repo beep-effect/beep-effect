@@ -37,5 +37,23 @@ hoisting the new known JSON codec compilation out of the test body.
 All 15 native law inversions fail with seed replay and shrinking. The seven
 decode-to-self laws preserve their 50-case floors and schema-equivalence
 predicates; eight encode/decode laws preserve their 20-case floors and exact
-Equal predicates. Final timing and inventory reconciliation remain pending;
-this package proof is not consolidated PR or goal acceptance.
+Equal predicates. All 32 original assertions and 12 static titles, fixture
+initializers and body deadlines are preserved. The runner failure probes pass
+with tracing both disabled and enabled.
+
+The saved nine-action inventory is reconciled against source commit
+`ceea3ce390567be721842e2374900b9b5c470079`. The final machine scan finds no USPTO
+rows. Historical detector records, including eight records present only in the
+root baseline, retain their identities and point to the completed remediation.
+All 683 unrelated ledger files and unrelated raw root/census objects are
+preserved. The adjacent MCP FieldTier census reflects the new byte-vector tests;
+its other 13 current detector findings are untouched. Strict validation passes
+for all 5,302 root IDs and 14,890 ledger IDs with no duplicates or invalid rows.
+The saved queue now contains nine packages and 610 actions.
+
+Node whole-command elapsed time was 4.070 seconds before and 4.121 seconds after;
+Bun was 2.217 seconds before and 1.465 seconds after. All 26 baseline and 41 final
+tests pass without skips, with stable source hashes. The published timing
+contexts record load and pressure around each command. These are observations
+under differing test counts and workstation conditions, not causal speedup
+claims. This package closeout is not consolidated PR or goal acceptance.

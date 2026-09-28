@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "effect-vitest-p2-timing-context/v1",
+  "package": "@beep/uspto-mcp",
+  "sourceHead": "3246b5501d6ffc48cae422cd42113d4e35669047",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.1",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "wholeCommandSeconds": 4.069765346997883,
+  "bunWholeCommandSeconds": 2.217445777991088,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "loadBefore": [1.828125, 2.6650390625, 2.5986328125],
+  "loadAfter": [1.92236328125, 2.6708984375, 2.60107421875],
+  "pressureBefore": {
+    "cpu": "some avg10=0.49 avg60=0.32 avg300=0.19 total=823966232\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186226369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178149302\n",
+    "io": "some avg10=0.12 avg60=0.31 avg300=0.15 total=869303113\nfull avg10=0.07 avg60=0.19 avg300=0.10 total=760382631\n"
+  },
+  "pressureAfter": {
+    "cpu": "some avg10=0.33 avg60=0.30 avg300=0.19 total=823972919\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186226369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178149302\n",
+    "io": "some avg10=0.08 avg60=0.29 avg300=0.14 total=869308749\nfull avg10=0.04 avg60=0.18 avg300=0.10 total=760387629\n"
+  },
+  "limits": {
+    "RLIMIT_NOFILE": [1048576, 1048576],
+    "RLIMIT_AS": [-1, -1],
+    "RLIMIT_CPU": [-1, -1]
+  },
+  "sourceStable": true,
+  "sourceHashes": [
+    {
+      "file": "bun.lock",
+      "sha256": "844a5c818d76d471c834d9ff9d1241ef1df65263b2efa1f1205d6a81be87605b"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/AGENTS.md",
+      "sha256": "525990605ec0654074db5fc3ee1f04d57d152f4fec482c902d9bfb2503bb6876"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/CLAUDE.md",
+      "sha256": "525990605ec0654074db5fc3ee1f04d57d152f4fec482c902d9bfb2503bb6876"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/LICENSE",
+      "sha256": "b46922d688af3bc9f5f4f59ee361a717fd1c069349369f108d4e247f44f54e5b"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/README.md",
+      "sha256": "fddadfe28be9263bb6b7504399194bef0d4ee0b31c406e9a8d7adb955dc754d9"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/docgen.json",
+      "sha256": "35a6d35be50bb6a146366e178dbde39534fcbc134dbabc8820e27721e6894f91"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/package.json",
+      "sha256": "c20b1885ac4e3ea61ce50d53a1da6619eb871833b2e8aeeebfa2cda2167621b7"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/Server.ts",
+      "sha256": "42fdd0b4a79820b223bcf7161cd789a835c3c7ae1d6b6e187cf286d4d758f157"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+      "sha256": "1d7902689edf429443bfb6f9c6cf87e4963e5484f372d14d8f4fead0105451c8"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoHandlers.ts",
+      "sha256": "75a3efabb8141ac4b4d2b3411f7523497345c42a859a217af70d4f4bbb0cbc27"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoSourceAuth.ts",
+      "sha256": "84694db63adec455134fb0d02acf6a13835bf4abd33ca74a179ec20238cc59c2"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoTools.ts",
+      "sha256": "75cc29506c0341f01de9df3a45d85bda3d8fcf0f063953b2302be1d525886f59"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/bin.ts",
+      "sha256": "147b5ad3d924880f5e18f89f9d3f50414a1d8dd1f6a1c8a1baf334d43a3193d7"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/index.ts",
+      "sha256": "5ed8f3d568707cc0217cfeb6704915d1d146f7a3d24773e62f8e0bcfa3bb8b7c"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "sha256": "9a5ba084f18fc5b139ad2dc756318131672b447f008259677bf50116439e611b"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/tsconfig.check.json",
+      "sha256": "5f4e03874a0cfb5b336a46df620104233b3a297ea5bc242271afab9976fde3ee"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/tsconfig.json",
+      "sha256": "20b81d644f6ddb36437c728d42d517532f00820630be6ffbbfec1b74fe59394f"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/tsconfig.test.json",
+      "sha256": "a97186ec871fcc1e1aef22a52f300485cd9cf0beeaeb21b558caca896276832a"
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/vitest.config.ts",
+      "sha256": "8d79d20b63f32e5004ab32f42767695804c731203449249155c486e584e8c1dd"
+    }
+  ],
+  "environmentMode": "Configured USPTO MCP fixtures exercise in-process MCP tool dispatch with mocked HTTP, local config and schema laws. No real USPTO credentials or provider endpoint is used. Single observation under recorded workstation load, not a causal benchmark.",
+  "bunProof": {
+    "passedTests": 26,
+    "skippedTests": 0,
+    "failedTests": 0,
+    "sourceStable": true,
+    "loadBefore": [1.92236328125, 2.6708984375, 2.60107421875],
+    "loadAfter": [1.92236328125, 2.6708984375, 2.60107421875],
+    "pressureBefore": {
+      "cpu": "some avg10=0.33 avg60=0.30 avg300=0.19 total=823972953\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186226369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178149302\n",
+      "io": "some avg10=0.08 avg60=0.29 avg300=0.14 total=869308749\nfull avg10=0.04 avg60=0.18 avg300=0.10 total=760387629\n"
+    },
+    "pressureAfter": {
+      "cpu": "some avg10=0.27 avg60=0.29 avg300=0.19 total=823976256\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=186226369\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=178149302\n",
+      "io": "some avg10=0.06 avg60=0.28 avg300=0.14 total=869308749\nfull avg10=0.04 avg60=0.17 avg300=0.09 total=760387629\n"
+    }
+  },
+  "nodeOutcomes": {
+    "passed": 26,
+    "skipped": 0
+  },
+  "interpretation": "All26 baseline and41 final tests pass on Node and Bun with zero skips and stable sources. All32 original assertions and12 static titles remain;15 native schema laws preserve their50/20 run floors. Three additional byte-budget regressions cover Unicode and full response wrapper boundaries. Host load and pressure are recorded; elapsed times are observations, not causal speedup claims."
+}
