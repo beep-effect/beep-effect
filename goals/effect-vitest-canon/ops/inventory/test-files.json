@@ -5071,8 +5071,8 @@
     "file": "packages/ontology/ui/test/Session.workbench.test.ts",
     "package": "@beep/ontology-ui",
     "kind": "test",
-    "bytes": 6871,
-    "lines": 194
+    "bytes": 6718,
+    "lines": 192
   },
   {
     "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
