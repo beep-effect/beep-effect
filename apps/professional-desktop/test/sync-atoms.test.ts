@@ -59,7 +59,10 @@ describe("vault sync command atoms", () => {
         tag === "TriggerVaultSync"
           ? Deferred.await(Equal.equals(payload.workspaceId, workspaceA) ? releaseA : releaseB)
           : Effect.die(`unexpected vault sync RPC: ${tag}`)) as unknown as DesktopSyncClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const actionA = vaultSyncCommandAtoms(workspaceA);
       const actionB = vaultSyncCommandAtoms(workspaceB);
       registry.mount(vaultSyncPanelStateAtoms(workspaceA));
@@ -80,7 +83,6 @@ describe("vault sync command atoms", () => {
       yield* waitForPanelState(registry, workspaceA, VaultSyncPanelState.guards.succeeded);
       yield* AtomRegistry.getResult(registry, actionA);
       yield* AtomRegistry.getResult(registry, actionB);
-      registry.dispose();
     })
   );
 
@@ -98,7 +100,10 @@ describe("vault sync command atoms", () => {
             ? recordCall.pipe(Effect.andThen(Deferred.await(releaseReview)))
             : Effect.die(`unexpected vault sync RPC: ${tag}`);
       }) as unknown as DesktopSyncClient["Service"]);
-      const registry = registryWithClient(client);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const action = vaultSyncCommandAtoms(workspaceA);
       registry.mount(vaultSyncPanelStateAtoms(workspaceA));
       registry.mount(action);
@@ -118,7 +123,6 @@ describe("vault sync command atoms", () => {
       const finalState = registry.get(vaultSyncPanelStateAtoms(workspaceA));
       expect(VaultSyncPanelState.guards.failed(finalState) ? finalState.message : "").toBe("Review failed safely.");
       yield* AtomRegistry.getResult(registry, action);
-      registry.dispose();
     })
   );
 });

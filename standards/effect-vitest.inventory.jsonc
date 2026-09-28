@@ -84705,48 +84705,8 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:50:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 50,
-      "endLine": 85,
-      "symbol": "it.live",
-      "occurrence": "v2:9d8e8667cda6d91bed717226620c9ab4f8a42e4a0c9822cd426007f0e590dc65",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"runs different workspace command families independently\", Effect.fnUntraced(function* () { const releaseA = yield* Deferred.make<void>(); const releaseB = yield* Deferred.make<void>(); const",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:87:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 87,
-      "endLine": 123,
-      "symbol": "it.live",
-      "occurrence": "v2:eb018f6e5a12fa31e5f80d669f155ae40b59981c3cfb726363d4d2e8cc0b8fa7",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"serializes a same-workspace review behind the active sync command\", Effect.fnUntraced(function* () { const releaseTrigger = yield* Deferred.make<void>(); const releaseReview = yield* Deferre",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV009:apps/professional-desktop/test/sync-atoms.test.ts:50:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/sync-atoms.test.ts","line":50,"endLine":87,"symbol":"it.live","occurrence":"v2:62e28116804f3b389a5ee46338a2707786edee8c561a92aea70403f4f6caf4ff","class":"unjustified-live-test","evidence":"it.live( \"runs different workspace command families independently\", Effect.fnUntraced(function* () { const releaseA = yield* Deferred.make<void>(); const releaseB = yield* Deferred.make<void>(); const","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV009:apps/professional-desktop/test/sync-atoms.test.ts:89:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/sync-atoms.test.ts","line":89,"endLine":127,"symbol":"it.live","occurrence":"v2:418ab61a4ac92d60ec7eaacff5773d298f9504bcdfb19141ed0004c29de34b80","class":"unjustified-live-test","evidence":"it.live( \"serializes a same-workspace review behind the active sync command\", Effect.fnUntraced(function* () { const releaseTrigger = yield* Deferred.make<void>(); const releaseReview = yield* Deferre","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV009:packages/foundation/modeling/schema/test/LocalDate.test.ts:342:it.live@4#1",
       "lens": "resource",

@@ -4380,3 +4380,11 @@ test-scope acquisition now guarantees it. The FPS early-disposal assertion stays
 in place and checks the same latest frame ID. When intercepting registry methods
 in controls, bind the original method to its instance so the observation preserves
 native cleanup behavior; the preceding browser controls were rerun with that bind.
+
+## Suspended sync work and IPC reader scopes needed parent ownership
+
+Failure controls reproduced missing registry disposal while sync RPC Deferreds
+were suspended and missing unlisten calls after IPC reader acquisition. Register
+registry release at acquisition and attach independently closeable child scopes
+to the test parent. Explicit early-close assertions should remain in place; they
+prove behavior that end-of-test cleanup alone cannot establish.

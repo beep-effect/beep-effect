@@ -563,8 +563,8 @@
     "file": "apps/professional-desktop/test/sync-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5766,
-    "lines": 124
+    "bytes": 5966,
+    "lines": 128
   },
   {
     "file": "apps/professional-desktop/test/sync-retry.test.tsx",
@@ -591,7 +591,7 @@
     "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5918,
+    "bytes": 5937,
     "lines": 158
   },
   {

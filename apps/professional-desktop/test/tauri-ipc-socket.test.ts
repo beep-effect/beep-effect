@@ -131,7 +131,7 @@ describe("TauriIpcSocket", { concurrent: false }, () => {
     return Effect.gen(function* () {
       const context = yield* Layer.build(TauriIpcSocketLive);
       const socket = Context.get(context, Socket.Socket);
-      const scope = yield* Scope.make();
+      const scope = yield* Scope.fork(yield* Effect.scope);
       const reader = yield* Scope.provide(scope)(socket.reader);
       expect(invoke).toHaveBeenCalledWith("sidecar_ipc_ready");
       const waiting = yield* reader.pull.pipe(Effect.flip, Effect.forkChild);
