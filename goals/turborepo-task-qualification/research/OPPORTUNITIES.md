@@ -2219,3 +2219,13 @@ queued attempt was deliberately interrupted; `--start-pr-early --monitor --pr`
 reused the clean local commit and pushed before admission. Use that route for
 the operator's requested early publication, and retain exact-head proof as a
 separate requirement. The original running proof was preserved.
+
+### 2026-09-28 — Generated sibling logs contaminate pilot inputs
+
+During current census attachment verification, `bunx turbo run lint
+--filter=@beep/identity --dry=json` included two Git-ignored
+`../utils/.turbo/` logs (doctest and lint:laws). The broad sibling input glob
+excludes other orchestration directories but not `.turbo`. Evidence:
+`research/current-pilot-orchestration-inputs.json`. A pilot-scoped generated-log
+exclusion plus a perturbation regression would prevent this digest drift.
+Task caching is disabled; this finding does not establish unsafe reuse.

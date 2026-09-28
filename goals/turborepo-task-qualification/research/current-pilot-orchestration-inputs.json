@@ -1,0 +1,32 @@
+{
+  "authority": "Actual Turbo dry input map and git check-ignore; no task execution or cache-hit claim",
+  "revision": "3979bcfc7057cabe4564b1e7fb7d6aca789b22e3",
+  "taskId": "@beep/identity#lint",
+  "turboVersion": "2.11.4",
+  "command": "bunx turbo run lint --filter=@beep/identity --dry=json",
+  "exitCode": 0,
+  "cacheEnabled": false,
+  "inputCount": 771,
+  "ignoredOrchestrationInputs": [
+    {
+      "path": "../utils/.turbo/turbo-doctest.log",
+      "turboFileHash": "02dd49236182515955c2e0d71099b6985fd7975c"
+    },
+    {
+      "path": "../utils/.turbo/turbo-lint$colon$laws.log",
+      "turboFileHash": "870643e0cf88f2232f171162d06e3f62d54b0a72"
+    }
+  ],
+  "cause": "The reviewed sibling utils/** input glob includes ignored utils/.turbo output logs. Current inputs exclude .beep, .fallow and node_modules but not .turbo.",
+  "impact": "Orchestration log presence and contents affect the task input identity independently of lint semantics. This is over-invalidation and a fresh-pair reproducibility hazard; cache is disabled, so no unsafe reuse is established.",
+  "remediation": "Add a pilot-scoped exclusion for generated .turbo files, then prove semantic source edits still invalidate and generated log changes do not. Preserve other lanes logs and rerun affected pilot evidence after configuration changes.",
+  "privateDryPlan": {
+    "path": ".beep/qualification-current/identity-current-dry.json",
+    "sha256": "aa09c347179e760e54961522decbf0c3b8a90ebbf51e8b09212d0fd6dd7270dc"
+  },
+  "limits": [
+    "Other changed task input maps remain unattributed.",
+    "No generated files were deleted or modified for this observation.",
+    "No policy tuple is promoted and no remote runtime evidence is renewed."
+  ]
+}

@@ -2304,3 +2304,22 @@ pass with isolated fixtures. [The review](research/current-reference-refresh-rev
 records live Git/provider inputs, maintenance writes, bounded failure details
 and the difference between rendered timer ordering and a runtime guarantee.
 It supplies census semantics without running a real refresh or granting reuse.
+
+### Current review attachment accepted by the census
+
+The canonical census accepts 1,020 source bindings, 67 reviews and six artifacts
+at revision `3979bcfc70`. All previous reference hashes and newly attached review
+source hashes match. The population remains 144 workspaces, 3,473 graph nodes and
+1,970 executable nodes. [The attachment receipt](research/current-review-attachment.json)
+records exact request/output hashes and comparison results. Nineteen obligations
+remain explicit; attachment acceptance is not semantic closure or qualification.
+
+### Pilot input-map contamination found during attachment refresh
+
+Twenty nodes changed input digests while command, configuration and dependency
+fields stayed identical; seventeen changed input counts. The current identity
+lint dry plan includes two ignored sibling `utils/.turbo` logs via `utils/**`.
+[The finding](research/current-pilot-orchestration-inputs.json) records their input
+identities without their contents. Caching remains disabled. Next: exclude
+orchestration logs at the pilot boundary, verify source invalidation still works,
+and renew affected pilot evidence. Other changed input maps need attribution.
