@@ -35,7 +35,14 @@
   `docs/runbooks/graft-local-recovery.md` describes how to read it. A clean night shows `pulled`
   or `unchanged` for both members, with coverage and no `detail`.
 - **Proposal:** Once the timer has a clean night after PR #1311 lands, the operator adds its date
-  and both members' coverage here. Status: open.
+  and both members' coverage here.
+- **Readback (2026-09-28):** the first scheduled run after PR #1311 (`beep-refs-refresh.timer`,
+  started 03:31 CDT, finished 03:55 CDT, receipt `timestamp` `2026-09-28T08:55:40Z`) was clean:
+  `effect` `unchanged` 16011/20006 cards (18 failed files), `effect-tsgo` `unchanged` 5345/5996
+  (1 failed file), workspace check exit 0, no member `detail`. The reuse pass did not recover the
+  19 failed files carried over from the manual 00:05 CDT run, so they are a standing retry, not a
+  regression. That run predates the patch-kit preflight in this PR, so its receipt has no
+  `preflight` field. Status: closed.
 
 ## The 02:30 beep deep pass and the 03:30 refs run overlapped
 
