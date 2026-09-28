@@ -1304,12 +1304,14 @@
           "@beep/box",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/box",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

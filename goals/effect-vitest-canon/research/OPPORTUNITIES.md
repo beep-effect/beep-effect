@@ -3795,3 +3795,25 @@ bytes under a 5,733-byte limit. Independent encoded-byte oracles and exact
 wrapper-boundary tests would have prevented both gaps. The standing production
 repair authorization covers the fix; details and verification are recorded in
 `uspto-byte-budget-repair.md`.
+
+## 2026-09-27 — Box SDK code generation fails on a non-cancellable method
+
+The saved Box package proof regenerated against the installed SDK and failed
+`tsgo -p tsconfig.check.json` with TS6133 on `getCachedUploadPart`: the generated
+callback declared an unused `signal`. Its four SDK parameters contain neither
+`cancellationToken` nor `optionalsInput`. Generation itself exited successfully.
+The original two generated files were restored after the reproduction.
+The renderer now derives callback bindings from the SDK parameters; methods
+that support cancellation retain signal forwarding. A generation-plus-typecheck
+gate catches this defect; SDK upgrade verification should run that gate before
+landing a version change. This repair follows the standing production authority.
+
+## 2026-09-27 — Box declaration build depends on compiler runtime
+
+The full Box package audit reached `tsc -p tsconfig.json` and returned a
+locationless TS2589. Controlled Bun compiler runs failed with both the previous
+and regenerated operation/model files; each source swap was restored exactly.
+An explicit Node TypeScript build passed, followed by a complete canonical
+package verification (audit 11.9 seconds, docgen 4.6 seconds). Record the
+compiler runtime with locationless declaration failures before changing generated
+schemas. This receipt does not establish a compiler root cause or a source fix.
