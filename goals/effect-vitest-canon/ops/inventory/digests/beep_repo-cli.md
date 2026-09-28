@@ -12,7 +12,7 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 260 fixed rows, seven reviewed exceptions and 3,154 open rows, with all
+contains 360 fixed rows, seven reviewed exceptions and 3,055 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
@@ -382,3 +382,16 @@ Evidence: [resource rows](../resource/beep_repo-cli.jsonl),
 Quoted fixture literals are preserved in the
 [reference evidence receipt](../../../history/2026-09-21-p1-reference-evidence/README.md).
 They are test data, not instructions to use a machine-local path.
+
+## Option presence and CI console follow-up
+
+Commit `a72a31ea9bc8546a58b017d6d4a0b1d9f92b01b0` fixes 99 historical
+Option-presence findings and one newly captured watermark assertion. Two
+identical historical predicates were matched by their duplicate ordinal as
+well as file, occurrence and evidence. The detector ledger has 3,422 unique
+schema-valid rows. The resource ledger has 250 rows, including the reasoned
+short-console lifetime exception. All 1,315 registrations pass before/after
+on Node and Bun; the CI console regression cohort passes all 38 tests on both.
+Full CLI audit/docgen passed, but separate Effect test diagnostics still need
+repair before repository readiness. See
+[the follow-up proof](../../../research/cli-option-presence-and-console-proof.md).
