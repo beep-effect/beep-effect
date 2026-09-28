@@ -3829,3 +3829,55 @@ uses the existing URL codec's Option result and allows the local branch only
 for a successfully parsed loopback hostname. Original local/external cases and
 valid parser behavior remain controls. This follows the standing production
 repair authorization; no network operation or credential is needed to reproduce.
+
+## 2026-09-27 — Box Provisioning fixture ownership under concurrent tests
+
+The saved resource and flake inventories identified module-owned SDK mutation
+counters in `BoxProvisioningApplier.test.ts`. Rebuilding a layer does not isolate
+state captured by its client callbacks. The normal baseline passed, but a
+controlled overlap witness using shared counters fails the exact per-invocation
+mutation totals. Per-invocation fixture factories and a two-client entry barrier
+now protect the test. Additional test reviews should inspect ownership of the
+objects captured by layers, not only whether each test constructs a layer.
+Status: repaired in the current Box Provisioning batch; ordinary historical
+flakiness is not claimed.
+
+## 2026-09-27 — a presence assertion did not establish the action variant
+
+The planner permission-discovery test asserted that a metadata action existed,
+then checked its reason only inside a Blocked guard. A test-local Noop mutant
+passed the old oracle and fails the new unconditional Blocked/entitlement shape
+assertion. Preserve narrowing guards for TypeScript where useful, but establish
+the expected variant unconditionally before relying on guarded assertions.
+Status: hardened in `BoxProvisioningPlanner.test.ts`; this witness identifies a
+test weakness, not a reproduced production planner defect.
+
+## 2026-09-27 — privacy checks hid the failing carrier and input category
+
+Two aggregate tests in `BoxProvisioningArtifactPrivacy.test.ts` combined four
+synthetic input forms across nine carrier/blocker predicates. The replacement
+36-case matrix preserves every predicate while naming schema and category. An
+inverted-oracle control reports every expected combination without printing the
+sentinel values. Other privacy tests that reduce multiple checks to one Boolean
+should expose diagnostic categories without logging sensitive input values.
+Status: hardened in the current batch, with positive and negative proof.
+
+## 2026-09-27 — package verification omitted a root compilation-placement rule
+
+`bun run beep quality package-verify @beep/box-provisioning` passed after the
+native-property migration, but `bun run lint:oxlint` rejected 18 newly introduced
+in-trial codec compilations with `beep(no-inline-schema-compile)`. Hoisting the
+nine encoder/decoder pairs repairs the issue; the root command and full package
+verification then pass. Package verification alone did not cover this root rule.
+A focused package-level invocation of applicable root Oxlint rules would catch
+this earlier. Status: source repaired; broader verification integration remains
+an improvement opportunity and should preserve the existing root gate.
+
+## 2026-09-27 — unknown nested help can look successful
+
+While locating the cache inventory command, `bun run beep quality cache-census
+--help` exited zero with the parent quality help, even though cache-census is not
+one of its subcommands. The actual command is `bun run beep cache census`.
+Unknown nested command help should identify the unrecognized segment and, where
+possible, suggest the valid route. Status: tooling follow-up; no command routing
+change is included in the Box Provisioning test batch.

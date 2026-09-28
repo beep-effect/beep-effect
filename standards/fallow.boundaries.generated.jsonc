@@ -1322,6 +1322,7 @@
           "@beep/box-provisioning",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1329,6 +1330,7 @@
           "@beep/box-provisioning",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },

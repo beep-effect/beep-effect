@@ -10,74 +10,136 @@ import {
   planBoxProvisioning,
 } from "@beep/box-provisioning";
 import { BoxProvisioningApplier } from "@beep/box-provisioning/BoxProvisioningApplier";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect, layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { TestClock } from "effect/testing";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
-const mutationCounts = {
-  collaborations: 0,
-  folders: 0,
-  webhooks: 0,
+const makeMutationFixture = () => {
+  const mutationCounts = {
+    collaborations: 0,
+    folders: 0,
+    webhooks: 0,
+  };
+
+  const mutationClient = {
+    folders: {
+      createFolder: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+        mutationCounts.folders += 1;
+        return Promise.resolve({
+          etag: "etag-created-child",
+          id: "created-folder-id",
+          name: "Fixture child",
+          parent: { id: "100", type: "folder" },
+          type: "folder",
+        });
+      },
+      getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve(
+          folderId === "created-folder-id"
+            ? {
+                etag: "etag-created-child",
+                id: "created-folder-id",
+                name: "Fixture child",
+                parent: { id: "100", type: "folder" },
+                type: "folder",
+              }
+            : {
+                etag: "etag-workspace",
+                id: "100",
+                name: "Fixture workspace",
+                parent: { id: "0", type: "folder" },
+                type: "folder",
+              }
+        ),
+      getFolderItems: (_folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve({ entries: [] }),
+    },
+    listCollaborations: {
+      getFolderCollaborations: (_folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve({ entries: [] }),
+    },
+    userCollaborations: {
+      createCollaboration: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+        mutationCounts.collaborations += 1;
+        return Promise.resolve({ id: "created-collaboration-id", type: "collaboration" });
+      },
+    },
+    webhooks: {
+      createWebhook: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+        mutationCounts.webhooks += 1;
+        return Promise.resolve({ id: "created-webhook-id" });
+      },
+      getWebhooks: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
+    },
+  };
+
+  const ApplierTestLayer = BoxProvisioningApplier.layer.pipe(Layer.provide(B.Box.makeLayerFromClient(mutationClient)));
+  return { mutationCounts, mutationClient, ApplierTestLayer };
 };
 
-const mutationClient = {
-  folders: {
-    createFolder: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
-      mutationCounts.folders += 1;
-      return Promise.resolve({
-        etag: "etag-created-child",
-        id: "created-folder-id",
-        name: "Fixture child",
-        parent: { id: "100", type: "folder" },
-        type: "folder",
-      });
+const makeUpdateFixture = () => {
+  const updateCounts = { collaborations: 0, webhooks: 0 };
+
+  const updateClient = {
+    folders: {
+      getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve(observedFolderPayload(folderId)),
+      getFolderItems: (_folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve({ entries: [] }),
     },
-    getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
-      Promise.resolve(
-        folderId === "created-folder-id"
-          ? {
-              etag: "etag-created-child",
-              id: "created-folder-id",
-              name: "Fixture child",
-              parent: { id: "100", type: "folder" },
-              type: "folder",
-            }
-          : {
-              etag: "etag-workspace",
-              id: "100",
-              name: "Fixture workspace",
-              parent: { id: "0", type: "folder" },
-              type: "folder",
-            }
-      ),
-    getFolderItems: (_folderId: string, _optionalsInput: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
-  },
-  listCollaborations: {
-    getFolderCollaborations: (_folderId: string, _optionalsInput: unknown): Promise<unknown> =>
-      Promise.resolve({ entries: [] }),
-  },
-  userCollaborations: {
-    createCollaboration: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
-      mutationCounts.collaborations += 1;
-      return Promise.resolve({ id: "created-collaboration-id", type: "collaboration" });
+    userCollaborations: {
+      getCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve({
+          accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
+          id: "200",
+          item: { id: "101", type: "folder" },
+          role: "viewer",
+          type: "collaboration",
+        }),
+      updateCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> => {
+        updateCounts.collaborations += 1;
+        return Promise.resolve({
+          accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
+          id: "200",
+          item: { id: "101", type: "folder" },
+          role: "editor",
+          type: "collaboration",
+        });
+      },
     },
-  },
-  webhooks: {
-    createWebhook: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
-      mutationCounts.webhooks += 1;
-      return Promise.resolve({ id: "created-webhook-id" });
+    webhooks: {
+      getWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> =>
+        Promise.resolve({
+          address: "https://example.test/box/events",
+          id: "300",
+          target: { id: "100", type: "folder" },
+          triggers: ["FILE.DOWNLOADED"],
+          type: "webhook",
+        }),
+      updateWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> => {
+        updateCounts.webhooks += 1;
+        return Promise.resolve({
+          address: "https://example.test/box/events",
+          id: "300",
+          target: { id: "100", type: "folder" },
+          triggers: ["FILE.UPLOADED"],
+          type: "webhook",
+        });
+      },
     },
-    getWebhooks: (_queryParams: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
-  },
+  };
+
+  const UpdateApplierTestLayer = BoxProvisioningApplier.layer.pipe(
+    Layer.provide(B.Box.makeLayerFromClient(updateClient))
+  );
+  return { updateCounts, updateClient, UpdateApplierTestLayer };
 };
-
-const ApplierTestLayer = BoxProvisioningApplier.layer.pipe(Layer.provide(B.Box.makeLayerFromClient(mutationClient)));
-
-const updateCounts = { collaborations: 0, webhooks: 0 };
 
 const observedFolderPayload = (folderId: string) =>
   folderId === "100"
@@ -90,64 +152,46 @@ const observedFolderPayload = (folderId: string) =>
       }
     : { etag: "etag-child", id: "101", name: "Fixture child", parent: { id: "100", type: "folder" }, type: "folder" };
 
-const updateClient = {
-  folders: {
-    getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
-      Promise.resolve(observedFolderPayload(folderId)),
-    getFolderItems: (_folderId: string, _optionalsInput: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
-  },
-  userCollaborations: {
-    getCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> =>
-      Promise.resolve({
-        accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
-        id: "200",
-        item: { id: "101", type: "folder" },
-        role: "viewer",
-        type: "collaboration",
-      }),
-    updateCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> => {
-      updateCounts.collaborations += 1;
-      return Promise.resolve({
-        accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
-        id: "200",
-        item: { id: "101", type: "folder" },
-        role: "editor",
-        type: "collaboration",
-      });
-    },
-  },
-  webhooks: {
-    getWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> =>
-      Promise.resolve({
-        address: "https://example.test/box/events",
-        id: "300",
-        target: { id: "100", type: "folder" },
-        triggers: ["FILE.DOWNLOADED"],
-        type: "webhook",
-      }),
-    updateWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> => {
-      updateCounts.webhooks += 1;
-      return Promise.resolve({
-        address: "https://example.test/box/events",
-        id: "300",
-        target: { id: "100", type: "folder" },
-        triggers: ["FILE.UPLOADED"],
-        type: "webhook",
-      });
-    },
-  },
-};
+it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning applier", (it) => {
+  it.effect(
+    "isolates mutation recorders while two SDK folder creates overlap",
+    Effect.fnUntraced(function* () {
+      const first = makeMutationFixture();
+      const second = makeMutationFixture();
+      const firstEntered = Promise.withResolvers<void>();
+      const secondEntered = Promise.withResolvers<void>();
+      const firstCreate = first.mutationClient.folders.createFolder;
+      const secondCreate = second.mutationClient.folders.createFolder;
+      first.mutationClient.folders.createFolder = (request, options) => {
+        firstEntered.resolve();
+        return secondEntered.promise.then(() => firstCreate(request, options));
+      };
+      second.mutationClient.folders.createFolder = (request, options) => {
+        secondEntered.resolve();
+        return firstEntered.promise.then(() => secondCreate(request, options));
+      };
+      const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const receipts = yield* Effect.all(
+        A.map([first, second], (fixture) =>
+          BoxProvisioningApplier.pipe(
+            Effect.flatMap((applier) => applier.apply(desiredFixture, plan)),
+            provideScopedLayer(fixture.ApplierTestLayer)
+          )
+        ),
+        { concurrency: 2 }
+      ).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
 
-const UpdateApplierTestLayer = BoxProvisioningApplier.layer.pipe(
-  Layer.provide(B.Box.makeLayerFromClient(updateClient))
-);
+      expect(first.mutationCounts).toEqual({ collaborations: 1, folders: 1, webhooks: 1 });
+      expect(second.mutationCounts).toEqual({ collaborations: 1, folders: 1, webhooks: 1 });
+      expect(first.mutationCounts).not.toBe(second.mutationCounts);
+      expect(A.map(receipts, (receipt) => receipt.planDigest)).toEqual([plan.planDigest, plan.planDigest]);
+    })
+  );
 
-layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "applies planned collaboration and webhook updates",
     Effect.fnUntraced(function* () {
-      updateCounts.collaborations = 0;
-      updateCounts.webhooks = 0;
+      const { updateCounts, UpdateApplierTestLayer } = makeUpdateFixture();
       const drifted = BoxObservedState.make({
         ...observedAfterApplyFixture,
         collaborations: A.map(observedAfterApplyFixture.collaborations, (collaboration) =>
@@ -183,9 +227,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "performs zero dependent mutations for an unallowlisted exact-name collision",
     Effect.fnUntraced(function* () {
-      mutationCounts.collaborations = 0;
-      mutationCounts.folders = 0;
-      mutationCounts.webhooks = 0;
+      const { mutationCounts, ApplierTestLayer } = makeMutationFixture();
       const desired = BoxDesiredState.make({
         ...desiredFixture,
         adoptions: BoxAdoptions.make({ entries: [] }),
@@ -206,9 +248,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "executes only planned v1 mutations and records blocked actions",
     Effect.fnUntraced(function* () {
-      mutationCounts.collaborations = 0;
-      mutationCounts.folders = 0;
-      mutationCounts.webhooks = 0;
+      const { mutationCounts, ApplierTestLayer } = makeMutationFixture();
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const receipt = yield* BoxProvisioningApplier.pipe(
         Effect.flatMap((applier) => applier.apply(desiredFixture, plan)),
@@ -231,9 +271,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "rejects a desired payload other than the one bound into the plan",
     Effect.fnUntraced(function* () {
-      mutationCounts.collaborations = 0;
-      mutationCounts.folders = 0;
-      mutationCounts.webhooks = 0;
+      const { mutationCounts, ApplierTestLayer } = makeMutationFixture();
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const changedDesired = BoxDesiredState.make({
         ...desiredFixture,
@@ -257,9 +295,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "rejects live drift immediately before dispatch",
     Effect.fnUntraced(function* () {
-      mutationCounts.collaborations = 0;
-      mutationCounts.folders = 0;
-      mutationCounts.webhooks = 0;
+      const { mutationCounts, mutationClient } = makeMutationFixture();
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const driftClient = {
         ...mutationClient,
@@ -294,6 +330,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "rejects a case-equivalent just-in-time folder collision before create",
     Effect.fnUntraced(function* () {
+      const { mutationClient } = makeMutationFixture();
       const collisionMutationCounts = { collaborations: 0, folders: 0, webhooks: 0 };
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const collisionClient = {
@@ -346,6 +383,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "aborts a child POST when a newly created parent is renamed after its own action",
     Effect.fnUntraced(function* () {
+      const { mutationClient } = makeMutationFixture();
       let parentReadCount = 0;
       let folderPosts = 0;
       const emptyObserved = BoxObservedState.make({ ...observedFixture, folders: [] });
@@ -408,6 +446,7 @@ layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "allows dependent child and collaboration POSTs when only parent etags change",
     Effect.fnUntraced(function* () {
+      const { mutationClient } = makeMutationFixture();
       const etagMutationCounts = { collaborations: 0, folders: 0, webhooks: 0 };
       const emptyObserved = BoxObservedState.make({ ...observedFixture, folders: [] });
       const plan = yield* planBoxProvisioning(desiredFixture, emptyObserved);
