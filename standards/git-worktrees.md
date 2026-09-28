@@ -178,7 +178,9 @@ clone's `.claude/worktrees/<name>`, so a Claude Code desktop lane retires with t
 same command. After its pull request merged, the one-shot form is
 `bun run beep yeet sweep --retire [--lane <path>]`: it archive-retires the
 lane (the invoking worktree, or the one `--lane` names when run from the
-clone), deletes the branch, and sweeps the owning clone. Run it from inside
+clone), deletes the branch, and sweeps the owning clone (returned to `main`
+only when it already stands there; a clone on another live branch keeps its
+checkout and receives ref-only updates). Run it from inside
 the lane, because `bun run beep` resolves the CLI from the checkout it runs in
 and the clone's `main` may still be behind the merge; the command steps its
 own process out of the lane before removal and the archive fence exempts the

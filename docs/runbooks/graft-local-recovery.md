@@ -262,6 +262,19 @@ structural `graft build` only and reports `skipped-cooldown`. Its `detail` then
 reads `model <m> cooling down at <base-url>; retry-after <n>s (until <time>)`.
 Any other answer, or a probe that cannot run, lets the deep build go ahead.
 
+Before any member work, the refresh runs
+`<owner>/scripts/graft/apply-dist-patches.sh --check` once and records the
+result as `preflight.patchKit` in the receipt. `ok` lets deep builds proceed.
+`missing` means the check exited 1, so the installed Graft lacks a recorded dist
+patch. `unavailable` means the script is absent, could not run, or exited with
+another status. On `missing` or `unavailable` every deep member runs a
+structural `graft build` only and reports `skipped-preflight`, with a `detail`
+of `graft dist patch kit <status>; deep pass skipped: <check output tail>`. No
+cooldown probe runs for those members. The run is degraded and pages, but the
+structural wiring and the workspace check still refresh. Repair it the same way
+as a failed graft deep preflight: rerun `scripts/graft/apply-dist-patches.sh`
+after a Graft install or upgrade, or port the patches for a new Graft version.
+
 A receipt with `skipped-cooldown`, or a `build-failed` whose `detail` names
 `model_cooldown`, means the proxy's Claude credential hit Anthropic's account
 rate limit. Nothing needs repair. Confirm it with

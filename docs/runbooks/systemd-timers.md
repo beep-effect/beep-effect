@@ -16,6 +16,33 @@ Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
 `$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)
 for the shared provider environment.
 
+Each refs run first checks the Graft dist patches with
+`<owner>/scripts/graft/apply-dist-patches.sh --check`, as the graft deep refresh
+does. If the check does not pass, every deep member gets a structural build only
+and reports `skipped-preflight`, and the run sends a critical notification.
+
+The rendered `beep-refs-refresh.service` carries
+`After=beep-graft-deep-refresh.service` in `[Unit]`. It is ordering only, with no
+`Wants=` or `Requires=`, so refs still runs when the graft unit is not installed.
+Both services are `Type=oneshot`, and a oneshot start job stays installed until
+its `ExecStart` exits. systemd enforces `After=` against any installed job, not
+only against jobs from the same transaction. When the 02:30 graft deep pass is
+still running at 03:30, the refs start job therefore waits for it instead of
+sharing the model proxy with a second deep build. No `flock` or `ExecStartPre`
+wait is needed. `OnCalendar` stays at 03:30.
+
+This was checked on this workstation's systemd 262 with two transient units:
+
+```bash
+systemd-run --user --unit=B --property=Type=oneshot sleep 25
+# about 3 s later:
+systemd-run --user --unit=A --property=Type=oneshot --property=After=B.service true
+systemctl --user list-jobs   # A: start waiting, B: start running
+```
+
+B started at 04:30:04 and exited at 04:30:29. A started at 04:30:29, the second
+B exited.
+
 All installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
 the Bun the unit runs is the mise shim (`$HOME/.local/share/mise/shims/bun`)
 when this user can execute it, else `$HOME/.bun/bin/bun`, else the Bun that
@@ -57,8 +84,10 @@ bun run beep refs install-timer --refresh
 ```
 
 Run them from a checkout that already contains the merged renderer change (the
-owning clone after `bun run beep yeet sweep --retire`, or any fresh worktree).
-`--refresh` fails with "install first" when nothing is installed.
+owning clone once `bun run beep yeet sweep --retire` has left it on `main`, or
+any fresh worktree; a clone the sweep left on another live branch does not
+carry the merge). `--refresh` fails with "install first" when nothing is
+installed.
 
 ## Who runs this
 
@@ -94,7 +123,10 @@ that session spawned into the lane (MCP servers, tool shells, background jobs);
 anything else holding the lane (a desktop terminal panel, an editor, another
 session) still refuses it, and the error names each holder and prints the
 working form. Run it as the last command of the session, from inside the lane,
-and step the shell into the swept clone afterwards:
+and step the shell into the swept clone afterwards. The clone is returned to
+`main` only when it already stands on `main`; a clone on another live branch
+keeps its checkout and receives ref-only updates (no `git switch`, no
+`bun install`), so the trailing `cd` may land on that branch:
 
 ```bash
 CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
