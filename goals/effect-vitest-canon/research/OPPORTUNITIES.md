@@ -4692,3 +4692,22 @@ Those helpers deliberately open, close, and reopen database lifetimes, so they
 need a separate Resource-lens judgment and migration plan; a clean EV002 scan
 alone does not establish canonical ownership for this test. A focused detector
 fixture for locally defined higher-order provider wrappers would expose the gap.
+
+## Runtime-owned platform layers can defeat outer filesystem substitution
+
+RuntimeTest provides BunServices.layer internally to the ontology handler.
+During the Desktop filesystem review, this made an outer MemoryFileSystem
+replacement unsuitable: it would create a fixture workspace invisible to the
+runtime filesystem. The smoke and contract fixtures retain real directories;
+a removed smoke probe proves creation and finalizer cleanup. A future runtime
+fixture API could accept an explicit platform layer when service-level tests
+need a shared virtual volume, while keeping compiled-process tests on real disk.
+
+## Preserve terminal receipts across context recovery
+
+The Desktop sidecar proof logs recorded eleven passing cases in each runtime
+and a successful package audit/docgen, but their session handles were lost in
+truncated tool output. Process inspection confirmed they had ended; the bounded
+proofs were rerun with explicit exit-code files and all exited zero. Durable
+exit receipts alongside logs would avoid repeating completed proofs merely to
+recover authoritative termination evidence.

@@ -87895,13 +87895,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:2:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:3:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
-      "line": 2,
-      "endLine": 2,
+      "line": 3,
+      "endLine": 3,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -87913,7 +87913,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the actual PGlite data directory across legacy-engine creation, engine close/reopen, PG_VERSION markers, host chmod unreadability, and extension-bundle cleanup. An in-memory Effect filesystem would not be the native engine filesystem and would change the subject. Nine cases pass under both Node and Bun; local provider lifetime wrappers remain a separate open Resource-lens review."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
@@ -88018,16 +88019,17 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The public fixture configures RuntimeTest, which internally provides BunServices.layer to OntologyServerLive. Its workspace must be visible to that runtime filesystem; replacing only the outer adapter would create a disconnected virtual workspace. The contract case passes under Node and Bun."
     },
     {
-      "id": "EV010:apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts:20:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 20,
+      "endLine": 20,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -88039,7 +88041,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the compiled Bun sidecar subprocess over stdin/stdout. CHAT_DB_PATH and ONTOLOGY_WORKSPACE_ROOT pass actual temporary paths across the process boundary. A process-local MemoryFileSystem cannot back the child process. Retain the real host boundary and the previously proven owned process/stderr/temporary-directory lifetimes."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/sidecar-smoke.test.ts:25:@effect/platform-bun/BunFileSystem@0#1",
@@ -88060,16 +88063,17 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The public it.layer fixture owns a real temporary ontology workspace for RuntimeTest, whose internal BunServices.layer supplies the ontology filesystem. The original smoke case passes under Node and Bun; a temporary host-filesystem probe proves the workspace exists during acquisition and is removed after suite finalization. Replacing only the outer adapter would disconnect fixture and runtime filesystems."
     },
     {
-      "id": "EV010:apps/professional-desktop/test/tailwind-sources.test.ts:1:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:apps/professional-desktop/test/tailwind-sources.test.ts:2:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
-      "line": 1,
-      "endLine": 1,
+      "line": 2,
+      "endLine": 2,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -88081,7 +88085,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the checked-in package.json and src/styles/globals.css relationship. Reading the actual repository files detects missing Tailwind source declarations; copying their expected content into MemoryFileSystem would replace the source under test with a fixture. The filesystem is owned by the public it.layer fixture."
     },
     {
       "id": "EV010:packages/drivers/exiftool/test/integration/Exiftool.live.test.ts:11:@effect/platform-node@0#1",

@@ -25,8 +25,6 @@ import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as A from "effect/Array";
@@ -108,9 +106,7 @@ const hasPersistedYouTube = (document: Md.Document.Type): boolean =>
 const RealAnthropicChatLayer = Layer.mergeAll(
   ThreadLayers.ThreadStoreDrizzleLayer,
   UsageRecordSinkDrizzle,
-  AnthropicTurnKernel,
-  BunFileSystem.layer,
-  BunPath.layer
+  AnthropicTurnKernel
 ).pipe(
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makeInProcessPgliteLayer()),

@@ -416,8 +416,8 @@
     "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 7035,
-    "lines": 171
+    "bytes": 6869,
+    "lines": 167
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
@@ -458,8 +458,8 @@
     "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3638,
-    "lines": 79
+    "bytes": 3746,
+    "lines": 81
   },
   {
     "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",

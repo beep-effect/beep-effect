@@ -22,7 +22,6 @@
  */
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
 import * as Chunk from "effect/Chunk";
@@ -34,7 +33,9 @@ import { RpcTest } from "effect/rpc";
 import * as Stream from "effect/Stream";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
 import { RuntimeTest } from "@/runtime/Layer";
+import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 
+const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
 
 const smokeProgram = Effect.gen(function* () {
@@ -57,23 +58,24 @@ const smokeProgram = Effect.gen(function* () {
   expect(roles).toContain("assistant");
 });
 
-// Build a fresh in-process rpc client wired to the fixture runtime handler
-// group, mirroring how the sidecar binds ChatRpcs to RuntimeLive.
-const smoke = Effect.gen(function* () {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "sidecar-smoke-ontology-" });
-  const OntologyWorkspaceConfigTest = ConfigProvider.layer(
-    ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot })
-  );
-  const runtime = RuntimeTest.pipe(Layer.provide(OntologyWorkspaceConfigTest));
-
-  yield* smokeProgram.pipe(provideScopedLayer(runtime));
-}).pipe(provideScopedLayer(BunFileSystem.layer));
+// Own the configured runtime and workspace in the public fixture layer.
+const SmokeLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "sidecar-smoke-ontology-" });
+    const OntologyWorkspaceConfigTest = ConfigProvider.layer(
+      ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot })
+    );
+    return RuntimeTest.pipe(Layer.provide(OntologyWorkspaceConfigTest));
+  })
+).pipe(Layer.provide(BunFileSystem.layer));
 
 if (!shouldRun) {
   describe.skip("Professional desktop sidecar smoke (set BEEP_TEST_SIDECAR_SMOKE=1)", () => {});
 } else {
   describe("Professional desktop sidecar smoke", { concurrent: false }, () => {
-    it.effect("creates a thread, streams a fixture turn, and persists it through ChatRpcs", () => smoke);
+    it.layer(SmokeLive, { timeout: fixtureTimeout })((it) => {
+      it.effect("creates a thread, streams a fixture turn, and persists it through ChatRpcs", () => smokeProgram);
+    });
   });
 }
