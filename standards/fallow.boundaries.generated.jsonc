@@ -1600,6 +1600,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1614,6 +1615,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ]

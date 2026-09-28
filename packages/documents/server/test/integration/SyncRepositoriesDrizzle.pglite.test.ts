@@ -31,8 +31,10 @@ import { makeDrizzle, makeDrizzleLayer, migrate, NativePgClient } from "@beep/po
 import { NonNegativeInt } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -48,28 +50,6 @@ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePglit
 // are pinned to the in-process driver with the bundled extension registered.
 const makeMigrationCapableLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
-
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
-};
-
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const remoteId = RemoteItemId.make("9001");
 const syncItemOne = Documents.SyncItemId.make(1);
@@ -99,6 +79,18 @@ const operationSeed = (idempotencyKey: string) =>
     targetRelPath: VaultRelPath.make("matters/client-default/complaint.pdf"),
     workspaceId,
   });
+const encodeSyncConflictSeed = S.encodeResult(SyncConflictSeed);
+const decodeSyncConflictSeed = S.decodeUnknownResult(SyncConflictSeed);
+const equivalentSyncConflictSeed = S.toEquivalence(SyncConflictSeed);
+const encodeSyncCursorSeed = S.encodeResult(SyncCursorSeed);
+const decodeSyncCursorSeed = S.decodeUnknownResult(SyncCursorSeed);
+const equivalentSyncCursorSeed = S.toEquivalence(SyncCursorSeed);
+const encodeSyncOperationSeed = S.encodeResult(SyncOperationSeed);
+const decodeSyncOperationSeed = S.decodeUnknownResult(SyncOperationSeed);
+const equivalentSyncOperationSeed = S.toEquivalence(SyncOperationSeed);
+const encodeSyncItemSeed = S.encodeResult(SyncItemSeed);
+const decodeSyncItemSeed = S.decodeUnknownResult(SyncItemSeed);
+const equivalentSyncItemSeed = S.toEquivalence(SyncItemSeed);
 
 const conflictSeed = (remoteEventId: O.Option<string>) =>
   SyncConflictSeed.make({
@@ -124,11 +116,47 @@ const migrateDocumentsSync = Effect.fnUntraced(function* () {
 const SyncRepositoriesDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(makeMigrationCapableLayer()));
 
 describe("Documents sync repository seeds", () => {
-  it("round-trips schema-derived repository seeds", () => {
-    assertSchemaArbitraryRoundTrip(SyncItemSeed);
-    assertSchemaArbitraryRoundTrip(SyncOperationSeed);
-    assertSchemaArbitraryRoundTrip(SyncCursorSeed);
-    assertSchemaArbitraryRoundTrip(SyncConflictSeed);
+  describe("round-trips schema-derived repository seeds", () => {
+    it.prop(
+      "SyncItemSeed",
+      { value: Arbitrary.schema(SyncItemSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncItemSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncItemSeed(encoded));
+        assertTrue(equivalentSyncItemSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncOperationSeed",
+      { value: Arbitrary.schema(SyncOperationSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncOperationSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncOperationSeed(encoded));
+        assertTrue(equivalentSyncOperationSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncCursorSeed",
+      { value: Arbitrary.schema(SyncCursorSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncCursorSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncCursorSeed(encoded));
+        assertTrue(equivalentSyncCursorSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncConflictSeed",
+      { value: Arbitrary.schema(SyncConflictSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncConflictSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncConflictSeed(encoded));
+        assertTrue(equivalentSyncConflictSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
   });
 });
 
@@ -136,7 +164,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Documents sync repositories Drizzle PgLite integration", () => {});
 } else {
   describe("Documents sync repositories Drizzle PgLite integration", { concurrent: false }, () => {
-    layer(SyncRepositoriesDrizzleLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(SyncRepositoriesDrizzleLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "creates, deduplicates, updates, and finds sync items",
         Effect.fnUntraced(function* () {
@@ -148,7 +176,7 @@ if (!shouldRunPgliteIntegration) {
           expect(second.id).not.toBe(first.id);
 
           const duplicate = yield* Effect.flip(repository.create(itemSeed("matters/client-default/zeta.pdf")));
-          expect(SyncItemRepositoryConflict.is(duplicate)).toBe(true);
+          pipe(SyncItemRepositoryConflict.is(duplicate), assertTrue);
 
           const pushed = yield* repository.update(
             DomainSyncItem.SyncItem.make({
@@ -159,17 +187,23 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           expect(pushed.syncState).toBe("current");
-          expect(pushed.remoteId).toEqual(O.some(remoteId));
+          assertSome(pushed.remoteId, remoteId);
 
           const foundByPath = yield* repository.findByPath(
             FindSyncItemByPathInput.make({ localRelPath: second.localRelPath, provider: "box", workspaceId })
           );
-          expect(O.map(foundByPath, (item) => item.id)).toEqual(O.some(second.id));
+          assertSome(
+            O.map(foundByPath, (item) => item.id),
+            second.id
+          );
 
           const foundByRemoteId = yield* repository.findByRemoteId(
             FindSyncItemByRemoteIdInput.make({ provider: "box", remoteId, workspaceId })
           );
-          expect(O.map(foundByRemoteId, (item) => item.id)).toEqual(O.some(first.id));
+          assertSome(
+            O.map(foundByRemoteId, (item) => item.id),
+            first.id
+          );
 
           const listed = yield* repository.listByWorkspace(
             ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId })
@@ -243,10 +277,13 @@ if (!shouldRunPgliteIntegration) {
 
           expect(replaced.id).toBe(created.id);
           expect(replaced.streamPosition).toBe("stream-position-2");
-          expect(replaced.lastEventId).toEqual(O.some("evt-2"));
+          assertSome<string>(replaced.lastEventId, "evt-2");
 
           const found = yield* repository.find(FindSyncCursorInput.make({ provider: "box", workspaceId }));
-          expect(O.map(found, (cursor) => cursor.streamPosition)).toEqual(O.some("stream-position-2"));
+          assertSome<string>(
+            O.map(found, (cursor) => cursor.streamPosition),
+            "stream-position-2"
+          );
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -290,13 +327,13 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* makeDrizzleSyncOperationRepository();
 
           yield* repository.enqueue(operationSeed("item-9:uploadFile:1"));
-          const duplicate = yield* Effect.flip(repository.enqueue(operationSeed("item-9:uploadFile:1")));
-
-          expect(SyncOperationRepositoryConflict.is(duplicate)).toBe(true);
-          expect(duplicate._tag).toBe("SyncOperationRepositoryConflict");
-
           const client = yield* NativePgClient.PgClient;
-          yield* Effect.ignore(client.unsafe("ROLLBACK"));
+          const duplicate = yield* repository
+            .enqueue(operationSeed("item-9:uploadFile:1"))
+            .pipe(Effect.flip, Effect.ensuring(client.unsafe("ROLLBACK").pipe(Effect.orDie)));
+
+          pipe(SyncOperationRepositoryConflict.is(duplicate), assertTrue);
+          expect(duplicate._tag).toBe("SyncOperationRepositoryConflict");
         }),
         pgliteIntegrationTimeoutMillis
       );

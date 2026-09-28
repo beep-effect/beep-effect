@@ -4012,3 +4012,133 @@ Existing error-type, operation-name and empty-repository assertions are retained
 Status: repaired locally; full package audit and docgen pass. Error-path
 tests should prove their cleanup can fail visibly, especially when subsequent
 operations normalize several underlying driver failures to the same public type.
+
+## 2026-09-28 — filing metadata did not prove materialized bytes
+
+The extraction-fallback test asserted filing classification and the relative
+path but never read the file. A controlled production mutation that skips
+materialization still passed the original test. The strengthened test reads the
+returned path under the native temporary vault and compares every byte with the
+original decoded input. Preserve this boundary when refactoring intake: returning
+metadata is insufficient evidence of a completed write. Status: repaired locally. The skipped-write control fails at the actual file
+read; Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — remote paths and sync status did not prove uploaded content
+
+The vacated-path regression checked both remote keys and current status but not
+the content at either key. A fixture mutation that always reports the first
+scan's digest passed that original oracle. The test now checks each public
+fixture node's contentDigest against the independently calculated SHA-256 of its
+respective first or second input. Status: repaired locally. The stale-digest control fails the new assertion;
+Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — truncation length accepted an absent payload head
+
+The drift-payload test checked String(head).length <= 8192. A mutation returning
+undefined for head passed because that conversion produces a short string.
+The original bound and truncated flag remain; a new golden assertion requires
+the exact JSON prefix of the injected oversized payload. Status: repaired locally. The absent-head control fails the exact prefix
+assertion; Node/Bun focused tests and full package audit/docgen pass.
+
+## 2026-09-28 — ambient configuration changed the retry scenario
+
+Running the existing three-attempt VaultSyncEngine regression in a subprocess
+with DOCUMENTS_SYNC_MAX_ATTEMPTS=1 fails its exact attempt assertion. The fixture
+now supplies an explicit ConfigProvider with the original three attempts and
+100-page limit. Production configuration decoding remains unchanged. Status:
+repaired locally. Subprocesses with ambient attempt limits 1 and 4 and page
+limit 1 retain the expected three attempts; full package audit/docgen pass. Test-local providers should own fixed scenarios without modifying
+process.env or weakening the production configuration tests.
+
+## 2026-09-28 — native byte containers differ across runtimes
+
+The new materialization assertion initially compared a Node Buffer directly to
+a Uint8Array. Vitest rejected deep equality despite identical bytes. Comparing
+A.fromIterable results through the Effect Array helper retains every byte
+and avoids treating a runtime container prototype as the persistence subject.
+Status: repaired locally and verified on Node and Bun. Keep both runtimes in
+verification of native-byte assertions.
+
+## 2026-09-28 — repository rollback gaps recur in Documents tests
+
+The adjacent SyncRepositoryDriverFailure suite ignored rollback errors after
+nine expected driver failures. All three cases still passed when ROLLBACK was
+replaced with invalid SQL. Guaranteed cleanup now surrounds each expected
+failure, with rollback errors exposed as defects; the same invalid-SQL control
+then fails. This preserves the existing public error-type and reason assertions.
+
+The integration duplicate-key case had the same ignored rollback after its
+assertions. Its full-file control also passed with invalid rollback. Cleanup is
+now guaranteed around the duplicate operation before its unchanged conflict
+assertions. The last-test ordering and native PGlite driver remain. Status:
+repaired locally; both invalid-rollback controls fail after repair, and full
+package audit/docgen plus nine integration cases pass on Node and Bun.
+Future error-path reviews should inspect both teardown execution and teardown
+error visibility rather than infer cleanup from expected domain errors.
+
+## 2026-09-28 — public layer migration exposes obsolete generator wrappers
+
+Removing twelve body providers from Box adapter cases exposed eleven nested
+Effect.gen wrappers that no longer establish a service boundary. Effect's
+nestedEffectGenYield diagnostic identified them. Their statements now run in
+the existing parent generator, retaining every command, returned-field binding
+and assertion. The test fixture service uses its deterministic package key.
+Status: repaired locally and package-verified before the later runner edits.
+Migration tooling can identify and inline these obsolete wrappers while keeping
+shorter resource scopes and body-specific client construction intact.
+
+## 2026-09-28 — property migration must include integration registrations
+
+The first native-property conversion covered top-level test files. The
+source-preservation audit found another aggregate Passed assertion in the
+integration file, backed by four seed schemas. Those four laws now use native registrations with their original domains,
+equivalence predicates and ten-run floor. Status: all four individual inversion
+controls fail with seed replay and shrinking; full package proof and both
+runtime integration suites pass. A migration must recurse through the complete saved test census;
+a passing unit selection cannot establish integration-file coverage.
+
+## 2026-09-28 — property codec compilation belongs at module scope
+
+Documents package verification passed while root oxlint rejected 32 codec
+compilations inside sixteen describe callbacks. Registration callbacks do not
+run per generated trial, but the repository compilation-placement rule still
+requires module-level reuse. Sixteen codec/equivalence groups now use named
+module constants. Root oxlint and the subsequent full package audit/docgen
+pass. This repeats the previously recorded gap between package verification
+and root policy coverage; tooling should expose that distinction earlier.
+
+## 2026-09-28 — publishing a resolved merge needs a separate commit step
+
+While resolving PR #1312 after the rc.118 snapshot landed, Yeet publish checked
+base freshness before committing the resolved in-progress merge and reported
+stale-base. Committing the merge with normal hooks resolved that condition.
+A second attempt established that early publication rejects amend/no-edit.
+The merge plus a new proof note then published through the normal early route.
+Status: operationally resolved; a documented existing-merge publication path
+would avoid repeated job submissions. No stale-base override was used.
+
+The conflict also illustrates why proof receipts must pin the dependency
+snapshot: the saved Documents proof used rc.117. Its 22-file batch was archived
+and restored with hashes verified; only the lockfile changed through main's
+merge. Reverification on rc.118 is required before claiming current proof.
+
+## 2026-09-28 — stale incremental diagnostics survive an Effect update
+
+After restoring the Documents batch onto rc.118, package verification failed
+in the unchanged Box dependency with TS2589 and no source location. Box's
+source/test/script check and a compiler run with fresh build-info both passed.
+Archiving only Box's generated incremental state made the full Documents audit
+and docgen pass (14.2 and 5.9 seconds). No production change was needed.
+Status: environment-only and verified. Dependency-snapshot transitions should
+invalidate incremental state or suggest a fresh-state diagnostic before source
+repair; preserve the failing state when investigating compiler cache behavior.
+
+## 2026-09-28 — root checks require explicit base and relocated anchors
+
+Direct Fallow check scripts expanded an unset BEEP_PROOF_BASE to an empty ref
+and exited 128. Re-running with origin/main supplies the intended comparison.
+The SHACL merge also moved the existing schema-first exception anchor from line
+21 to 36. Only that line reference changed; its rule, disposition, ownership and
+regression-coverage rationale remain intact. Root checks detect these cases
+after package verification; standalone recipes should name the comparison base
+and stable finding identities should avoid line-only invalidation.

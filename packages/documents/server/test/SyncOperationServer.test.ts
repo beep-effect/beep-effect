@@ -18,36 +18,16 @@ import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
-
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
-};
-
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const itemOne = Documents.SyncItemId.make(1);
 const itemTwo = Documents.SyncItemId.make(2);
@@ -88,6 +68,12 @@ const detachedOperationRow = {
   targetRelPath: "matters/client-default/ghost.pdf",
   workspaceId: 2,
 };
+const encodeSyncOperationSeed = S.encodeResult(SyncOperationSeed);
+const decodeSyncOperationSeed = S.decodeUnknownResult(SyncOperationSeed);
+const equivalentSyncOperationSeed = S.toEquivalence(SyncOperationSeed);
+const encodeSyncOperation = S.encodeResult(DomainSyncOperation.SyncOperation);
+const decodeSyncOperation = S.decodeUnknownResult(DomainSyncOperation.SyncOperation);
+const equivalentSyncOperation = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
 describe("SyncOperation server repository", () => {
   it.effect(
@@ -111,7 +97,7 @@ describe("SyncOperation server repository", () => {
       yield* repository.enqueue(operationSeed("item-1:uploadFile:1", itemOne));
 
       const error = yield* Effect.flip(repository.enqueue(operationSeed("item-1:uploadFile:1", itemOne)));
-      expect(SyncOperationRepositoryConflict.is(error)).toBe(true);
+      pipe(SyncOperationRepositoryConflict.is(error), assertTrue);
       if (SyncOperationRepositoryConflict.is(error)) {
         expect(error.idempotencyKey).toBe("item-1:uploadFile:1");
       }
@@ -161,27 +147,46 @@ describe("SyncOperation server repository", () => {
       const detachedOperation = yield* decodeUnknownSyncOperation(detachedOperationRow);
 
       const error = yield* Effect.flip(repository.update(detachedOperation));
-      expect(SyncOperationRepositoryNotFound.is(error)).toBe(true);
+      pipe(SyncOperationRepositoryNotFound.is(error), assertTrue);
       if (SyncOperationRepositoryNotFound.is(error)) {
         expect(error.syncOperationId).toBe(detachedOperation.id);
       }
     })
   );
 
-  it.effect(
-    "resolves the repository through the in-memory layer",
-    Effect.fnUntraced(function* () {
-      const queued = yield* SyncOperationRepository.pipe(
-        Effect.flatMap((repository) => repository.listQueued(queuedInput)),
-        provideScopedLayer(SyncOperationRepositoryInMemoryLayer)
-      );
+  it.layer(Layer.fresh(SyncOperationRepositoryInMemoryLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "resolves the repository through the in-memory layer",
+      Effect.fnUntraced(function* () {
+        const queued = yield* SyncOperationRepository.pipe(
+          Effect.flatMap((repository) => repository.listQueued(queuedInput))
+        );
 
-      expect(queued).toEqual([]);
-    })
-  );
+        expect(queued).toEqual([]);
+      })
+    );
+  });
 
-  it("round-trips schema-derived sync operations and seeds", () => {
-    assertSchemaArbitraryRoundTrip(DomainSyncOperation.SyncOperation);
-    assertSchemaArbitraryRoundTrip(SyncOperationSeed);
+  describe("round-trips schema-derived sync operations and seeds", () => {
+    it.prop(
+      "DomainSyncOperation.SyncOperation",
+      { value: Arbitrary.schema(DomainSyncOperation.SyncOperation) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncOperation(value));
+        const decoded = Result.getOrThrow(decodeSyncOperation(encoded));
+        assertTrue(equivalentSyncOperation(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncOperationSeed",
+      { value: Arbitrary.schema(SyncOperationSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncOperationSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncOperationSeed(encoded));
+        assertTrue(equivalentSyncOperationSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
   });
 });

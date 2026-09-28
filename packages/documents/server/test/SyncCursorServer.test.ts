@@ -9,36 +9,23 @@ import {
   SyncCursorSeed,
 } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, Layer, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  const encode = S.encodeResult(schema);
-  const decode = S.decodeUnknownResult(schema);
-  const equivalent = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.schema(schema),
-        (value) => {
-          const encoded = Result.getOrThrow(encode(value));
-          const decoded = Result.getOrThrow(decode(encoded));
-
-          return equivalent(decoded, value);
-        },
-        fcRuns(10)
-      )
-    )._tag
-  ).toBe("Passed");
-};
-
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const findInput = FindSyncCursorInput.make({ provider: "box", workspaceId });
+const encodeSyncCursorSeed = S.encodeResult(SyncCursorSeed);
+const decodeSyncCursorSeed = S.decodeUnknownResult(SyncCursorSeed);
+const equivalentSyncCursorSeed = S.toEquivalence(SyncCursorSeed);
+const encodeSyncCursor = S.encodeResult(DomainSyncCursor.SyncCursor);
+const decodeSyncCursor = S.decodeUnknownResult(DomainSyncCursor.SyncCursor);
+const equivalentSyncCursor = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
 describe("SyncCursor server repository", () => {
   it.effect(
@@ -47,7 +34,7 @@ describe("SyncCursor server repository", () => {
       const repository = yield* makeInMemorySyncCursorRepository();
 
       const found = yield* repository.find(findInput);
-      expect(O.isNone(found)).toBe(true);
+      assertNone(found);
     })
   );
 
@@ -73,29 +60,49 @@ describe("SyncCursor server repository", () => {
       );
       expect(replaced.id).toBe(created.id);
       expect(replaced.streamPosition).toBe("stream-position-2");
-      expect(replaced.lastEventId).toEqual(O.some("evt-2"));
-      expect(replaced.lastError).toEqual(O.some("stream read interrupted"));
+      assertSome<string>(replaced.lastEventId, "evt-2");
+      assertSome<string>(replaced.lastError, "stream read interrupted");
       expect(replaced.status).toBe("error");
 
       const found = yield* repository.find(findInput);
-      expect(O.map(found, (cursor) => cursor.streamPosition)).toEqual(O.some("stream-position-2"));
-    })
-  );
-
-  it.effect(
-    "resolves the repository through the in-memory layer",
-    Effect.fnUntraced(function* () {
-      const found = yield* SyncCursorRepository.pipe(
-        Effect.flatMap((repository) => repository.find(findInput)),
-        provideScopedLayer(SyncCursorRepositoryInMemoryLayer)
+      assertSome<string>(
+        O.map(found, (cursor) => cursor.streamPosition),
+        "stream-position-2"
       );
-
-      expect(O.isNone(found)).toBe(true);
     })
   );
 
-  it("round-trips schema-derived sync cursors and seeds", () => {
-    assertSchemaArbitraryRoundTrip(DomainSyncCursor.SyncCursor);
-    assertSchemaArbitraryRoundTrip(SyncCursorSeed);
+  it.layer(Layer.fresh(SyncCursorRepositoryInMemoryLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "resolves the repository through the in-memory layer",
+      Effect.fnUntraced(function* () {
+        const found = yield* SyncCursorRepository.pipe(Effect.flatMap((repository) => repository.find(findInput)));
+
+        assertNone(found);
+      })
+    );
+  });
+
+  describe("round-trips schema-derived sync cursors and seeds", () => {
+    it.prop(
+      "DomainSyncCursor.SyncCursor",
+      { value: Arbitrary.schema(DomainSyncCursor.SyncCursor) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncCursor(value));
+        const decoded = Result.getOrThrow(decodeSyncCursor(encoded));
+        assertTrue(equivalentSyncCursor(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
+    it.prop(
+      "SyncCursorSeed",
+      { value: Arbitrary.schema(SyncCursorSeed) },
+      ({ value }) => {
+        const encoded = Result.getOrThrow(encodeSyncCursorSeed(value));
+        const decoded = Result.getOrThrow(decodeSyncCursorSeed(encoded));
+        assertTrue(equivalentSyncCursorSeed(decoded, value));
+      },
+      { arbitrary: fcRuns(10) }
+    );
   });
 });

@@ -7,13 +7,15 @@ import {
 } from "@beep/documents-domain/values/Taxonomy";
 import { DocumentsServerLive } from "@beep/documents-server/layer";
 import { Document } from "@beep/documents-use-cases/server";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -22,6 +24,7 @@ import * as Str from "effect/String";
 const decodeDocumentIntakeDroppedFileInput = S.decodeEffect(Document.IntakeDroppedFileInput);
 const decodeUnknownUint8ArrayFromBase64Result = S.decodeUnknownResult(S.Uint8ArrayFromBase64);
 const encodeUint8ArrayFromBase64Result = S.encodeResult(S.Uint8ArrayFromBase64);
+const equivalentUint8ArrayFromBase64 = S.toEquivalence(S.Uint8ArrayFromBase64);
 
 const DocumentsIntakeTestLayer = DocumentsServerLive.pipe(
   Layer.provideMerge(BunFileSystem.layer),
@@ -47,152 +50,152 @@ const filedConceptId = (filing: FilingOutcome) =>
   });
 
 describe("@beep/documents-server DocumentIntake", () => {
-  it("round-trips dropped-file bytes through the Base64 wire codec with schema-derived arbitraries", () => {
-    const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
+  it.prop(
+    "round-trips dropped-file bytes through the Base64 wire codec with schema-derived arbitraries",
+    { bytes: Arbitrary.schema(S.Uint8ArrayFromBase64) },
+    ({ bytes }) => {
+      const encoded = Result.getOrThrow(encodeUint8ArrayFromBase64Result(bytes));
+      const decoded = Result.getOrThrow(decodeUnknownUint8ArrayFromBase64Result(encoded));
+      assertTrue(equivalentUint8ArrayFromBase64(decoded, bytes));
+    },
+    { arbitrary: fcRuns(10) }
+  );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(S.Uint8ArrayFromBase64),
-          (bytes) => {
-            const encoded = Result.getOrThrow(encodeUint8ArrayFromBase64Result(bytes));
-            const decoded = Result.getOrThrow(decodeUnknownUint8ArrayFromBase64Result(encoded));
+  it.layer(Layer.fresh(DocumentsIntakeTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "materializes a dropped file atomically into the deterministic taxonomy path",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+        const input = yield* complaintInput(vaultRootPath);
+        const document = yield* intake.intakeDroppedFile(input);
+        const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
+        const written = yield* fs.readFile(targetPath);
 
-            expect(equivalent(decoded, bytes)).toBe(true);
-
-            return true;
-          },
-          fcRuns(10)
-        )
-      )._tag
-    ).toBe("Passed");
+        expect(document.filing.kind).toBe("filed");
+        expect(filedConceptId(document.filing)).toBe("pleadings");
+        expect(document.vaultPath.relativePath).toContain("01-pleadings");
+        expect(document.vaultPath.fileName).toMatch(/^complaint--[a-f0-9]{12}\.pdf$/u);
+        expect(new TextDecoder().decode(written)).toBe("complaint body");
+      })
+    );
   });
 
-  it.effect(
-    "materializes a dropped file atomically into the deterministic taxonomy path",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
-      const input = yield* complaintInput(vaultRootPath);
-      const document = yield* intake.intakeDroppedFile(input);
-      const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
-      const written = yield* fs.readFile(targetPath);
+  it.layer(Layer.fresh(DocumentsIntakeTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "routes an unmatched document into the intake inbox instead of a guessed folder",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+        const bytes = new TextEncoder().encode("unclassifiable body");
 
-      expect(document.filing.kind).toBe("filed");
-      expect(filedConceptId(document.filing)).toBe("pleadings");
-      expect(document.vaultPath.relativePath).toContain("01-pleadings");
-      expect(document.vaultPath.fileName).toMatch(/^complaint--[a-f0-9]{12}\.pdf$/u);
-      expect(new TextDecoder().decode(written)).toBe("complaint body");
-    }, provideScopedLayer(DocumentsIntakeTestLayer))
-  );
+        const input = yield* decodeDocumentIntakeDroppedFileInput({
+          content: Buffer.from(bytes).toString("base64"),
+          filingContext: DefaultVaultFilingContext,
+          intakeBatchId: "Batch 42",
+          originalFileName: "untitled.xyz",
+          vaultRootPath,
+          workspaceId: 1,
+        });
+        const document = yield* intake.intakeDroppedFile(input);
+        const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
+        const written = yield* fs.readFile(targetPath);
 
-  it.effect(
-    "routes an unmatched document into the intake inbox instead of a guessed folder",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
-      const bytes = new TextEncoder().encode("unclassifiable body");
+        expect(document.filing).toMatchObject({ kind: "inboxed", reason: "no-match" });
+        expect(document.vaultPath.relativePath).toMatch(/^00-inbox\/batch-42\/untitled--[a-f0-9]{12}\.xyz$/u);
+        expect(document.vaultPath.taxonomySegments).toEqual([]);
+        expect(new TextDecoder().decode(written)).toBe("unclassifiable body");
+      })
+    );
+  });
 
-      const input = yield* decodeDocumentIntakeDroppedFileInput({
-        content: Buffer.from(bytes).toString("base64"),
-        filingContext: DefaultVaultFilingContext,
-        intakeBatchId: "Batch 42",
-        originalFileName: "untitled.xyz",
-        vaultRootPath,
-        workspaceId: 1,
-      });
-      const document = yield* intake.intakeDroppedFile(input);
-      const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
-      const written = yield* fs.readFile(targetPath);
+  it.layer(Layer.fresh(DocumentsIntakeTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "rejects a projected vault ancestor that is a symlink outside the vault",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+        const outsideRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-outside-" });
+        yield* fs.symlink(outsideRootPath, path.join(vaultRootPath, "matters"));
 
-      expect(document.filing).toMatchObject({ kind: "inboxed", reason: "no-match" });
-      expect(document.vaultPath.relativePath).toMatch(/^00-inbox\/batch-42\/untitled--[a-f0-9]{12}\.xyz$/u);
-      expect(document.vaultPath.taxonomySegments).toEqual([]);
-      expect(new TextDecoder().decode(written)).toBe("unclassifiable body");
-    }, provideScopedLayer(DocumentsIntakeTestLayer))
-  );
+        const input = yield* complaintInput(vaultRootPath);
+        const result = yield* Effect.result(intake.intakeDroppedFile(input));
 
-  it.effect(
-    "rejects a projected vault ancestor that is a symlink outside the vault",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
-      const outsideRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-outside-" });
-      yield* fs.symlink(outsideRootPath, path.join(vaultRootPath, "matters"));
+        pipe(result, Result.isFailure, assertTrue);
+        if (Result.isFailure(result)) {
+          expect(result.failure._tag).toBe("DocumentMaterializationFailed");
+          expect(result.failure.reason).toContain("escapes the allowed root");
+        }
+        pipe(yield* fs.exists(path.join(outsideRootPath, "client-default-default-client")), assertFalse);
+      })
+    );
+  });
 
-      const input = yield* complaintInput(vaultRootPath);
-      const result = yield* Effect.result(intake.intakeDroppedFile(input));
+  it.layer(Layer.fresh(DocumentsIntakeTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "does not write through the legacy predictable temporary-file symlink",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+        const outsideRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-outside-" });
+        const outsideVictimPath = path.join(outsideRootPath, "victim.txt");
+        const digest = bytesToHex(sha256(complaintBytes));
+        const projectedPath = yield* projectFiledDocumentPath(
+          ProjectFiledDocumentPathInput.make({
+            contentDigest: digest,
+            context: DefaultVaultFilingContext,
+            originalFileName: "Complaint.pdf",
+            taxonomy: legalDocumentTaxonomy,
+            taxonomyConceptId: "pleadings",
+          })
+        );
+        const targetPath = path.join(vaultRootPath, ...projectedPath.segments);
+        const targetDirectory = path.dirname(targetPath);
+        const legacyTemporaryPath = path.join(
+          targetDirectory,
+          `.${path.basename(targetPath)}.tmp-${Str.slice(0, 12)(digest)}`
+        );
 
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) {
-        expect(result.failure._tag).toBe("DocumentMaterializationFailed");
-        expect(result.failure.reason).toContain("escapes the allowed root");
-      }
-      expect(yield* fs.exists(path.join(outsideRootPath, "client-default-default-client"))).toBe(false);
-    }, provideScopedLayer(DocumentsIntakeTestLayer))
-  );
+        yield* fs.makeDirectory(targetDirectory, { recursive: true });
+        yield* fs.writeFileString(outsideVictimPath, "unchanged");
+        yield* fs.symlink(outsideVictimPath, legacyTemporaryPath);
 
-  it.effect(
-    "does not write through the legacy predictable temporary-file symlink",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
-      const outsideRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-outside-" });
-      const outsideVictimPath = path.join(outsideRootPath, "victim.txt");
-      const digest = bytesToHex(sha256(complaintBytes));
-      const projectedPath = yield* projectFiledDocumentPath(
-        ProjectFiledDocumentPathInput.make({
-          contentDigest: digest,
-          context: DefaultVaultFilingContext,
-          originalFileName: "Complaint.pdf",
-          taxonomy: legalDocumentTaxonomy,
-          taxonomyConceptId: "pleadings",
-        })
-      );
-      const targetPath = path.join(vaultRootPath, ...projectedPath.segments);
-      const targetDirectory = path.dirname(targetPath);
-      const legacyTemporaryPath = path.join(
-        targetDirectory,
-        `.${path.basename(targetPath)}.tmp-${Str.slice(0, 12)(digest)}`
-      );
+        const document = yield* intake.intakeDroppedFile(yield* complaintInput(vaultRootPath));
 
-      yield* fs.makeDirectory(targetDirectory, { recursive: true });
-      yield* fs.writeFileString(outsideVictimPath, "unchanged");
-      yield* fs.symlink(outsideVictimPath, legacyTemporaryPath);
+        expect(document.vaultPath.relativePath).toBe(projectedPath.relativePath);
+        expect(yield* fs.readFileString(outsideVictimPath)).toBe("unchanged");
+        expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
+        expect(yield* fs.readLink(legacyTemporaryPath)).toBe(outsideVictimPath);
+        pipe(yield* Effect.result(fs.readLink(targetPath)), Result.isFailure, assertTrue);
+      })
+    );
+  });
 
-      const document = yield* intake.intakeDroppedFile(yield* complaintInput(vaultRootPath));
+  it.layer(Layer.fresh(DocumentsIntakeTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "materializes concurrent identical drops without temporary-path collisions",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const intake = yield* Document.DocumentIntake;
+        const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+        const input = yield* complaintInput(vaultRootPath);
+        const documents = yield* Effect.all(A.replicate(intake.intakeDroppedFile(input), 8), { concurrency: 8 });
+        const firstDocument = yield* Effect.fromOption(A.head(documents));
+        const targetPath = path.join(vaultRootPath, ...firstDocument.vaultPath.segments);
 
-      expect(document.vaultPath.relativePath).toBe(projectedPath.relativePath);
-      expect(yield* fs.readFileString(outsideVictimPath)).toBe("unchanged");
-      expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
-      expect(yield* fs.readLink(legacyTemporaryPath)).toBe(outsideVictimPath);
-      expect(Result.isFailure(yield* Effect.result(fs.readLink(targetPath)))).toBe(true);
-    }, provideScopedLayer(DocumentsIntakeTestLayer))
-  );
-
-  it.effect(
-    "materializes concurrent identical drops without temporary-path collisions",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const intake = yield* Document.DocumentIntake;
-      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
-      const input = yield* complaintInput(vaultRootPath);
-      const documents = yield* Effect.all(A.replicate(intake.intakeDroppedFile(input), 8), { concurrency: 8 });
-      const firstDocument = yield* Effect.fromOption(A.head(documents));
-      const targetPath = path.join(vaultRootPath, ...firstDocument.vaultPath.segments);
-
-      expect(documents).toHaveLength(8);
-      expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
-      expect(yield* fs.readDirectory(path.dirname(targetPath))).toEqual([firstDocument.vaultPath.fileName]);
-    }, provideScopedLayer(DocumentsIntakeTestLayer))
-  );
+        expect(documents).toHaveLength(8);
+        expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
+        expect(yield* fs.readDirectory(path.dirname(targetPath))).toEqual([firstDocument.vaultPath.fileName]);
+      })
+    );
+  });
 });
