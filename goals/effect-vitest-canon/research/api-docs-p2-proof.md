@@ -1,5 +1,7 @@
 # API docs canonical test migration
 
+Source commit: `c216446a60e7931d9c2a19d95841b2b36588c99f`, pushed in PR #1307.
+
 All three configured test files preserve their original subjects, 20 assertions
 and five registration titles. Catalog still checks nine entries, unique slugs,
 all four generated contracts and path-labeled committed specification existence.
@@ -27,6 +29,13 @@ changing commands, qualification state or unrelated nodes.
 
 Full package audit passes in 5.7 seconds (lab docgen is skipped); the package test
 typecheck also passes. Root oxlint, Sherif, Fallow health/audit, cache policy and
-schema-first are green. The source timing and inventory closeout are recorded
-separately. The overall consolidated goal still requires its remaining inventory,
+schema-first are green. All seven saved actions are adjudicated. One current
+native-filesystem exception remains for committed-asset provenance. Reconciliation
+preserves all 683 unrelated ledger hashes and raw unrelated root/census objects.
+The saved queue now contains ten packages and 619 actions.
+
+Normal Node/Bun runs pass all five tests with zero skips and stable source hashes.
+Whole-command before/after seconds are Node 4.020426/3.969623 and
+Bun 2.016780/1.365858, with load and pressure receipts. These observations are
+not causal performance comparisons. The overall goal still requires remaining inventory,
 final root/hosted checks and review closure before merge.

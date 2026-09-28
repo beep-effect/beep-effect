@@ -26943,27 +26943,6 @@
       "reason": "The strict equality checks the complete encoded append-input object, including content, parentTurnId, role and threadId. Preserve the structural wire-shape oracle; a single Option assertion would weaken it."
     },
     {
-      "id": "EV002:apps/labs/api-docs/test/Catalog.test.ts:39:provideScopedLayer@32#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/api-docs",
-      "file": "apps/labs/api-docs/test/Catalog.test.ts",
-      "line": 39,
-      "endLine": 39,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:e9b1f7b19f41711dd67c9e7c6c0c2a7fe338cd1bdd59a6f7a19ccdddd83b347c",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(BunServices.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:48:provideScopedLayer@7#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -59555,48 +59534,6 @@
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:apps/labs/api-docs/test/Docs.routes.test.ts:64:scoped@95#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/api-docs",
-      "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
-      "line": 64,
-      "endLine": 64,
-      "symbol": "scoped",
-      "occurrence": "v2:fd601b72dd6741986b44e60fc8e9d874095169ea063d9117ce00a8528ac47815",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:apps/labs/api-docs/test/health.test.ts:22:scoped@60#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/api-docs",
-      "file": "apps/labs/api-docs/test/health.test.ts",
-      "line": 22,
-      "endLine": 22,
-      "symbol": "scoped",
-      "occurrence": "v2:a767c90ed990787dc05e219252e7e7c71957360c3bdadc2e27283f9521d9d455",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
       },
       "severity": "major",
       "confidence": 0.95,
@@ -96146,27 +96083,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:apps/labs/api-docs/test/Catalog.test.ts:2:@effect/platform-bun/BunServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/api-docs",
-      "file": "apps/labs/api-docs/test/Catalog.test.ts",
-      "line": 2,
-      "endLine": 2,
-      "symbol": "@effect/platform-bun/BunServices",
-      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:apps/labs/ciops/test/projection.test.ts:3:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -109771,6 +109687,7 @@
     {"id":"EV010:apps/labs/semantica/test/Reasoning.test.ts:4:@effect/platform-bun/BunServices@0#1","lens":"resource","ruleId":"EV010","package":"@beep/semantica","file":"apps/labs/semantica/test/Reasoning.test.ts","line":4,"endLine":4,"symbol":"@effect/platform-bun/BunServices","occurrence":"v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c","class":"platform-resource-provenance-review","evidence":"import * as BunServices from \"@effect/platform-bun/BunServices\";","replacement":{"primitive":"it.layer","sketch":"Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Native Bun/EYE child processes, bounded stdout/stderr, cancellation and post-close PGlite recovery are subjects; a fake spawner or MemoryFS cannot prove them."},
     {"id":"EV002:packages/drivers/pacer/test/Pacer.test.ts:257:provideScopedLayer@13#1","lens":"resource","ruleId":"EV002","package":"@beep/pacer","file":"packages/drivers/pacer/test/Pacer.test.ts","line":257,"endLine":257,"symbol":"provideScopedLayer","occurrence":"v2:3fa6659546a8b900322ec9b71bbe9e53dd10f8a7bb31bfe96b4e12c05b3e447c","class":"unresolved-layer-provide","evidence":"provideScopedLayer(Pacer.makePacerLayer(cfg, transport).full)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The transport is built from this test case's fresh mutable deletion Ref and, for interruption, its acquisition/polling barrier. The canonical inner provider keeps those resources within the case and allows asserting the original interrupted/defect outcome plus exact deletion. No real HTTP endpoint is used."},
     {"id":"EV002:packages/drivers/pacer/test/Pacer.test.ts:285:provideScopedLayer@13#1","lens":"resource","ruleId":"EV002","package":"@beep/pacer","file":"packages/drivers/pacer/test/Pacer.test.ts","line":285,"endLine":285,"symbol":"provideScopedLayer","occurrence":"v2:78bb1c659e68c9444bbebcb48ee93212e023a347fbcf741a3954d9fa3be60880","class":"unresolved-layer-provide","evidence":"provideScopedLayer(Pacer.makePacerLayer(cfg, transport).full)","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The transport is built from this test case's fresh mutable deletion Ref and, for interruption, its acquisition/polling barrier. The canonical inner provider keeps those resources within the case and allows asserting the original interrupted/defect outcome plus exact deletion. No real HTTP endpoint is used."},
-    {"id":"EV002:packages/drivers/pacer/test/Pacer.test.ts:303:provideScopedLayer@13#1","lens":"resource","ruleId":"EV002","package":"@beep/pacer","file":"packages/drivers/pacer/test/Pacer.test.ts","line":303,"endLine":303,"symbol":"provideScopedLayer","occurrence":"v2:993c2dfb21bc5a5e1bbb331e57b37d4e635c2f2583bfe098f499063f76bec0ca","class":"unresolved-layer-provide","evidence":"provideScopedLayer(mockLayer({ logoutCount, logoutTokens, rotateNextGenCso: rotatedToken }))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The inner session scope must close before assertions verify exactly one logout with the rotated token. A suite-owned scope would outlive the assertion. The existing canonical scoped helper preserves this subject."}
+    {"id":"EV002:packages/drivers/pacer/test/Pacer.test.ts:303:provideScopedLayer@13#1","lens":"resource","ruleId":"EV002","package":"@beep/pacer","file":"packages/drivers/pacer/test/Pacer.test.ts","line":303,"endLine":303,"symbol":"provideScopedLayer","occurrence":"v2:993c2dfb21bc5a5e1bbb331e57b37d4e635c2f2583bfe098f499063f76bec0ca","class":"unresolved-layer-provide","evidence":"provideScopedLayer(mockLayer({ logoutCount, logoutTokens, rotateNextGenCso: rotatedToken }))","replacement":{"primitive":"it.layer","sketch":"it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"major","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"The inner session scope must close before assertions verify exactly one logout with the rotated token. A suite-owned scope would outlive the assertion. The existing canonical scoped helper preserves this subject."},
+    {"id":"EV010:apps/labs/api-docs/test/Catalog.test.ts:2:@effect/platform-bun/BunServices@0#1","lens":"resource","ruleId":"EV010","package":"@beep/api-docs","file":"apps/labs/api-docs/test/Catalog.test.ts","line":2,"endLine":2,"symbol":"@effect/platform-bun/BunServices","occurrence":"v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c","class":"platform-resource-provenance-review","evidence":"import * as BunServices from \"@effect/platform-bun/BunServices\";","replacement":{"primitive":"it.layer","sketch":"Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"exception","reason":"Actual committed repository specification paths and bytes are the subject. Seeding MemoryFileSystem with expected filenames would fabricate this provenance. Public scoped platform provision preserves those checks, all9catalog entries and4generated contracts."}
   ]
 }

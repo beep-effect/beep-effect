@@ -10,22 +10,22 @@
     "file": "apps/labs/api-docs/test/Catalog.test.ts",
     "package": "@beep/api-docs",
     "kind": "test",
-    "bytes": 1797,
+    "bytes": 1810,
     "lines": 48
   },
   {
     "file": "apps/labs/api-docs/test/Docs.routes.test.ts",
     "package": "@beep/api-docs",
     "kind": "test",
-    "bytes": 2977,
-    "lines": 65
+    "bytes": 2976,
+    "lines": 66
   },
   {
     "file": "apps/labs/api-docs/test/health.test.ts",
     "package": "@beep/api-docs",
     "kind": "test",
-    "bytes": 954,
-    "lines": 23
+    "bytes": 990,
+    "lines": 25
   },
   {
     "file": "apps/labs/ciops/test/health.test.ts",
