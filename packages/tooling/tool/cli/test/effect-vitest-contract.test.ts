@@ -569,7 +569,7 @@ it.layer(BunCrypto.layer)((it) => {
         assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
         const merged = preserveEffectVitestExceptions(live, document);
         assertTrue(merged[0]?.status === "open");
-        assertTrue(O.isNone(merged[0]?.reason ?? O.none()), "Unproved legacy exception reasons must not transfer");
+        deepStrictEqual(merged[0]?.reason ?? O.none(), O.none(), "Unproved legacy exception reasons must not transfer");
       }
     })
   );

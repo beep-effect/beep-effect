@@ -165,7 +165,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, vi } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -1287,7 +1287,10 @@ describe("quality task adapter", () => {
         Effect.map(({ failures, report }) => {
           expect(failures).toHaveLength(1);
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["passed", "failed"]);
-          expect(A.map(report.lanes, (lane) => lane.exitCode)).toEqual([O.some(0), O.some(7)]);
+          deepStrictEqual(
+            A.map(report.lanes, (lane) => lane.exitCode),
+            [O.some(0), O.some(7)]
+          );
           {
             const optionUnderTest = report.lanes[0]?.inputDigest;
             const expectedOptionValue = "turbo-task-hash";
@@ -1376,7 +1379,10 @@ describe("quality task adapter", () => {
           }),
         ]);
         expect(report.lanes[0]?.status).toBe("passed");
-        expect(report.lanes[0]?.inputDigest).toStrictEqual(O.map(expected, (digest) => digest.digest));
+        deepStrictEqual(
+          report.lanes[0]?.inputDigest,
+          O.map(expected, (digest) => digest.digest)
+        );
         // The parent consumes the ledger once read.
         const leftovers = yield* fs
           .readDirectory(path.join(tempDir, ".beep", "quality", "lane-ledgers"))
@@ -1718,7 +1724,11 @@ describe("quality task adapter", () => {
           decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line))
         );
         expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
-        expect(A.every(reports, (report) => O.contains(report.parentLaneId, "full:current-parent"))).toBe(true);
+        pipe(
+          reports,
+          A.every((report) => O.contains(report.parentLaneId, "full:current-parent")),
+          assertTrue
+        );
         yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
@@ -4288,7 +4298,7 @@ describe("quality task adapter", () => {
               yield* encodeJson({ total: valid, "src/Index.ts": summary })
             ).pipe(provideScopedLayer(NodePath.layer))
           );
-          assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
+          assertTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
         }),
         { discard: true }
       );
@@ -4388,7 +4398,7 @@ describe("quality task adapter", () => {
         invalidDocuments,
         Effect.fnUntraced(function* ({ input, label }) {
           const decoded = yield* Effect.exit(decodeUnknownCoverageRegressionBaseline(input));
-          assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
+          assertTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
         }),
         { discard: true }
       );
@@ -5764,7 +5774,11 @@ describe("quality task adapter", () => {
           expect(A.map(packageStillHigh.failures, (failure) => failure._tag)).toEqual(
             A.makeBy(4, () => "baseline-drop")
           );
-          expect(A.every(packageStillHigh.failures, (failure) => O.isNone(failure.filePath))).toBe(true);
+          pipe(
+            packageStillHigh.failures,
+            A.every((failure) => O.isNone(failure.filePath)),
+            assertTrue
+          );
           expect(renderCoverageMeasuredRowProposals(packageStillHigh)[1]).toBe(
             `  "@beep/existing" totals: ${yield* encodeCoverageFileBaselineJson(coverageFileBaseline(60, 30))}`
           );

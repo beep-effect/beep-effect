@@ -969,6 +969,26 @@ const dataAssertionRoute = (
     );
     return { judgment: replacement.primitive !== "utils.assertNone", replacement };
   }
+  if (O.isSome(truth) && Node.isCallExpression(actual)) {
+    const expression = actual.getExpression();
+    const contains =
+      (actual.getArguments().length === 2 &&
+        isProvenanceCall(actual, imports, OPTION_MODULES, "Option", ["contains"])) ||
+      (actual.getArguments().length === 1 &&
+        Node.isCallExpression(expression) &&
+        expression.getArguments().length === 1 &&
+        isProvenanceCall(expression, imports, OPTION_MODULES, "Option", ["contains"]));
+    if (contains || arrayPredicateDataShape(actual, imports)) {
+      return {
+        judgment: true,
+        replacement: EffectVitestReplacement.make({
+          primitive: truth.value ? "utils.assertTrue" : "utils.assertFalse",
+          sketch:
+            "Preserve the complete Boolean membership or aggregate predicate, its operands and truth polarity. Membership retains Effect Equal semantics; do not invent payload or structural equality expectations.",
+        }),
+      };
+    }
+  }
   return {
     judgment: true,
     replacement: equality ? constructorAssertionReplacement(expected, imports) : ambiguousDataAssertion,

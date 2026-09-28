@@ -10,7 +10,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Fiber, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -38,7 +38,7 @@ describe("Yeet PR provenance v2", () => {
 
   it.effect("does not classify companion variables as Codex", () =>
     Effect.gen(function* () {
-      expect(yield* detectCodexEnvironment).toStrictEqual([false, O.none()]);
+      deepStrictEqual(yield* detectCodexEnvironment, [false, O.none()]);
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,

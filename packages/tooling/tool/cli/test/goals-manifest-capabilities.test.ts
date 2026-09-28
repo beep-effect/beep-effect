@@ -236,7 +236,7 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
       const before = yield* readTrackedManifests();
       for (const entry of before) {
         const parsed = parseGoalManifestText(entry.text);
-        expect(O.isSome(parsed), entry.manifestPath).toBe(true);
+        assertTrue(O.isSome(parsed), entry.manifestPath);
         if (O.isSome(parsed)) {
           yield* decodeGoalManifest(parsed.value).pipe(Effect.flatMap(encodeGoalManifest));
         }

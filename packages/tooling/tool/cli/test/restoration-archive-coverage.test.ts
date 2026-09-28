@@ -83,9 +83,10 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.writeFileString(different, "abcxef");
         yield* fs.writeFileString(short, "abc");
 
-        expect(
-          yield* RA.inspectCanonicalPath(source, "File", "wrong type", "symbolic link").pipe(Effect.exit)
-        ).toMatchObject({ _tag: "Success" });
+        (yield* RA.inspectCanonicalPath(source, "File", "wrong type", "symbolic link").pipe(Effect.exit)).pipe(
+          Exit.isSuccess,
+          assertTrue
+        );
         (yield* RA.inspectCanonicalPath(source, "Directory", "wrong type", "symbolic link").pipe(Effect.exit)).pipe(
           Exit.isFailure,
           assertTrue

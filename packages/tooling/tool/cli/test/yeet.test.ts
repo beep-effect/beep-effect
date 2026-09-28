@@ -154,7 +154,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -165,6 +165,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
@@ -661,9 +662,9 @@ describe("yeet planner", () => {
           );
           const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
           expect(A.map(terminals, (terminal) => terminal.reason)).toEqual(A.map(cases, ([, , reason]) => reason));
-          expect(
+          pipe(
+            terminals,
             A.every(
-              terminals,
               (terminal) =>
                 O.contains(terminal.resolvedHeadSha, "0123456789abcdef0123456789abcdef01234567") &&
                 O.contains(
@@ -673,8 +674,9 @@ describe("yeet planner", () => {
                 O.contains(terminal.proofTier, "cheap-gates") &&
                 O.contains(terminal.envProfile, "local") &&
                 O.contains(terminal.stage, "repair-loop")
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
         })
       )
     ));
@@ -721,14 +723,29 @@ describe("yeet planner", () => {
             )
           );
 
-          expect(liveLease).toMatchObject({
-            attemptId: O.some(attempt.attemptId),
-            resolvedHeadSha: attempt.resolvedHeadSha,
-            diffFingerprint: attempt.diffFingerprint,
-            proofTier: attempt.proofTier,
-            envProfile: attempt.envProfile,
-            stage: attempt.stage,
-          });
+          {
+            const actualProjection = liveLease;
+            const expectedProjection = {
+              attemptId: O.some(attempt.attemptId),
+              resolvedHeadSha: attempt.resolvedHeadSha,
+              diffFingerprint: attempt.diffFingerprint,
+              proofTier: attempt.proofTier,
+              envProfile: attempt.envProfile,
+              stage: attempt.stage,
+            };
+            assertDefined(actualProjection);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, [
+                "attemptId",
+                "resolvedHeadSha",
+                "diffFingerprint",
+                "proofTier",
+                "envProfile",
+                "stage",
+              ]),
+              expectedProjection
+            );
+          }
         })
       )
     ));
@@ -2974,15 +2991,31 @@ describe("yeet attempt journal", () => {
           );
           const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
           expect(terminals).toHaveLength(1);
-          expect(terminals[0]).toMatchObject({
-            attemptId: deadAttemptId,
-            reason: "owner-dead",
-            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-            proofTier: O.some("cheap-gates"),
-            envProfile: O.some("local"),
-            stage: O.some("repair-loop"),
-          });
+          {
+            const actualProjection = terminals[0];
+            const expectedProjection = {
+              attemptId: deadAttemptId,
+              reason: "owner-dead",
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("cheap-gates"),
+              envProfile: O.some("local"),
+              stage: O.some("repair-loop"),
+            };
+            assertDefined(actualProjection);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, [
+                "attemptId",
+                "reason",
+                "resolvedHeadSha",
+                "diffFingerprint",
+                "proofTier",
+                "envProfile",
+                "stage",
+              ]),
+              expectedProjection
+            );
+          }
           expect(A.some(terminals, (terminal) => terminal.attemptId === liveAttemptId)).toBe(false);
         })
       )

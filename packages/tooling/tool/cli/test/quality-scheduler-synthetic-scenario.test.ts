@@ -3,6 +3,9 @@ import {
   AdmissionConfig,
   AdmissionEvictionJournal,
   AdmissionJournalEvent,
+  AdmissionJournalLeaseEvictedV3,
+  AdmissionJournalReleasedV3,
+  AdmissionJournalTicketEvictedV3,
   AdmissionRequest,
   admissionCapacityTokensFor,
   admissionJournalPath,
@@ -27,6 +30,7 @@ import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertDefined, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import {
   Clock,
   Config,
@@ -429,8 +433,24 @@ describe("synthetic admission scenario", () => {
           const enqueues = A.filter(events, AdmissionJournalEvent.guards["admission-enqueued"]);
           const enqueuedA = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutA));
           const enqueuedB = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutB));
-          expect(enqueuedA).toMatchObject({ branch: branchA, attemptId: O.some(attemptA), weightTokens: 3 });
-          expect(enqueuedB).toMatchObject({ branch: branchB, attemptId: O.some(attemptB), weightTokens: 3 });
+          {
+            const actualProjection = enqueuedA;
+            const expectedProjection = { branch: branchA, attemptId: O.some(attemptA), weightTokens: 3 };
+            assertDefined(actualProjection);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
+              expectedProjection
+            );
+          }
+          {
+            const actualProjection = enqueuedB;
+            const expectedProjection = { branch: branchB, attemptId: O.some(attemptB), weightTokens: 3 };
+            assertDefined(actualProjection);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
+              expectedProjection
+            );
+          }
           const withdrawn = O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-withdrawn"]));
           expect(withdrawn).toMatchObject(Struct.omit(enqueuedB, ["_tag", "weightTokens"]));
           expect(withdrawn.withdrawnAtMillis).toBeGreaterThanOrEqual(enqueuedB.enqueuedAtMillis);
@@ -441,28 +461,60 @@ describe("synthetic admission scenario", () => {
           const withdrawnWire = O.getOrThrow(A.findFirst(wire, (row) => row._tag === "admission-withdrawn"));
           expect(withdrawnWire).not.toHaveProperty("weightTokens");
           expect(withdrawnWire).not.toHaveProperty("reason");
-          expect(
-            O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-lease-evicted"]))
-          ).toMatchObject({
-            checkoutRoot: checkoutLease,
-            branch: branchLease,
-            lastHeartbeatAtMillis: fixtureInstant,
-            reason: "owner-dead-or-reused",
-            attemptId: O.some(attemptLease),
-          });
-          expect(
-            O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-ticket-evicted"]))
-          ).toMatchObject({
-            checkoutRoot: checkoutTicket,
-            branch: branchTicket,
-            reason: "queued-submitter-death",
-            attemptId: O.some(attemptTicket),
-          });
-          expect(O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-released"]))).toMatchObject({
-            checkoutRoot: checkoutA,
-            branch: branchA,
-            attemptId: O.some(attemptA),
-          });
+          {
+            const actualProjection = O.getOrThrow(
+              A.findFirst(events, AdmissionJournalEvent.guards["admission-lease-evicted"])
+            );
+            const expectedProjection = {
+              checkoutRoot: checkoutLease,
+              branch: branchLease,
+              lastHeartbeatAtMillis: fixtureInstant,
+              reason: "owner-dead-or-reused",
+              attemptId: O.some(attemptLease),
+            };
+            assertDefined(actualProjection);
+            const expectedVariant = S.is(AdmissionJournalLeaseEvictedV3)(actualProjection);
+            assertTrue(expectedVariant);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["checkoutRoot", "branch", "lastHeartbeatAtMillis", "reason", "attemptId"]),
+              expectedProjection
+            );
+          }
+          {
+            const actualProjection = O.getOrThrow(
+              A.findFirst(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])
+            );
+            const expectedProjection = {
+              checkoutRoot: checkoutTicket,
+              branch: branchTicket,
+              reason: "queued-submitter-death",
+              attemptId: O.some(attemptTicket),
+            };
+            assertDefined(actualProjection);
+            const expectedVariant = S.is(AdmissionJournalTicketEvictedV3)(actualProjection);
+            assertTrue(expectedVariant);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["checkoutRoot", "branch", "reason", "attemptId"]),
+              expectedProjection
+            );
+          }
+          {
+            const actualProjection = O.getOrThrow(
+              A.findFirst(events, AdmissionJournalEvent.guards["admission-released"])
+            );
+            const expectedProjection = {
+              checkoutRoot: checkoutA,
+              branch: branchA,
+              attemptId: O.some(attemptA),
+            };
+            assertDefined(actualProjection);
+            const expectedVariant = S.is(AdmissionJournalReleasedV3)(actualProjection);
+            assertTrue(expectedVariant);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["checkoutRoot", "branch", "attemptId"]),
+              expectedProjection
+            );
+          }
           const chains = [
             {
               label: "contender-a",

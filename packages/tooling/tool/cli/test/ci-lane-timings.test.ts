@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertExitSuccess, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -385,7 +385,7 @@ describe("ci lane timings attempt filter", () => {
     Effect.gen(function* () {
       const exits = yield* Effect.forEach([0, 101], (limit) => Effect.exit(collectCiLaneTimings(".", limit)));
 
-      expect(A.every(exits, Exit.isFailure)).toBe(true);
+      pipe(exits, A.every(Exit.isFailure), assertTrue);
     }).pipe(provideScopedLayer(laneTimingsSpawnerLayer))
   );
 
@@ -500,7 +500,7 @@ describe("ci lane timings gh api retry", () => {
       const exit = yield* collectWithRetries(scripted.spawner);
 
       assertTrue(Exit.isSuccess(exit));
-      expect(Exit.isSuccess(exit) ? exit.value.jobCount : -1).toBe(2);
+      assertExitSuccess(exit.pipe(Exit.map((report) => report.jobCount)), 2);
       expect(scripted.state.spawned).toBe(4 + 3);
     })
   );

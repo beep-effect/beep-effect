@@ -46,7 +46,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
@@ -57,6 +57,7 @@ import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import type { PlatformError } from "effect";
 
@@ -236,7 +237,7 @@ describe("corpus restoration evidence invariants", () => {
         expect(RA.sameSourceIdentity(identity, identity)).toBe(true);
         expect(RA.sameSourceIdentity(identity, noMtimeIdentity)).toBe(false);
         expect(RA.sameSourceIdentityExceptMtime(identity, noMtimeIdentity)).toBe(true);
-        expect(RA.sameDeviceAndInode(identity, identity)).toBe(O.isSome(identity.inode));
+        strictEqual(RA.sameDeviceAndInode(identity, identity), O.isSome(identity.inode));
         expect(RA.sameDeviceAndInode({ ...identity, inode: O.none() }, identity)).toBe(false);
         expect(RA.sourceIdentityToken(identity)).toContain("\u0000");
         expect(RA.objectIdFor("source", "relative/path")).toHaveLength(64);
@@ -1767,10 +1768,18 @@ describe("corpus restoration preservation", () => {
         const childExit = yield* Effect.result(child.exitCode);
         const staleClaimExists = yield* fs.exists(claimPath);
 
-        expect({ claimedOutput, staleClaimExists }).toMatchObject({
-          claimedOutput: O.some("CLAIMED\n"),
-          staleClaimExists: true,
-        });
+        {
+          const actualProjection = { claimedOutput, staleClaimExists };
+          const expectedProjection = {
+            claimedOutput: O.some("CLAIMED\n"),
+            staleClaimExists: true,
+          };
+          assertDefined(actualProjection);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["claimedOutput", "staleClaimExists"]),
+            expectedProjection
+          );
+        }
         assertTrue(Result.isFailure(childExit));
 
         yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);

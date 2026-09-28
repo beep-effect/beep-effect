@@ -245,9 +245,15 @@ describe("manifest translation", () => {
       expect(plan.translation.value.drift).toContain("breaking");
       expect(plan.translation.value.drift).toContain("additive");
       const parsed = parseGoalManifestText(plan.translation.value.content);
-      expect(O.isSome(parsed) && isJsonRecord(parsed.value) ? parsed.value.bespoke : undefined).toStrictEqual({
-        preserved: true,
-      });
+      {
+        parsed.pipe(O.isSome, assertTrue);
+        const parsedValue = O.getOrThrow(parsed);
+        const isRecord = isJsonRecord(parsedValue);
+        assertTrue(isRecord);
+        expect(parsedValue.bespoke).toStrictEqual({
+          preserved: true,
+        });
+      }
     });
   }
 
@@ -2300,7 +2306,11 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
         );
       const expectRollbackFailure = (exit: Exit.Exit<unknown, unknown>, message: string): void => {
         expectReportedExit(exit);
-        expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(message);
+        {
+          const exitFailed = Exit.isFailure(exit);
+          assertTrue(exitFailed);
+          expect(exit.cause.toString()).toContain(message);
+        }
       };
 
       let manifestReads = 0;

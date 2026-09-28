@@ -523,7 +523,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(RT.sortedRecycleGroups(grouped)).toHaveLength(1);
       expect(RT.sortedRecyclePairs(grouped)).toHaveLength(1);
       const group = RT.sortedRecycleGroups(grouped)[0];
-      expect(group === undefined ? O.none() : RT.recyclePair(group)).toMatchObject({ _tag: "Some" });
+      (group === undefined ? O.none() : RT.recyclePair(group)).pipe(O.isSome, assertTrue);
       if (group !== undefined) {
         expect(RT.recycleGroupSourceObjectIds(group, "valid-pair")).toEqual(["meta", "content"]);
         expect(RT.recycleGroupSourceObjectIds(group, "duplicate")).toEqual(["content-duplicate"]);

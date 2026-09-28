@@ -1390,7 +1390,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         ["expect(value).toEqual(X.fail(error))", "utils.deepStrictEqual", "judgment"],
         ["expect(value).not.toEqual(O.none())", "utils.deepStrictEqual", "judgment"],
         ["expect(O.isNone(a) && R.isFailure(b)).toBe(true)", "utils.deepStrictEqual", "judgment"],
-        ["expect(A.every(values, O.isNone)).toBe(true)", "utils.deepStrictEqual", "judgment"],
+        ["expect(A.every(values, O.isNone)).toBe(true)", "utils.assertTrue", "judgment"],
       ];
       for (const [assertion, primitive, mode] of examples) {
         const rows = A.filter(
@@ -1575,6 +1575,49 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           assertTrue(A.every(rows, (row) => row.replacement.sketch.includes(requirement)));
         }
       })
+  );
+
+  it.effect("accepts public Boolean assertions over proven membership and aggregate predicates", () =>
+    Effect.gen(function* () {
+      for (const expression of [
+        "O.contains(value, expected)",
+        "O.contains(expected)(value)",
+        "A.every(values, O.isNone)",
+        "A.some(values, (value) => O.isSome(value.field))",
+        "A.every(O.isNone)(values)",
+      ]) {
+        for (const truth of [true, false]) {
+          const prelude =
+            'import * as A from "effect/Array"; import { assertTrue, assertFalse } from "@effect/vitest/utils";';
+          const helper = truth ? "assertTrue" : "assertFalse";
+          assertFalse(
+            yield* hasRule(`${prelude} it("canonical", () => ${helper}(${expression}, "preserved message"));`, "EV006")
+          );
+          const rows = A.filter(
+            yield* findings(`${prelude} it("legacy", () => expect(${expression}).toBe(${truth}));`),
+            (row) => row.ruleId === "EV006"
+          );
+          deepStrictEqual(
+            A.map(rows, (row) => [row.mechanization, row.replacement.primitive]),
+            [["judgment", `utils.${helper}`]]
+          );
+        }
+      }
+      for (const expression of ["O.map(value, transform)", "O.filter(value, predicate)", "O.some(value)"]) {
+        assertTrue(
+          yield* hasRule(
+            `import { assertTrue } from "@effect/vitest/utils"; it("notBoolean", () => assertTrue(${expression}));`,
+            "EV006"
+          )
+        );
+      }
+      assertFalse(
+        yield* hasRule(
+          'import { assertTrue } from "@effect/vitest/utils"; it("shadow", (assertTrue) => assertTrue(O.contains(value, expected)));',
+          "EV006"
+        )
+      );
+    })
   );
 
   it.effect("requires canonical absence assertions through proven pipe stages", () =>

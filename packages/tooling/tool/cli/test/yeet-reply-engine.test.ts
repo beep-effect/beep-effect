@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -571,7 +571,10 @@ describe("runYeetReply", () => {
         const written = yield* fs.readFileString(reportPath);
         const report = yield* ReplyReportJson.decode(written);
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "failed"]);
-        expect(A.map(report.outcomes, (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open"), O.none()]);
+        deepStrictEqual(
+          A.map(report.outcomes, (outcome) => outcome.threadId),
+          [O.some("PRRT_open"), O.none()]
+        );
         for (const outcome of report.outcomes) {
           expect(outcome.detail).toContain("gh: authentication required");
           expect(outcome.detail).toContain(REPLY_RERUN_COMMAND);
@@ -690,7 +693,10 @@ describe("reply run verdict", () => {
       ReplyDraftOutcome.make({ threadId: O.some("PRRT_posted"), status: "posted", detail: "reply posted" }),
       ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
     ]);
-    expect(A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open")]);
+    deepStrictEqual(
+      A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId),
+      [O.some("PRRT_open")]
+    );
   });
 
   it("names every failed handle, the report, and the still-open threads", () => {

@@ -477,7 +477,7 @@ describe("delete-package registration geometry", () => {
               "--skip-baselines",
             ])
           );
-          expect(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined).toBe(true);
+          assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
 
           expect(yield* fs.exists(packageDir)).toBe(false);
           expect(yield* fs.readFileString("package.json")).not.toContain("packages/drivers/courtlistener");

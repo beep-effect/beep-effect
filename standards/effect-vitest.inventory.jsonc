@@ -8632,7 +8632,7 @@
       "line": 413,
       "endLine": 488,
       "symbol": "runPromise",
-      "occurrence": "v2:8f85f6948557cf765f4d4be0471d0c2978e00c2206de98b167d2aa5c1ae6d858",
+      "occurrence": "v2:c207a716bd89194fdc4353fd455cd600a6215c7f0b92cf69a67bc56a927f9a51",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString(\"bun.lock\", \"\"); yield* fs.writ",
       "replacement": {
@@ -18838,7 +18838,7 @@
       "line": 290,
       "endLine": 500,
       "symbol": "runPromise",
-      "occurrence": "v2:be86209ffd71e218decd3e8f2462c37d673e43f47a11dac1c4a540f7ceae0755",
+      "occurrence": "v2:9c6b9d4c8090432f07c59aa6b423650f06ec23ce63fa7a7812b1e252a95443eb",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withAdmissionTempRoot( Effect.fnUntraced(function* (runtimeDir, exportTarget) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = path.join(runtim",
       "replacement": {
@@ -20855,7 +20855,7 @@
       "line": 1276,
       "endLine": 1297,
       "symbol": "runPromise",
-      "occurrence": "v2:273e4a7bd2370e8f7417921560dc6badaded9140536003370b2994484ce7de44",
+      "occurrence": "v2:d523e6500b534b7fd56d922a8d3d90e396fb10f44a96c7c20e33443bc6b7b805",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectQualityTaskLaneRunsForTesting( \"ci:local\", [ [\"check\", bunScriptStep(\"ci:check\", \"process.exit(0)\"), O.some(\"turbo-task-hash\")], [\"nix\", bunScriptStep(\"ci:nix\", \"process.exit",
       "replacement": {
@@ -20918,7 +20918,7 @@
       "line": 1336,
       "endLine": 1375,
       "symbol": "runPromise",
-      "occurrence": "v2:74806e4da3346bb291d86e1d0c73ccb7c6ac64f965e4bceeb8401e18429a0ea7",
+      "occurrence": "v2:f729b7d6964aa8641aca20a0e27588bd7fcabcf970020ceda34f9a09fbc5e2b8",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); // The fixture stands in for `beep c",
       "replacement": {
@@ -21023,7 +21023,7 @@
       "line": 1559,
       "endLine": 1603,
       "symbol": "runPromise",
-      "occurrence": "v2:1994bfd1718bd03394a125eb85c7c149bb642b8bcb3a59e2081b163acffe8dca",
+      "occurrence": "v2:c3ed4eaee384608f7a0276bb37a743a3f0c1e170eaef175a1e1e17801fcff640",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const missingPath = path.join(tempDi",
       "replacement": {
@@ -24320,7 +24320,7 @@
       "line": 2927,
       "endLine": 2984,
       "symbol": "runPromise",
-      "occurrence": "v2:5bf9c5d551cece1077fa4af80a6f79884a451d113ffa20a777aef6bc767fc9d1",
+      "occurrence": "v2:d331cf8e3e0df8c529b735ccdb9df402083150c927b445711553e70f0ac56db1",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempContext = RepoRunContext.make({ ...context,",
       "replacement": {
@@ -25517,7 +25517,7 @@
       "line": 610,
       "endLine": 676,
       "symbol": "runPromise",
-      "occurrence": "v2:a1bcf7bd39618a23f8a99d91953b9a126b55a09434b7abe663788749f30a4eb1",
+      "occurrence": "v2:499a6a8c52b2888554dc01c37b8a242a9b8d5214771b33990b33df0c081fe5d3",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir",
       "replacement": {
@@ -25538,7 +25538,7 @@
       "line": 679,
       "endLine": 730,
       "symbol": "runPromise",
-      "occurrence": "v2:07add4f2a517dd22686befdc6a63120d76f9513cf2f1a9ff91b1296ecfdbbd0f",
+      "occurrence": "v2:c52b50a3208d703d5ce40b9b0626bef3b324176eebb1eda51fe8abd91bc00221",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ tempContext, tmpDir }) => Effect.gen(function* () { const path = yield* Path.Path; const attempt = YeetAttemptStarted.make({ schemaVersion: \"yeet-attempt",
       "replacement": {
@@ -32355,7 +32355,7 @@
       "line": 388,
       "endLine": 388,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:d5553f1f9f628545bc3959625713d9c6bb60b064b5a00ff0983fb818acec5a3a",
+      "occurrence": "v2:e715ddfa2ca18a4745da5afdf84f77e4ada2835595ba96bd7e40d90eb72a8ff5",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(laneTimingsSpawnerLayer)",
       "replacement": {
@@ -33279,7 +33279,7 @@
       "line": 1777,
       "endLine": 1777,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:f5bd6c8343125d0dc5d0900ac3a505a04c212a871292d32c67b2125c2455e5b3",
+      "occurrence": "v2:f87406073ddf63807b3bf09438a82ba0b62fa5038bd0d3563ea6260af75a615e",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33468,7 +33468,7 @@
       "line": 262,
       "endLine": 262,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:2c803512846bdc9fcee216947145f0f5e48114fa30218a8aa7e80226a622bfd5",
+      "occurrence": "v2:16cdeb87095f63cd9e5404f9586f4c56048f317cad8f7c2310b7c108e53f97aa",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -40777,7 +40777,7 @@
       "line": 107,
       "endLine": 107,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:3fafe7a36a686d327c0483d0dd6b51100577ba8b15210cc789a74d924e46b8c0",
+      "occurrence": "v2:5e0702e855b6120a43460b0a586620424a7b37ec618bcc93c5d02cb1dc534cab",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -46699,7 +46699,7 @@
       "line": 535,
       "endLine": 535,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:5164f909a3e1d62418ad59fc4094a9490b91cc8f6086c29a2930cadb2ecc5a33",
+      "occurrence": "v2:dbfbaa23da4635278913463806888dbe66dc40d792eaf622e4d8612f78c738ca",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(replyTestLayer(deniedRepoViewStubs))",
       "replacement": {
@@ -56664,7 +56664,7 @@
       "line": 1776,
       "endLine": 1776,
       "symbol": "scoped",
-      "occurrence": "v2:f5bd6c8343125d0dc5d0900ac3a505a04c212a871292d32c67b2125c2455e5b3",
+      "occurrence": "v2:f87406073ddf63807b3bf09438a82ba0b62fa5038bd0d3563ea6260af75a615e",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -56853,7 +56853,7 @@
       "line": 261,
       "endLine": 261,
       "symbol": "scoped",
-      "occurrence": "v2:2c803512846bdc9fcee216947145f0f5e48114fa30218a8aa7e80226a622bfd5",
+      "occurrence": "v2:16cdeb87095f63cd9e5404f9586f4c56048f317cad8f7c2310b7c108e53f97aa",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -58554,7 +58554,7 @@
       "line": 106,
       "endLine": 106,
       "symbol": "scoped",
-      "occurrence": "v2:3fafe7a36a686d327c0483d0dd6b51100577ba8b15210cc789a74d924e46b8c0",
+      "occurrence": "v2:5e0702e855b6120a43460b0a586620424a7b37ec618bcc93c5d02cb1dc534cab",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -83416,7 +83416,7 @@
       "line": 3656,
       "endLine": 3809,
       "symbol": "it.live",
-      "occurrence": "v2:61488e9962c102d4e5d954a1b8b5d681afa35496098c283d3c3139d9a9ea511c",
+      "occurrence": "v2:9d5ab37ec11d62b40ce98880ad3648364a3fd64063bf9f722bb50dcca4cf8ffa",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"atomically claims dead leases and tickets before journaling each death once\", () => Effect.gen(function* () { const gibRef = yield* Ref.make(50); yield* withAdmissionTempRoot(gibRef, (tempRoo",
       "replacement": {
@@ -94978,7 +94978,7 @@
       "line": 495,
       "endLine": 495,
       "symbol": "it.layer",
-      "occurrence": "v2:e064c0c31f56cea307c753e508c20b8cec08e7ef07c26625a2b8012531a24c9f",
+      "occurrence": "v2:d4b0cc5efd6f2cfed13f69ef0c90671c9867c46fedf56e8e3c040b40ea459587",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "it.layer(BunCrypto.layer)",
       "replacement": {
@@ -95041,7 +95041,7 @@
       "line": 122,
       "endLine": 122,
       "symbol": "it.layer",
-      "occurrence": "v2:54c9f3e10399ca184ecf5042b74c75a5f3be3734df043390f929518d7acdfa0a",
+      "occurrence": "v2:1360d9a8923bd13c04a8a94ced0eaf97c37e5a10e80878b90a7a424ce1374340",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(NodeServices.layer)",
       "replacement": {

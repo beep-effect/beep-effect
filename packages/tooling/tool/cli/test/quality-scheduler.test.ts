@@ -67,6 +67,7 @@ import {
   decodeYeetAttemptJournalEvent,
   RepoRunContext,
   TurboPlanSnapshot,
+  YeetAttemptJournalEvent,
 } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UUID } from "@beep/schema/String";
@@ -77,7 +78,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import {
   Clock,
   ConfigProvider,
@@ -3793,20 +3794,40 @@ describe("quality-scheduler", () => {
               })
           );
           expect(attemptEvents).toHaveLength(2);
-          expect(attemptEvents[0]).toMatchObject({
-            resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
-            diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-            proofTier: O.some("full"),
-            envProfile: O.some("local"),
-            stage: O.some("pre-push"),
-          });
-          expect(attemptEvents[1]).toMatchObject({
-            resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
-            diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
-            proofTier: O.some("review-fix"),
-            envProfile: O.some("hosted"),
-            stage: O.some("hosted"),
-          });
+          {
+            const actualProjection = attemptEvents[0];
+            const expectedProjection = {
+              resolvedHeadSha: O.some("0123456789abcdef0123456789abcdef01234567"),
+              diffFingerprint: O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+              proofTier: O.some("full"),
+              envProfile: O.some("local"),
+              stage: O.some("pre-push"),
+            };
+            assertDefined(actualProjection);
+            const expectedVariant = YeetAttemptJournalEvent.guards["attempt-terminated"](actualProjection);
+            assertTrue(expectedVariant);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["resolvedHeadSha", "diffFingerprint", "proofTier", "envProfile", "stage"]),
+              expectedProjection
+            );
+          }
+          {
+            const actualProjection = attemptEvents[1];
+            const expectedProjection = {
+              resolvedHeadSha: O.some("fedcba9876543210fedcba9876543210fedcba98"),
+              diffFingerprint: O.some("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+              proofTier: O.some("review-fix"),
+              envProfile: O.some("hosted"),
+              stage: O.some("hosted"),
+            };
+            assertDefined(actualProjection);
+            const expectedVariant = YeetAttemptJournalEvent.guards["attempt-terminated"](actualProjection);
+            assertTrue(expectedVariant);
+            deepStrictEqual<typeof expectedProjection>(
+              Struct.pick(actualProjection, ["resolvedHeadSha", "diffFingerprint", "proofTier", "envProfile", "stage"]),
+              expectedProjection
+            );
+          }
           expect(yield* listDirectory(tempRoot.leases)).toHaveLength(0);
           expect(yield* listDirectory(tempRoot.queue)).toHaveLength(0);
           expect(yield* listDirectory(tempRoot.claims)).toHaveLength(0);
