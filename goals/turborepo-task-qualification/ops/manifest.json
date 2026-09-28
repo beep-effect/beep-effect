@@ -396,7 +396,8 @@
     "research/current-proof-shadow-review.json",
     "research/current-proof-ledger-storage-review.json",
     "research/current-monitor-escalation-review.json",
-    "research/current-sweep-ordering-review.json"
+    "research/current-sweep-ordering-review.json",
+    "research/current-reference-refresh-review.json"
   ],
   "agentLaunchers": [
     {

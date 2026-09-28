@@ -2295,3 +2295,12 @@ preconditions, sequential outcomes and installation suppression after a failed
 checkout switch. Subprocess fixtures establish those branches; no real retirement
 was run. Observation races and process ownership remain outside this evidence,
 and command success alone does not mean all sweep steps executed.
+
+### Reference refresh preflight and external verdicts
+
+The changed reference refresh was reviewed against its patch-kit and provider
+cooldown branches. All 36 existing tests across refresh, schema and timer suites
+pass with isolated fixtures. [The review](research/current-reference-refresh-review.json)
+records live Git/provider inputs, maintenance writes, bounded failure details
+and the difference between rendered timer ordering and a runtime guarantee.
+It supplies census semantics without running a real refresh or granting reuse.

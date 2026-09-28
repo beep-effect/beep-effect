@@ -1,0 +1,64 @@
+{
+  "authority": "Bounded reference-refresh delta review and existing isolated fixture tests",
+  "revision": "5eda484091651a3986507ef86e0af46e44237af0",
+  "comparisonBase": "cafc1f8eb9f07e19b25f6be6a4146cd11fc21c27",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+      "sha256": "2358ad8df0aa93d8a8fde58d802f7a6d737de49f14d05dcd40a1e1ce627f4957"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+      "sha256": "163e4fe2c69ce95915d1d043cc346d6227f384f056c402a28d9188c383b3ab55"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts",
+      "sha256": "a8f9aaec1d0fbba7f1788e3b1607fa56f934e9b2b46eb7cc091b99bdeaff8e94"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-schemas.test.ts",
+      "sha256": "54d7bb104dc4ce9570ed6093c9c52b03beeffb0612a220745adb8ed3017ed9e2"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-timer.test.ts",
+      "sha256": "1249e6d6458af2469e9efadad9ab51c17c47281d03e1d2c2a864f970968d8b35"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-test-utils.ts",
+      "sha256": "fd18ee6dda8639cf48a678d3448e211e60df326eb7de69f1c53e63327706f2ad"
+    }
+  ],
+  "reviewedBehavior": [
+    "Patch-kit check runs before member work; missing or unavailable patches downgrade deep members to structural builds.",
+    "Only members still planned for deep builds probe cooldown. Configured OpenAI-compatible providers receive a one-token request; HTTP 429 downgrades to structural, while missing settings, other responses and transport failure allow the ordinary deep attempt.",
+    "Cooldown detail derives from status, configured model/base URL, Retry-After and current time. Response bodies are not read by this probe.",
+    "Git probes separate stdout for parsing from stderr for failure detail. Missing Git metadata, dirty members and off-main members remain distinct from successful pull/build.",
+    "Build failure takes precedence over downgrade reporting; deep coverage is retained only for successful deep builds.",
+    "Reports add optional preflight and detail keys, preserving decoding of older receipts. Bounded tail capture does not itself redact arbitrary subprocess output.",
+    "Rendered timer service orders after the deep-refresh service without adding a requirement dependency. This review tests rendered text, not live systemd serialization."
+  ],
+  "semanticInputs": [
+    "Manifest, selected root, member Git metadata, branch cleanliness, upstream refs and network availability",
+    "Installed Graft binary and patch kit, PATH, HOME, package-root override and provider configuration",
+    "Provider response status and headers, current clock, deadlines and jobs count",
+    "Existing filesystem and environment inherited by deep builds, notifier and systemctl"
+  ],
+  "effects": [
+    "Production refresh can fetch upstream changes, update Git excludes, rebuild structural/deep indexes, make provider requests, write local status and notify the operator.",
+    "These tests use temporary fixtures, scripted executables and scripted HTTP responses; they do not run a real reference refresh or install timers."
+  ],
+  "verification": {
+    "command": "bun --no-env-file run --cwd packages/tooling/tool/cli beep:test test/refs-refresh-plan.test.ts test/refs-schemas.test.ts test/refs-timer.test.ts --maxWorkers=1",
+    "filesPassed": 3,
+    "testsPassed": 36,
+    "exitCode": 0,
+    "vitestVersion": "5.0.1",
+    "logSha256": "c190586531c980e3b4629e7745edc13a922e7a985bf0b8959d8eb889aa1696ff"
+  },
+  "limits": [
+    "No claim of live provider behavior, quota availability, installed patch correctness or timer runtime ordering.",
+    "Configured URLs/models and arbitrary failing subprocess tails still require sanitization before publication; truncation is only a size bound.",
+    "Ambient filesystem and provider state are not immutable inputs, and replay cannot reproduce maintenance effects or fresh external verdicts.",
+    "This review does not qualify task-result reuse, replace signed conformance evidence or mutate a policy tuple."
+  ]
+}
