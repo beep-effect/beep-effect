@@ -8,9 +8,10 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Make the volume-pool order binding — Codex Astra while any admitted Codex account holds more than 5%,
-then the Cursor agent (fail-open), then hold — and make the Cursor lane a measurable, structurally
-guarded pool: pulse hooks, a committed deny list, and a runbook every orchestrator can copy from.
+Make the volume-pool order binding — Opus 5.5 (`claude-opus-5-5`) for every sub-agent, then the
+Cursor agent when the operator authorizes it, then hold; Codex is opt-in only since the 2026-09-24
+directive — and make the Cursor lane a measurable, structurally guarded pool: pulse hooks, a
+committed deny list, and a runbook every orchestrator can copy from.
 
 ## Launch
 
@@ -37,6 +38,11 @@ by a `composer-2.5` lane in worktree `cursor-agent-pool` (D15 dogfood); the deny
 and `cursor-cli` schema literal are Fable-written in the same worktree.
 
 ## Latest Evidence
+
+[`history/2026-09-27-opus-default.md`](./history/2026-09-27-opus-default.md): the routing axis
+moved from Codex Astra to Opus 5.5 — `AGENTS.md`, the runbook, the `beep models` seed
+(`child.heavy`), and the QA/oracle skills now pin `claude-opus-5-5`; the CLIProxyAPI registry gap
+for that id is recorded there.
 
 [`history/2026-09-16-admission-proof.md`](./history/2026-09-16-admission-proof.md): first slice written by
 a `composer-2.5` lane under the deny list (0 git commands), package verify green with the `cursor-cli`

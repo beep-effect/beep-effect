@@ -42,11 +42,13 @@ Two resolutions:
    scope in mind (or skip it and accept per-action prompts/manual paste).
 2. **Session workaround (agent, no human needed):** render the bundle to a
    file (`oracle --render -p ... --file ... > <scratchpad>/oracle-bundle.md`)
-   and dispatch a `codex:codex-rescue` task with
-   `--model gpt-6-astra --effort medium` that reads the bundle file, follows
-   the instructions inside it, and writes the review to one deliverable
-   file. Same ChatGPT-Pro-backed model pool, fully
-   automated; loses only the ChatGPT-UI Pro extended-thinking mode.
+   and hand it to an Agent-tool subagent pinned to `model: "claude-opus-5-5"`
+   that reads the bundle file, follows the instructions inside it, and writes
+   the review to one deliverable file. Fully automated; loses the
+   second-model-family opinion and the ChatGPT-UI Pro extended-thinking mode.
+   The `codex:codex-rescue` route (`--model gpt-6-astra --effort medium`)
+   keeps the ChatGPT-Pro-backed pool but is Codex opt-in only under the
+   `AGENTS.md` Volume pools order — use it when the operator asks for it.
 
 Also verified: if the ChatGPT composer shows an attached "Deep research"
 chip, remove it before pasting (click into the composer, Backspace) — the
