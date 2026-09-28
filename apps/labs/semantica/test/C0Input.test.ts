@@ -4,7 +4,7 @@ import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
 import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -141,12 +141,12 @@ describe("C0 F1 input services", () => {
     );
   });
 
-  it.layer(runtime, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(Layer.merge(runtime, ParserRetryLive), { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("acquires ParserRetryLive and preserves both F1 PDF outcomes", () =>
       Effect.gen(function* () {
         const catalog = yield* F1Catalog;
         const source = yield* DocumentSource;
-        const retryParser = yield* provideScopedLayer(ParserRetryLive)(Parser);
+        const retryParser = yield* Parser;
         const index = yield* catalog.load;
         const twoColumn = A.getUnsafe(
           A.filter(index.fixtures, (fixture) => Str.Equivalence(fixture.id, "pdf-two-column")),

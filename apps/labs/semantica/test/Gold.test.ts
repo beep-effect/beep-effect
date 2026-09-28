@@ -320,229 +320,219 @@ describe("C0 gold proposer", () => {
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("maps a gold-generation deadline to GoldUnavailable", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeCorpusManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-timeout-" });
-          const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, Duration.zero, true))(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.some(A.getUnsafe(manifest.rows, 0).id),
-              subset: O.none(),
-            })
-          ).pipe(Effect.flip);
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const manifest = yield* fs
+          .readFileString("fixtures/w1.manifest.json")
+          .pipe(Effect.flatMap(decodeCorpusManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-timeout-" });
+        const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures, Duration.zero, true))(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.some(A.getUnsafe(manifest.rows, 0).id),
+            subset: O.none(),
+          })
+        ).pipe(Effect.flip);
 
-          expect(error).toBeInstanceOf(GoldUnavailable);
-          expect(error.reason).toBe("provider-failed");
-          expect(error.message).toContain("generation timeout");
-        })
-      )
+        expect(error).toBeInstanceOf(GoldUnavailable);
+        expect(error.reason).toBe("provider-failed");
+        expect(error.message).toContain("generation timeout");
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("writes partial labels, drops invalid anchors and relation endpoints, and defers gold.json", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeCorpusManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const paperId = A.getUnsafe(manifest.rows, 0).id;
-          const outputDirectory = yield* fs.makeTempDirectoryScoped({
-            prefix: "semantica-gold-",
-          });
-          const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.some(paperId),
-              subset: O.none(),
-            })
-          );
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const manifest = yield* fs
+          .readFileString("fixtures/w1.manifest.json")
+          .pipe(Effect.flatMap(decodeCorpusManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const paperId = A.getUnsafe(manifest.rows, 0).id;
+        const outputDirectory = yield* fs.makeTempDirectoryScoped({
+          prefix: "semantica-gold-",
+        });
+        const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.some(paperId),
+            subset: O.none(),
+          })
+        );
 
-          expect(result.total).toBe(7);
-          expect(result.accepted).toBe(5);
-          expect(result.fraction).toBe(5 / 7);
-          expect(A.length(result.files)).toBe(3);
-          expect(result.reference.status).toBe("not-written");
-          if (result.reference.status === "not-written") {
-            expect(result.reference.missingJobs).toHaveLength(15);
-          }
-          pipe(
-            A.every(result.files, (file) => {
-              for (const label of file.labels) {
-                if (label.verified) {
-                  return false;
-                }
+        expect(result.total).toBe(7);
+        expect(result.accepted).toBe(5);
+        expect(result.fraction).toBe(5 / 7);
+        expect(A.length(result.files)).toBe(3);
+        expect(result.reference.status).toBe("not-written");
+        if (result.reference.status === "not-written") {
+          expect(result.reference.missingJobs).toHaveLength(15);
+        }
+        pipe(
+          A.every(result.files, (file) => {
+            for (const label of file.labels) {
+              if (label.verified) {
+                return false;
               }
-              return true;
-            }),
-            assertTrue
-          );
+            }
+            return true;
+          }),
+          assertTrue
+        );
 
-          const decodedFiles = yield* Effect.forEach(["structure", "entity", "relation"] as const, (subset) =>
-            fs
-              .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
-              .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText))
-          );
-          const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
-          assertSome(
-            O.map(structureFile, (file) => A.length(file.labels)),
-            2
-          );
-          const reanchored = structureFile.pipe(
-            O.flatMap((file) => A.findFirst(file.labels, (label) => label.quote === "Beta"))
-          );
-          assertSome(
-            O.map(reanchored, (label) => [label.startChar, label.endChar]),
-            [16, 20]
-          );
-          const entityFile = A.findFirst(decodedFiles, (file) => file.subset === "entity");
-          assertSome(
-            O.map(entityFile, (file) => A.length(file.labels)),
-            2
-          );
-          const relationFile = A.findFirst(decodedFiles, (file) => file.subset === "relation");
-          assertSome(
-            O.map(relationFile, (file) => A.length(file.labels)),
-            1
-          );
-          pipe(yield* fs.exists(path.join(outputDirectory, "gold.json")), assertFalse);
-        })
-      )
+        const decodedFiles = yield* Effect.forEach(["structure", "entity", "relation"] as const, (subset) =>
+          fs
+            .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
+            .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText))
+        );
+        const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
+        assertSome(
+          O.map(structureFile, (file) => A.length(file.labels)),
+          2
+        );
+        const reanchored = structureFile.pipe(
+          O.flatMap((file) => A.findFirst(file.labels, (label) => label.quote === "Beta"))
+        );
+        assertSome(
+          O.map(reanchored, (label) => [label.startChar, label.endChar]),
+          [16, 20]
+        );
+        const entityFile = A.findFirst(decodedFiles, (file) => file.subset === "entity");
+        assertSome(
+          O.map(entityFile, (file) => A.length(file.labels)),
+          2
+        );
+        const relationFile = A.findFirst(decodedFiles, (file) => file.subset === "relation");
+        assertSome(
+          O.map(relationFile, (file) => A.length(file.labels)),
+          1
+        );
+        pipe(yield* fs.exists(path.join(outputDirectory, "gold.json")), assertFalse);
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("writes gold.json only after all eighteen stub jobs form one coherent proposer set", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeCorpusManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-complete-" });
-          const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.none(),
-              subset: O.none(),
-            })
-          );
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const manifest = yield* fs
+          .readFileString("fixtures/w1.manifest.json")
+          .pipe(Effect.flatMap(decodeCorpusManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-complete-" });
+        const result = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.none(),
+            subset: O.none(),
+          })
+        );
 
-          expect(result.files).toHaveLength(18);
-          expect(result.total).toBe(41);
-          expect(result.accepted).toBe(33);
-          expect(result.reference.status).toBe("written");
-          const reference = yield* fs
-            .readFileString(path.join(outputDirectory, "gold.json"))
-            .pipe(Effect.flatMap(decodeGoldRefJson));
-          expect(reference.proposer).toEqual(proposer);
-          expect(reference.spotCheckedFraction).toBe(0);
-        })
-      )
+        expect(result.files).toHaveLength(18);
+        expect(result.total).toBe(41);
+        expect(result.accepted).toBe(33);
+        expect(result.reference.status).toBe("written");
+        const reference = yield* fs
+          .readFileString(path.join(outputDirectory, "gold.json"))
+          .pipe(Effect.flatMap(decodeGoldRefJson));
+        expect(reference.proposer).toEqual(proposer);
+        expect(reference.spotCheckedFraction).toBe(0);
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("removes gold.json when a complete set is followed by a partial rerun", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeCorpusManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-rerun-" });
-          const layer = makeGoldTestLayer(manifest, fixtures);
-          yield* provideScopedLayer(layer)(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.none(),
-              subset: O.none(),
-            })
-          );
-          const referencePath = path.join(outputDirectory, "gold.json");
-          pipe(yield* fs.exists(referencePath), assertTrue);
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const manifest = yield* fs
+          .readFileString("fixtures/w1.manifest.json")
+          .pipe(Effect.flatMap(decodeCorpusManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-rerun-" });
+        const layer = makeGoldTestLayer(manifest, fixtures);
+        yield* provideScopedLayer(layer)(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.none(),
+            subset: O.none(),
+          })
+        );
+        const referencePath = path.join(outputDirectory, "gold.json");
+        pipe(yield* fs.exists(referencePath), assertTrue);
 
-          const partial = yield* provideScopedLayer(layer)(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.some(A.getUnsafe(manifest.rows, 0).id),
-              subset: O.none(),
-            })
-          );
+        const partial = yield* provideScopedLayer(layer)(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.some(A.getUnsafe(manifest.rows, 0).id),
+            subset: O.none(),
+          })
+        );
 
-          expect(partial.reference.status).toBe("not-written");
-          pipe(yield* fs.exists(referencePath), assertFalse);
-        })
-      )
+        expect(partial.reference.status).toBe("not-written");
+        pipe(yield* fs.exists(referencePath), assertFalse);
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails with mixed-proposer when one complete-set file is stale", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeCorpusManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-mixed-" });
-          const layer = makeGoldTestLayer(manifest, fixtures);
-          yield* provideScopedLayer(layer)(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.none(),
-              subset: O.none(),
-            })
-          );
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const manifest = yield* fs
+          .readFileString("fixtures/w1.manifest.json")
+          .pipe(Effect.flatMap(decodeCorpusManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const outputDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-mixed-" });
+        const layer = makeGoldTestLayer(manifest, fixtures);
+        yield* provideScopedLayer(layer)(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.none(),
+            subset: O.none(),
+          })
+        );
 
-          const stalePaper = A.getUnsafe(manifest.rows, 9).id;
-          const stalePath = path.join(outputDirectory, `${stalePaper}.structure.json`);
-          const staleFile = yield* fs
-            .readFileString(stalePath)
-            .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText));
-          const staleProposer = ModelIdentity.make({
-            ...proposer,
-            name: "stale-gold-20260825",
-            revision: "stale-gold-20260825",
-          });
-          const staleValue = yield* GoldFile.makeEffect({ ...staleFile, proposer: staleProposer });
-          const staleJson = yield* encodeGoldFileJson(staleValue);
-          yield* fs.writeFileString(stalePath, `${staleJson}\n`);
+        const stalePaper = A.getUnsafe(manifest.rows, 9).id;
+        const stalePath = path.join(outputDirectory, `${stalePaper}.structure.json`);
+        const staleFile = yield* fs
+          .readFileString(stalePath)
+          .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText));
+        const staleProposer = ModelIdentity.make({
+          ...proposer,
+          name: "stale-gold-20260825",
+          revision: "stale-gold-20260825",
+        });
+        const staleValue = yield* GoldFile.makeEffect({ ...staleFile, proposer: staleProposer });
+        const staleJson = yield* encodeGoldFileJson(staleValue);
+        yield* fs.writeFileString(stalePath, `${staleJson}\n`);
 
-          const selectedPaper = A.getUnsafe(manifest.rows, 0).id;
-          const error = yield* provideScopedLayer(layer)(
-            proposeGold({
-              manifestPath: "stub.manifest.json",
-              outputDirectory,
-              paper: O.some(selectedPaper),
-              subset: O.none(),
-            })
-          ).pipe(Effect.flip);
+        const selectedPaper = A.getUnsafe(manifest.rows, 0).id;
+        const error = yield* provideScopedLayer(layer)(
+          proposeGold({
+            manifestPath: "stub.manifest.json",
+            outputDirectory,
+            paper: O.some(selectedPaper),
+            subset: O.none(),
+          })
+        ).pipe(Effect.flip);
 
-          expect(error).toBeInstanceOf(GoldUnavailable);
-          expect(error.reason).toBe("mixed-proposer");
-        })
-      )
+        expect(error).toBeInstanceOf(GoldUnavailable);
+        expect(error.reason).toBe("mixed-proposer");
+      })
     );
   });
 

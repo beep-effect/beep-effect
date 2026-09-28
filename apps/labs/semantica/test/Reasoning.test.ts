@@ -146,52 +146,50 @@ describe("C2 declarative reasoner", () => {
     it.effect(
       "recovers projection-relevant state committed before SIGKILL",
       () =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
-            const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-            const fixture = yield* processSpawner.string(
-              ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "fixture"], {
-                cwd: process.cwd(),
-                stderr: "pipe",
-                stdout: "pipe",
-              })
-            );
-            const input = yield* decodeCrashProjectionInputJson(fixture);
-            expect(input.outcomes).toHaveLength(2);
-            expect(input.events).toHaveLength(2);
-            const inputPath = path.join(ledgerRoot, "projection-input.json");
-            yield* fs.writeFileString(inputPath, fixture);
-            const recover = processSpawner
-              .string(
-                ChildProcess.make(
-                  "bun",
-                  ["run", "src/canary/RuntimeProbeChild.ts", "recover", ledgerRoot, Str.repeat(64)("c"), "replay"],
-                  { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
-                )
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
+          const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+          const fixture = yield* processSpawner.string(
+            ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "fixture"], {
+              cwd: process.cwd(),
+              stderr: "pipe",
+              stdout: "pipe",
+            })
+          );
+          const input = yield* decodeCrashProjectionInputJson(fixture);
+          expect(input.outcomes).toHaveLength(2);
+          expect(input.events).toHaveLength(2);
+          const inputPath = path.join(ledgerRoot, "projection-input.json");
+          yield* fs.writeFileString(inputPath, fixture);
+          const recover = processSpawner
+            .string(
+              ChildProcess.make(
+                "bun",
+                ["run", "src/canary/RuntimeProbeChild.ts", "recover", ledgerRoot, Str.repeat(64)("c"), "replay"],
+                { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
               )
-              .pipe(Effect.timeout("30 seconds"), Effect.map(Str.trim));
-            const emptyDigest = yield* recover;
-            const crash = yield* ChildProcess.make(
-              "bun",
-              ["run", "src/canary/RuntimeProbeChild.ts", "crash", ledgerRoot, Str.repeat(64)("c"), "replay", inputPath],
-              { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
-            );
-            const [crashOutput, crashExit] = yield* Effect.all(
-              [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
-              { concurrency: "unbounded" }
-            ).pipe(Effect.timeout("30 seconds"));
-            expect(crashOutput).toContain("projection-state-committed");
-            pipe(crashExit, Exit.isFailure, assertTrue);
-            const recoveredDigest = yield* recover;
-            const repeatedDigest = yield* recover;
-            pipe(isSha256Hex(recoveredDigest), assertTrue);
-            expect(recoveredDigest).not.toBe(emptyDigest);
-            expect(repeatedDigest).toBe(recoveredDigest);
-          })
-        ),
+            )
+            .pipe(Effect.timeout("30 seconds"), Effect.map(Str.trim));
+          const emptyDigest = yield* recover;
+          const crash = yield* ChildProcess.make(
+            "bun",
+            ["run", "src/canary/RuntimeProbeChild.ts", "crash", ledgerRoot, Str.repeat(64)("c"), "replay", inputPath],
+            { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
+          );
+          const [crashOutput, crashExit] = yield* Effect.all(
+            [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
+            { concurrency: "unbounded" }
+          ).pipe(Effect.timeout("30 seconds"));
+          expect(crashOutput).toContain("projection-state-committed");
+          pipe(crashExit, Exit.isFailure, assertTrue);
+          const recoveredDigest = yield* recover;
+          const repeatedDigest = yield* recover;
+          pipe(isSha256Hex(recoveredDigest), assertTrue);
+          expect(recoveredDigest).not.toBe(emptyDigest);
+          expect(repeatedDigest).toBe(recoveredDigest);
+        }),
       120_000
     );
   });

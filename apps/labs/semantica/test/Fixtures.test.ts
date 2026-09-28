@@ -146,49 +146,47 @@ describe("W1 corpus manifest", () => {
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("reports the mutated paper id through both the service and Command.runWith", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const seedSource = yield* fs.readFileString("fixtures/w1.manifest.json");
-          const seed = yield* decodeManifestFromJsonString(seedSource);
-          const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-w1-" });
-          yield* Effect.forEach(
-            seed.rows,
-            (row) =>
-              fs.writeFile(
-                path.join(corpusRoot, row.relativePath),
-                new TextEncoder().encode(`synthetic test paper ${row.id}`)
-              ),
-            { concurrency: 4 }
-          );
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const seedSource = yield* fs.readFileString("fixtures/w1.manifest.json");
+        const seed = yield* decodeManifestFromJsonString(seedSource);
+        const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-w1-" });
+        yield* Effect.forEach(
+          seed.rows,
+          (row) =>
+            fs.writeFile(
+              path.join(corpusRoot, row.relativePath),
+              new TextEncoder().encode(`synthetic test paper ${row.id}`)
+            ),
+          { concurrency: 4 }
+        );
 
-          const runtime = runtimeFromEnv({ SEMANTICA_CORPUS_ROOT: corpusRoot });
-          const runtimeContext = yield* Layer.build(runtime);
-          const builder = yield* CorpusManifestBuilder.pipe(Effect.provide(runtimeContext));
-          const built = yield* builder.build;
-          const manifestPath = path.join(corpusRoot, "w1.manifest.json");
-          const manifestJson = yield* encodeManifestToJsonString(built);
-          yield* fs.writeFileString(manifestPath, `${manifestJson}\n`);
+        const runtime = runtimeFromEnv({ SEMANTICA_CORPUS_ROOT: corpusRoot });
+        const runtimeContext = yield* Layer.build(runtime);
+        const builder = yield* CorpusManifestBuilder.pipe(Effect.provide(runtimeContext));
+        const built = yield* builder.build;
+        const manifestPath = path.join(corpusRoot, "w1.manifest.json");
+        const manifestJson = yield* encodeManifestToJsonString(built);
+        yield* fs.writeFileString(manifestPath, `${manifestJson}\n`);
 
-          const mutatedId = A.getUnsafe(built.rows, 0).id;
-          yield* fs.writeFile(path.join(corpusRoot, `${mutatedId}.pdf`), new TextEncoder().encode("mutated"));
+        const mutatedId = A.getUnsafe(built.rows, 0).id;
+        yield* fs.writeFile(path.join(corpusRoot, `${mutatedId}.pdf`), new TextEncoder().encode("mutated"));
 
-          const drift = yield* builder.check(manifestPath).pipe(Effect.flip);
-          expect(drift).toBeInstanceOf(ManifestDrift);
-          if (drift._tag !== "ManifestDrift") {
-            return yield* Effect.die(new Error("Expected ManifestDrift from the direct manifest check."));
-          }
-          expect(A.map(drift.diffs, (diff) => diff.id)).toContain(mutatedId);
+        const drift = yield* builder.check(manifestPath).pipe(Effect.flip);
+        expect(drift).toBeInstanceOf(ManifestDrift);
+        if (drift._tag !== "ManifestDrift") {
+          return yield* Effect.die(new Error("Expected ManifestDrift from the direct manifest check."));
+        }
+        expect(A.map(drift.diffs, (diff) => diff.id)).toContain(mutatedId);
 
-          const runCanary = Command.runWith(CanaryCommand, { renderErrors: false, version: "0.0.0" });
-          const commandError = yield* runCanary(["manifest", "check", "--manifest", manifestPath]).pipe(
-            Effect.provide(runtimeContext),
-            Effect.flip
-          );
-          expect(commandError).toBeInstanceOf(ManifestDrift);
-        })
-      )
+        const runCanary = Command.runWith(CanaryCommand, { renderErrors: false, version: "0.0.0" });
+        const commandError = yield* runCanary(["manifest", "check", "--manifest", manifestPath]).pipe(
+          Effect.provide(runtimeContext),
+          Effect.flip
+        );
+        expect(commandError).toBeInstanceOf(ManifestDrift);
+      })
     );
   });
 });
@@ -320,39 +318,37 @@ describe("F1 fixtures", () => {
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("reproduces every committed PDF byte-for-byte in two independent directories", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const crypto = yield* Crypto.Crypto;
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const firstDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-first-" });
-          const secondDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-second-" });
-          const names = A.make("pdf-two-column.pdf", "pdf-multipage.pdf", "pdf-truncated.pdf");
-          const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
-            return yield* Sha256HexFromBytes.decodeEffect(bytes).pipe(
-              Effect.provideService(Crypto.Crypto, crypto),
-              Effect.orDie
-            );
-          });
-
-          yield* generateF1Pdfs(firstDirectory);
-          yield* generateF1Pdfs(secondDirectory);
-          yield* Effect.forEach(
-            names,
-            Effect.fnUntraced(function* (name) {
-              const committed = yield* fs.readFile(path.join("fixtures/f1/documents", name));
-              const first = yield* fs.readFile(path.join(firstDirectory, name));
-              const second = yield* fs.readFile(path.join(secondDirectory, name));
-              const committedHash = yield* hashBytes(committed);
-
-              expect(yield* hashBytes(first)).toBe(committedHash);
-              expect(yield* hashBytes(second)).toBe(committedHash);
-            })
+      Effect.gen(function* () {
+        const crypto = yield* Crypto.Crypto;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const firstDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-first-" });
+        const secondDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-second-" });
+        const names = A.make("pdf-two-column.pdf", "pdf-multipage.pdf", "pdf-truncated.pdf");
+        const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
+          return yield* Sha256HexFromBytes.decodeEffect(bytes).pipe(
+            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.orDie
           );
-          const truncated = yield* fs.readFile(path.join("fixtures/f1/documents", "pdf-truncated.pdf"));
-          pipe(Str.includes("xref")(new TextDecoder().decode(truncated)), assertFalse);
-        })
-      )
+        });
+
+        yield* generateF1Pdfs(firstDirectory);
+        yield* generateF1Pdfs(secondDirectory);
+        yield* Effect.forEach(
+          names,
+          Effect.fnUntraced(function* (name) {
+            const committed = yield* fs.readFile(path.join("fixtures/f1/documents", name));
+            const first = yield* fs.readFile(path.join(firstDirectory, name));
+            const second = yield* fs.readFile(path.join(secondDirectory, name));
+            const committedHash = yield* hashBytes(committed);
+
+            expect(yield* hashBytes(first)).toBe(committedHash);
+            expect(yield* hashBytes(second)).toBe(committedHash);
+          })
+        );
+        const truncated = yield* fs.readFile(path.join("fixtures/f1/documents", "pdf-truncated.pdf"));
+        pipe(Str.includes("xref")(new TextDecoder().decode(truncated)), assertFalse);
+      })
     );
   });
 });

@@ -150,12 +150,10 @@ const isProviderCacheEntry = S.is(ProviderCacheEntry);
 const isSourceDocument = S.is(SourceDocument);
 
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import type { CanonicalText, ChunkKind as ChunkKindValue, ParseOutcome as ParseOutcomeValue } from "@/schema/Text";
-
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
@@ -164,14 +162,12 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
   pipe(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), assertTrue);
 };
 
-const roundTripGoldFile = (value: GoldFileValue): void => {
+const roundTripGoldFile = Effect.fn("SchemaTest.roundTripGoldFile")(function* (value: GoldFileValue) {
   const encoded = Result.getOrThrow(encodeGoldFileResult(value));
-  const decoded = Effect.runSync(
-    decodeGoldFile(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"))
-  );
+  const decoded = yield* decodeGoldFile(encoded).pipe(Effect.provideService(CurrentGoldDocumentText, "Effect data"));
 
   pipe(S.toEquivalence(S.toType(GoldFile))(decoded, value), assertTrue);
-};
+});
 
 const rejects = <Schema extends S.Codec<unknown>>(schema: Schema, value: unknown): boolean =>
   Result.isFailure(S.decodeUnknownResult(schema)(value));
@@ -683,156 +679,160 @@ describe("C0 schema round trips", () => {
     roundTrip(EvalRunTelemetry, telemetry);
   });
 
-  it("encodes gold labels without corpus text and hydrates exact document slices", () => {
-    const text = "Effect uses Schema";
-    const structure = GoldFile.make({
-      labels: [
-        GoldStructureLabel.make({
-          depth: NonNegativeInt.make(0),
-          endChar: NonNegativeInt.make(6),
-          quote: "Effect",
-          role: "title",
-          startChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "structure",
-      version: "gold/v1",
-    });
-    const entity = GoldFile.make({
-      labels: [
-        GoldEntityLabel.make({
-          cluster: "software-effect",
-          endChar: NonNegativeInt.make(6),
-          entityType: "software",
-          label: "Effect",
-          quote: "Effect",
-          startChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "entity",
-      version: "gold/v1",
-    });
-    const relation = GoldFile.make({
-      labels: [
-        GoldRelationLabel.make({
-          endChar: NonNegativeInt.make(18),
-          object: "Schema",
-          objectEndChar: NonNegativeInt.make(18),
-          objectStartChar: NonNegativeInt.make(12),
-          predicate: "uses",
-          quote: text,
-          startChar: NonNegativeInt.make(0),
-          subject: "Effect",
-          subjectEndChar: NonNegativeInt.make(6),
-          subjectStartChar: NonNegativeInt.make(0),
-          verified: false,
-        }),
-      ],
-      paperId: paper1,
-      proposer: proposerModel,
-      subset: "relation",
-      version: "gold/v1",
-    });
-    const encodedStructure = Result.getOrThrow(encodeGoldFileResult(structure));
-    const encodedEntity = Result.getOrThrow(encodeGoldFileResult(entity));
-    const encodedRelation = Result.getOrThrow(encodeGoldFileResult(relation));
+  it.effect("encodes gold labels without corpus text and hydrates exact document slices", () =>
+    Effect.gen(function* () {
+      const text = "Effect uses Schema";
+      const structure = GoldFile.make({
+        labels: [
+          GoldStructureLabel.make({
+            depth: NonNegativeInt.make(0),
+            endChar: NonNegativeInt.make(6),
+            quote: "Effect",
+            role: "title",
+            startChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "structure",
+        version: "gold/v1",
+      });
+      const entity = GoldFile.make({
+        labels: [
+          GoldEntityLabel.make({
+            cluster: "software-effect",
+            endChar: NonNegativeInt.make(6),
+            entityType: "software",
+            label: "Effect",
+            quote: "Effect",
+            startChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "entity",
+        version: "gold/v1",
+      });
+      const relation = GoldFile.make({
+        labels: [
+          GoldRelationLabel.make({
+            endChar: NonNegativeInt.make(18),
+            object: "Schema",
+            objectEndChar: NonNegativeInt.make(18),
+            objectStartChar: NonNegativeInt.make(12),
+            predicate: "uses",
+            quote: text,
+            startChar: NonNegativeInt.make(0),
+            subject: "Effect",
+            subjectEndChar: NonNegativeInt.make(6),
+            subjectStartChar: NonNegativeInt.make(0),
+            verified: false,
+          }),
+        ],
+        paperId: paper1,
+        proposer: proposerModel,
+        subset: "relation",
+        version: "gold/v1",
+      });
+      const encodedStructure = Result.getOrThrow(encodeGoldFileResult(structure));
+      const encodedEntity = Result.getOrThrow(encodeGoldFileResult(entity));
+      const encodedRelation = Result.getOrThrow(encodeGoldFileResult(relation));
 
-    expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
-    expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
-    expect(encodedEntity.labels[0]).not.toHaveProperty("label");
-    expect(encodedEntity.labels[0]).not.toHaveProperty("quote");
-    expect(encodedEntity.labels[0]).toHaveProperty("labelSha256");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("object");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("quote");
-    expect(encodedRelation.labels[0]).not.toHaveProperty("subject");
-    expect(encodedRelation.labels[0]).toHaveProperty("objectSha256");
-    expect(encodedRelation.labels[0]).toHaveProperty("quoteSha256");
-    expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
+      expect(encodedStructure.labels[0]).not.toHaveProperty("quote");
+      expect(encodedStructure.labels[0]).toHaveProperty("quoteSha256");
+      expect(encodedEntity.labels[0]).not.toHaveProperty("label");
+      expect(encodedEntity.labels[0]).not.toHaveProperty("quote");
+      expect(encodedEntity.labels[0]).toHaveProperty("labelSha256");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("object");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("quote");
+      expect(encodedRelation.labels[0]).not.toHaveProperty("subject");
+      expect(encodedRelation.labels[0]).toHaveProperty("objectSha256");
+      expect(encodedRelation.labels[0]).toHaveProperty("quoteSha256");
+      expect(encodedRelation.labels[0]).toHaveProperty("subjectSha256");
 
-    const hydrated = Effect.runSync(
-      decodeGoldFile(encodedRelation).pipe(Effect.provideService(CurrentGoldDocumentText, text))
-    );
-    expect(hydrated).toEqual(relation);
-  });
+      const hydrated = yield* decodeGoldFile(encodedRelation).pipe(
+        Effect.provideService(CurrentGoldDocumentText, text)
+      );
+      expect(hydrated).toEqual(relation);
+    })
+  );
 
-  it("round-trips every tagged-union member", () => {
-    const parsed = ParseOutcome.cases.Parsed.make({
-      outcome: "Parsed",
-      document: documentId,
-      text: "Effect data",
-      extractor: extractorIdentity,
-    });
-    const degradedParse = ParseOutcome.cases.Degraded.make({
-      outcome: "Degraded",
-      document: documentId,
-      kind: "invalid-utf8",
-      detail: "Input was not valid UTF-8.",
-    });
-    roundTrip(Origin, fixtureOrigin);
-    roundTrip(Origin, w1Origin);
-    roundTrip(ParseOutcome, parsed);
-    roundTrip(ParseOutcome, degradedParse);
-    roundTrip(ClaimBody, entityBody);
-    roundTrip(ClaimBody, relationBody);
-    roundTrip(ClaimBody, structureBody);
-    roundTrip(ExtractOutcome, ExtractOutcome.cases.Extracted.make({ outcome: "Extracted", batch: evidenceBatch }));
-    roundTrip(
-      ExtractOutcome,
-      ExtractOutcome.cases.Degraded.make({
+  it.effect("round-trips every tagged-union member", () =>
+    Effect.gen(function* () {
+      const parsed = ParseOutcome.cases.Parsed.make({
+        outcome: "Parsed",
+        document: documentId,
+        text: "Effect data",
+        extractor: extractorIdentity,
+      });
+      const degradedParse = ParseOutcome.cases.Degraded.make({
         outcome: "Degraded",
         document: documentId,
-        lane: "hosted",
-        kind: "provider-unavailable",
-        detail: "Provider cache miss.",
-      })
-    );
+        kind: "invalid-utf8",
+        detail: "Input was not valid UTF-8.",
+      });
+      roundTrip(Origin, fixtureOrigin);
+      roundTrip(Origin, w1Origin);
+      roundTrip(ParseOutcome, parsed);
+      roundTrip(ParseOutcome, degradedParse);
+      roundTrip(ClaimBody, entityBody);
+      roundTrip(ClaimBody, relationBody);
+      roundTrip(ClaimBody, structureBody);
+      roundTrip(ExtractOutcome, ExtractOutcome.cases.Extracted.make({ outcome: "Extracted", batch: evidenceBatch }));
+      roundTrip(
+        ExtractOutcome,
+        ExtractOutcome.cases.Degraded.make({
+          outcome: "Degraded",
+          document: documentId,
+          lane: "hosted",
+          kind: "provider-unavailable",
+          detail: "Provider cache miss.",
+        })
+      );
 
-    const eventBodies = [
-      EventBody.cases.Ingested.make({ kind: "Ingested", document: documentId }),
-      EventBody.cases.Parsed.make({
-        kind: "Parsed",
-        document: documentId,
-        outcome: "parsed",
-        extractor: extractorIdentity,
-      }),
-      EventBody.cases.Chunked.make({ kind: "Chunked", document: documentId, chunks: [chunkId] }),
-      EventBody.cases.Extracted.make({ kind: "Extracted", batch: batchId, model: hostedModel }),
-      EventBody.cases.Asserted.make({ kind: "Asserted", claims: [claimId] }),
-      EventBody.cases.Invalidated.make({ kind: "Invalidated", claim: claimId, reason: "superseded" }),
-    ];
-    A.forEach(eventBodies, (body) => roundTrip(EventBody, body));
+      const eventBodies = [
+        EventBody.cases.Ingested.make({ kind: "Ingested", document: documentId }),
+        EventBody.cases.Parsed.make({
+          kind: "Parsed",
+          document: documentId,
+          outcome: "parsed",
+          extractor: extractorIdentity,
+        }),
+        EventBody.cases.Chunked.make({ kind: "Chunked", document: documentId, chunks: [chunkId] }),
+        EventBody.cases.Extracted.make({ kind: "Extracted", batch: batchId, model: hostedModel }),
+        EventBody.cases.Asserted.make({ kind: "Asserted", claims: [claimId] }),
+        EventBody.cases.Invalidated.make({ kind: "Invalidated", claim: claimId, reason: "superseded" }),
+      ];
+      A.forEach(eventBodies, (body) => roundTrip(EventBody, body));
 
-    const structureFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "structure",
-      labels: [],
-      proposer: proposerModel,
-    });
-    const entityFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "entity",
-      labels: [],
-      proposer: proposerModel,
-    });
-    const relationFile = GoldFile.make({
-      version: "gold/v1",
-      paperId: paper1,
-      subset: "relation",
-      labels: [],
-      proposer: proposerModel,
-    });
-    roundTripGoldFile(structureFile);
-    roundTripGoldFile(entityFile);
-    roundTripGoldFile(relationFile);
-  });
+      const structureFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "structure",
+        labels: [],
+        proposer: proposerModel,
+      });
+      const entityFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "entity",
+        labels: [],
+        proposer: proposerModel,
+      });
+      const relationFile = GoldFile.make({
+        version: "gold/v1",
+        paperId: paper1,
+        subset: "relation",
+        labels: [],
+        proposer: proposerModel,
+      });
+      yield* roundTripGoldFile(structureFile);
+      yield* roundTripGoldFile(entityFile);
+      yield* roundTripGoldFile(relationFile);
+    })
+  );
 
   it("round-trips every typed error", () => {
     roundTrip(DocumentUnavailable, DocumentUnavailable.make({ message: "Document unavailable." }));
@@ -909,8 +909,8 @@ describe("document and text refinements", () => {
 });
 
 describe("digest and provider-cache refinements", () => {
-  it.effect("keeps canonical digests stable across key insertion order and supports field omission", () =>
-    provideBunCrypto(
+  it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("keeps canonical digests stable across key insertion order and supports field omission", () =>
       Effect.gen(function* () {
         const Ordered = S.Struct({ a: S.Finite, b: S.Finite });
         const ReportShape = S.Struct({ a: S.Finite, digest: S.String });
@@ -924,8 +924,8 @@ describe("digest and provider-cache refinements", () => {
         expect(Result.getOrThrow(contentDigestSync(Ordered)({ b: 2, a: 1 }))).toBe(left);
         expect(Result.getOrThrow(digestOmittingSync(ReportShape, "digest")({ a: 1, digest: "ignored" }))).toBe(omitted);
       })
-    )
-  );
+    );
+  });
 
   it("accepts both cache digests and rejects either mismatched digest", () => {
     pipe(isProviderCacheEntry(providerEntry), assertTrue);

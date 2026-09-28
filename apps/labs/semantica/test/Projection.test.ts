@@ -124,7 +124,7 @@ describe("C1 vector projection", () => {
 });
 
 describe("C1 committed projection gate", () => {
-  it.live("fails typed on empty and mismatched G-projection witnesses", () =>
+  it.effect("fails typed on empty and mismatched G-projection witnesses", () =>
     Effect.gen(function* () {
       const model = embeddingModel(PosInt.make(3));
       const queryChunk = chunkId("1");
@@ -166,7 +166,7 @@ describe("C1 committed projection gate", () => {
 });
 
 describe("C1 embedding cache", () => {
-  it.live("writes actual provider vectors live, replays them offline, and degrades only cache misses", () =>
+  it.effect("writes actual provider vectors live, replays them offline, and degrades only cache misses", () =>
     Effect.gen(function* () {
       const model = embeddingModel(PosInt.make(3));
       const providerCalls = yield* Ref.make(0);

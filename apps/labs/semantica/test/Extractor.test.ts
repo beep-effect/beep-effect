@@ -174,34 +174,35 @@ describe("C0 hosted extractor", () => {
     );
   });
 
-  it.effect("preserves hosted coreference cluster assignments on entity claims", () => {
+  {
     const text = "Ada wrote notes.";
     const extractions = [grounded("person", "Ada", 0, O.some({ cluster: "person-ada" }))];
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
+      it.effect("preserves hosted coreference cluster assignments on entity claims", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            const cluster = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
+              O.flatMap((claim) =>
+                ClaimBody.match(claim.body, {
+                  Entity: (body) => body.cluster,
+                  Relation: () => O.none(),
+                  Structure: () => O.none(),
+                })
+              )
+            );
+            assertSome(cluster, "person-ada");
+          }
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          const cluster = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
-            O.flatMap((claim) =>
-              ClaimBody.match(claim.body, {
-                Entity: (body) => body.cluster,
-                Relation: () => O.none(),
-                Structure: () => O.none(),
-              })
-            )
-          );
-          assertSome(cluster, "person-ada");
-        }
-      })
-    );
-  });
-
-  it.effect("anchors repeated endpoint surfaces inside relation evidence and synthesizes same-batch entities", () => {
+  {
     const text = "Ada wrote notes. Ada selected Engine.";
     const relationStart = text.lastIndexOf("Ada");
     const engineStart = text.indexOf("Engine");
@@ -217,40 +218,43 @@ describe("C0 hosted extractor", () => {
         })
       ),
     ];
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
+      it.effect("anchors repeated endpoint surfaces inside relation evidence and synthesizes same-batch entities", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Degraded") {
+            return yield* Effect.die(new Error(outcome.detail));
+          }
+          const entities = A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity");
+          const relation = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Relation");
+          const subject = A.findFirst(entities, (claim) => claim.body.startChar === relationStart);
+          const object = A.findFirst(entities, (claim) => claim.body.startChar === engineStart);
+          pipe(relation, O.isSome, assertTrue);
+          pipe(subject, O.isSome, assertTrue);
+          pipe(object, O.isSome, assertTrue);
+          expect(entities).toHaveLength(2);
+          expect(
+            O.map(relation, (claim) =>
+              ClaimBody.match(claim.body, {
+                Entity: () => O.none(),
+                Relation: (body) => O.some([body.subject, body.object]),
+                Structure: () => O.none(),
+              })
+            )
+          ).toEqual(
+            O.all([O.map(subject, (claim) => claim.id), O.map(object, (claim) => claim.id)]).pipe(O.map(O.some))
+          );
+          expect(outcome.batch.degraded).toEqual([]);
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Degraded") {
-          return yield* Effect.die(new Error(outcome.detail));
-        }
-        const entities = A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity");
-        const relation = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Relation");
-        const subject = A.findFirst(entities, (claim) => claim.body.startChar === relationStart);
-        const object = A.findFirst(entities, (claim) => claim.body.startChar === engineStart);
-        pipe(relation, O.isSome, assertTrue);
-        pipe(subject, O.isSome, assertTrue);
-        pipe(object, O.isSome, assertTrue);
-        expect(entities).toHaveLength(2);
-        expect(
-          O.map(relation, (claim) =>
-            ClaimBody.match(claim.body, {
-              Entity: () => O.none(),
-              Relation: (body) => O.some([body.subject, body.object]),
-              Structure: () => O.none(),
-            })
-          )
-        ).toEqual(O.all([O.map(subject, (claim) => claim.id), O.map(object, (claim) => claim.id)]).pipe(O.map(O.some)));
-        expect(outcome.batch.degraded).toEqual([]);
-      })
-    );
-  });
-
-  it.effect("reuses base entity claims already anchored inside the relation evidence", () => {
+  {
     const text = "Ada wrote notes. Ada selected Engine.";
     const secondAda = text.lastIndexOf("Ada");
     const engine = text.indexOf("Engine");
@@ -264,75 +268,78 @@ describe("C0 hosted extractor", () => {
         O.some({ object: "Engine", predicate: "selected", subject: "Ada" })
       ),
     ];
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
+      it.effect("reuses base entity claims already anchored inside the relation evidence", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation")).toHaveLength(1);
+            expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity")).toHaveLength(2);
+            assertSome(
+              A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
+                O.map((claim) => claim.body.startChar)
+              ),
+              secondAda
+            );
+            expect(outcome.batch.degraded).toEqual([]);
+          }
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation")).toHaveLength(1);
-          expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity")).toHaveLength(2);
-          assertSome(
-            A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
-              O.map((claim) => claim.body.startChar)
-            ),
-            secondAda
-          );
-          expect(outcome.batch.degraded).toEqual([]);
-        }
-      })
-    );
-  });
-
-  it.effect("retains an unresolved relation as a degraded claim", () => {
+  {
     const text = "Ada praised Engine.";
     const extractions = [
       grounded("person", "Ada", 0),
       grounded("method", "Engine", text.indexOf("Engine")),
       grounded("relation", text, 0, O.some({ object: "Engine", predicate: "praised", subject: "Missing" })),
     ];
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
+      it.effect("retains an unresolved relation as a degraded claim", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "relation-unresolved" }]);
+            pipe(
+              A.some(outcome.batch.claims, (claim) => claim.body.kind === "Relation"),
+              assertFalse
+            );
+          }
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          expect(outcome.batch.degraded).toMatchObject([{ kind: "relation-unresolved" }]);
-          pipe(
-            A.some(outcome.batch.claims, (claim) => claim.body.kind === "Relation"),
-            assertFalse
-          );
-        }
-      })
-    );
-  });
-
-  it.effect("fails a malformed relation contract as typed model-output degradation", () => {
+  {
     const text = "Ada selected Engine.";
     const extractions = [grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" }))];
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
+      it.effect("fails a malformed relation contract as typed model-output degradation", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "model-output-invalid" }]);
+            expect(outcome.batch.claims).toEqual([]);
+          }
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          expect(outcome.batch.degraded).toMatchObject([{ kind: "model-output-invalid" }]);
-          expect(outcome.batch.claims).toEqual([]);
-        }
-      })
-    );
-  });
-
-  it.effect("disqualifies fuzzy alignment for relation evidence", () => {
+  {
     const text = "Ada selected Engine.";
     const extraction = GroundedExtraction.cases.match_fuzzy.make({
       alignmentStatus: "match_fuzzy",
@@ -343,23 +350,24 @@ describe("C0 hosted extractor", () => {
       span: Contract.Span.make({ end: NonNegativeInt.make(text.length), start: NonNegativeInt.make(0) }),
       text,
     });
+    it.layer(Layer.merge(baseLayer, hostedLayer([extraction])), { timeout: "30 seconds" })((it) => {
+      it.effect("disqualifies fuzzy alignment for relation evidence", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, hostedLayer([extraction])))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical(text);
-        const extractor = yield* HostedExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "fabricated-span" }]);
+            expect(outcome.batch.claims).toEqual([]);
+          }
+        })
+      );
+    });
+  }
 
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          expect(outcome.batch.degraded).toMatchObject([{ kind: "fabricated-span" }]);
-          expect(outcome.batch.claims).toEqual([]);
-        }
-      })
-    );
-  });
-
-  it.live.each([
+  it.effect.each([
     ["model-generation-failed", "provider-unavailable"],
     ["model-output-parse-failed", "model-output-invalid"],
   ] as const)("maps %s to a %s outcome value", ([reason, expectedKind]) =>
@@ -376,7 +384,7 @@ describe("C0 hosted extractor", () => {
 });
 
 describe("C0 pattern extractor", () => {
-  it.effect("turns an absent or width-mismatched Wink span into fabricated-span", () => {
+  {
     const nlp = Layer.succeed(
       NLPService,
       NLPService.of({
@@ -397,20 +405,21 @@ describe("C0 pattern extractor", () => {
       })
     );
     const pattern = PatternExtractorLive.pipe(Layer.provide(nlp), Layer.provide(canonicalizerLayer));
+    it.layer(Layer.merge(baseLayer, pattern), { timeout: "30 seconds" })((it) => {
+      it.effect("turns an absent or width-mismatched Wink span into fabricated-span", () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical("Alice writes.");
+          const extractor = yield* PatternExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
 
-    return provideScopedLayer(Layer.merge(baseLayer, pattern))(
-      Effect.gen(function* () {
-        const { canonical, chunks } = yield* makeCanonical("Alice writes.");
-        const extractor = yield* PatternExtractor;
-        const outcome = yield* extractor.extract(canonical, chunks);
-
-        expect(outcome.outcome).toBe("Extracted");
-        if (outcome.outcome === "Extracted") {
-          expect(outcome.batch.claims).toEqual([]);
-          expect(outcome.batch.degraded).toMatchObject([{ kind: "fabricated-span" }]);
-          expect(outcome.batch.lossy).toEqual(["relations-not-supported", "structure-not-supported"]);
-        }
-      })
-    );
-  });
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.claims).toEqual([]);
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "fabricated-span" }]);
+            expect(outcome.batch.lossy).toEqual(["relations-not-supported", "structure-not-supported"]);
+          }
+        })
+      );
+    });
+  }
 });

@@ -12,7 +12,6 @@ import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
@@ -326,7 +325,7 @@ describe("C0 evaluator metric math", () => {
     expect(bCubedF1(predicted, expected)).toBeCloseTo(2 / 3);
   });
 
-  it.effect("keeps identical relation text in different documents as distinct metric keys", () => {
+  {
     const papers = A.take(paperIds, 2);
     const firstPaper = A.getUnsafe(papers, 0);
     const secondPaper = A.getUnsafe(papers, 1);
@@ -357,25 +356,26 @@ describe("C0 evaluator metric math", () => {
       GoldSource.of({ load: Effect.fn("GoldSource.relationIdentity")(() => Effect.succeed(scenarioFiles)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
+    it.layer(Layer.merge(BunCrypto.layer, evaluator), { timeout: "30 seconds" })((it) => {
+      it.effect("keeps identical relation text in different documents as distinct metric keys", () =>
+        Effect.gen(function* () {
+          const service = yield* Evaluator;
+          const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
+          const relation = A.findFirst(
+            report.metrics,
+            (metric) => metric.name === "rebel-end-to-end-triple-f1" && metric.lane === "hosted"
+          );
 
-    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
-      Effect.gen(function* () {
-        const service = yield* Evaluator;
-        const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
-        const relation = A.findFirst(
-          report.metrics,
-          (metric) => metric.name === "rebel-end-to-end-triple-f1" && metric.lane === "hosted"
-        );
+          assertSome<number>(
+            O.map(relation, (metric) => metric.value),
+            0.5
+          );
+        })
+      );
+    });
+  }
 
-        assertSome<number>(
-          O.map(relation, (metric) => metric.value),
-          0.5
-        );
-      })
-    );
-  });
-
-  it.effect("scores provider cluster assignments instead of normalized entity surfaces", () => {
+  {
     const selectedRun = metricRun([paperId]);
     const source = w1Document(DocumentId.make(Str.repeat(64)("a")), paperId);
     const predictedEntities = [
@@ -402,71 +402,74 @@ describe("C0 evaluator metric math", () => {
       GoldSource.of({ load: Effect.fn("GoldSource.coreference")(() => Effect.succeed(scenarioFiles)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
+    it.layer(Layer.merge(BunCrypto.layer, evaluator), { timeout: "30 seconds" })((it) => {
+      it.effect("scores provider cluster assignments instead of normalized entity surfaces", () =>
+        Effect.gen(function* () {
+          const service = yield* Evaluator;
+          const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
+          const pairwise = A.findFirst(
+            report.metrics,
+            (metric) => metric.name === "pairwise-f1" && metric.lane === "hosted"
+          );
+          const bCubed = A.findFirst(report.metrics, (metric) => metric.name === "b-cubed" && metric.lane === "hosted");
 
-    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
-      Effect.gen(function* () {
-        const service = yield* Evaluator;
-        const report = yield* service.score(selectedRun, selectedSnapshot, outcomes);
-        const pairwise = A.findFirst(
-          report.metrics,
-          (metric) => metric.name === "pairwise-f1" && metric.lane === "hosted"
-        );
-        const bCubed = A.findFirst(report.metrics, (metric) => metric.name === "b-cubed" && metric.lane === "hosted");
+          assertSome<number>(
+            O.map(pairwise, (metric) => metric.value),
+            0
+          );
+          assertSome<number>(
+            O.map(bCubed, (metric) => metric.value),
+            2 / 3
+          );
+        })
+      );
+    });
+  }
 
-        assertSome<number>(
-          O.map(pairwise, (metric) => metric.value),
-          0
-        );
-        assertSome<number>(
-          O.map(bCubed, (metric) => metric.value),
-          2 / 3
-        );
-      })
-    );
-  });
-
-  it.effect("counts hosted degradation on a fixture declared parseable", () => {
+  {
     const goldSource = Layer.succeed(
       GoldSource,
       GoldSource.of({ load: Effect.fn("GoldSource.fixtureDegraded")(() => Effect.succeed(files)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
+    it.layer(Layer.merge(BunCrypto.layer, evaluator), { timeout: "30 seconds" })((it) => {
+      it.effect("counts hosted degradation on a fixture declared parseable", () =>
+        Effect.gen(function* () {
+          const service = yield* Evaluator;
+          const report = yield* service.score(run, snapshot, [fixtureHostedDegraded]);
 
-    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
-      Effect.gen(function* () {
-        const service = yield* Evaluator;
-        const report = yield* service.score(run, snapshot, [fixtureHostedDegraded]);
+          expect(A.headNonEmpty(report.documents).extraction.hosted).toBe("provider-unavailable");
+          expect(report.unexpectedDegraded).toBe(1);
+        })
+      );
+    });
+  }
 
-        expect(A.headNonEmpty(report.documents).extraction.hosted).toBe("provider-unavailable");
-        expect(report.unexpectedDegraded).toBe(1);
-      })
-    );
-  });
-
-  it.effect("loads injected F1-only gold and emits all ten C0 coordinates", () => {
+  {
     const goldSource = Layer.succeed(
       GoldSource,
       GoldSource.of({ load: Effect.fn("GoldSource.stub")(() => Effect.succeed(files)) })
     );
     const evaluator = EvaluatorLive.pipe(Layer.provide(goldSource));
+    it.layer(Layer.merge(BunCrypto.layer, evaluator), { timeout: "30 seconds" })((it) => {
+      it.effect("loads injected F1-only gold and emits all ten C0 coordinates", () =>
+        Effect.gen(function* () {
+          const service = yield* Evaluator;
+          const report = yield* service.score(run, snapshot, []);
 
-    return provideScopedLayer(Layer.merge(BunCrypto.layer, evaluator))(
-      Effect.gen(function* () {
-        const service = yield* Evaluator;
-        const report = yield* service.score(run, snapshot, []);
-
-        expect(report.metrics).toHaveLength(10);
-        expect(report.documents).toHaveLength(1);
-        expect(report.unexpectedDegraded).toBe(1);
-        expect(A.filter(report.metrics, (metric) => metric.status === "unsupported")).toHaveLength(2);
-        pipe(
-          A.every(
-            A.filter(report.metrics, (metric) => metric.status === "scored"),
-            (metric) => metric.support === 1 && metric.value === 1
-          ),
-          assertTrue
-        );
-      })
-    );
-  });
+          expect(report.metrics).toHaveLength(10);
+          expect(report.documents).toHaveLength(1);
+          expect(report.unexpectedDegraded).toBe(1);
+          expect(A.filter(report.metrics, (metric) => metric.status === "unsupported")).toHaveLength(2);
+          pipe(
+            A.every(
+              A.filter(report.metrics, (metric) => metric.status === "scored"),
+              (metric) => metric.support === 1 && metric.value === 1
+            ),
+            assertTrue
+          );
+        })
+      );
+    });
+  }
 });

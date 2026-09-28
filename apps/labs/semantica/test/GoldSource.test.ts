@@ -114,176 +114,168 @@ describe("C0 gold source", () => {
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("loads selected files and omits unreferenced subsets after verifying the complete gold reference", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-source-" });
-          const fixture = yield* writeGoldFixture(directory);
-          const paperIds = [A.getUnsafe(goldPapers, 0), A.getUnsafe(goldPapers, 9)];
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-source-" });
+        const fixture = yield* writeGoldFixture(directory);
+        const paperIds = [A.getUnsafe(goldPapers, 0), A.getUnsafe(goldPapers, 9)];
 
-          const loaded = yield* GoldSource.pipe(
-            Effect.flatMap((source) => source.load(paperIds, [])),
-            provideScopedLayer(GoldSourceLive(directory))
-          );
+        const loaded = yield* GoldSource.pipe(
+          Effect.flatMap((source) => source.load(paperIds, [])),
+          provideScopedLayer(GoldSourceLive(directory))
+        );
 
-          expect(loaded).toEqual(A.filter(fixture.files, (file) => A.contains(paperIds, file.paperId)));
-        })
-      )
+        expect(loaded).toEqual(A.filter(fixture.files, (file) => A.contains(paperIds, file.paperId)));
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("returns GoldUnavailable for a malformed covered file", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-malformed-" });
-          yield* writeGoldFixture(directory);
-          const paperId = A.getUnsafe(goldPapers, 0);
-          yield* fs.writeFileString(path.join(directory, `${paperId}.entity.json`), "not-json");
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-malformed-" });
+        yield* writeGoldFixture(directory);
+        const paperId = A.getUnsafe(goldPapers, 0);
+        yield* fs.writeFileString(path.join(directory, `${paperId}.entity.json`), "not-json");
 
-          const error = yield* GoldSource.pipe(
-            Effect.flatMap((source) => source.load([paperId], [])),
-            provideScopedLayer(GoldSourceLive(directory)),
-            Effect.flip
-          );
+        const error = yield* GoldSource.pipe(
+          Effect.flatMap((source) => source.load([paperId], [])),
+          provideScopedLayer(GoldSourceLive(directory)),
+          Effect.flip
+        );
 
-          expect(error).toBeInstanceOf(GoldUnavailable);
-          expect(error.reason).toBe("read-failed");
-        })
-      )
+        expect(error).toBeInstanceOf(GoldUnavailable);
+        expect(error.reason).toBe("read-failed");
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails typed when a covered label file no longer matches gold.json", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-stale-reference-" });
-          yield* writeGoldFixture(directory);
-          const paperId = A.getUnsafe(goldPapers, 0);
-          const tampered = yield* decodeGoldFileEncoded({
-            labels: [
-              {
-                depth: 0,
-                endChar: 4,
-                quoteSha256: Sha256Hex.make("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-                role: "title",
-                startChar: 0,
-                verified: false,
-              },
-            ],
-            paperId,
-            proposer: encodedProposer,
-            subset: "structure",
-            version: "gold/v1",
-          });
-          const tamperedJson = yield* encodeGoldFileEncodedJson(tampered);
-          yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${tamperedJson}\n`);
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-stale-reference-" });
+        yield* writeGoldFixture(directory);
+        const paperId = A.getUnsafe(goldPapers, 0);
+        const tampered = yield* decodeGoldFileEncoded({
+          labels: [
+            {
+              depth: 0,
+              endChar: 4,
+              quoteSha256: Sha256Hex.make("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+              role: "title",
+              startChar: 0,
+              verified: false,
+            },
+          ],
+          paperId,
+          proposer: encodedProposer,
+          subset: "structure",
+          version: "gold/v1",
+        });
+        const tamperedJson = yield* encodeGoldFileEncodedJson(tampered);
+        yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${tamperedJson}\n`);
 
-          const error = yield* GoldSource.pipe(
-            Effect.flatMap((source) => source.load([paperId], [])),
-            provideScopedLayer(GoldSourceLive(directory)),
-            Effect.flip
-          );
+        const error = yield* GoldSource.pipe(
+          Effect.flatMap((source) => source.load([paperId], [])),
+          provideScopedLayer(GoldSourceLive(directory)),
+          Effect.flip
+        );
 
-          expect(error).toBeInstanceOf(GoldUnavailable);
-          expect(error.reason).toBe("stale-reference");
-        })
-      )
+        expect(error).toBeInstanceOf(GoldUnavailable);
+        expect(error.reason).toBe("stale-reference");
+      })
     );
   });
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails typed when a covered label digest mismatches its canonical document slice", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-digest-mismatch-" });
-          const fixture = yield* writeGoldFixture(directory);
-          const paperId = A.getUnsafe(goldPapers, 0);
-          const mismatched = yield* decodeGoldFileEncoded({
-            labels: [
-              {
-                depth: 0,
-                endChar: 4,
-                quoteSha256: Sha256Hex.make(Str.repeat(64)("b")),
-                role: "title",
-                startChar: 0,
-                verified: false,
-              },
-            ],
-            paperId,
-            proposer: encodedProposer,
-            subset: "structure",
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-gold-digest-mismatch-" });
+        const fixture = yield* writeGoldFixture(directory);
+        const paperId = A.getUnsafe(goldPapers, 0);
+        const mismatched = yield* decodeGoldFileEncoded({
+          labels: [
+            {
+              depth: 0,
+              endChar: 4,
+              quoteSha256: Sha256Hex.make(Str.repeat(64)("b")),
+              role: "title",
+              startChar: 0,
+              verified: false,
+            },
+          ],
+          paperId,
+          proposer: encodedProposer,
+          subset: "structure",
+          version: "gold/v1",
+        });
+        const encodedFiles = A.map(fixture.encodedFiles, (file) =>
+          Str.Equivalence(file.paperId, paperId) && Str.Equivalence(file.subset, "structure") ? mismatched : file
+        );
+        const mismatchedJson = yield* encodeGoldFileEncodedJson(mismatched);
+        yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${mismatchedJson}\n`);
+        const digest = yield* contentDigest(S.Array(GoldFileEncoded))(encodedFiles);
+        const referenceJson = yield* encodeGoldRefJson(
+          GoldRef.make({
+            digest,
+            proposer,
+            spotCheckedFraction: UnitInterval.make(0),
+            subsets,
             version: "gold/v1",
-          });
-          const encodedFiles = A.map(fixture.encodedFiles, (file) =>
-            Str.Equivalence(file.paperId, paperId) && Str.Equivalence(file.subset, "structure") ? mismatched : file
-          );
-          const mismatchedJson = yield* encodeGoldFileEncodedJson(mismatched);
-          yield* fs.writeFileString(path.join(directory, `${paperId}.structure.json`), `${mismatchedJson}\n`);
-          const digest = yield* contentDigest(S.Array(GoldFileEncoded))(encodedFiles);
-          const referenceJson = yield* encodeGoldRefJson(
-            GoldRef.make({
-              digest,
-              proposer,
-              spotCheckedFraction: UnitInterval.make(0),
-              subsets,
-              version: "gold/v1",
-            })
-          );
-          yield* fs.writeFileString(path.join(directory, "gold.json"), `${referenceJson}\n`);
+          })
+        );
+        yield* fs.writeFileString(path.join(directory, "gold.json"), `${referenceJson}\n`);
 
-          const documentId = DocumentId.make(Str.repeat(64)("c"));
-          const extractor = SourceTextExtractor.make({ name: "gold-source-test", version: "0.0.0" });
-          const identity = SourceTextIdentity.make({
+        const documentId = DocumentId.make(Str.repeat(64)("c"));
+        const extractor = SourceTextExtractor.make({ name: "gold-source-test", version: "0.0.0" });
+        const identity = SourceTextIdentity.make({
+          extractor,
+          locator: PosixPath.make(`${paperId}.pdf`),
+          normalizationVersion: "raw/1",
+          scopeRef: "semantica-gold-source-test",
+          sourceDigest: SourceTextDigest.make(`sha256:${documentId}`),
+          sourceRef: documentId,
+          textDigest: SourceTextDigest.make(`sha256:${Str.repeat(64)("d")}`),
+        });
+        const document = SourceDocument.make({
+          acquired: ProvenanceEventId.make(Str.repeat(64)("e")),
+          bytes: NonNegativeInt.make(4),
+          id: documentId,
+          mediaType: "application/pdf",
+          origin: Origin.cases.W1Paper.make({
+            corpusId: "academia-2026-07",
+            paperId,
+            relativePath: `${paperId}.pdf`,
+          }),
+          sha256: documentId,
+        });
+        const snapshot = LedgerDocumentSnapshot.make({
+          canonical: O.some(ResolvedSourceText.make({ identity, text: "Test" })),
+          chunks: [],
+          document,
+          outcome: ParseOutcome.cases.Parsed.make({
+            document: documentId,
             extractor,
-            locator: PosixPath.make(`${paperId}.pdf`),
-            normalizationVersion: "raw/1",
-            scopeRef: "semantica-gold-source-test",
-            sourceDigest: SourceTextDigest.make(`sha256:${documentId}`),
-            sourceRef: documentId,
-            textDigest: SourceTextDigest.make(`sha256:${Str.repeat(64)("d")}`),
-          });
-          const document = SourceDocument.make({
-            acquired: ProvenanceEventId.make(Str.repeat(64)("e")),
-            bytes: NonNegativeInt.make(4),
-            id: documentId,
-            mediaType: "application/pdf",
-            origin: Origin.cases.W1Paper.make({
-              corpusId: "academia-2026-07",
-              paperId,
-              relativePath: `${paperId}.pdf`,
-            }),
-            sha256: documentId,
-          });
-          const snapshot = LedgerDocumentSnapshot.make({
-            canonical: O.some(ResolvedSourceText.make({ identity, text: "Test" })),
-            chunks: [],
-            document,
-            outcome: ParseOutcome.cases.Parsed.make({
-              document: documentId,
-              extractor,
-              outcome: "Parsed",
-              text: "Test",
-            }),
-          });
+            outcome: "Parsed",
+            text: "Test",
+          }),
+        });
 
-          const error = yield* GoldSource.pipe(
-            Effect.flatMap((source) => source.load([paperId], [snapshot])),
-            provideScopedLayer(GoldSourceLive(directory)),
-            Effect.flip
-          );
+        const error = yield* GoldSource.pipe(
+          Effect.flatMap((source) => source.load([paperId], [snapshot])),
+          provideScopedLayer(GoldSourceLive(directory)),
+          Effect.flip
+        );
 
-          expect(error).toBeInstanceOf(GoldUnavailable);
-          expect(error.reason).toBe("digest-failed");
-        })
-      )
+        expect(error).toBeInstanceOf(GoldUnavailable);
+        expect(error.reason).toBe("digest-failed");
+      })
     );
   });
 });

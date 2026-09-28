@@ -59,189 +59,182 @@ describe("C0 F1 live-to-replay slice", () => {
 
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("runs real F1-only sources without a corpus root and replays to an equal report digest", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const temp = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c0-slice-" });
-          const goldDirectory = path.join(temp, "gold");
-          const cacheDirectory = path.join(temp, "provider-cache");
-          const ledgerRoot = path.join(temp, "ledger");
-          const liveOut = path.join(temp, "live-out");
-          const replayOut = path.join(temp, "replay-out");
-          const manifest = yield* fs
-            .readFileString("fixtures/w1.manifest.json")
-            .pipe(Effect.flatMap(decodeManifestJson));
-          const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
-          const goldIds = A.map(A.take(manifest.rows, 10), (row) => row.id);
-          const proposer = ModelIdentity.make({
-            artifactHash: Sha256Hex.make("8".repeat(64)),
-            name: "stub-gold-20260826",
-            provider: "xai",
-            revision: "stub-gold-20260826",
-            taskType: "gold-proposal",
-          });
-          const gold = GoldRef.make({
-            digest: Sha256Hex.make("9".repeat(64)),
-            proposer,
-            spotCheckedFraction: UnitInterval.make(0),
-            subsets: GoldSubset.make({
-              entity: A.take(goldIds, 5),
-              relation: A.take(goldIds, 3),
-              structure: goldIds,
-            }),
-            version: "gold/v1",
-          });
-          const goldPaper = A.getUnsafe(goldIds, 0);
-          const goldFiles = [
-            GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "structure", version: "gold/v1" }),
-            GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "entity", version: "gold/v1" }),
-            GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "relation", version: "gold/v1" }),
-          ];
-          yield* fs.makeDirectory(goldDirectory, { recursive: true });
-          yield* fs.writeFileString(path.join(goldDirectory, "gold.json"), `${yield* encodeGoldRefJson(gold)}\n`);
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temp = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c0-slice-" });
+        const goldDirectory = path.join(temp, "gold");
+        const cacheDirectory = path.join(temp, "provider-cache");
+        const ledgerRoot = path.join(temp, "ledger");
+        const liveOut = path.join(temp, "live-out");
+        const replayOut = path.join(temp, "replay-out");
+        const manifest = yield* fs.readFileString("fixtures/w1.manifest.json").pipe(Effect.flatMap(decodeManifestJson));
+        const fixtures = yield* fs.readFileString("fixtures/f1/index.json").pipe(Effect.flatMap(decodeF1IndexJson));
+        const goldIds = A.map(A.take(manifest.rows, 10), (row) => row.id);
+        const proposer = ModelIdentity.make({
+          artifactHash: Sha256Hex.make("8".repeat(64)),
+          name: "stub-gold-20260826",
+          provider: "xai",
+          revision: "stub-gold-20260826",
+          taskType: "gold-proposal",
+        });
+        const gold = GoldRef.make({
+          digest: Sha256Hex.make("9".repeat(64)),
+          proposer,
+          spotCheckedFraction: UnitInterval.make(0),
+          subsets: GoldSubset.make({
+            entity: A.take(goldIds, 5),
+            relation: A.take(goldIds, 3),
+            structure: goldIds,
+          }),
+          version: "gold/v1",
+        });
+        const goldPaper = A.getUnsafe(goldIds, 0);
+        const goldFiles = [
+          GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "structure", version: "gold/v1" }),
+          GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "entity", version: "gold/v1" }),
+          GoldFile.make({ labels: [], paperId: goldPaper, proposer, subset: "relation", version: "gold/v1" }),
+        ];
+        yield* fs.makeDirectory(goldDirectory, { recursive: true });
+        yield* fs.writeFileString(path.join(goldDirectory, "gold.json"), `${yield* encodeGoldRefJson(gold)}\n`);
 
-          const config = Layer.succeed(
-            LabConfig,
-            LabConfig.of({
-              corpusRoot: O.none(),
-              embeddingDimension: PosInt.make(1536),
-              embeddingModel: "text-embedding-3-small",
-              embeddingRevision: "text-embedding-3-small@2024-01-25",
-              extractionTimeout: Duration.minutes(15),
-              extractorModel: "stub-extractor-20260826",
-              goldDirectory,
-              goldGenerationTimeout: Duration.minutes(45),
-              goldModel: "stub-gold-20260826",
-              ledgerRoot,
-              mode: "live",
-              offline: false,
-              projectionTimeout: Duration.seconds(30),
-              providerCacheDirectory: cacheDirectory,
-            })
+        const config = Layer.succeed(
+          LabConfig,
+          LabConfig.of({
+            corpusRoot: O.none(),
+            embeddingDimension: PosInt.make(1536),
+            embeddingModel: "text-embedding-3-small",
+            embeddingRevision: "text-embedding-3-small@2024-01-25",
+            extractionTimeout: Duration.minutes(15),
+            extractorModel: "stub-extractor-20260826",
+            goldDirectory,
+            goldGenerationTimeout: Duration.minutes(45),
+            goldModel: "stub-gold-20260826",
+            ledgerRoot,
+            mode: "live",
+            offline: false,
+            projectionTimeout: Duration.seconds(30),
+            providerCacheDirectory: cacheDirectory,
+          })
+        );
+        const manifestBuilder = CorpusManifestBuilderLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
+        const fixtureCatalog = F1CatalogLive.pipe(Layer.provide(BunServices.layer));
+        const documentSource = DocumentSourceLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
+        const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunServices.layer));
+        const chunker = ChunkerLive.pipe(Layer.provide(canonicalizer), Layer.provide(BunServices.layer));
+        const providerCache = ProviderCacheLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
+        const providerCalls = yield* Ref.make(0);
+        const hostedProvider = Layer.effect(
+          LanguageModel.LanguageModel,
+          LanguageModel.make({
+            generateText: () =>
+              Ref.update(providerCalls, (count) => count + 1).pipe(
+                Effect.as([Response.makePart("text", { text: '{"extractions":[]}' })])
+              ),
+            streamText: () => Stream.empty,
+          })
+        );
+        const goldSourceLayer = (_directory: string) =>
+          Layer.succeed(
+            GoldSource,
+            GoldSource.of({ load: Effect.fn("GoldSource.slice")(() => Effect.succeed(goldFiles)) })
           );
-          const manifestBuilder = CorpusManifestBuilderLive.pipe(
-            Layer.provide(config),
-            Layer.provide(BunServices.layer)
-          );
-          const fixtureCatalog = F1CatalogLive.pipe(Layer.provide(BunServices.layer));
-          const documentSource = DocumentSourceLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
-          const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunServices.layer));
-          const chunker = ChunkerLive.pipe(Layer.provide(canonicalizer), Layer.provide(BunServices.layer));
-          const providerCache = ProviderCacheLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
-          const providerCalls = yield* Ref.make(0);
-          const hostedProvider = Layer.effect(
-            LanguageModel.LanguageModel,
-            LanguageModel.make({
-              generateText: () =>
-                Ref.update(providerCalls, (count) => count + 1).pipe(
-                  Effect.as([Response.makePart("text", { text: '{"extractions":[]}' })])
-                ),
-              streamText: () => Stream.empty,
-            })
-          );
-          const goldSourceLayer = (_directory: string) =>
-            Layer.succeed(
-              GoldSource,
-              GoldSource.of({ load: Effect.fn("GoldSource.slice")(() => Effect.succeed(goldFiles)) })
-            );
-          const dependencies = Layer.mergeAll(
-            BunServices.layer,
-            canonicalizer,
-            chunker,
-            config,
-            documentSource,
-            fixtureCatalog,
-            manifestBuilder,
-            ParserLive,
-            providerCache
-          );
-          const canary = CanaryC0WithGoldSourceLive({ goldSourceLayer, hostedProvider }).pipe(
-            Layer.provide(dependencies)
-          );
-          const runtime = Layer.merge(dependencies, canary);
+        const dependencies = Layer.mergeAll(
+          BunServices.layer,
+          canonicalizer,
+          chunker,
+          config,
+          documentSource,
+          fixtureCatalog,
+          manifestBuilder,
+          ParserLive,
+          providerCache
+        );
+        const canary = CanaryC0WithGoldSourceLive({ goldSourceLayer, hostedProvider }).pipe(
+          Layer.provide(dependencies)
+        );
+        const runtime = Layer.merge(dependencies, canary);
 
-          yield* Effect.gen(function* () {
-            const service = yield* CanaryC0;
-            const live = yield* service.run({
-              manifest: "fixtures/w1.manifest.json",
-              offline: false,
-              out: O.some(liveOut),
-              paper: O.none(),
-              selection: "f1",
-            });
-            const callsAfterLive = yield* Ref.get(providerCalls);
-            const replay = yield* service.run({
+        yield* Effect.gen(function* () {
+          const service = yield* CanaryC0;
+          const live = yield* service.run({
+            manifest: "fixtures/w1.manifest.json",
+            offline: false,
+            out: O.some(liveOut),
+            paper: O.none(),
+            selection: "f1",
+          });
+          const callsAfterLive = yield* Ref.get(providerCalls);
+          const replay = yield* service.run({
+            manifest: "fixtures/w1.manifest.json",
+            offline: true,
+            out: O.some(replayOut),
+            paper: O.none(),
+            selection: "f1",
+          });
+          const callsAfterReplay = yield* Ref.get(providerCalls);
+          const writtenLive = yield* fs
+            .readFileString(path.join(liveOut, "eval-report.json"))
+            .pipe(Effect.flatMap(decodeEvalReportJson));
+          const writtenReplay = yield* fs
+            .readFileString(path.join(replayOut, "eval-report.json"))
+            .pipe(Effect.flatMap(decodeEvalReportJson));
+          const liveTelemetry = yield* fs
+            .readFileString(path.join(liveOut, "eval-telemetry.json"))
+            .pipe(Effect.flatMap(decodeEvalTelemetryJson));
+          const replayTelemetry = yield* fs
+            .readFileString(path.join(replayOut, "eval-telemetry.json"))
+            .pipe(Effect.flatMap(decodeEvalTelemetryJson));
+
+          expect(live.reportDigest).toBe(replay.reportDigest);
+          expect(live.reportDigest).toBe("95cc0a0dbe099ab307d18f36e657b9ab758e95753bb46bbf44e0ecf623c17dc9");
+          expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
+          expect(writtenLive.reportDigest).toBe(live.reportDigest);
+          expect(live.unexpectedDegraded).toBe(0);
+          expect(replay.unexpectedDegraded).toBe(0);
+          expect(live.documents).toHaveLength(fixtures.fixtures.length);
+          expect(callsAfterLive).toBe(6);
+          expect(callsAfterReplay).toBe(callsAfterLive);
+          expect(liveTelemetry.mode).toBe("live");
+          expect(replayTelemetry.mode).toBe("replay");
+          assertNone(liveTelemetry.dependencyBytes);
+          assertNone(liveTelemetry.modelBytes);
+          for (const outcome of live.documents) {
+            if (outcome.origin.kind === "Fixture") {
+              const expected = outcome.origin.declared;
+              expect(expected.expectation === "parses" ? "parsed" : O.getOrThrow(expected.degradedKind)).toBe(
+                outcome.parse
+              );
+            }
+          }
+
+          yield* fs.remove(cacheDirectory, { force: true, recursive: true });
+          const replayAfterCacheRemoval = yield* service
+            .run({
               manifest: "fixtures/w1.manifest.json",
               offline: true,
               out: O.some(replayOut),
               paper: O.none(),
               selection: "f1",
-            });
-            const callsAfterReplay = yield* Ref.get(providerCalls);
-            const writtenLive = yield* fs
-              .readFileString(path.join(liveOut, "eval-report.json"))
-              .pipe(Effect.flatMap(decodeEvalReportJson));
-            const writtenReplay = yield* fs
-              .readFileString(path.join(replayOut, "eval-report.json"))
-              .pipe(Effect.flatMap(decodeEvalReportJson));
-            const liveTelemetry = yield* fs
-              .readFileString(path.join(liveOut, "eval-telemetry.json"))
-              .pipe(Effect.flatMap(decodeEvalTelemetryJson));
-            const replayTelemetry = yield* fs
-              .readFileString(path.join(replayOut, "eval-telemetry.json"))
-              .pipe(Effect.flatMap(decodeEvalTelemetryJson));
+            })
+            .pipe(Effect.flip);
+          expect(replayAfterCacheRemoval).toBeInstanceOf(ReportInvalid);
 
-            expect(live.reportDigest).toBe(replay.reportDigest);
-            expect(live.reportDigest).toBe("95cc0a0dbe099ab307d18f36e657b9ab758e95753bb46bbf44e0ecf623c17dc9");
-            expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
-            expect(writtenLive.reportDigest).toBe(live.reportDigest);
-            expect(live.unexpectedDegraded).toBe(0);
-            expect(replay.unexpectedDegraded).toBe(0);
-            expect(live.documents).toHaveLength(fixtures.fixtures.length);
-            expect(callsAfterLive).toBe(6);
-            expect(callsAfterReplay).toBe(callsAfterLive);
-            expect(liveTelemetry.mode).toBe("live");
-            expect(replayTelemetry.mode).toBe("replay");
-            assertNone(liveTelemetry.dependencyBytes);
-            assertNone(liveTelemetry.modelBytes);
-            for (const outcome of live.documents) {
-              if (outcome.origin.kind === "Fixture") {
-                const expected = outcome.origin.declared;
-                expect(expected.expectation === "parses" ? "parsed" : O.getOrThrow(expected.degradedKind)).toBe(
-                  outcome.parse
-                );
-              }
-            }
-
-            yield* fs.remove(cacheDirectory, { force: true, recursive: true });
-            const replayAfterCacheRemoval = yield* service
-              .run({
-                manifest: "fixtures/w1.manifest.json",
-                offline: true,
-                out: O.some(replayOut),
-                paper: O.none(),
-                selection: "f1",
-              })
-              .pipe(Effect.flip);
-            expect(replayAfterCacheRemoval).toBeInstanceOf(ReportInvalid);
-
-            const goldPath = path.join(goldDirectory, "gold.json");
-            yield* fs.remove(goldPath);
-            const missingGold = yield* service
-              .run({
-                manifest: "fixtures/w1.manifest.json",
-                offline: true,
-                out: O.some(replayOut),
-                paper: O.none(),
-                selection: "f1",
-              })
-              .pipe(Effect.flip);
-            expect(missingGold).toBeInstanceOf(GoldUnavailable);
-            expect(missingGold.message).toContain(goldPath);
-          }).pipe(provideScopedLayer(runtime));
-        })
-      )
+          const goldPath = path.join(goldDirectory, "gold.json");
+          yield* fs.remove(goldPath);
+          const missingGold = yield* service
+            .run({
+              manifest: "fixtures/w1.manifest.json",
+              offline: true,
+              out: O.some(replayOut),
+              paper: O.none(),
+              selection: "f1",
+            })
+            .pipe(Effect.flip);
+          expect(missingGold).toBeInstanceOf(GoldUnavailable);
+          expect(missingGold.message).toContain(goldPath);
+        }).pipe(provideScopedLayer(runtime));
+      })
     );
   });
 });
