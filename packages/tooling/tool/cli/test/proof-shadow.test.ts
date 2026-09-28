@@ -53,6 +53,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
+const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
+
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const facts = (overrides: Partial<ProofShadowAttemptFacts> = {}): ProofShadowAttemptFacts =>
@@ -733,8 +735,6 @@ describe("proof shadow mode", () => {
   // TTC ruling 72: a red run records its input digest as an observation, through the same
   // wrapper-ledger path a pass takes, so a failed lane can be decided against a passed fact.
   it.layer(PlatformLayer, { timeout: "30 seconds" })("red runs resolved through the production path", (it) => {
-    const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
-
     // One wrapper lane attempt the way `runQualityTaskStreamingLaneGroup` runs it: the child
     // (`bun run beep ci lane check`) runs `turbo run check --summarize`, declares that step's
     // digest to the ledger the parent named, closes it, and the parent resolves the lane.
