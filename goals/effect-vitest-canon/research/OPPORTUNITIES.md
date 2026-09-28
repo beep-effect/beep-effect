@@ -5030,3 +5030,13 @@ original whole-cohort timeout or final package acceptance.
   the migrated assertions were updated; all statuses were retained. A reviewed identity-migration receipt would prevent
   this manual reconciliation without admitting new debt. Private evidence:
   `cli-predicate-batch-anchor-review.json` and the original failed ratchet log.
+
+- PR #1323 early publication passed 14 cheap gates but failed
+  `quality:changeset-status`: the continuation lacked in-branch changesets for
+  `@beep/mcp-kit` and `@beep/professional-desktop`. Added the required patch
+  metadata without changing production behavior. Running this short gate before
+  publication would have caught the omission before hosted checks began.
+- Detached publication initially could not reach the healthy systemd user
+  manager because the tool shell lacked its runtime-directory and bus address.
+  An explicit user-bus environment made the same launch succeed. Preserving that
+  environment across Desktop continuations would avoid this repeat friction.
