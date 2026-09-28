@@ -44,7 +44,8 @@ Bun; after durations are 29.764159380 and 20.549630623 seconds respectively.
 Runtime versions, process limits, workstation load and pressure are captured.
 These samples do not establish a causal performance improvement.
 
-Full CLI package audit/docgen is running; its result is not yet claimed.
+Full CLI package verification passes: audit in 645.1 seconds and docgen in
+18.9 seconds, with unchanged test source throughout the proof.
 Private receipts use `cli-predicate-cause-batch-*`, with inputs from
 `cli-chai-predicate-*`, `cli-exit-cause-*` and `exit-cause-alias-proof.mts`.
 The complete inventory, empty baseline and hosted gates still block closeout.
