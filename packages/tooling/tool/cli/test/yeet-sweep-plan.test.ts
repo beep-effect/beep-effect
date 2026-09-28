@@ -26,6 +26,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -775,38 +776,61 @@ describe("executeSweep", () => {
     )
   );
 
-  it.effect("moves a clone off the swept branch, then installs against main", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const { report, spawned } = yield* recordedSweep(root);
-        const endState = outcomeOf(report, "end-state");
-        expect(endState.status).toBe("executed");
-        expect(endState.status === "executed" ? endState.detail : O.none()).toEqual(O.some("switched to main"));
-        expect(outcomeOf(report, "lockfile-install").status).toBe("executed");
-        // The switch precedes the install, so the install resolves main's bun.lock.
-        expect(spawnIndex(spawned, "git switch main")).toBeLessThan(spawnIndex(spawned, "bun install"));
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer(cloneOn("feat/merge-loop", mergedTip))))
+  // The live-checkout rail at execution: each block runs the sweep against a
+  // clone parked on the branch its layer's stubs describe.
+  it.layer(sweepTestLayer(cloneOn("feat/merge-loop", mergedTip)), { timeout: "30 seconds" })(
+    "clone on the swept branch",
+    (it) => {
+      it.effect(
+        "moves the clone off the swept branch, then installs against main",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped();
+          const { report, spawned } = yield* recordedSweep(root);
+          const endState = outcomeOf(report, "end-state");
+          expect(endState.status).toBe("executed");
+          assertSome(endState.status === "executed" ? endState.detail : O.none(), "switched to main");
+          expect(outcomeOf(report, "lockfile-install").status).toBe("executed");
+          // The switch precedes the install, so the install resolves main's bun.lock.
+          expect(spawnIndex(spawned, "git switch main")).toBeLessThan(spawnIndex(spawned, "bun install"));
+        })
+      );
+    }
   );
 
-  it.effect("leaves a clone on another branch where it stands and says which HEAD blocked it", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
-        const { report, spawned } = yield* recordedSweep(root);
-        expect(skipReason(report, "end-state")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
-        expect(skipReason(report, "lockfile-install")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
-        expect(spawned).not.toContain("git switch main");
-        expect(spawned).not.toContain("bun install");
-        // The ref-only steps still ran against that clone.
-        expect(spawned).toContain("git fetch --prune origin");
-        expect(spawned).toContain("git fetch origin main:main");
-      })
-    ).pipe(provideScopedLayer(sweepTestLayer(cloneOn("@chore/get-main-green", "cccc3333dddd4444"))))
+  it.layer(sweepTestLayer(cloneOn("@chore/get-main-green", "cccc3333dddd4444")), { timeout: "30 seconds" })(
+    "clone on another live branch",
+    (it) => {
+      it.effect(
+        "leaves the clone where it stands and says which HEAD blocked it",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped();
+          const { report, spawned } = yield* recordedSweep(root);
+          expect(skipReason(report, "end-state")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
+          expect(skipReason(report, "lockfile-install")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
+          expect(spawned).not.toContain("git switch main");
+          expect(spawned).not.toContain("bun install");
+          // The ref-only steps still ran against that clone.
+          expect(spawned).toContain("git fetch --prune origin");
+          expect(spawned).toContain("git fetch origin main:main");
+        })
+      );
+    }
   );
 
-  it.effect("skips the install when the switch to main fails at run time", () =>
-    withTempDirectory((root) =>
-      Effect.gen(function* () {
+  it.layer(
+    sweepTestLayer([
+      ["git switch main", { exitCode: 1, output: "error: your local changes would be overwritten by checkout" }],
+      ...cloneOn("feat/merge-loop", mergedTip),
+    ]),
+    { timeout: "30 seconds" }
+  )("switch to main fails at run time", (it) => {
+    it.effect(
+      "skips the install",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
         const { report, spawned } = yield* recordedSweep(root);
         expect(skipReason(report, "end-state")).toContain("git switch 'main' failed (exit 1)");
         expect(skipReason(report, "lockfile-install")).toContain("end-state did not leave the clone on main");
@@ -814,15 +838,8 @@ describe("executeSweep", () => {
         expect(spawned).toContain("git switch main");
         expect(spawned).not.toContain("bun install");
       })
-    ).pipe(
-      provideScopedLayer(
-        sweepTestLayer([
-          ["git switch main", { exitCode: 1, output: "error: your local changes would be overwritten by checkout" }],
-          ...cloneOn("feat/merge-loop", mergedTip),
-        ])
-      )
-    )
-  );
+    );
+  });
 });
 
 describe("deletion revalidation", () => {
