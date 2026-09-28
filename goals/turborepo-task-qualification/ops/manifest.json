@@ -436,7 +436,10 @@
     "research/current-patched-stable-fresh-pairs.json",
     "research/current-patched-canary-fresh-pairs.json",
     "research/current-patched-stable-invalidation.json",
-    "research/current-patched-canary-invalidation.json"
+    "research/current-patched-canary-invalidation.json",
+    "research/current-patched-stable-config-controls.json",
+    "research/current-patched-canary-config-controls.json",
+    "research/current-patched-packet-verification.json"
   ],
   "agentLaunchers": [
     {

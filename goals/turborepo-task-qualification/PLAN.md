@@ -2649,3 +2649,20 @@ and equal successful task-log bytes. Binary pins match the patched fresh-pair
 receipts. Installed dependency archive identity remains equal before and after
 both suites. These renew source-invalidation behavior only; other control
 classes, semantic closure, signed remote and shadow acceptance remain open.
+
+### Patched dependency profile: configuration controls and packet checks
+
+The renewed [stable](research/current-patched-stable-config-controls.json) and
+[canary](research/current-patched-canary-config-controls.json) suites each pass
+nine expected outcomes: baseline miss/hit, child and root declaration
+invalidation/restoration, stale generated-profile rejection before Turbo with
+unchanged cache bytes, profile restoration, and unchanged-hash orchestration
+replay. Independent native-summary/archive review passes, supplied control
+values are verified, and dependency archive identity matches before and after.
+These selected controls do not establish exhaustive semantic-input closure.
+
+[Packet checks](research/current-patched-packet-verification.json) pass at
+`b99394122c`: goals doctor has no new blocking findings, exploration integrity
+has no findings, reflection-artifact lint has zero blocking/advisory findings,
+and the launcher remains 2,755 characters. This is consistency evidence only;
+the final reflection, signed remote, shadow and merge-ready gates remain open.
