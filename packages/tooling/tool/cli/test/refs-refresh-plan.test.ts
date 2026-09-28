@@ -4,12 +4,22 @@ import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/co
 import { NonNegativeInt } from "@beep/schema/Number";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import { ConfigProvider, Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as HttpClient from "effect/http/HttpClient";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ReferenceFixture, referenceFixtureLayer, workspace, writeExecutable } from "./refs-test-utils.ts";
+import {
+  graftTestApiKey,
+  ReferenceFixture,
+  referenceFixtureLayer,
+  scriptedHttpClient,
+  withGraftEnv,
+  workspace,
+  writeExecutable,
+} from "./refs-test-utils.ts";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 // JSON normalizes -0 to 0; schema equivalence compares their numeric value.
 const refreshStatusEquivalent = S.toEquivalence(RefsRefreshStatus);
@@ -41,6 +51,26 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
     '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/notifications.log"\n'
   );
   return f;
+});
+
+// Both real manifest members are deep; give each clean main Git metadata and refresh them with
+// the unit's graft settings and a scripted proxy.
+const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
+  respond: () => Response | undefined,
+  seen: Array<HttpClientRequest.HttpClientRequest>
+) {
+  const f = yield* prepare();
+  for (const name of ["effect", "effect-tsgo"])
+    yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+  const status = yield* workspace
+    .use((service) => service.refresh(f.home, f.root, 4))
+    .pipe(
+      Effect.provideService(HttpClient.HttpClient, scriptedHttpClient({ respond, seen })),
+      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv(f.configValues))
+    );
+  const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
+  const receipt = yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
+  return { f, status, log, receipt };
 });
 
 describe("reference planning and refresh", () => {
@@ -197,6 +227,7 @@ describe("reference planning and refresh", () => {
           for (const name of ["effect", "effect-tsgo"]) yield* f.fs.makeDirectory(f.path.join(f.root, name));
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
           expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
+          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toContain("No Git metadata at");
           expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git ");
         })
       );
@@ -219,9 +250,82 @@ describe("reference planning and refresh", () => {
           }
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
           expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
+          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toBe("git pull --ff-only exited 7");
+          expect(O.getOrElse(status.members[1]?.detail ?? O.none(), () => "")).toBe("graft exited 8");
           expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(true);
         })
       );
     }
   );
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "skips deep builds while the model cools down and keeps structural wiring fresh",
+    (it) => {
+      it.effect(
+        "skips deep builds while the model cools down and keeps structural wiring fresh",
+        Effect.fnUntraced(function* () {
+          const seen: Array<HttpClientRequest.HttpClientRequest> = [];
+          const { f, status, log, receipt } = yield* refreshWithProxy(
+            () =>
+              new Response('{"error":{"code":"model_cooldown"}}', {
+                status: 429,
+                headers: { "retry-after": "55516" },
+              }),
+            seen
+          );
+          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
+          expect(log).not.toContain("--deep");
+          expect(log).toContain("graft effect build env=1");
+          expect(log).toContain("graft effect-tsgo build env=1");
+          for (const report of status.members) {
+            assertNone(report.coverage);
+            expect(O.getOrElse(report.detail, () => "")).toMatch(
+              /^model claude-opus-5 cooling down at http:\/\/127\.0\.0\.1:8317\/v1; retry-after 55516s \(until \d{4}-\d{2}-\d{2}T[^)]+\)$/u
+            );
+          }
+          expect(seen.map((request) => [request.method, request.url])).toEqual([
+            ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
+            ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
+          ]);
+          expect(seen[0]?.headers.authorization).toBe(`Bearer ${graftTestApiKey}`);
+          // Neither the key nor the proxy's response body reaches the receipt.
+          expect(receipt).not.toContain(graftTestApiKey);
+          expect(receipt).not.toContain("model_cooldown");
+          expect(receipt).toContain('"outcome":"skipped-cooldown"');
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("runs deep builds when the model answers", (it) => {
+    it.effect(
+      "runs deep builds when the model answers",
+      Effect.fnUntraced(function* () {
+        const seen: Array<HttpClientRequest.HttpClientRequest> = [];
+        const { status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
+        expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
+        expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
+        expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
+        expect(seen.length).toBe(2);
+        for (const report of status.members) {
+          assertNone(report.detail);
+          expect(O.isSome(report.coverage)).toBe(true);
+        }
+      })
+    );
+  });
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("never lets a failed probe block the deep build", (it) => {
+    it.effect(
+      "never lets a failed probe block the deep build",
+      Effect.fnUntraced(function* () {
+        const seen: Array<HttpClientRequest.HttpClientRequest> = [];
+        const { status, log } = yield* refreshWithProxy(() => undefined, seen);
+        expect(seen.length).toBe(2);
+        expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
+        expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
+        expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
+      })
+    );
+  });
 });
