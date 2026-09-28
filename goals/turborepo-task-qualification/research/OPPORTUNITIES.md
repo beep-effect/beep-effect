@@ -2253,3 +2253,14 @@ PR #1327's early-publish proof and Repo Sanity stopped at
 in-range changeset. The gate counts these changed product workspaces even when
 only tests change. Added the required patch entries; a pre-publication
 changeset-status check would have caught the omission before hosted CI.
+
+### Fresh-pair sandbox mount preflight
+
+The frozen current-source fresh-pair runner stopped before executing the task:
+`bwrap: Can't create file .../.turbo: Read-only file system`. The newly created
+worktree did not yet contain the bind-mount destination. The failed observation
+is retained under `~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-8dy7deik`;
+it supplies no comparison credit. The private runner now creates the empty
+`.turbo` and `.beep` mount destinations before constructing the read-only
+namespace. A mount-destination preflight would have prevented this failure.
+The retry uses the same scheduler admission and isolated writable overlays.

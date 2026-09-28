@@ -5,7 +5,7 @@
     "title": "Turborepo task qualification",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
@@ -410,7 +410,8 @@
     "research/current-ordinary-runtime-review.json",
     "research/current-pretext-coverage-repair.json",
     "research/current-remaining-coverage-repairs.json",
-    "research/current-runtime-repairs-attachment.json"
+    "research/current-runtime-repairs-attachment.json",
+    "research/current-stable-fresh-pairs.json"
   ],
   "agentLaunchers": [
     {
@@ -474,5 +475,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PR #1268 merged; PR #1324 carries current census evidence. Source attachment restored with 1020 sources, 6 artifacts, 56 reviews and 18 unresolved obligations. Historical evidence recovery does not renew runtime qualification. Signed sibling receipts and complete semantic review remain pending; no tuple is qualified."
+  "statusNote": "PR #1324 merged; PR #1327 carries runtime repairs and current evidence. Canonical attachment accepts 1025 sources, 77 reviews and 6 artifacts with 20 unresolved obligations. Three stable local fresh/fresh pairs and twelve replay controls pass at frozen revision 7f53b4a840. Exact-canary comparisons, signed sibling receipts, semantic closure and shadow acceptance remain pending; no tuple is qualified."
 }

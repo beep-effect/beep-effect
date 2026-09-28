@@ -2384,3 +2384,20 @@ bindings, 77 reviews and six artifacts. The population remains 144 workspaces,
 were copied into the follow-up lane with matching hashes. The
 [receipt](research/current-runtime-repairs-attachment.json) retains 20 unresolved
 obligations. Acceptance proves byte binding, not semantic closure or qualification.
+
+### Current stable three-pair comparison
+
+At frozen revision `7f53b4a840`, stable Turbo `2.11.4` completed six
+independent ordinary identity-lint executions, forming three fresh/fresh pairs.
+Each execution also passed two local replay controls. The independent
+[receipt review](research/current-stable-fresh-pairs.json) verifies tool pins,
+input maps, hashed environment, task hashes, identity overlay trees and exact
+task-log bytes for each pair. Evidence retention hashes 9,282 files.
+Only disposable overlays enabled identity caching. This is stable local
+comparison evidence; canary, signed remote, semantic closure, representative
+shadow decisions and promotion remain outstanding. The exact-canary comparison
+is admitted through the scheduler and remains pending at this checkpoint.
+
+The earlier repo-cli package verification has now completed: full audit and
+docgen passed, with the repaired proof-ledger test hash unchanged. Whole-proof
+coverage and hosted readiness remain separate gates.
