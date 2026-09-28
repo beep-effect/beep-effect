@@ -1424,22 +1424,22 @@
     "file": "packages/drivers/box/test/Box.equivalence.test.ts",
     "package": "@beep/box",
     "kind": "test",
-    "bytes": 666,
-    "lines": 16
+    "bytes": 787,
+    "lines": 19
   },
   {
     "file": "packages/drivers/box/test/Box.service.test.ts",
     "package": "@beep/box",
     "kind": "test",
-    "bytes": 36048,
-    "lines": 1031
+    "bytes": 42939,
+    "lines": 1235
   },
   {
     "file": "packages/drivers/box/test/integration/Box.live.test.ts",
     "package": "@beep/box",
     "kind": "test",
-    "bytes": 1590,
-    "lines": 45
+    "bytes": 1656,
+    "lines": 47
   },
   {
     "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",

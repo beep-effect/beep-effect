@@ -51,5 +51,12 @@ stable source hashes: Node 4.270 to 4.221 seconds, Bun 2.217 to 1.667 seconds.
 These observations record workstation load and pressure and do not establish a
 causal speedup. The integration gate passes without a live token; no live Box
 request is claimed. The fresh machine scan has three explicit scoped-provision
-judgments. Inventory reconciliation and public timing publication remain pending;
-this source proof is not consolidated PR or goal acceptance.
+judgments, each recorded with its case-specific lifetime or failure-assertion
+reason. The saved 50-action inventory is reconciled against source commit
+`c38ba004b40b18283fe7db288c3403a7253d3ed0`, with no open actionable Box rows.
+Historical detector identities are retained, including root-only records.
+Strict validation passes for 5,255 root IDs and 14,942 ledger IDs, with no
+invalid rows or duplicates. All 683 unrelated ledger hashes and unrelated raw
+root/census objects are preserved. Four public timing/context artifacts record
+the measurements above. The saved queue now contains eight packages and 560
+actions. This package closeout is not consolidated PR or goal acceptance.
