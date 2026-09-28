@@ -8,8 +8,11 @@ import {
   freezeGrantSet,
   verifyFrozenGrantSetDigest,
 } from "@beep/epistemic-domain/values/GrantSet";
-import { describe, expect, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
+import { it } from "@beep/test-runner";
+import { provideScopedLayer } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Cause, ConfigProvider, Effect, Exit, Layer, pipe } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -18,50 +21,47 @@ const decodeExecutionGrant = S.decodeEffect(ExecutionGrant);
 
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   EpistemicConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("EpistemicConfigLive", () => {
-  it.effect(
-    "defaults to the empty allowlist, which denies every destination",
-    Effect.fnUntraced(function* () {
-      const config = yield* EpistemicConfig.pipe(provideScopedLayer(configLayer({})));
+  it.layer(configLayer({}), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "defaults to the empty allowlist, which denies every destination",
+      Effect.fnUntraced(function* () {
+        const config = yield* EpistemicConfig;
 
-      expect(config.destinationAllowlist).toEqual([]);
-      expect(config.policyRevision).toBe(defaultPolicyRevision);
-    })
-  );
+        expect(config.destinationAllowlist).toEqual([]);
+        expect(config.policyRevision).toBe(defaultPolicyRevision);
+      })
+    );
+  });
 
-  it.effect(
-    "parses a comma-separated destination allowlist",
-    Effect.fnUntraced(function* () {
-      const config = yield* EpistemicConfig.pipe(
-        provideScopedLayer(
-          configLayer({
-            EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: "https://a.example,https://b.example",
-            EPISTEMIC_POLICY_REVISION: "2.1.0",
-          })
-        )
-      );
+  it.layer(
+    configLayer({
+      EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: "https://a.example,https://b.example",
+      EPISTEMIC_POLICY_REVISION: "2.1.0",
+    }),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "parses a comma-separated destination allowlist",
+      Effect.fnUntraced(function* () {
+        const config = yield* EpistemicConfig;
 
-      expect(config.destinationAllowlist).toEqual(["https://a.example", "https://b.example"]);
-      expect(config.policyRevision).toBe("2.1.0");
-    })
-  );
+        expect(config.destinationAllowlist).toEqual(["https://a.example", "https://b.example"]);
+        expect(config.policyRevision).toBe("2.1.0");
+      })
+    );
+  });
 
-  it.effect(
-    "reads an explicitly empty allowlist as deny-all rather than as an error",
-    Effect.fnUntraced(function* () {
-      const config = yield* EpistemicConfig.pipe(
-        provideScopedLayer(configLayer({ EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: "" }))
-      );
+  it.layer(configLayer({ EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST: "" }), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reads an explicitly empty allowlist as deny-all rather than as an error",
+      Effect.fnUntraced(function* () {
+        const config = yield* EpistemicConfig;
 
-      expect(config.destinationAllowlist).toEqual([]);
-    })
-  );
+        expect(config.destinationAllowlist).toEqual([]);
+      })
+    );
+  });
 
   it.effect(
     "keeps malformed configuration in the typed failure channel",
@@ -77,10 +77,10 @@ describe("EpistemicConfigLive", () => {
       for (const configuration of configurations) {
         const exit = yield* Effect.exit(EpistemicConfig.pipe(provideScopedLayer(configLayer(configuration))));
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        pipe(exit, Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
-          expect(Cause.hasFails(exit.cause)).toBe(true);
-          expect(Cause.hasDies(exit.cause)).toBe(false);
+          pipe(Cause.hasFails(exit.cause), assertTrue);
+          pipe(Cause.hasDies(exit.cause), assertFalse);
         }
       }
     })
@@ -88,6 +88,22 @@ describe("EpistemicConfigLive", () => {
 });
 
 describe("resolveSinkAudience", () => {
+  it.effect.each(["localhost", " LOCALHOST ", "127.0.0.1", "[::1]", "::1", "0.0.0.0", "//localhost", "http://[::1"])(
+    "takes the stricter audience for malformed loopback-like input %s",
+    (destination) =>
+      Effect.gen(function* () {
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("external-network");
+      })
+  );
+
+  it.effect.each(["  HTTP://LOCALHOST:3939/mcp  ", "ftp://localhost/path"])(
+    "preserves URL parser semantics for a valid local destination %s",
+    (destination) =>
+      Effect.gen(function* () {
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("local-workspace");
+      })
+  );
+
   it.effect(
     "classifies loopback destinations as local-workspace",
     Effect.fnUntraced(function* () {
@@ -126,7 +142,7 @@ describe("resolveSinkAudience", () => {
 
 describe("grant fixtures", () => {
   it("seals a verifiable grant set", () => {
-    expect(verifyFrozenGrantSetDigest(fixtureFrozenGrantSet)).toBe(true);
+    pipe(verifyFrozenGrantSetDigest(fixtureFrozenGrantSet), assertTrue);
   });
 
   it.effect(

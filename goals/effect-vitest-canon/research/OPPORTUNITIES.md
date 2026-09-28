@@ -3817,3 +3817,15 @@ An explicit Node TypeScript build passed, followed by a complete canonical
 package verification (audit 11.9 seconds, docgen 4.6 seconds). Record the
 compiler runtime with locationless declaration failures before changing generated
 schemas. This receipt does not establish a compiler root cause or a source fix.
+
+## 2026-09-27 — malformed destinations received the weaker audience
+
+The saved Epistemic Config finding reproduces in six current test cases: bare
+loopback names/addresses, including trimmed and case variants, classify as
+`local-workspace` after URL parsing fails. The documented contract requires
+`external-network` for unparseable input. The existing destination schema accepts
+these strings; narrowing it would obscure this classifier defect. The repair
+uses the existing URL codec's Option result and allows the local branch only
+for a successfully parsed loopback hostname. Original local/external cases and
+valid parser behavior remain controls. This follows the standing production
+repair authorization; no network operation or credential is needed to reproduce.

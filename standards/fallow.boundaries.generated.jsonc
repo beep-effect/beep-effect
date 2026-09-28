@@ -1785,12 +1785,16 @@
         "allow": [
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {
