@@ -1160,9 +1160,17 @@ const proofReportJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDescription("Render the proof shadow report as JSON (proof-shadow-report/v1)")
 );
 
+const proofReportSinceFlag = Flag.String("since").pipe(
+  Flag.withSchema(S.DateTimeUtcFromString),
+  Flag.optional,
+  Flag.withDescription(
+    "Count only shadow rows recorded at or after this ISO timestamp toward the enforcement bar (ruling 80)"
+  )
+);
+
 const yeetProofReportCommand = Command.make(
   "proof-report",
-  { json: proofReportJsonFlag },
+  { json: proofReportJsonFlag, since: proofReportSinceFlag },
   runYeetProofReportCommand
 ).pipe(
   Command.withDescription(

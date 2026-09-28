@@ -1168,3 +1168,99 @@ that packet's steward and auditor. Rejected: writing the
 `iv-1006-wave-order` row from a ttc PR; a ciops mirror with a widened `PlanEpisodeInput`; a
 provisional lane-order A-Box; ontology DECISIONS rulings ratified by a ttc merge; `links.goals`
 (graduation semantics); an INBOX entry; a run-4 docket row; rewriting SPEC D1's sentence.
+
+## 2026-09-28 — P4 close re-run and the C4.2 unblock, round 25 (three rulings, proposed by the orchestrator; the merge of this PR is the lock; 71–72 as reserved by rounds 21 and 24, then 80 after D1's 76–79)
+
+Context: on 2026-09-28 the operator re-registered the goal with one change, "complete the remaining
+work in 1 single PR if possible to save aws & pr queue costs". The unfinished PLAN items were B9
+(captured, not scheduled: ruling 56), C4/C4.2 (enforcement gated on ruling 7's bar), the A1 close
+re-run and the closeout. The bar could not be reached as built: `proof-report` read 4 attempts on 1
+branch in the clone lanes are cut from, because every lane's ledger dies with the lane (receipt
+2026-09-24), and its disagreement count was zero by construction, because a red run records no
+digest (second receipt of 2026-09-24). Rulings 71 and 72 remove both defects; ruling 80 records the
+flip condition under which enforcement lands in a later PR and pauses the packet until then. The
+completion-gate accounting is in `SPEC.md` and `research/economics-close.md`. The design contract is `research/p4-close-brief.md`.
+
+The same PR runs the A1 close re-run (`research/economics-close.md`, `--run close` of
+`research/scripts/economics.py` over `research/inputs/close/`) after fixing the two defects the
+2026-09-25 receipt names: wrapper and inner lanes are separate populations (ruling 74's rule) and
+the numbered `beep-effect*-worktrees` lanes are discovered (ruling 73). Three script changes ride
+with them and are recorded here rather than as rulings: discovery keeps only checkouts whose owning
+clone's `origin` is `beep-effect/beep-effect`, because the widened glob also matched a private
+duplicate clone whose journals must not enter a public input; corpus validation runs only when
+`--corpus` is passed, because the in-repo corpus was redacted after the baseline (#1032, #1037,
+#1041) and every default replay on `main` failed closed against the ratified receipts; and the
+close run adopts ruling 75's elapsed rule for sweep-stamped terminations. The baseline re-render
+moved only its reproduction-script receipt, which was already stale on `main` (the ratified
+`test_pristine_inputs_pass` was red there), so `GATE_ORDER_SOURCE` and the handoff's source
+reference move with it under ruling 77's pin-move clause; no seed value moved. B9 closes in this
+packet as captured, not scheduled: `explorations/github-merge-queue` (PR #1164) holds the capture,
+and its grill stays behind the ship-velocity E8 flip condition, which this packet's GOAL forbids it
+to cross.
+
+**Ruling 71 (C4-5) — the proof ledger's checkout is the owning clone, resolved without git.**
+`proofLedgerPathForCheckout` returns `<clone>/.beep/yeet/proof-ledger.ndjson`, where the clone is
+found the way `git rev-parse --git-common-dir` finds it, from the filesystem alone: a `.git`
+directory is the clone itself; a `.git` file's `gitdir:` target and that directory's `commondir`
+file name the common dir, whose parent is the clone when the common dir is `<clone>/.git`; a bare
+or separated common dir keeps the ledger inside itself, because the directory holding it may hold
+other repositories; a root with no `.git` is its own clone, so test roots keep today's
+behaviour. Sibling lanes of one clone and the clone itself therefore read
+and write one ledger; a primary clone's ledger keeps its path and stays valid; a lane's `.beep/`
+can be deleted by `yeet sweep --retire` without losing the sample. Facts keep
+`provenance.originKey` = the worktree that ran them, and containment
+(`readContainedFileStringNoFollow`, `appendContainedFileString`) is checked against the clone
+root. Concurrency: one append per attempt (ruling 63) stays the only write path; the largest
+attempt append measured in `beep-effect3` on 2026-09-28 is 55,068 bytes over 64 rows; `O_APPEND`
+places each write at end-of-file, a torn row can arise only if one append is split across
+syscalls, and the tolerant reader counts every torn line as a malformed row that `proof-report`
+prints, so the sample's integrity is disclosed rather than assumed. No lock is added (GOAL rule).
+Rejected: a machine-wide ledger keyed by origin (still the deferred P3 candidate, ruling 3);
+per-lane shard files under the clone (a directory reader for a race the tolerant reader already
+discloses); folding existing lane ledgers into the clone (rulings 59–60: never migrate a store
+whose provenance the reader cannot verify); spawning git for the resolution (untestable on bare
+roots and a new failure mode on every attempt).
+
+**Ruling 72 (C4-6) — a red run records its input digest as an observation, never as a reuse
+source.** `turboLaneDigestFromSummary` and `readTurboLaneDigest` fold the digest whenever a
+selected task is present, whatever its outcome: the digest text is `taskId=hash` per task, so it
+names the work, not the result. `resolveLaneInputDigestSource` short-circuits only on an
+executor-declared digest; a failed outcome resolves its digest and package scope through the same
+wrapper-ledger or direct-Turbo path as a pass, and the wrapper child declares its digest on red.
+The fact recorded for a red lane carries `outcome: "failed"`, and `decideExactFact` keeps
+answering it with `miss(key, "prior-failed")`; a passed fact followed by a red run on the same key
+now records a hit-versus-failed shadow row, which is the disagreement ruling 7 counts. A red run
+that stopped early folds only the tasks that ran, so its key differs from the full-pass key and
+neither serves nor contradicts a pass. The changed-package tripwire gains a scope on failed lanes
+as a side effect. Must-fail fixture, locked with this ruling: a passed fact for key K, then a
+failed run resolving K through the production path, records exactly one disagreement. Rejected:
+enforcing on the vacuous bar (a criterion that cannot fail is not evidence); counting
+`undeclared-inputs` misses as disagreements (absence of a key is not a contradiction between two
+runs); recording red runs as reusable facts (rulings 1 and 4).
+
+**Ruling 80 (C4-7) — C4.2 enforcement waits for a post-merge sample, and the packet pauses on
+that condition.** Attempt-to-attempt reuse within pre-push stays off in this PR. The flip PR is the
+packet's final PR. It lands when, in the owning clone,
+`bun run beep yeet proof-report --since <this PR's merge instant>` reads ready under ruling 7 (200
+attempts, 10 branches, zero disagreements) over rows recorded after the merge (earlier rows could
+not observe a disagreement), with `malformed rows: 0` and every C5 fixture green, and once the
+ruling-69 root-input gap is closed: lane inputs that sit in no workspace and outside the six epoch
+components (`standards/*.jsonc` baselines, the Biome configuration, `.github/workflows/`,
+`scripts/`) trip nothing today, so a reused proof could prove the old rules
+(`research/c5-must-fail-fixtures-grill.md`, open question for ruling 69); the flip PR locks one of
+that section's two answers with a must-fail fixture of its own before it turns anything on. That PR
+turns reuse on for the pre-push pair, deletes `LaneProofReuse.ts` and `.beep/yeet/lane-proofs.json`
+with a retirement receipt (ruling 60), re-runs `economics.py --run close` so the completion gate's
+outcome lines are measured with enforcement live, and carries the status flip and the closeout
+reflection. Until then the packet is `paused` with that resume condition. No agent-independent step
+remains, and `completed-retained` would claim a gate this PR's close run does not meet: the
+post-P0 M1 closed-episode median is 1.02 h against the 43.3 min baseline and is a censored lower
+bound (58 closed episodes against 129 open streaks); the M4 proxy's 16 repeats are not classified
+by the three named false-red classes; 23 post-P0 starts still have no finish (M5, down from 10.65%
+of starts to 2.0%); and line 2 needs enforcement. Hosted reuse stays a separate decision behind the
+parity ledger, and the pre-push-to-merged-preview pair follows once env profiles are proven in the
+key (SPEC C4). Rejected: flipping on the 2026-09-28 sample (4 attempts on 1 branch, disagreements
+unobservable); an agent declaring `completed-retained` with the outcome lines carried (the packet's
+gate says "not achieved until"; closing with lines carried is the operator's call, as ship-velocity's
+2026-08-30 authorization was); keeping the packet `active` with nothing an agent can do; a calendar
+deadline for the flip (ruling 7 counts events, not days).

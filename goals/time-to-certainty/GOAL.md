@@ -32,16 +32,17 @@ Rules: schema-first (Effect v4, LiteralKit, S.Class); services via Context.Servi
 APIs against the Effect reference checkout; the ship-velocity C5 first-cold-lane law for any
 cache accounting; changed-package tasks never reuse a proof; no merge queue before the recorded
 flip condition; no hosted-tier reuse without parity-ledger evidence; no new lock or scheduler.
-Heavy implementation and measurement run on Codex lanes; web research runs on Grok; the
-orchestrator writes schemas and contracts and judges evidence. Record friction receipts in
+Sub-agents follow the AGENTS.md volume pools (Opus 5.5 by default); the orchestrator writes
+schemas and contracts and judges evidence. Record friction receipts in
 `research/OPPORTUNITIES.md` at the moment they happen, redacted for a public repo. Update PLAN
 checkmarks as items land; the status flip and closeout reflection ride the final PR.
 
-Status (2026-09-25): P0, P1 and P3 complete. `research/baseline.md` is ratified (ruling 8: M1 P50
-43.3 min / P95 3.95 h; pre-push wave 65.9% of local wrapper time; M3/M4 unmeasurable until journals
-carry fingerprints and inner lanes). `research/decisions.md` holds seventy-seven rulings (1–70 and
-73–79; 71–72 reserved for the C5 grill draft), the latest C4 shadow mode (61–64), D2 review
-follow-ups (65–67), the C5 tripwire (68–70), the A3 economics surface (73–75) and the D1 ordering
-handoff (76–79). Landed: A3, A4, A5/A5b/A5c, B1–B6, C1/C2, C3, C4a, C4.1, C5, D1 (the pre-push order
-handed to the ontology packet as `research/gate-order-handoff.json`) and D2. Next: C4.2 enforcement
-once the shadow report reads ready; then the P4 A1 close re-run.
+Status (2026-09-28): `paused`. P0, P1 and P3 complete; P2 complete except C4.2 enforcement;
+the P4 A1 close re-run landed as `research/economics-close.md`. `research/decisions.md` holds
+eighty rulings (1-80). Round 25 moved the proof ledger to the owning clone (71), made a red run's
+digest observable (72), and set C4.2's flip condition (80). Resume when
+`bun run beep yeet proof-report --since <round-25 merge instant>` in the owning clone reads ready
+with zero malformed rows, every C5 fixture is green, and the ruling-69 root-input gap is closed.
+That flip PR turns reuse on, deletes the legacy lane-proof store, re-runs
+`economics.py --run close`, and carries the status flip and closeout reflection. B9 lives in
+`explorations/github-merge-queue`, gated on E8.

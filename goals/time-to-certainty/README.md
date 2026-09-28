@@ -1,6 +1,6 @@
 # time-to-certainty
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Created 2026-09-03 · Anchor: [SPEC.md](SPEC.md) · Order: [PLAN.md](PLAN.md)
 

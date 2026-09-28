@@ -1,12 +1,16 @@
 /**
- * Checkout-scoped append-only storage for proof facts and shadow decisions.
+ * Append-only storage for proof facts and shadow decisions, shared by every
+ * checkout of one clone.
  *
  * **Details**
  *
  * The service is deliberately disconnected from Yeet lane execution. It can
  * record and classify proof evidence, but this module never skips or enforces
- * a lane. Each read tolerates malformed terminated rows and ignores an
- * unterminated tail as an append still in flight.
+ * a lane. The ledger lives in the owning clone (ruling 71): a linked worktree
+ * reads and appends `<clone>/.beep/yeet/proof-ledger.ndjson`, so lanes cut from
+ * one clone accumulate one sample and retiring a lane never deletes it. Each
+ * read tolerates malformed terminated rows and ignores an unterminated tail as
+ * an append still in flight.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -22,7 +26,7 @@ import * as Str from "effect/String";
 import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { proofLedgerPathForCheckout } from "./ArtifactPaths.ts";
+import { resolveProofLedgerLocation } from "./ArtifactPaths.ts";
 import {
   PROOF_FACT_SCHEMA_VERSION,
   ProofLedgerFactRow,
@@ -50,8 +54,8 @@ type LoadedProofLedger = {
 const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   repoRoot: string
 ): Effect.fn.Return<LoadedProofLedger, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
-  const read = yield* readContainedFileStringNoFollow(repoRoot, ledgerPath).pipe(
+  const { ledgerPath, ledgerRoot } = yield* resolveProofLedgerLocation(repoRoot);
+  const read = yield* readContainedFileStringNoFollow(ledgerRoot, ledgerPath).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to read proof ledger "${ledgerPath}".`))
   );
   if (!read.exists) {
@@ -71,6 +75,14 @@ const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   return { malformedRows: A.length(lines) - A.length(rows), rows };
 });
 
+// One append per attempt (ruling 63), and no lock (packet law). Lanes cut from
+// one clone append to the same file (ruling 71), so two attempts can append at
+// once. The file is opened `O_APPEND`, which places each `write(2)` atomically
+// at end-of-file; the largest attempt append measured in the owning clone on
+// 2026-09-28 was 55,068 bytes (64 rows). Rows could only tear if one append
+// were split across syscalls and another append landed between the pieces; the
+// tolerant reader then counts each torn line in `malformedRows`, which
+// `yeet proof-report` prints.
 const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
   repoRoot: string,
   rows: ReadonlyArray<ProofLedgerRow>
@@ -78,8 +90,8 @@ const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
   if (A.isReadonlyArrayEmpty(rows)) {
     return;
   }
-  const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
-  const read = yield* readContainedFileStringNoFollow(repoRoot, ledgerPath).pipe(
+  const { ledgerPath, ledgerRoot } = yield* resolveProofLedgerLocation(repoRoot);
+  const read = yield* readContainedFileStringNoFollow(ledgerRoot, ledgerPath).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to inspect proof ledger "${ledgerPath}" before appending.`))
   );
   if (read.exists && O.isNone(read.contents)) {
@@ -99,7 +111,7 @@ const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
     A.map(lines, (line) => `${line}\n`),
     ""
   );
-  yield* appendContainedFileString(repoRoot, ledgerPath, `${recoveryPrefix}${text}`).pipe(
+  yield* appendContainedFileString(ledgerRoot, ledgerPath, `${recoveryPrefix}${text}`).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to append proof ledger "${ledgerPath}".`))
   );
 });
@@ -220,7 +232,7 @@ const decideAgainstFacts = (
 };
 
 /**
- * Operations exposed by the checkout proof ledger.
+ * Operations exposed by the owning clone's proof ledger (ruling 71).
  *
  * @category services
  * @since 0.0.0
@@ -249,6 +261,11 @@ export interface ProofLedgerShape {
  * Service key for a checkout's append-only proof ledger.
  *
  * **Details**
+ *
+ * `make(repoRoot)` takes the checkout that ran; every read and append resolves
+ * that checkout's owning clone and uses the clone's ledger (ruling 71), so a
+ * service made from a linked worktree and one made from its clone see the same
+ * rows.
  *
  * `expire` reports how many persisted facts are logically expired at the
  * supplied instant; it never rewrites history. `lookup` independently checks
