@@ -2453,15 +2453,15 @@
     "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
     "package": "@beep/epistemic-client",
     "kind": "test",
-    "bytes": 17543,
-    "lines": 447
+    "bytes": 19431,
+    "lines": 486
   },
   {
     "file": "packages/epistemic/client/test/Protocol.test.ts",
     "package": "@beep/epistemic-client",
     "kind": "test",
-    "bytes": 928,
-    "lines": 23
+    "bytes": 972,
+    "lines": 24
   },
   {
     "file": "packages/epistemic/config/test/Config.test.ts",
