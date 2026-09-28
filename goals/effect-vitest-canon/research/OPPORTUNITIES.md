@@ -3729,3 +3729,15 @@ keeps both modules and avoids changing Vite or the application implementation.
 - Prevention: provide a public renderer lifetime acknowledgement for integration
   fixtures, and document the Node-only assertion-helper boundary. No renderer or
   atom production implementation is changed by this repair.
+
+### Db-admin schema-first exception anchors after import changes
+
+- Activity: preserve existing migration regression exceptions while adopting the
+  shared test runner and assertion helpers.
+- Evidence: root schema-first reports three missing/stale pairs at the same
+  symbols; only their line numbers moved by one or two lines. The schema codec
+  counts and established exception reasons are unchanged.
+- Disposition: re-anchor only those three owned entries, preserving every other
+  field and unrelated entry. No new exception or baseline-wide rewrite is made.
+- Prevention: stable symbol identities would avoid re-adjudicating unchanged
+  exceptions after import-only line movement.

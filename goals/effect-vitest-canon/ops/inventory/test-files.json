@@ -752,71 +752,71 @@
     "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 3976,
-    "lines": 108
+    "bytes": 3818,
+    "lines": 102
   },
   {
     "file": "packages/_internal/db-admin/test/index.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 264,
-    "lines": 8
+    "bytes": 300,
+    "lines": 9
   },
   {
     "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 11434,
-    "lines": 354
+    "bytes": 11461,
+    "lines": 355
   },
   {
     "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 7429,
-    "lines": 158
+    "bytes": 8025,
+    "lines": 165
   },
   {
     "file": "packages/_internal/db-admin/test/integration/EpistemicContradictionMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 28602,
+    "bytes": 28718,
     "lines": 532
   },
   {
     "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 9078,
-    "lines": 215
+    "bytes": 9463,
+    "lines": 220
   },
   {
     "file": "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 6670,
-    "lines": 154
+    "bytes": 6785,
+    "lines": 158
   },
   {
     "file": "packages/_internal/db-admin/test/integration/LawPracticeCandorGateMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 14480,
-    "lines": 323
+    "bytes": 14438,
+    "lines": 324
   },
   {
     "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 14604,
-    "lines": 346
+    "bytes": 14634,
+    "lines": 347
   },
   {
     "file": "packages/_internal/db-admin/test/migrate-on-boot.pglite.test.ts",
     "package": "@beep/db-admin",
     "kind": "test",
-    "bytes": 1296,
-    "lines": 28
+    "bytes": 1323,
+    "lines": 29
   },
   {
     "file": "packages/agents/client/test/Chat.layer.test.ts",

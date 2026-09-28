@@ -101,7 +101,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 36,
+      "line": 37,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
     },
@@ -111,7 +111,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 37,
+      "line": 39,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
     },
@@ -121,7 +121,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 31,
+      "line": 32,
       "owner": "@beep/db-admin",
       "reason": "Migration regression proof decodes fixed fixture rows through the table converters to prove the five-table DDL, the trigger catalog, and the append-only denials; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests."
     },
