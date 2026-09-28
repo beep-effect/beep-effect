@@ -1,7 +1,5 @@
 # Verification economics — P4 close snapshot
 
-> **NON-RATIFIED EMBEDDED INPUT DRIFT:** generated with `--allow-input-drift`; do not use as the baseline.
-
 Reproduce from a clean repository clone with the committed compact inputs:
 
 ```sh

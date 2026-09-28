@@ -280,7 +280,6 @@
       }
     ]
   },
-  "corpusValidation": "embedded-drifted",
   "dataQuality": {
     "attemptWindowEndUtc": "2026-09-28T12:56:00.841Z",
     "attemptWindowStartUtc": "2026-08-04T12:22:57.623Z",
