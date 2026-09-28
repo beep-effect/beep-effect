@@ -4868,7 +4868,7 @@
     "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
     "package": "@beep/law-practice-server",
     "kind": "test",
-    "bytes": 51937,
+    "bytes": 51966,
     "lines": 1126
   },
   {

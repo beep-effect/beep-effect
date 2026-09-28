@@ -1110,7 +1110,7 @@ const practiceKgConformanceRegistrations = Layer.unwrap(
   })
 ).pipe(Layer.provide(testLayer));
 
-it.layer(ConformanceBundleLive, { timeout: "2 minutes" })((it) => {
+it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bundle", (it) => {
   conformance2026({
     tester: it,
     name: "beep-practice-kg-test",

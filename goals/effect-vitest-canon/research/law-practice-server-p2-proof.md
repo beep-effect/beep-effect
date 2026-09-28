@@ -62,3 +62,15 @@ census files and both timing summaries validate. The remaining saved queue is
 214 actions across Practice KG MCP, Professional Desktop and the real HTTP auth
 regression. Hosted readiness and final empty-baseline acceptance remain open;
 the overall goal is active.
+
+### Hosted setup-boundary correction
+
+The HTTP conformance suite exposed a setup-order regression under hosted load.
+The unnamed parent registered beforeEach, allowing the nested HTTP beforeAll to
+acquire the native bundle under its ten-second budget. Naming the outer public
+layer restores fixture acquisition before the HTTP hook under the existing
+two-minute budget. No deadline, assertion, test body or fixture domain changed.
+A temporary eleven-second acquisition control fails before the correction and
+passes all 14 HTTP/stdio conformance cases afterward; the control is removed.
+The earlier timing receipts remain measurements of their recorded source commit,
+not measurements of this subsequent hook-order correction.

@@ -4272,3 +4272,17 @@ smoke assertion proves guarded module import only, not compiled host execution.
 The closeout initially tried `bun run lint:effect-vitest`, which is not a root
 script. The canonical command is `bun run beep lint effect-vitest`. Keep saved
 operator recipes aligned with the CLI to avoid failed alias guesses.
+
+## Nested public layer setup budget in Law Practice conformance
+
+PR #1312 unit-b job 108849216221 failed the HTTP conformance suite with
+`Hook timed out in 10000ms`. The native fixture had a two-minute budget, but
+its unnamed public layer acquires in beforeEach; the inner named HTTP layer
+acquires in beforeAll and therefore built the expensive parent first.
+The installed Effect/Vitest implementation and the local Effect reference agree.
+Using the named outer layer acquires the shared fixture in its own beforeAll,
+preserving both the two-minute fixture budget and ten-second HTTP budget.
+A temporary eleven-second acquisition delay fails the old registration and
+passes the corrected one (14 conformance cases). The delay is removed.
+Review nested layer hook order during migrations; checking duration literals
+alone does not prove that the original setup boundary is preserved.
