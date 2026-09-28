@@ -45,22 +45,22 @@
     "file": "apps/labs/lejeune-bolt-workbench/test/App.test.tsx",
     "package": "@beep/lejeune-bolt-workbench",
     "kind": "test",
-    "bytes": 350,
-    "lines": 11
+    "bytes": 394,
+    "lines": 12
   },
   {
     "file": "apps/labs/lejeune-bolt-workbench/test/Bundle.test.ts",
     "package": "@beep/lejeune-bolt-workbench",
     "kind": "test",
-    "bytes": 47642,
-    "lines": 1081
+    "bytes": 50225,
+    "lines": 1133
   },
   {
     "file": "apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts",
     "package": "@beep/lejeune-bolt-workbench",
     "kind": "test",
-    "bytes": 24046,
-    "lines": 479
+    "bytes": 25541,
+    "lines": 511
   },
   {
     "file": "apps/labs/semantica/test/App.test.tsx",
