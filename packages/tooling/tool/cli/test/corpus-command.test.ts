@@ -1765,7 +1765,7 @@ describe("corpus restoration preservation", () => {
         });
         const claimedOutput = yield* child.stdout.pipe(Stream.decodeText(), Stream.runHead);
         yield* child.kill({ killSignal: "SIGKILL" });
-        const childExit = yield* Effect.result(child.exitCode);
+        yield* child.exitCode.pipe(Effect.flip);
         const staleClaimExists = yield* fs.exists(claimPath);
 
         {
@@ -1780,7 +1780,6 @@ describe("corpus restoration preservation", () => {
             expectedProjection
           );
         }
-        assertTrue(Result.isFailure(childExit));
 
         yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);
 

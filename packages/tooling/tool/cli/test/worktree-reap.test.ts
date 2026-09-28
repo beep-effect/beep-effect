@@ -22,7 +22,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -493,8 +492,8 @@ describe("worktree reap", () => {
         const fs = yield* FileSystem.FileSystem;
         const target = yield* addWorktree(repoRoot, worktreesRoot, "unauthorized");
         const removal = yield* WorktreeRemovalService;
-        const attempt = yield* Effect.result(
-          removal.remove(
+        yield* removal
+          .remove(
             WorktreeRemovalRequest.make({
               name: NonEmptyTrimmedStr.make("unauthorized"),
               targetPath: target,
@@ -505,9 +504,8 @@ describe("worktree reap", () => {
               expectedHead: O.some("a".repeat(40)),
             })
           )
-        );
+          .pipe(Effect.flip);
 
-        attempt.pipe(Result.isFailure, assertTrue);
         expect(yield* fs.exists(target)).toBe(true);
         const branch = yield* runRepoCommandCapture(
           "git",

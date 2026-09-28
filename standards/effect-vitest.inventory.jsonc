@@ -14932,7 +14932,7 @@
       "line": 209,
       "endLine": 231,
       "symbol": "runPromise",
-      "occurrence": "v2:a0bebdeacb1d14092f380d042eaa616166262c09f29ec6dbeb58e1752064efab",
+      "occurrence": "v2:2c43c5b88c40fed9427391e446217dfced061b48c721b18e573edf41baa5a51e",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const withoutExportsStart = A.join( A.filter( Str.split(registryWithRegions([\"const generatedLabComposers = {};\"], []), \"\\n\"), (l",
       "replacement": {
@@ -14953,7 +14953,7 @@
       "line": 234,
       "endLine": 252,
       "symbol": "runPromise",
-      "occurrence": "v2:5c4e5c6de591ca99ff1175a73ce4fe6f117851660b4a658dad86912f88a0007c",
+      "occurrence": "v2:07d0796961457e0201b83654bdb7d45b4b6366668ad65f950b25a19adcea538d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const duplicated = Str.concat( registryWithRegions([\"const generatedLabComposers = {};\"], []), `${LAB_COMPOSERS_START_MARKER}\\n`",
       "replacement": {
@@ -22514,9 +22514,9 @@
       "line": 261,
       "endLine": 275,
       "symbol": "runPromise",
-      "occurrence": "v2:4506fbd454e4c9ea7d3fcedcbfc0fe1e566c2902bc769980ed294fec911b3dd5",
+      "occurrence": "v2:eb1f4ee5ac83d12df0cac05603ea1d739e17fbfc18b44becaa262ffe9cda606e",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { yield* writeProjectFile(\".codex/config.toml\", \"[skills]\\n include_instructions = true\\n\"); const result = yield* Effect.result(runSkillsUpdate({ mode: \"wri",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { yield* writeProjectFile(\".codex/config.toml\", \"[skills]\\n include_instructions = true\\n\"); const result = yield* runSkillsUpdate({ mode: \"write\", skill: O.",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -33279,7 +33279,7 @@
       "line": 1777,
       "endLine": 1777,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:f87406073ddf63807b3bf09438a82ba0b62fa5038bd0d3563ea6260af75a615e",
+      "occurrence": "v2:5914a0baa095661b9ccf0a83539dc03b0b33351b5b71fe12d25f4cbe9eef51c5",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -36093,7 +36093,7 @@
       "line": 110,
       "endLine": 110,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:5c8636d4ff04722bd3f8325c9f31de8a8c7a3a3dd4c10b2827cadc68addb5248",
+      "occurrence": "v2:b6207c81ac71e065e3f530bb58c48049c2d161abe36c151063761e915d7671db",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(ProcessDiagnosticTestLayer)",
       "replacement": {
@@ -36177,7 +36177,7 @@
       "line": 50,
       "endLine": 50,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:99843affca56bbc96ec203dbd7faebbb9888cb2f391e453341b355143f600b99",
+      "occurrence": "v2:7ef2d476469cfb149e3f798b6df5301a7bfaf5abff84c11ec292122a74db52c1",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36198,7 +36198,7 @@
       "line": 68,
       "endLine": 68,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:a32b1f4a7292024e7e3410f597ecd9f4ef3f07b9542c7515321d793e0b518372",
+      "occurrence": "v2:c4a0536e4ee40bf20a13292c947131a7c42d2b9aae7645d3dee5652b3b009a1a",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -40651,7 +40651,7 @@
       "line": 643,
       "endLine": 643,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:358cfa1520f662d9ff7b276c9fb38bd86bafe10d3c5b4a70a4a80f52c5cfbaff",
+      "occurrence": "v2:917e7521b004483e4edf92c375efd3a4f4f4cbf2cb91c6e066e73c71446532ef",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -55043,7 +55043,7 @@
       "line": 490,
       "endLine": 518,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:77f02a363f8828848aee03b88399f5ea3c81f44c9a0b732e56a898cdf1e3acc5",
+      "occurrence": "v2:e1cb5eefcbbf466f5942bd77147c7f0242e608cd4a6eba0d92be1020b8264137",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const target = yield* addWorktree(repoRoot, worktreesRoot, \"unauthorized\"); const re",
       "replacement": {
@@ -56664,7 +56664,7 @@
       "line": 1776,
       "endLine": 1776,
       "symbol": "scoped",
-      "occurrence": "v2:f87406073ddf63807b3bf09438a82ba0b62fa5038bd0d3563ea6260af75a615e",
+      "occurrence": "v2:5914a0baa095661b9ccf0a83539dc03b0b33351b5b71fe12d25f4cbe9eef51c5",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -83289,9 +83289,9 @@
       "line": 37,
       "endLine": 51,
       "symbol": "it.live",
-      "occurrence": "v2:ec0c6e3f09c10371d9008c3bce08ac88b79cf7d2f4f45873955ccf4b803096b0",
+      "occurrence": "v2:92ec403f0e8b3e8ef80636d5981b01a20727889b3b172dc84e6b8b5a6c19c7b2",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"surfaces a nonzero child exit rather than treating it as a stall\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const outcome = yield* Effect.result( runDocgenSte",
+      "evidence": "it.live( \"surfaces a nonzero child exit rather than treating it as a stall\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); yield* runDocgenStepWithStallWatchdogForTesting(\"w",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -83310,7 +83310,7 @@
       "line": 53,
       "endLine": 69,
       "symbol": "it.live",
-      "occurrence": "v2:b3b5b7f53c9f01f2975ee1083ec98ff3a95ca9929cfd467d534ca9111e0e0f1e",
+      "occurrence": "v2:ab2efc79d2ac70712c3f08c2c314474055deced95acb520167d2b8e7219b51d8",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"abandons a child that outlives its budget and fails once the retry stalls too\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); // Both attempts stall, which is the",
       "replacement": {
@@ -83331,7 +83331,7 @@
       "line": 71,
       "endLine": 111,
       "symbol": "it.live",
-      "occurrence": "v2:789aca97a61c5383252c8d79c271d3e066bc54d3b1d6dd5f37c7c28a8cb72e08",
+      "occurrence": "v2:8983bd9f52c9426a98aa3b0000ba8738dc7b05bfb65e783586f45e51e7868679",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"logs only the watched child tree without raw argument values\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const unrelated = yield* ChildProcess.make(\"sleep\", [\"",
       "replacement": {

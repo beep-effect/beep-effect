@@ -2875,9 +2875,7 @@ describe("quality task adapter", () => {
           Effect.gen(function* () {
             const exit = yield* Effect.exit(runGithubChecks("cheap-gates").pipe(TestClock.withLive));
 
-            if (Exit.isSuccess(exit)) {
-              assert.fail("Expected cheap gates to report both configured failures");
-            }
+            assertTrue(Exit.isFailure(exit), "Expected cheap gates to report both configured failures");
             if (Exit.isFailure(exit)) {
               const failure = Cause.squash(exit.cause);
               expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
