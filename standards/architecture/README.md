@@ -90,25 +90,29 @@ back here for the rationale once the shape clicks.
 
 ## Known Unknowns
 
-The architecture standards in this set were authored over a 10-day burst
-(2026-04-21 → 2026-05-01) and have not yet been load-tested at scale. The
-following areas are most likely to be revised after first contact:
+These standards were written from 2026-04-21 to 2026-05-01. The architecture
+lab has since been built from the slice shape and is covered by tests: 7
+packages and 168 tracked files, 68 of them under `src/`, counted with
+`git ls-files packages/architecture-lab` on 2026-09-22. The items below are
+the ones that contact has not settled.
 
 - **Promotion record enforcement.** The schema (`02-shared-kernel.md` Appendix)
-  is in place but lint enforcement (`lint:promotion-records`) is planned, not
-  implemented.
+  is in place. `lint:promotion-records` is still only a name in these
+  documents; no lint command implements it.
 - **Cross-slice workflow boundaries.** `10-cross-slice-coordination.md`
-  codifies the rules but the God Process Manager diagnostic has not yet caught
-  a real case in this repo.
-- **Deprecation windows.** `11-evolution-and-deprecation.md` proposes
-  2-minor-release / 1-quarter / 6-week defaults; these are starting values that
-  should be tightened or relaxed based on actual evolution velocity.
-- **Span/attribute conventions.** `12-observability.md` codifies the mapping
-  but no live trace from this repo has yet validated that the names render
-  legibly in our actual tracing tooling.
-- **Onboarding claims.** `13-onboarding-the-minimum-viable-slice.md` claims a
-  "smallest legal slice" of ~15 files; this should be verified by an actual new
-  contributor on a real task.
+  codifies the rules. The God Process Manager diagnostic has not caught a real
+  case in this repo.
+- **Deprecation windows.** The 2026-09-02 decision removes unreleased in-repo
+  symbols on discovery. The 2-minor-release / 1-quarter / 6-week defaults in
+  `11-evolution-and-deprecation.md` still govern published and cross-slice
+  surfaces, and they are still starting values.
+- **Span/attribute conventions.** `12-observability.md` codifies the mapping.
+  No live trace from this repo has validated that the names render legibly in
+  the tracing tooling.
+- **Onboarding walkthrough.** The file count in
+  `13-onboarding-the-minimum-viable-slice.md` is now the counted drawing and
+  the counted lab. A new contributor has not yet walked that drawing on a real
+  task.
 
 When any of the above is revised, append a corresponding `DECISIONS.md` entry
 and remove or update the bullet here.
