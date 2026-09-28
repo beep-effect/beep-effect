@@ -5328,3 +5328,13 @@ two existing cases; assertions, concurrency and timeout values are unchanged.
 The failed cohort is retained separately from the final comparison. Future
 resource migrations should inspect transitive retry clocks, not only direct
 sleep calls in the test file. Final validation belongs in the Yeet batch proof.
+
+### Match detector evidence with its canonical truncation and trimming order
+
+A private lineage audit initially could not resolve five Yeet runtime rows
+because it compared a 200-character prefix that retained a trailing space.
+The detector's compactEvidence trims after truncation. Applying the same rule
+produces exact historical line/evidence matches for all 74 runtime rows. Future
+lineage tooling should reuse compactEvidence rather than recreating its text
+normalization; otherwise shared evidence prefixes create false ambiguity and
+unnecessary history scans. No detector or baseline behavior was changed.

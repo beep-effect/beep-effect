@@ -59,20 +59,25 @@ and 1,552 resolved. This batch removes 79 live findings without any baseline
 anchor or membership edits. Its shorter environment-restoration helper and
 native-filesystem judgment remain open.
 
-Sixty-nine historical runtime rows have exact recorded line/evidence matches
-in committed source and a unique unchanged test title in the pre-migration
-source. Five further historical runtime rows share a truncated evidence prefix;
-the searched history did not prove their individual occurrence correspondence.
-They remain open, despite the current file having no manual runtime boundaries.
-Their IDs are retained in the private history-lineage and ledger-reconciliation
-receipts. This batch also leaves two older runSync rows and one property row
-for separate lineage reconciliation.
+All 74 historical runtime rows have exact recorded line/evidence matches in
+committed source and a unique unchanged test title in the pre-migration source.
+Five initially appeared ambiguous because the private comparison retained a
+trailing space after truncating the evidence. The detector trims after its
+200-character cutoff. Matching that canonical operation resolves all five;
+no heuristic correspondence or finding waiver is needed.
 
-The ledger closes 74 historical rows (69 runtime and five provider/wrapper
-rows) and records four provider judgments exposed by the runtime-only draft as
-fixed by the same combined migration. No baseline entries were added for those
-intermediate findings. The CLI ledger now has 1,348 fixed, seven exception and
-2,113 open records: 3,468 strict schema-valid, unique rows.
+Three older rows (one direct decoder runtime plus the verdict property's runtime
+and direct-Arbitrary call) belong to upstream b1aa7e320c, PR #1200. Original
+evidence matches its parent commit. Both current registrations exactly match
+its landed source after whitespace normalization, including the schema arbitrary
+and fcRuns(32). Both cases pass in the same 170-case Node/Bun cohort.
+
+The ledger closes 79 historical rows for this migration and three upstream rows,
+and records four provider judgments exposed by the runtime-only draft as fixed
+by the combined migration. No baseline entries were added for intermediate
+findings. The CLI ledger now has 1,356 fixed, seven exception and 2,105 open
+records: 3,468 strict schema-valid, unique rows. Only the shorter environment
+wrapper and native-filesystem judgment remain open in yeet.test.ts.
 
 Full CLI package verification is running for source 75fa5f2713. Its result is
 not yet claimed. The preceding docgen migration has its own completed full
