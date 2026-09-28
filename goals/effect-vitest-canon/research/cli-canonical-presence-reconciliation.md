@@ -21,5 +21,5 @@ No exceptions or source rewrites were needed. CLI inventory now has 996 fixed,
 ratchet count is unaffected by this historical reconciliation.
 
 Private receipts: `cli-canonical-presence-reconciliation.json` and the refreshed
-`cli-remaining-assertion-audit.json`. Full CLI package verification from the
-preceding source change is still running and is not credited here.
+`cli-remaining-assertion-audit.json`. Full CLI package verification for the preceding source correction subsequently
+passed: audit 666.5 seconds and docgen 19.7 seconds.

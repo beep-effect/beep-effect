@@ -25,4 +25,4 @@ transition; absence from detector output is not the sole evidence.
 The CLI ledger now contains 1,005 fixed, 7 exception and 2,442 open records,
 including 39 open EV006 records. Private receipt:
 `cli-historical-outcome-reconciliation.json`. Full CLI verification for the
-preceding source repair remains in progress.
+preceding source repair passed: audit 666.5 seconds and docgen 19.7 seconds.

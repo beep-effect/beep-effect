@@ -40,7 +40,9 @@ versions and limits are recorded; these are observations, not causal
 performance claims.
 
 Full schema package verification passes: audit 9.6 seconds and docgen
-5.6 seconds. Full CLI package verification is running; it is not yet proof.
+5.6 seconds. Full CLI package verification passes: audit 666.5 seconds and docgen
+19.7 seconds. Source stayed unchanged during the proof; the only intervening
+commits reconciled packet evidence and historical inventory records.
 Hosted follow-up proof and remaining goal work remain outstanding. PR1323
 remains frozen under the operator's instruction.
 
