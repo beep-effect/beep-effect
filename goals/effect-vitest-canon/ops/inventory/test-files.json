@@ -584,15 +584,15 @@
     "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2316,
-    "lines": 49
+    "bytes": 2548,
+    "lines": 52
   },
   {
     "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5937,
-    "lines": 158
+    "bytes": 5319,
+    "lines": 142
   },
   {
     "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
@@ -605,8 +605,8 @@
     "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6208,
-    "lines": 162
+    "bytes": 6437,
+    "lines": 167
   },
   {
     "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",

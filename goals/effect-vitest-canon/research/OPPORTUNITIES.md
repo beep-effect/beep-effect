@@ -4563,3 +4563,14 @@ The direct always-failing client function initially failed TypeScript's generic
 RPC return constraint (TS2375). The existing sync-atoms service-stub boundary
 pattern resolved it. A reusable typed RPC test-client builder could reduce these
 local assertions while retaining the protocol's tag/payload/error relationship.
+
+## Distinguish shared descriptors from per-acquisition state
+
+The Tauri socket tests rebuilt an effectful layer inside each test and wrapped
+five whole test bodies in another scope. Source inspection showed that the layer
+creates a stateless descriptor while each reader/writer acquisition creates its
+own state. Public suite-layer ownership is safe here; a cross-test partial-frame
+probe confirmed fresh writer buffers on the shared Socket. Moving the actual
+writer or reader into a suite fixture would have changed that isolation contract.
+Theme and filesystem hook budgets were also made explicit using the existing
+normal/coverage/deep-sweep policy.
