@@ -3881,3 +3881,134 @@ one of its subcommands. The actual command is `bun run beep cache census`.
 Unknown nested command help should identify the unrecognized segment and, where
 possible, suggest the valid route. Status: tooling follow-up; no command routing
 change is included in the Box Provisioning test batch.
+
+## 2026-09-28 — scheduler yields did not establish dispatch readiness
+
+The saved Epistemic Server overlap test read its decision ledger after one
+scheduler yield per fork. A controlled dispatch delay of 20 scheduler yields
+makes that oracle fail while explicit acknowledgements from the approved bodies
+pass. The test now awaits each acknowledgement before launching the next actor
+and inspecting decision order, while preserving reverse settlement, joined
+fibers, the second failure and exact hash binding. Use observable milestones for
+concurrency claims; a yield is not a readiness signal. Status: repaired locally
+in the current Epistemic Server batch; a historical hosted flake is not claimed.
+
+## 2026-09-28 — failed tamper assertions could leave append-only triggers absent
+
+ExecutionLedger PGlite tests dropped shared database triggers, performed tamper
+assertions, then restored the triggers. Assertion defects or interruption could
+skip restoration. Both scopes now use acquireUseRelease; restoration errors
+remain visible as defects. Controlled failures and interruption verify that each
+of the decision and outcome triggers exists afterward. Disabling restoration
+fails all four checks. Test teardown should be registered before deliberately
+weakening shared database constraints. Status: repaired locally; original forged
+fields, chain index and binding assertions remain intact.
+
+## 2026-09-28 — the external PostgreSQL lane asserted the wrong conflict layer
+
+The untouched ContradictionTriage PostgreSQL baseline produced one winning
+approval and one losing review, but rejected the loser because it expected
+SupersessionConflict. A classification-only probe found
+ContradictionReviewConflict with reason stale-candidate. The repository checks
+proposal applicability after locking the surviving edge and returns that review
+error before calling the edge superseder. The assertion now requires that exact
+type and reason rather than accepting an arbitrary failure. Status: repaired locally and verified on Node and Bun; no production behavior
+change was warranted by this evidence.
+The reproduction used a dedicated disposable PostgreSQL database.
+
+## 2026-09-28 — a fixed PostgreSQL wait was not a contention acknowledgement
+
+ContradictionTriage race tests waited 250 ms before counting lock waiters.
+The replacement polls the two known backend IDs for Lock state, clearing the
+statistics snapshot inside the blocker transaction between observations. Polling
+is limited to 250 ten-millisecond intervals and a ten-second live watchdog; it
+does not retry the race or advance TestClock. Actual simultaneous lock waiting
+remains required before releasing the blocker. Status: both native PostgreSQL races pass on Node and Bun. With writer startup
+delayed by 800 ms, the original fixed-delay observer fails and the bounded
+lock-state observer passes; all source is restored after the control.
+
+## 2026-09-28 — derived public-ID uniqueness was misclassified as malformed input
+
+The untouched EdgeAuthority PostgreSQL race B baseline produced one winner and
+one EdgeConstraintViolation naming epistemic_edge_version_public_id_unique_idx.
+The public ID is derived directly from logicalKey and version; its uniqueness
+constraint therefore enforces the same pair as the already-recognized logical
+version constraint. The write-error mapper omitted this fourth concurrency
+backstop, giving callers the wrong recovery classification when PostgreSQL
+reported that index first. The standing production-repair authorization covers
+adding the exact index name to the SupersessionConflict mapping. The race retains
+its one-winner, one-typed-conflict and lineage assertions; its diagnostic accepts
+the four equivalent backstop names rather than assuming index evaluation order.
+Status: the four native PostgreSQL tests pass on Node and Bun, and full package
+verification passes after the production repair. The overlap-witness and
+filtered-setup hardening are also repaired locally, with their evidence recorded
+below. Publication and the remaining batch closeout are still pending.
+
+## 2026-09-28 — filtered PostgreSQL races depended on another test's setup
+
+Running only EdgeAuthority race A on a fresh dedicated database failed because
+epistemic_candidate_claim did not exist. Reset and migration lived in the first
+test rather than suite setup. The public layer now performs those prerequisites,
+retaining the existing five-minute setup budget and original test deadlines.
+Filtered race A then passes on that fresh database. Test filtering should be a
+supported diagnostic workflow, with setup independent of test selection.
+Status: repaired locally in the Epistemic Server batch.
+
+## 2026-09-28 — timed row locking did not prove writer overlap
+
+EdgeAuthority race A released its blocker after 250 ms without observing either
+writer. Each writer now acknowledges its backend PID inside a pinned transaction;
+the blocker requires distinct PIDs and waits for both to enter Lock state before
+release. The bounded observer is shared with ContradictionTriage. An 800 ms writer
+delay still passes; withholding the second distinct witness fails. The two
+repository instances, four-connection pool and exact conflict/lineage outcomes
+remain. Status: repaired locally and verified against real PostgreSQL.
+
+## 2026-09-28 — assertion migration needs to preserve branded numeric expectations
+
+Mechanical Option assertion conversion caused four branded-number inference
+errors in EdgeAuthority PGlite tests: assertSome inferred PosInt while the
+unchanged expected value was the literal 1. Explicit assertSome<number> retains
+that original comparison. One nested helper call also required its equivalent
+pipe form for the Effect diagnostic. Preservation proof still accounts for all
+437 original assertions, including separately documented oracle repairs.
+Migration tooling should detect these cases before handoff and preserve expected
+values instead of introducing constructors solely to satisfy inferred brands.
+Status: local conversions repaired; broader converter improvements are a follow-up.
+
+
+## 2026-09-28 — schema-first inventory churn obscures surviving advisories
+
+The final Epistemic Server `bun run lint:schema-first` proof exits 1 with six
+stale `SFV4-arbitrary-tests` entries. The same scan reports the same six files,
+`schema-codec-tests` symbols and codec counts at their new line positions. For
+example, BoundedShaclValidator moves from line 19 to 21 and EdgeAuthority.pg
+from 65 to 68. These diagnostics do not establish that property coverage was
+removed; the advisory still exists at a different location.
+
+Reconcile the affected entries after confirming their identity and preserving
+all existing dispositions. Then rerun the gate. A tooling follow-up should
+check whether inventory identity can survive import and setup line shifts, or
+at least report a relocation rather than an apparent removal. A regression
+should insert unrelated lines above an unchanged advisory and verify that its
+review disposition survives without suppressing a genuinely new finding.
+Status: the six line anchors are reconciled with every disposition and reason
+preserved, and the root gate passes. Stable diagnostic matching remains a
+tooling improvement opportunity. The six property-coverage advisories still
+require their existing review and must not be silently dismissed.
+
+
+## 2026-09-28 — ignored rollback failures hid broken database cleanup
+
+The adjacent EpistemicRepositoryDriverFailure PGlite suite called rollback after
+expected failures but ignored rollback errors. Replacing ROLLBACK with a query
+against a deliberately missing table still passed all three tests. The existing
+typed-error assertions therefore did not establish that cleanup succeeded.
+
+Each expected driver failure now owns rollback through Effect.ensuring, and
+rollback errors remain visible through Effect.orDie. The unchanged three tests
+pass with real rollback; the identical broken-rollback control now fails.
+Existing error-type, operation-name and empty-repository assertions are retained.
+Status: repaired locally; full package audit and docgen pass. Error-path
+tests should prove their cleanup can fail visibly, especially when subsequent
+operations normalize several underlying driver failures to the same public type.

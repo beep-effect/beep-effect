@@ -36,7 +36,6 @@ import {
   EdgeAuthorityRepository,
   GetExpandedContradictionCandidate,
   RecordEdgeFact,
-  SupersessionConflict,
 } from "@beep/epistemic-use-cases/server";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { PosInt } from "@beep/schema/Int";
@@ -49,10 +48,13 @@ import * as Shared from "@beep/shared-domain/identity/Shared";
 import { systemPrincipal as systemPrincipalInput } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as PgClient from "@effect/sql-pg/PgClient";
+import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
 
 const decodeUnknownRecordEdgeFactResult = S.decodeUnknownResult(RecordEdgeFact);
 
-import { describe, expect, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Config, Context, DateTime, Deferred, Effect, Layer, pipe, Redacted } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -277,26 +279,11 @@ const readBackendPid = Effect.fnUntraced(function* (sql: SqlClient.SqlClient) {
   );
 });
 
-const expectBothWritersWaiting = Effect.fnUntraced(function* (
-  sql: SqlClient.SqlClient,
-  firstPid: number,
-  secondPid: number
-) {
-  yield* sql`SELECT pg_sleep(0.25)`;
-  const waiters = yield* sql<{ readonly count: number }>`
-    SELECT COUNT(*)::int AS count
-    FROM pg_stat_activity
-    WHERE pid IN (${firstPid}, ${secondPid})
-      AND wait_event_type = 'Lock'
-  `;
-  expect(A.map(waiters, (row) => row.count)).toEqual([2]);
-});
-
 if (Str.isEmpty(externalUrl)) {
   describe.skip("ContradictionTriage external Postgres race — BEEP_EPISTEMIC_CONTRADICTION_PG_URL not set", () => {});
 } else {
   describe("ContradictionTriage external Postgres race", { concurrent: false }, () => {
-    layer(makeExternalLayer(2), { timeout: "5 minutes" })((it) => {
+    it.layer(makeExternalLayer(2), { timeout: "5 minutes" })((it) => {
       it.effect(
         "allows exactly one reviewer and preserves the disposition across a fresh repository/client stack",
         Effect.fnUntraced(function* () {
@@ -375,14 +362,18 @@ if (Str.isEmpty(externalUrl)) {
           const failures = A.filter(outcomes, Result.isFailure);
           expect(A.length(successes)).toBe(1);
           expect(A.length(failures)).toBe(1);
-          expect(A.every(failures, (outcome) => ContradictionReviewConflict.is(outcome.failure))).toBe(true);
-          expect(
+          pipe(
+            A.every(failures, (outcome) => ContradictionReviewConflict.is(outcome.failure)),
+            assertTrue
+          );
+          pipe(
             A.every(
               failures,
               (outcome) =>
                 ContradictionReviewConflict.is(outcome.failure) && Eq.equals(outcome.failure.reason, "already-resolved")
-            )
-          ).toBe(true);
+            ),
+            assertTrue
+          );
 
           const dispositionCounts = yield* sql<{ readonly count: number }>`
             SELECT COUNT(*)::int AS count
@@ -405,16 +396,18 @@ if (Str.isEmpty(externalUrl)) {
               );
             })
           );
-          expect(O.isSome(persisted)).toBe(true);
+          pipe(persisted, O.isSome, assertTrue);
           if (O.isNone(persisted)) {
             return yield* Effect.die("expected the reviewed candidate after rebuilding the repository stack");
           }
           expect(persisted.value.candidate.rowVersion).toBe(1);
-          expect(O.map(persisted.value.disposition, (disposition) => disposition.rowVersion)).toStrictEqual(
-            O.some(PosInt.make(1))
+          assertSome(
+            O.map(persisted.value.disposition, (disposition) => disposition.rowVersion),
+            PosInt.make(1)
           );
-          expect(O.map(persisted.value.disposition, (disposition) => disposition.decision.status)).toStrictEqual(
-            O.some("rejected")
+          assertSome(
+            O.map(persisted.value.disposition, (disposition) => disposition.decision.status),
+            "rejected"
           );
         }),
         180_000
@@ -545,9 +538,21 @@ if (Str.isEmpty(externalUrl)) {
           );
           const failures = A.filter(outcomes, Result.isFailure);
           expect(A.length(successes)).toBe(1);
-          expect(A.every(successes, (disposition) => Eq.equals(disposition.decision.status, "superseded"))).toBe(true);
+          pipe(
+            A.every(successes, (disposition) => Eq.equals(disposition.decision.status, "superseded")),
+            assertTrue
+          );
           expect(A.length(failures)).toBe(1);
-          expect(A.every(failures, (outcome) => SupersessionConflict.is(outcome.failure))).toBe(true);
+          // The locked applicability check rejects the losing review before
+          // calling the lower-level edge superseder.
+          pipe(
+            A.every(
+              failures,
+              (outcome) =>
+                ContradictionReviewConflict.is(outcome.failure) && Eq.equals(outcome.failure.reason, "stale-candidate")
+            ),
+            assertTrue
+          );
           const successfulDisposition = yield* pipe(
             successes,
             A.head,
@@ -622,12 +627,12 @@ if (Str.isEmpty(externalUrl)) {
             return yield* Effect.die("expected the persisted disposition to supersede the shared edge");
           }
           expect(persistedDisposition.id).toBe(successfulDisposition.id);
-          expect(O.isSome(recovered.latest)).toBe(true);
+          pipe(recovered.latest, O.isSome, assertTrue);
           if (O.isNone(recovered.latest)) {
             return yield* Effect.die("expected the replacement edge after rebuilding the repository stack");
           }
           expect(recovered.latest.value.version).toBe(2);
-          expect(recovered.latest.value.supersedesId).toStrictEqual(O.some(shared.id));
+          assertSome(recovered.latest.value.supersedesId, shared.id);
           expect(recovered.latest.value.id).toBe(successfulDisposition.decision.replacementEdgeVersionId);
           expect(recovered.latest.value.id).toBe(persistedDisposition.decision.replacementEdgeVersionId);
         }),

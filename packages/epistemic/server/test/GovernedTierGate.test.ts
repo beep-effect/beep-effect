@@ -23,8 +23,10 @@ import {
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate, TierGateSettlement } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Deferred, Duration, Effect, Fiber, pipe, Ref } from "effect";
 import { Tool } from "effect/ai";
 import * as Str from "effect/String";
@@ -144,7 +146,7 @@ describe("GovernedTierGate", () => {
       const decision = decisions[0]!;
       expect(decision.verdict).toBe("allowed");
       expect(decision.seq).toBe(0);
-      expect(O.isNone(decision.prevHash)).toBe(true);
+      assertNone(decision.prevHash);
       expect(decision.sinkClass).toBe("mcp-write");
       expect(decision.audience).toBe("local-workspace");
       expect(decision.operationDigest).toBe(operationDigestOf(GrantOperation.make(grantedTool.name)));
@@ -154,7 +156,7 @@ describe("GovernedTierGate", () => {
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("completed");
-      expect(verifyOutcomeBinding(outcomes[0]!, decision)).toBe(true);
+      pipe(verifyOutcomeBinding(outcomes[0]!, decision), assertTrue);
     })
   );
 
@@ -170,8 +172,14 @@ describe("GovernedTierGate", () => {
       expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
       expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "denied", "allowed"]);
       const runKey = decisions[0]!.runKey;
-      expect(A.every(decisions, (record) => record.runKey === runKey)).toBe(true);
-      expect(A.every(decisions, (record) => record.grantSetDigest === decisions[0]!.grantSetDigest)).toBe(true);
+      pipe(
+        A.every(decisions, (record) => record.runKey === runKey),
+        assertTrue
+      );
+      pipe(
+        A.every(decisions, (record) => record.grantSetDigest === decisions[0]!.grantSetDigest),
+        assertTrue
+      );
       expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
 
       // The denied middle decision never settles; both allowed ones do.
@@ -240,7 +248,7 @@ describe("GovernedTierGate", () => {
       // persisted against the write-ahead decision.
       expect(outcomes[0]!.settlement).toBe("failed");
       const decisions = yield* Ref.get(harness.decisions);
-      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
     })
   );
 
@@ -278,22 +286,34 @@ describe("GovernedTierGate", () => {
       const harness = yield* makeHarness();
       const slow = yield* Deferred.make<void>();
       const fast = yield* Deferred.make<void>();
+      const firstStarted = yield* Deferred.make<void>();
+      const secondStarted = yield* Deferred.make<void>();
 
       // Two concurrent dispatches of ONE tool on ONE session, finishing in the
       // reverse of their decision order. Correlation is by dispatch fiber, so
       // each settlement must bind to its own decision rather than to whichever
       // decision was written first.
-      const first = yield* Effect.forkChild(dispatchAs(harness, "s-1", grantedTool, Deferred.await(slow)));
-      yield* Effect.yieldNow;
+      const first = yield* Effect.forkChild(
+        dispatchAs(
+          harness,
+          "s-1",
+          grantedTool,
+          Deferred.succeed(firstStarted, undefined).pipe(Effect.andThen(Deferred.await(slow)))
+        )
+      );
+      yield* Deferred.await(firstStarted);
       const second = yield* Effect.forkChild(
         dispatchAs(
           harness,
           "s-1",
           grantedTool,
-          Deferred.await(fast).pipe(Effect.andThen(Effect.fail("second" as const)))
+          Deferred.succeed(secondStarted, undefined).pipe(
+            Effect.andThen(Deferred.await(fast)),
+            Effect.andThen(Effect.fail("second" as const))
+          )
         )
       );
-      yield* Effect.yieldNow;
+      yield* Deferred.await(secondStarted);
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(2);
@@ -330,7 +350,10 @@ describe("GovernedTierGate", () => {
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
-      expect(A.every(decisions, (record) => record.runKey === decisions[0]!.runKey)).toBe(true);
+      pipe(
+        A.every(decisions, (record) => record.runKey === decisions[0]!.runKey),
+        assertTrue
+      );
       expect(verifyExecutionDecisionChain(decisions, decisions[0]!.runKey).result).toBe("chain-intact");
     })
   );
@@ -356,7 +379,10 @@ describe("GovernedTierGate", () => {
       );
       expect(reasons).toEqual([refusalGuidance, refusalGuidance, refusalGuidance]);
       // And the constant carries none of the bounded vocabulary.
-      expect(A.some(DenialReason.Options, (reason) => Str.includes(reason)(refusalGuidance))).toBe(false);
+      pipe(
+        A.some(DenialReason.Options, (reason) => Str.includes(reason)(refusalGuidance)),
+        assertFalse
+      );
     })
   );
 });

@@ -234,7 +234,7 @@ const normalizeWriteFailure =
                 `${operation} failed against ${EDGE_TABLE_NAME}`,
                 driverCause
               ),
-            // Three names mean "another writer got there first"; every other name
+            // Four names mean "another writer got there first"; every other name
             // describes a malformed write.
             //
             // The open-head index and the valid-interval exclusion constraint are
@@ -244,16 +244,17 @@ const normalizeWriteFailure =
             // transaction locked. A duplicate can therefore only mean a
             // concurrent writer committed that version first, which is the same
             // lost race and the same caller recovery: re-read the head, re-derive
-            // the version, try again. Two creators of one brand-new key hit this
-            // one rather than the open-head index, because both compute version 1
-            // and the btree unique index is checked first (proven by race B of
-            // EdgeAuthority.pg.test.ts on real Postgres).
+            // the version, try again. The public ID is derived from that exact
+            // pair, so its unique index is a fourth equivalent backstop.
+            // PostgreSQL may report either unique index for two creators of a
+            // new key; callers need the same conflict regardless of index order.
             onSome: (constraintName) =>
               Match.value(constraintName).pipe(
                 Match.whenOr(
                   "epistemic_edge_open_head_idx",
                   "epistemic_edge_no_overlap",
                   "epistemic_edge_logical_version_unique",
+                  "epistemic_edge_version_public_id_unique_idx",
                   () => SupersessionConflict.backstop(logicalKey, expectedVersion, driverCause)
                 ),
                 Match.orElse((name) => EdgeConstraintViolation.on(operation, name))
