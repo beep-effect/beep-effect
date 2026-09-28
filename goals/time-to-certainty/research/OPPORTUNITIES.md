@@ -2609,3 +2609,50 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   `research/baseline.md` already lists fleet queue share as unmeasured. Record hosted queue time
   (`created_at -> started_at`) per Heavy job as its own term before the B9 merge-queue capture is
   judged.
+
+## 2026-09-28 — `yeet sweep --retire` switched a live non-`main` owning clone to `main` under a running verify
+
+- Doing: retiring the merged #1288 lane from a shared clone checked out on `@chore/get-main-green`,
+  where another Claude Code session had a `yeet verify --no-fail-fast` process running since 06:59Z.
+- Evidence: at 07:33Z a sibling session's `yeet sweep --retire` (closing the merged #1313 lane,
+  `feat/yeet-pr-events-slice-2`; the retire form shows in its archive ref
+  `refs/archive/worktrees/yeet-pr-events-slice-2/20260928-073332`) swept the same clone. The clone's
+  local sweep report (`.beep/yeet/sweep-report.json`, git-ignored and overwritten by the next sweep;
+  07:33:36Z to 07:33:48Z) and its reflogs show `ff-main` fast-forwarding `main` at 07:33:46Z,
+  `lockfile-install` running `bun install` in the live checkout at 07:33:47Z against the checked-out
+  branch's lockfile (its `prepare` script uses effect-tsgo to restore and re-patch the native `tsc`
+  binary, and its `postinstall` re-syncs lefthook hooks and rebuilds the infra runner script), and
+  `end-state` switching the clone from `@chore/get-main-green` to `main` at 07:33:48Z, all under the
+  running verify. The clone was switched back at 07:34:38Z (reflog), so the tree showed `main`'s
+  files for 50 seconds, and the verify kept going across that window: its `quality:lint` proof at
+  07:27Z carries the pre-sweep base and its `quality:test-unit` proof at 07:48Z the new `main`, both
+  for head `4832e3bbba` (`.beep/yeet/lane-proofs.json`). At 07:36Z `yeet sweep --retire --plan`, run
+  with the lane's CLI from inside the #1288 lane (the retiring session's terminal output, not
+  recorded), printed the same steps for this clone: `lockfile-install: bun install` (gated by a
+  clean tree plus a post-refresh `bun.lock` re-check, forecast `unchanged` here) and
+  `end-state: git switch 'main'` (gated only by a clean tree and `main` not being checked out
+  elsewhere). No step refuses because the clone sits on an unrelated branch (`ffMainPlanStep` and
+  `endStatePlanStep` in `packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts` read the
+  clone's HEAD only to choose `git fetch origin main:main` over `git merge --ff-only` and, for
+  `end-state`, to add the clean-tree and main-free preconditions), none checks whether a process is
+  running in the clone, and the module comment describes leaving the clone on `main` as the intended
+  end state. The lane was retired with `bun run beep worktree remove <lane> --archive --delete-branch`
+  from the clone instead (archive ref recorded, local branch deleted, remote branch already gone:
+  deleted on GitHub at merge and pruned locally); `main` needed no refresh because the sibling's
+  `ff-main` had already moved it.
+- Prevention: skip the sweep's `end-state` and `lockfile-install` steps, and say so in the plan,
+  when the owning clone's HEAD is neither `main` nor the branch being swept (under `--retire` that
+  means "not on `main`", since the swept branch lives in the lane); that rule alone would have
+  prevented this incident. Run `lockfile-install` after `end-state`, and only when `end-state`
+  executed or the clone was already on `main`, so the install resolves `main`'s `bun.lock`. A
+  process check is the open question: the retire fence's `/proc` scan exempts the invoker's
+  ancestry and, when `CLAUDE_PID` proves the session, that session's descendants, so applied to the
+  clone it would still not see a verify launched by the sweeping session itself, and it would have
+  to exclude the linked worktrees nested under `.claude/worktrees/`. Until then, every session
+  retiring a lane of a shared clone runs `--plan` first; when the clone is on a branch other than
+  `main`, or another session's process is working in it (`/proc/*/cwd` under the clone, outside
+  `.claude/worktrees/`, a narrower check than the fence's cwd-plus-descriptor scan), retire with
+  `worktree remove --archive --delete-branch`, then `git fetch --prune origin` and
+  `git fetch origin main:main` (ref-only, fast-forward only), delete the remote branch with the
+  plan's leased push (`git push origin --force-with-lease=refs/heads/<b>:<pr-head> :refs/heads/<b>`)
+  if it is still at the PR head, and run no `bun install` in that clone.
