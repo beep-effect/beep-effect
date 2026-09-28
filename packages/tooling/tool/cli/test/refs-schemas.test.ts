@@ -3,8 +3,11 @@ import {
   MEMBER_REFRESH_DETAIL_MAX_CHARS,
   MemberRefreshOutcome,
   MemberRefreshReport,
+  PatchKitStatus,
   ReferenceMember,
   ReferenceWorkspaceManifest,
+  RefsRefreshPreflight,
+  RefsRefreshStatus,
 } from "@beep/repo-cli/commands/Refs";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -20,6 +23,11 @@ const encodeReport = S.encodeEffect(ReportJson);
 const decodeReport = S.decodeEffect(ReportJson);
 const decodeReportUnknown = S.decodeUnknownEffect(MemberRefreshReport);
 const reportEquivalent = S.toEquivalence(MemberRefreshReport);
+const PreflightJson = S.fromJsonString(RefsRefreshPreflight);
+const encodePreflight = S.encodeEffect(PreflightJson);
+const decodePreflight = S.decodeEffect(PreflightJson);
+const preflightEquivalent = S.toEquivalence(RefsRefreshPreflight);
+const decodeStatusUnknown = S.decodeUnknownEffect(RefsRefreshStatus);
 
 describe("reference manifest schemas", () => {
   it.effect(
@@ -54,9 +62,48 @@ describe("reference manifest schemas", () => {
     );
   }
 
-  it("recognizes the cooldown outcome", () => {
+  it("recognizes the cooldown and preflight outcomes", () => {
     expect(MemberRefreshOutcome.is["skipped-cooldown"]("skipped-cooldown")).toBe(true);
+    expect(MemberRefreshOutcome.is["skipped-preflight"]("skipped-preflight")).toBe(true);
+    expect(PatchKitStatus.Options).toEqual(["ok", "missing", "unavailable"]);
   });
+
+  it.effect(
+    "keeps the preflight an optional receipt key",
+    Effect.fnUntraced(function* () {
+      const base = {
+        schemaVersion: "beep-refs-refresh/v1",
+        timestamp: "2026-09-28T08:30:00.000Z",
+        root: "/refs",
+        members: [],
+        workspaceCheck: { buildExitCode: 0, exitCode: 0, output: "fresh" },
+      };
+      // Receipts written before the preflight existed still decode.
+      assertNone((yield* decodeStatusUnknown(base)).preflight);
+      const missing = yield* decodeStatusUnknown({
+        ...base,
+        preflight: { patchKit: "missing", detail: "missing  0002-summaries" },
+      });
+      assertSome(
+        missing.preflight,
+        RefsRefreshPreflight.make({ patchKit: "missing", detail: O.some("missing  0002-summaries") })
+      );
+      const ok = yield* encodePreflight(RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
+      expect(ok).toBe('{"patchKit":"ok"}');
+      const unknown = { ...base, preflight: { patchKit: "stale" } };
+      expect((yield* decodeStatusUnknown(unknown).pipe(Effect.result))._tag).toBe("Failure");
+    })
+  );
+
+  it.effect.prop(
+    "round-trips preflight records through the JSON codec",
+    [Arbitrary.schema(RefsRefreshPreflight)],
+    Effect.fnUntraced(function* ([preflight]) {
+      const decoded = yield* decodePreflight(yield* encodePreflight(preflight));
+      expect(preflightEquivalent(decoded, preflight)).toBe(true);
+    }),
+    { arbitrary: fcRuns(100) }
+  );
 
   it.effect(
     "round-trips failure detail and omits the key when absent",

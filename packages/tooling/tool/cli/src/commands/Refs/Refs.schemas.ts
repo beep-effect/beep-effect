@@ -190,6 +190,7 @@ export const MemberRefreshOutcome = LiteralKit([
   "pull-failed",
   "build-failed",
   "skipped-cooldown",
+  "skipped-preflight",
 ]).pipe($I.annoteSchema("MemberRefreshOutcome", { description: "Result of refreshing one upstream member." }));
 /**
  * Terminal member outcome.
@@ -217,8 +218,8 @@ export const MEMBER_REFRESH_DETAIL_MAX_CHARS = 2000;
  * Tail of the failing step's output, bounded so receipts stay small.
  *
  * **Details**
- * Holds the last characters of a failed pull or build, or the cooldown
- * preflight's status summary. It never carries a model response body or an
+ * Holds the last characters of a failed pull or build, the cooldown
+ * preflight's status summary, or the patch-kit preflight's result. It never carries a model response body or an
  * API key.
  *
  * **Example** (Accept a bounded detail)
@@ -246,8 +247,8 @@ export type MemberRefreshDetail = typeof MemberRefreshDetail.Type;
  * A member receipt, retaining deep-build coverage and failure detail when available.
  *
  * **Details**
- * `detail` is present for `pull-failed`, `build-failed`, and `skipped-cooldown`
- * and absent otherwise. The key is optional, so older `beep-refs-refresh/v1`
+ * `detail` is present for `pull-failed`, `build-failed`, `skipped-cooldown`,
+ * and `skipped-preflight` and absent otherwise. The key is optional, so older `beep-refs-refresh/v1`
  * receipts still decode.
  *
  * **Example** (Record a skipped member)
@@ -288,7 +289,66 @@ export class ReferenceWorkspaceCheck extends S.Class<ReferenceWorkspaceCheck>($I
 ) {}
 
 /**
+ * Result of the Graft dist patch-kit check that gates every deep build.
+ *
+ * **Details**
+ * `ok` means `scripts/graft/apply-dist-patches.sh --check` exited 0. `missing`
+ * means it exited 1: the installed Graft lacks at least one recorded patch.
+ * `unavailable` means the script is absent, could not run, or exited with any
+ * other status. Anything but `ok` downgrades every deep member to a structural
+ * build.
+ *
+ * **Example** (Recognize a missing patch kit)
+ * ```ts
+ * import { PatchKitStatus } from "@beep/repo-cli/commands/Refs"
+ * PatchKitStatus.is.missing("missing") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PatchKitStatus = LiteralKit(["ok", "missing", "unavailable"]).pipe(
+  $I.annoteSchema("PatchKitStatus", { description: "Outcome of the Graft dist patch-kit check." })
+);
+/**
+ * Graft dist patch-kit check outcome.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PatchKitStatus = typeof PatchKitStatus.Type;
+
+/**
+ * Checks a refresh runs once before any member work.
+ *
+ * **Details**
+ * `detail` holds the bounded tail of the patch-kit check output when the
+ * status is not `ok`, and is absent otherwise.
+ *
+ * **Example** (Record a passing preflight)
+ * ```ts
+ * import { RefsRefreshPreflight } from "@beep/repo-cli/commands/Refs"
+ * import * as O from "effect/Option"
+ * RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }).patchKit // => "ok"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RefsRefreshPreflight extends S.Class<RefsRefreshPreflight>($I`RefsRefreshPreflight`)(
+  {
+    patchKit: PatchKitStatus,
+    detail: S.OptionFromOptionalKey(MemberRefreshDetail),
+  },
+  $I.annote("RefsRefreshPreflight", { description: "Run-level checks recorded before member work." })
+) {}
+
+/**
  * Durable receipt written after a reference refresh.
+ *
+ * **Details**
+ * `preflight` is an optional key, so receipts written before the patch-kit
+ * check existed still decode under `beep-refs-refresh/v1`.
  *
  * **Example** (Inspect the receipt schema)
  * ```ts
@@ -307,8 +367,11 @@ export class RefsRefreshStatus extends S.Class<RefsRefreshStatus>($I`RefsRefresh
     root: S.NonEmptyString,
     members: S.Array(MemberRefreshReport),
     workspaceCheck: ReferenceWorkspaceCheck,
+    preflight: S.OptionFromOptionalKey(RefsRefreshPreflight),
   },
-  $I.annote("RefsRefreshStatus", { description: "One report per manifest member and the workspace check." })
+  $I.annote("RefsRefreshStatus", {
+    description: "One report per manifest member, the workspace check, and the run preflight.",
+  })
 ) {
   /**
    * Decodes a saved reference refresh receipt.

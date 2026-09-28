@@ -1,6 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft";
-import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
+import { ReferenceWorkspaceManifest, RefsRefreshPreflight, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -12,6 +12,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   graftTestApiKey,
+  patchKitStub,
   ReferenceFixture,
   referenceFixtureLayer,
   scriptedHttpClient,
@@ -58,16 +59,19 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
 // the unit's graft settings and a scripted proxy.
 const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
   respond: () => Response | undefined,
-  seen: Array<HttpClientRequest.HttpClientRequest>
+  seen: Array<HttpClientRequest.HttpClientRequest>,
+  arrange: (f: Effect.Success<ReturnType<typeof prepare>>) => Effect.Effect<void> = () => Effect.void,
+  extraConfig: Readonly<Record<string, string>> = {}
 ) {
   const f = yield* prepare();
   for (const name of ["effect", "effect-tsgo"])
     yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+  yield* arrange(f);
   const status = yield* workspace
     .use((service) => service.refresh(f.home, f.root, 4))
     .pipe(
       Effect.provideService(HttpClient.HttpClient, scriptedHttpClient({ respond, seen })),
-      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv(f.configValues))
+      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv({ ...f.configValues, ...extraConfig }))
     );
   const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
   const receipt = yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
@@ -131,6 +135,9 @@ describe("reference planning and refresh", () => {
           const plan = yield* workspace.use((service) => service.plan(f.home, missing));
           expect(A.join(plan, "\n")).toContain("clone git@github.com:Effect-TS/effect.git");
           expect(A.join(plan, "\n")).toContain("--deep --allow-partial -j 16");
+          expect(plan[1]).toBe(
+            `preflight: ${f.path.join(f.owner, "scripts/graft/apply-dist-patches.sh")} --check; deep members build structural unless it passes`
+          );
           expect(yield* f.fs.exists(missing)).toBe(false);
           expect(yield* f.fs.exists(f.path.join(f.owner, ".repos"))).toBe(false);
         })
@@ -330,7 +337,7 @@ describe("reference planning and refresh", () => {
       "runs deep builds when the model answers",
       Effect.fnUntraced(function* () {
         const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-        const { status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
+        const { f, status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
         expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
         expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
         expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
@@ -339,9 +346,124 @@ describe("reference planning and refresh", () => {
           assertNone(report.detail);
           assertTrue(O.isSome(report.coverage));
         }
+        // The patch kit is checked once, before any member work, with the maintenance allowlist.
+        expect(log.startsWith("patch-kit --check\n")).toBe(true);
+        expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe("root=unset key=unset\n");
+        assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
       })
     );
   });
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "downgrades deep members to structural builds when the patch kit is missing",
+    (it) => {
+      it.effect(
+        "downgrades deep members to structural builds when the patch kit is missing",
+        Effect.fnUntraced(function* () {
+          const seen: Array<HttpClientRequest.HttpClientRequest> = [];
+          const { f, status, log, receipt } = yield* refreshWithProxy(
+            () => new Response("{}", { status: 200 }),
+            seen,
+            (f) => f.fs.writeFileString(f.path.join(f.owner, "patch-kit-missing"), "").pipe(Effect.orDie)
+          );
+          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-preflight", "skipped-preflight"]);
+          // A downgraded member is never probed for a model cooldown.
+          expect(seen).toEqual([]);
+          expect(log).not.toContain("--deep");
+          expect(log).toContain("graft effect build env=1");
+          expect(log).toContain("graft effect-tsgo build env=1");
+          expect(log).toContain("graft references build env=1");
+          const tail = "applied  0001-keep\nmissing  0002-summaries\n1 patch(es) not applied to graft 9.9.9";
+          assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "missing", detail: O.some(tail) }));
+          for (const report of status.members) {
+            assertNone(report.coverage);
+            assertSome(report.detail, `graft dist patch kit missing; deep pass skipped: ${tail}`);
+          }
+          expect(receipt).toContain('"patchKit":"missing"');
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "treats an absent, unrunnable, or broken patch kit as unavailable",
+    (it) => {
+      it.effect(
+        "treats an absent, unrunnable, or broken patch kit as unavailable",
+        Effect.fnUntraced(function* () {
+          const cases: ReadonlyArray<
+            readonly [
+              label: string,
+              arrange: (f: Effect.Success<ReturnType<typeof prepare>>, script: string) => Effect.Effect<void>,
+              detail: (script: string) => string,
+            ]
+          > = [
+            ["absent", (f, script) => f.fs.remove(script).pipe(Effect.orDie), (script) => `${script} not found`],
+            [
+              "unrunnable",
+              (f, script) => f.fs.chmod(script, 0o644).pipe(Effect.orDie),
+              (script) => `${script} failed to run.`,
+            ],
+            [
+              "broken",
+              (f) => f.fs.writeFileString(f.path.join(f.owner, "patch-kit-broken"), "").pipe(Effect.orDie),
+              () => "no Graft package at /nowhere",
+            ],
+          ];
+          const fixture = yield* ReferenceFixture;
+          const script = fixture.path.join(fixture.owner, "scripts/graft/apply-dist-patches.sh");
+          for (const [label, arrange, detail] of cases) {
+            const seen: Array<HttpClientRequest.HttpClientRequest> = [];
+            const { f, status, log } = yield* refreshWithProxy(
+              () => new Response("{}", { status: 200 }),
+              seen,
+              (f) => arrange(f, script)
+            );
+            expect([label, status.members.map((report) => report.outcome)]).toEqual([
+              label,
+              ["skipped-preflight", "skipped-preflight"],
+            ]);
+            assertSome(
+              status.preflight,
+              RefsRefreshPreflight.make({ patchKit: "unavailable", detail: O.some(detail(script)) })
+            );
+            expect(seen).toEqual([]);
+            expect(log).not.toContain("--deep");
+            expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain(
+              "--urgency=critical"
+            );
+            yield* f.fs.remove(f.path.join(f.home, "commands.log"));
+            yield* f.fs.remove(f.path.join(f.home, "notifications.log"));
+            yield* writeExecutable(script, patchKitStub);
+            yield* f.fs.remove(f.path.join(f.owner, "patch-kit-broken")).pipe(Effect.ignore);
+          }
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "checks the Graft install the unit environment names and nothing else",
+    (it) => {
+      it.effect(
+        "checks the Graft install the unit environment names and nothing else",
+        Effect.fnUntraced(function* () {
+          const { f, status } = yield* refreshWithProxy(
+            () => new Response("{}", { status: 200 }),
+            [],
+            () => Effect.void,
+            { GRAFT_PACKAGE_ROOT: "/opt/graft-package" }
+          );
+          assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
+          // GRAFT_PACKAGE_ROOT reaches the check; the provider key in the same environment does not.
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe(
+            "root=/opt/graft-package key=unset\n"
+          );
+        })
+      );
+    }
+  );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("never lets a failed probe block the deep build", (it) => {
     it.effect(
