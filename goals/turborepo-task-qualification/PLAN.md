@@ -2617,3 +2617,22 @@ The task hash differs from the old dependency profile; no historical evidence
 is relabeled. This renews only stable fresh-pair/local-replay behavior. Canary,
 other perturbation controls, signed remote, semantic closure and shadow
 acceptance remain separate obligations before promotion.
+
+### Patched dependency profile: exact-canary fresh pairs
+
+The [renewed canary receipt](research/current-patched-canary-fresh-pairs.json)
+passes three fresh/fresh pairs, six fresh executions and twelve local replay
+controls at `b410da2b6d`. Every native summary reports `2.11.5-canary.2`;
+the binary content pin matches the retained exact canary. Independent pair
+review and before/after installed-dependency identity pass. The separate
+retention manifest binds 9,282 observation files. Both clients now have
+patched-profile fresh-pair/local-replay evidence; this does not renew the
+older perturbation, portability, concurrency or native-I/O controls and does
+not satisfy signed-remote, semantic-closure or shadow acceptance.
+
+A bounded Codex inventory refresh inspected all five pinned tasks, the latest
+50 unarchived tasks and the first 50 archived tasks. No conformance or trust
+runtime owner was identified from those titles/summaries. The relevant archived
+audit task points to the original exploration. Older pages and work hidden by
+titles/summaries remain outside this search; no absence or signed-receipt credit
+is inferred. Its detailed receipt remains private.
