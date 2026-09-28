@@ -5127,3 +5127,17 @@ TypeScript compatibility. Future assertion preparation should classify optional
 subjects and account for Effect diagnostics before starting the timed after-run.
 Private receipt: `cli-option-none-equality-typecheck.json`. The generated task
 wrapper exited zero while its result artifact correctly reported exit one.
+
+### Option comparison migration must preserve asymmetric matchers
+
+Preparing the CLI `Option.some` batch exposed one `quality-tasks.test.ts`
+comparison whose payload is `expect.objectContaining`. The public `assertSome`
+helper delegates to Node's deep strict comparison, which does not implement
+Vitest asymmetric matching. A direct mechanical replacement would change the
+assertion. The draft instead binds the subject and matcher once, asserts the
+Some predicate, and retains the original matcher against the unwrapped value.
+Future migration preparation should classify asymmetric matchers before
+emitting helper calls; parse validity and argument-text equality are not enough.
+Evidence: installed `@effect/vitest/src/utils.ts`, the existing root lint policy
+step test, and private `cli-option-some-equality-proposal.json`. This was caught
+in draft review before application; it is not a production defect.

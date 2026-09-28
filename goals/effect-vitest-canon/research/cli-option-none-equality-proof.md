@@ -50,8 +50,8 @@ resolved baseline findings, scanning 1,217 files in 10.34 seconds. The final
 after cohort passes 1,182 tests on Node in 130.688501169 seconds and Bun in
 86.570207997 seconds, with zero failures/skips and stable source hashes.
 All four before/final-after runs have identical file/title registration
-multiplicities. Full CLI package audit/docgen remains active; its result is
-not yet claimed.
+multiplicities. Full CLI package verification passes: audit in 680.6 seconds and docgen in
+21.8 seconds. The test source remained unchanged throughout this proof.
 Runtime versions, limits, load and CPU/memory/I/O pressure are recorded with
 each timed run. Concurrent workstation work prevents a causal performance
 claim from these samples.
