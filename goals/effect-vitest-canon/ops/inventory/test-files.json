@@ -262,8 +262,8 @@
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3213,
-    "lines": 82
+    "bytes": 3413,
+    "lines": 86
   },
   {
     "file": "apps/professional-desktop/test/chat-contract.test.ts",

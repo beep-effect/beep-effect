@@ -4361,3 +4361,13 @@ Practice KG MCP and Professional Desktop. Regeneration added only two Desktop
 `@beep/test-runner` allowed-dependency entries; a patch changeset covers both apps.
 Package-level proof did not cover these repository gates. Dependency migrations
 should refresh boundary output and validate changeset coverage before publication.
+
+## Browser failure registry cleanup depended on successful assertions
+
+Both browser-failure atom tests disposed registries only at the success tail.
+Injected defects after each real mount observed zero cleanup callbacks before
+repair and one afterward. Acquisition now registers disposal in the live test
+scope before mounting. Review registry construction together with failure-path
+ownership; ordinary passing tests did not expose this leak. Two enclosing EV009
+fingerprints changed with the resource edit and were reanchored without closing
+or weakening the pending live-clock judgments.

@@ -84383,48 +84383,8 @@
       "mechanization": "judgment",
       "status": "open"
     },
-    {
-      "id": "EV009:apps/professional-desktop/test/browser-failure-atoms.test.ts:40:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
-      "line": 40,
-      "endLine": 60,
-      "symbol": "it.live",
-      "occurrence": "v2:d78c95c22a83fb07fe003c0d808a4710bd01c8a71442d0a7551a716e533b0665",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"observes a handled AsyncResult failure through the professional runtime\", Effect.fnUntraced(function* () { const annotations: Array<Record<string, unknown>> = []; const registry = registryWi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:apps/professional-desktop/test/browser-failure-atoms.test.ts:62:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
-      "line": 62,
-      "endLine": 81,
-      "symbol": "it.live",
-      "occurrence": "v2:ff83e1a7dbda7c04c7a95ca3b5342e6131b7fb8a2e786337f76b25af55efe9f4",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"keeps the delegated global-listener reporting action mounted until logging completes\", Effect.fnUntraced(function* () { const annotations: Array<Record<string, unknown>> = []; const registry",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
+    {"id":"EV009:apps/professional-desktop/test/browser-failure-atoms.test.ts:40:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/browser-failure-atoms.test.ts","line":40,"endLine":62,"symbol":"it.live","occurrence":"v2:8a736ed8fe1fa2218818bae74cacf0d9800741c8ae5525056fe4fd459f4ced3a","class":"unjustified-live-test","evidence":"it.live( \"observes a handled AsyncResult failure through the professional runtime\", Effect.fnUntraced(function* () { const annotations: Array<Record<string, unknown>> = []; const registry = yield* Eff","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
+    {"id":"EV009:apps/professional-desktop/test/browser-failure-atoms.test.ts:64:it.live@2#1","lens":"resource","ruleId":"EV009","package":"@beep/professional-desktop","file":"apps/professional-desktop/test/browser-failure-atoms.test.ts","line":64,"endLine":85,"symbol":"it.live","occurrence":"v2:e1f60e073c187c974e1f1ebbef558c6e1ac663ef6852ec2d8b3d110179afad08","class":"unjustified-live-test","evidence":"it.live( \"keeps the delegated global-listener reporting action mounted until logging completes\", Effect.fnUntraced(function* () { const annotations: Array<Record<string, unknown>> = []; const registry","replacement":{"primitive":"it.effect","sketch":"it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."},"severity":"info","confidence":0.55,"mechanization":"judgment","status":"open"},
     {
       "id": "EV009:apps/professional-desktop/test/composer-atom-lifetime.test.ts:34:it.live@2#1",
       "lens": "resource",

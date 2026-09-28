@@ -41,7 +41,10 @@ describe("browser failure atoms", () => {
     "observes a handled AsyncResult failure through the professional runtime",
     Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];
-      const registry = registryWithDelayedLogger(annotations);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithDelayedLogger(annotations)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       const failure = BrowserFailure.make({
         source: "app_registry",
         cause: new Error("token=private-value at /home/operator/workspace"),
@@ -55,7 +58,6 @@ describe("browser failure atoms", () => {
       expect(annotations[0]?.["professional_desktop.renderer.source"]).toBe("app_registry");
       expect(annotations[0]?.cause_message).not.toContain("private-value");
       expect(annotations[0]?.cause_detail).not.toContain("/home/operator");
-      registry.dispose();
     })
   );
 
@@ -63,7 +65,10 @@ describe("browser failure atoms", () => {
     "keeps the delegated global-listener reporting action mounted until logging completes",
     Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];
-      const registry = registryWithDelayedLogger(annotations);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithDelayedLogger(annotations)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
       registry.mount(browserFailureListenersAtom);
 
       window.dispatchEvent(
@@ -76,7 +81,6 @@ describe("browser failure atoms", () => {
       expect(annotations[0]?.["professional_desktop.renderer.source"]).toBe("window_error");
       expect(annotations[0]?.cause_message).not.toContain("listener-private-value");
       expect(annotations[0]?.cause_detail).not.toContain("/home/operator");
-      registry.dispose();
     })
   );
 });
