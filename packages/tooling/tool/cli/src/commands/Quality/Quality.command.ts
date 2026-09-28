@@ -3870,7 +3870,10 @@ export const renderAdmissionSnapshotLinesForTesting: {
 const schedulerStatusCommand = Command.make(
   "status",
   {
-    json: Flag.Boolean("json").pipe(Flag.withDescription("Emit the admission snapshot as JSON")),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the admission snapshot as JSON")
+    ),
   },
   Effect.fn(function* ({ json }) {
     const snapshot = yield* admissionStatus();

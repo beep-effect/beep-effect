@@ -20792,9 +20792,9 @@
       "line": 986,
       "endLine": 1014,
       "symbol": "runPromise",
-      "occurrence": "v2:a3003c561a2466888440f6a14da461d3c887836454b5e7c94f05db12fddf76c7",
+      "occurrence": "v2:5d01dda0e2f5027fcf95b3aebba1cb7275b6d3f92aa6d8df67c45717850ad799",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const gibRef = yield* Ref.make(50); yield* withAdmissionTempRoot(gibRef, (tempRoot) => Effect.gen(function* () { yield* runQualityCommand([\"scheduler\"]); y",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const gibRef = yield* Ref.make(50); yield* withAdmissionTempRoot(gibRef, (tempRoot) => Effect.gen(function* () { yield* runQualityCommand([\"scheduler\"]); c",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."

@@ -989,7 +989,13 @@ describe("quality-scheduler", () => {
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
             yield* runQualityCommand(["scheduler"]);
+            const beforeDefaultStatus = yield* TestConsole.logLines;
+            yield* runQualityCommand(["scheduler", "status"]);
+            const defaultStatusLines = A.drop(yield* TestConsole.logLines, A.length(beforeDefaultStatus));
+            const beforeExplicitStatus = yield* TestConsole.logLines;
             yield* runQualityCommand(["scheduler", "status", "--no-json"]);
+            const explicitStatusLines = A.drop(yield* TestConsole.logLines, A.length(beforeExplicitStatus));
+            expect(defaultStatusLines).toEqual(explicitStatusLines);
             yield* runQualityCommand(["scheduler", "status", "--json"]);
             yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
             yield* writeFakeTicket(tempRoot, {
