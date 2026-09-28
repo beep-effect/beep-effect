@@ -390,7 +390,9 @@
     "research/current-attachment-restoration.json",
     "research/current-tsconfig-reference-review.json",
     "research/current-package-turbo-review.json",
-    "research/current-source-migration-review.json"
+    "research/current-source-migration-review.json",
+    "research/current-vitest-config-review.json",
+    "research/current-failed-lane-digest-review.json"
   ],
   "agentLaunchers": [
     {

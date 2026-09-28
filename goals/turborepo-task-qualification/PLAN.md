@@ -2240,3 +2240,23 @@ so it is not a runtime equivalence claim. The
 confirms an identical byte-to-hex helper for three hashing callers, while
 recording schema-representation and JSON Schema differences in the prefix
 filter rename. The remaining caller and dependency semantics stay open.
+
+### Vitest configuration delta and working-directory controls
+
+Eight clean-environment configuration evaluations cover the changed oip-web
+and Epistemic configs across unit, coverage and doctest profiles, plus two
+repository-root cwd controls. Isolation overrides remain true; oip-web's
+eleven provider env overrides are empty; merged setup arrays retain shared
+setup. Transform-cache placement follows process.cwd(), so the root controls
+share the root cache path. [The review](research/current-vitest-config-review.json)
+records configuration observations only, with worker execution, cache races
+and runtime qualification still unproven.
+
+### Failed-lane input observations and reuse rejection
+
+The changed Quality/Yeet handoff retains failed-lane digests and package
+scopes as observations. The ledger still rejects exact failed facts with
+`prior-failed`. All 27 tests in the two existing digest/ledger suites pass.
+[The bounded review](research/current-failed-lane-digest-review.json) records
+fresh-summary, filesystem, task-selection and ledger inputs; it does not
+replace full proof or establish real signed-remote qualification.
