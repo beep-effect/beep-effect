@@ -4467,3 +4467,13 @@ the actual seed error to an unrelated Error still passed the original test. Dire
 public assertions now require both failure polarity and the error family before
 the unchanged reason/file/database assertions. Review guarded assertion bodies
 for vacuous success, including guards that only exist to narrow TypeScript types.
+
+## Canonical property registration can still omit CI run and seed controls
+
+The composer configuration property had already moved to public `it.effect.prop`
+during an Effect update, but it supplied no arbitrary options. The installed
+peer runner forwards only explicit options, and Effect defaults to 100 cases.
+The existing `fcRuns(100)` helper preserves that floor while forwarding the
+`BEEP_FC_NUM_RUNS` maximum and `BEEP_FC_SEED` pin. A syntax migration alone does
+not establish property-budget preservation; inspect the live options and observe
+the generated case count and replay sequence.

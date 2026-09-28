@@ -21,6 +21,7 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
 import { afterEach, beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
@@ -1119,7 +1120,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const encoded = yield* encodeComposerFeatures(features);
       expect(yield* decodeComposerFeatures(encoded)).toEqual(features);
       expect(["enter", "modifierEnter"]).toContain(features.sendOn);
-    })
+    }),
+    { arbitrary: fcRuns(100) }
   );
 
   it("shows incompatible future wire as escaped read-only text", () => {
