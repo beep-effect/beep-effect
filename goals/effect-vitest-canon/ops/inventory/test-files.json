@@ -570,8 +570,8 @@
     "file": "apps/professional-desktop/test/sync-retry.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1389,
-    "lines": 35
+    "bytes": 1908,
+    "lines": 42
   },
   {
     "file": "apps/professional-desktop/test/table-layout.test.tsx",

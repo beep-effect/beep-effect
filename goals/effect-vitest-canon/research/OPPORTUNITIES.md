@@ -4550,3 +4550,16 @@ The dock-shell regression sampled storage once after a 600 ms sleep while the
 snapshot key within the same 600 ms bound and verifies storage starts empty.
 Suppressing the save dispatch fails the bounded wait. The real debounce and
 original final assertion remain; no reproduced ambient timing failure is claimed.
+
+## Retry UI tests must choose their failure source
+
+The sync retry test assumed the default sidecar HTTP request would fail within
+four seconds. A never-resolving fetch control left the original test loading and
+failed its Retry lookup. A public DesktopSyncClient failure layer now drives the
+real panel/query path; the same control passes with zero fetch calls. The Retry
+assertions and wait bound remain unchanged.
+
+The direct always-failing client function initially failed TypeScript's generic
+RPC return constraint (TS2375). The existing sync-atoms service-stub boundary
+pattern resolved it. A reusable typed RPC test-client builder could reduce these
+local assertions while retaining the protocol's tag/payload/error relationship.
