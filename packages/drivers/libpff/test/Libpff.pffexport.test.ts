@@ -289,7 +289,7 @@ const readExported = Effect.fn(function* (exportRoot: string, relativePath: stri
   return yield* fs.readFileString(path.join(exportRoot, relativePath));
 });
 
-describe("makePffexportFileProcessingEngine", () => {
+describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
   it.effect.prop(
     "round-trips schema-derived message records through the JSONL string codec",
     [PffexportMessageRecordArbitrary],
@@ -411,7 +411,7 @@ describe("makePffexportFileProcessingEngine", () => {
           const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
           // The engine resolves the env interpreter from the host PATH; pin it to the standard roots so a
           // workstation shell with a non-standard bash first on PATH (e.g. a nix-store bash) cannot leak in.
-          // The test opts out of `concurrent` so no concurrent sibling observes the pinned PATH.
+          // The whole suite runs sequentially so no sibling that needs the host PATH observes the pin.
           yield* Effect.acquireRelease(
             Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
             () => Effect.sync(() => vi.unstubAllEnvs())
