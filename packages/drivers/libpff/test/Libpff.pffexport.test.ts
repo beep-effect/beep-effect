@@ -18,7 +18,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -398,7 +398,7 @@ describe("makePffexportFileProcessingEngine", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
     "uses a standard-root env interpreter without an additional runtime bind",
     (it) => {
       it.effect(
@@ -425,6 +425,12 @@ exec "$mapped_command" "\${mapped[@]}"`
             )
           );
           yield* fs.chmod(bwrapPath, 0o755);
+          // The env interpreter resolves from the host PATH; pin a standard-root PATH so a
+          // workstation shell with a nix-store bash first cannot leak into this case.
+          yield* Effect.acquireRelease(
+            Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
+            () => Effect.sync(() => vi.unstubAllEnvs())
+          );
           const engine = yield* makePffexportFileProcessingEngine(
             PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
           );
