@@ -1202,8 +1202,10 @@ to cross.
 `proofLedgerPathForCheckout` returns `<clone>/.beep/yeet/proof-ledger.ndjson`, where the clone is
 found the way `git rev-parse --git-common-dir` finds it, from the filesystem alone: a `.git`
 directory is the clone itself; a `.git` file's `gitdir:` target and that directory's `commondir`
-file name the common dir, whose parent is the clone; a root with no `.git` is its own clone, so
-test roots keep today's behaviour. Sibling lanes of one clone and the clone itself therefore read
+file name the common dir, whose parent is the clone when the common dir is `<clone>/.git`; a bare
+or separated common dir keeps the ledger inside itself, because the directory holding it may hold
+other repositories; a root with no `.git` is its own clone, so test roots keep today's
+behaviour. Sibling lanes of one clone and the clone itself therefore read
 and write one ledger; a primary clone's ledger keeps its path and stays valid; a lane's `.beep/`
 can be deleted by `yeet sweep --retire` without losing the sample. Facts keep
 `provenance.originKey` = the worktree that ran them, and containment

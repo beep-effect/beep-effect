@@ -2791,3 +2791,17 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   report byte for byte and fails closed on a drifted baseline or close input; a one-line edit to
 `economics.py` turns `test_pristine_close_inputs_pass` red (probed 2026-09-28). The hosted lane is
   still owed.
+
+## 2026-09-28 — effect-vitest `--write` rekeys unrelated drifted rows
+
+- Doing: refreshing `standards/effect-vitest.inventory.jsonc` after editing
+  `turbo-lane-digest.test.ts` (replacing `Date.parse` with `DateTime` changed the occurrence hash of
+  two EV002 rows: `[effect-vitest] 2 new finding(s)`).
+- Evidence: `bun run beep lint effect-vitest --write` also rewrote the id, line and end line of two
+  rows in files this PR never touched (`refs-refresh-plan.test.ts` EV006 340 to 347,
+  `yeet-sweep-plan.test.ts` EV010 27 to 26): `main` carries line drift the check tolerates but the
+  writer normalises. Keeping the inventory diff scoped to this PR took a scripted per-file JSON diff
+  against `git show HEAD:` and a hand revert of those two rows; the check then read
+  `introduced=0 resolved=0`.
+- Prevention: a `--write --files <paths>` (or package-scoped) mode that refreshes only the rows of
+  the named files.
