@@ -5043,29 +5043,29 @@
     "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 8021,
-    "lines": 213
+    "bytes": 7761,
+    "lines": 209
   },
   {
     "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 7984,
-    "lines": 192
+    "bytes": 8553,
+    "lines": 206
   },
   {
     "file": "packages/ontology/server/test/OntologyTools.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 12970,
-    "lines": 344
+    "bytes": 14535,
+    "lines": 373
   },
   {
     "file": "packages/ontology/server/test/SessionServer.test.ts",
     "package": "@beep/ontology-server",
     "kind": "test",
-    "bytes": 24850,
-    "lines": 555
+    "bytes": 31004,
+    "lines": 707
   },
   {
     "file": "packages/ontology/ui/test/Session.workbench.test.ts",
