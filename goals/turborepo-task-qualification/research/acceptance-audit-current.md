@@ -557,3 +557,12 @@ and [canary](./current-concurrency-canary.json). Native target tasks overlap for
 659 ms and 692 ms respectively, with equal inputs, fresh trees and task logs.
 These observations cover independent writable overlays and cache directories;
 shared-cache writers and shared-output collisions remain unproven.
+
+The current [stable](./current-capture-stable.json) and
+[canary](./current-capture-canary.json) capture controls confirm native
+synthetic-token presence and absence from retained artifacts. Cache archives
+contain only the task log, without home or checkout paths. Private diagnostic
+streams remain private; remote telemetry and exhaustive capture closure remain
+unproven. Hosted Security passes on `47ea862597`; infra docgen passes all
+101 examples after restoring its normal postinstall prerequisite. Full proof
+and final merge readiness remain pending.

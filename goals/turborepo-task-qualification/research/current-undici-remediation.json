@@ -31,6 +31,14 @@
       "6.29.0": 0,
       "7.30.0": 0,
       "8.11.2": 0
+    },
+    "infraDocgenAfterRestoringPostinstall": {
+      "exitCode": 0,
+      "examples": 101
+    },
+    "hostedSecurity": {
+      "head": "47ea862597ae2e0163527f33ecc3dda397e5f3f6",
+      "conclusion": "SUCCESS"
     }
   },
   "limits": [

@@ -2480,3 +2480,22 @@ worktrees. All were paused; no candidate receipt filenames were found in
 their research directories. Archived tasks, unchecked-out branches and
 differently named artifacts remain outside that search; no signed-evidence
 credit is inferred. The private search receipt is retained with local evidence.
+
+### Current synthetic-token capture controls
+
+The [stable](research/current-capture-stable.json) and
+[canary](research/current-capture-canary.json) controls each pass a fresh run
+and two local replays with a synthetic `TURBO_TOKEN`. An independent native
+summary review confirms the token's hashed passthrough binding in every run.
+A scan of 1,547 retained files and decompressed archives per client finds no
+synthetic marker. Each archive contains only the expected 53-byte task log and
+no home or checkout path. Separate manifests retain 1,549 files per client,
+including the capture and native-presence reviews.
+
+Private CLI streams still contain diagnostic paths and remain private. These
+network-isolated controls do not prove remote telemetry, authentication or
+exhaustive secret-pattern safety. All observations retain frozen source
+`7f53b4a840` and its dependency profile; no signed-remote or promotion credit
+is claimed. Root/child configuration and profile-drift controls are running
+separately; an expected profile-preflight rejection is recorded in the friction
+ledger instead of weakening the gate to force task execution.

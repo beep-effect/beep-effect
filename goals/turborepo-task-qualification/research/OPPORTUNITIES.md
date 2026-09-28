@@ -2342,3 +2342,31 @@ do not replace those gates.
 
 Prevention: attribute each security red to its exact advisory and head before
 reusing a prior green scan; preserve the intended postinstall prerequisites.
+
+### 2026-09-28 — Configuration fixture serialization changed lint semantics
+
+The first ordinary configuration-control run missed cache on the child Turbo
+configuration mutation, then failed identity lint. A direct Biome check of the
+retained overlay reported only formatting: Python JSON serialization expanded
+short arrays. The mutation unintentionally introduced a formatting violation
+in a file the task itself checks. The failed runner, native summary and streams
+are retained. No successful configuration-control credit is assigned.
+
+The replacement changes only the environment declaration bytes while preserving
+reviewed formatting. Prevention: format or preserve the mutated task input
+before asserting that a semantic configuration control should still succeed.
+
+### 2026-09-28 — Profile drift is rejected before Turbo, not a cache miss
+
+The corrected child/root configuration experiment passed those invalidation
+controls but stopped at the generated Biome profile mutation. The ordinary CLI
+reported `Identity lint profile is stale` before producing a native summary.
+The experiment had incorrectly expected every configuration change to execute
+a fresh task. Preserve this as fail-closed profile enforcement, not as an
+unexplained semantic divergence or successful lint run. The revised control
+requires that rejection, no native execution and unchanged cache bytes, then
+a baseline hit after restoring the reviewed profile.
+
+Prevention: distinguish configuration changes accepted by the command contract
+from changes rejected by its profile-integrity gate when defining expected
+experiment outcomes. Do not bypass that gate to manufacture a miss.
