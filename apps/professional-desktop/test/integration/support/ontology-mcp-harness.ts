@@ -117,10 +117,10 @@ const transportLayer = (root: string, options: TransportOptions) =>
     Layer.orDie
   );
 
-const transportServer = (root: string, options: TransportOptions) => {
-  const routes = transportLayer(root, options).pipe(Layer.provide(HttpRouter.layer));
-  return routes.pipe(Layer.provide(HttpRouter.serve(routes, { disableListenLog: true, disableLogger: true })));
-};
+// HttpRouter.serve owns the router it serves and re-exposes the app's services,
+// so the transport layer is built once, inside the entrypoint.
+const transportServer = (root: string, options: TransportOptions) =>
+  HttpRouter.serve(transportLayer(root, options), { disableListenLog: true, disableLogger: true });
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

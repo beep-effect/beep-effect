@@ -214,12 +214,8 @@ const isImportedBindingMember = (
     })
   );
 
-// The delta derives the surface for the base tree with the current parser, so
-// the pre-rc.118 `effect/unstable/cli` specifier stays accepted until every
-// compared tree imports Command from `effect/cli`.
 const isCommandMember = (expression: Expression, memberName: string): boolean =>
-  isImportedBindingMember(expression, "Command", memberName, "effect/cli") ||
-  isImportedBindingMember(expression, "Command", memberName, "effect/unstable/cli");
+  isImportedBindingMember(expression, "Command", memberName, "effect/cli");
 
 const isArrayMake = (expression: Expression): boolean =>
   isImportedBindingMember(expression, "A", "make", "effect/Array") ||

@@ -22,7 +22,7 @@ import { InstrumentedVitestRuntime } from "./internal/VitestRuntime.ts";
  * **Details**
  *
  * Plain Vitest calls and the complete Effect/live/layer tester surface delegate
- * to the public rc.117 runner. Effectful bodies gain a live-clock watchdog below
+ * to the public rc.118 runner. Effectful bodies gain a live-clock watchdog below
  * their resolved task timeout. Set `BEEP_TEST_TRACE=1`, or run in CI, to emit
  * annotated start/end diagnostics; JSON reporter durations remain authoritative.
  *
