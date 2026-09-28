@@ -402,15 +402,15 @@
     "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6313,
-    "lines": 159
+    "bytes": 6107,
+    "lines": 155
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6301,
-    "lines": 136
+    "bytes": 6135,
+    "lines": 132
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
@@ -423,7 +423,7 @@
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 16015,
+    "bytes": 16016,
     "lines": 367
   },
   {

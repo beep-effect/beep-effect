@@ -32,8 +32,6 @@ import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-ut
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Chunk from "effect/Chunk";
@@ -60,9 +58,7 @@ const migrateAll = Effect.fnUntraced(function* () {
 const ChatPersistLayer = Layer.mergeAll(
   ThreadLayers.ThreadStoreDrizzleLayer,
   UsageRecordSinkDrizzle,
-  FixtureTurnKernel,
-  BunFileSystem.layer,
-  BunPath.layer
+  FixtureTurnKernel
 ).pipe(
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makeInProcessPgliteLayer()),

@@ -18,6 +18,7 @@ import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -25,7 +26,6 @@ import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspac
 import { WorkspaceVaultStoreDrizzleLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { Workspace } from "@beep/workspace-use-cases/server";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
@@ -66,7 +66,7 @@ const PgliteDrizzleTestLive = makeDrizzleLayer().pipe(
 const SeedServicesLive = Layer.mergeAll(EpistemicServerDrizzleLive, WorkspaceVaultStoreDrizzleLayer).pipe(
   Layer.provideMerge(PgliteDrizzleTestLive)
 );
-const TestPlatformLive = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+const TestPlatformLive = Layer.mergeAll(NodeCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 
 const databaseSnapshot = Effect.fn("ContradictionQaSeedTest.databaseSnapshot")(function* () {
   const db = yield* PostgresDrizzle;

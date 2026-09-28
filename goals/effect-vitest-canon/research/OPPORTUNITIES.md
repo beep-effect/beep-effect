@@ -4672,3 +4672,23 @@ occurred in the same registry before checking input survival. The extended-TTL
 control fails the new witness while the original case passes; normal Node and
 Bun runs remain green. This pattern distinguishes lifetime preservation from a
 test that simply ran before any eviction.
+
+## In-process SQL tests can carry unused platform layers
+
+The UsageRecordSink and chat-persist fixtures provided real filesystem and path
+adapters although their migrations come from an embedded module and their bodies
+only exercise SQL. Removing those adapters keeps both cases green. The related
+contradiction seed fixture needs FileSystem semantics but no host path: the
+existing MemoryFileSystem passes all original cases, with a probe proving four
+isolated virtual volumes, no host fixture roots, and cleanup after finalization.
+Review actual service requirements before preserving broad platform bundles.
+
+## Local provider wrappers need an explicit resource review
+
+The PgliteDataDirCompatibility test defines its own provideScopedLayer helper,
+which calls Layer.build and Effect.scoped, and wraps it with withPgliteSql and
+withChatDbPath. The current detector rows do not include EV002 for that file.
+Those helpers deliberately open, close, and reopen database lifetimes, so they
+need a separate Resource-lens judgment and migration plan; a clean EV002 scan
+alone does not establish canonical ownership for this test. A focused detector
+fixture for locally defined higher-order provider wrappers would expose the gap.
