@@ -109,10 +109,10 @@ describe("ProcessIdentity", () => {
       ).toBe(true);
 
       const portable = yield* withProcStat("", processStartIdentityForPid(process.pid));
-      assertTrue(O.isSome(portable));
+      portable.pipe(O.isSome, assertTrue);
       if (O.isSome(portable)) {
         expect(Str.startsWith("ps:")(portable.value)).toBe(true);
-        assertTrue(O.isSome(yield* processStartIdentityForPid(process.pid, portable)));
+        (yield* processStartIdentityForPid(process.pid, portable)).pipe(O.isSome, assertTrue);
       }
 
       expect(O.isNone(yield* processStartIdentityForPid(DEAD_PID, O.some("ps:missing")))).toBe(true);

@@ -93,7 +93,7 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
     const rendered = line(finding);
     expect(rendered.startsWith(SchemaFirstPolicyIssuePrefix)).toBe(true);
     const decoded = decodeSchemaFirstPolicyFindingLine(rendered);
-    assertTrue(O.isSome(decoded));
+    decoded.pipe(O.isSome, assertTrue);
     if (O.isSome(decoded)) {
       expect(decoded.value.severity).toBe("warning");
       expect(decoded.value.ruleId).toBe("SFV4-defaults");
@@ -137,7 +137,7 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
       message: "m",
     })}`;
     const decoded = decodeSchemaFirstPolicyFindingLine(bare);
-    assertTrue(O.isSome(decoded));
+    decoded.pipe(O.isSome, assertTrue);
     if (O.isSome(decoded)) {
       expect(decoded.value.severity).toBeUndefined();
       expect(decoded.value.remediation).toBeUndefined();
@@ -176,7 +176,7 @@ describe("JsonStringCodec", () => {
 
   it("decodeOption yields None on malformed input", () => {
     expect(O.isNone(codec.decodeOption("nope"))).toBe(true);
-    assertTrue(O.isSome(codec.decodeOption('{"x":1,"y":2}')));
+    codec.decodeOption('{"x":1,"y":2}').pipe(O.isSome, assertTrue);
   });
 
   it("decodeOrFail maps schema errors to a domain error", () => {

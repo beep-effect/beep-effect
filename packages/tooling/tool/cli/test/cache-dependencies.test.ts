@@ -76,7 +76,7 @@ describe("installed cache dependency integrity", () => {
         { _tag: "Workspace", path: "@beep/example", target: "../../packages/example", workspace: "packages/example" },
         { _tag: "Internal", path: "entry", target: "example/index.js" },
       ]);
-      assertTrue(Result.isFailure(yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)));
+      (yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
@@ -86,12 +86,12 @@ describe("installed cache dependency integrity", () => {
       const link = path.join(modules, "outside");
       for (const target of ["/etc/passwd", "../../outside"]) {
         yield* fs.symlink(target, link);
-        assertTrue(Result.isFailure(yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)));
+        (yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.remove(link);
       }
       const alternate = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-link-test-" });
       yield* fs.symlink(modules, path.join(alternate, "node_modules"));
-      assertTrue(Result.isFailure(yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result)));
+      (yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 });

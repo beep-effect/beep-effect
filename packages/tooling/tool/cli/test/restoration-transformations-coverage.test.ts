@@ -1623,8 +1623,8 @@ else exit 92; fi
         unapprovedCount: NonNegativeInt.make(1),
       });
 
-      assertTrue(O.isSome(yield* RT.resumableFamilyStart(context, []).pipe(Effect.option)));
-      assertTrue(O.isSome(yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option)));
+      (yield* RT.resumableFamilyStart(context, []).pipe(Effect.option)).pipe(O.isSome, assertTrue);
+      (yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option)).pipe(O.isSome, assertTrue);
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [acceptance]).pipe(Effect.option))).toBe(true);
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary, runStart]).pipe(Effect.option))).toBe(true);
       expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary]).pipe(Effect.option))).toBe(true);

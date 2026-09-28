@@ -5088,3 +5088,18 @@ original whole-cohort timeout or final package acceptance.
   evidence, even though they are test fixtures rather than real private paths.
   Preserve the test case while using portable, unambiguous fixture paths or
   sanitized inventory evidence. Receipt: `pr1323-local-policy-failures.json`.
+
+- Converting nested boolean assertions to their required pipeable form exposed
+  an EV005 detector blind spot: six existing outcome findings disappeared
+  without changing their test behavior. A red regression now covers method
+  pipes, functional pipes, inline results, lexical shadows, unrelated bindings,
+  and non-assertion consumers. The detector follows proven public assertion
+  references and includes method receivers in local-binding checks. All six
+  findings remain visible. The repair also exposes nine existing outcome
+  assertions in PathSafety and DocumentIntake, which require explicit review
+  and remediation rather than silent baseline expansion. Receipt:
+  `console-followup-detector-before` and `console-followup-policy-captures`.
+- `package-test-typecheck` is a Turbo artifact producer: its wrapper may exit
+  zero while `.turbo/package-test-typecheck-result.json` records failure.
+  Operators must inspect the artifact or use the aggregating quality command;
+  a clearer command completion summary would prevent false green reports.

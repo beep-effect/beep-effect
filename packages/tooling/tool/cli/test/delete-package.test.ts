@@ -749,7 +749,7 @@ describe("delete-package baseline writer stage", () => {
       withTempDirectory((repoRoot) =>
         Effect.gen(function* () {
           const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener"));
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             expect(Str.includes("fallow boundaries failed with exit code 1")(Cause.pretty(exit.cause))).toBe(true);
           }

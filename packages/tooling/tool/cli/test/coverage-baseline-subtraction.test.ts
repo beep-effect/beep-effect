@@ -172,7 +172,7 @@ describe("coverage baseline subtraction", () => {
             const exit = yield* Effect.exit(
               subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener")
             );
-            assertTrue(Exit.isFailure(exit));
+            exit.pipe(Exit.isFailure, assertTrue);
             if (Exit.isFailure(exit)) {
               expect(Str.includes("schema version 1")(Cause.pretty(exit.cause))).toBe(true);
             }

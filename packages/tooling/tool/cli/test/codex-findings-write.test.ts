@@ -327,16 +327,15 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
   });
 
   describe("codex findings packet path containment", () => {
-    const rejectsPath = (path: string) =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.makeDirectory("goals", { recursive: true });
-        return yield* Effect.try(() => PacketDocument.make({ contents: "x\n", path, tracked: true })).pipe(
-          Effect.map(() => "accepted"),
-          Effect.orElseSucceed(() => "rejected")
-        );
-      });
+    const rejectsPath = Effect.fn("rejectsPath")(function* (path: string) {
+      yield* temporaryWorkingDirectory;
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory("goals", { recursive: true });
+      return yield* Effect.try(() => PacketDocument.make({ contents: "x\n", path, tracked: true })).pipe(
+        Effect.map(() => "accepted"),
+        Effect.orElseSucceed(() => "rejected")
+      );
+    });
 
     it.effect("rejects a parent-directory traversal in a document path", () =>
       rejectsPath("../escape.md").pipe(Effect.map((outcome) => expect(outcome).toBe("rejected")))

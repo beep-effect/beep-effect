@@ -37,6 +37,7 @@ import * as Str from "effect/String";
 import type { YeetCheckTransition, YeetHeadChanged, YeetReviewThreadStateTag } from "@beep/repo-cli/test/Yeet";
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
+const decodeYeetWatchCheck = S.decodeEffect(YeetWatchCheck);
 
 const AT = "2026-08-17T00:00:00Z";
 
@@ -523,7 +524,7 @@ describe("merge-blocking checks", () => {
 
   it.effect("decodes historical check records without rate-limit evidence", () =>
     Effect.gen(function* () {
-      const check = yield* S.decodeUnknownEffect(YeetWatchCheck)({
+      const check = yield* decodeYeetWatchCheck({
         name: "Vercel – todox",
         outcome: "fail",
         required: false,

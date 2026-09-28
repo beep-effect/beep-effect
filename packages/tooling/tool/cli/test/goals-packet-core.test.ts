@@ -105,7 +105,7 @@ describe("canonical encoding and digests", () => {
   it("round-trips event file names and rejects non-CAS names", () => {
     const digest = "a".repeat(64);
     const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);
-    assertTrue(O.isSome(parsed));
+    parsed.pipe(O.isSome, assertTrue);
     if (O.isSome(parsed)) {
       expect(parsed.value.seq).toBe(2);
       expect(parsed.value.type).toBe("status-set");
@@ -618,7 +618,7 @@ describe("planForkRepair", () => {
 
           const losingId = plan.fork.children[1];
           const losing = A.findFirst(listing.events, (stored) => stored.id === losingId);
-          assertTrue(O.isSome(losing));
+          losing.pipe(O.isSome, assertTrue);
           const draft = plan.rebaseDrafts[0];
           expect(draft?.seq).toBe(4);
           expect(draft?.expectedRevision).toBe(3);

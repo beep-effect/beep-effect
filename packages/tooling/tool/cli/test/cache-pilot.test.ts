@@ -42,7 +42,7 @@ describe("real pilot capture boundary", () => {
         CachePilotLogInput.make({ ...input, stdout: `${prefix}task output\n` }),
         CachePilotLogInput.make({ ...input, stderr: `${prefix}unexpected\n` }),
       ])
-        assertTrue(Result.isFailure(yield* extractCachePilotLog(changed).pipe(Effect.result)));
+        (yield* extractCachePilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -54,7 +54,7 @@ describe("real pilot capture boundary", () => {
         CachePilotLogInput.make({ ...input, stderr: "\u001b[0m" }),
         CachePilotLogInput.make({ ...input, stdout: `${prefix}${progress}${prefix}${Str.repeat(65537)("x")}` }),
       ])
-        assertTrue(Result.isFailure(yield* extractCachePilotLog(changed).pipe(Effect.result)));
+        (yield* extractCachePilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 

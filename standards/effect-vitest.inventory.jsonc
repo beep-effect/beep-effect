@@ -4324,7 +4324,7 @@
       "line": 18,
       "endLine": 18,
       "symbol": "it.layer",
-      "occurrence": "v2:9edec209304f068253b33e006febedeba2a21eadcf030c1ccf487f8a62504172",
+      "occurrence": "v2:18529b1f842e5f54b59462707c808f74cc7e7237c3ba0666375c866f688466be",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "it.layer(PathSafetyTestLayer)",
       "replacement": {
@@ -7477,7 +7477,7 @@
       "line": 155,
       "endLine": 183,
       "symbol": "runPromise",
-      "occurrence": "v2:0ab41ba8bd8572dec85288c452a9ba25fafcf7ee31b7c93a6494eab31867fac4",
+      "occurrence": "v2:e7a4bf45005bb3bfb3e73c8d04fb8ba807e254adc1ac2e56150540857dac5d88",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const legacy = { schema_version: 1, generated_at: \"2026-01-01T00:00:00.000Z\", git_sha: \"feedfacefeedfacefeedfa",
       "replacement": {
@@ -8695,9 +8695,9 @@
       "line": 746,
       "endLine": 757,
       "symbol": "runPromise",
-      "occurrence": "v2:0d05de317380d430f12524faad8297709b99cad407a93828264aef7bd035853f",
+      "occurrence": "v2:924991db6c9162364269d74589d49a44218c89a8f92bfd9b826d8cc1d28f5443",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, \"@beep/courtlistener\")); assertTrue(Exit.isFailu",
+      "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, \"@beep/courtlistener\")); exit.pipe(Exit.isFailur",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -10669,7 +10669,7 @@
       "line": 133,
       "endLine": 215,
       "symbol": "runPromise",
-      "occurrence": "v2:f187e7fd68a986df9581b559dcfeb8f747b86c87417221f491d85e74063be453",
+      "occurrence": "v2:e7b52c37f234350e254077b370c45c11cad5d1d5c93bebd8f95ed88fcc8ad99d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
       "replacement": {
@@ -10942,7 +10942,7 @@
       "line": 64,
       "endLine": 147,
       "symbol": "runPromise",
-      "occurrence": "v2:5cd1792593cfe7338820b258b7e91f4f2cc5d27d6670e9c395e09439a313e6a7",
+      "occurrence": "v2:02e7ebe4a21fa3d6b4291b182c54924472a1d68280fcee719cec5b54a020b381",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { // Exploration-root stream with a genesis fork and no trace file. const genesisA = PacketEvent.make({ schemaVersion: \"packet-even",
       "replacement": {
@@ -13756,7 +13756,7 @@
       "line": 595,
       "endLine": 643,
       "symbol": "runPromise",
-      "occurrence": "v2:4a199eccbe32ba9b255f74bfa27cc33744eec98a8e699a3be43b7ea5ba3599bf",
+      "occurrence": "v2:94639720856db2cdc9cf6536a2b96d0c4b61a71c74068eefaf036cff8ab131fd",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const listing = yield* store.list( PacketStreamLocator.make({ packet: \"forked\", root: \"goals\", packetPath: FORKED_PA",
       "replacement": {
@@ -14491,7 +14491,7 @@
       "line": 199,
       "endLine": 237,
       "symbol": "runPromise",
-      "occurrence": "v2:04756ca8bd4e41e63ac02099b206ed593fe988fade31706dbfcb4f21db8a25bf",
+      "occurrence": "v2:0cfcc05c9ab599e3a49d79cc909a31f402cd5c00ab886ee63d38b2e807f74c2d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -14533,7 +14533,7 @@
       "line": 282,
       "endLine": 304,
       "symbol": "runPromise",
-      "occurrence": "v2:adda55f47fef0980ee7e69ba2659bf0c5c45febddc6232c22f81323752e831ca",
+      "occurrence": "v2:fbecd291259196a985b44c71b1b3463e2de3c4da14ea909d74d3203d2021a61d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const videoDir = path.join(tmpDir, \"videos\"); yield*",
       "replacement": {
@@ -14554,7 +14554,7 @@
       "line": 307,
       "endLine": 339,
       "symbol": "runPromise",
-      "occurrence": "v2:f0e7a9fee7942e4e0be57fae4bf6395adb4ded583c248cf6e4ce68d30602e432",
+      "occurrence": "v2:188c836d1c697cae1b6e5cafafa176783fc855fc6d37830b5385e57f3c3c36ef",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -14575,7 +14575,7 @@
       "line": 342,
       "endLine": 384,
       "symbol": "runPromise",
-      "occurrence": "v2:9620ca02ea9b8b99d0954f7138575a78344293bcc653a2fc47ace90103d4d90e",
+      "occurrence": "v2:483034702e0e6b5cf3e0332c3a5d083fe905e74b8ea61826c983410831b2aa99",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -18061,7 +18061,7 @@
       "line": 287,
       "endLine": 298,
       "symbol": "runPromise",
-      "occurrence": "v2:7303b8f9af4ea70f0b0950169891ad101f348e31f325d28121861a12b9e93cb7",
+      "occurrence": "v2:9b549f65ad773bb0d80b4bbbff18ed9d76ef648462d858fe82703bf5218ba6e1",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const budgetPath = `${dir}/artifact-budget.json`; expect(yield* readArtifactBudget(budgetPath)).toEqual(O.none()); yield* writeArtif",
       "replacement": {
@@ -18082,7 +18082,7 @@
       "line": 301,
       "endLine": 316,
       "symbol": "runPromise",
-      "occurrence": "v2:9bb32fb0da112149a4a698c1fa049e1e500414f3f4ab8ba39255057b429ced82",
+      "occurrence": "v2:863dacd93a9ec9518f7ce3869b88dab50030b6a7e72a0d45f57bed44c9bf3832",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const videoDir = `${dir}/video`; expect(yield* discoverRecordedVideo(videoDir)).toEqual(O.n",
       "replacement": {
@@ -18145,7 +18145,7 @@
       "line": 339,
       "endLine": 354,
       "symbol": "runPromise",
-      "occurrence": "v2:ba5067fe9a83259e6d729d5c25f8f03cf288bb17151c24c2131f09d820bd2610",
+      "occurrence": "v2:3f91640abe03954a746b2e10354e1f743cfb4c3071b7d9631252b5a822dfe805",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const manifestPath = `${dir}/manifest.json`; yield* fs.writeFileString( manifestPath, yield",
       "replacement": {
@@ -21086,7 +21086,7 @@
       "line": 1782,
       "endLine": 1831,
       "symbol": "runPromise",
-      "occurrence": "v2:1c89dfffff580c2f8d636dd57a9d4e3db5aa55051100d0a314a68fe93e2aab8f",
+      "occurrence": "v2:e04e6f592b98503525b47b251549db74acb6a146d410a1d71f557f668d1545a0",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:a\", \"preflight\", \"process.exit(2)\", O",
       "replacement": {
@@ -24761,7 +24761,7 @@
       "line": 4451,
       "endLine": 4477,
       "symbol": "runPromise",
-      "occurrence": "v2:978d398dc7ebc122902527792c60be026bef16a6ca2d9cfc654fe45a43877ce0",
+      "occurrence": "v2:30f99bc2866e5f660a051c402e17402bbf34ab562d160560ca6ffa93cd40ed3d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTrackedFileRepo(({ filePath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileStrin",
       "replacement": {
@@ -24782,7 +24782,7 @@
       "line": 4480,
       "endLine": 4501,
       "symbol": "runPromise",
-      "occurrence": "v2:a8d2c1a04291df1bdddbfcd98e573bdace972ce967d30009932cc02894ca1f9a",
+      "occurrence": "v2:743f146499efa4af5c13da424cb95f48cf20aef44fd05c0db68aa3d39f37f1e0",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTrackedFileRepo(({ filePath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(filePath, \"residue\\n\"); const",
       "replacement": {
@@ -24803,7 +24803,7 @@
       "line": 4504,
       "endLine": 4524,
       "symbol": "runPromise",
-      "occurrence": "v2:7d3c841268c13dd0f38a159e339e00d512c58cb6da8386d2cd58aa268e5d5d0e",
+      "occurrence": "v2:433abe2f7c3f7ca7b60b4b7b0fe1c4661b5a292ad6084b8e39224de641b69bd1",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTrackedFileRepo(({ filePath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(filePath, \"residue\\n\"); const",
       "replacement": {
@@ -24824,7 +24824,7 @@
       "line": 4527,
       "endLine": 4547,
       "symbol": "runPromise",
-      "occurrence": "v2:586a34b33cff37f37789d79abd6f14231cc81c7c4a4fafdaf1ef41f4a8af9b1b",
+      "occurrence": "v2:e3f30fd4ed46444ddc5cb4e54a0f56085af1a8c9268abe8ba389e566f38724df",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTrackedFileRepo(({ filePath, tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.writeFileString(filePath, \"residue\\n\"); const",
       "replacement": {
@@ -24950,7 +24950,7 @@
       "line": 4717,
       "endLine": 4731,
       "symbol": "runPromise",
-      "occurrence": "v2:e8d4d1e7d85b6970c4af696480eee38531e6593ee210f86caea7f466b6f34cd6",
+      "occurrence": "v2:e36c7b6c6513d4a986e5e59381e8a6caafdf2373c6eb667a2228d48eb78ce52c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const lease = yield* acquireLegacyFullProofLockOrObserveAtPathForTesting(lockPath, tempContext, [ p",
       "replacement": {
@@ -24992,7 +24992,7 @@
       "line": 4773,
       "endLine": 4794,
       "symbol": "runPromise",
-      "occurrence": "v2:879da792fd7309092cb14e5ba5b78120aa8ec0ea01fd92c6bdbc4d11fb38adc5",
+      "occurrence": "v2:3e9d60c3099b040e9c11dc1bab060f4ff3b3c0b8620f3887add252323b20f77d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const retired = yield* retireFullProofLockOrObserveAtPath(",
       "replacement": {
@@ -25013,7 +25013,7 @@
       "line": 4797,
       "endLine": 4811,
       "symbol": "runPromise",
-      "occurrence": "v2:2df2c8a1f3327cd14dd2ad2352eee58f9b1564a0d5c5c82eee5dac413277cb53",
+      "occurrence": "v2:655f404752d74bfb547c8801e5fd9cb723837a21e2b3e46a56769ebcf2cef99d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const lease = yield* acquireLegacyFullProofLockForTesting(",
       "replacement": {
@@ -25034,7 +25034,7 @@
       "line": 4814,
       "endLine": 4837,
       "symbol": "runPromise",
-      "occurrence": "v2:ef02811ceb690d3277e2fc8c70a6fa93658bb959318d8b19f13e80aab47c146b",
+      "occurrence": "v2:570afd3d35af462a53c0344c9c5c075d74aaf8876a2ed2231a4910ca5d9b5d5c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const staleText = `${yield* encodeJson( YeetProofLockStateForTesting.ma",
       "replacement": {
@@ -25055,7 +25055,7 @@
       "line": 4840,
       "endLine": 4889,
       "symbol": "runPromise",
-      "occurrence": "v2:5d75b8fff103e654df06be54c6aa851eaf01acb135e6f52e342240bcb687cd05",
+      "occurrence": "v2:e9bce043e8c05c6d028b807b001659a66460bfcbc55270b15ba1b5538e1637e9",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const staleText = `${yield* encodeJson( YeetProofLockStateForTesting.ma",
       "replacement": {
@@ -25076,7 +25076,7 @@
       "line": 4892,
       "endLine": 4933,
       "symbol": "runPromise",
-      "occurrence": "v2:46d144bc4e849e88012685dc1e35fd527b159be1b94a106eb4f0e000f24de922",
+      "occurrence": "v2:d405d51d7058172d3a9f71c780bb7d5abb615051d43100ce8345281d37b94390",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const path = yield* Path.Path; const fallbackPath = path.join(path.dirname(lockPath), \"scheduler-fa",
       "replacement": {
@@ -25097,7 +25097,7 @@
       "line": 4936,
       "endLine": 4969,
       "symbol": "runPromise",
-      "occurrence": "v2:d00af1c3f76b89e9b03d7784cb763852120e0ca8a842ddcadd0dde1c5ce9760c",
+      "occurrence": "v2:a72892a246196f1d261b2daa22426a1b9c76f2a4dfd1015dc5d542a8cd946c98",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fallbackPath = path.j",
       "replacement": {
@@ -25139,7 +25139,7 @@
       "line": 4995,
       "endLine": 5016,
       "symbol": "runPromise",
-      "occurrence": "v2:9ed5a1c2ee951f849886b94beee82688ed9c65510992f53a48857c7c43a49bd3",
+      "occurrence": "v2:7ae9da6300305ee7895f71c147e03e4c28974dbe348ec66be4a0a75f14d2786c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withProofCoordinatorRepo(({ lockPath, tempContext }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fallbackPath = path.j",
       "replacement": {
@@ -30780,7 +30780,7 @@
       "line": 155,
       "endLine": 155,
       "symbol": "provideCrypto",
-      "occurrence": "v2:610172873358ee236092573f14978d27b9c65ef2b0a57beba0a6f8c72c1f3b83",
+      "occurrence": "v2:ade5221128db467ac12da050b7b33a091cd6709abf40821472d8910133eedf3f",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -30822,7 +30822,7 @@
       "line": 204,
       "endLine": 204,
       "symbol": "provideCrypto",
-      "occurrence": "v2:fd3f85523f941bb322e5601d239cb8d494a050c6893d3a25d570ae6eee62f4e0",
+      "occurrence": "v2:06eb442beaede58fe27fd6f358b98f8f94f18b54f689e94619a76369239c8032",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -31137,7 +31137,7 @@
       "line": 79,
       "endLine": 79,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:119a6a84ff4700a7a57beccfaeaf43a7505175ef2c3a49c7f6689d70ded519dd",
+      "occurrence": "v2:75c22562e716c05866d68da0625b8fc9e03d2f2bf8bc13e2d42164b1ed1a383b",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -31158,7 +31158,7 @@
       "line": 94,
       "endLine": 94,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e8672c4cc63c49a81357f8efa2ed20ff16a42b8d7ac3a4137f8d55789ee1d065",
+      "occurrence": "v2:6b1205483114d9c2ddbaed26213b2ac1a43dae13793ed05ef636872be159e6e6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -31515,7 +31515,7 @@
       "line": 41,
       "endLine": 41,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:eaf779d6588fcc4df8e7711551a0ee8f8e3cf4aa1a350c014a4e092203380967",
+      "occurrence": "v2:7e50d02c338cba9aaad9f55bf086050e960c839a0046a88ff9eaa2681e9557a8",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -31536,7 +31536,7 @@
       "line": 57,
       "endLine": 57,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1e8da6cd8b70dd3c561a43b430a3fbd6817d5d582ef19e57debc41b9fc010aa7",
+      "occurrence": "v2:d4b9442a21545b0148cf75db394fb03f2156cf7a3a8b08ea8f7aa98019ce142c",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -31809,7 +31809,7 @@
       "line": 239,
       "endLine": 239,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:8bc88e5cbf1c885905e2e64b4aa3e9a026a3eb35c91caf0da9b056da3b6bdf97",
+      "occurrence": "v2:5957954bca5aca8796dfd371a436e5bba125a0f8f436c8395309b2f31fbc2aab",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(platform)",
       "replacement": {
@@ -31830,7 +31830,7 @@
       "line": 262,
       "endLine": 262,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:117e41f6dead6e51acffddc38b059e8480753c840e80717425beb09a07838c9c",
+      "occurrence": "v2:6104694c9d22a5fccffe6f0ad235c50e0d7f94e00c240f4b456b43826f7e86dd",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(platform)",
       "replacement": {
@@ -33027,7 +33027,7 @@
       "line": 1083,
       "endLine": 1083,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:cf2ffbc23322bfa3a7860ffd35b7f375078d62729db7566f8b6eb4a3118a59b1",
+      "occurrence": "v2:31435dcf3eddc358135c27c1ed051b85fb95d277569d6b6fbde41d99f3d2a082",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33195,7 +33195,7 @@
       "line": 1631,
       "endLine": 1631,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:57ea82a62a532eaa9f7e948f8803e99b5f6320ecba06d1d16b1daf3f8a2e2966",
+      "occurrence": "v2:3cdbb57af3fd7d6abbbf6c72ea812daaa692a22c9d14de6217b126ccd4fbcf9e",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33489,7 +33489,7 @@
       "line": 2637,
       "endLine": 2637,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:577ac950dea0b2ce00a28062f53765a2805c0947be8a222b5709989ecb5674c9",
+      "occurrence": "v2:2020239868b5ca3c57c2207c25fdead38b2ce59221ccff3ef9c4b04ed019fd75",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33762,7 +33762,7 @@
       "line": 3475,
       "endLine": 3475,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:fc5d34d8a3705a9e3b25edb6a1123a5bc648878891790cffe4a71b1ea376334b",
+      "occurrence": "v2:1cb87d23087207f7e8816ffec6c32f39f16e6c8774c4d16415c3af251ac0694f",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -36030,7 +36030,7 @@
       "line": 58,
       "endLine": 58,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:d902947fa351848cea06ce97540528c293b3d3d858da1f8ecadd5d4f26ab2abe",
+      "occurrence": "v2:7f5507d6b70f563ebf5eca2cb40aa418d4b8488af0db12f7f5caa72bfbdd6525",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36072,7 +36072,7 @@
       "line": 98,
       "endLine": 98,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:ba504089f99fa84d326355aa6f4d12e6383d9eb05310452f3280c104ed8adddb",
+      "occurrence": "v2:bba8f6ab4f06c797ce3c31cf93c9b9a5dbc1cc6edbc9e3dc09463e7438284478",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36093,7 +36093,7 @@
       "line": 110,
       "endLine": 110,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:c04d26bccb669b9b7a66ea81b87cb84d468d89d6b4592b76a9890dbf1dab322d",
+      "occurrence": "v2:5c8636d4ff04722bd3f8325c9f31de8a8c7a3a3dd4c10b2827cadc68addb5248",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(ProcessDiagnosticTestLayer)",
       "replacement": {
@@ -36177,7 +36177,7 @@
       "line": 50,
       "endLine": 50,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1f58871869f7ce66515db3cca6d40b59c510ec6e4c0e8e9943279f5159cb4d47",
+      "occurrence": "v2:99843affca56bbc96ec203dbd7faebbb9888cb2f391e453341b355143f600b99",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36198,7 +36198,7 @@
       "line": 68,
       "endLine": 68,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:fcbf20911713a7f8ec817c4f8a7fbe1378b4ce3d362ce356015ab525d4fb4de2",
+      "occurrence": "v2:a32b1f4a7292024e7e3410f597ecd9f4ef3f07b9542c7515321d793e0b518372",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -37017,7 +37017,7 @@
       "line": 1398,
       "endLine": 1398,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:4cdd4699713101e402a5fc46737f1e95a964474802e3faac20197ccd94432fb3",
+      "occurrence": "v2:6f2455d5b9e1dba2d8f49a9fac05a14758f54594fae41f117e5d545aea967d67",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -37080,7 +37080,7 @@
       "line": 1473,
       "endLine": 1473,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:71542a3d44860cd2d6f2e5a8d2645f9119bce5581f3e23c5c45f7726f6710157",
+      "occurrence": "v2:d488687e914a707b2d4046fae29a900f65da79154801926443fa64f08407dc88",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -38298,7 +38298,7 @@
       "line": 119,
       "endLine": 119,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:54881ede5064192199d88ca1a43058a1d3174d47bed89e851b30a62c037fe782",
+      "occurrence": "v2:a8a6f427bca400532693850623376a0c975d3a600dff532c7f28015c076db82c",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeFileSystem.layer)",
       "replacement": {
@@ -38866,7 +38866,7 @@
       "line": 209,
       "endLine": 209,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:fde82d824c26b2ae7d9bdaf7728a286e0051cfd63300c3cb2566544a7dac5702",
+      "occurrence": "v2:956b4566f80e3a80d4907fde0d7d1d71f935a524d41d631128034b4457460dc7",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -39244,7 +39244,7 @@
       "line": 1983,
       "endLine": 1983,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:ba2d7c3f361b00ef748dda7f84952de14c185153212d097a848c5a0312a2655c",
+      "occurrence": "v2:5c986e326baf3e5327070866a9cc15d4baa2ca247d08e10e9e77f6f71d25c533",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -40504,7 +40504,7 @@
       "line": 403,
       "endLine": 403,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:0d4bbc39629ca8ae8e5580ce98545f138d068ba16b350aa9170433018dfeacdd",
+      "occurrence": "v2:5044be7698d76fda293bf486329b12158b99dbafd2689ea66c6f668e30436587",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -40651,7 +40651,7 @@
       "line": 643,
       "endLine": 643,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:30be3478f547bf8b73600b626583b9788da1f89adbd4b9203555f070ab512313",
+      "occurrence": "v2:358cfa1520f662d9ff7b276c9fb38bd86bafe10d3c5b4a70a4a80f52c5cfbaff",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -41029,7 +41029,7 @@
       "line": 755,
       "endLine": 755,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:f3e7b8ef9d7c8e4b8e5238417337ea2e281b100007709fa4a34a452946e9ab29",
+      "occurrence": "v2:157db6b3c30069117ed177a8ffd34c91ef08056a3d92138a94b9983d7dd5acf2",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -45355,7 +45355,7 @@
       "line": 300,
       "endLine": 305,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:daa3d94db43d8ae70ed22911235290acd7c9ee4828c79afd903a44cd46b445a2",
+      "occurrence": "v2:98582e8bbed6796b2ebe3d761a25fa737b0009553b72cd728621acbd2e5a3c4e",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( PlatformLayer, recordingSpawnerLayer(commandsRef, () => ({ exitCode: 0, output: EMPTY_PAGE })) ) )",
       "replacement": {
@@ -45481,7 +45481,7 @@
       "line": 487,
       "endLine": 489,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1c640287b89b6a314db31cb634e6c724b7e1731fda5c162a3d4125525f18a037",
+      "occurrence": "v2:d7caac51f484332f55cb95236c898f3df552a613078e34746ccee0c5d3f6b55f",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(commandsRef, missedStub)) )",
       "replacement": {
@@ -46468,7 +46468,7 @@
       "line": 290,
       "endLine": 290,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:597d2e4a5bd0bf70fae49cdaab411b7e33df467b1569d9787d28c5b1b4a6c259",
+      "occurrence": "v2:e74e26de4df09b2404db0127b1b3bc035849f5019609ef1c94efe5e98abe37af",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -46594,7 +46594,7 @@
       "line": 416,
       "endLine": 416,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:2a7ddbd0c4715360806531d3ab85198a16dd5580e515d484b21a0490a57dde1a",
+      "occurrence": "v2:79ae52612a0d212c12c552c56ef42420ac6bb41d4cb5adbb1fe2994502ce4441",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer))",
       "replacement": {
@@ -47455,7 +47455,7 @@
       "line": 855,
       "endLine": 855,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:b2880018c5954a6d51b49fcba077bf4402475b5c026ded6ea1bc39fa4992e6f9",
+      "occurrence": "v2:a5959168efdbab56ab0ed39ef7259574b53232233c5e801ddb93f143fd5a45cc",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(sweepTestLayer(mergedSweepStubs))",
       "replacement": {
@@ -48778,7 +48778,7 @@
       "line": 770,
       "endLine": 798,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:27b5929721ab36c4924501824e2083868ef14bc9356580a18ea1a70f1981d2de",
+      "occurrence": "v2:1b5fed8d199affe567287643bd8837b69d900036d8c7ce7edafedf6777155bd7",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( TestConsole.layer, PlatformLayer, scriptedSpawnerLayer([ { view: { exitCode: 0, output: viewJson(\"OPEN\", \"aaa111\", \"BEHIND\") }, checks: { exitCode: 0, output: check",
       "replacement": {
@@ -48799,7 +48799,7 @@
       "line": 829,
       "endLine": 884,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:12c6a3131e006741cde59101c7bf82343b1c7be0d360f977fc448208ac01eb1e",
+      "occurrence": "v2:ab37bb24fcc730c153d0fa6adb4ed1029f22d90de49e6fa36d527bbb605509b3",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( TestConsole.layer, PlatformLayer, scriptedSpawnerLayer([ { view: { exitCode: 0, output: viewJson(\"OPEN\", \"aaa111\") }, checks: { exitCode: 0, output: checksJson([ {",
       "replacement": {
@@ -48841,7 +48841,7 @@
       "line": 969,
       "endLine": 1020,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:8032203a7f3d5e37ee7eb9e7d39be1a5b023badbab7ef65d18bea851aa7ceffb",
+      "occurrence": "v2:7e4267c8cefbd1a6aa90eab263d542825deaf20a16534c4d0e798f1f4b435e42",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( TestConsole.layer, PlatformLayer, scriptedSpawnerLayer([ { view: { exitCode: 0, output: viewJson(\"OPEN\", \"aaa111\") }, checks: { exitCode: 0, output: checksJson([ {",
       "replacement": {
@@ -50780,7 +50780,7 @@
       "line": 1051,
       "endLine": 1118,
       "symbol": "withOtlpSink",
-      "occurrence": "v2:e29c2835abd93ffaf66ae0eb7830a440100e81a16f550dcd5af1de71f92b4f84",
+      "occurrence": "v2:07410abb914532792fb7136dcb26a04cf2a7b0bdc46272ccfb9db3d3e0c2afd7",
       "class": "resource-wrapper",
       "evidence": "withOtlpSink((otlpBaseUrl, requests) => withTempDirectory((tmpDir) => Effect.gen(function* () { const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tmp",
       "replacement": {
@@ -50801,7 +50801,7 @@
       "line": 1124,
       "endLine": 1199,
       "symbol": "withOtlpSink",
-      "occurrence": "v2:0e29dab7982cbaf1dcefa004075fd677e01a0852b01f785177da4ecf5ae73a33",
+      "occurrence": "v2:46ee79f20b7f818d2131bdf07747b6f80723febefa56643dc9e0cef2302519d8",
       "class": "resource-wrapper",
       "evidence": "withOtlpSink( (otlpBaseUrl) => withTempDirectory((tmpDir) => Effect.gen(function* () { const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tmpDir, \"rep",
       "replacement": {
@@ -50843,7 +50843,7 @@
       "line": 1247,
       "endLine": 1383,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:05db58a57a629c1137c6a07d47eba1affe680ca23bb2c566e53717c9b613869d",
+      "occurrence": "v2:36b8b55a0c663b127a6a41c16017b3d7ad40159b3613d0232f51a9f311b5e60e",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tm",
       "replacement": {
@@ -51704,7 +51704,7 @@
       "line": 873,
       "endLine": 930,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:22c81f901e05a7864b966f8c2d0da5282d8c1f37ec248f354ec4a3fa1ff1d2fd",
+      "occurrence": "v2:3cf615517ed3c65774cfd571ed83685b7fb52e0ca6816b514792ac33a4e8282a",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tmpDir, \"repo\"); const claudeProjectName =",
       "replacement": {
@@ -54812,7 +54812,7 @@
       "line": 130,
       "endLine": 200,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:b859d5b02f52f1164715ddc325f337e113a0e0837eb655e515d56f64897de049",
+      "occurrence": "v2:cf67e10dcf171cb865fe51a2d09a8ee38b6ff29bfa9a2efceb444825ca2ee593",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const merged = yield* addWorktree(repoRoot,",
       "replacement": {
@@ -54959,7 +54959,7 @@
       "line": 355,
       "endLine": 391,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:bf32738a41a9db6d28fbfcdbc7426017abe48ecb5f0e53bc95f08a630b72aa6e",
+      "occurrence": "v2:3cbcefb65479e8c0ed9eb4bb5a3e0b2da006a3589d57f2fc57bc4aff32960fbc",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const merged = yield* addWorktree(repoRoot, worktreesRoot, \"reclassified\")",
       "replacement": {
@@ -55043,7 +55043,7 @@
       "line": 490,
       "endLine": 518,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:1c7c2b05ce243876b35583398be684730f1648864cf250a3a4054010f2c0dd38",
+      "occurrence": "v2:77f02a363f8828848aee03b88399f5ea3c81f44c9a0b732e56a898cdf1e3acc5",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const target = yield* addWorktree(repoRoot, worktreesRoot, \"unauthorized\"); const re",
       "replacement": {
@@ -56454,7 +56454,7 @@
       "line": 1082,
       "endLine": 1082,
       "symbol": "scoped",
-      "occurrence": "v2:cf2ffbc23322bfa3a7860ffd35b7f375078d62729db7566f8b6eb4a3118a59b1",
+      "occurrence": "v2:31435dcf3eddc358135c27c1ed051b85fb95d277569d6b6fbde41d99f3d2a082",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -56601,7 +56601,7 @@
       "line": 1630,
       "endLine": 1630,
       "symbol": "scoped",
-      "occurrence": "v2:57ea82a62a532eaa9f7e948f8803e99b5f6320ecba06d1d16b1daf3f8a2e2966",
+      "occurrence": "v2:3cdbb57af3fd7d6abbbf6c72ea812daaa692a22c9d14de6217b126ccd4fbcf9e",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -56874,7 +56874,7 @@
       "line": 2636,
       "endLine": 2636,
       "symbol": "scoped",
-      "occurrence": "v2:577ac950dea0b2ce00a28062f53765a2805c0947be8a222b5709989ecb5674c9",
+      "occurrence": "v2:2020239868b5ca3c57c2207c25fdead38b2ce59221ccff3ef9c4b04ed019fd75",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57147,7 +57147,7 @@
       "line": 3474,
       "endLine": 3474,
       "symbol": "scoped",
-      "occurrence": "v2:fc5d34d8a3705a9e3b25edb6a1123a5bc648878891790cffe4a71b1ea376334b",
+      "occurrence": "v2:1cb87d23087207f7e8816ffec6c32f39f16e6c8774c4d16415c3af251ac0694f",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57672,7 +57672,7 @@
       "line": 58,
       "endLine": 58,
       "symbol": "scoped",
-      "occurrence": "v2:d902947fa351848cea06ce97540528c293b3d3d858da1f8ecadd5d4f26ab2abe",
+      "occurrence": "v2:7f5507d6b70f563ebf5eca2cb40aa418d4b8488af0db12f7f5caa72bfbdd6525",
       "class": "helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57714,7 +57714,7 @@
       "line": 98,
       "endLine": 98,
       "symbol": "scoped",
-      "occurrence": "v2:ba504089f99fa84d326355aa6f4d12e6383d9eb05310452f3280c104ed8adddb",
+      "occurrence": "v2:bba8f6ab4f06c797ce3c31cf93c9b9a5dbc1cc6edbc9e3dc09463e7438284478",
       "class": "helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57966,9 +57966,9 @@
       "line": 1381,
       "endLine": 1398,
       "symbol": "scoped",
-      "occurrence": "v2:4cdd4699713101e402a5fc46737f1e95a964474802e3faac20197ccd94432fb3",
+      "occurrence": "v2:6f2455d5b9e1dba2d8f49a9fac05a14758f54594fae41f117e5d545aea967d67",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", \"\\u001B[31mwarning\\u001B[0m at /home/operator/private/runtime.ts\\u0001\" ); const err",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness(\"resolved\\tgoals\\tdoctor\\nextra\", malformedProbeStderr); const error = yield* Effect.flip(harness.oracle.probeCommands(",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -58029,9 +58029,9 @@
       "line": 1436,
       "endLine": 1473,
       "symbol": "scoped",
-      "occurrence": "v2:71542a3d44860cd2d6f2e5a8d2645f9119bce5581f3e23c5c45f7726f6710157",
+      "occurrence": "v2:d488687e914a707b2d4046fae29a900f65da79154801926443fa64f08407dc88",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"unsafe stdout from /home/operator/private/stdout.ts\", \"\\u001B[31mSyntaxError\\u001B[0m in /home/operator/private/stder",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness(unsafeProbeStdout, unsafeProbeStderr, 1); const error = yield* Effect.flip(harness.oracle.probeCommands([[\"goals\", \"doc",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -58764,7 +58764,7 @@
       "line": 754,
       "endLine": 754,
       "symbol": "scoped",
-      "occurrence": "v2:f3e7b8ef9d7c8e4b8e5238417337ea2e281b100007709fa4a34a452946e9ab29",
+      "occurrence": "v2:157db6b3c30069117ed177a8ffd34c91ef08056a3d92138a94b9983d7dd5acf2",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -82589,7 +82589,7 @@
       "line": 134,
       "endLine": 157,
       "symbol": "checkEffect",
-      "occurrence": "v2:610172873358ee236092573f14978d27b9c65ef2b0a57beba0a6f8c72c1f3b83",
+      "occurrence": "v2:ade5221128db467ac12da050b7b33a091cd6709abf40821472d8910133eedf3f",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.schema(CacheTaskConfiguration), (configuration) => Effect.gen(function* () { const f = yield* activationFixture(); const after = yield* encodeJsonObjectJson({ extends:",
       "replacement": {
@@ -83289,7 +83289,7 @@
       "line": 37,
       "endLine": 51,
       "symbol": "it.live",
-      "occurrence": "v2:e09f5b0300d035b2ff851f46b802d3dbebc570556b57e419d2e3645b332c0401",
+      "occurrence": "v2:ec0c6e3f09c10371d9008c3bce08ac88b79cf7d2f4f45873955ccf4b803096b0",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"surfaces a nonzero child exit rather than treating it as a stall\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const outcome = yield* Effect.result( runDocgenSte",
       "replacement": {
@@ -83310,7 +83310,7 @@
       "line": 53,
       "endLine": 69,
       "symbol": "it.live",
-      "occurrence": "v2:d1f60ac6df97ca7c9f3006c2fb8d06b725b458e59ab11a2315e5fd158047faec",
+      "occurrence": "v2:b3b5b7f53c9f01f2975ee1083ec98ff3a95ca9929cfd467d534ca9111e0e0f1e",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"abandons a child that outlives its budget and fails once the retry stalls too\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); // Both attempts stall, which is the",
       "replacement": {
@@ -83331,7 +83331,7 @@
       "line": 71,
       "endLine": 111,
       "symbol": "it.live",
-      "occurrence": "v2:bfaae028c00e628f867adc648e6386e2523323f9e7c5c88a51964821eae72ec5",
+      "occurrence": "v2:789aca97a61c5383252c8d79c271d3e066bc54d3b1d6dd5f37c7c28a8cb72e08",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"logs only the watched child tree without raw argument values\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const unrelated = yield* ChildProcess.make(\"sleep\", [\"",
       "replacement": {
@@ -85096,7 +85096,7 @@
       "line": 281,
       "endLine": 307,
       "symbol": "it.live",
-      "occurrence": "v2:70d3fa215895cbcf08952d8c8130f89c0fec78ac5f9efee834990bc806fb5030",
+      "occurrence": "v2:32a7d500b21a806e563f84539cd8bd0db6d415d3bbec798a33d0e80ac0452290",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"writes its starting position even when the pull request is quiet\", () => { const commandsRef = Ref.makeUnsafe<ReadonlyArray<string>>(A.empty()); return withTempDirectory((root) => Effect.gen(",
       "replacement": {
@@ -85180,7 +85180,7 @@
       "line": 471,
       "endLine": 491,
       "symbol": "it.live",
-      "occurrence": "v2:8f0514fe443186c4565fc79657509d3d2897064421222b4ebbba72ff8f57059f",
+      "occurrence": "v2:9f889a6832ce3b5196d6d5d2fab77efc46753e90bba9a93a3ef543f4584c6ae3",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"says so, and records a position, when the branch has none yet\", () => { const commandsRef = Ref.makeUnsafe<ReadonlyArray<string>>(A.empty()); return withTempDirectory((root) => Effect.gen(fun",
       "replacement": {
@@ -85201,7 +85201,7 @@
       "line": 270,
       "endLine": 291,
       "symbol": "it.live",
-      "occurrence": "v2:1afe3c7e0c1335a1b1b641072e9c0d3edb642a04cc93d4a4e8aa744af62a307b",
+      "occurrence": "v2:294674571d47754934e6e4ecebe04b72e5df9677d1d229a9e85f7bc3d301d435",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"reads back what was persisted and refuses everything else\", () => inTempRepo((root) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; expect(O.isNone(yield* loadYeetRemedi",
       "replacement": {
@@ -85327,7 +85327,7 @@
       "line": 395,
       "endLine": 417,
       "symbol": "it.live",
-      "occurrence": "v2:5e69e0ba9df9220292e0cadcfe3a1ee2b018a6cce62b85d560ae43ec7b0db092",
+      "occurrence": "v2:577f210a575b22bcaac3c6271a021fa84ca2d5382b14003f8647a43028fb2e5e",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"derives the capsule from the failing check's own record\", () => inTempRepo((root) => Effect.gen(function* () { yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failing",
       "replacement": {
@@ -85999,7 +85999,7 @@
       "line": 732,
       "endLine": 800,
       "symbol": "it.live",
-      "occurrence": "v2:b8b56b973c57d212cb6fb73814bc936f0477ae25563a6b7fd2c73ef17e5804b8",
+      "occurrence": "v2:c180cd754a50f5fccb66500037b96a7e3408ebf6cbaaccd1317b338d105c2a5f",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"delivers a first red's capsule to the inbox on the tick that observes it\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(root), { int",
       "replacement": {
@@ -86020,7 +86020,7 @@
       "line": 804,
       "endLine": 886,
       "symbol": "it.live",
-      "occurrence": "v2:0882624328aa10e4274dedad82ef9c50114e820f3690eb8bd2c9bc431797d089",
+      "occurrence": "v2:a96d384d87a89dcacddbc2da287f4dec2e3050a12f175511082a6483a6627e2a",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"queues three reds on one head into a single repair session\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0",
       "replacement": {
@@ -86062,7 +86062,7 @@
       "line": 941,
       "endLine": 1022,
       "symbol": "it.live",
-      "occurrence": "v2:9d53370fe0dd145b61da5c19292f0045386daf32661828ab6716cd80f5eeec70",
+      "occurrence": "v2:e7dd8e56dc48587c99ac7b9628f7b6da61c27f42bcb11c9e185d2b8536978cb0",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"supersedes the wave on a head change and seeds the new baseline's reds\", () => inTempRepo((root) => Effect.gen(function* () { const ended = yield* runYeetWatchStream(contextFor(root), { inter",
       "replacement": {
@@ -95062,7 +95062,7 @@
       "line": 116,
       "endLine": 116,
       "symbol": "it.layer",
-      "occurrence": "v2:82b50455ae298ed5123f083da760b012ee44d7e1811167aa9ae3fa72ec7cf996",
+      "occurrence": "v2:dac5cd667f12b6773a86e8a9aa839649670584aa4a0a3a9a997ba0e83d5b1e14",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(testLayer)",
       "replacement": {
@@ -95272,7 +95272,7 @@
       "line": 98,
       "endLine": 98,
       "symbol": "it.layer",
-      "occurrence": "v2:21fe2452f6754242fd48c3a67cf319c3d6d3e6ce8d62a56dfa2964376964ce72",
+      "occurrence": "v2:9508262dfa1ff9d4eaec49c88f85aa57560d2297f496e8f7096c8ca36c49545e",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(testLayer)",
       "replacement": {
@@ -95461,7 +95461,7 @@
       "line": 61,
       "endLine": 61,
       "symbol": "it.layer",
-      "occurrence": "v2:6913a7ff376a81d7e8e1310cff599afece0cccd7ad70441d529cb1863dacc9a6",
+      "occurrence": "v2:481eca463284cb2cc19b4ac5c01eaae3137460d33d4f086ccf44e4a025fbdda7",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {
@@ -99426,17 +99426,17 @@
     {"id": "EV003:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:32:withUnreadableDataDir@109#1", "lens": "detector", "ruleId": "EV003", "package": "@beep/professional-desktop", "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts", "line": 32, "endLine": 43, "symbol": "withUnreadableDataDir", "occurrence": "v2:fe08980a84cf132bd1fde03371638a89eb4f28a058bf759a316af0298714edf8", "class": "resource-wrapper", "evidence": "function* < A, E, R, >(dataDir: string, use: Effect.Effect<A, E, R>) { const fs = yield* FileSystem.FileSystem; return yield* Effect.acquireUseRelease( fs.chmod(dataDir, 0), () => use, () => fs.chmod(", "replacement": {"primitive": "it.layer", "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."}, "severity": "major", "confidence": 0.95, "mechanization": "detector", "status": "exception", "reason": "The permission bracket is intentionally shorter than the surrounding test: the unreadable-directory assertion must observe failed access before chmod restoration, while the interruption regression holds mode 0 until cancellation. A shared acquireUseRelease helper makes both paths use the same restoration finalizer; moving it to it.layer or the whole test scope changes the observed lifetime. Node and Bun pass all 10 integration tests; a dropped-restoration mutation fails the mode-before-cleanup assertion (0 instead of 448) and restores the source afterward. See research/pr1323-readiness-and-interruption-proof.md."},
     {"id": "EV004:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:304:scoped@18#1", "lens": "resource", "ruleId": "EV004", "package": "@beep/professional-desktop", "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts", "line": 304, "endLine": 304, "symbol": "scoped", "occurrence": "v2:9ca807f70630b48c0d67665c24c5de856a6ddbdacd675890b5b7c55b1afd284d", "class": "inner-helper-scope-lifetime-review", "evidence": "Effect.scoped", "replacement": {"primitive": "readme.resource-safety", "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."}, "severity": "major", "confidence": 0.55, "mechanization": "judgment", "status": "exception", "reason": "This scoped child must close on interruption before the parent test asserts mode restoration and root deletion. Moving ownership to the test scope prevents those post-cleanup assertions. Node and Bun pass all 10 integration tests; a dropped-restoration mutation fails the mode-before-cleanup assertion (0 instead of 448) and restores the source afterward. See research/pr1323-readiness-and-interruption-proof.md."},
     {
-      "id": "EV002:packages/tooling/tool/cli/test/person-match-portability.test.ts:193:provide@12#1",
+      "id": "EV002:packages/tooling/tool/cli/test/person-match-portability.test.ts:194:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/person-match-portability.test.ts",
-      "line": 193,
-      "endLine": 193,
-      "symbol": "provide",
-      "occurrence": "v2:a6a1bf6a8e4804f11a5fed3c6a8e8d66b346fcaf7aee91600a20afd9b1404733",
+      "line": 194,
+      "endLine": 194,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:8643b0c9140d491e395247094f9012b5fe77ee57978daf66eb52874d3b46eaac",
       "class": "unresolved-layer-provide",
-      "evidence": "Effect.provide(Layer.fresh(TestConsole.layer))",
+      "evidence": "provideScopedLayer(Layer.fresh(TestConsole.layer))",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "Build the effectful or unresolved Layer once with it.layer; pure Layer.succeed/mock stubs remain permitted."

@@ -822,7 +822,7 @@ describe("remediation dispatch through the watch", () => {
         );
 
         const wave = yield* loadYeetRemediationWave(root);
-        assertTrue(O.isSome(wave));
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(wave.value.headSha).toBe("aaa111");
           expect(wave.value.sessionStartedAt).not.toBeNull();
@@ -881,7 +881,7 @@ describe("remediation dispatch through the watch", () => {
         ).toEqual(["Check", "Coverage", "Lint"]);
 
         const wave = yield* loadYeetRemediationWave(root);
-        assertTrue(O.isSome(wave));
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(A.length(wave.value.capsuleIds)).toBe(3);
           expect(wave.value.capsuleIds).toEqual(A.map(rows, (row) => row.id));
@@ -1023,7 +1023,7 @@ describe("remediation dispatch through the watch", () => {
         ]);
 
         const wave = yield* loadYeetRemediationWave(root);
-        assertTrue(O.isSome(wave));
+        wave.pipe(O.isSome, assertTrue);
         if (O.isSome(wave)) {
           expect(wave.value.headSha).toBe("bbb222");
           expect(A.length(wave.value.capsuleIds)).toBe(1);

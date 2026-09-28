@@ -644,7 +644,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       `rejects ${closureFault} dependencies before creating an experiment`,
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture("none", linker, false, true, closureFault);
-        assertTrue(Result.isFailure(yield* run().pipe(Effect.result)));
+        (yield* run().pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
       })
     );

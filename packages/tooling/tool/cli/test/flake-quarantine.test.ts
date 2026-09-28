@@ -49,7 +49,7 @@ const laneStep = QualityTaskStep.make({
 describe("detectNoLocationTs2589Flake", () => {
   it("quarantines a single no-location TS2589 turbo task failure", () => {
     const detected = detectNoLocationTs2589Flake(quarantinableBuildOutput);
-    assertTrue(O.isSome(detected));
+    detected.pipe(O.isSome, assertTrue);
     const tasks = O.getOrThrow(detected);
     expect(tasks).toHaveLength(1);
     expect(tasks[0]).toMatchObject({ taskId: "@beep/box#build", packageName: "@beep/box", task: "build" });
@@ -76,7 +76,7 @@ describe("detectNoLocationTs2589Flake", () => {
 
   it("detects through ANSI escapes", () => {
     const output = [`\u001B[31m${boxTs2589Line}\u001B[0m`, "\u001B[1mFailed:    @beep/box#build\u001B[0m"].join("\n");
-    assertTrue(O.isSome(detectNoLocationTs2589Flake(output)));
+    detectNoLocationTs2589Flake(output).pipe(O.isSome, assertTrue);
   });
 
   it("keeps a located TS2589 hard", () => {

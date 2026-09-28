@@ -197,7 +197,7 @@ describe("process identity liveness", () => {
         Effect.provideService(FileSystem.FileSystem, withoutProcfs)
       );
 
-      assertTrue(O.isSome(identity));
+      identity.pipe(O.isSome, assertTrue);
       if (O.isSome(identity)) {
         expect(Str.startsWith(process.platform === "win32" ? "win:" : "ps:")(identity.value)).toBe(true);
         expect(

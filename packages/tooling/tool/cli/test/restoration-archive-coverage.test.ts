@@ -750,7 +750,7 @@ describe("restoration archive boundary helpers", () => {
           sourceRelativePath: "synthetic.bin",
         });
         expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
-        assertTrue(O.isSome(RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId));
+        RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId.pipe(O.isSome, assertTrue);
       },
       Effect.scoped,
       provideTestLayer

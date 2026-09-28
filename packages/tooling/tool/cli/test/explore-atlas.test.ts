@@ -198,7 +198,7 @@ describe("exploration projections", () => {
           expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 
           const alpha = A.findFirst(projection.readmes, (item) => item.path.endsWith("/alpha/README.md"));
-          assertTrue(O.isSome(alpha));
+          alpha.pipe(O.isSome, assertTrue);
           if (O.isSome(alpha)) {
             expect(alpha.value.projected).toContain("<!-- BEGIN GENERATED: EXPLORATION STATUS -->");
             expect(alpha.value.projected).toContain("Which question survives projection?");

@@ -123,7 +123,7 @@ describe("internal/cli/RunMode", () => {
 
 describe("internal/cli/UnknownProbe", () => {
   it("narrows non-array objects, rejecting arrays and primitives", () => {
-    assertTrue(O.isSome(asRecord({ a: 1 })));
+    asRecord({ a: 1 }).pipe(O.isSome, assertTrue);
     expect(O.isNone(asRecord([1, 2]))).toBe(true);
     expect(O.isNone(asRecord("nope"))).toBe(true);
     expect(isUnknownRecord({ a: 1 })).toBe(true);

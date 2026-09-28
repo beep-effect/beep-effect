@@ -295,7 +295,7 @@ describe("yeet monitor comment cursor persistence", () => {
         // comment posted in between.
         const persisted = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
         expect(O.map(persisted, (mark) => mark.issue.id)).toEqual(O.some(0));
-        assertTrue(O.isSome(persisted));
+        persisted.pipe(O.isSome, assertTrue);
       })
     ).pipe(
       provideScopedLayer(
@@ -482,7 +482,7 @@ describe("yeet monitor comment replay", () => {
         // Nothing was read, because there was no "since" to read from — the
         // point of the line is that the NEXT open is the one that resumes.
         expect(A.length(yield* Ref.get(commandsRef))).toBe(0);
-        assertTrue(O.isSome(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)));
+        (yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)).pipe(O.isSome, assertTrue);
       })
     ).pipe(
       provideScopedLayer(

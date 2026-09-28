@@ -657,7 +657,7 @@ describe("reply run verdict", () => {
       ]),
       "/repo/.beep/yeet/reply-report.json"
     );
-    assertTrue(O.isSome(verdict));
+    verdict.pipe(O.isSome, assertTrue);
     const text = O.getOrElse(verdict, () => "");
     expect(text).toContain("2 of 2 drafts");
     expect(text).toContain("PRRT_open");

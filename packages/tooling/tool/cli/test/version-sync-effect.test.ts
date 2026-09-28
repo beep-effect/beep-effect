@@ -87,7 +87,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         const report = buildEffectReport(state);
 
         expect(report.status).toBe("drift");
-        assertTrue(O.isSome(report.latest));
+        report.latest.pipe(O.isSome, assertTrue);
         if (O.isSome(report.latest)) {
           expect(report.latest.value).toBe("^4.0.0-beta.28");
         }

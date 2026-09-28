@@ -235,7 +235,7 @@ describe("synthetic orchestration process boundary", () => {
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture(fault);
         const result = yield* run().pipe(Effect.result);
-        assertTrue(Result.isFailure(result));
+        result.pipe(Result.isFailure, assertTrue);
         expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       }, provideScopedLayer(platform))
     );
@@ -257,7 +257,7 @@ describe("synthetic orchestration process boundary", () => {
         }),
         CacheSyntheticRequest.make({ ...request, channel: "canary" }),
       ]) {
-        assertTrue(Result.isFailure(yield* run(changed).pipe(Effect.result)));
+        (yield* run(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
       }
       expect(calls).toEqual([]);
     }, provideScopedLayer(platform))

@@ -847,7 +847,7 @@ describe("deletion revalidation", () => {
     Effect.gen(function* () {
       const drifted = stateWith({ localTip: O.some("cccc3333dddd4444") });
       const refusal = yield* revalidateLocalDeletion("/repo", drifted);
-      assertTrue(O.isSome(refusal));
+      refusal.pipe(O.isSome, assertTrue);
       expect(O.getOrElse(refusal, () => "")).toContain("moved since planning");
 
       const unchanged = yield* revalidateLocalDeletion("/repo", mergedState);

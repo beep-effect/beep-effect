@@ -135,8 +135,8 @@ describe("doctest rewrite planning", () => {
 
   it("uses the real upstream transform as the assertion oracle", () => {
     expect(O.isNone(validateDoctestAssertions("1 + 1 // => 2", "fixture.ts", 1))).toBe(true);
-    assertTrue(O.isSome(validateDoctestAssertions("// => 2", "fixture.ts", 1)));
-    assertTrue(O.isSome(validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1)));
+    validateDoctestAssertions("// => 2", "fixture.ts", 1).pipe(O.isSome, assertTrue);
+    validateDoctestAssertions("let value = 1 // => 1", "fixture.ts", 1).pipe(O.isSome, assertTrue);
     expect(O.isNone(validateDoctestAssertions("if (true) {\n  1 // => 1\n}", "fixture.ts", 1))).toBe(true);
   });
 

@@ -2388,7 +2388,7 @@ describe("yeet quality issue index", () => {
         "\nfull:pre-push failed with exit code 1.\nsecurity:nix completed successfully"
     );
 
-    assertTrue(O.isSome(remediation));
+    remediation.pipe(O.isSome, assertTrue);
     expect(O.getOrUndefined(remediation)).toContain("typos");
   });
 
@@ -4459,7 +4459,7 @@ describe("yeet publish scope helpers", () => {
           yield* fs.writeFileString(path.join(tmpDir, "untracked.txt"), "wip\n");
 
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          assertTrue(O.isSome(stash));
+          stash.pipe(O.isSome, assertTrue);
 
           const cleanStatus = yield* runGitStatus(tmpDir);
           expect(cleanStatus).toBe("");
@@ -4485,7 +4485,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          assertTrue(O.isSome(stash));
+          stash.pipe(O.isSome, assertTrue);
 
           yield* fs.writeFileString(filePath, "conflicting\n");
           yield* runGit(tmpDir, ["add", "tracked.txt"]);
@@ -4509,7 +4509,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          assertTrue(O.isSome(stash));
+          stash.pipe(O.isSome, assertTrue);
           const parkedStatus = yield* runGitStatus(tmpDir);
           expect(parkedStatus).toBe("");
 
@@ -4532,7 +4532,7 @@ describe("yeet publish scope helpers", () => {
 
           yield* fs.writeFileString(filePath, "residue\n");
           const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
-          assertTrue(O.isSome(stash));
+          stash.pipe(O.isSome, assertTrue);
 
           const committed = yield* Effect.succeed("committed").pipe(
             restorePublishStashOnFailure({ context: tempContext, stash })
@@ -4722,7 +4722,7 @@ describe("yeet publish scope helpers", () => {
             prePushStep,
           ]);
 
-          assertTrue(O.isSome(lease));
+          lease.pipe(O.isSome, assertTrue);
           if (O.isSome(lease)) {
             expect(lease.value.lockPath).toBe(lockPath);
             yield* releaseProofLock(lease.value);
@@ -4777,12 +4777,12 @@ describe("yeet publish scope helpers", () => {
           const fs = yield* FileSystem.FileSystem;
 
           const retired = yield* retireFullProofLockOrObserveAtPath(lockPath);
-          assertTrue(O.isSome(retired));
+          retired.pipe(O.isSome, assertTrue);
           const markerText = yield* fs.readFileString(lockPath);
           expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
           expect(markerText).toContain('"coordination":"quality-scheduler/v1"');
 
-          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
           expect(yield* fs.readFileString(lockPath)).toBe(markerText);
 
           const legacyPathRefusal = yield* acquireLegacyFullProofLockForTesting(tempContext, [prePushStep]).pipe(
@@ -4805,7 +4805,7 @@ describe("yeet publish scope helpers", () => {
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
 
           yield* releaseProofLock(lease);
-          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
           expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
         })
       )
@@ -4829,7 +4829,7 @@ describe("yeet publish scope helpers", () => {
           )}\n`;
           yield* fs.writeFileString(lockPath, staleText);
 
-          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
           const markerText = yield* fs.readFileString(lockPath);
           expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
           expect(markerText).not.toBe(staleText);
@@ -4883,7 +4883,7 @@ describe("yeet publish scope helpers", () => {
             Effect.provideService(FileSystem.FileSystem, racingFileSystem)
           );
 
-          assertTrue(O.isSome(retired));
+          retired.pipe(O.isSome, assertTrue);
           expect(yield* fs.readFileString(lockPath)).toBe(competingMarker);
         })
       )
@@ -4896,13 +4896,13 @@ describe("yeet publish scope helpers", () => {
           const path = yield* Path.Path;
           const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
           const otherOriginLockPath = path.join(path.dirname(lockPath), "other-origin.lock");
-          assertTrue(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath)));
+          (yield* retireFullProofLockOrObserveAtPath(lockPath)).pipe(O.isSome, assertTrue);
           const first = yield* acquireFullProofFallbackLockOrObserveAtPath(
             lockPath,
             tempContext,
             "bun run beep yeet verify"
           );
-          assertTrue(O.isSome(first));
+          first.pipe(O.isSome, assertTrue);
           if (O.isSome(first)) {
             expect(first.value.lockPath).toBe(fallbackPath);
           }
@@ -4924,7 +4924,7 @@ describe("yeet publish scope helpers", () => {
             tempContext,
             "bun run beep yeet verify"
           );
-          assertTrue(O.isSome(next));
+          next.pipe(O.isSome, assertTrue);
           if (O.isSome(next)) {
             expect(next.value.lockPath).toBe(fallbackPath);
             yield* releaseProofLock(next.value);
@@ -4960,7 +4960,7 @@ describe("yeet publish scope helpers", () => {
             "bun run beep yeet verify"
           );
 
-          assertTrue(O.isSome(replacement));
+          replacement.pipe(O.isSome, assertTrue);
           expect(yield* fs.readFileString(fallbackPath)).not.toBe(recycledOwnerText);
           if (O.isSome(replacement)) {
             yield* releaseProofLock(replacement.value);
@@ -5007,7 +5007,7 @@ describe("yeet publish scope helpers", () => {
             O.some("ps:Sun Aug 31 00:00:00 2026")
           );
 
-          assertTrue(O.isSome(acquired));
+          acquired.pipe(O.isSome, assertTrue);
           expect(yield* fs.readFileString(fallbackPath)).toContain('"procStart":"ps:Sun Aug 31 00:00:00 2026"');
           if (O.isSome(acquired)) {
             yield* releaseProofLock(acquired.value);
@@ -5528,7 +5528,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "",
       resolveThreads: "PRRT_missing",
     });
-    assertTrue(O.isSome(unknown.error));
+    unknown.error.pipe(O.isSome, assertTrue);
     if (O.isSome(unknown.error)) {
       expect(unknown.error.value).toContain("PRRT_missing");
     }
@@ -5539,7 +5539,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "",
     });
-    assertTrue(O.isSome(unpaired.error));
+    unpaired.error.pipe(O.isSome, assertTrue);
 
     const orphanBody = closeoutWritePlanForTesting({
       knownThreadIds: known,
@@ -5547,7 +5547,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "",
       resolveThreads: "",
     });
-    assertTrue(O.isSome(orphanBody.error));
+    orphanBody.error.pipe(O.isSome, assertTrue);
 
     const oversized = closeoutWritePlanForTesting({
       knownThreadIds: known,
@@ -5555,7 +5555,7 @@ describe("yeet publish scope helpers", () => {
       replyThread: "PRRT_a",
       resolveThreads: "",
     });
-    assertTrue(O.isSome(oversized.error));
+    oversized.error.pipe(O.isSome, assertTrue);
   });
 
   it("decodes closeout reports without writeActions for backwards compatibility", () =>

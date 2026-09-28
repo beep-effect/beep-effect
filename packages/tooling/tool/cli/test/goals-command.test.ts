@@ -307,7 +307,7 @@ describe("renderPortfolioIndex", () => {
 
 describe("parseGoalManifestText", () => {
   it("accepts JSON objects and rejects non-object or broken JSON", () => {
-    assertTrue(O.isSome(parseGoalManifestText('{ "a": 1 }')));
+    parseGoalManifestText('{ "a": 1 }').pipe(O.isSome, assertTrue);
     expect(O.isNone(parseGoalManifestText("[1, 2]"))).toBe(true);
     expect(O.isNone(parseGoalManifestText("not json"))).toBe(true);
   });

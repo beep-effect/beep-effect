@@ -131,7 +131,7 @@ layer(testLayer)("schema catalog command", (it) => {
               (candidate) => candidate.file === "packages/example/src/Example.ts" && candidate.symbol === "FixtureModel"
             );
 
-            assertTrue(O.isSome(entry));
+            entry.pipe(O.isSome, assertTrue);
             if (O.isSome(entry)) {
               expect(entry.value.kind).toBe("schema-class");
               expect(entry.value.owner).toBe("@beep/example");

@@ -399,7 +399,7 @@ describe("residue reap", () => {
         expect(reaped.path).toBe(lexicalWorktree);
         // The real directory behind the link is gone; the symlink itself is untouched.
         expect(yield* fs.exists(fixture.oldWorktree)).toBe(false);
-        assertTrue(O.isSome(yield* fs.readLink(linkedHome).pipe(Effect.option)));
+        (yield* fs.readLink(linkedHome).pipe(Effect.option)).pipe(O.isSome, assertTrue);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -638,9 +638,9 @@ describe("residue reap", () => {
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
       const empty = yield* Effect.result(runResidueReap({ homeRoot: "" }));
-      assertTrue(Result.isFailure(empty));
+      empty.pipe(Result.isFailure, assertTrue);
       const relative = yield* Effect.result(runResidueReap({ homeRoot: "relative/home" }));
-      assertTrue(Result.isFailure(relative));
+      relative.pipe(Result.isFailure, assertTrue);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 

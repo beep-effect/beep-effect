@@ -282,7 +282,7 @@ describe("loadYeetRemediationWave", () => {
         const json = yield* YeetRemediationWaveJson.encode(wave());
         yield* fs.writeFileString(statePath, `${json}\n`);
         const loaded = yield* loadYeetRemediationWave(root);
-        assertTrue(O.isSome(loaded));
+        loaded.pipe(O.isSome, assertTrue);
         if (O.isSome(loaded)) {
           expect(loaded.value.schemaVersion).toBe(YEET_DISPATCH_SCHEMA_VERSION);
           expect(loaded.value).toStrictEqual(wave());
@@ -410,7 +410,7 @@ describe("dispatchYeetCheckFailure", () => {
         expect(entry.capsule.state).toBe("CANCELLED");
 
         const persisted = yield* loadYeetRemediationWave(root);
-        assertTrue(O.isSome(persisted));
+        persisted.pipe(O.isSome, assertTrue);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("repair session opened")(line))).toBe(true);
       })

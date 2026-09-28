@@ -49,8 +49,8 @@ describe("DirectoryHandle", () => {
 
       const bound = yield* openDirectoryHandle(real);
       const expected = directoryIdentity(yield* fs.stat(real));
-      assertTrue(O.isSome(bound));
-      assertTrue(O.isSome(expected));
+      bound.pipe(O.isSome, assertTrue);
+      expected.pipe(O.isSome, assertTrue);
       expect(sameDirectoryIdentity(O.getOrThrow(bound).identity, O.getOrThrow(expected))).toBe(true);
 
       expect(O.isNone(yield* openDirectoryHandle(link))).toBe(true);
@@ -95,7 +95,7 @@ describe("DirectoryHandle", () => {
       expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("identity-changed");
       expect(yield* fs.readDirectory(moved)).toEqual([]);
       expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
-      assertTrue(O.isSome(yield* fs.readLink(victim).pipe(Effect.option)));
+      (yield* fs.readLink(victim).pipe(Effect.option)).pipe(O.isSome, assertTrue);
     }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer))
   );
 
