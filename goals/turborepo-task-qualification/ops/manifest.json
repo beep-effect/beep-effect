@@ -382,7 +382,9 @@
     "research/proof-7877-attribution.json",
     "research/refs-entrypoint-semantics.json",
     "research/refs-transitive-semantics.json",
-    "research/main-1270-source-refresh.json"
+    "research/main-1270-source-refresh.json",
+    "research/main-1270-planner-review.json",
+    "research/current-main-census-delta.json"
   ],
   "agentLaunchers": [
     {

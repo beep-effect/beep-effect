@@ -2164,3 +2164,26 @@ root scripts and global configuration are unchanged. Input summaries changed
 for 55 nodes. Eighteen Yeet source bindings were refreshed and Converge.ts
 was newly attached. This source-only refresh explicitly leaves semantic review
 and planner reproduction open; it does not renew historical runtime evidence.
+
+### Planner reproduction after PR #1270
+
+[The planner comparison](research/main-1270-planner-review.json) reproduces the
+finite local and hosted scenarios at `f806118ec2`. CI/Quality projections are
+unchanged. Two Yeet remote-status scenarios per environment request additional
+check metadata; all other projected values remain equal. This closes the
+bounded planner reproduction item while preserving the event-convergence,
+wave-handling, monitor-state and exhaustive interpreter review obligations.
+No runtime evidence is renewed and no tuple is qualified.
+
+### Current-main census after PR #1268 retirement — 2026-09-28
+
+The merged lane was retired with its unpublished planner receipt preserved.
+A fresh lane at `980b4cd44c` reproduces 144 workspaces, 3,473 graph nodes and
+1,970 executable tasks under Turbo 2.11.4. Commands and effective task
+configuration are unchanged, but dependency membership differs for 2,074
+nodes and input digests differ for 3,448. Of the previous 1,019 reviewed
+source references, 526 retain their hashes, 490 changed, and three private
+planner scripts need recovery or reproduction. The old attachment is not
+accepted for this head. The [delta receipt](research/current-main-census-delta.json)
+records these limits; semantic review must explain the changed graph before
+renewing coverage. Historical runtime evidence retains its original pins.
