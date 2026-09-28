@@ -2309,3 +2309,36 @@ The generated lockfile also deduplicates `ws` to its already-present `8.22.0`
 version. Before installing the changed dependency view, this task gracefully
 interrupted its own running and queued older proofs; other checkouts and
 frozen experiments were preserved. Full and hosted checks must run again.
+
+### 2026-09-28 — Suppressed postinstall left infra SDK declarations absent
+
+The Security repair installed the changed lock with `bun install --frozen-lockfile
+--ignore-scripts` in the working lane. The subsequent local full proof stopped
+at infra docgen: generated `@pulumi/gharunners` TypeScript source produced
+TS1205, TS1294 and TS4114 errors. Its installed `bin/index.d.ts` was absent.
+The root postinstall normally runs `infra:prepare-gha-runners`; Yeet's clean-HEAD
+install check ran it only in its temporary checkout. The working lane's infra
+source and configuration have no diff against `origin/main`. Running the
+existing preparation command restored the installed declaration file. A direct
+docgen verification is running; no compiler rules were weakened.
+
+Prevention: after an intentionally script-suppressed dependency install, restore
+reviewed repository-owned preparation prerequisites before starting full proof.
+A successful temporary-checkout install is not evidence that the working lane's
+installed generated artifacts exist. Preserve the failed proof; downstream
+lanes skipped after docgen remain unproven.
+
+### 2026-09-28 — New undici advisory invalidates the queued proof target
+
+Hosted Security at `f26ad5145a` reported GHSA-3wwx-pv8p-q78v against
+undici 6.28.0, 7.29.0 and 8.10.0. The advisory was published while this
+PR was being verified. A targeted Bun update in an isolated repair checkout
+selected patched releases within the existing ranges. Frozen installation
+passed with repository postinstall enabled. The owned old-lock proof and
+queued docgen diagnostic were gracefully stopped before installing the
+changed lockfile; logs and cancellation receipts are retained. The new full
+proof and hosted Security remain required. Package-specific clean OSV queries
+do not replace those gates.
+
+Prevention: attribute each security red to its exact advisory and head before
+reusing a prior green scan; preserve the intended postinstall prerequisites.

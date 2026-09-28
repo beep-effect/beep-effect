@@ -1,0 +1,41 @@
+{
+  "advisory": "GHSA-3wwx-pv8p-q78v",
+  "advisoryPublishedAt": "2026-09-28T21:42:37Z",
+  "hostedFailure": {
+    "run": 36490053175,
+    "job": 109156481683,
+    "head": "f26ad5145a2541cf561e29b813055bd88a302c81"
+  },
+  "affectedVersions": [
+    "6.28.0",
+    "7.29.0",
+    "8.10.0"
+  ],
+  "patchedFloors": [
+    "6.28.1",
+    "7.29.1",
+    "8.10.2"
+  ],
+  "resolvedVersions": [
+    "6.29.0",
+    "7.30.0",
+    "8.11.2"
+  ],
+  "change": "Bun targeted undici update within existing dependency ranges; lockfile-only resolution updates and deduplication, no root manifest change.",
+  "verification": {
+    "isolatedFrozenInstall": 0,
+    "workingLaneFrozenInstall": 0,
+    "repositoryPostinstallEnabled": true,
+    "installedInfraDeclarationPresent": true,
+    "osvQueries": {
+      "6.29.0": 0,
+      "7.30.0": 0,
+      "8.11.2": 0
+    }
+  },
+  "limits": [
+    "Package-specific OSV queries do not replace the full hosted security gate.",
+    "Older local proof was intentionally stopped before dependency mutation; a new complete proof is required.",
+    "Frozen runtime pilot receipts retain source 7f53b4a840 and their original dependency profile."
+  ]
+}

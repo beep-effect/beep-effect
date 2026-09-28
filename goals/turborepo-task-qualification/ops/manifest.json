@@ -421,7 +421,8 @@
     "research/current-cross-root-shared-view-stable.json",
     "research/current-cross-root-shared-view-canary.json",
     "research/current-concurrency-stable.json",
-    "research/current-concurrency-canary.json"
+    "research/current-concurrency-canary.json",
+    "research/current-undici-remediation.json"
   ],
   "agentLaunchers": [
     {
