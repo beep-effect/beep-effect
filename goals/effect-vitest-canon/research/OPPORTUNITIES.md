@@ -4485,3 +4485,14 @@ caused no more than eight renders. A blocked click also satisfied both assertion
 A positive render-count increase now proves a new attempt before the unchanged
 upper-bound check. The click-propagation control passed the original test and
 failed the strengthened one; no production retry behavior was changed.
+
+## Publish freshness guard rejects a resolved uncommitted main merge
+
+After merging main for PR #1312, all conflict markers were resolved, the inventory
+ratchet passed, and the affected package proof passed. Yeet publish still rejected
+the branch as stale because its pre-commit freshness check compared the old HEAD
+to main while MERGE_HEAD already identified the intended merge. Finalizing the
+merge commit before normal publication avoids an override. The guard should
+recognize a fully resolved merge of the current base, while still rejecting stale
+or unresolved merges. Inventory conflicts were reconciled as a three-way semantic
+delta so main's location updates did not restore this branch's removed findings.
