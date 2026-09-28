@@ -4345,3 +4345,19 @@ with their original statuses and obligations retained; a preservation receipt
 accounts for every other non-import statement. Inventory identity should depend
 on the actionable expression rather than unrelated assertions in its enclosing
 callback. Two schema-first exception anchors also moved solely from imports.
+
+## Legacy fixture readiness escaped cleanup ownership
+
+The Desktop compatibility fixture awaited PGlite readiness inside acquisition,
+before registering close. A controlled readiness-step failure after real engine
+initialization observed zero close callbacks before the repair and one afterward.
+Readiness now runs in the protected use phase. Resource reviews should inspect
+failure paths within acquisition, as successful close/reopen tests missed this gap.
+
+## Runner dependency additions require generated boundaries and release entries
+
+PR #1312 Repo Sanity rejected stale Fallow boundaries and missing changesets for
+Practice KG MCP and Professional Desktop. Regeneration added only two Desktop
+`@beep/test-runner` allowed-dependency entries; a patch changeset covers both apps.
+Package-level proof did not cover these repository gates. Dependency migrations
+should refresh boundary output and validate changeset coverage before publication.

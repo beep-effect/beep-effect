@@ -68,23 +68,25 @@ const createLegacyPglite046Fixture = Effect.fn(
   "ProfessionalDesktop.PgliteCompatibilityTest.createLegacyPglite046Fixture"
 )(function* (dataDir: string) {
   yield* Effect.acquireUseRelease(
-    Effect.sync(() => new LegacyPglite046(dataDir)).pipe(
-      Effect.tap((pglite) => Effect.promise(() => pglite.waitReady))
-    ),
+    Effect.sync(() => new LegacyPglite046(dataDir)),
     (pglite) =>
-      Effect.all(
-        [
-          Effect.promise(() =>
-            pglite.query(`
+      Effect.promise(() => pglite.waitReady).pipe(
+        Effect.andThen(
+          Effect.all(
+            [
+              Effect.promise(() =>
+                pglite.query(`
         CREATE TABLE legacy_notes (
           id SERIAL PRIMARY KEY,
           body TEXT NOT NULL
         )
       `)
-          ),
-          Effect.promise(() => pglite.query("INSERT INTO legacy_notes (body) VALUES ('keep me')")),
-        ],
-        { discard: true }
+              ),
+              Effect.promise(() => pglite.query("INSERT INTO legacy_notes (body) VALUES ('keep me')")),
+            ],
+            { discard: true }
+          )
+        )
       ),
     (pglite) => Effect.promise(() => pglite.close()).pipe(Effect.ignore)
   );
