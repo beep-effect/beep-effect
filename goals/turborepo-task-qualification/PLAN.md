@@ -2218,3 +2218,25 @@ baselines were recovered from Git history and parsed with TypeScript JSONC
 support. [The review](research/current-tsconfig-reference-review.json) records
 the source hashes and limits. Referenced source semantics and runtime
 qualification remain open.
+
+### Changed Turbo and package-manifest comparison
+
+All eleven changed Turbo configs differ only in the schema URL. All 124
+changed package manifests were compared with hash-matched baseline bytes:
+122 change development dependencies only, the CLI changes exports and publish
+configuration, and the root changes catalog versions, one override and four
+patch-registration entries. No scripts changed. The
+[configuration review](research/current-package-turbo-review.json) preserves
+the toolchain changes as unresolved semantic inputs; unchanged task settings
+do not establish runtime equivalence or qualification.
+
+### Source migration classification and selected Effect APIs
+
+Hash-matched baselines were recovered for 70 remaining source files. Parser
+comparison finds 31 with unchanged non-import syntax and 39 with changed
+non-import syntax. Comments and formatting are excluded from that comparison,
+so it is not a runtime equivalence claim. The
+[selective migration review](research/current-source-migration-review.json)
+confirms an identical byte-to-hex helper for three hashing callers, while
+recording schema-representation and JSON Schema differences in the prefix
+filter rename. The remaining caller and dependency semantics stay open.
