@@ -17,9 +17,9 @@ import {
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { PromotionGateRequest, PromotionSubjectRef, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { PromotionGate } from "@beep/shared-use-cases/server";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 
 const subject = PromotionSubjectRef.make({ id: "application-16138242", kind: "patent-application" });
@@ -80,132 +80,139 @@ const gateLayer = (verdict: CandorGateVerdict) =>
   );
 
 describe("CandorPromotionGate", () => {
-  it.effect("maps a covered candor verdict to the shared clear value", () =>
-    Effect.gen(function* () {
-      const gate = yield* PromotionGate;
-      const verdict = yield* gate.evaluate(request);
+  it.layer(gateLayer(CandorGateVerdict.make({ scope, uncovered: [] })), { timeout: "10 seconds" })((it) => {
+    it.effect("maps a covered candor verdict to the shared clear value", () =>
+      Effect.gen(function* () {
+        const gate = yield* PromotionGate;
+        const verdict = yield* gate.evaluate(request);
 
-      expect(verdict.outcome).toBe("clear");
-    }).pipe(provideScopedLayer(gateLayer(CandorGateVerdict.make({ scope, uncovered: [] }))))
-  );
+        expect(verdict.outcome).toBe("clear");
+      })
+    );
+  });
 
-  it.effect("maps an uncovered candor verdict to an opaque blocked value", () =>
-    Effect.gen(function* () {
-      const gate = yield* PromotionGate;
-      const verdict = yield* gate.evaluate(request);
+  it.layer(
+    gateLayer(
+      CandorGateVerdict.make({
+        scope,
+        uncovered: [UncoveredEvent.make({ eventId: 1, reason: "no-disposition" })],
+      })
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("maps an uncovered candor verdict to an opaque blocked value", () =>
+      Effect.gen(function* () {
+        const gate = yield* PromotionGate;
+        const verdict = yield* gate.evaluate(request);
 
-      expect(verdict.outcome).toBe("blocked");
-      if (verdict.outcome === "blocked") {
-        expect(verdict.reason).toBe("law-practice-candor-policy-blocked");
-      }
-    }).pipe(
-      provideScopedLayer(
-        gateLayer(
-          CandorGateVerdict.make({
-            scope,
-            uncovered: [UncoveredEvent.make({ eventId: 1, reason: "no-disposition" })],
-          })
+        expect(verdict.outcome).toBe("blocked");
+        if (verdict.outcome === "blocked") {
+          expect(verdict.reason).toBe("law-practice-candor-policy-blocked");
+        }
+      })
+    );
+  });
+
+  it.layer(
+    CandorPromotionGateLive.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          Layer.succeed(
+            CandorPromotionSubjectResolver,
+            CandorPromotionSubjectResolver.of({
+              resolve: Effect.fn("CandorPromotionSubjectResolver.resolve")((unresolved) =>
+                Effect.fail(
+                  CandorPromotionSubjectResolutionError.make({
+                    reason: "mapping-unavailable",
+                    request: unresolved,
+                  })
+                )
+              ),
+            })
+          ),
+          Layer.succeed(
+            CandorPolicy,
+            CandorPolicy.of({
+              evaluate: Effect.fn("CandorPolicy.evaluate")(() =>
+                Effect.succeed(CandorGateVerdict.make({ scope, uncovered: [] }))
+              ),
+            })
+          ),
+          Layer.succeed(
+            CandorRecordReader,
+            CandorRecordReader.of({
+              snapshotForFiling: Effect.fn("CandorRecordReader.snapshotForFiling")(() =>
+                Effect.succeed(CandorRecordSnapshot.make({ dispositions: [], events: [] }))
+              ),
+            })
+          ),
+          Layer.succeed(
+            SourceTextResolver,
+            SourceTextResolver.of({
+              resolve: Effect.fn("SourceTextResolver.resolve")(() => Effect.die("unused source resolver")),
+            })
+          ),
+          BunCrypto.layer
         )
       )
-    )
-  );
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("fails closed when the shared subject cannot be resolved", () =>
+      Effect.gen(function* () {
+        const gate = yield* PromotionGate;
+        const verdict = yield* gate.evaluate(request);
 
-  it.effect("fails closed when the shared subject cannot be resolved", () =>
-    Effect.gen(function* () {
-      const gate = yield* PromotionGate;
-      const verdict = yield* gate.evaluate(request);
+        expect(verdict.outcome).toBe("blocked");
+        if (verdict.outcome === "blocked") {
+          expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
+        }
+      })
+    );
+  });
 
-      expect(verdict.outcome).toBe("blocked");
-      if (verdict.outcome === "blocked") {
-        expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
-      }
-    }).pipe(
-      provideScopedLayer(
-        CandorPromotionGateLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              Layer.succeed(
-                CandorPromotionSubjectResolver,
-                CandorPromotionSubjectResolver.of({
-                  resolve: Effect.fn("CandorPromotionSubjectResolver.resolve")((unresolved) =>
-                    Effect.fail(
-                      CandorPromotionSubjectResolutionError.make({
-                        reason: "mapping-unavailable",
-                        request: unresolved,
-                      })
-                    )
-                  ),
-                })
+  it.layer(gateLayer(CandorGateVerdict.make({ scope, uncovered: [] })), { timeout: "10 seconds" })((it) => {
+    it.effect("fails closed when the same subject is requested under another tenant", () =>
+      Effect.gen(function* () {
+        const gate = yield* PromotionGate;
+        const verdict = yield* gate.evaluate(otherTenantRequest);
+
+        expect(verdict.outcome).toBe("blocked");
+        if (verdict.outcome === "blocked") {
+          expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
+        }
+      })
+    );
+  });
+
+  it.layer(
+    CandorPromotionGateLive.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          supportingLayers,
+          Layer.succeed(
+            CandorPolicy,
+            CandorPolicy.of({
+              evaluate: Effect.fn("CandorPolicy.evaluate")(() =>
+                Effect.fail(CandorRecordReadError.fromReason("snapshot-unavailable", "record unavailable"))
               ),
-              Layer.succeed(
-                CandorPolicy,
-                CandorPolicy.of({
-                  evaluate: Effect.fn("CandorPolicy.evaluate")(() =>
-                    Effect.succeed(CandorGateVerdict.make({ scope, uncovered: [] }))
-                  ),
-                })
-              ),
-              Layer.succeed(
-                CandorRecordReader,
-                CandorRecordReader.of({
-                  snapshotForFiling: Effect.fn("CandorRecordReader.snapshotForFiling")(() =>
-                    Effect.succeed(CandorRecordSnapshot.make({ dispositions: [], events: [] }))
-                  ),
-                })
-              ),
-              Layer.succeed(
-                SourceTextResolver,
-                SourceTextResolver.of({
-                  resolve: Effect.fn("SourceTextResolver.resolve")(() => Effect.die("unused source resolver")),
-                })
-              ),
-              BunCrypto.layer
-            )
+            })
           )
         )
       )
-    )
-  );
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect("fails closed when candor policy evaluation cannot read its record", () =>
+      Effect.gen(function* () {
+        const gate = yield* PromotionGate;
+        const verdict = yield* gate.evaluate(request);
 
-  it.effect("fails closed when the same subject is requested under another tenant", () =>
-    Effect.gen(function* () {
-      const gate = yield* PromotionGate;
-      const verdict = yield* gate.evaluate(otherTenantRequest);
-
-      expect(verdict.outcome).toBe("blocked");
-      if (verdict.outcome === "blocked") {
-        expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
-      }
-    }).pipe(provideScopedLayer(gateLayer(CandorGateVerdict.make({ scope, uncovered: [] }))))
-  );
-
-  it.effect("fails closed when candor policy evaluation cannot read its record", () =>
-    Effect.gen(function* () {
-      const gate = yield* PromotionGate;
-      const verdict = yield* gate.evaluate(request);
-
-      expect(verdict.outcome).toBe("blocked");
-      if (verdict.outcome === "blocked") {
-        expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
-      }
-    }).pipe(
-      provideScopedLayer(
-        CandorPromotionGateLive.pipe(
-          Layer.provide(
-            Layer.mergeAll(
-              supportingLayers,
-              Layer.succeed(
-                CandorPolicy,
-                CandorPolicy.of({
-                  evaluate: Effect.fn("CandorPolicy.evaluate")(() =>
-                    Effect.fail(CandorRecordReadError.fromReason("snapshot-unavailable", "record unavailable"))
-                  ),
-                })
-              )
-            )
-          )
-        )
-      )
-    )
-  );
+        expect(verdict.outcome).toBe("blocked");
+        if (verdict.outcome === "blocked") {
+          expect(verdict.reason).toBe("law-practice-candor-policy-unavailable");
+        }
+      })
+    );
+  });
 });

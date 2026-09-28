@@ -2552,6 +2552,7 @@
       "devDependencies": {
         "@beep/md": "workspace:^",
         "@beep/pglite": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",

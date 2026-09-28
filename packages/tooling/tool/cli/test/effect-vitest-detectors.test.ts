@@ -158,7 +158,7 @@ const cases: ReadonlyArray<{
   },
 ];
 
-layer(BunCrypto.layer)((it) => {
+layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
   it.effect.each(cases)("$ruleId positive AST fixture", ({ positive, ruleId }) =>
     Effect.gen(function* () {
       assertTrue(yield* hasRule(positive, ruleId));
@@ -612,6 +612,9 @@ layer(BunCrypto.layer)((it) => {
       for (const assertion of [
         'import { assertTrue as check } from "@effect/vitest/utils"; it("x", () => check(O.isSome(value)));',
         'import * as U from "@effect/vitest/utils"; it("x", () => U.assertFalse(X.isFailure(value)));',
+      ])
+        assertFalse(yield* hasRule(assertion, "EV006"));
+      for (const assertion of [
         'import { assert as check } from "@effect/vitest"; it("x", () => check.isTrue(R.isFailure(value)));',
         'import { ok as check } from "node:assert/strict"; it("x", () => check(O.isNone(value)));',
       ])
@@ -1537,7 +1540,9 @@ layer(BunCrypto.layer)((it) => {
           );
           deepStrictEqual(
             A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
-            [[primitive, mode]]
+            assertion === `${truth ? "assertTrue" : "assertFalse"}(${expression})` && primitive !== "utils.assertNone"
+              ? []
+              : [[primitive, mode]]
           );
           assertTrue(A.every(rows, (row) => row.evidence.includes(expression)));
           assertTrue(A.every(rows, (row) => row.replacement.sketch.includes(polarity)));
@@ -1970,7 +1975,7 @@ layer(BunCrypto.layer)((it) => {
   );
 });
 
-layer(BunCrypto.layer)((it) => {
+layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
   it.effect("does not infer tagged return values across a plain or incomplete boundary: (each)", () =>
     Effect.gen(function* () {
       for (const expression of [
@@ -2272,6 +2277,29 @@ layer(BunCrypto.layer)((it) => {
             (finding) => finding.ruleId === "EV001"
           )
         );
+      }
+    })
+  );
+});
+
+layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
+  it.effect("accepts the exact canonical Boolean helper while retaining stronger Option routes", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        'import { assertTrue } from "@effect/vitest/utils"; it("some", () => assertTrue(O.isSome(value)));',
+        'import { assertFalse as no } from "@effect/vitest/utils"; it("some", () => no(O.isNone(value), "present"));',
+        'import * as utils from "@effect/vitest/utils"; it("failure", () => utils.assertTrue(R.isFailure(value)));',
+        'import { assertFalse } from "@effect/vitest/utils"; it("exit", () => assertFalse(X.isSuccess(value)));',
+      ]) {
+        assertFalse(yield* hasRule(body, "EV006"), body);
+      }
+      for (const body of [
+        'import { assertTrue } from "@effect/vitest/utils"; it("none", () => assertTrue(O.isNone(value)));',
+        'import { assertFalse } from "@effect/vitest/utils"; it("none", () => assertFalse(O.isSome(value)));',
+        'it("legacy", () => expect(O.isSome(value)).toBe(true));',
+        'import { assert } from "@effect/vitest"; it("legacy", () => assert.isTrue(O.isSome(value)));',
+      ]) {
+        assertTrue(yield* hasRule(body, "EV006"), body);
       }
     })
   );

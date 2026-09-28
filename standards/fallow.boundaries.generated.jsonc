@@ -2282,6 +2282,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -2306,6 +2307,7 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-use-cases",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"

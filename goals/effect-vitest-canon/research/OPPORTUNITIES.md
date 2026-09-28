@@ -4151,3 +4151,95 @@ Repo Sanity on `d8a746e93c` rejected the Documents Server batch because
 committed-tree release contract. Added a package patch changeset and reran the
 check from the isolated publication tree. Keep this check in the final staged
 publication preflight, including test-runner dependency migrations.
+
+## 2026-09-28 — singleton frame reads cannot prove SQL ordering
+
+The Law Practice ordering regression stored one exercise per frame and did not
+assert correction order. Removing either frame-keyed ORDER BY independently
+still passed the original filtered native PGlite case. The repaired fixture
+adds two exercises and two corrections in one additional frame, inserting IDs
+301 before 201 while retaining forced sequential scans and every prior
+assertion. Status: repaired; the full four-case native suite passes and removing either
+ORDER BY now independently fails the strengthened case. Ordering tests should make heap and required order disagree within
+the exact scope being read, including each independently implemented query.
+
+## 2026-09-28 — a fixture-row property exercised only strings
+
+The Practice KG property titled schema-valid fixture rows generated S.String
+and checked isString. The original string domain and assertion remain as an
+explicit smoke case under that group; a separate property now generates actual
+FixtureSourceRow values and checks JSON codec equivalence. Both this group and
+the Legal Position tenant property route the existing ten-run floor through
+fcRuns. Status: repaired; positive property runs and all three inverted predicates
+pass their expected outcomes with seed replay and shrinking. Property names need a domain-and-predicate review, not only a native
+property-registration check.
+
+## 2026-09-28 — partial conformance setup leaked a native directory
+
+Forcing Practice KG bundle construction to fail after creating its fixture
+corpus left one owned temporary directory behind. The old manual Scope.make
+was saved only after construction completed, so afterAll could not close it
+on that failure path. The fixture now belongs to a public two-minute layer:
+scoped native resources are acquired under that owner, and its shared-context
+reference has a clearing finalizer. Status: repaired; the same forced failure leaves zero owned directories,
+and full MCP kit and Law Practice package verification pass.
+No user corpus or unrelated temporary resource was touched.
+
+The conformance helper previously registered only through global test methods,
+so enclosing a call in it.layer did not acquire the parent fixture. Its optional
+tester input now composes both HTTP and stdio arms through that owner; existing
+standalone hosts retain their default behavior. A shared-context reference is
+still needed because the harness accepts closed registration layers, and it is
+cleared by the public fixture finalizer.
+
+## 2026-09-28 — no-findings prose can become stale after remediation
+
+PR #1312 review identified three descriptions that still said rollback errors
+were ignored or race overlap was unwitnessed. The published tests had already
+repaired those subjects. Commit d8a746e93c updates the descriptions while keeping
+the opt-in external PostgreSQL and absent historical Node-baseline qualifications.
+Status: fixed, schema-validated, replied and resolved. Reconciliation should
+review adjacent no-findings prose as well as action rows and line anchors.
+
+## 2026-09-28 — deep property selection can exclude an explicitly named native suite
+
+The 400-run Law Practice command named three files but selected only the two
+property-bearing files under the shared deep-property filter. Its 27 passing
+cases did not include the native ordering suite. A separate ordinary run proves
+all four native PGlite cases, and isolated before/after ORDER BY controls each
+report one selected case. Status: proof scopes corrected; reports should carry
+selected file/case counts alongside requested paths.
+
+## 2026-09-28 — merged Refs assertion crossed the ratchet
+
+The local proof for #1312 stopped at one EV006 finding newly introduced by
+main #1311: `expect(O.isSome(report.coverage)).toBe(true)` in the Refs refresh
+regression. Replaced only its assertion wrapper with `assertTrue`, preserving
+the exact operand and polarity. Three Law Practice schema-first exceptions also
+needed line-only anchor updates after runner imports moved; their rule, reason
+and disposition are unchanged. Run the ratchet after a main merge even when
+the merge is conflict-free; do not rebaseline incoming findings.
+
+## 2026-09-28 — EV006 reported its own recommended assertion
+
+Direct `assertTrue(O.isSome(value))` remained an EV006 finding recommending
+`utils.assertTrue`. A focused regression fails before repair. The detector now
+recognizes an exact imported canonical helper matching its selected replacement,
+including aliases and namespace imports. It still reports legacy assertions and
+Option checks with a stronger `assertNone` replacement. This syntax-only repair
+avoids forcing users to reshape an already canonical assertion to evade a
+false positive. The shared primitive graph and original operands are unchanged.
+
+The CLI quick check initially failed with missing dependency declaration outputs
+(TS6305) and cascading Effect channel diagnostics. Building its dependencies
+restored a green quick check without changing those production modules.
+
+## 2026-09-28 — shared coverage module cache bypassed the SHACL mock
+
+The capped SHACL construction test passed alone with Node coverage but failed
+in the full package coverage selection: the mock recorded zero constructions
+instead of one. Coverage disables file isolation by default, allowing an earlier
+file to cache the validator before this test installs its schema-module mock.
+The package now explicitly retains file isolation, as the shared configuration
+requires for module-mocking packages. The original one-versus-three construction
+assertions, result contents and limit behavior remain intact.

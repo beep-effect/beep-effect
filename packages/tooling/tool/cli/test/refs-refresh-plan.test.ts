@@ -3,7 +3,7 @@ import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft";
 import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -337,7 +337,7 @@ describe("reference planning and refresh", () => {
         expect(seen.length).toBe(2);
         for (const report of status.members) {
           assertNone(report.detail);
-          expect(O.isSome(report.coverage)).toBe(true);
+          assertTrue(O.isSome(report.coverage));
         }
       })
     );

@@ -64,9 +64,11 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Equal, Layer } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -612,7 +614,7 @@ const readPractice = Effect.fnUntraced(function* () {
 // ---------------------------------------------------------------------------
 
 describe("FLINT competency queries — the in-scope subset this runtime answers", () => {
-  layer(RecordedPractice)((it) => {
+  it.layer(RecordedPractice, { timeout: "10 seconds" })((it) => {
     it.effect(
       "cq-frame-source — Given a frame in an interpretation, which source passages motivate the inclusion of this frame in the interpretation?",
       Effect.fnUntraced(function* () {
@@ -634,7 +636,10 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
           A.length(frame.slots) + A.length(frame.preconditions) + A.length(frame.creates) + A.length(frame.terminates)
         );
         expect(A.length(elementNorms)).toBe(7);
-        expect(A.every(elementNorms, (designation) => designation.length > 0)).toBe(true);
+        pipe(
+          A.every(elementNorms, (designation) => designation.length > 0),
+          assertTrue
+        );
         expect(
           O.getOrThrow(O.flatMap(A.head(frame.preconditions), (precondition) => precondition.source.fragment))
         ).toBe("upon written notice");
@@ -689,7 +694,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         expect(A.map(actors, (candidate) => candidate.label)).toEqual(["assignor"]);
         // A frame with no actor slot is not admitted at all, so this question
         // can never come back empty for a recorded frame.
-        expect(isActFrameFieldsSlots([])).toBe(false);
+        pipe(isActFrameFieldsSlots([]), assertFalse);
       })
     );
 
@@ -759,16 +764,22 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         // stored claim, which is what keeps the store from ever holding a duty
         // whose claim was superseded out from under it.
         const stored = HashSet.fromIterable(A.map(relators, (relation) => relation.positionKind));
-        expect(HashSet.has(stored, "claim")).toBe(true);
-        expect(HashSet.has(HashSet.fromIterable(HohfeldPositionKind.Options), "duty")).toBe(true);
-        expect(A.some(relators, (relation) => isAdvantagePositionKind(relation.positionKind))).toBe(true);
+        pipe(HashSet.has(stored, "claim"), assertTrue);
+        pipe(HashSet.has(HashSet.fromIterable(HohfeldPositionKind.Options), "duty"), assertTrue);
+        pipe(
+          A.some(relators, (relation) => isAdvantagePositionKind(relation.positionKind)),
+          assertTrue
+        );
 
         const duties = A.map(
           A.filter(relators, (relation) => relation.positionKind === "claim"),
           (relation) => policy.correlativeView(relation)
         );
         expect(A.length(duties)).toBe(3);
-        expect(A.every(duties, (view) => view.position.kind === "duty")).toBe(true);
+        pipe(
+          A.every(duties, (view) => view.position.kind === "duty"),
+          assertTrue
+        );
         expect(A.map(duties, (view) => view.bearer.name)).toEqual(["lessor", "lessor", "lessee"]);
       })
     );
@@ -809,9 +820,10 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         expect(power.positionKind).toBe("power");
         expect(policy.correlativeView(power).position.kind).toBe("liability");
         expect(policy.correlativeView(power).bearer.name).toBe("lessor");
-        expect(
-          Equal.equals(PotestativePositionKind.HashSet, HashSet.make("power", "liability", "immunity", "disability"))
-        ).toBe(true);
+        pipe(
+          Equal.equals(PotestativePositionKind.HashSet, HashSet.make("power", "liability", "immunity", "disability")),
+          assertTrue
+        );
       })
     );
   });
@@ -831,7 +843,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
  * absent here rather than guessed at.
  */
 describe("UFO-L power-subjection competency questions — expressed in this runtime's terms", () => {
-  layer(RecordedPractice)((it) => {
+  it.layer(RecordedPractice, { timeout: "10 seconds" })((it) => {
     it.effect(
       "CQ2 — which norm-prescribed roles does each recorded relation hold between?",
       Effect.fnUntraced(function* () {
@@ -855,7 +867,7 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
         // Stored kinds are advantage-side only; the readings derived from them
         // are what reach the burden side.
         const stored = HashSet.fromIterable(A.map(relators, (relation) => relation.positionKind));
-        expect(HashSet.isSubset(AdvantagePositionKind.HashSet)(stored)).toBe(true);
+        pipe(HashSet.isSubset(AdvantagePositionKind.HashSet)(stored), assertTrue);
 
         const reached = HashSet.fromIterable(
           A.flatMap(relators, (relation) => [
@@ -864,9 +876,9 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
             policy.oppositeView(relation).position.kind,
           ])
         );
-        expect(HashSet.has(reached, "duty")).toBe(true);
-        expect(HashSet.has(reached, "liability")).toBe(true);
-        expect(HashSet.has(reached, "noRight")).toBe(true);
+        pipe(HashSet.has(reached, "duty"), assertTrue);
+        pipe(HashSet.has(reached, "liability"), assertTrue);
+        pipe(HashSet.has(reached, "noRight"), assertTrue);
       })
     );
 
@@ -923,8 +935,8 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
         // starts another in the same step, and a single-valued field would make
         // the recorder throw half of that away.
         expect(HashSet.size(kinds)).toBe(2);
-        expect(HashSet.has(kinds, "create")).toBe(true);
-        expect(HashSet.has(kinds, "extinguish")).toBe(true);
+        pipe(HashSet.has(kinds, "create"), assertTrue);
+        pipe(HashSet.has(kinds, "extinguish"), assertTrue);
         expect(HashSet.size(byId(frames, GRANT_FRAME).derivationKind.kinds)).toBe(1);
       })
     );
@@ -969,7 +981,7 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
 
         // And the chain terminates: a norm-founded relation names no earlier
         // exercise, so following the lineage back always halts.
-        expect(O.isNone(byId(relators, ORIGINAL_CLAIM).grounding.foundingExercise)).toBe(true);
+        assertNone(byId(relators, ORIGINAL_CLAIM).grounding.foundingExercise);
       })
     );
 
@@ -983,8 +995,9 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
         expect(assigned.content.polarity).toBe("omission");
         // The cross-party reading leaves content exactly as recorded; only the
         // same-party negation moves polarity, and it moves the kind with it.
-        expect(legalActContentEquivalence(policy.correlativeView(assigned).position.content, assigned.content)).toBe(
-          true
+        pipe(
+          legalActContentEquivalence(policy.correlativeView(assigned).position.content, assigned.content),
+          assertTrue
         );
         expect(policy.oppositeView(assigned).position.content.polarity).toBe("act");
       })
@@ -1028,7 +1041,10 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
     // the donor's in-scope executable set and the exclusion is structural
     // rather than a choice made here.
     const checkedIn = HashSet.fromIterable(FLINT_CHECKED_IN_QUERIES);
-    expect(A.every(flatten(FLINT_OUT_OF_SCOPE), (query) => !HashSet.has(checkedIn, query))).toBe(true);
+    pipe(
+      A.every(flatten(FLINT_OUT_OF_SCOPE), (query) => !HashSet.has(checkedIn, query)),
+      assertTrue
+    );
   });
 
   it("the twenty-two checked-in queries split cleanly into the ported subset and the surfaces this rung did not take", () => {
@@ -1039,10 +1055,10 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
     expect(HashSet.size(ported)).toBe(11);
     expect(HashSet.size(notPorted)).toBe(11);
     expect(HashSet.size(HashSet.intersection(ported, notPorted))).toBe(0);
-    expect(Equal.equals(HashSet.union(ported, notPorted), HashSet.fromIterable(FLINT_CHECKED_IN_QUERIES))).toBe(true);
+    pipe(Equal.equals(HashSet.union(ported, notPorted), HashSet.fromIterable(FLINT_CHECKED_IN_QUERIES)), assertTrue);
   });
 
-  layer(RecordedPractice)((it) => {
+  it.layer(RecordedPractice, { timeout: "10 seconds" })((it) => {
     it.effect(
       "the position domain still models the orbits the donor's Hohfeldian exclusions name — one donor narrows where the other widens",
       Effect.fnUntraced(function* () {
@@ -1056,7 +1072,7 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
         const eight = HashSet.fromIterable(HohfeldPositionKind.Options);
         expect(HashSet.size(eight)).toBe(8);
         for (const kind of ["immunity", "disability", "privilege", "noRight"]) {
-          expect(HashSet.has(eight, kind)).toBe(true);
+          pipe(HashSet.has(eight, kind), assertTrue);
         }
 
         // And they are reachable from stored records, not merely declarable.
@@ -1077,9 +1093,12 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
         // The donor models positive actions only and says so. Its gap is not
         // inherited: polarity is a required field of act content, and the
         // opposite derivation is unsound without it.
-        expect(isLegalActPolarity("omission")).toBe(true);
+        pipe(isLegalActPolarity("omission"), assertTrue);
         expect(byId(relators, ORIGINAL_CLAIM).content.polarity).toBe("omission");
-        expect(A.some(relators, (relation) => relation.content.polarity === "act")).toBe(true);
+        pipe(
+          A.some(relators, (relation) => relation.content.polarity === "act"),
+          assertTrue
+        );
       })
     );
 
@@ -1108,7 +1127,7 @@ describe("FLINT's out-of-scope competency questions are excluded from porting", 
 // ---------------------------------------------------------------------------
 
 describe("competency questions that ask for a legal judgment are answered with the recorded determination and its attribution", () => {
-  layer(RecordedPractice)((it) => {
+  it.layer(RecordedPractice, { timeout: "10 seconds" })((it) => {
     it.effect(
       "an attempt determined to lack power stays on the record and grounds no position",
       Effect.fnUntraced(function* () {
@@ -1117,7 +1136,10 @@ describe("competency questions that ask for a legal judgment are answered with t
 
         expect(O.getOrThrow(voided.result.constitution).outcome).toBe("not-constituted");
         expect(voided.result.disposition.disposition).toBe("void");
-        expect(A.every(relators, (relation) => relation.grounding.producingExercise !== VOID_EXERCISE)).toBe(true);
+        pipe(
+          A.every(relators, (relation) => relation.grounding.producingExercise !== VOID_EXERCISE),
+          assertTrue
+        );
 
         // An act may be within power and still breach a duty, so the axes are
         // never merged and neither is inferred from the other. The one donor
@@ -1158,17 +1180,15 @@ describe("competency questions that ask for a legal judgment are answered with t
         expect(HashSet.size(screened)).toBe(1);
 
         const recorded = byId(candidates, SCREENED_CANDIDATE);
-        expect(Equal.equals(recorded.candidate.relators, HashSet.make(PRIVILEGE_TO_ENTER, CLAIM_TO_REFRAIN))).toBe(
-          true
-        );
-        expect(Equal.equals(HashSet.make(recorded.candidate), screened)).toBe(true);
+        pipe(Equal.equals(recorded.candidate.relators, HashSet.make(PRIVILEGE_TO_ENTER, CLAIM_TO_REFRAIN)), assertTrue);
+        pipe(Equal.equals(HashSet.make(recorded.candidate), screened), assertTrue);
 
         // The basis is the argument, not the answer: no ordering, no score, and
         // no family until an attorney assigns one.
         const basis = O.getOrThrow(recorded.priorityBasis);
         expect(O.getOrThrow(basis.sourcePrecedence)).toBe("the lease clause over the parties' course of dealing");
-        expect(O.isNone(basis.specificity)).toBe(true);
-        expect(O.isNone(recorded.verdictFamily)).toBe(true);
+        assertNone(basis.specificity);
+        assertNone(recorded.verdictFamily);
       })
     );
 
@@ -1181,7 +1201,7 @@ describe("competency questions that ask for a legal judgment are answered with t
         const first = byId(corrections, FIRST_CORRECTION);
         const second = byId(corrections, SECOND_CORRECTION);
 
-        expect(O.isNone(first.supersedes)).toBe(true);
+        assertNone(first.supersedes);
         expect(O.getOrThrow(second.supersedes)).toBe(FIRST_CORRECTION);
         expect([first.stage, second.stage]).toEqual(["interpretation", "qualification"]);
         expect([first.reviewer, second.reviewer]).toEqual([paralegal, attorney]);

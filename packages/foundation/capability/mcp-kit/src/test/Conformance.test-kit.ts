@@ -19,7 +19,7 @@
  * @since 0.0.0
  */
 
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, it as defaultIt, describe } from "@effect/vitest";
 import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Queue, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
@@ -49,6 +49,7 @@ import {
   withRequestMetadata,
 } from "../client.ts";
 import { MCP_PROTOCOL_VERSION, statelessMcpProtocols } from "../Version.ts";
+import type { Vitest } from "@effect/vitest";
 import type * as Scope from "effect/Scope";
 import type { McpClientConnection, McpHttpExchange } from "../client.ts";
 
@@ -72,6 +73,7 @@ export interface ConformanceHost<E> {
       }
     | undefined;
   readonly registrations: Layer.Layer<never, E>;
+  readonly tester?: Vitest.MethodsNonLive | undefined;
   readonly tool: {
     readonly name: string;
     readonly arguments: Readonly<Record<string, unknown>>;
@@ -315,12 +317,33 @@ const legacyInitialize = (id: number) =>
 /**
  * Registers the `conformance 2026-07-28` suite for a host.
  *
+ * **Details**
+ * Pass the enclosing public layer's tester to make both HTTP and stdio arms
+ * acquire that fixture before using its registrations. Omitting the tester
+ * retains standalone registration through the default Effect Vitest methods.
+ *
+ * **Example** (Register under a public fixture scope)
+ * ```ts
+ * import { conformance2026, type ConformanceHost } from "@beep/mcp-kit/test/Conformance"
+ * import { it } from "@effect/vitest"
+ * import { Effect, Layer } from "effect"
+ *
+ * const registerScopedHost = (host: ConformanceHost<never>) => {
+ *   const fixture = Layer.effectDiscard(
+ *     Effect.addFinalizer(() => Effect.log("Conformance fixture closed")))
+ *   it.layer(fixture)((scopedIt) => conformance2026({ ...host, tester: scopedIt }))
+ * }
+ * ```
+ *
+ * @param host - Host registrations and the protocol probes to exercise.
+ * @category testing
  * @internal
  * @since 0.0.0
  */
 export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
+  const it = O.getOrElse(O.fromUndefinedOr(host.tester), () => defaultIt);
   describe(`conformance 2026-07-28: ${host.name}`, () => {
-    layer(layerConformanceHttp(host))("over streamable HTTP", (it) => {
+    it.layer(layerConformanceHttp(host))("over streamable HTTP", (it) => {
       it.effect("discovers the server without initialize or a session", () =>
         Effect.gen(function* () {
           const { discovery } = yield* connectHttp();

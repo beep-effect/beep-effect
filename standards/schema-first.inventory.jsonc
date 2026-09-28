@@ -587,7 +587,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 40,
+      "line": 41,
       "owner": "@beep/law-practice-server",
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
@@ -597,7 +597,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 553,
+      "line": 555,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
@@ -607,7 +607,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 59,
+      "line": 60,
       "owner": "@beep/law-practice-server",
       "reason": "PGlite-backed drizzle repository proof decodes fixed fixture rows through the real migration bundle to prove read-back with database-assigned ids, tenant isolation, id-ascending order, and typed driver failures; schema-derived arbitrary coverage for these entities lives with the law-practice domain model tests (same posture as the candor sibling and the migration proof entries above)."
     },
