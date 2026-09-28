@@ -4325,3 +4325,13 @@ The Node integration command fails four suites importing PGlite initdb Wasm with
 it; the Bun integration run passes 30 tests. Fix Node/Vite asset loading and rerun
 the original suite; do not replace the native PGlite subject or count collection
 of opt-in sidecar/provider files as execution.
+
+### Node/PGlite asset-loading repair
+
+The Desktop integration config now maps only PGlite dist Wasm/data/archive
+imports to Vite asset URLs. The sidecar uses Bun file import attributes, which
+Node otherwise interprets as executable Wasm modules. Inlining the dependency
+alone did not fix the error; the explicit asset URL alias did, and the unused
+inline setting was removed. The same enabled integration selection now passes
+30 tests under both Node and Bun, with no test-body or production-source change.
+Keep runtime-specific file-import handling at this test/build boundary.

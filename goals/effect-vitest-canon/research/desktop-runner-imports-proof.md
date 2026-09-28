@@ -18,8 +18,8 @@ globals were not enabled and mock behavior was not rewritten.
 The Bun integration run passes 30 tests. Node runs 19 integration tests but four
 suites fail during import with `Cannot find package 'env'` from PGlite's initdb
 Wasm module. The pre-migration Pglite equivalence file reproduces this Node loader
-failure, so it is inherited rather than caused by the runner import. This remains
-an open Node integration compatibility task. Opt-in sidecar/provider scenarios
+failure, so it is inherited rather than caused by the runner import. A subsequent integration-config asset URL alias fixes this loader boundary;
+the original Node and Bun integration selections now both pass 30 tests. Opt-in sidecar/provider scenarios
 are not claimed as executed merely because their files were collected.
 
 The Desktop lifetime, property, assertion and observability inventory remains
