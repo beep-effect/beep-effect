@@ -2260,3 +2260,21 @@ scopes as observations. The ledger still rejects exact failed facts with
 [The bounded review](research/current-failed-lane-digest-review.json) records
 fresh-summary, filesystem, task-selection and ledger inputs; it does not
 replace full proof or establish real signed-remote qualification.
+
+### Shadow comparison recording and enforcement sample
+
+All 29 existing proof-shadow tests pass. The recorder looks up prior facts
+before appending its observation batch, and counts hit-versus-failed rows as
+disagreements. The enforcement sample is restricted by stage/profile and the
+optional timestamp bound, while headline totals retain all rows. The
+[review](research/current-proof-shadow-review.json) preserves the distinction
+between this shadow report, hosted proof, and signed task qualification.
+
+### Clone ledger location and append boundary
+
+The real linked-worktree resolver matches Git's common-directory ownership
+and ledger path. Source review records malformed/incomplete row handling,
+exclusive creation and checked hard-link append, with no cross-process lock.
+The prior focused ledger test source still matches its passing receipt.
+[The storage review](research/current-proof-ledger-storage-review.json) keeps
+concurrent-write, incomplete-tail recovery and crash-durability limits open.

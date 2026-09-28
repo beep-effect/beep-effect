@@ -392,7 +392,9 @@
     "research/current-package-turbo-review.json",
     "research/current-source-migration-review.json",
     "research/current-vitest-config-review.json",
-    "research/current-failed-lane-digest-review.json"
+    "research/current-failed-lane-digest-review.json",
+    "research/current-proof-shadow-review.json",
+    "research/current-proof-ledger-storage-review.json"
   ],
   "agentLaunchers": [
     {
