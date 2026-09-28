@@ -416,7 +416,8 @@
     "research/current-stable-invalidation.json",
     "research/current-canary-invalidation.json",
     "research/current-cross-root-preflight.json",
-    "research/current-runtime-matrix-attachment.json"
+    "research/current-runtime-matrix-attachment.json",
+    "research/current-security-remediation.json"
   ],
   "agentLaunchers": [
     {

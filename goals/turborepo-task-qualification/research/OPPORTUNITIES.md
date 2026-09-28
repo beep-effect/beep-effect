@@ -2299,3 +2299,13 @@ base in this branch. The failure occurred during module loading, not a story
 assertion; its cause is not yet established. Coverage was skipped after the
 red. The already-running newer proof will supply the next observation; no
 production repair or baseline change is justified from this failure alone.
+
+### Newly reported fast-uri vulnerability
+
+Hosted Security failed on inherited `fast-uri@3.1.6` with
+`GHSA-58mr-gqgx-xq4g`. The existing override floor is raised to `^3.1.7`;
+Bun resolves patched `3.1.8`. A direct OSV package query reports no findings.
+The generated lockfile also deduplicates `ws` to its already-present `8.22.0`
+version. Before installing the changed dependency view, this task gracefully
+interrupted its own running and queued older proofs; other checkouts and
+frozen experiments were preserved. Full and hosted checks must run again.
