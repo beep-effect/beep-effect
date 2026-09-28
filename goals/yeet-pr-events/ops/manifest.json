@@ -3,13 +3,13 @@
   "initiative": {
     "id": "yeet-pr-events",
     "title": "Yeet PR Events",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-25",
-    "updated": "2026-09-25",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-pr-events",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make `yeet monitor --until-ready` the durable producer of every PR event that matters (required reds, base conflicts, review threads, human comments) as attributed, per-head-coalesced inbox rows; deliver them to the owning session whether it is blocked, idle, or dead; and measure the push -> row -> ack timeline.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -91,43 +91,45 @@
     {
       "id": "W7",
       "name": "Socket probe gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W8",
       "name": "Session-owned inbox tail",
-      "status": "pending"
+      "status": "complete",
+      "reason": "Closed as cut, not built. W7 probe failed for every detached sender (setsid -f, plain background child posting after the invocation returned, systemd-run unit): own-child delivery is scoped to the in-flight hook/tool child tree, so a SessionStart-spawned tail would be held and expire. Record: explorations/pr-event-awareness/research/2026-09-28-W7-socket-probe.md. Slice 2 closed as cut per SPEC; no rejected D15 option revived. The manifest phase domain has no `skipped`, so the cut is recorded as `complete` with this reason."
     },
     {
       "id": "W9",
       "name": "pr-wave notifier and liveness rule",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "W10",
       "name": "Snapshot collapse follow-up",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P11",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P12",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P13",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
     "bunx --bun vitest run packages/tooling/tool/cli/test/yeet-status-triage.test.ts packages/tooling/tool/cli/test/proof-job.test.ts",
     "bun run beep quality package-verify @beep/repo-cli",
     "bash -n .claude/hooks/yeet-inbox.sh",
+    "bash -n .claude/hooks/yeet-pr-wave-notifier.sh",
     "test \"$(wc -m < goals/yeet-pr-events/GOAL.md)\" -le 4000",
     "jq . goals/yeet-pr-events/ops/manifest.json",
     "bun run beep goals doctor",
