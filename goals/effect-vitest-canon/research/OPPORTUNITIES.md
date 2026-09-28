@@ -5176,3 +5176,21 @@ before publication. This changes batching, not acceptance requirements or the
 full Yeet/hosted gates. Receipts: the Option comparison and inline Exit assertion
 proof documents and their private package-verify logs. Do not interrupt or edit
 under a full proof that is already running.
+
+### EV006 must inspect canonical absence through pipe syntax
+
+The remaining-assertion audit found that `assertTrue(O.isNone(value))` routes
+to `assertNone`, while `value.pipe(O.isNone, assertTrue)` escapes EV006. The
+earlier 215-assertion absence migration used that pipe form, so its reported
+ratchet reduction did not establish canonical absence assertions. Add paired
+direct/method/functional pipe regression cases, preserving import provenance
+and predicate polarity, then correct the affected assertions and their proof
+records. Keep already canonical presence and Result/Exit branch predicates
+valid; do not invent expected payloads. Receipt: `detectBooleanDataShape` in
+`EffectVitestDetectors.ts` and `cli-option-absence-proof.md`.
+
+The corrected root scan also exposes 50 functional-pipe absence assertions
+in eight `@beep/schema` test files. They require the same canonical repair;
+the baseline must not grow to absorb them. The first corrected scan reports
+3,816 findings with 50 introduced. CLI's 216 repaired pipe assertions restore
+previously claimed migration credit rather than add a fresh reduction.

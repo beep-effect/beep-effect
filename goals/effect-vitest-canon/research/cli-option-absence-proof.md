@@ -1,5 +1,11 @@
 # CLI Option absence predicate migration
 
+> Correction: the EV006 reduction below was caused by a detector gap for
+> piped boolean assertions. It does not prove canonical absence migration.
+> A follow-up now tests method and functional pipes, repairs detection, and
+> replaces those predicates with `assertNone`. The historical test parity
+> remains valid, but canonicalization credit requires the corrective proof.
+
 ## Scope and preservation
 
 This batch selects 26 files from the existing open CLI EV006 inventory. It
