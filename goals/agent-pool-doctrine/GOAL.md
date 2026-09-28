@@ -5,7 +5,7 @@ running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
 Outcome: `AGENTS.md` and `docs/runbooks/agent-pools.md` state the pool order
-(Codex Astra above 5% → Cursor agent, fail-open → hold), the bucket-aware seat
+(Opus 5.5 sub-agents → Cursor agent when authorized → hold; Codex opt-in), the bucket-aware seat
 map, and the structural guards; `.cursor/` carries the deny list and the pulse
 hook adapter; `@beep/repo-ai-metrics` decodes `cursor-cli` rows; a real
 headless `cursor-agent -p` run leaves pulse rows in the evidence ledger.

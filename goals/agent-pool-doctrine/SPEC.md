@@ -46,6 +46,9 @@ copied).
   Never `-fast`, `auto`, `kimi-k3-*`, `claude-fable-5-1-*` on Cursor.
 - Floors (D7, D8): Codex union-of-accounts > 5%; Cursor 5% per target bucket as a human dashboard
   check; both dry → hold and notify; Fable children never a fallback; grok-4.6 lanes research-only.
+  Amended 2026-09-24 (operator directive, `history/2026-09-27-opus-default.md`): pool 1 is Opus 5.5
+  (`claude-opus-5-5`) for every sub-agent; Cursor runs only when the operator authorizes it; Codex
+  is opt-in only, its floor and pins kept for that case.
 - Hooks (D9, D13): pulse rows must flow for preToolUse, postToolUse, postToolUseFailure, sessionEnd;
   `stop`/`beforeSubmitPrompt` are registered but recorded as headless GAPs; Notification is a GAP.
 - Permission hooks must answer `{"permission":"allow"}` (empty stdout on a permission event blocks), and

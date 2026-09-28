@@ -68,7 +68,7 @@ Your FINAL message must be exactly:
   "schemaVersion": "qa-inventory/v1",
   "round": {{ROUND}},
   "sessionRef": "session.json",
-  "judge": { "model": "gpt-6-astra", "effort": "medium" },
+  "judge": { "model": "claude-opus-5-5", "effort": "inherited" },
   "findings": [
     {
       "id": "R{{ROUND}}-01",            // R<round>-<nn>, zero-padded, ordered by severity

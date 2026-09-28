@@ -932,7 +932,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
     `qa judge-pack: round ${options.round} -> ${judgeDir}`,
     `  files: ${A.length(judgeManifest.files)} (${judgeManifest.totalBytes} bytes)`,
     `  dropped: ${A.length(judgeManifest.dropped)}`,
-    `  next: node "\${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-6-astra --effort medium --prompt-file ${path.join(judgeDir, "prompt.md")}`,
+    `  next: launch the vision judge as an Agent-tool subagent (judge model: "claude-opus-5-5") that reads ${path.join(judgeDir, "prompt.md")}; save its final message to ${path.join(judgeDir, "stdout.txt")}`,
   ]);
 
   return judgeManifest;

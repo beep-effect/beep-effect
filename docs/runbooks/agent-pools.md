@@ -8,22 +8,37 @@ signatures. Goal B (`beep agent-pool pick`) automates the picker; until then, ch
 
 ## Pool order
 
-Three steps, evaluated in order on every admitted lane (D2, D7, D8):
+Three steps, evaluated in order on every admitted lane (D2, D7, D8, amended 2026-09-24):
 
-1. **Codex pool.** When any admitted Codex account has more than 5% weekly remaining, launch
-   `codex exec` on `gpt-6-astra` with `medium` reasoning (D3, D8). The union of accounts
-   includes the `codex` CLI login and OAuth credentials admitted to CLIProxyAPI.
-2. **Cursor pool (fail-open).** When Codex is at or below the floor, launch `cursor-agent -p`
-   on the seat for the lane tier (D6, D17). Cursor counts as available until a lane proves
-   otherwise (see Meters).
-3. **Hold and notify.** When both pools are below floor, queue the lane and notify the
-   operator. Fable children are never the fallback pool (D7). `grok-4.6` proxy lanes
-   (CLIProxyAPI, xAI) stay reserved for research-class work (D7) — not to be confused with
-   `cursor-grok-4.6-xhigh`, the Cursor volume fallback seat (D16).
+1. **Opus pool.** Every sub-agent, delegation, and Workflow child runs on Claude Opus 5.5,
+   pinned by the explicit id `claude-opus-5-5` (the `opus` alias resolved to `claude-opus-5`
+   before 2026-09-25 and is not a pin). Research, review, implementation, exploration,
+   distillation, and QA judging all route here. The pool is the orchestrating session's own
+   Anthropic account; a rate-limit error is the floor signal (see Meters).
+2. **Cursor pool (operator-authorized).** When the operator authorizes Cursor volume for a
+   lane, launch `cursor-agent -p` on the seat for the lane tier (D6, D17). Cursor counts as
+   available until a lane proves otherwise (see Meters). Do not spin up Cursor lanes on your
+   own initiative.
+3. **Hold and notify.** When Opus is rate limited and no Cursor lane was authorized, queue
+   the lane and notify the operator. Fable children are never the fallback pool (D7).
+   `grok-4.6` proxy lanes (CLIProxyAPI, xAI) stay reserved for research-class work (D7) — not
+   to be confused with `cursor-grok-4.6-xhigh`, the Cursor volume fallback seat (D16).
+
+**Codex is opt-in only.** `codex exec`, `/codex:*`, the Codex companion, and `gpt-6-astra`
+proxy children run only when the operator names Codex for a task; the codex-security scan is
+the one tool that is Codex by nature. The meter and recipe below stay for that case.
 
 ## Meters
 
-### Codex
+### Opus
+
+There is no scraper and no dashboard API for the Anthropic pool; the signal is the request
+itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
+account's rate limit") marks the Opus pool below floor for the session: finish what is already
+running, then hold and notify (step 3) unless the operator has authorized a Cursor lane.
+`claude` shows the live windows with `/usage`.
+
+### Codex (opt-in lanes)
 
 The Codex app-server protocol exposes `account/rateLimits/read` and
 `account/rateLimits/updated` (confirmed from `codex app-server generate-json-schema`,
@@ -307,9 +322,36 @@ Artifacts: `explorations/cursor-agent-pool/ops/hooks-smoke/`.
 `--force` is required with `--sandbox enabled` or non-sandboxable commands are silently denied
 (https://cursor.com/docs/cli/headless).
 
-## Codex lane recipe
+## Opus lane recipe
 
-When Codex is above the 5% floor, launch the existing volume lane unchanged (D2):
+Every delegation carries the explicit id. Native subagent through the Agent tool:
+
+```text
+Agent({ subagent_type: "general-purpose", model: "claude-opus-5-5", prompt: "<bounded task>" })
+```
+
+Workflow child:
+
+```js
+await agent("<bounded task>", { model: "claude-opus-5-5", phase: "Implement" })
+```
+
+Bounded scope, files written early and refined in place, and the orchestrator stages by name —
+the same prompt contract as the Cursor lane. Continue related follow-ups on the same subagent
+(SendMessage) instead of spawning fresh ones.
+
+**Proxy sessions.** `claudex`, `claudeg`, and `claudep` children use the same id, but CLIProxyAPI
+routes only the Claude ids its registry knows: on 2026-09-27 `GET /v1/models` listed
+`claude-opus-5` and not `claude-opus-5-5`, and a `claude-opus-5-5` request returned
+`unknown provider for model`. Until the vendored registry (`internal/registry/models/models.json`
+in the workstation CLIProxyAPI build) carries the id, run Opus 5.5 children from a direct
+`claude` session; `beep models check` reports the `child.heavy` × `proxy-workflow` binding as
+`unknown-model` while the gap stands. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers.
+
+## Codex lane recipe (opt-in)
+
+Only when the operator names Codex for the task (see Pool order), launch the volume lane
+unchanged (D2):
 
 ```sh
 codex exec --model gpt-6-astra -c 'model_reasoning_effort="medium"' \
@@ -319,9 +361,9 @@ codex exec --model gpt-6-astra -c 'model_reasoning_effort="medium"' \
 Run it from the lane's worktree root. Working-directory, sandbox, `--add-dir`, and commit-capable
 flags follow the operator's Codex rules; this runbook does not restate them.
 
-Pin model and reasoning effort per `AGENTS.md` "Codex (pool 1)". Native subagents, the Codex
-plugin/companion, and proxy Workflow children use the same pins. Do not set
-`CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers.
+Pin model and reasoning effort per `AGENTS.md` "Codex (opt-in only)". The Codex plugin/companion
+(`--model gpt-6-astra --effort medium`) and proxy Workflow children (`gpt-6-astra(medium)`) use
+the same pins.
 
 ## Failure signatures and remedies
 

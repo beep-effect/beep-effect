@@ -4,8 +4,8 @@ description: >
   Run the browser QA loop against a UI change: a playwright capture harness
   drives real-input scenarios while `bun run beep qa record` captures video and
   a witness event log, `beep qa extract` pulls per-gesture frame strips, GIFs,
-  and contact sheets, a codex vision task judges the evidence into a
-  schema-validated inventory, Fable fixes the findings, and the loop repeats
+  and contact sheets, an Opus 5.5 vision-judge agent judges the evidence into
+  a schema-validated inventory, Fable fixes the findings, and the loop repeats
   until zero required findings. Use for any milestone that changes pointer
   gestures, layout, animation, or user-facing UI — jsdom green is not
   click-works green, and a post-gesture screenshot is not a mid-gesture proof.
@@ -62,9 +62,11 @@ screenshots-only loop.
    Check `report.md` for clock-sync confidence and budget warnings.
 3. **Judge** — `bun run beep qa judge-pack --round N` builds `judge/`
    (timeline, file manifest with byte sizes, rendered prompt from
-   `resources/judge-prompt.md`). Launch the vision judge:
-   `node "${CLAUDE_PLUGIN_ROOT}/scripts/codex-companion.mjs" task --model gpt-6-astra --effort medium --prompt-file <round>/judge/prompt.md > <round>/judge/stdout.txt`
-   (read-only sandbox — no `--write`). Then
+   `resources/judge-prompt.md`). Launch the vision judge as an Agent-tool
+   subagent pinned to `model: "claude-opus-5-5"` (never the `opus` alias):
+   it reads `<round>/judge/prompt.md` and the evidence files that prompt
+   names, edits nothing, and its final message is the verdict. Save that final
+   message verbatim to `<round>/judge/stdout.txt`. Then
    `bun run beep qa judge-ingest --round N --from <round>/judge/stdout.txt`
    decodes the JSON verdict, cross-checks every evidence path and event ref,
    and writes `inventory.json` + renders `inventory.md`. The exit gate is

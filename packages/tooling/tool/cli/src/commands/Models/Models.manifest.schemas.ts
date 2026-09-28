@@ -38,6 +38,7 @@ const RoutingRoleKit = LiteralKit([
   "orchestrator",
   "codex.heavy",
   "codex.plan",
+  "child.heavy",
   "child.lightweight",
   "research.web",
   "cursor.volume",
