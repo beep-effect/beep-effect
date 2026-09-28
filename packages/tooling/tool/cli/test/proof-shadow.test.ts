@@ -1,4 +1,13 @@
-import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality";
+import { QualityTaskFailed, QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality";
+import {
+  closeTurboLaneLedger,
+  QualityTaskStep,
+  recordTurboLaneLedgerRowForTesting,
+  resolveLaneInputDigestForTesting,
+  TURBO_LANE_LEDGER_ENV,
+  TurboRunSummary,
+  TurboSummaryTask,
+} from "@beep/repo-cli/test/Quality";
 import {
   buildProofShadowReport,
   changedPackagesForAttempt,
@@ -6,6 +15,9 @@ import {
   ProofChangedPackagesKnown,
   ProofChangedPackagesUnavailable,
   ProofLedger,
+  ProofLedgerShadowRow,
+  ProofReuseHit,
+  ProofReuseMiss,
   ProofShadowAttemptFacts,
   ProofShadowEnforcementBar,
   ProofShadowReportInput,
@@ -33,9 +45,11 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { DateTime, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -548,6 +562,91 @@ describe("proof shadow mode", () => {
     ).toBe(true);
   });
 
+  // TTC ruling 80: the flip condition counts only rows recorded after ruling 72 went live, so
+  // `proof-report --since` bounds the bar sample while the headline counts keep every row.
+  it("bounds the enforcement sample to rows recorded at or after since", () => {
+    const shadowRow = (
+      attemptId: string,
+      branch: string,
+      recordedAt: string,
+      decision: ProofLedgerShadowRow["decision"],
+      observed: ProofLedgerShadowRow["observed"]
+    ): ProofLedgerShadowRow =>
+      ProofLedgerShadowRow.make({
+        schemaVersion: "proof-fact/v1",
+        attemptId,
+        laneId: "quality:check",
+        branch,
+        stage: "pre-push",
+        envProfile: "local",
+        decision,
+        observed,
+        durationMs: 1_000,
+        recordedAt,
+      });
+    const hit = ProofReuseHit.make({ key: "k", factRecordedAt: "2026-09-27T00:00:00.000Z" });
+    const rows = [
+      // Before the bound: a disagreement and two branches that must not count toward the bar.
+      shadowRow("before-1", "feat/old-a", "2026-09-27T23:59:59.999Z", hit, "failed"),
+      shadowRow("before-2", "feat/old-b", "2026-09-27T12:00:00.000Z", hit, "passed"),
+      // At and after the bound.
+      shadowRow("after-1", "feat/new-a", "2026-09-28T00:00:00.000Z", hit, "passed"),
+      shadowRow(
+        "after-2",
+        "feat/new-b",
+        "2026-09-28T09:30:00.000Z",
+        ProofReuseMiss.make({ key: "k2", reason: "no-fact" }),
+        "passed"
+      ),
+    ];
+    const bar = ProofShadowEnforcementBar.make({ attempts: 2, branches: 2, disagreements: 0 });
+    const since = DateTime.makeUnsafe("2026-09-28T00:00:00.000Z");
+
+    const unbounded = buildProofShadowReport(ProofShadowReportInput.make({ ...emptyInput(bar), rows }));
+    expect(unbounded).toMatchObject({ barAttempts: 4, barBranches: 4, barDisagreements: 1, enforcementReady: false });
+    assertNone(unbounded.since);
+    expect(Str.includes("enforcement sample since")(renderProofShadowReport(unbounded))).toBe(false);
+
+    const bounded = buildProofShadowReport(
+      ProofShadowReportInput.make({ ...emptyInput(bar), rows, since: O.some(since) })
+    );
+    // Headline counts still fold every row; only the bar fields are bounded.
+    expect(bounded).toMatchObject({
+      shadowRows: 4,
+      attempts: 4,
+      branches: 4,
+      wouldReuse: 3,
+      barAttempts: 2,
+      barBranches: 2,
+      barDisagreements: 0,
+      enforcementReady: true,
+    });
+    expect(A.length(bounded.disagreements)).toBe(1);
+    assertSome(O.map(bounded.since, DateTime.formatIso), "2026-09-28T00:00:00.000Z");
+    const text = renderProofShadowReport(bounded);
+    expect(
+      Str.includes(
+        "enforcement sample since: 2026-09-28T00:00:00.000Z (rows recorded earlier do not count toward the bar)"
+      )(text)
+    ).toBe(true);
+    expect(Str.includes("): ready — attempts 2/2, branches 2/2, disagreements 0/0")(text)).toBe(true);
+  });
+
+  it.effect(
+    "echoes the since bound in JSON and omits it when absent",
+    Effect.fnUntraced(function* () {
+      const since = DateTime.makeUnsafe("2026-09-28T00:00:00.000Z");
+      const without = yield* ProofShadowReportJson.encode(buildProofShadowReport(emptyInput()));
+      expect(Str.includes('"since"')(without)).toBe(false);
+      const withBound = yield* ProofShadowReportJson.encode(
+        buildProofShadowReport(ProofShadowReportInput.make({ ...emptyInput(), since: O.some(since) }))
+      );
+      expect(Str.includes('"since":"2026-09-28T00:00:00.000Z"')(withBound)).toBe(true);
+      const decoded = yield* ProofShadowReportJson.decode(withBound);
+      assertSome(O.map(decoded.since, DateTime.formatIso), "2026-09-28T00:00:00.000Z");
+    })
+  );
+
   it.live("never lets merged-preview rows satisfy the pre-push bar", () =>
     inTempCheckout((root) =>
       Effect.gen(function* () {
@@ -629,6 +728,176 @@ describe("proof shadow mode", () => {
         expect(decoded).toMatchObject({ shadowRows: 1, attempts: 1, branches: 1, enforcementReady: false });
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, TestConsole.layer)))
+  );
+
+  // TTC ruling 72: a red run records its input digest as an observation, through the same
+  // wrapper-ledger path a pass takes, so a failed lane can be decided against a passed fact.
+  it.layer(PlatformLayer, { timeout: "30 seconds" })("red runs resolved through the production path", (it) => {
+    const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
+
+    // One wrapper lane attempt the way `runQualityTaskStreamingLaneGroup` runs it: the child
+    // (`bun run beep ci lane check`) runs `turbo run check --summarize`, declares that step's
+    // digest to the ledger the parent named, closes it, and the parent resolves the lane.
+    const wrapperLaneRun = Effect.fn("ProofShadowTest.wrapperLaneRun")(function* (
+      root: string,
+      startedAtIso: string,
+      exitCode: number
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const runs = path.join(root, ".turbo", "runs");
+      yield* fs.makeDirectory(runs, { recursive: true });
+      const writtenAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso)) + 1_000;
+      const summaryPath = path.join(runs, `${startedAtIso}.json`);
+      const summary = TurboRunSummary.make({
+        id: `run-${exitCode}`,
+        execution: { startTime: writtenAtMillis, endTime: writtenAtMillis + 10, exitCode },
+        tasks: [
+          TurboSummaryTask.make({
+            taskId: "@beep/x#check",
+            task: "check",
+            hash: "same-inputs",
+            cache: { status: "MISS" },
+            execution: { exitCode },
+          }),
+        ],
+      });
+      yield* encodeSummary(summary).pipe(Effect.flatMap((text) => fs.writeFileString(summaryPath, text)));
+      yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
+      const failure =
+        exitCode === 0
+          ? O.none<QualityTaskFailed>()
+          : O.some(QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode }));
+      const outcome = (step: QualityTaskStep) => ({
+        durationMs: 90_000,
+        startedAt: startedAtIso,
+        endedAt: startedAtIso,
+        failure,
+        step,
+      });
+      const ledger = path.join(root, ".beep", "quality", "lane-ledgers", `lane-${exitCode}`, "ledger.jsonl");
+      const child = QualityTaskStep.make({
+        label: "ci:check",
+        command: "bunx",
+        args: ["turbo", "run", "check", "--summarize"],
+        cwd: root,
+      });
+      assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child)), true);
+      yield* closeTurboLaneLedger(ledger, 1);
+      const wrapper = QualityTaskStep.make({
+        label: "quality:check",
+        command: "bun",
+        args: ["run", "beep", "ci", "lane", "check"],
+        cwd: root,
+        env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+      });
+      const resolved = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
+      return lane(
+        "quality:check",
+        exitCode === 0 ? "passed" : "failed",
+        resolved.inputDigest,
+        90_000,
+        resolved.inputPackages
+      );
+    });
+
+    // C5 must-fail fixture (ruling 72): the lock for a disagreement being observable. A passed
+    // fact is recorded for key K; a later red run of the same Turbo task hash resolves K through
+    // the production path and must count as exactly one hit-versus-failed disagreement, both in
+    // the attempt's own summary and in the report. Before ruling 72 the red run folded no digest,
+    // its key read `undeclared`, and this count was structurally zero.
+    it.effect(
+      "must fail: a red run on a passed key records one disagreement through the production digest path",
+      Effect.fnUntraced(function* () {
+        yield* inTempCheckout((root) =>
+          Effect.gen(function* () {
+            const green = yield* wrapperLaneRun(root, "2026-09-28T10:00:00.000Z", 0);
+            const red = yield* wrapperLaneRun(root, "2026-09-28T11:00:00.000Z", 1);
+            // Same task hash, same key: the red run's digest names the work, not the result.
+            assertSome(red.inputDigest, yield* Effect.fromOption(green.inputDigest));
+            expect(red.inputPackages).toStrictEqual(["@beep/x"]);
+
+            const first = yield* recordProofShadowForAttempt(root, facts(), [report([green])], changedNone());
+            expect(first).toMatchObject({ recorded: 1, wouldReuse: 0, disagreements: 0, undeclared: 0 });
+            const second = yield* recordProofShadowForAttempt(
+              root,
+              facts({ attemptId: "attempt-2", branch: "fix/red" }),
+              [report([red])],
+              changedNone()
+            );
+            expect(second).toMatchObject({ recorded: 1, wouldReuse: 1, disagreements: 1, undeclared: 0, tripped: 0 });
+
+            const shadow = yield* loadProofShadowReport(root);
+            expect(shadow).toMatchObject({ barDisagreements: 1, enforcementReady: false });
+            expect(A.map(shadow.disagreements, (row) => [row.attemptId, row.laneId, row.branch])).toStrictEqual([
+              ["attempt-2", "quality:check", "fix/red"],
+            ]);
+            const rebuilt = buildProofShadowReport(
+              ProofShadowReportInput.make({
+                ...emptyInput(),
+                rows: yield* (yield* ProofLedger.make(root)).shadowRows,
+              })
+            );
+            expect(A.length(rebuilt.disagreements)).toBe(1);
+            expect(rebuilt.barDisagreements).toBe(1);
+
+            // A re-run of the red key is decided by the newest exact fact, the failed one, so a
+            // failed fact never becomes a reuse source.
+            const third = yield* recordProofShadowForAttempt(
+              root,
+              facts({ attemptId: "attempt-3", branch: "fix/red" }),
+              [report([red])],
+              changedNone()
+            );
+            expect(third).toMatchObject({ recorded: 1, wouldReuse: 0, disagreements: 0 });
+            const rows = yield* (yield* ProofLedger.make(root)).shadowRows;
+            expect(
+              A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
+            ).toStrictEqual(["no-fact", "hit", "prior-failed"]);
+          })
+        );
+      })
+    );
+  });
+
+  // TTC ruling 71: a lane's shadow pass and `yeet proof-report` both use the owning clone's
+  // ledger, and each fact still names the lane that ran as its origin.
+  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer), { timeout: "30 seconds" })(
+    "proof report from a linked worktree",
+    (it) => {
+      it.effect(
+        "records into and reports from the owning clone's ledger",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const clone = yield* fs.makeTempDirectoryScoped({ prefix: "proof-shadow-clone-" });
+          yield* inTempCheckout((laneRoot) =>
+            Effect.gen(function* () {
+              const gitDir = path.join(clone, ".git", "worktrees", "lane");
+              yield* fs.makeDirectory(gitDir, { recursive: true });
+              yield* fs.writeFileString(path.join(gitDir, "commondir"), "../..\n");
+              yield* fs.writeFileString(path.join(laneRoot, ".git"), `gitdir: ${gitDir}\n`);
+              const cloneLedger = path.join(clone, ".beep", "yeet", "proof-ledger.ndjson");
+
+              yield* recordProofShadowForAttempt(
+                laneRoot,
+                facts(),
+                [report([lane("quality:coverage", "passed", O.some("digest-a"))])],
+                changedNone()
+              );
+              expect(yield* fs.exists(path.join(laneRoot, ".beep"))).toBe(false);
+              expect(Str.includes(`"originKey":"${laneRoot}"`)(yield* fs.readFileString(cloneLedger))).toBe(true);
+
+              const fromLane = yield* loadProofShadowReport(laneRoot);
+              expect(fromLane).toMatchObject({ ledgerPath: cloneLedger, shadowRows: 1, facts: 1 });
+              yield* runYeetProofReport(YeetProofReportOptions.make({ json: false }), Effect.succeed(laneRoot));
+              const lines = yield* TestConsole.logLines;
+              expect(Str.startsWith(`proof shadow report (${cloneLedger})`)(String(lines[0]))).toBe(true);
+            })
+          );
+        })
+      );
+    }
   );
 });
 

@@ -21,7 +21,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
+import { DateTime, Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -104,63 +104,96 @@ describe("Turbo lane digests", () => {
     }, providePlatform)
   );
 
-  it.effect(
-    "refuses a digest when a selected task failed or none matched",
-    Effect.fnUntraced(function* () {
-      const rows = [task("//#lint:allowlist", "a1", "MISS", 1), task("//#lint:typos", "c3", "MISS")];
-      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:allowlist", "lint:typos"])).toEqual(
-        O.none()
-      );
-      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:typos"])).not.toEqual(O.none());
-      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:missing"])).toEqual(O.none());
-    }, providePlatform)
-  );
+  // TTC ruling 72: a selected task folds whatever its exit code, so a red run records the key a
+  // green run of the same inputs records; only a selection that matched nothing folds to None.
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })("red-run folding", (it) => {
+    it.effect(
+      "folds a failed task's hash as an observation and refuses only an empty selection",
+      Effect.fnUntraced(function* () {
+        const red = [task("//#lint:allowlist", "a1", "MISS", 1), task("//#lint:typos", "c3", "MISS")];
+        const green = [task("//#lint:allowlist", "a1", "MISS"), task("//#lint:typos", "c3", "HIT")];
+        const names = ["lint:allowlist", "lint:typos"];
+        const greenDigest = yield* Effect.fromOption(
+          yield* turboLaneDigestFromSummary(summary("green", 100, green), names)
+        );
+        const redDigest = yield* turboLaneDigestFromSummary(summary("red", 200, red), names);
+        assertSome(
+          O.map(redDigest, (digest) => digest.digest),
+          greenDigest.digest
+        );
+        assertSome(
+          O.map(redDigest, (digest) => digest.summaryIds),
+          ["red"]
+        );
+        assertNone(yield* turboLaneDigestFromSummary(summary("red", 200, red), ["lint:missing"]));
+      })
+    );
+  });
 
-  it.effect(
-    "reads only summaries the attempt wrote and skips unreadable files",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-digest-" });
-      const runs = path.join(root, ".turbo", "runs");
-      yield* fs.makeDirectory(runs, { recursive: true });
-      const startedAt = Date.parse("2026-09-12T04:00:00.000Z");
-      const write = (name: string, value: TurboRunSummary) =>
-        Effect.flatMap(encodeSummary(value), (text) => fs.writeFileString(path.join(runs, name), text));
-      yield* write("stale.json", summary("stale", startedAt - 5_000, [task("//#lint:allowlist", "old", "MISS")]));
-      yield* write("fresh.json", summary("fresh", startedAt + 1_000, [task("//#lint:allowlist", "new", "MISS")]));
-      yield* write("newest-red.json", summary("red", startedAt + 2_000, [task("//#lint:allowlist", "bad", "MISS", 2)]));
-      yield* fs.writeFileString(path.join(runs, "broken.json"), "{not json");
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })("fresh summaries", (it) => {
+    it.effect(
+      "reads only summaries the attempt wrote and skips unreadable files",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-digest-" });
+        const runs = path.join(root, ".turbo", "runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        const startedAt = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-09-12T04:00:00.000Z"));
+        const write = (name: string, value: TurboRunSummary) =>
+          Effect.flatMap(encodeSummary(value), (text) => fs.writeFileString(path.join(runs, name), text));
+        yield* write("stale.json", summary("stale", startedAt - 5_000, [task("//#lint:allowlist", "old", "MISS")]));
+        yield* write("fresh.json", summary("fresh", startedAt + 1_000, [task("//#lint:allowlist", "new", "MISS")]));
+        yield* write(
+          "newest-red.json",
+          summary("red", startedAt + 2_000, [task("//#lint:allowlist", "bad", "MISS", 2)])
+        );
+        yield* fs.writeFileString(path.join(runs, "broken.json"), "{not json");
 
-      const digest = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
-      expect(digest).toEqual(O.none());
-      yield* fs.remove(path.join(runs, "newest-red.json"));
-      const folded = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
-      expect(O.map(folded, (value) => value.summaryIds)).toEqual(O.some(["fresh"]));
-      expect(O.map(folded, (value) => value.tasks[0]?.hash)).toEqual(O.some("new"));
+        // TTC ruling 72: the newest fresh summary's hash wins even when that run was red.
+        const digest = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
+        assertSome(
+          O.map(digest, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`)),
+          ["//#lint:allowlist=bad"]
+        );
+        yield* fs.remove(path.join(runs, "newest-red.json"));
+        const folded = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", ["lint:allowlist"]);
+        assertSome(
+          O.map(folded, (value) => value.summaryIds),
+          ["fresh"]
+        );
+        assertSome(
+          O.map(folded, (value) => A.map(value.tasks, (row) => row.hash)),
+          ["new"]
+        );
 
-      const beforeAny = yield* readTurboLaneDigest(root, "2026-09-12T05:00:00.000Z", ["lint:allowlist"]);
-      expect(beforeAny).toEqual(O.none());
-      const unparseable = yield* readTurboLaneDigest(root, "not-a-timestamp", ["lint:allowlist"]);
-      expect(unparseable).toEqual(O.none());
+        const beforeAny = yield* readTurboLaneDigest(root, "2026-09-12T05:00:00.000Z", ["lint:allowlist"]);
+        assertNone(beforeAny);
+        const unparseable = yield* readTurboLaneDigest(root, "not-a-timestamp", ["lint:allowlist"]);
+        assertNone(unparseable);
 
-      const noRuns = yield* readTurboLaneDigest(path.join(root, "elsewhere"), "2026-09-12T04:00:00.000Z", []);
-      expect(noRuns).toEqual(O.none());
+        const noRuns = yield* readTurboLaneDigest(path.join(root, "elsewhere"), "2026-09-12T04:00:00.000Z", []);
+        assertNone(noRuns);
 
-      yield* write(
-        "second.json",
-        summary("second", startedAt + 3_000, [
-          task("//#lint:allowlist", "newer", "HIT"),
-          task("//#lint:typos", "t1", "MISS"),
-        ])
-      );
-      const every = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", []);
-      expect(O.map(every, (value) => value.summaryIds)).toEqual(O.some(["fresh", "second"]));
-      expect(O.map(every, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(
-        O.some(["//#lint:allowlist=newer", "//#lint:typos=t1"])
-      );
-    }, providePlatform)
-  );
+        yield* write(
+          "second.json",
+          summary("second", startedAt + 3_000, [
+            task("//#lint:allowlist", "newer", "HIT"),
+            task("//#lint:typos", "t1", "MISS"),
+          ])
+        );
+        const every = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.000Z", []);
+        assertSome(
+          O.map(every, (value) => value.summaryIds),
+          ["fresh", "second"]
+        );
+        assertSome(
+          O.map(every, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`)),
+          ["//#lint:allowlist=newer", "//#lint:typos=t1"]
+        );
+      })
+    );
+  });
 
   it.effect(
     "does not read historical summaries when collecting a new lane digest",
@@ -242,7 +275,7 @@ describe("Turbo lane digests", () => {
       const runs = path.join(root, ".turbo", "runs");
       yield* fs.makeDirectory(runs, { recursive: true });
       const startedAtIso = "2026-09-12T04:00:00.000Z";
-      const startedAt = Date.parse(startedAtIso);
+      const startedAt = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso));
       const write = (name: string, value: TurboRunSummary) =>
         Effect.flatMap(encodeSummary(value), (text) => fs.writeFileString(path.join(runs, name), text));
       // The child's own direct step shares `.turbo/runs` with a concurrent lane whose task failed.
@@ -322,93 +355,97 @@ describe("Turbo lane digests", () => {
   // digest folds, by both the wrapper-ledger path and the direct `turbo run --summarize`
   // path, with root tasks contributing nothing. The proof ledger's changed-package
   // tripwire intersects that scope with the attempt's changed packages.
-  it.effect(
-    "resolves a lane's package scope from its folded Turbo task ids by both digest paths",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-scope-" });
-      const runs = path.join(root, ".turbo", "runs");
-      yield* fs.makeDirectory(runs, { recursive: true });
-      const startedAtIso = "2026-09-24T04:00:00.000Z";
-      const startedAt = Date.parse(startedAtIso);
-      yield* Effect.flatMap(
-        encodeSummary(
-          summary("scope", startedAt + 1_000, [
-            task("@beep/x#check", "hx1", "HIT"),
-            task("@beep/x#test", "hx2", "MISS"),
-            task("@beep/y#check", "hy1", "MISS"),
-            task("//#lint:policy", "hr1", "HIT"),
-          ])
-        ),
-        (text) => fs.writeFileString(path.join(runs, "scope.json"), text)
-      );
-      const outcome = (step: QualityTaskStep): StreamingStepOutcome => ({
-        durationMs: 1,
-        startedAt: startedAtIso,
-        endedAt: "2026-09-24T04:00:05.000Z",
-        failure: O.none(),
-        step,
-      });
-      const child = QualityTaskStep.make({
-        label: "ci:check",
-        command: "bunx",
-        args: ["turbo", "run", "check", "test", "lint:policy", "--summarize"],
-        cwd: root,
-      });
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })("package scope", (it) => {
+    it.effect(
+      "resolves a lane's package scope from its folded Turbo task ids by both digest paths",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-scope-" });
+        const runs = path.join(root, ".turbo", "runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        const startedAtIso = "2026-09-24T04:00:00.000Z";
+        const startedAt = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso));
+        yield* Effect.flatMap(
+          encodeSummary(
+            summary("scope", startedAt + 1_000, [
+              task("@beep/x#check", "hx1", "HIT"),
+              task("@beep/x#test", "hx2", "MISS"),
+              task("@beep/y#check", "hy1", "MISS"),
+              task("//#lint:policy", "hr1", "HIT"),
+            ])
+          ),
+          (text) => fs.writeFileString(path.join(runs, "scope.json"), text)
+        );
+        const outcome = (step: QualityTaskStep): StreamingStepOutcome => ({
+          durationMs: 1,
+          startedAt: startedAtIso,
+          endedAt: "2026-09-24T04:00:05.000Z",
+          failure: O.none(),
+          step,
+        });
+        const child = QualityTaskStep.make({
+          label: "ci:check",
+          command: "bunx",
+          args: ["turbo", "run", "check", "test", "lint:policy", "--summarize"],
+          cwd: root,
+        });
 
-      // The direct path reads its own summaries and carries the same scope.
-      const direct = yield* resolveLaneInputDigestForTesting(outcome(child), O.none());
-      assertSome(O.map(direct.inputDigest, Str.isNonEmpty), true);
-      expect(direct.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+        // The direct path reads its own summaries and carries the same scope.
+        const direct = yield* resolveLaneInputDigestForTesting(outcome(child), O.none());
+        assertSome(O.map(direct.inputDigest, Str.isNonEmpty), true);
+        expect(direct.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
 
-      // The wrapper path reads the same digest back out of the lane ledger its child wrote.
-      const ledger = path.join(root, "lane-scope", "ledger.jsonl");
-      assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child)), true);
-      yield* closeTurboLaneLedger(ledger, 1);
-      const wrapper = QualityTaskStep.make({
-        label: "quality:check",
-        command: "bun",
-        args: ["run", "beep", "ci", "lane", "check"],
-        cwd: root,
-        env: { [TURBO_LANE_LEDGER_ENV]: ledger },
-      });
-      const wrapped = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
-      expect(wrapped.inputDigest).toEqual(direct.inputDigest);
-      expect(wrapped.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+        // The wrapper path reads the same digest back out of the lane ledger its child wrote.
+        const ledger = path.join(root, "lane-scope", "ledger.jsonl");
+        assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child)), true);
+        yield* closeTurboLaneLedger(ledger, 1);
+        const wrapper = QualityTaskStep.make({
+          label: "quality:check",
+          command: "bun",
+          args: ["run", "beep", "ci", "lane", "check"],
+          cwd: root,
+          env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+        });
+        const wrapped = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
+        expect(wrapped.inputDigest).toEqual(direct.inputDigest);
+        expect(wrapped.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
 
-      // The scope is derived from the digest's own rows, so it reads the same off the digest.
-      const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "test", "lint:policy"]);
-      assertSome(O.map(folded, turboLaneDigestPackages), ["@beep/x", "@beep/y"]);
+        // The scope is derived from the digest's own rows, so it reads the same off the digest.
+        const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "test", "lint:policy"]);
+        assertSome(O.map(folded, turboLaneDigestPackages), ["@beep/x", "@beep/y"]);
 
-      // Review round 1: the root node spells itself `//`, which is not a workspace, so a
-      // digest folding only root tasks names no package at all.
-      expect(
-        turboLaneDigestPackages(
-          TurboLaneDigest.make({
-            digest: "root-only",
-            summaryIds: ["run"],
-            tasks: [
-              TurboLaneTaskHash.make({ taskId: "//#lint:policy", hash: "h1", cacheStatus: "HIT" }),
-              TurboLaneTaskHash.make({ taskId: "//#lint:typos", hash: "h2", cacheStatus: "MISS" }),
-            ],
-          })
-        )
-      ).toStrictEqual([]);
+        // Review round 1: the root node spells itself `//`, which is not a workspace, so a
+        // digest folding only root tasks names no package at all.
+        expect(
+          turboLaneDigestPackages(
+            TurboLaneDigest.make({
+              digest: "root-only",
+              summaryIds: ["run"],
+              tasks: [
+                TurboLaneTaskHash.make({ taskId: "//#lint:policy", hash: "h1", cacheStatus: "HIT" }),
+                TurboLaneTaskHash.make({ taskId: "//#lint:typos", hash: "h2", cacheStatus: "MISS" }),
+              ],
+            })
+          )
+        ).toStrictEqual([]);
 
-      // Review round 1, kriegcloud P2: a failed step short-circuits before any Turbo
-      // digest is read, so it resolves neither a digest nor a scope.
-      const failed = yield* resolveLaneInputDigestForTesting(
-        {
-          ...outcome(child),
-          failure: O.some(QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })),
-        },
-        O.none()
-      );
-      assertNone(failed.inputDigest);
-      expect(failed.inputPackages).toStrictEqual([]);
-    }, providePlatform)
-  );
+        // TTC ruling 72: a failed step resolves through the same path as a pass, so it carries the
+        // digest and package scope of the work it ran — the tripwire now sees a failed lane's scope.
+        const failed = yield* resolveLaneInputDigestForTesting(
+          {
+            ...outcome(child),
+            failure: O.some(
+              QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
+            ),
+          },
+          O.none()
+        );
+        assertSome(failed.inputDigest, yield* Effect.fromOption(direct.inputDigest));
+        expect(failed.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+      })
+    );
+  });
 
   // TTC ruling 58: the labs lane digest folds every check/lint/test task hash its own summary ran,
   // which the labs filter makes exactly the lab tasks today. Upstream build/transit work reaches it
@@ -422,7 +459,7 @@ describe("Turbo lane digests", () => {
       const startedAtIso = "2026-09-16T14:00:00.000Z";
       // One fixture clock for the summary's start time and its file mtime, so the fresh-summary
       // filter never depends on the host's wall clock being later than the fixed start.
-      const writtenAtMillis = Date.parse(startedAtIso) + 1_000;
+      const writtenAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso)) + 1_000;
       const labsRun = Effect.fnUntraced(function* (prefix: string, tasks: ReadonlyArray<TurboSummaryTask>) {
         const root = yield* fs.makeTempDirectoryScoped({ prefix });
         const runs = path.join(root, ".turbo", "runs");
@@ -479,4 +516,61 @@ describe("Turbo lane digests", () => {
       assertNone(zero.digest);
     }, providePlatform)
   );
+
+  // TTC ruling 72: the wrapper child (`bun run beep ci lane <id>`) declares a red direct Turbo
+  // step's digest too, so the parent resolves a failed wrapper lane to the key a pass records.
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })("red wrapper child", (it) => {
+    it.effect(
+      "declares a red step's digest to the lane ledger and resolves it for the failed wrapper lane",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-red-child-" });
+        const runs = path.join(root, ".turbo", "runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        const startedAtIso = "2026-09-28T04:00:00.000Z";
+        const writtenAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso)) + 1_000;
+        const summaryPath = path.join(runs, "red.json");
+        const red = summary("red", writtenAtMillis, [task("@beep/x#check", "hx1", "MISS", 1)]);
+        yield* encodeSummary(red).pipe(Effect.flatMap((text) => fs.writeFileString(summaryPath, text)));
+        yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
+        const failure = O.some(
+          QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
+        );
+        const failedOutcome = (step: QualityTaskStep): StreamingStepOutcome => ({
+          durationMs: 1,
+          startedAt: startedAtIso,
+          endedAt: "2026-09-28T04:00:05.000Z",
+          failure,
+          step,
+        });
+        const child = QualityTaskStep.make({
+          label: "ci:check",
+          command: "bunx",
+          args: ["turbo", "run", "check", "--summarize"],
+          cwd: root,
+        });
+        const ledger = path.join(root, "lane-red", "ledger.jsonl");
+        assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), failedOutcome(child)), true);
+        yield* closeTurboLaneLedger(ledger, 1);
+
+        const wrapper = QualityTaskStep.make({
+          label: "quality:check",
+          command: "bun",
+          args: ["run", "beep", "ci", "lane", "check"],
+          cwd: root,
+          env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+        });
+        const resolved = yield* resolveLaneInputDigestForTesting(failedOutcome(wrapper), O.none());
+        // The key is the one a green run of the same task hash records.
+        const green = yield* Effect.fromOption(
+          yield* turboLaneDigestFromSummary(summary("green", writtenAtMillis, [task("@beep/x#check", "hx1", "HIT")]), [
+            "check",
+          ])
+        );
+        assertSome(resolved.inputDigest, green.digest);
+        expect(resolved.inputPackages).toStrictEqual(["@beep/x"]);
+      })
+    );
+  });
 });
