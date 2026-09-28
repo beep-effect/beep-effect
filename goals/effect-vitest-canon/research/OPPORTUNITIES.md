@@ -4533,3 +4533,12 @@ It now witnesses an unmounted state resetting in the same registry before the
 original Send assertion. The handler itself must remain mounted; the saved lens
 sketch's suggestion to witness handler disposal would contradict the fixed
 lifetime contract. Removing that production mount still fails the test.
+
+## File-wide mock cleanup overlaps concurrent UI tests
+
+Chat UI inherited global test concurrency while afterEach cleaned all rendered
+DOM and cleared the shared toast mock. A temporary lifecycle counter demonstrated
+overlapping cases; four explicit serial suite options removed that overlap
+without changing any test body. Shared cleanup ownership should be reviewed
+whenever async UI tests inherit global concurrency. This control proves overlap,
+not a naturally reproduced toast flake.

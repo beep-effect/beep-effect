@@ -79,7 +79,7 @@ function RunFailingTurn({ threadId }: { readonly threadId: WorkspaceIdentity.Thr
   );
 }
 
-describe("StreamingBlocks", () => {
+describe("StreamingBlocks", { concurrent: false }, () => {
   it("renders the assistant block vocabulary to the expected tags", () => {
     const blocks: ReadonlyArray<AssistantBlock> = [
       { type: "heading", level: "h2", children: [{ type: "text", text: "Title" }] },
@@ -181,7 +181,7 @@ describe("StreamingBlocks", () => {
   });
 });
 
-describe("MessageView", () => {
+describe("MessageView", { concurrent: false }, () => {
   it("renders a persisted Md.Document's text", () => {
     const document = Md.Document.make({
       children: [Md.P.make({ children: [Md.Text.make({ value: "hello from a persisted message" })] })],
@@ -194,7 +194,7 @@ describe("MessageView", () => {
   });
 });
 
-describe("ChatApp", () => {
+describe("ChatApp", { concurrent: false }, () => {
   it("renders the chat shell in its empty/loading state without a live server", () => {
     const { getByTestId, unmount } = render(<ChatApp />);
 
@@ -208,7 +208,7 @@ describe("ChatApp", () => {
   });
 });
 
-describe("ChatTurnErrorToasts", () => {
+describe("ChatTurnErrorToasts", { concurrent: false }, () => {
   it.effect(
     "toasts a client-safe turn error message and clears the atom",
     Effect.fnUntraced(function* () {

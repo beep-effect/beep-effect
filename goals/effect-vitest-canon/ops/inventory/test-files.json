@@ -276,7 +276,7 @@
     "file": "apps/professional-desktop/test/chat-ui.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 10812,
+    "bytes": 10904,
     "lines": 250
   },
   {
