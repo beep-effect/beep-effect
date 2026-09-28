@@ -3772,3 +3772,15 @@ in about 73 milliseconds and the entire repository in 8.8 seconds. Preserve AST
 identity when tracking visited syntax graph nodes. The simple nested-generator
 regression retains classification coverage; the full cache fixture, rather than
 that small example, reproduces the severe performance failure.
+
+### Pacer batch cancellation cleanup
+
+The saved resource lens identified a possible report lifetime gap. A controlled
+mock-HTTP witness reached the first status request after report creation, then
+interrupted the download. The original implementation recorded no deletion;
+report 1078 remained allocated. `Effect.result` followed by cleanup misses both
+interruption and defects. Three regression cases reproduce the omission against
+the original source and pass with `Effect.acquireUseRelease`, including a failed
+best-effort deletion. The operator approved this narrow production repair in
+PR #1307. Resource cleanup tests should cover cancellation and defects alongside
+success and typed failures, with acquisition barriers instead of elapsed sleeps.

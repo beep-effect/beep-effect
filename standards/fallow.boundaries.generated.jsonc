@@ -2960,12 +2960,16 @@
           "@beep/identity",
           "@beep/pacer",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/pacer",
           "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
