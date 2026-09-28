@@ -5053,3 +5053,11 @@ original whole-cohort timeout or final package acceptance.
   a populated mode-0 directory, observes restored mode 0700 before root cleanup,
   then checks that the root is gone. A mutation that drops restoration must fail
   that observation; this supplements the existing ordinary-failure assertions.
+
+- PR #1323's full publisher caught a complex readiness condition and a
+  duplication finding around the existing timestamp-ordering helper. Grouping
+  equivalent count checks with `Array.every` and directly composing the existing
+  DateTime/Option helpers removed both findings without suppression or baseline
+  expansion. Targeted Fallow audit/health and regression tests pass. Running the
+  affected Fallow gates before publishing this production repair would have
+  shortened the feedback loop. Receipts: `pr1323-fallow-fix-*`.

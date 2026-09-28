@@ -269,10 +269,14 @@ export const yeetCheckBlocksMerge = (check: YeetWatchCheck): boolean =>
       )
     ));
 
-const instantMillis = (instant: string): number =>
-  O.getOrElse(O.map(DateTime.make(instant), DateTime.toEpochMillis), () => Number.POSITIVE_INFINITY);
-
-const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
+const instantOrder: Order.Order<string> = Order.mapInput(
+  Order.Number,
+  flow(
+    DateTime.make,
+    O.map(DateTime.toEpochMillis),
+    O.getOrElse(() => Number.POSITIVE_INFINITY)
+  )
+);
 
 const headRedOrder: Order.Order<YeetHeadRed> = Order.mapInput(instantOrder, (red: YeetHeadRed) => red.at);
 

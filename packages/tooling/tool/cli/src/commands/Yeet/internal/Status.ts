@@ -1430,12 +1430,19 @@ const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean => {
     O.exists(
       (count) =>
         count > 0 &&
-        (remote.failingRequiredCheckCount ?? 0) === 0 &&
-        (remote.pendingRequiredCheckCount ?? 0) === 0 &&
-        (remote.pendingOptionalCheckCount ?? 0) === 0 &&
-        (remote.pendingCheckCount ?? 0) === 0 &&
-        (remote.failingCheckCount ?? 0) <= exemptFailures &&
-        (remote.failingOptionalCheckCount ?? 0) <= exemptFailures &&
+        A.every(
+          [
+            remote.failingRequiredCheckCount,
+            remote.pendingRequiredCheckCount,
+            remote.pendingOptionalCheckCount,
+            remote.pendingCheckCount,
+          ],
+          (value) => (value ?? 0) === 0
+        ) &&
+        A.every(
+          [remote.failingCheckCount, remote.failingOptionalCheckCount],
+          (value) => (value ?? 0) <= exemptFailures
+        ) &&
         !A.some(remote.checks, yeetCheckBlocksMerge)
     )
   );

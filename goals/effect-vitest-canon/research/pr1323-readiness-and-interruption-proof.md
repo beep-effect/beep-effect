@@ -19,7 +19,8 @@ watch cases were converted to canonical `it.layer`. Those two suites then passed
 all 100 tests on Node and Bun. The layer hook budget is explicitly 10 seconds,
 matching the ordinary shared hook ceiling; existing test-body budgets are intact.
 The final ratchet passes with 4,490 findings, zero introduced and 526 resolved.
-Full CLI package verification is still running.
+Full CLI package verification passed: audit 692.1 seconds and docgen 28.7
+seconds.
 
 The PGlite review regression shares its permission bracket with the ordinary
 unreadable-directory test. A Deferred barrier proves the populated directory is
@@ -46,3 +47,13 @@ Private receipts include `optional-heavy-readiness-control.json`,
 `pr1323-pglite-interruption-fixed-mutant.log`. The dropped-finalizer control is distinct
 from the whole-file positive runs. Full package proofs and hosted closeout are
 required before merge readiness is established.
+
+
+A later full-publisher attempt stopped on introduced Fallow complexity in the
+readiness condition and a timestamp-ordering duplication finding. The equivalent
+condition now uses `Array.every` for the two count constraints, and timestamp
+ordering composes the existing DateTime/Option helpers directly. Both targeted
+Fallow gates pass with no introduced findings. The affected status, watch-stream
+and check-fidelity suites pass under both runtimes; package lint/type-check
+verification also passes. These focused checks cover the subsequent two-function
+simplification; the new full publisher must still prove the final head.
