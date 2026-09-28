@@ -398,7 +398,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
+  it.layer(NodeServices.layer, { excludeTestServices: true })(
     "uses a standard-root env interpreter without an additional runtime bind",
     (it) => {
       it.effect(
@@ -432,12 +432,6 @@ exec "$mapped_command" "\${mapped[@]}"`
             )
           );
           yield* fs.chmod(bwrapPath, 0o755);
-          // The env interpreter resolves from the host PATH; pin a standard-root PATH so a
-          // workstation shell with a nix-store bash first cannot leak into this case.
-          yield* Effect.acquireRelease(
-            Effect.sync(() => vi.stubEnv("PATH", "/usr/bin:/bin")),
-            () => Effect.sync(() => vi.unstubAllEnvs())
-          );
           const engine = yield* makePffexportFileProcessingEngine(
             PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
           );

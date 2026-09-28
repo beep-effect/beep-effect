@@ -7,8 +7,6 @@ export default mergeConfig(
     test: {
       // Tests here mock modules (BoundedShaclValidator.test.ts); keep every file in its own worker
       // even under coverage (vitest.shared.ts shares the graph there by default).
-      // Tests here mock modules, stub globals, or change the working directory; keep every file in
-      // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
       isolate: true,
     },
   })
