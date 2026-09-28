@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/vitest/src/internal/internal.ts at
-// @effect/vitest@4.0.0-rc.117 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: 155930c2d861f93c27c32f1d2d05261f3d3eb8cbade23ea53cc17df89ed1654b
+// @effect/vitest@4.0.0-rc.118 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: a3e05deb484087f732a02d7dbb673dbf20587ed3a8426699f23d9691e9ef696b
 
-// @effect-vitest-anchor internal.runTest.abort-finalizers 37 51
+// @effect-vitest-anchor internal.runTest.abort-finalizers 40 54
 const runTest = (ctx?: Vitest.TestContext) => <E, A>(effect: Effect.Effect<A, E>) => {
   const promise = runPromise(effect, ctx)
   if (ctx) {
@@ -19,8 +19,9 @@ const runTest = (ctx?: Vitest.TestContext) => <E, A>(effect: Effect.Effect<A, E>
   return promise
 }
 
-// @effect-vitest-anchor internal.layer.fixture-hooks 235 354
-export const layer = <R, E>(
+// @effect-vitest-anchor internal.layer.fixture-hooks 238 358
+const makeLayer = <ExtraContext>(it: V.TestAPI<ExtraContext>) =>
+<R, E>(
   layer_: Layer.Layer<R, E>,
   options?: {
     readonly concurrent?: boolean
@@ -29,20 +30,20 @@ export const layer = <R, E>(
     readonly excludeTestServices?: boolean
   }
 ): {
-  (f: (it: Vitest.Vitest.MethodsNonLive<R>) => void): void
+  (f: (it: Vitest.Vitest.MethodsNonLive<R, ExtraContext>) => void): void
   (
     name: string,
-    f: (it: Vitest.Vitest.MethodsNonLive<R>) => void
+    f: (it: Vitest.Vitest.MethodsNonLive<R, ExtraContext>) => void
   ): void
 } =>
 (
   ...args: [
     name: string,
     f: (
-      it: Vitest.Vitest.MethodsNonLive<R>
+      it: Vitest.Vitest.MethodsNonLive<R, ExtraContext>
     ) => void
   ] | [
-    f: (it: Vitest.Vitest.MethodsNonLive<R>) => void
+    f: (it: Vitest.Vitest.MethodsNonLive<R, ExtraContext>) => void
   ]
 ) => {
   const excludeTestServices = options?.excludeTestServices ?? false
@@ -66,36 +67,35 @@ export const layer = <R, E>(
     return runPromise(Scope.close(scope, Exit.void))
   }
 
-  const makeIt = (it: V.TestAPI): Vitest.Vitest.MethodsNonLive<R> =>
-    makeItProxy(it, {
-      effect: makeTester<R | Scope.Scope>(
-        (effect) =>
-          Effect.flatMap(contextEffect, (context) =>
-            effect.pipe(
-              Effect.scoped,
-              Effect.provide(context)
-            )),
-        it
-      ),
-      prop,
-      flakyTest,
-      layer<R2, E2>(nestedLayer: Layer.Layer<R2, E2, R>, options?: {
-        readonly concurrent?: boolean
-        readonly timeout?: Duration.Input
-      }) {
-        return layer(Layer.provideMerge(nestedLayer, withTestEnv), {
-          ...options,
-          memoMap: Layer.forkMemoMapUnsafe(memoMap),
-          excludeTestServices
-        })
-      }
-    })
+  const methods: Vitest.Vitest.MethodsNonLive<R, ExtraContext> = makeItProxy(it, {
+    effect: makeTester<R | Scope.Scope, ExtraContext>(
+      (effect) =>
+        Effect.flatMap(contextEffect, (context) =>
+          effect.pipe(
+            Effect.scoped,
+            Effect.provide(context)
+          )),
+      it
+    ),
+    prop: makeProp<ExtraContext>(it),
+    flakyTest,
+    layer<R2, E2>(nestedLayer: Layer.Layer<R2, E2, R>, options?: {
+      readonly concurrent?: boolean
+      readonly timeout?: Duration.Input
+    }) {
+      return makeLayer(it)(Layer.provideMerge(nestedLayer, withTestEnv), {
+        ...options,
+        memoMap: Layer.forkMemoMapUnsafe(memoMap),
+        excludeTestServices
+      })
+    }
+  })
 
   if (args.length === 1) {
     const currentSuite = getCurrentSuite()
     const previousTasks = new Set(currentSuite.tasks)
 
-    args[0](makeIt(V.it))
+    args[0](methods)
 
     const blockTasks = collectTasks(
       currentSuite.tasks.filter((task) => !previousTasks.has(task)) as ReadonlyArray<CollectedTask>
@@ -109,17 +109,18 @@ export const layer = <R, E>(
     let remaining = blockTasks.length
 
     V.beforeEach(
-      (ctx) => {
-        if (!blockTaskSet.has(ctx.task)) {
+      // Destructured so Vitest can parse the hook once the suite defines fixtures.
+      ({ onTestFinished, signal, task }) => {
+        if (!blockTaskSet.has(task)) {
           return
         }
-        ctx.onTestFinished(() => {
+        onTestFinished(() => {
           remaining--
           if (remaining === 0) {
             return closeScope()
           }
         })
-        return runPromise(Effect.asVoid(contextEffect), ctx)
+        return runPromise(Effect.asVoid(contextEffect), { signal })
       },
       hookTimeout(options?.timeout)
     )
@@ -137,6 +138,6 @@ export const layer = <R, E>(
       () => closeScope(),
       hookTimeout(options?.timeout)
     )
-    return args[1](makeIt(V.it))
+    return args[1](methods)
   })
 }

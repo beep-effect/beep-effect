@@ -1796,8 +1796,17 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   get.mount(reportGraphWorkerFailureAtom);
   get.mount(runGraphWorkerBoundaryAtom);
 
+  // Cancels an outstanding request by bumping its counter. Registry disposal
+  // runs this graph's finalizer after the node map is already empty, and reading
+  // a request atom then would create a node on a disposed registry; a request
+  // nobody can answer any more needs no cancellation.
+  const cancelRequest = <A>(atom: Atom.Writable<GraphWorkerRequest<A>>): void => {
+    if (!get.registry.getNodes().has(atom)) return;
+    get.set(atom, [get.registry.get(atom)[0] + 1, O.none()]);
+  };
+
   const disarmWatchdog = (): void => {
-    get.set(graphWorkerWatchdogRequestAtom, [get.registry.get(graphWorkerWatchdogRequestAtom)[0] + 1, O.none()]);
+    cancelRequest(graphWorkerWatchdogRequestAtom);
   };
 
   // Armed on every request, disarmed by any answer. A worker that never replies
@@ -1970,8 +1979,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 
   get.addFinalizer(() => {
     disarmWatchdog();
-    get.set(graphWorkerBoundaryRequestAtom, [get.registry.get(graphWorkerBoundaryRequestAtom)[0] + 1, O.none()]);
-    get.set(graphWorkerFailureRequestAtom, [get.registry.get(graphWorkerFailureRequestAtom)[0] + 1, O.none()]);
+    cancelRequest(graphWorkerBoundaryRequestAtom);
+    cancelRequest(graphWorkerFailureRequestAtom);
     terminateWorker();
   });
 });
