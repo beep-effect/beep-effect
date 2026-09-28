@@ -42,8 +42,8 @@ The after cohort passes all 119 tests on Node in 31.617997754 seconds and Bun
 in 21.449470444 seconds. All four before/after runs preserve identical file/title
 registration multiplicities, zero failures/skips and stable source hashes. The
 ratchet passes with 3,819 findings, zero introduced and 1,198 resolved baseline
-findings. Full CLI package audit/docgen remains active; its result is not yet
-claimed. Load, pressure, runtime and process limits are
+findings. Full CLI package verification passes: audit in 672.8 seconds and
+docgen in 19.1 seconds, with unchanged test source throughout the proof. Load, pressure, runtime and process limits are
 captured with each timing; no causal performance claim is made.
 
 Private receipts use `cli-assertion-residual-batch-*`, with preparation inputs
