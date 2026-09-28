@@ -5234,3 +5234,34 @@ large, truncated tool result. Recovery should allowlist terminal fields
 (exit, timeout, duration, source stability) and test totals, leaving the full
 hash map on disk. This is reporting friction; the four timing runs retained
 stable source and identical registrations.
+
+### Runtime migration exposes nested resource ownership candidates
+
+Converting 95 files-command runtime wrappers to instrumented Effect tests
+preserved all 105 Node/Bun cases and clean TypeScript diagnostics, but the
+before/after syntax detector revealed 93 additional whole-body resource-wrapper
+calls and seven layer-provision candidates. Their bodies were previously below
+plain test callbacks, outside those detector contexts. The migration needs
+canonical fixture ownership as well as runtime removal; expanding the baseline
+would conceal that work. Preview detector output on prepared drafts before
+applying large harness migrations, and reconcile newly visible candidates with
+the owning resource definitions. Receipt: cli-files-runtime-raw-findings.json.
+
+### Hoisting a layer can bypass filesystem fault injection
+
+FilesCommandService captures its construction context and supplies that context
+to each operation. Five files-command fault tests override FileSystem before
+constructing the service. Hoisting one native instance to a shared suite fixture
+would therefore bypass the overrides, even though the tests still appeared to
+provide them. The migration uses harness-owned scenario layers built with the
+same filesystem objects, retains all rollback counters and preservation checks,
+and leaves assertions in the test body. Resource migration review should inspect
+constructor context capture before hoisting providers. Receipts:
+cli-files-scenario-fixtures.json and cli-files-assertion-preservation.json.
+
+The new verification fixture initially used an unknown error channel and a
+handwritten service key. Generated Effect diagnostics rejected both. Its final
+channel names PlatformError and FlattenMediaSummary (the latter is the existing
+Effect.flip unexpected-success failure), and the key follows the deterministic
+package/test/declaration path. Run generated test diagnostics before recording
+final timing evidence for new fixture declarations.

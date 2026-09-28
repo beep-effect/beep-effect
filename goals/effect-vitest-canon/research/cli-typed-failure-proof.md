@@ -39,6 +39,7 @@ resolved. Existing CLI ledger totals are 1,057 fixed, 7 exception and 2,393 open
 its existing EV005 and EV006 inventories have no open rows. This is not an
 exhaustive fresh-main census or goal completion.
 
-Full CLI package verification for this source commit is pending. The preceding
-source batch passed audit in 778.7 seconds and docgen in 21.4 seconds; that proof
-does not cover this batch. Private receipts use the cli-typed-failure prefix.
+Full CLI package verification for this source batch passed: audit 670.7 seconds
+and docgen 20.9 seconds. Source stayed unchanged during verification; intervening
+commits updated only packet evidence and ledger lineage. Private receipts use
+the cli-typed-failure prefix.
