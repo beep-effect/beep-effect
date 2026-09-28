@@ -1778,3 +1778,17 @@ filesystem error. Both outside fixtures retained their original bytes. The
 runner still requires complete input binding and independent approval before
 launch. A provider-free mount probe before any model call would expose this
 host compatibility failure earlier.
+
+### 2026-09-28 — Search-tool bootstrap changes a frozen runtime profile
+
+R43 stopped after its first lane when the post-lane guard detected a new
+vendored search binary and a memory-trace log. The lane process exited zero
+and its empty report validated, but neither result proves coverage under the
+admitted runtime. The other 26 lanes were not executed. The terminal receipt
+is `data/sweeps/refresh-2026-09-28-r43-main-8c16e6/round-verdict.json`.
+
+A no-tools runtime probe and a read/write capability probe did not exercise
+search-tool initialization. Bootstrap every allowed tool family before freezing
+the runtime profile, bind executable artifacts, and distinguish runtime logs
+from routing inputs. Preserve the failed attempt and require a fresh full-round
+admission instead of relaxing its frozen guard after execution.

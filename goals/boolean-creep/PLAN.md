@@ -1045,3 +1045,15 @@ PR merged by Benjamin. Then implement the reviewed designs, obtain Benjamin's
 implementation merges, run two final exact-main dry rounds, and merge the
 reflection and completed-retained closeout. This checkpoint claims neither
 implementation nor dry-round credit.
+
+## 2026-09-28 R43 runtime refusal
+
+PR #1325 merged, and the operator approved enforced file-write confinement.
+The replacement runner passed independent technical review and began R43 at
+source `df3b127353a95a3bf2e53b81020a3224cc209e58`, based on main `8c16e648527af9da83f5cad411f7216bd1bca777`.
+Its first lane ended with an empty validated report, but the post-lane runtime
+guard found newly created search-tool and memory-trace artifacts and stopped
+the round. All 26 remaining lanes were skipped. The [R43 terminal verdict](./data/sweeps/refresh-2026-09-28-r43-main-8c16e6/round-verdict.json)
+grants no coverage or dry-round credit. Inventory remains 725 rows, with 108
+qualified, 617 disqualified and zero applied. A separately reviewed successor
+must cover the full current corpus after tool initialization is accounted for.
