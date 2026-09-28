@@ -2636,3 +2636,16 @@ runtime owner was identified from those titles/summaries. The relevant archived
 audit task points to the original exploration. Older pages and work hidden by
 titles/summaries remain outside this search; no absence or signed-receipt credit
 is inferred. Its detailed receipt remains private.
+
+### Patched dependency profile: source invalidation
+
+The renewed [stable](research/current-patched-stable-invalidation.json) and
+[canary](research/current-patched-canary-invalidation.json) receipts each pass
+seven outcomes at `b410da2b6d`: baseline miss/hit, valid source-change miss/hit,
+two fresh malformed-source failures, and restoration of the baseline hit.
+Independent reviews verify exact native client versions, the single intended
+input-path changes, unchanged environment bindings, absent failure archives
+and equal successful task-log bytes. Binary pins match the patched fresh-pair
+receipts. Installed dependency archive identity remains equal before and after
+both suites. These renew source-invalidation behavior only; other control
+classes, semantic closure, signed remote and shadow acceptance remain open.

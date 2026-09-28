@@ -434,7 +434,9 @@
     "research/current-git-exclusion-canary-control.json",
     "research/current-input-controls-attachment.json",
     "research/current-patched-stable-fresh-pairs.json",
-    "research/current-patched-canary-fresh-pairs.json"
+    "research/current-patched-canary-fresh-pairs.json",
+    "research/current-patched-stable-invalidation.json",
+    "research/current-patched-canary-invalidation.json"
   ],
   "agentLaunchers": [
     {
