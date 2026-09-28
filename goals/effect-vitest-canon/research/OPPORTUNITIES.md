@@ -4142,3 +4142,12 @@ The SHACL merge also moved the existing schema-first exception anchor from line
 regression-coverage rationale remain intact. Root checks detect these cases
 after package verification; standalone recipes should name the comparison base
 and stable finding identities should avoid line-only invalidation.
+
+### PR #1312 Documents changeset omission
+
+Repo Sanity on `d8a746e93c` rejected the Documents Server batch because
+`quality changeset-status --since origin/main` found no in-range changeset for
+`@beep/documents-server`. The earlier local check did not establish the final
+committed-tree release contract. Added a package patch changeset and reran the
+check from the isolated publication tree. Keep this check in the final staged
+publication preflight, including test-runner dependency migrations.
