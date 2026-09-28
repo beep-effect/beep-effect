@@ -1765,6 +1765,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1773,6 +1774,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
