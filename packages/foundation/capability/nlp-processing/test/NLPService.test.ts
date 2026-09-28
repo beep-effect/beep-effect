@@ -17,7 +17,8 @@ import {
 } from "@beep/nlp-processing/NLPService";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Chunk, Effect, Graph, Layer } from "effect";
+import { assertSome } from "@effect/vitest/utils";
+import { Chunk, Effect, Graph, Layer, MutableHashMap } from "effect";
 import * as O from "effect/Option";
 import type { Sentence } from "@beep/nlp/Core/Sentence";
 import type { Token } from "@beep/nlp/Core/Token";
@@ -25,6 +26,13 @@ import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend";
 
 const noTokens: ReadonlyArray<Token> = [];
 const noSentences: ReadonlyArray<Sentence> = [];
+
+// The last text each delegated backend operation received, so a test can see that a service
+// call reached its backend method instead of only matching the stub's empty result.
+const backendCalls = MutableHashMap.empty<string, string>();
+const recordBackendCall = (operation: string, text: string): void => {
+  MutableHashMap.set(backendCalls, operation, text);
+};
 
 const backend: NLPBackendShape = {
   name: "minimal",
@@ -45,19 +53,22 @@ const backend: NLPBackendShape = {
   sentencize: Effect.fn("test.backend.sentencize")(function* (text: string) {
     return [text];
   }),
-  posTag: Effect.fn("test.backend.posTag")(function* () {
+  posTag: Effect.fn("test.backend.posTag")(function* (text: string) {
+    recordBackendCall("posTag", text);
     return [];
   }),
   lemmatize: Effect.fn("test.backend.lemmatize")(function* () {
     return [];
   }),
-  extractEntities: Effect.fn("test.backend.extractEntities")(function* () {
+  extractEntities: Effect.fn("test.backend.extractEntities")(function* (text: string) {
+    recordBackendCall("extractEntities", text);
     return [];
   }),
   parseDependencies: Effect.fn("test.backend.parseDependencies")(function* () {
     return [];
   }),
-  extractRelations: Effect.fn("test.backend.extractRelations")(function* () {
+  extractRelations: Effect.fn("test.backend.extractRelations")(function* (text: string) {
+    recordBackendCall("extractRelations", text);
     return [];
   }),
 };
@@ -91,9 +102,16 @@ describe("NLPService", () => {
       const graph = yield* service.processText("ada lovelace");
 
       expect((yield* service.getBackend).name).toBe("minimal");
+      MutableHashMap.clear(backendCalls);
       expect(yield* service.extractEntities("ada lovelace")).toStrictEqual([]);
-      expect(yield* service.extractRelations("ada lovelace")).toStrictEqual([]);
-      expect(yield* service.tagPartsOfSpeech("ada lovelace")).toStrictEqual([]);
+      assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
+      MutableHashMap.clear(backendCalls);
+      expect(yield* service.extractRelations("grace hopper")).toStrictEqual([]);
+      assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
+      MutableHashMap.clear(backendCalls);
+      expect(yield* service.tagPartsOfSpeech("alan turing")).toStrictEqual([]);
+      assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
+      expect(MutableHashMap.size(backendCalls)).toBe(1);
       expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
     })
   );
@@ -106,9 +124,16 @@ describe("NLPService", () => {
         Effect.fnUntraced(function* () {
           const graph = yield* processText("ada lovelace");
 
+          MutableHashMap.clear(backendCalls);
           expect(yield* extractEntities("ada lovelace")).toStrictEqual([]);
-          expect(yield* extractRelations("ada lovelace")).toStrictEqual([]);
-          expect(yield* tagPartsOfSpeech("ada lovelace")).toStrictEqual([]);
+          assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
+          MutableHashMap.clear(backendCalls);
+          expect(yield* extractRelations("grace hopper")).toStrictEqual([]);
+          assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
+          MutableHashMap.clear(backendCalls);
+          expect(yield* tagPartsOfSpeech("alan turing")).toStrictEqual([]);
+          assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
+          expect(MutableHashMap.size(backendCalls)).toBe(1);
           expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
         })
       );
