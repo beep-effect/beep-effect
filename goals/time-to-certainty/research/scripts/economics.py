@@ -565,6 +565,10 @@ def markdown_escape(value: Any) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
+# Rendered into both reports, so the wording is frozen: changing it would move a
+# baseline value, not only the script receipt. The last line's origin check
+# applies to every candidate, the repository root included (read from each
+# checkout's Git common dir); `discover_live_roots` documents the behaviour.
 LIVE_DISCOVERY_RULE = (
     "repository root",
     "projects-root directories named beep-effect* with .beep/yeet/runs",
@@ -576,19 +580,23 @@ LIVE_DISCOVERY_RULE = (
 FLEET_REPOSITORY = "beep-effect/beep-effect"
 
 
-def owning_clone(root: Path) -> Path | None:
-    """Resolve the clone that owns a checkout, as `git rev-parse --git-common-dir` would.
+def git_common_dir(root: Path) -> Path | None:
+    """Resolve a checkout's Git common dir, as `git rev-parse --git-common-dir` would.
 
-    A `.git` directory marks a primary clone; a `.git` file names the lane's
-    gitdir, whose `commondir` (when present) points at the clone's `.git`. A
-    lane whose `.git` file is already gone (a half-removed worktree that still
+    A `.git` directory is its own common dir (a primary clone). A `.git` file
+    names the checkout's gitdir; the gitdir's `commondir` file (a linked lane)
+    points at the common dir, and without one the gitdir is the common dir (a
+    `--separate-git-dir` checkout or a bare repository's worktree). The common
+    dir may sit anywhere and carry any name, such as `/x/beep-effect.git`.
+    A lane whose `.git` file is already gone (a half-removed worktree that still
     holds journals) falls back to the fleet layout: `<clone>-worktrees/<lane>`
-    and `<clone>/.claude/worktrees/<lane>` name their clone. Returns None when
-    neither Git metadata nor the layout names a clone.
+    and `<clone>/.claude/worktrees/<lane>` name their clone, whose `.git`
+    directory is the common dir. Returns None when neither Git metadata nor the
+    layout names one, or when a `.git` file cannot be read or has no `gitdir:`.
     """
     marker = root / ".git"
     if marker.is_dir():
-        return root
+        return marker.resolve()
     if not marker.is_file():
         parent = root.parent
         if parent.name.endswith("-worktrees"):
@@ -597,7 +605,7 @@ def owning_clone(root: Path) -> Path | None:
             clone = parent.parent.parent
         else:
             return None
-        return clone if (clone / ".git").is_dir() else None
+        return (clone / ".git").resolve() if (clone / ".git").is_dir() else None
     try:
         text = marker.read_text(encoding="utf-8").strip()
     except (OSError, UnicodeDecodeError):
@@ -606,22 +614,40 @@ def owning_clone(root: Path) -> Path | None:
         return None
     gitdir = (root / text[len("gitdir:"):].strip()).resolve()
     commondir_file = gitdir / "commondir"
-    common = gitdir
-    if commondir_file.is_file():
-        try:
-            common = (gitdir / commondir_file.read_text(encoding="utf-8").strip()).resolve()
-        except (OSError, UnicodeDecodeError):
-            return None
-    return common.parent
+    if not commondir_file.is_file():
+        return gitdir
+    try:
+        return (gitdir / commondir_file.read_text(encoding="utf-8").strip()).resolve()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def owning_clone(root: Path) -> Path | None:
+    """Return the clone that owns a checkout, by the TypeScript resolver's rule (ruling 71).
+
+    The clone is the common dir's parent when the common dir is named `.git`
+    (`<clone>/.git`, for a primary clone and its linked lanes), and the common
+    dir itself otherwise (a bare or separated common dir such as
+    `/x/beep-effect.git`). Returns None when `git_common_dir` finds none.
+    """
+    common = git_common_dir(root)
+    if common is None:
+        return None
+    return common.parent if common.name == ".git" else common
 
 
 def origin_repository(root: Path) -> str | None:
-    """Return `owner/repo` for the owning clone's `remote "origin"` url, else None."""
-    clone = owning_clone(root)
-    if clone is None:
+    """Return `owner/repo` for the `remote "origin"` url in `<commonDir>/config`, else None.
+
+    The config is read from the common dir itself, never `<clone>/.git/config`,
+    so a checkout whose common dir is bare or separated is judged by its own
+    repository's origin instead of being dropped for a missing file.
+    """
+    common = git_common_dir(root)
+    if common is None:
         return None
     try:
-        lines = (clone / ".git" / "config").read_text(encoding="utf-8").splitlines()
+        lines = (common / "config").read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError):
         return None
     in_origin = False
@@ -644,10 +670,16 @@ def discover_live_roots(projects_root: Path | None = None) -> list[Path]:
     the lanes under `beep-effect-worktrees/*` and every numbered
     `beep-effect<N>-worktrees/*`, and the lanes under each clone's
     `.claude/worktrees/*`. The repository root is always a candidate, so a run
-    from a lane still reads its own journals. Any other candidate is kept only
-    when its owning clone's origin is `beep-effect/beep-effect`: a private
-    duplicate such as `beep-effect-private` matches the name glob but is another
-    repository, and its journals never enter this public repository's inputs.
+    from a lane still reads its own journals. Every candidate, the repository
+    root included, is kept only when its origin (read from its Git common dir)
+    is `beep-effect/beep-effect`: a private duplicate such as
+    `beep-effect-private` matches the name glob but is another repository, and
+    its journals never enter this public repository's inputs, even when the
+    capture runs from a checkout of that duplicate. A repository root that holds
+    journals but fails the check is skipped like any other candidate, with one
+    stderr line naming the skip so the capture never drops its own journals
+    silently. The recorded discovery rule's first line, "repository root",
+    names the root as a candidate; its last line's origin check covers it too.
     """
     root = PROJECTS_ROOT if projects_root is None else projects_root
 
@@ -661,14 +693,23 @@ def discover_live_roots(projects_root: Path | None = None) -> list[Path]:
     roots: list[Path] = []
     seen: set[Path] = set()
     for candidate in candidates:
-        if candidate != REPO_ROOT and candidate.is_symlink():
+        is_repo_root = candidate == REPO_ROOT
+        if not is_repo_root and candidate.is_symlink():
             continue
         resolved = candidate.resolve()
         if resolved in seen or not (resolved / ".beep" / "yeet" / "runs").is_dir():
             continue
-        if candidate != REPO_ROOT and origin_repository(resolved) != FLEET_REPOSITORY:
-            continue
+        # Judged once: the repository root also matches a glob, and its verdict never changes.
         seen.add(resolved)
+        origin = origin_repository(resolved)
+        if origin != FLEET_REPOSITORY:
+            if is_repo_root:
+                print(
+                    f"live discovery: skipped the repository root {checkout_label(resolved)}: "
+                    f"its origin is {origin or 'unknown'}, not {FLEET_REPOSITORY}",
+                    file=sys.stderr,
+                )
+            continue
         roots.append(resolved)
     return sorted(roots, key=checkout_label)
 

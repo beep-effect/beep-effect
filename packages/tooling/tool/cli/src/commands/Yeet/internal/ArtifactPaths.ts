@@ -407,13 +407,13 @@ export const resolveProofLedgerLocation = Effect.fn("Yeet.resolveProofLedgerLoca
  * **Details**
  *
  * The path projection of {@link resolveProofLedgerLocation}: the ledger lives
- * in the owning clone's `.beep/yeet` artifact root, and the clone is the
- * parent of the Git common dir. When the common dir is `<clone>/.git` that is
- * the clone's checkout, so a linked worktree resolves to its clone's ledger
- * and a primary clone to its own; a bare or separated common dir (not named
- * `.git`) resolves to that directory's parent, as
- * `git rev-parse --git-common-dir` implies. It is not scoped to a branch or
- * run because proof facts describe inputs and epochs, not Git refs.
+ * in the owning clone's `.beep/yeet` artifact root. When the Git common dir is
+ * `<clone>/.git`, the owning clone is its parent, the clone's checkout, so a
+ * linked worktree resolves to its clone's ledger and a primary clone to its
+ * own; a bare or separated common dir (not named `.git`, such as
+ * `/srv/repo.git`) keeps the ledger inside itself, under
+ * `/srv/repo.git/.beep/yeet`. It is not scoped to a branch or run because
+ * proof facts describe inputs and epochs, not Git refs.
  *
  * **Example** (Resolve a checkout ledger)
  *

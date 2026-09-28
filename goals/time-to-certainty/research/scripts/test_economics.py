@@ -6,12 +6,14 @@ import gzip
 import importlib.util
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 
@@ -20,6 +22,27 @@ SPEC = importlib.util.spec_from_file_location("economics", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 economics = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(economics)
+
+# Variables that point git at another repository, work tree, index or object
+# store. A git hook exports some of them, so a fixture that inherits them would
+# commit into the hook's repository and the script's blob-drift checks would
+# read it instead of the fixture repository.
+GIT_REDIRECT_VARIABLES = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_CEILING_DIRECTORIES",
+)
+FLEET_ORIGIN = "git@github.com:beep-effect/beep-effect.git"
+
+
+def clean_git_environment() -> contextlib.AbstractContextManager[Any]:
+    """Patch `os.environ` without the git redirect variables for one test."""
+    cleaned = {key: value for key, value in os.environ.items() if key not in GIT_REDIRECT_VARIABLES}
+    return mock.patch.dict(os.environ, cleaned, clear=True)
 
 
 class EmbeddedInputValidationTest(unittest.TestCase):
@@ -47,6 +70,7 @@ class EmbeddedInputValidationTest(unittest.TestCase):
             shutil.copyfile(source, destination)
 
         self.patches = contextlib.ExitStack()
+        self.patches.enter_context(clean_git_environment())
         replacements = {
             "SCRIPT": self.script,
             "OUTPUT_ROOT": self.output_root,
@@ -63,6 +87,7 @@ class EmbeddedInputValidationTest(unittest.TestCase):
             self.patches.enter_context(mock.patch.object(economics, name, value))
 
         self.git("init", "-q")
+        self.git("remote", "add", "origin", FLEET_ORIGIN)
         self.git("add", ".")
         self.git(
             "-c",
@@ -189,6 +214,7 @@ class CloseInputValidationTest(unittest.TestCase):
             shutil.copyfile(source, destination)
 
         self.patches = contextlib.ExitStack()
+        self.patches.enter_context(clean_git_environment())
         replacements = {
             "SCRIPT": self.script,
             "OUTPUT_ROOT": self.output_root,
@@ -206,6 +232,7 @@ class CloseInputValidationTest(unittest.TestCase):
             self.patches.enter_context(mock.patch.object(economics, name, value))
 
         self.git("init", "-q")
+        self.git("remote", "add", "origin", FLEET_ORIGIN)
         self.git("add", ".")
         self.git(
             "-c",
@@ -664,7 +691,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         *,
         runs: bool = True,
         clone: str | None = None,
-        origin: str = "git@github.com:beep-effect/beep-effect.git",
+        origin: str = FLEET_ORIGIN,
     ) -> Path:
         """Create a checkout; `clone` names the owning clone of a linked lane."""
         path = self.projects / relative
@@ -673,16 +700,39 @@ class LiveDiscoveryTest(unittest.TestCase):
             (path / ".beep" / "yeet" / "runs").mkdir(parents=True)
         if clone is None:
             (path / ".git").mkdir(exist_ok=True)
-            (path / ".git" / "config").write_text(
-                f'[core]\n\tbare = false\n[remote "origin"]\n\turl = {origin}\n'
-                '\tfetch = +refs/heads/*:refs/remotes/origin/*\n',
-                encoding="utf-8",
-            )
+            self.write_config(path / ".git", origin=origin)
         else:
             gitdir = self.projects / clone / ".git" / "worktrees" / path.name
             gitdir.mkdir(parents=True, exist_ok=True)
             (gitdir / "commondir").write_text("../..\n", encoding="utf-8")
             (path / ".git").write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
+        return path
+
+    @staticmethod
+    def write_config(common: Path, *, origin: str, bare: bool = False) -> None:
+        common.mkdir(parents=True, exist_ok=True)
+        (common / "config").write_text(
+            f'[core]\n\tbare = {"true" if bare else "false"}\n[remote "origin"]\n\turl = {origin}\n'
+            '\tfetch = +refs/heads/*:refs/remotes/origin/*\n',
+            encoding="utf-8",
+        )
+
+    def separated_checkout(self, relative: str, common: Path, *, origin: str, lane: bool = False) -> Path:
+        """Create a checkout whose `.git` file points outside it at a common dir not named `.git`.
+
+        With `lane`, the `.git` file names `<common>/worktrees/<name>`, whose
+        `commondir` points back at the common dir; without it, the `.git` file
+        names the common dir directly (a `--separate-git-dir` checkout).
+        """
+        path = self.projects / relative
+        (path / ".beep" / "yeet" / "runs").mkdir(parents=True)
+        self.write_config(common, origin=origin, bare=True)
+        gitdir = common
+        if lane:
+            gitdir = common / "worktrees" / path.name
+            gitdir.mkdir(parents=True)
+            (gitdir / "commondir").write_text("../..\n", encoding="utf-8")
+        (path / ".git").write_text(f"gitdir: {gitdir}\n", encoding="utf-8")
         return path
 
     def test_projects_root_is_derived_from_a_clone_or_a_lane(self) -> None:
@@ -768,6 +818,64 @@ class LiveDiscoveryTest(unittest.TestCase):
             economics.origin_repository(self.projects / "beep-effect9"), "someone/beep-effect-fork"
         )
         self.assertIsNone(economics.origin_repository(self.projects / "beep-effect4-no-git"))
+
+    def test_bare_or_separated_common_dirs_are_judged_by_their_own_config(self) -> None:
+        elsewhere = self.projects / "elsewhere"
+        fleet_common = elsewhere / "beep-effect.git"
+        separated = self.separated_checkout("beep-effect11", fleet_common, origin=FLEET_ORIGIN)
+        lane = self.separated_checkout(
+            "beep-effect11-worktrees/bare-lane", fleet_common, origin=FLEET_ORIGIN, lane=True
+        )
+        other = self.separated_checkout(
+            "beep-effect12",
+            elsewhere / "beep-effect-private.git",
+            origin="git@github.com:beep-effect/beep-effect-private.git",
+        )
+        lane_root = self.checkout("beep-effect3-worktrees/ttc-close", runs=False, clone="beep-effect3")
+        self.checkout("beep-effect3", runs=False)
+
+        # Ruling 71: a common dir not named `.git` is itself the owning clone.
+        self.assertEqual(economics.owning_clone(separated), fleet_common)
+        self.assertEqual(economics.owning_clone(lane), fleet_common)
+        self.assertEqual(economics.owning_clone(lane_root), self.projects / "beep-effect3")
+        self.assertEqual(economics.origin_repository(lane), "beep-effect/beep-effect")
+        self.assertEqual(economics.origin_repository(other), "beep-effect/beep-effect-private")
+
+        with mock.patch.object(economics, "REPO_ROOT", lane_root), mock.patch.object(
+            economics, "PROJECTS_ROOT", self.projects
+        ):
+            labels = [economics.checkout_label(root) for root in economics.discover_live_roots()]
+
+        self.assertEqual(labels, ["beep-effect11", "beep-effect11-worktrees/bare-lane"])
+
+    def test_repository_root_of_another_repository_is_skipped_with_a_notice(self) -> None:
+        private_origin = "git@github.com:beep-effect/beep-effect-private.git"
+        self.checkout("beep-effect3")
+        self.checkout("beep-effect-private", runs=False, origin=private_origin)
+        lane_root = self.checkout("beep-effect-private-worktrees/capture-lane", clone="beep-effect-private")
+
+        stderr = io.StringIO()
+        with mock.patch.object(economics, "REPO_ROOT", lane_root), mock.patch.object(
+            economics, "PROJECTS_ROOT", self.projects
+        ), contextlib.redirect_stderr(stderr):
+            labels = [economics.checkout_label(root) for root in economics.discover_live_roots()]
+
+        self.assertEqual(labels, ["beep-effect3"])
+        notices = stderr.getvalue().splitlines()
+        self.assertEqual(len(notices), 1)
+        self.assertIn("skipped the repository root beep-effect-private-worktrees/capture-lane", notices[0])
+        self.assertIn("beep-effect/beep-effect-private", notices[0])
+
+    def test_repository_root_of_the_fleet_is_kept_without_a_notice(self) -> None:
+        lane_root = self.checkout("beep-effect3-worktrees/ttc-close", clone="beep-effect3")
+        self.checkout("beep-effect3", runs=False)
+        stderr = io.StringIO()
+        with mock.patch.object(economics, "REPO_ROOT", lane_root), mock.patch.object(
+            economics, "PROJECTS_ROOT", self.projects
+        ), contextlib.redirect_stderr(stderr):
+            labels = [economics.checkout_label(root) for root in economics.discover_live_roots()]
+        self.assertEqual(labels, ["beep-effect3-worktrees/ttc-close"])
+        self.assertEqual(stderr.getvalue(), "")
 
     def test_projects_root_flag_overrides_the_derived_root(self) -> None:
         self.checkout("beep-effect7")

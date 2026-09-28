@@ -13,8 +13,8 @@ evidence; Opus 5.5 lanes implement it.
    observation). Both were proposed in `research/c5-must-fail-fixtures-grill.md` §"Proposed ruling
    71/72" and are unchanged in substance; the open concurrent-append question under 71 is settled
    here by measurement and the tolerant reader.
-2. **Ruling 80: C4.2 enforcement is carried past close with a recorded flip condition.** Nothing in
-   this PR turns proof reuse on. `LaneProofReuse.ts` and `.beep/yeet/lane-proofs.json` stay (ruling
+2. **Ruling 80: C4.2 enforcement waits for a post-merge sample, and the packet pauses on that
+   condition.** Nothing in this PR turns proof reuse on. `LaneProofReuse.ts` and `.beep/yeet/lane-proofs.json` stay (ruling
    60 deletes them in the flip PR).
 3. **A1 close re-run.** The two script defects recorded on 2026-09-25 in `research/OPPORTUNITIES.md`
    are fixed first (wrapper/inner double count; numbered `-worktrees` roots undiscovered), then the
@@ -22,9 +22,11 @@ evidence; Opus 5.5 lanes implement it.
    `research/inputs/close/`, with M1–M5 beside the ratified P0 baseline (`research/baseline.md`).
 4. **B9** is recorded as captured (`explorations/github-merge-queue`, PR #1164, ruling 56); its grill
    stays gated on the ship-velocity E8 flip condition and moves with the exploration.
-5. **Closeout.** `research/decisions.md` round 25 (rulings 71, 72, 80); PLAN/SPEC/GOAL/README/manifest
-   updated; `history/reflections/2026-09-28-claude.md`; lifecycle flipped to `completed-retained` by
-   `bun run beep goals set-status time-to-certainty completed-retained`; receipts for every friction hit.
+5. **Packet state.** `research/decisions.md` round 25 (rulings 71, 72, 80); PLAN/SPEC/GOAL/README/
+   manifest updated; an on-demand `history/reflections/2026-09-28-claude.md`; lifecycle set to
+   `paused` by `bun run beep goals set-status time-to-certainty paused`, because the close run does
+   not meet gate lines 2 to 5 (ruling 80); receipts for every friction hit. The status flip to
+   `completed-retained` and the closeout reflection ride the C4.2 flip PR, not this one.
 
 ## Laws for every lane
 
@@ -56,7 +58,9 @@ Contract:
     unchanged from today, so existing primary-clone ledgers stay valid).
   - `<repoRoot>/.git` is a file `gitdir: <path>` → `gitdir` resolves relative to `repoRoot`; the
     common dir is `<gitdir>/commondir` resolved relative to `gitdir` when that file exists, else
-    `gitdir` itself; the clone is `dirname(commonDir)`.
+    `gitdir` itself; the clone is `dirname(commonDir)` when the common dir is named `.git`, and a
+    bare or separated common dir keeps the ledger inside itself (revised during implementation: the
+    directory holding a bare repository may hold others).
   - No `.git` at all → the clone is `repoRoot` (test roots and non-git directories keep today's
     behaviour).
   Introduce a schema for the resolved location, e.g. `ProofLedgerLocation` (`S.Class`:
@@ -97,9 +101,8 @@ Contract:
 
 - `TurboLaneDigest.ts`: `turboLaneDigestFromSummary` and `readTurboLaneDigest` fold the digest
   whenever at least one selected task is present, regardless of task outcome. The digest text is
-  `taskId=hash` per row (`digestRows`), so it identifies the work, not the result. A red run that
-  stopped early folds only the tasks that ran; that key differs from the full-pass key, so it neither
-  serves nor contradicts a pass. Update the module JSDoc (line ~128 "a lane never records a reusable
+  `taskId=hash` per row (`digestRows`), so it identifies the work, not the result. A red run folds
+  the selected tasks its run summary lists; when that set differs from a full pass, so does the key. Update the module JSDoc (line ~128 "a lane never records a reusable
   digest for a red run") to say a red run's digest is recorded as an observation and is never a reuse
   source.
 - `Tasks.ts` `resolveLaneInputDigestSource`: short-circuit only on `O.isSome(declared)`; a failed
@@ -176,30 +179,32 @@ Then the close run:
   `origin/main` today — attribute it before touching anything; add tests for the split and the
   discovery). The script must stay Python 3 stdlib only.
 
-## Closeout contract
+## Packet-state contract (revised 2026-09-28 by ruling 80)
 
-- `research/decisions.md`: append round 25 "2026-09-28 — P4 close, round 25 (three rulings, proposed
-  by the orchestrator; the merge of this PR is the lock)", rulings 71, 72, 80 in the house style
-  (bold heading, evidence, rule, rationale, rejected).
-- `PLAN.md`: B9 → `[x]` captured (exploration pointer, ruling 56, grill gated on E8, carried by the
-  exploration); C4 → `[x]` shadow landed 2026-09-21, rulings 71/72 landed in this PR, enforcement
-  carried under ruling 80; C4.2 → `[x]` carried with the flip condition (not enforced); A1 re-run →
-  `[x]` with the close numbers; closeout → `[x]` with this PR. Every date absolute.
-- `SPEC.md`: dated parentheticals on C4 (rulings 71/72, ruling 80 flip condition) and under
-  "Completion gate" one dated note that states which lines are met and which are carried, with the
-  operator directive of 2026-09-28 as the authority; do not rewrite gate sentences.
-- `GOAL.md`: the Status paragraph becomes the close status (P4 complete, rulings 1–80, what is
-  carried); keep the file at or under 4,000 characters (`wc -m`).
-- `ops/manifest.json`: `initiative.updated` 2026-09-28, `statusNote` rewritten for close, phases P2
-  and P4 `complete`, `completionGate.statement` gains one dated sentence naming the carried line
-  (C4.2 flip) and the operator authorization; then run
-  `bun run beep goals set-status time-to-certainty completed-retained` (writes manifest status,
-  README `Lifecycle:` line and `goals/INDEX.md`). Run `bun run beep goals doctor` after.
-- `history/reflections/2026-09-28-claude.md` from `goals/_template/history/reflections/_TEMPLATE.md`
-  (`ReflectionFrontmatter`, `bun run beep lint reflection-artifacts`), narrative from the packet's
-  receipts and this PR.
+The first draft of this section closed the packet as `completed-retained`. The close run then showed
+gate lines 2 to 5 unmet, and ruling 80 pauses the packet instead. A later session follows this
+section, not the draft:
+
+- `research/decisions.md`: round 25 with rulings 71, 72 and 80 in the house style (bold heading,
+  evidence, rule, rationale, rejected).
+- `PLAN.md`: B9 `[x]` as captured (exploration pointer, ruling 56, grill gated on E8); C4 and C4.2
+  stay `[ ]`, unblocked by rulings 71 and 72 and waiting on ruling 80's sample; A1 re-run `[x]` with
+  the close numbers; the closeout item stays `[ ]` and rides the flip PR. Every date absolute.
+- `SPEC.md`: a dated parenthetical on C4 and, under "Completion gate", one dated note stating which
+  lines the close run meets (line 1) and which it does not (lines 2 to 5); the gate text is unchanged.
+- `GOAL.md`: the Status paragraph names `paused` and ruling 80's resume condition; the file stays at
+  or under 4,000 characters (`wc -m`).
+- `ops/manifest.json`: `initiative.updated` 2026-09-28, `statusNote` with the resume condition, P4
+  `in-progress`; then `bun run beep goals set-status time-to-certainty paused` (writes the manifest
+  status, the README `Lifecycle:` line and the local `goals/INDEX.md`) and `bun run beep goals doctor`.
+- `history/reflections/2026-09-28-claude.md` with `trigger: on-demand` (`ReflectionFrontmatter`,
+  `bun run beep lint reflection-artifacts`); the closeout reflection belongs to the flip PR.
 - `research/OPPORTUNITIES.md`: receipts hit during this PR.
-- Commit message subject cites the packet slug `time-to-certainty`, body lines under 100 characters.
+- Commit subjects cite the packet slug `time-to-certainty`; body lines stay under 100 characters.
+- The flip PR resumes from ruling 80: reuse on for the pre-push pair, `LaneProofReuse.ts` and
+  `.beep/yeet/lane-proofs.json` deleted with a retirement receipt, `economics.py --run close`
+  re-run, then `bun run beep goals set-status time-to-certainty completed-retained` with the
+  closeout reflection, only if the re-run meets the gate or the operator authorizes carried lines.
 
 ## Verification before publish
 
