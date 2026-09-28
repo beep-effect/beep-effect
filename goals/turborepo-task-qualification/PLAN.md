@@ -2499,3 +2499,30 @@ exhaustive secret-pattern safety. All observations retain frozen source
 is claimed. Root/child configuration and profile-drift controls are running
 separately; an expected profile-preflight rejection is recorded in the friction
 ledger instead of weakening the gate to force task execution.
+
+### Post-security attachment refresh
+
+The [new canonical attachment](research/current-post-security-attachment.json)
+accepts 1,025 sources, 90 reviews and six artifacts at `1d5ffd0fdf`, retaining
+22 explicit unresolved obligations. The population remains 144 workspaces,
+3,473 graph nodes and 1,970 executable nodes. Only `package.json` and
+`bun.lock` changed among previously bound sources; all other bound sources
+and reviews retain their hashes, with no missing files. Eight new review
+receipts attach the security fixes, shared-dependency cross-root controls,
+isolated concurrency and synthetic capture results. The new dependency
+profile does not inherit the frozen pilot's runtime evidence.
+
+### Stable configuration and orchestration controls
+
+The [stable configuration receipt](research/current-config-controls-stable.json)
+passes nine expected outcomes: initial miss and replay hit; child environment
+declaration miss and restoration hit; root environment declaration miss and
+restoration hit; stale generated-profile rejection before Turbo; profile
+restoration hit; and unchanged-hash replay after changing a synthetic
+`CODEX_THREAD_ID`. Native summaries confirm the injected child/root values
+and orchestration passthrough binding. Only the expected child or root
+`turbo.json` input changes in each accepted mutation. Profile rejection writes
+no native summary and leaves the cache unchanged. All successful archives
+contain matching task-log bytes. The exact canary control is still running.
+This does not establish complete semantic-input closure or remote/shadow
+acceptance and retains the frozen dependency profile.

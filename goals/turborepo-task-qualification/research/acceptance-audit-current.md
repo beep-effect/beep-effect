@@ -566,3 +566,9 @@ streams remain private; remote telemetry and exhaustive capture closure remain
 unproven. Hosted Security passes on `47ea862597`; infra docgen passes all
 101 examples after restoring its normal postinstall prerequisite. Full proof
 and final merge readiness remain pending.
+
+The [post-security census attachment](./current-post-security-attachment.json)
+now accepts 1,025 sources, 90 reviews and six artifacts, with 22 unresolved
+obligations. Its population is unchanged. It attributes the two changed
+source bindings to dependency remediation and does not renew runtime
+observations across that dependency change.
