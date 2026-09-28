@@ -583,20 +583,25 @@ FLEET_REPOSITORY = "beep-effect/beep-effect"
 def git_common_dir(root: Path) -> Path | None:
     """Resolve a checkout's Git common dir, as `git rev-parse --git-common-dir` would.
 
-    A `.git` directory is its own common dir (a primary clone). A `.git` file
-    names the checkout's gitdir; the gitdir's `commondir` file (a linked lane)
-    points at the common dir, and without one the gitdir is the common dir (a
-    `--separate-git-dir` checkout or a bare repository's worktree). The common
-    dir may sit anywhere and carry any name, such as `/x/beep-effect.git`.
+    A `.git` directory is its own common dir (a primary clone), returned as
+    `<checkout>/.git` even when `.git` is a symlink to a directory with another
+    name: like Git, it names the checkout itself, never the symlink target, so
+    `owning_clone` still answers the checkout.
+
+    A `.git` file names the checkout's gitdir; the gitdir's `commondir` file (a
+    linked lane) points at the common dir, and without one the gitdir is the
+    common dir (a `--separate-git-dir` checkout or a bare repository's worktree).
+    The common dir may sit anywhere and carry any name, such as
+    `/x/beep-effect.git`.
     A lane whose `.git` file is already gone (a half-removed worktree that still
     holds journals) falls back to the fleet layout: `<clone>-worktrees/<lane>`
     and `<clone>/.claude/worktrees/<lane>` name their clone, whose `.git`
-    directory is the common dir. Returns None when neither Git metadata nor the
+    directory (symlinked or not) is the common dir, as `<clone>/.git`. Returns None when neither Git metadata nor the
     layout names one, or when a `.git` file cannot be read or has no `gitdir:`.
     """
     marker = root / ".git"
     if marker.is_dir():
-        return marker.resolve()
+        return root.resolve() / ".git"
     if not marker.is_file():
         parent = root.parent
         if parent.name.endswith("-worktrees"):
@@ -605,7 +610,7 @@ def git_common_dir(root: Path) -> Path | None:
             clone = parent.parent.parent
         else:
             return None
-        return (clone / ".git").resolve() if (clone / ".git").is_dir() else None
+        return clone.resolve() / ".git" if (clone / ".git").is_dir() else None
     try:
         text = marker.read_text(encoding="utf-8").strip()
     except (OSError, UnicodeDecodeError):
@@ -641,13 +646,14 @@ def origin_repository(root: Path) -> str | None:
 
     The config is read from the common dir itself, never `<clone>/.git/config`,
     so a checkout whose common dir is bare or separated is judged by its own
-    repository's origin instead of being dropped for a missing file.
+    repository's origin instead of being dropped for a missing file. A `.git`
+    symlink is followed to its real path for the read.
     """
     common = git_common_dir(root)
     if common is None:
         return None
     try:
-        lines = (common / "config").read_text(encoding="utf-8").splitlines()
+        lines = (common.resolve() / "config").read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError):
         return None
     in_origin = False
@@ -684,6 +690,7 @@ def discover_live_roots(projects_root: Path | None = None) -> list[Path]:
     root = PROJECTS_ROOT if projects_root is None else projects_root
 
     def by_name(paths: Iterable[Path]) -> list[Path]:
+        """Existing directories among `paths`, sorted by POSIX path."""
         return sorted((path for path in paths if path.is_dir()), key=lambda path: path.as_posix())
 
     candidates = [REPO_ROOT]
@@ -722,6 +729,13 @@ def checkout_label(root: Path) -> str:
 
 
 def capture_live(corpus_root: Path) -> None:
+    """Capture every discovered fleet checkout's Yeet journals as the compact live input.
+
+    For each root `discover_live_roots` returns (ruling 73), reads every run's
+    `attempts.ndjson`, `verdict.json` and `state.json` plus the peak-RSS files,
+    redacts them, records the discovery rule, and writes `LIVE_SNAPSHOT` compacted
+    against the run2 fleet corpus. Fails when the corpus directory is missing.
+    """
     roots = discover_live_roots()
     files: list[dict[str, Any]] = []
     captured_at = dt.datetime.now(dt.timezone.utc)
@@ -800,6 +814,12 @@ def run_command(args: list[str], *, attempts: int = 1) -> str:
 
 
 def capture_hosted() -> None:
+    """Capture the last 14 UTC dates of hosted `Check` runs as the compact hosted input.
+
+    Lists runs one UTC date at a time and fails closed when a date reaches the
+    API cap, keeps pull-request runs and pushes to `main`, fetches each kept run
+    with its jobs, and records the required contexts of ruleset 10240248.
+    """
     captured_at = dt.datetime.now(dt.timezone.utc)
     cutoff_date = (captured_at - dt.timedelta(days=14)).date().isoformat()
     list_fields = (
@@ -959,6 +979,15 @@ def attempt_key(checkout: str, run_id: str, attempt_id: str) -> tuple[str, str, 
 def load_attempts(
     sources: list[dict[str, Any]], verdict_sources: list[dict[str, Any]]
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Join journaled starts, terminal rows and verdict files into one row per finished attempt.
+
+    A duplicate row keeps the live copy; a verdict file without a journaled
+    terminal row is added as an orphan finish; a compaction receipt sets its
+    journal's left-censor cutoff. A reconciler-stamped termination keeps its start
+    but has no end and no elapsed time; a termination the attempt wrote itself
+    falls back to `endedAt - startedAt`. Returns the attempts in start order and
+    the loader diagnostics.
+    """
     starts: dict[tuple[str, str, str], dict[str, Any]] = {}
     finishes: dict[tuple[str, str, str], dict[str, Any]] = {}
     duplicate_starts = 0
@@ -1155,14 +1184,17 @@ def split_lanes(lanes: list[Any]) -> tuple[list[dict[str, Any]], list[dict[str, 
 
 
 def wrapper_lanes(attempt: dict[str, Any]) -> list[dict[str, Any]]:
+    """The attempt's wrapper lanes: the population the baseline lane rows count (ruling 74)."""
     return split_lanes(attempt["lanes"])[0]
 
 
 def inner_lanes(attempt: dict[str, Any]) -> list[dict[str, Any]]:
+    """The attempt's inner lanes: a separate population, never added to its wrappers (ruling 74)."""
     return split_lanes(attempt["lanes"])[1]
 
 
 def timed_lane_duration(lane: dict[str, Any]) -> float | None:
+    """A lane's `durationMs` as a float, or None when it is absent, non-numeric or negative."""
     duration = lane.get("durationMs")
     if not isinstance(duration, (int, float)) or duration < 0:
         return None
@@ -1194,6 +1226,15 @@ def population_lane_metrics(
     *,
     denominator: str,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Per-lane rows and totals for one lane population (ruling 74).
+
+    `population` picks an attempt's lanes (`wrapper_lanes` or `inner_lanes`).
+    Each row carries nearest-rank P50/P95 durations, the status mix, and its share
+    of the population's timed total. `denominator` picks the accounted
+    percentage's divisor: "all-attempts" divides by every attempt's elapsed time
+    (the baseline shape); any other value divides by the elapsed time of the
+    attempts that contributed at least one timed lane.
+    """
     by_lane: dict[tuple[str, str, str], list[tuple[dict[str, Any], float]]] = collections.defaultdict(list)
     all_durations: list[float] = []
     lanes_by_attempt: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
@@ -1288,6 +1329,15 @@ def actionable_lane(attempt: dict[str, Any]) -> str:
 
 
 def first_failure_metrics(attempts: list[dict[str, Any]]) -> dict[str, Any]:
+    """M2: how far into a red attempt its first failure becomes known.
+
+    Walks each red attempt's lanes in verdict order, summing prior
+    duration-bearing lanes, and stops at the first failed lane with a duration.
+    Post-A5 verdicts list inner lanes after their wrapper, so the walk still stops
+    at the failed wrapper. Reports nearest-rank P50/P95 start and completion
+    offsets, plus the actionable-lane and receipt-proxy mixes over every red
+    attempt.
+    """
     observations: list[dict[str, Any]] = []
     actionable_counts: collections.Counter[str] = collections.Counter()
     proxy_counts: collections.Counter[str] = collections.Counter()
@@ -1368,6 +1418,15 @@ def comparable_attempts(attempts: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_episodes(
     attempts: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Group attempts into M1 red-to-green episodes per (checkout, branch).
+
+    An episode is a streak of non-success attempts closed by the next success;
+    its span runs from the streak's first start to the success's end. Episodes
+    that start at or before their journal's left-censor cutoff are set aside, and
+    a streak with no closing success is right-censored. Lane minutes are summed
+    separately for wrapper and inner lanes (ruling 74). Attempts without a start
+    are skipped. Returns (closed, right-censored, left-censored).
+    """
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
     for attempt in attempts:
         if attempt["startedAt"] is None:
@@ -1440,6 +1499,11 @@ def episode_summary(
     *,
     include_inner: bool = False,
 ) -> dict[str, Any]:
+    """Summarize closed episodes: count, nearest-rank P50/P95 span, machine minutes and censoring counts.
+
+    `include_inner` adds the inner-lane machine minutes that only the close run
+    reports, so the baseline summary keeps its shape.
+    """
     spans = [row["spanMs"] for row in rows]
     summary = {
         "closedEpisodes": len(rows),
@@ -1462,6 +1526,12 @@ def episode_summary(
 
 
 def red_to_green(attempts: list[dict[str, Any]], *, include_inner: bool = False) -> dict[str, Any]:
+    """M1 red-to-green time over the comparable attempts, compared with the article's figures.
+
+    Returns the 24-hour-cut summary (the article-comparable population), the uncut
+    tail, and the P50/P95 deltas against the article. `include_inner` is passed
+    through to `episode_summary`.
+    """
     comparable = comparable_attempts(attempts)
     uncut, censored, left_censored = build_episodes(comparable)
     cut = [row for row in uncut if row["spanMs"] <= COMPARABLE_EPISODE_CUT_MS]
@@ -1842,6 +1912,7 @@ def fingerprint_quality(attempts: list[dict[str, Any]], states: list[dict[str, A
 
 
 def mix_rows(counter: collections.Counter[str], key: str) -> list[dict[str, Any]]:
+    """Counter entries as rows keyed by `key`, largest count first and ties by label."""
     return [
         {"attempts": count, key: label}
         for label, count in sorted(counter.items(), key=lambda item: (-item[1], item[0]))
@@ -1948,6 +2019,7 @@ def termination_metrics(
 
 
 def attempt_instant(attempt: dict[str, Any]) -> dt.datetime | None:
+    """The instant an attempt is placed at: its start, else its end."""
     return attempt["startedAt"] or attempt["endedAt"]
 
 
@@ -1976,6 +2048,7 @@ def post_baseline_metrics(
 
 
 def context_row(report_rows: list[dict[str, Any]], context: str) -> dict[str, Any]:
+    """The required-context row named `context`, or an empty row when it is absent."""
     return next((row for row in report_rows if row.get("context") == context), {})
 
 
@@ -2047,6 +2120,12 @@ COMPARISON_UNITS = {
 def baseline_comparison(
     baseline: dict[str, Any], close: dict[str, Any], post_baseline: dict[str, Any]
 ) -> list[dict[str, Any]]:
+    """Ruling-8 comparison rows for the close report.
+
+    Each M1-M5 measure `comparison_values` projects appears once, with its value
+    in the P0 baseline, the close union and the post-P0 attempts, and its display
+    unit.
+    """
     before = comparison_values(baseline, full_report=True)
     after = comparison_values(close, full_report=True)
     later = comparison_values(post_baseline, full_report=False)
@@ -2125,6 +2204,11 @@ def markdown_table(headers: list[str], rows: list[list[Any]]) -> list[str]:
 
 
 def render_economics(report: dict[str, Any]) -> str:
+    """Render a report as the markdown snapshot.
+
+    A close-run report also gets section B2 and the comparison with the P0
+    baseline (ruling 8). Fails when the text would exceed 300 lines.
+    """
     close = report.get("run") == CLOSE_RUN
     run_flag = " --run close" if close else ""
     lines: list[str] = [
@@ -2381,6 +2465,7 @@ def render_economics(report: dict[str, Any]) -> str:
 
 
 def render_close_inner_lanes(report: dict[str, Any]) -> list[str]:
+    """Close-run section B2: the top inner-lane rows, a population kept apart from section B (ruling 74)."""
     totals = report["localInnerTotals"]
     rows = report["localInnerLanes"]
     lines = [
@@ -2415,6 +2500,7 @@ def render_close_inner_lanes(report: dict[str, Any]) -> list[str]:
 
 
 def render_comparison_cell(value: Any, unit: str) -> str:
+    """Format one comparison value by unit: a duration for ms, a percent sign for pct, `n/a` when missing."""
     if value is None:
         return "n/a"
     if unit == "ms":
@@ -2425,6 +2511,11 @@ def render_comparison_cell(value: Any, unit: str) -> str:
 
 
 def render_close_comparison(report: dict[str, Any]) -> list[str]:
+    """Close-run section comparing the ruling-8 rows with the P0 baseline.
+
+    Renders the comparison table, one M1 censoring sentence per population, the
+    M4 method note and the M5 termination-reason table.
+    """
     comparison = report["baselineComparison"]
     post = report["postBaseline"]
     terminations = report["terminations"]
@@ -2581,6 +2672,7 @@ def baseline_json_path() -> Path:
 
 
 def load_worktree_corpus_receipts() -> list[dict[str, Any]]:
+    """Frozen corpus receipts from the ratified baseline report in the working tree."""
     baseline = baseline_json_path()
     if not baseline.is_file():
         raise SystemExit(f"missing {portable_path(baseline)} with frozen corpus receipts")
@@ -2591,6 +2683,10 @@ def load_worktree_corpus_receipts() -> list[dict[str, Any]]:
 
 
 def load_committed_corpus_receipts() -> list[dict[str, Any]]:
+    """Frozen corpus receipts from the baseline report as committed at HEAD.
+
+    Fails closed when the committed report cannot be read or parsed.
+    """
     relative = baseline_json_path().relative_to(REPO_ROOT).as_posix()
     completed = subprocess.run(
         ["git", "show", f"HEAD:{relative}"],
@@ -2766,6 +2862,13 @@ def embedded_input_validation_error(paths: list[str]) -> str:
 
 
 def validate_embedded_inputs(allow_input_drift: bool) -> str:
+    """Check the compact inputs, the report and the input receipts against committed evidence.
+
+    Compares their Git blobs with HEAD (the close run adds the ratified baseline it
+    quotes) and the input bytes with the committed receipts. Drift fails closed
+    unless `allow_input_drift` is set, which names the paths on stderr and returns
+    "embedded-drifted"; a clean check returns "embedded".
+    """
     evidence_paths: tuple[Path, ...] = (HOSTED_SNAPSHOT, LIVE_SNAPSHOT, ECONOMICS_JSON, INPUT_RECEIPTS)
     if RUN == CLOSE_RUN:
         # The close report quotes the ratified baseline row by row, so the
@@ -2824,6 +2927,13 @@ def build_report(
     # The compact snapshots and receipts are consumed on every path, so they are
     # verified against committed evidence on every path; corpus validation is an
     # additional check, never a substitute for it.
+    """Replay the committed inputs into one economics report for the configured run.
+
+    Embedded inputs are validated on every path; a corpus is validated only when
+    `--corpus` names it. The baseline sections are computed for every run, and the
+    close run adds its own (ruling 8). A drifted corpus or input stamps the
+    report as non-ratified.
+    """
     embedded_validation = validate_embedded_inputs(allow_input_drift)
     if not LIVE_SNAPSHOT.is_file():
         raise SystemExit(f"missing {portable_path(LIVE_SNAPSHOT)}; run --capture-live")
@@ -3014,6 +3124,7 @@ def configure_run(run: str) -> None:
 
 
 def main() -> None:
+    """Command-line entry: capture fresh inputs, or replay the committed inputs into the run's JSON and markdown reports."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--run",
