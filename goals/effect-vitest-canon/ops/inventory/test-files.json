@@ -1991,15 +1991,15 @@
     "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
     "package": "@beep/pacer",
     "kind": "test",
-    "bytes": 718,
-    "lines": 16
+    "bytes": 754,
+    "lines": 17
   },
   {
     "file": "packages/drivers/pacer/test/Pacer.test.ts",
     "package": "@beep/pacer",
     "kind": "test",
-    "bytes": 16146,
-    "lines": 390
+    "bytes": 19145,
+    "lines": 460
   },
   {
     "file": "packages/drivers/pglite/test/Pglite.equivalence.test.ts",

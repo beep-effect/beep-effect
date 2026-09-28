@@ -1,0 +1,71 @@
+{
+  "package": "@beep/pacer",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T03:01:08+00:00",
+  "totalMs": 3770.633056640625,
+  "testCount": 23,
+  "files": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.equivalence.test.ts",
+      "ms": 0.930419921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "ms": 240.633056640625,
+      "tests": 22
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) pagination cap fails when pagination exceeds the hard page cap",
+      "ms": 184.63314300000002
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CourtCaseSearchDto round-trips",
+      "ms": 33.658130999999685
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CaseReportList round-trips",
+      "ms": 33.49394799999982
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) ReportInfoType round-trips",
+      "ms": 33.4857649999999
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) CourtCaseSearchDto arbitrary values round-trip",
+      "ms": 33.479845999999725
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER schema round-trips (generated) PartySearchDto round-trips",
+      "ms": 33.47128299999986
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER error mappings (property-based) fromStatus maps any HTTP status to the right typed PacerPclError",
+      "ms": 11.920410000000174
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) logs out through the session finalizer",
+      "ms": 11.027373999999782
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) auth request body encodes login/logout request bodies without Effect Option internals",
+      "ms": 11.00357699999995
+    },
+    {
+      "file": "packages/drivers/pacer/test/Pacer.test.ts",
+      "testName": "PACER end-to-end (mock transport) happy path streams every /cases/find page and decodes /parties/find",
+      "ms": 10.290749000000233
+    }
+  ]
+}

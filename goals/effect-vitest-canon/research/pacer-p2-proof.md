@@ -1,5 +1,7 @@
 # Pacer canonical test migration
 
+Source commit: `5ba90014c8c9cb06d2d0f48f1d125d7775ee89b9`, pushed in PR #1307.
+
 The operator approved a narrow production cleanup repair for PR #1307 after a
 controlled cancellation reproduced an allocated report remaining undeleted.
 `downloadCases` now brackets report creation, use and best-effort deletion with
@@ -40,8 +42,16 @@ Full package verification passes with BEEP_FC_NUM_RUNS=400 and seed 20260708:
 audit 8.1 seconds and docgen 3.0 seconds. Six root policies also pass: oxlint,
 Sherif, Fallow health/audit, cache policy and schema-first. Test-only dependencies,
 generated TypeScript/Fallow edges and the narrow cache dependency review are
-included. Package-local inventory reconciliation and final source timing receipts
-are recorded separately before declaring the saved Pacer actions closed.
+included. All23saved actions are adjudicated; three current detector exceptions
+retain the documented inner providers. The root baseline drops18old Pacer rows
+and adds3current exceptions, preserving all683unrelated ledger hashes and raw
+unrelated root/census objects. The remaining saved queue has11packages/626actions.
+
+Normal Node and Bun runs each pass26tests with zero skips and stable sources.
+Whole-command before/after seconds are Node4.119375/4.019568 and
+Bun2.166813/1.515942. Both observations retain load, pressure and source hashes;
+these are not causal performance comparisons. The before23/after26test counts
+reflect the three added resource regressions.
 
 The consolidated goal and PR still require the remaining package inventory,
 final root/hosted proof and review closure before merge.
