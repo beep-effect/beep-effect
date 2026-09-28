@@ -1,0 +1,106 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-27",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-25T08:17:00-05:00",
+    "end": "2026-09-27T08:19:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 48,
+    "sunday_weekly": true
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-25",
+    "lastSuccessfulPr": 1261,
+    "lastSuccessfulRun": "2026-09-25T08:17:00-05:00"
+  },
+  "counts": {
+    "total": 25,
+    "window_new": 16,
+    "refute": 12,
+    "by_axis": {
+      "law": 8,
+      "effect": 8,
+      "agents": 9
+    }
+  },
+  "novelty": {
+    "window_new": 16,
+    "exclusion_url_collisions": 10,
+    "exclusion_collision_pct": 40.0,
+    "unique_claim_urls": 25,
+    "collision_urls": [
+      "https://patent.dev/heads-up-complete-your-uspto-profile-by-august-18/",
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://github.com/Effect-TS/effect/pull/8336",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://www.instantdb.com/essays/instant_team_joins_openai",
+      "https://github.com/evoluhq/evolu/pull/708",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004"
+    ],
+    "window_new_collision_pct": 6.2,
+    "note": "Hard collisions are intentional refute-quota re-cites + Evolu #708 GitHub settle re-cite. HOLD breaks use fresh version-specific npmjs URLs. Gate \u226440%."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all"],
+      "error": "client-not-enrolled",
+      "detail": "X connector search_posts_all: client-not-enrolled (Appropriate Level of API Access) \u2014 skipped; continued without X."
+    },
+    {
+      "source": "arxiv-export",
+      "error": "empty-api-response",
+      "detail": "export.arxiv.org API returned empty; used arxiv.org/list/cs.AI|cs.CR/new HTML + WebFetch abs pages."
+    },
+    {
+      "source": "uspto-support",
+      "error": "js-spa-empty-shell",
+      "detail": "USPTO data.uspto.gov/support is JS SPA; used patent.dev four-field confirmation."
+    },
+    {
+      "source": "local-gh",
+      "error": "bad-credentials-unused",
+      "detail": "local gh unused by design; preferred cursor-github MCP for PR/issue status."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-avoided",
+      "detail": "npm tip probes via registry.npmjs.org JSON; HOLD-break claims cite fresh version-specific npmjs package URLs for novelty."
+    }
+  ],
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed. USPTO support SPA needs browser/JS for primary text."
+  },
+  "headline_deltas": [
+    "Evolu #708 MERGED Sep 26; @evolu/common@8.11.0 published \u2014 unpublished HOLD settled.",
+    "Zero canary.13 \u2192 canary.15; head tip 1.11.0-head-*-20260926.",
+    "jazz-tools alpha.56 \u2192 alpha.57 (Sep 26).",
+    "Effect tip still rc.117; #8336 rc.118 OPEN (updated Sep 27, mergeable clean, unmerged).",
+    "Beri Sep 26 GC buyer guide (prices checked Sep 27): library>model; Legora metered Agent Pro; Harvey worst GC terms.",
+    "ChatGPT plugins live for Everlaw evidence + Legora research; Harvey\u2194Everlaw MCP + iManage/TR MCP still not GA.",
+    "SpecHarness arXiv 2609.29921 \u2014 State Authority Principle; SkillsBench Pass +12pp / S\u2013A \u221220pp.",
+    "Instrumental Monitor Evasion arXiv 2609.30217 \u2014 EvasionBench attempt \u226498% / success \u226488% under ordinary task pressure.",
+    "SEP-2640 Tier-1 SDKs still OPEN (go#1238 / py#3485 / ts#2818 draft); MCP #3306 still blocked; SEP-3004 still closed-unmerged.",
+    "drizzle #6162 / Instant 2027-08-31 / USPTO four-field \u2014 HOLDs reconfirmed.",
+    "Sunday weekly: local-first tip churn week; Effect tip stall; legal MCP split clocks; skills/governance papers outpace SDK merges."
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": true,
+    "called_cloud_agent": true
+  },
+  "written_at": "2026-09-27T08:28:00-05:00"
+}
