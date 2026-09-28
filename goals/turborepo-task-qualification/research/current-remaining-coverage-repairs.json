@@ -1,6 +1,6 @@
 {
   "authority": "Focused behavioral regressions for uncovered paths; whole-proof result pending",
-  "baseRevision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "sourceRevision": "2ec13b831bc2330ba321439539371250ec75b642",
   "sources": [
     {
       "path": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
