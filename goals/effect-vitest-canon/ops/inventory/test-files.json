@@ -2670,50 +2670,50 @@
     "file": "packages/epistemic/use-cases/test/ClaimDisposition.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 4507,
-    "lines": 114
+    "bytes": 5890,
+    "lines": 146
   },
   {
     "file": "packages/epistemic/use-cases/test/ContradictionTriage.commands.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 3449,
-    "lines": 78
+    "bytes": 3570,
+    "lines": 79
   },
   {
     "file": "packages/epistemic/use-cases/test/ContradictionTriage.rpc.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 10778,
-    "lines": 276
+    "bytes": 9817,
+    "lines": 253
   },
   {
     "file": "packages/epistemic/use-cases/test/EdgeAuthorityCommands.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 5385,
-    "lines": 143
+    "bytes": 5728,
+    "lines": 157
   },
   {
     "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 6957,
+    "bytes": 7090,
     "lines": 173
   },
   {
     "file": "packages/epistemic/use-cases/test/ExecutionLedger.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 3838,
-    "lines": 97
+    "bytes": 3932,
+    "lines": 99
   },
   {
     "file": "packages/epistemic/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/epistemic-use-cases",
     "kind": "test",
-    "bytes": 5732,
-    "lines": 120
+    "bytes": 5853,
+    "lines": 123
   },
   {
     "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
@@ -7873,5 +7873,12 @@
     "kind": "test",
     "bytes": 3429,
     "lines": 94
+  },
+  {
+    "file": "packages/epistemic/use-cases/test/ClaimEvidenceReview.test.ts",
+    "package": "@beep/epistemic-use-cases",
+    "kind": "test",
+    "bytes": 8487,
+    "lines": 199
   }
 ]
