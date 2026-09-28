@@ -1,6 +1,7 @@
 # Lint-command migration preparation
 
-This is preparation evidence, not an applied migration or closed inventory.
+This records the preparation checkpoint. The subsequently applied migration
+and its verification are documented in cli-lint-runtime-resource-proof.md.
 The existing inventory selects lint-command.test.ts with 57 historical runtime
 rows. The current file contains 65 runPromise boundaries in 66 tests. The
 private draft converts all 65 direct registrations to public it.effect while
