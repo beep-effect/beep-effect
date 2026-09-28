@@ -20,8 +20,8 @@ These timings are observations, not a causal performance comparison.
 
 The root ratchet remains 1,217 files / 3,465 live findings, with zero introduced
 and 1,552 resolved findings. Only the existing status-test runtime anchor was
-updated for its added regression; it remains open. Full package proof covering
-this repair is still required. The completed Yeet full proof predates it.
+updated for its added regression; it remains open. The later full CLI package proof at a1de26d035 covers this repair: audit
+704.4 seconds and docgen 19.2 seconds. The earlier Yeet proof predates it.
 
 ## Expanded assertion conservation
 

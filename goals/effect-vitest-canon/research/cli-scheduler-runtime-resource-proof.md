@@ -41,8 +41,9 @@ load and pressure are recorded; these figures are not a causal speed claim.
 
 The root ratchet passes across 1,217 files with 3,355 live findings, zero
 introduced and 1,667 resolved. The batch removes 115 prior live findings and
-adds five evidenced clock judgments, a net reduction of 110. Full CLI package
-verification remains pending.
+adds five evidenced clock judgments, a net reduction of 110. Full CLI package verification passes for source a1de26d035: audit 704.4
+seconds and docgen 19.2 seconds. Package source stayed unchanged throughout
+the proof; intervening commits changed only the goal ledger and documentation.
 
 Native filesystem decisions, withProcessPath and the existing retry-loop
 judgment remain open. The disappearance of a wrapper detector row after moving
@@ -65,5 +66,5 @@ Eight additional pre-batch provider/live-test findings are recorded as fixed,
 covering the seven extra native providers and the table-driven live case. No
 historical scheduler runtime, provider, property or live-test row remains open.
 The CLI ledger has 3,481 unique schema-valid rows: 1,476 fixed, 12 exceptions
-and 1,993 open. Full package verification is running for source a1de26d035;
-its terminal result is not yet available.
+and 1,993 open. The full package proof for source a1de26d035 completed successfully as recorded
+above. This also covers the preceding scheduler status default repair.

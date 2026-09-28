@@ -5322,9 +5322,8 @@ Repaired in f6b1dcaa28 by defaulting the Boolean output flag to false. A
 regression failed before the repair and passes on Node and Bun afterward;
 omitting the flag produces exactly the explicit --no-json output. The real
 unflagged command now succeeds. Quick package proof passed lint/check, and the
-133-case scheduler cohort passes on both runtimes. Full package proof covering
-this repair will accompany the scheduler migration; the earlier Yeet proof
-predates it.
+133-case scheduler cohort passes on both runtimes. The later full package proof at a1de26d035 passes audit (704.4 seconds) and
+docgen (19.2 seconds), covering this repair; the earlier Yeet proof predates it.
 
 ### Native journal lock retries need an explicit live clock during migration
 
