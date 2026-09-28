@@ -2603,3 +2603,17 @@ endpoints now explicit. Six new receipts attach stable/canary configuration
 controls, native I/O and Git routing attribution, stable/canary Git exclusion
 controls, and packet verification. Their recorded boundaries remain intact;
 this is attachment acceptance, not semantic closure or tuple promotion.
+
+### Patched dependency profile: stable fresh pairs
+
+The [renewed stable receipt](research/current-patched-stable-fresh-pairs.json)
+passes three isolated fresh/fresh pairs at `b410da2b6d`, with six fresh
+executions and twelve local replay controls. The new worktree uses a normal
+frozen-lockfile install including postinstall. Independent review validates
+all pair comparisons and retains a manifest for 9,282 observation files.
+Installed dependency archive identity matches before and after: SHA-256
+`9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27`.
+The task hash differs from the old dependency profile; no historical evidence
+is relabeled. This renews only stable fresh-pair/local-replay behavior. Canary,
+other perturbation controls, signed remote, semantic closure and shadow
+acceptance remain separate obligations before promotion.

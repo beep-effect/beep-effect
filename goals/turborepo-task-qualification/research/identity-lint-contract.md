@@ -8,9 +8,12 @@ prove purity, portability, log safety or a cache qualification.
 ## Current evidence boundary — 2026-09-28
 
 The [post-security census attachment](./current-post-security-attachment.json)
-binds current source at `1d5ffd0fdf`. The ordinary-runtime experiments remain
+binds current source at `1d5ffd0fdf`. Earlier ordinary-runtime experiments remain
 frozen at `7f53b4a840`; patched dependency content does not inherit those
-results. Stable `2.11.4` and exact canary `2.11.5-canary.2` have separately
+results. The [patched stable fresh-pair matrix](./current-patched-stable-fresh-pairs.json)
+now separately passes three pairs and twelve local replays at `b410da2b6d`,
+with installed dependency identity equal before and after. Other control
+classes and exact-canary renewal remain outstanding. Stable `2.11.4` and exact canary `2.11.5-canary.2` have separately
 reviewed fresh pairs, invalidation, shared-dependency cross-root replay,
 isolated concurrency, synthetic-token capture and selected configuration
 controls. These are bounded observations, not a qualified tuple.

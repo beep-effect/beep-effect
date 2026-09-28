@@ -432,7 +432,8 @@
     "research/current-native-io-review.json",
     "research/current-git-exclusion-control.json",
     "research/current-git-exclusion-canary-control.json",
-    "research/current-input-controls-attachment.json"
+    "research/current-input-controls-attachment.json",
+    "research/current-patched-stable-fresh-pairs.json"
   ],
   "agentLaunchers": [
     {
