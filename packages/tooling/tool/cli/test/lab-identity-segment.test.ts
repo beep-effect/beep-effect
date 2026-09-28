@@ -13,6 +13,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as O from "effect/Option";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
@@ -221,7 +222,7 @@ describe("lab identity segment", () => {
 
           const outcome = yield* Effect.result(LabIdentitySegment.syncLabIdentitySegment("."));
 
-          expect(Result.isFailure(outcome)).toBe(true);
+          assertTrue(Result.isFailure(outcome));
           if (Result.isFailure(outcome)) {
             expect(outcome.failure.message).toContain(LAB_EXPORTS_START_MARKER);
             expect(outcome.failure.message).toContain("is missing");
@@ -243,7 +244,7 @@ describe("lab identity segment", () => {
 
           const outcome = yield* Effect.result(LabIdentitySegment.diffLabIdentitySegment("."));
 
-          expect(Result.isFailure(outcome)).toBe(true);
+          assertTrue(Result.isFailure(outcome));
           if (Result.isFailure(outcome)) {
             expect(outcome.failure.message).toContain(LAB_COMPOSERS_START_MARKER);
             expect(outcome.failure.message).toContain("appears more than once");

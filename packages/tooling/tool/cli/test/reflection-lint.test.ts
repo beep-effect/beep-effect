@@ -6,6 +6,7 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import { Command } from "effect/cli";
 import * as Str from "effect/String";
@@ -15,7 +16,7 @@ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -102,7 +103,7 @@ const expectReflectionLintSuccess = Effect.fn("expectReflectionLintSuccess")(fun
   fixture: ReflectionLintFixture
 ) {
   const exit = yield* runReflectionLintFixture(fixture);
-  expect(Exit.isSuccess(exit)).toBe(true);
+  assertTrue(Exit.isSuccess(exit));
 });
 
 describe("reflection-artifacts lint command", { concurrent: false }, () => {
@@ -256,7 +257,7 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
             yield* writeReflection("in-flight", "2026-08-17-claude.md", VALID_REFLECTION);
             yield* writeActiveGoal("no-reflections-yet");
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

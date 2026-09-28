@@ -17,6 +17,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -604,7 +605,7 @@ BunRuntime.runMain(
       yield* TestClock.adjust("3 seconds");
 
       const exit = yield* Fiber.await(fiber);
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
       expect(rendered).toContain("CapturePipeWedgedError");
       expect(rendered).toContain("fake-step --flag");
@@ -650,7 +651,7 @@ BunRuntime.runMain(
       yield* TestClock.adjust("1 minute");
 
       const exit = yield* Fiber.await(fiber);
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
       expect(rendered).toContain("CaptureCommandTimedOutError");
       expect(rendered).toContain("fake-step --flag");

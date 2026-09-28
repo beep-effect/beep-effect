@@ -6511,7 +6511,7 @@
       "line": 73,
       "endLine": 93,
       "symbol": "runPromise",
-      "occurrence": "v2:ad47cf0bae71fac7eff1af475c6dc15e7cb1798ba4cd1da7165a075b3d5bc91a",
+      "occurrence": "v2:8d516130f4cce4e22cf49a38c6a2257b27fe2e5aacfe112f46ac7624b6818c38",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const exit = yield* readArtifact({ path: path.join(dir, \"missing.jsonc\"), schema: ExampleDocument, on",
       "replacement": {
@@ -7477,7 +7477,7 @@
       "line": 155,
       "endLine": 183,
       "symbol": "runPromise",
-      "occurrence": "v2:4f53a83220a31287abf79de1cf6ab33a2e9eee575e36452beb7787f7c7053860",
+      "occurrence": "v2:0ab41ba8bd8572dec85288c452a9ba25fafcf7ee31b7c93a6494eab31867fac4",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const legacy = { schema_version: 1, generated_at: \"2026-01-01T00:00:00.000Z\", git_sha: \"feedfacefeedfacefeedfa",
       "replacement": {
@@ -8695,9 +8695,9 @@
       "line": 746,
       "endLine": 757,
       "symbol": "runPromise",
-      "occurrence": "v2:8f22292a6c6668af2d7d6e492261366c4f02d2f84edbb651b07c61be7b212175",
+      "occurrence": "v2:0d05de317380d430f12524faad8297709b99cad407a93828264aef7bd035853f",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, \"@beep/courtlistener\")); expect(Exit.isFailure(e",
+      "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, \"@beep/courtlistener\")); assertTrue(Exit.isFailu",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -8905,7 +8905,7 @@
       "line": 1683,
       "endLine": 1726,
       "symbol": "runPromise",
-      "occurrence": "v2:f89fb2c5d52139f11fb471cf285dcdb7f961ff545a0fda0df61ff93a9a876d6c",
+      "occurrence": "v2:f813fa7a6da0b0b8f44b6feee0897ed75206c186054a2105a98f17e0be525727",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); yield* fs.writeFileString( path.join(tm",
       "replacement": {
@@ -9493,7 +9493,7 @@
       "line": 3786,
       "endLine": 3867,
       "symbol": "runPromise",
-      "occurrence": "v2:57356dbdbd4a9203bfdca39c17105dff0ea779263c2b361b1b7b80b2b64bda53",
+      "occurrence": "v2:736f535b98adb3c4179cacd712127a58c0b6dfaa9bbcc3c6083c69b9bb737de0",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const packageDir = path.join(tmpDir, \"p",
       "replacement": {
@@ -9577,7 +9577,7 @@
       "line": 3978,
       "endLine": 4014,
       "symbol": "runPromise",
-      "occurrence": "v2:32935ddad56f19fcdbc009923cc5c9641e8521c1d73878729c0d15ba5099ab22",
+      "occurrence": "v2:de248c3e61bdb9ce61396204b03fe5f8522711d49abe8f8a88013799860327e9",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); yield* fs.writeFileString( path.join(tm",
       "replacement": {
@@ -10795,7 +10795,7 @@
       "line": 154,
       "endLine": 194,
       "symbol": "runPromise",
-      "occurrence": "v2:c4e617ee000e8254a1851f04c6404f53bd881fabc21dd2a66ac7638fe5b890ce",
+      "occurrence": "v2:0816b50886f1d22f9a099407df7f4467055f4d3a948d1cd7759c56f5b49d0b71",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { // Two distinct orphan parents, each with two seq-2 children: two // fork verdicts share parentSeq 1, but only the planned fork m",
       "replacement": {
@@ -10816,7 +10816,7 @@
       "line": 201,
       "endLine": 232,
       "symbol": "runPromise",
-      "occurrence": "v2:ed08aa546bd7d2a7dc01c884ff916449e27144eec5b9058634257624d5570099",
+      "occurrence": "v2:c343e2aafa255d0f3a0f96f193392e0eabe6daf64d4b6504a271cbf75f05c0dd",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const genesis = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"unparseable\", root: \"goals\", seq: 1, expectedRevisi",
       "replacement": {
@@ -10837,7 +10837,7 @@
       "line": 239,
       "endLine": 285,
       "symbol": "runPromise",
-      "occurrence": "v2:c0bba09a365eb918c5d1e28403c59bc89c6dd85da32d4a9e94f5d4a5eb053339",
+      "occurrence": "v2:63f7059285c86c547b27b49ac0e6667dd639db4b6ee1d8be846f25f5e9824c47",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const goalEvent = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"goal-drift\", root: \"goals\", seq: 1, expectedRevis",
       "replacement": {
@@ -10858,7 +10858,7 @@
       "line": 292,
       "endLine": 325,
       "symbol": "runPromise",
-      "occurrence": "v2:c79c1cbc1e705e24502e267fe34d40b4da6558fa314cd6550527e2e960af28f5",
+      "occurrence": "v2:e14f0d6857c202d4dafe5780d993ccda808766ab266c3e24062c2fc342405df3",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const event = PacketEvent.make({ schemaVersion: \"packet-event/v1\", packet: \"drift\", root: \"goals\", seq: 1, expectedRevision: 0, a",
       "replacement": {
@@ -10879,7 +10879,7 @@
       "line": 332,
       "endLine": 355,
       "symbol": "runPromise",
-      "occurrence": "v2:f5d7f1ce1390966f87415959a87c83dd4696494d3e583ac2ed21c72b5d4d7dac",
+      "occurrence": "v2:ab5f7a20f2064f4e30d303e1310c0f519c0283d1893a3a24fe82907b4c6edf56",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile( \"goals/a/ops/manifest.json\", '{\"schemaVersion\":\"initiative-manifest/v2\",\"initiative\":{\"id\":\"same\",\"statu",
       "replacement": {
@@ -10900,9 +10900,9 @@
       "line": 362,
       "endLine": 372,
       "symbol": "runPromise",
-      "occurrence": "v2:430e07bbeae855e0cc39e2ba662f4c6343e7f230067d2212166c26cff100a6a0",
+      "occurrence": "v2:11455d553c8fc25f8200dd0ae9961866ea7dd49d778a9b56aad2bb04167745e7",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const exit = yield* Effect.exit(runExploreCommand([])); expect(Exit.isSuccess(exit)).toBe(true); const output = yield* consoleTex",
+      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const exit = yield* Effect.exit(runExploreCommand([])); assertTrue(Exit.isSuccess(exit)); const output = yield* consoleText(); ex",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -10921,9 +10921,9 @@
       "line": 46,
       "endLine": 57,
       "symbol": "runPromise",
-      "occurrence": "v2:e379f180f2cdb405c02db9ecfb97122d74f1776d90e9d6dfa5e0b18d86a3b586",
+      "occurrence": "v2:4f0fd480589de8a099af4444a905cf47f5a700e15ff1182ba4c3a7ca816587d3",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/plain/README.md\", \"# plain\\n\"); const exit = yield* Effect.exit(runExploreCommand([\"--check\"])); e",
+      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/plain/README.md\", \"# plain\\n\"); const exit = yield* Effect.exit(runExploreCommand([\"--check\"])); a",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -10942,7 +10942,7 @@
       "line": 64,
       "endLine": 147,
       "symbol": "runPromise",
-      "occurrence": "v2:845a479a4b48de2efc6757507a05789f666a4a5e6fc815254b171477fc77bb72",
+      "occurrence": "v2:1fda9ae3194b859aff90876de9e2864a19f9732bcba45198dfaece9229f8e953",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { // Exploration-root stream with a genesis fork and no trace file. const genesisA = PacketEvent.make({ schemaVersion: \"packet-even",
       "replacement": {
@@ -11089,7 +11089,7 @@
       "line": 1391,
       "endLine": 1426,
       "symbol": "runPromise",
-      "occurrence": "v2:15ef550aea320095a09eb5eff28ac8b7e8b1fcba2eefbfd334282aa60886905e",
+      "occurrence": "v2:c5b74884ceba4daa8b943faa11aeb05c1b6831719dcb8266f7d035b66344d022",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const datasetDir = yield* makeDatasetDir(tmpDir); con",
       "replacement": {
@@ -11446,7 +11446,7 @@
       "line": 2469,
       "endLine": 3014,
       "symbol": "runPromise",
-      "occurrence": "v2:a8ba82986152301ad75f7d92cc3f992abcf8d3dd35ec6ae8fcc67d63240eae48",
+      "occurrence": "v2:ffc697ea4eafcf2a504c19181d08010d1846daab21ae81ba871460cdb9302283",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const candidateDir = path.join(tmpDir, \"candidates\");",
       "replacement": {
@@ -13336,7 +13336,7 @@
       "line": 578,
       "endLine": 624,
       "symbol": "runPromise",
-      "occurrence": "v2:c075837e54dd77ccd77ed778806fffa09c95a88ae1e7d3b2c73d2b9c3189ecd4",
+      "occurrence": "v2:5a116dbdaa907040e1e0687f7811b85a39ebb5548650972208cd98e0133c1846",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const missingPlan = yield* Effect.exit( runGoalsCommand([\"bootstrap\", \"--slug\", \"x-goal\", \"--title\", \"X\", \"--mission\", \"Y.\"]) );",
       "replacement": {
@@ -13357,7 +13357,7 @@
       "line": 635,
       "endLine": 661,
       "symbol": "runPromise",
-      "occurrence": "v2:304da3b0aa7dffb7fe609801268a1db47a09b119ac0d7dd8fe00a23395ed3dbc",
+      "occurrence": "v2:726fe11683a22aec593f77035ec36440e2cbf33c94bceb0ef145297f9232e2cd",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/_template/README.md\", \"# <Goal Title>\\n\"); yield* writeProjectFile(\"goals/_template/ops/manifest.j",
       "replacement": {
@@ -13399,7 +13399,7 @@
       "line": 101,
       "endLine": 110,
       "symbol": "runPromise",
-      "occurrence": "v2:f5faf7aea32caf3147bd7e1a721193d2110d4ac5d0491e8047aead020cfc09e2",
+      "occurrence": "v2:862c9320d078b88a6d62fdb54d866a2bed3bd8e915c187aa16efd00bcb5e0a02",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeDriftedPacket(\"demo\"); yield* writeBaseline([\"demo lifecycle-mismatch\"]); const exit = yield* Effect.exit(runGoalsCom",
       "replacement": {
@@ -13441,7 +13441,7 @@
       "line": 69,
       "endLine": 78,
       "symbol": "runPromise",
-      "occurrence": "v2:9b0acfbb532d33b8f09546a5a5208cad9343a0252de620cd75f184f33318135d",
+      "occurrence": "v2:a0ecf47ab76ec78a21c2d5577683c645e0bd742e7af7ead4feb71989168261b4",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/.idea/workspace.xml\", \"<project />\\n\"); yield* writeBaseline([]); const exit = yield* Effect.exit(",
       "replacement": {
@@ -13693,7 +13693,7 @@
       "line": 511,
       "endLine": 526,
       "symbol": "runPromise",
-      "occurrence": "v2:17d299476c36c52516a2e19222ffba29aba5bee23d8573a4dcaf0c34572d5617",
+      "occurrence": "v2:131d8f8c061dcd8f65b1b492572a702572b3023b608641891b6adc249d081f34",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // Projections are disposable derived copies: a v1 trace is never // upcast — it fails the v2 decode, explore --ch",
       "replacement": {
@@ -13714,7 +13714,7 @@
       "line": 533,
       "endLine": 571,
       "symbol": "runPromise",
-      "occurrence": "v2:aba18680ebee9e86630d9369f33b30f48707a82b30a7cc5f37446ebdd987b12f",
+      "occurrence": "v2:f97f9ba8a07ac552312b5ece0e132b268005a186ca49759392879310dc41b64a",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const store = yield* PacketEventStore; const locator = PacketStreamLocator.make({ packet: \"forked\", root: \"goals\", packetPath: FORKED_PATH }); const listin",
       "replacement": {
@@ -13924,7 +13924,7 @@
       "line": 922,
       "endLine": 969,
       "symbol": "runPromise",
-      "occurrence": "v2:cd923ea5d14c17490dfee2a5ab41493409d51e0ec3400d652d108091c66d64a3",
+      "occurrence": "v2:e6b86f60de98d4c16065aacd04c5eb057b197aff6f20121cd46bee7207d1908c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const store = yield* PacketEventStore; const missingPath = yield* fs.makeTempDirectory(); const missingLocator = P",
       "replacement": {
@@ -13966,7 +13966,7 @@
       "line": 114,
       "endLine": 145,
       "symbol": "runPromise",
-      "occurrence": "v2:f6f94a9bca722562461bd4b3e31a1627a3e23428a05d66f4b60af58099b1c47a",
+      "occurrence": "v2:1fd05fc61e6b15bf1e796c0816bd273bc6ad68d8afa0f8f15bab09e134276074",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writePacket(\"replace-demo\"); const first = yield* Effect.exit( runGoalsCommand([\"",
       "replacement": {
@@ -13987,7 +13987,7 @@
       "line": 152,
       "endLine": 167,
       "symbol": "runPromise",
-      "occurrence": "v2:670679813a5e1f0faa861e9263dcce1c2765a57ede6cc433907e25f856a2c439",
+      "occurrence": "v2:caaaca548ce37135ff84a43b85a0300c2c4b1719b10eca7dc2d99af7dbbca846",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writePacket(\"preview-override\"); const exit = yield* Effect.exit( runGoalsCommand",
       "replacement": {
@@ -14029,7 +14029,7 @@
       "line": 195,
       "endLine": 240,
       "symbol": "runPromise",
-      "occurrence": "v2:47d3605307824d84661afcf8131ebf0ae64c4d4bcdc142cdc23c9c35ff77bf91",
+      "occurrence": "v2:ec6345480fe838a0b0060a8589915b92d84fc9a198702d1fdda57329bab68cd4",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writePacket(\"forked-override\"); const seeded = yield* Effect.exit( runGoalsComman",
       "replacement": {
@@ -14071,7 +14071,7 @@
       "line": 73,
       "endLine": 107,
       "symbol": "runPromise",
-      "occurrence": "v2:f254069ce4387f1d1cdcc87c3d0e38adad43ce8a5245a69c1f39ef861c680673",
+      "occurrence": "v2:be037a65217a67212c7bda1ddbe23b245d4a2d09c8c53eba03a4e5730c429207",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writePacket(\"override-demo\"); const manifestBefore = yield* fs.readFileString(\"go",
       "replacement": {
@@ -14092,7 +14092,7 @@
       "line": 113,
       "endLine": 129,
       "symbol": "runPromise",
-      "occurrence": "v2:ee511ef0e7961df9fd780c7ff72f44852518708bc3ba70328473ba8e3f270915",
+      "occurrence": "v2:a10612d53812797a5a96892ddfbfa6b489903ef728f751e25edb34df788cb81a",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"preview-demo\"); const exit = yield* Effect.exit(runGoalsComman",
       "replacement": {
@@ -14113,7 +14113,7 @@
       "line": 136,
       "endLine": 180,
       "symbol": "runPromise",
-      "occurrence": "v2:20dc65f362fb162303427db4e00c950c8f8f10b10753298bf27f3fda4e6ac8e4",
+      "occurrence": "v2:891929c29bc5820e12965c2ea2800163e5acda42ce365b4da8332957118818c9",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"forked-demo\"); const seeded = yield* Effect.exit(runGoalsComma",
       "replacement": {
@@ -14155,7 +14155,7 @@
       "line": 220,
       "endLine": 256,
       "symbol": "runPromise",
-      "occurrence": "v2:52021f0188bbc5cb98a70e1a9b31860733099d64fc285bb96568a93597bc07e6",
+      "occurrence": "v2:5dcedc29f6dc0b64ab0a692a7f608d9398d70f8064e51ce65220fd787660da65",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"idempotent-demo\"); const seeded = yield* Effect.exit(runGoalsC",
       "replacement": {
@@ -14176,7 +14176,7 @@
       "line": 263,
       "endLine": 301,
       "symbol": "runPromise",
-      "occurrence": "v2:517e8a4be43b84e28ec23aeec2daea697bbe64dc14d26480ebc57e0ca0071d62",
+      "occurrence": "v2:41d2a48b7d5482f588c3cf95968799174628a59d8519269c8d533d69676ffd25",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-stale-trace-demo\"); const seeded = yield* Effect.exit(run",
       "replacement": {
@@ -14197,7 +14197,7 @@
       "line": 308,
       "endLine": 352,
       "symbol": "runPromise",
-      "occurrence": "v2:e8308c0e71d12ca3208ec89e475b15f0713df26874fa2eb69459351b92909739",
+      "occurrence": "v2:d3f90d8247cecc595334e535b10c0412702e445baacfc142a00ba6da13c63fa4",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"skip-cas-demo\"); const seeded = yield* Effect.exit(runGoalsCommand([\"set-status\", \"skip-cas-demo\", \"pau",
       "replacement": {
@@ -14218,7 +14218,7 @@
       "line": 359,
       "endLine": 378,
       "symbol": "runPromise",
-      "occurrence": "v2:e4ca2902ad1ed30c112f2db49fdfffb766f66cc49236bc40bb655c8eb35d1c1e",
+      "occurrence": "v2:39dc7fa9b7aedc359043bb8310a71324b3a9467d378c642328ba131028f66699",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-preview-demo\"); const seeded = yield* Effect.exit(runGoal",
       "replacement": {
@@ -14239,7 +14239,7 @@
       "line": 385,
       "endLine": 402,
       "symbol": "runPromise",
-      "occurrence": "v2:e68ee6a02e849929ba1abbdd3cfaedc0a336b8cb6ec3f94cdef23dd72d8e0276",
+      "occurrence": "v2:75e993b190df441e2f282aa7d65646d3fbf9b0c5d156dfd9e82e818337835041",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-write-demo\"); const seeded = yield* Effect.exit(runGoalsC",
       "replacement": {
@@ -14260,7 +14260,7 @@
       "line": 409,
       "endLine": 425,
       "symbol": "runPromise",
-      "occurrence": "v2:590b0138b368e58b4889166e7c08d770c42a064b40dd1cc44e89bf6a792baa5f",
+      "occurrence": "v2:c4b0ce91c2f02d447477231f7b6b8d21198ddc6655c2eeaf949298adc20cc874",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const decoded = yield* Effect.exit( decodePacketTransitionRequest({ locator: { packet: \"decode-demo\", root: \"goals\", packetPath: \"goals/decode-demo\" }, sta",
       "replacement": {
@@ -14281,7 +14281,7 @@
       "line": 432,
       "endLine": 463,
       "symbol": "runPromise",
-      "occurrence": "v2:04dcf514ea4e366ef146c11da9ba4c4c8b0bf29b8e6efac833ac1d0aad886659",
+      "occurrence": "v2:5b54ca59ff328286e77e9ad83afa8d66786f6758b569df8eb02398e9b889a3ff",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"retry-demo\"); const seeded = yield* Effect.exit(runGoalsCommand([\"set-status\", \"retry-demo\", \"paused\"])",
       "replacement": {
@@ -14302,7 +14302,7 @@
       "line": 470,
       "endLine": 511,
       "symbol": "runPromise",
-      "occurrence": "v2:bea56cb94e41bea707b92e197843ca062b7ed7c0bae681a8852885564a9869a2",
+      "occurrence": "v2:1f7de559b368783e35f35be014495d56ac78f8291e686c00f0381ed9ca1a9953",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"cas-demo\"); const store = yield* PacketEventStore; const locator = PacketStreamLocator.make({ packet: \"",
       "replacement": {
@@ -14323,7 +14323,7 @@
       "line": 75,
       "endLine": 106,
       "symbol": "runPromise",
-      "occurrence": "v2:0c53ab7c966994c15c0925ab985c43a63e176ee6798536b631e0cd6cb22a300a",
+      "occurrence": "v2:9fd930e6d5a1c740d611d0d1131aafde2e70f389e771c47d62d84184dbbf5904",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"stream-demo\"); const first = yield* Effect.exit(runGoalsComman",
       "replacement": {
@@ -14491,7 +14491,7 @@
       "line": 199,
       "endLine": 237,
       "symbol": "runPromise",
-      "occurrence": "v2:7c8e25bb1e1092480298feeae18ee6e5b04cc9bd12058ccbdfbba70ee69df96f",
+      "occurrence": "v2:f4005bc5983e38a2434ca11c3f0fabb354a1d91df4e15f91ec0d84441927d73d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -14533,7 +14533,7 @@
       "line": 282,
       "endLine": 304,
       "symbol": "runPromise",
-      "occurrence": "v2:b057bc0652e344186346606aa1ccb8bd442b8f43e7bedec97bd8841385d93a5a",
+      "occurrence": "v2:1b86b749a34ea1fd7651c380cb4cb0753a0c2da0c2e57318ea64589ff6fe4892",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const videoDir = path.join(tmpDir, \"videos\"); yield*",
       "replacement": {
@@ -14554,7 +14554,7 @@
       "line": 307,
       "endLine": 339,
       "symbol": "runPromise",
-      "occurrence": "v2:44c0149f8b1a0ce9fcae803ad08c3a19647ddc474abe1b313a94990fe3a33b65",
+      "occurrence": "v2:0906bedbe7a90d9028624acefa8af146bba3f99915258802c8a8db411993e46c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -14575,7 +14575,7 @@
       "line": 342,
       "endLine": 384,
       "symbol": "runPromise",
-      "occurrence": "v2:499cdf43f0eb9b849fdd88d4b94fa3221b8686d6b6e3f01ede635e9a9b47f598",
+      "occurrence": "v2:534ee78d6c74c6875c4f8db7174bb18296b33533128fe98b151aa1aba3295602",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"bin\"); const argsPa",
       "replacement": {
@@ -14932,7 +14932,7 @@
       "line": 209,
       "endLine": 231,
       "symbol": "runPromise",
-      "occurrence": "v2:f433fecd97d75c972425807824e01ef4e27929083df655af09e5d3c50fcaacd8",
+      "occurrence": "v2:a0bebdeacb1d14092f380d042eaa616166262c09f29ec6dbeb58e1752064efab",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const withoutExportsStart = A.join( A.filter( Str.split(registryWithRegions([\"const generatedLabComposers = {};\"], []), \"\\n\"), (l",
       "replacement": {
@@ -14953,7 +14953,7 @@
       "line": 234,
       "endLine": 252,
       "symbol": "runPromise",
-      "occurrence": "v2:be5c3c9b5a17badd24c895490c7cce7fef5ccdf3d7510ab719f52395fb1e1137",
+      "occurrence": "v2:5c4e5c6de591ca99ff1175a73ce4fe6f117851660b4a658dad86912f88a0007c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const duplicated = Str.concat( registryWithRegions([\"const generatedLabComposers = {};\"], []), `${LAB_COMPOSERS_START_MARKER}\\n`",
       "replacement": {
@@ -17410,7 +17410,7 @@
       "line": 393,
       "endLine": 412,
       "symbol": "runPromise",
-      "occurrence": "v2:d7f4e860cfbdd04a439d42e9291f655a0fdab3cc70c5a537ac4a1ac12dd2f8ac",
+      "occurrence": "v2:09c4d542aab3bda3c3c1ae1527cb2269cd2814a83fbf09c0f81742f2034b8e8b",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const exit = yield* Effect.exit( selectPackageVerifyTargetForTesting({ changedFiles: [\"packages/demo/src/index.ts\", \"apps/app/src/main.ts\"], packageName: O",
       "replacement": {
@@ -18691,9 +18691,9 @@
       "line": 124,
       "endLine": 131,
       "symbol": "runPromise",
-      "occurrence": "v2:ef35fa4ea19917cbbf5ca79d534814b2c0075305e05d0cb2ebd577c8ba759d58",
+      "occurrence": "v2:12dc291d8d3784114f295c1ae90433f53b78401a0f32d07aecdee6a74939dc0d",
       "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const exit = yield* Effect.exit(runQualityCommand([\"github-checks\", \"security\"])); expect(Exit.isFailure(exit)).toBe(true); expect(spawned).toEqual([\"node",
+      "evidence": "Effect.runPromise( Effect.gen(function* () { const exit = yield* Effect.exit(runQualityCommand([\"github-checks\", \"security\"])); assertTrue(Exit.isFailure(exit)); expect(spawned).toEqual([\"node --test",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -21317,7 +21317,7 @@
       "line": 3509,
       "endLine": 3546,
       "symbol": "runPromise",
-      "occurrence": "v2:49802f27118225c9daf0dd114784c88906f1c5d4ff265bdb912f3d9e9c481db7",
+      "occurrence": "v2:8ef50320a01d060e71a70440cbf28912911ddb08e56a480b0d452119f4f16b27",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const binDir = path.join(tmpDir, \"bin\")",
       "replacement": {
@@ -21485,7 +21485,7 @@
       "line": 5849,
       "endLine": 5903,
       "symbol": "runPromise",
-      "occurrence": "v2:3da71bf3a1bae524119457299a78be86e172cc7d257af89bd1ef61e183b6b183",
+      "occurrence": "v2:a58c77df90cc5a9f4f5385cc2b415e84037f097b4e17d8d401dae35c1d8e30d7",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo",
       "replacement": {
@@ -21548,7 +21548,7 @@
       "line": 7166,
       "endLine": 7201,
       "symbol": "runPromise",
-      "occurrence": "v2:585e6a641d6c19cdc9dfa738c884ef2c7a2d819cf34c70f65548f1f7e98f260b",
+      "occurrence": "v2:6f95c1a9bc455413da45638deb875e40ca01b237dd82c5df39f19ae653b5fc8e",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { let released = false; const exit = yield* Effect.exit( runSqlIntegrationTestLaneForTesting({ acquireResource: Effect.acquireRelease( Effect.s",
       "replacement": {
@@ -21611,7 +21611,7 @@
       "line": 7248,
       "endLine": 7287,
       "symbol": "runPromise",
-      "occurrence": "v2:7a2421d73ab57cf4ef52502a184f85461fa655820070ddd1ca683efe6f80a36e",
+      "occurrence": "v2:a8ff1110aa94c499a8d4ed57a7db34b26b02018685caead3238ace01b123cabc",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const exit = yield* Effect.exit( runQualityTaskStepGroupForTesting( \"test:group\", [ bunScriptStep(\"test:first\", \"console.log('first failed');",
       "replacement": {
@@ -21632,7 +21632,7 @@
       "line": 7290,
       "endLine": 7324,
       "symbol": "runPromise",
-      "occurrence": "v2:44d946844e6f6d03b91f30dff309493ecafc0640715ee0180c36864ac75d7c75",
+      "occurrence": "v2:005b4fc6fbea64e6bb70b34b805668eb5b2d5e96552b95d582006615238788b3",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const markerPath = path.join(process.cwd(), \"second-ran.txt\"); const",
       "replacement": {
@@ -21674,7 +21674,7 @@
       "line": 7386,
       "endLine": 7435,
       "symbol": "runPromise",
-      "occurrence": "v2:99d198f06fff8ad6d7186aeeeccc8d9dcf60fa4156de13ac11181b9b6940fa5a",
+      "occurrence": "v2:160ec3ebfd23311a04330ddee427207b7d72c98325cef04a539384bf6be1f5be",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const statePath = path.join(process.cwd(), \"quarantine-repeat.txt\");",
       "replacement": {
@@ -21695,7 +21695,7 @@
       "line": 7438,
       "endLine": 7506,
       "symbol": "runPromise",
-      "occurrence": "v2:e61c6f1796e7071427927a14e54fb3c8594b71da5499cf46aeffcba04af49fc5",
+      "occurrence": "v2:1b1a34621dba62f8df9f94a7657785dc62799b040a95fb094566c77bf65ea65d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const binDir = path.join(tmpDir, \"bin\")",
       "replacement": {
@@ -21947,7 +21947,7 @@
       "line": 251,
       "endLine": 261,
       "symbol": "runPromise",
-      "occurrence": "v2:db408b5f53176b9301bfb7b5edc3052c90962159dcb2605a1faef93e19c495f9",
+      "occurrence": "v2:3caaba3523ad00d394ddd98f5061d4043329ba58c32a3fea8e8ace0b3cf15d05",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeActiveGoal(\"in-flight\"); yield* writeReflection(\"in-flight\", \"2026-08-17-claude.md\", VALID_REFLECTION); yield* writeA",
       "replacement": {
@@ -21989,7 +21989,7 @@
       "line": 63,
       "endLine": 73,
       "symbol": "runPromise",
-      "occurrence": "v2:4e93e31532555d4c966ff72b8b5828ac0d8d16d6489becdb9fc98cf8fe1c1a3c",
+      "occurrence": "v2:cbc15bcf1b394cd06710e3120a026fee435725ac727ad1d9d91709c4e55a4beb",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeFixture( \"# Roadmap\\n\\n- [Exploration Atlas](../explorations/ATLAS.md)\\n- [Goals index](../goals/INDEX.md)\\n\" ); cons",
       "replacement": {
@@ -22010,7 +22010,7 @@
       "line": 80,
       "endLine": 119,
       "symbol": "runPromise",
-      "occurrence": "v2:9d790f70ad5cd8d3cab15cfb866e00dba0251c68b6250bd1ed0ffbcc7742b3d5",
+      "occurrence": "v2:ab25d4bcf957eba98d405290bc598acb7ddae3c25cd338605277fd784005f1ea",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const roadmap = yield* fs.readFileString(pa",
       "replacement": {
@@ -22514,7 +22514,7 @@
       "line": 261,
       "endLine": 275,
       "symbol": "runPromise",
-      "occurrence": "v2:434eb0a3aa0a689cc1480f81fa065e834630c3dc5cfd57d1221a6f3a193b7ac4",
+      "occurrence": "v2:4506fbd454e4c9ea7d3fcedcbfc0fe1e566c2902bc769980ed294fec911b3dd5",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { yield* writeProjectFile(\".codex/config.toml\", \"[skills]\\n include_instructions = true\\n\"); const result = yield* Effect.result(runSkillsUpdate({ mode: \"wri",
       "replacement": {
@@ -30780,7 +30780,7 @@
       "line": 155,
       "endLine": 155,
       "symbol": "provideCrypto",
-      "occurrence": "v2:39a51c7c5dbe33ea580181f7e1a28711f3b02527f8af7daf0413d56fbe43e1cb",
+      "occurrence": "v2:610172873358ee236092573f14978d27b9c65ef2b0a57beba0a6f8c72c1f3b83",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -30822,7 +30822,7 @@
       "line": 204,
       "endLine": 204,
       "symbol": "provideCrypto",
-      "occurrence": "v2:a0f9b27242390c7d0bef89f114685501ed248a69959c82cabe9baa65deb1ca8c",
+      "occurrence": "v2:fd3f85523f941bb322e5601d239cb8d494a050c6893d3a25d570ae6eee62f4e0",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -31137,7 +31137,7 @@
       "line": 79,
       "endLine": 79,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:813f54f50aa5e6a5ba90b730ecf4f8dea7e53504cea3b42a2c417176944a17e6",
+      "occurrence": "v2:119a6a84ff4700a7a57beccfaeaf43a7505175ef2c3a49c7f6689d70ded519dd",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -31158,7 +31158,7 @@
       "line": 94,
       "endLine": 94,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:f693693310780a375eec948221237469c1d6e620f48c7e2d5972b1dbd8d30b33",
+      "occurrence": "v2:e8672c4cc63c49a81357f8efa2ed20ff16a42b8d7ac3a4137f8d55789ee1d065",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -31515,7 +31515,7 @@
       "line": 41,
       "endLine": 41,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:c4638bd803a2e8222f5b7bb18e84c99be2a9219a8629ef31cd61072f5e43410c",
+      "occurrence": "v2:eaf779d6588fcc4df8e7711551a0ee8f8e3cf4aa1a350c014a4e092203380967",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -31536,7 +31536,7 @@
       "line": 57,
       "endLine": 57,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:654cbd54091cb9e930217a44fed20a04f9be64306630c62ebeda9ea3bc09e96f",
+      "occurrence": "v2:1e8da6cd8b70dd3c561a43b430a3fbd6817d5d582ef19e57debc41b9fc010aa7",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -31809,7 +31809,7 @@
       "line": 239,
       "endLine": 239,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:935381dfe41dde70f93dc93eeb71b1ca9862b7ce453732296d4d2f1798c8bc0f",
+      "occurrence": "v2:8bc88e5cbf1c885905e2e64b4aa3e9a026a3eb35c91caf0da9b056da3b6bdf97",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(platform)",
       "replacement": {
@@ -31830,7 +31830,7 @@
       "line": 262,
       "endLine": 262,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:98af9305a9d7248577432381517c6b9beef64ef0dc3b274891d9ee5656472b6c",
+      "occurrence": "v2:117e41f6dead6e51acffddc38b059e8480753c840e80717425beb09a07838c9c",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(platform)",
       "replacement": {
@@ -32145,7 +32145,7 @@
       "line": 1326,
       "endLine": 1326,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e8bb70b07515a9c02e872dd7666ee9927cd27f6bbe8dc0548c4f57eeb6b2cf55",
+      "occurrence": "v2:2f2586e4c7904ee216bb675fcbd721c03b5f212c62217a57496f709d6d84add9",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands))",
       "replacement": {
@@ -32166,7 +32166,7 @@
       "line": 1342,
       "endLine": 1342,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:b708b1efd307be1e82766cef148ae5f28708b38c6b09c6229017ecc02af64619",
+      "occurrence": "v2:ba718aedf85ff44f0e6717bb155e04faf4163a2892ee7fe4bedc28a6d739dc61",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands, response))",
       "replacement": {
@@ -32208,7 +32208,7 @@
       "line": 1376,
       "endLine": 1376,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:7cf416046a45a833d7aa0975392839574612ffa2397cf817a44cc517bfcf6c36",
+      "occurrence": "v2:bd73a12cef74825cc900667515ba3c15398c4e44532a986eb6316fbd2e8f890e",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(laneTimingsCommandLayer)",
       "replacement": {
@@ -32250,7 +32250,7 @@
       "line": 1459,
       "endLine": 1459,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:50103e00a4b8e690133170c05f1b979232de7cbc0a845b6250a8efd655b17499",
+      "occurrence": "v2:7ab2f541351f2111e00bd0fe48bc30b24be73a1525ca8182b33d07d84fe022e2",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(laneTimingsCommandLayer)",
       "replacement": {
@@ -32271,7 +32271,7 @@
       "line": 1478,
       "endLine": 1478,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:0b46280e1d56c31a44f1b6007e4b663410ee7ec3e67896946a55083252f60e16",
+      "occurrence": "v2:0b96ce36ada9c4572bed47ba1007e13f1a6be69dbb8a08a525ef6c70d72e3ea2",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(laneTimingsCommandLayer)",
       "replacement": {
@@ -33279,7 +33279,7 @@
       "line": 1777,
       "endLine": 1777,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:3d6e23822ecc89c5c81a629ce8c3932f02f0f952744f93a33c93a68c33c1486d",
+      "occurrence": "v2:f5bd6c8343125d0dc5d0900ac3a505a04c212a871292d32c67b2125c2455e5b3",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -36093,7 +36093,7 @@
       "line": 110,
       "endLine": 110,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:00d600be146b175046bdd665f83da1b6d845ab9480c071acb63dcf0f7470dbc1",
+      "occurrence": "v2:c04d26bccb669b9b7a66ea81b87cb84d468d89d6b4592b76a9890dbf1dab322d",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(ProcessDiagnosticTestLayer)",
       "replacement": {
@@ -36177,7 +36177,7 @@
       "line": 50,
       "endLine": 50,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:826b12c6de330ade3f220164908e96687b0ddf6d51218c95aa1bd5a8e3f8f748",
+      "occurrence": "v2:1f58871869f7ce66515db3cca6d40b59c510ec6e4c0e8e9943279f5159cb4d47",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36198,7 +36198,7 @@
       "line": 68,
       "endLine": 68,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:3c2faa7af3136b4986f01b5b506638e48af43e5256cd28e07d27af3b8b5e962a",
+      "occurrence": "v2:fcbf20911713a7f8ec817c4f8a7fbe1378b4ce3d362ce356015ab525d4fb4de2",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -36261,7 +36261,7 @@
       "line": 1162,
       "endLine": 1162,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e7d251c74428eef6dc920f22e21035240cd263a5fa0608e068204d339864af00",
+      "occurrence": "v2:114b438725cc44dfeeb8d64f870063b5f68e1b9d1b8e800ac3b7a8a9eb2e4327",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(TestConsole.layer)",
       "replacement": {
@@ -36828,7 +36828,7 @@
       "line": 662,
       "endLine": 662,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:927b522e4d20c1d42ca437aa4f2a5d8d8b107fffe670f6f7c6df4344666173da",
+      "occurrence": "v2:478de08371e41e0cd9fdc2b8f06e4629e572309e56f6cd7b8bece00a47a38d67",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(TestConsole.layer)",
       "replacement": {
@@ -37227,7 +37227,7 @@
       "line": 923,
       "endLine": 923,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:861e1998d780490bdb234894e76b06327abd515408a5e99628dbb586e5af48f1",
+      "occurrence": "v2:28cfabf6c1fa6211f3125c50573fd4e7aa46bac6e261fc5c68870ef17e1b2baf",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -37458,7 +37458,7 @@
       "line": 147,
       "endLine": 147,
       "symbol": "providePlatform",
-      "occurrence": "v2:0b30804e6c48ba3404f2482e78a74fb57ed8fe59f3e96f16d23057ea817462dc",
+      "occurrence": "v2:aad07e6d90cdc223856d839cbf2b66a770ab6b29dfc0e391a9ef45ee964748f2",
       "class": "unresolved-layer-provide",
       "evidence": "providePlatform",
       "replacement": {
@@ -37836,7 +37836,7 @@
       "line": 59,
       "endLine": 59,
       "symbol": "providePlatform",
-      "occurrence": "v2:18339313404ab7b0f0526ccd90e6af6b0036c5f37da602285dd8ccc3cae65a95",
+      "occurrence": "v2:0718cdb0d2ce5acf77489ccb3fe0472c0d0092a78fe79bc0c32af0750f255c25",
       "class": "unresolved-layer-provide",
       "evidence": "providePlatform",
       "replacement": {
@@ -38509,7 +38509,7 @@
       "line": 220,
       "endLine": 220,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:548524e61a8d1a255c480ac37f4e0e375069ebc8d17560efdd2c44df148967f6",
+      "occurrence": "v2:fec9589fc3a2c002acb01ca143df2ed0ead5c43b4f75c825a6f65444286464f6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -38530,7 +38530,7 @@
       "line": 229,
       "endLine": 229,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:f27c7c034a6f44dbca77f69883dd11ca3b98ea8e4a2235cdc45cf534a6c8ab97",
+      "occurrence": "v2:a5fc2f6d4be6a782a1ab7b40379faa9b4ad3fc051d9a980f0abec4c28c3dabe9",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -40651,7 +40651,7 @@
       "line": 643,
       "endLine": 643,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:2b03c85ce934daa4dc83ef27e882946dacdaa4fd4bc765c24a0a051db1103c23",
+      "occurrence": "v2:30be3478f547bf8b73600b626583b9788da1f89adbd4b9203555f070ab512313",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -44872,7 +44872,7 @@
       "line": 171,
       "endLine": 171,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e6fa545656887059a91e92a0b16398170ba02ce0c6c7ce5c857e62febb1b63c1",
+      "occurrence": "v2:11154dfe570918b13725b864a7fd49f45febcda239eb98a655d66cffa129cef6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -44893,7 +44893,7 @@
       "line": 181,
       "endLine": 181,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:0237bbe3fd61b036d9ce1ccbaebc137db1d7ce739e84319a61ec3d45fab51e09",
+      "occurrence": "v2:d4c9cea427cc3a09e94b7fe8f30af8cc84294d2591bc180650ed6b8f95af7466",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -44914,7 +44914,7 @@
       "line": 191,
       "endLine": 191,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e1197508a8f241089fe291fe7a89f115fac6b4a6a7bbfc6dd0076da092259de3",
+      "occurrence": "v2:c197aad99be366dddb0aa2ee841eba0aa62e3ffef6e6375026e649cbd0c2722c",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -44935,7 +44935,7 @@
       "line": 201,
       "endLine": 201,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:b47f3818344fbe59887ec4d8d12cfc49b839b62bb5fc2d750e720fc8ce818030",
+      "occurrence": "v2:4bc301f7aa15b93ecbb1ca973521665a38e1008a36027a253b2b7b7e9a7cf66b",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -44956,7 +44956,7 @@
       "line": 215,
       "endLine": 215,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:69a8422c88ceda5720d5a6c4b1c6b97f1ff4d69e0fc1a00543c82ea5618adad8",
+      "occurrence": "v2:4828ec6b96a70277592c8e535b21352659fd481f3a8a5732fd8ccfb9341fa8ce",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -51557,7 +51557,7 @@
       "line": 702,
       "endLine": 728,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:6c624498fcc5a3dedd4f9ed6481df78571be74f6e95d7cf1f76e3d23b992783d",
+      "occurrence": "v2:8f9086d80d4553af22ddd1f8e4a27051593e00f358061b867e17d497717ed194",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tmpDir, \"repo\"); const exit = yield* Effect",
       "replacement": {
@@ -53132,7 +53132,7 @@
       "line": 107,
       "endLine": 141,
       "symbol": "withTempDir",
-      "occurrence": "v2:7ed90deb3fe99076dea054ac0748e1673e93aead0b10cc122bf58f9d501069c6",
+      "occurrence": "v2:a69e0f4e8296e28dad3468bb79763610733337b8c573bbe14b7f0b8875063cae",
       "class": "resource-wrapper",
       "evidence": "withTempDir( Effect.fnUntraced(function* (parent) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const roundRoot = path.join(parent, \"round-1\"); const framesDir = path.join(",
       "replacement": {
@@ -53153,7 +53153,7 @@
       "line": 145,
       "endLine": 160,
       "symbol": "withTempDir",
-      "occurrence": "v2:b04462c80f47bb14bcdce55959332874f9bf290a3648b1c4b73e08bf03fe4353",
+      "occurrence": "v2:a205e4a54fc94ccdb9df4101a72b7bb7bb86637c68145010be713d35aa98bc88",
       "class": "resource-wrapper",
       "evidence": "withTempDir( Effect.fnUntraced(function* (parent) { const path = yield* Path.Path; const root = path.join(parent, \"missing-round\"); const input = CitedArtifactExistsInput.make({ citedPaths: [\"frames/g",
       "replacement": {
@@ -55043,7 +55043,7 @@
       "line": 490,
       "endLine": 518,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:1329345e68ee83fb9725fb75f77559866f7aef211c9019125c7fdb84799ed4a8",
+      "occurrence": "v2:1c7c2b05ce243876b35583398be684730f1648864cf250a3a4054010f2c0dd38",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo(({ repoRoot, worktreesRoot }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const target = yield* addWorktree(repoRoot, worktreesRoot, \"unauthorized\"); const re",
       "replacement": {
@@ -56664,7 +56664,7 @@
       "line": 1776,
       "endLine": 1776,
       "symbol": "scoped",
-      "occurrence": "v2:3d6e23822ecc89c5c81a629ce8c3932f02f0f952744f93a33c93a68c33c1486d",
+      "occurrence": "v2:f5bd6c8343125d0dc5d0900ac3a505a04c212a871292d32c67b2125c2455e5b3",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -82589,7 +82589,7 @@
       "line": 134,
       "endLine": 157,
       "symbol": "checkEffect",
-      "occurrence": "v2:39a51c7c5dbe33ea580181f7e1a28711f3b02527f8af7daf0413d56fbe43e1cb",
+      "occurrence": "v2:610172873358ee236092573f14978d27b9c65ef2b0a57beba0a6f8c72c1f3b83",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.schema(CacheTaskConfiguration), (configuration) => Effect.gen(function* () { const f = yield* activationFixture(); const after = yield* encodeJsonObjectJson({ extends:",
       "replacement": {
@@ -83289,7 +83289,7 @@
       "line": 37,
       "endLine": 51,
       "symbol": "it.live",
-      "occurrence": "v2:2d32bad6a4ace01601acf21308121f28f12731a1263a040e1a1a27d2ec47f5e7",
+      "occurrence": "v2:e09f5b0300d035b2ff851f46b802d3dbebc570556b57e419d2e3645b332c0401",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"surfaces a nonzero child exit rather than treating it as a stall\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const outcome = yield* Effect.result( runDocgenSte",
       "replacement": {
@@ -83310,7 +83310,7 @@
       "line": 53,
       "endLine": 69,
       "symbol": "it.live",
-      "occurrence": "v2:c220522b02a3a64d9e7de2252cabe23835f68c77913bb38d838399678d00cb99",
+      "occurrence": "v2:d1f60ac6df97ca7c9f3006c2fb8d06b725b458e59ab11a2315e5fd158047faec",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"abandons a child that outlives its budget and fails once the retry stalls too\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); // Both attempts stall, which is the",
       "replacement": {
@@ -83331,7 +83331,7 @@
       "line": 71,
       "endLine": 111,
       "symbol": "it.live",
-      "occurrence": "v2:33a9ff7688aab6b3ad11f4564f53ad0c5189c1ec1a5c291527210edbf20dec7f",
+      "occurrence": "v2:bfaae028c00e628f867adc648e6386e2523323f9e7c5c88a51964821eae72ec5",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"logs only the watched child tree without raw argument values\", Effect.fnUntraced(function* () { const repoRoot = yield* findRepoRoot(); const unrelated = yield* ChildProcess.make(\"sleep\", [\"",
       "replacement": {
@@ -95041,7 +95041,7 @@
       "line": 122,
       "endLine": 122,
       "symbol": "it.layer",
-      "occurrence": "v2:8bf730e50c1632948fbbcfad083710493c23410ed4dc35967fc2756623483a82",
+      "occurrence": "v2:54c9f3e10399ca184ecf5042b74c75a5f3be3734df043390f929518d7acdfa0a",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(NodeServices.layer)",
       "replacement": {
@@ -95062,7 +95062,7 @@
       "line": 116,
       "endLine": 116,
       "symbol": "it.layer",
-      "occurrence": "v2:2e914502d511f99e0c91c2be24fe49f129c726ac0b4980f58ad3afc262195d36",
+      "occurrence": "v2:82b50455ae298ed5123f083da760b012ee44d7e1811167aa9ae3fa72ec7cf996",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(testLayer)",
       "replacement": {
@@ -95146,7 +95146,7 @@
       "line": 645,
       "endLine": 645,
       "symbol": "it.layer",
-      "occurrence": "v2:309f2a82f2d77256a1b23f763dac73a72a12e2b8d6eb8b10b88e8bf366a9cf54",
+      "occurrence": "v2:fdec00bb19e26ae6e3de9264e6f93a5e5bf1a7ce5661b5c830476b3837fb5100",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(BunCrypto.layer)",
       "replacement": {
@@ -95356,7 +95356,7 @@
       "line": 177,
       "endLine": 177,
       "symbol": "it.layer",
-      "occurrence": "v2:9609d5d0634af34b98ec35fef57c153bce31775848e55d3f13d688996375ab61",
+      "occurrence": "v2:927f7c071ffbdf774650af6a40883cb7519d4d23b56bbd872dd5fdb08ae3f5b0",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(TestLayer)",
       "replacement": {

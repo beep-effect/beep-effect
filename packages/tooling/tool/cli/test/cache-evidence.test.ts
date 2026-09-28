@@ -7,6 +7,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -19,9 +20,7 @@ describe("shared bounded experiment artifacts", () => {
     Effect.gen(function* () {
       const text = "café λ\n";
       expect(yield* decodeCacheExperimentText(new TextEncoder().encode(text))).toBe(text);
-      expect(Result.isFailure(yield* decodeCacheExperimentText(new Uint8Array([0xc3, 0x28])).pipe(Effect.result))).toBe(
-        true
-      );
+      assertTrue(Result.isFailure(yield* decodeCacheExperimentText(new Uint8Array([0xc3, 0x28])).pipe(Effect.result)));
     })
   );
 
@@ -34,10 +33,10 @@ describe("shared bounded experiment artifacts", () => {
       expect(yield* readCacheExperimentBytes(root, "artifact", 4).pipe(Effect.flatMap(decodeCacheExperimentText))).toBe(
         "four"
       );
-      expect(Result.isFailure(yield* readCacheExperimentBytes(root, "artifact", 3).pipe(Effect.result))).toBe(true);
-      expect(Result.isFailure(yield* readCacheExperimentBytes(root, "absent", 4).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheExperimentBytes(root, "artifact", 3).pipe(Effect.result)));
+      assertTrue(Result.isFailure(yield* readCacheExperimentBytes(root, "absent", 4).pipe(Effect.result)));
       yield* fs.symlink(path.join(root, "artifact"), path.join(root, "link"));
-      expect(Result.isFailure(yield* readCacheExperimentBytes(root, "link", 4).pipe(Effect.result))).toBe(true);
+      assertTrue(Result.isFailure(yield* readCacheExperimentBytes(root, "link", 4).pipe(Effect.result)));
     }).pipe(provideScopedLayer(testLayer))
   );
 
@@ -51,9 +50,7 @@ describe("shared bounded experiment artifacts", () => {
       yield* fs.writeFile(executable, bytes);
       expect(yield* hashCacheExperimentExecutable(executable)).toBe(yield* hashBytes(bytes));
       yield* fs.symlink(executable, path.join(root, "link"));
-      expect(Result.isFailure(yield* hashCacheExperimentExecutable(path.join(root, "link")).pipe(Effect.result))).toBe(
-        true
-      );
+      assertTrue(Result.isFailure(yield* hashCacheExperimentExecutable(path.join(root, "link")).pipe(Effect.result)));
     }).pipe(provideScopedLayer(testLayer))
   );
 });

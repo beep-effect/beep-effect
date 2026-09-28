@@ -6,6 +6,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
@@ -126,7 +127,7 @@ describe("quality command dispatch", () => {
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         expect(spawned).toEqual(["node --test scripts/test-onnxruntime-installer-patch.mjs"]);
       }).pipe(provideScopedLayer(Layer.mergeAll(CommandTestLayer, recordingSpawnerLayer(spawned, failedHandle))))
     );

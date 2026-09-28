@@ -164,7 +164,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, vi } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -595,7 +595,7 @@ const policyStepCommand = (step: QualityTaskStep) => {
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const failure = Cause.squash(exit.cause);
     expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -3533,7 +3533,7 @@ describe("quality task adapter", () => {
             Effect.exit(runRootLintPolicyTask(true))
           );
 
-          expect(Exit.isSuccess(exit)).toBe(true);
+          assertTrue(Exit.isSuccess(exit));
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           // Derived from the same plan the runtime executes: a lint policy step
@@ -5897,7 +5897,7 @@ describe("quality task adapter", () => {
                 )
               )
             );
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
           })
         )
       ));
@@ -7188,7 +7188,7 @@ describe("quality task adapter", () => {
           );
 
           expect(released).toBe(true);
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskFailed);
@@ -7259,7 +7259,7 @@ describe("quality task adapter", () => {
             )
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -7301,7 +7301,7 @@ describe("quality task adapter", () => {
           );
 
           expect(yield* fs.exists(markerPath)).toBe(true);
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -7422,7 +7422,7 @@ describe("quality task adapter", () => {
             Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]))
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           expect(yield* fs.readFileString(statePath)).toBe("3");
           expect(yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH))).toBe(false);
 
@@ -7478,7 +7478,7 @@ describe("quality task adapter", () => {
             Effect.exit(runQualityTask(getInvocation(["lint"])))
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);

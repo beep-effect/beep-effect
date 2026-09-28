@@ -25,6 +25,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -517,7 +518,7 @@ describe("golden replay (committed fixture)", () => {
           // packet-trace-stale, and the next write regenerates it.
           const v1Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.v1.json`);
           const decoded = yield* Effect.exit(decodePacketTraceProjectionJson(v1Text));
-          expect(Exit.isFailure(decoded)).toBe(true);
+          assertTrue(Exit.isFailure(decoded));
 
           const v2Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
           expect(v2Text).not.toBe(v1Text);
@@ -564,7 +565,7 @@ describe("golden replay (committed fixture)", () => {
             body: { type: "status-set", status: "paused", previous: "active" },
           });
           const result = yield* Effect.exit(store.append(locator, next));
-          expect(Exit.isFailure(result)).toBe(true);
+          assertTrue(Exit.isFailure(result));
           if (Exit.isFailure(result)) {
             expect(String(Cause.squash(result.cause))).toContain("forked");
           }
@@ -928,7 +929,7 @@ describe("store read robustness", () => {
           const missingPath = yield* fs.makeTempDirectory();
           const missingLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: missingPath });
           const missing = yield* Effect.exit(store.append(missingLocator, genesisEvent("robust")));
-          expect(Exit.isFailure(missing)).toBe(true);
+          assertTrue(Exit.isFailure(missing));
           if (Exit.isFailure(missing)) {
             expect(String(Cause.squash(missing.cause))).toContain("ops/events");
           }
@@ -938,7 +939,7 @@ describe("store read robustness", () => {
           yield* fs.writeFileString(`${brokenPath}/ops/events/junk.json`, "{}");
           const brokenLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: brokenPath });
           const broken = yield* Effect.exit(store.append(brokenLocator, genesisEvent("robust")));
-          expect(Exit.isFailure(broken)).toBe(true);
+          assertTrue(Exit.isFailure(broken));
           if (Exit.isFailure(broken)) {
             expect(String(Cause.squash(broken.cause))).toContain("integrity");
           }
@@ -958,7 +959,7 @@ describe("store read robustness", () => {
             body: { type: "status-set", status: "paused", previous: "active" },
           });
           const conflicted = yield* Effect.exit(store.append(parentLocator, wrongParent));
-          expect(Exit.isFailure(conflicted)).toBe(true);
+          assertTrue(Exit.isFailure(conflicted));
           if (Exit.isFailure(conflicted)) {
             expect(String(Cause.squash(conflicted.cause))).toContain("parent digest");
           }

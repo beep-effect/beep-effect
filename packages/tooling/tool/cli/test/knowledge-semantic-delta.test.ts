@@ -26,6 +26,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Hex from "effect/encoding/Hex";
@@ -919,7 +920,7 @@ describe("knowledge semantic-delta probe policy", () => {
 
       expect(skipped.probePolicy).toBe("skipped-untrusted-context");
       expect(skipped.introduced).toEqual([]);
-      expect(Exit.isFailure(probed)).toBe(true);
+      assertTrue(Exit.isFailure(probed));
     }).pipe(provideScopedLayer(testLayer))
   );
 

@@ -12,6 +12,7 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -60,7 +61,7 @@ const listEventFiles = Effect.fnUntraced(function* (slug: string) {
 });
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -81,7 +82,7 @@ describe("set-risk-tier guarded override writer", () => {
             const exit = yield* Effect.exit(
               runGoalsCommand(["set-risk-tier", "override-demo", "standard", "--reason", "pilot routing"])
             );
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
 
             const files = yield* listEventFiles("override-demo");
             expect(A.length(files)).toBe(2);
@@ -121,11 +122,11 @@ describe("set-risk-tier guarded override writer", () => {
             const first = yield* Effect.exit(
               runGoalsCommand(["set-risk-tier", "replace-demo", "standard", "--reason", "initial routing"])
             );
-            expect(Exit.isSuccess(first)).toBe(true);
+            assertTrue(Exit.isSuccess(first));
             const second = yield* Effect.exit(
               runGoalsCommand(["set-risk-tier", "replace-demo", "full", "--reason", "scope grew"])
             );
-            expect(Exit.isSuccess(second)).toBe(true);
+            assertTrue(Exit.isSuccess(second));
 
             const files = yield* listEventFiles("replace-demo");
             expect(A.length(files)).toBe(3);
@@ -159,7 +160,7 @@ describe("set-risk-tier guarded override writer", () => {
             const exit = yield* Effect.exit(
               runGoalsCommand(["set-risk-tier", "preview-override", "full", "--reason", "just looking", "--preview"])
             );
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
 
             expect(A.length(yield* listEventFiles("preview-override"))).toBe(0);
             expect(yield* fs.exists("goals/preview-override/ops/trace.json")).toBe(false);
@@ -201,7 +202,7 @@ describe("set-risk-tier guarded override writer", () => {
             const seeded = yield* Effect.exit(
               runGoalsCommand(["set-risk-tier", "forked-override", "standard", "--reason", "initial routing"])
             );
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             // Handcraft a second child of the genesis event (a fork).
             const store = yield* PacketEventStore;

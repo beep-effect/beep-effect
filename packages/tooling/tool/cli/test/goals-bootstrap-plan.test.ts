@@ -25,7 +25,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertExitSuccess, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -619,7 +619,7 @@ describe("goals bootstrap command gate", () => {
                 "--json",
               ])
             );
-            expect(Exit.isSuccess(happy)).toBe(true);
+            assertTrue(Exit.isSuccess(happy));
           })
         ).pipe(provideScopedLayer(commandTestLayer))
       ),
@@ -648,12 +648,12 @@ describe("goals adopt command gate", () => {
             expectReportedExit(missingPlan);
 
             const happy = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet", "--plan", "--json"]));
-            expect(Exit.isSuccess(happy)).toBe(true);
+            assertTrue(Exit.isSuccess(happy));
 
             const human = yield* Effect.exit(
               runGoalsCommand(["adopt", "fixture-packet", "--plan", "--toward", "standard-delivery"])
             );
-            expect(Exit.isSuccess(human)).toBe(true);
+            assertTrue(Exit.isSuccess(human));
 
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);

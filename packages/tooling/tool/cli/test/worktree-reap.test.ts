@@ -15,6 +15,7 @@ import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -506,7 +507,7 @@ describe("worktree reap", () => {
           )
         );
 
-        expect(Result.isFailure(attempt)).toBe(true);
+        assertTrue(Result.isFailure(attempt));
         expect(yield* fs.exists(target)).toBe(true);
         const branch = yield* runRepoCommandCapture(
           "git",

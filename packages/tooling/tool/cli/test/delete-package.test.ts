@@ -19,6 +19,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as Exit from "effect/Exit";
@@ -748,7 +749,7 @@ describe("delete-package baseline writer stage", () => {
       withTempDirectory((repoRoot) =>
         Effect.gen(function* () {
           const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener"));
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             expect(Str.includes("fallow boundaries failed with exit code 1")(Cause.pretty(exit.cause))).toBe(true);
           }

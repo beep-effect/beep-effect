@@ -5012,3 +5012,21 @@ Receipts: `cli-otlp-clock-control-node.json` and
 `cli-otlp-clock-control-bun.json`. This proves the helper's delayed-arrival gap;
 it does not by itself identify which stage caused the full forwarder timeout.
 Keep the original 30-second test budget and qualify any repair accordingly.
+
+The polling helper now applies `TestClock.withLive` only to its existing retry
+program. All 45 AI metrics tests pass under Node and Bun with unchanged retry
+limits and test budgets. The full 49-file comparison is being re-established
+under receipt prefix `cli-predicate-batch-before-clock-repaired`; the original
+failed `cli-predicate-batch-before-node` evidence remains intact. Passing the
+focused file supports the narrow clock repair, not a causal claim about the
+original whole-cohort timeout or final package acceptance.
+
+- Assertion migration identity churn: the 49-file, 190-assertion CLI batch reduced
+  detector findings by 180, but the first `beep lint effect-vitest` run reported
+  100 introduced findings because enclosing statement hashes include assertion
+  bodies. A before/after run of the actual detector matched all 100 to existing
+  rows, preserving every non-EV006 file/rule/class/symbol traversal count.
+  Only those baseline occurrence hashes and four evidence excerpts containing
+  the migrated assertions were updated; all statuses were retained. A reviewed identity-migration receipt would prevent
+  this manual reconciliation without admitting new debt. Private evidence:
+  `cli-predicate-batch-anchor-review.json` and the original failed ratchet log.

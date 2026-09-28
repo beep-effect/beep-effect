@@ -27,6 +27,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 
@@ -402,7 +403,7 @@ describe("package verify", () => {
           })
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
           const error = Cause.squash(exit.cause);
           expect(error).toMatchObject({

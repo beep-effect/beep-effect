@@ -6,6 +6,7 @@ import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, FileSystem, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -171,7 +172,7 @@ describe("coverage baseline subtraction", () => {
             const exit = yield* Effect.exit(
               subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener")
             );
-            expect(Exit.isFailure(exit)).toBe(true);
+            assertTrue(Exit.isFailure(exit));
             if (Exit.isFailure(exit)) {
               expect(Str.includes("schema version 1")(Cause.pretty(exit.cause))).toBe(true);
             }

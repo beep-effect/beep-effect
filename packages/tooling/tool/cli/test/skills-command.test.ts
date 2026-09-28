@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
@@ -267,7 +268,7 @@ describe("skills command", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
 
-        expect(Result.isFailure(result)).toBe(true);
+        assertTrue(Result.isFailure(result));
         if (Result.isFailure(result)) {
           expect(result.failure.message).toContain("unsafe file path");
         }

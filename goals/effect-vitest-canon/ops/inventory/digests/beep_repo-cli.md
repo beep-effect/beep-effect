@@ -12,7 +12,7 @@ AST comparison confirms all non-import statements remain unchanged. Evidence:
 Eleven additional detector rows from that commit are now fixed: scoped cwd
 acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
 runner imports and the schema-topology layer timeout. The detector ledger now
-contains 84 fixed rows, seven reviewed exceptions and 3,330 open rows, with all
+contains 98 fixed rows, seven reviewed exceptions and 3,316 open rows, with all
 3,415 historical identities preserved and six newly exposed shorter-scope
 judgments added and strict schema validation passing. The full CLI
 package audit and docgen passed after the cwd repair. Four-lens reconciliation,
@@ -23,6 +23,11 @@ Commit `77f8387edb` additionally fixes 17 detector findings in the allowlist/cac
 resource migration and the cache dashboard cleanup resource finding. Its scoped
 proof and native-boundary qualifications are recorded in
 [the resource proof](../../../research/cli-allowlist-cache-resource-proof.md).
+
+Commit `c7763ea32d` fixes 14 more detector findings in the QA command, reply
+schema and verdict JSON suites. All 48 registrations pass on Node and Bun;
+full package audit/docgen passed. See
+[the assertion proof](../../../research/cli-schema-assertions-proof.md).
 
 Historical evidence follows unchanged.
 

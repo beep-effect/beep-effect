@@ -40,7 +40,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, vi } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -644,7 +644,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       `rejects ${closureFault} dependencies before creating an experiment`,
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture("none", linker, false, true, closureFault);
-        expect(Result.isFailure(yield* run().pipe(Effect.result))).toBe(true);
+        assertTrue(Result.isFailure(yield* run().pipe(Effect.result)));
         expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
       })
     );

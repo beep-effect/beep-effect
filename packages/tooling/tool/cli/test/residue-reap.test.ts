@@ -8,6 +8,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -637,9 +638,9 @@ describe("residue reap", () => {
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
       const empty = yield* Effect.result(runResidueReap({ homeRoot: "" }));
-      expect(Result.isFailure(empty)).toBe(true);
+      assertTrue(Result.isFailure(empty));
       const relative = yield* Effect.result(runResidueReap({ homeRoot: "relative/home" }));
-      expect(Result.isFailure(relative)).toBe(true);
+      assertTrue(Result.isFailure(relative));
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 

@@ -5,6 +5,7 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -222,7 +223,7 @@ describe("image command", { concurrent: false }, () => {
           expect(yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"))).toBe("existing");
           expect(yield* TestConsole.errorLines).toEqual([]);
           expect(process.exitCode ?? 0).toBe(0);
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
             expect(O.isSome(failure)).toBe(true);
@@ -291,7 +292,7 @@ describe("image command", { concurrent: false }, () => {
           yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
           const exit = yield* Effect.exit(runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
             expect(O.isSome(failure)).toBe(true);
@@ -323,7 +324,7 @@ describe("image command", { concurrent: false }, () => {
             withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           expect(yield* fs.exists(argsPath)).toBe(false);
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
@@ -371,7 +372,7 @@ describe("image command", { concurrent: false }, () => {
             `image extract-frames-dir: good.mp4: wrote 2 frame(s) to ${path.join(videoDir, "good")}. manifest: ${path.join(videoDir, "good", "extract-frames-manifest.json")}`,
             "image extract-frames-dir: processed 2 video(s); succeeded 1; failed 1.",
           ]);
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = firstFailure(exit.cause);
             expect(O.isSome(failure)).toBe(true);
