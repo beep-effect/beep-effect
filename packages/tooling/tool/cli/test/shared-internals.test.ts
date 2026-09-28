@@ -1,4 +1,4 @@
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 
 // Effect's default ConfigProvider snapshots the ambient environment once, at
 // the first config read in this (isolated) test file. Set the values the
@@ -112,7 +112,10 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
       remediation: "r",
     });
     const decoded = decodeSchemaFirstPolicyFindingLine(line(finding));
-    expect(O.map(decoded, (f) => f.severity)).toEqual(O.some("error"));
+    assertSome(
+      O.map(decoded, (f) => f.severity),
+      "error"
+    );
   });
 
   it("represents both the 'warn' and 'warning' severity spellings", () => {
@@ -126,7 +129,10 @@ describe("SchemaFirstPolicyFinding wire contract", () => {
       message: "m",
     })}`;
     const decoded = decodeSchemaFirstPolicyFindingLine(warnLine);
-    expect(O.map(decoded, (f) => f.severity)).toEqual(O.some("warn"));
+    assertSome(
+      O.map(decoded, (f) => f.severity),
+      "warn"
+    );
   });
 
   it("decodes a line with severity and remediation omitted", () => {
@@ -235,7 +241,7 @@ describe("EnvConfig readers", () => {
   const UNSET = "BEEP_SI_DEFINITELY_UNSET";
 
   it("configStringOptionSync reads present and absent snapshot values", () => {
-    expect(configStringOptionSync("BEEP_SI_STR")).toEqual(O.some("value"));
+    assertSome(configStringOptionSync("BEEP_SI_STR"), "value");
     configStringOptionSync(UNSET).pipe(O.isNone, assertTrue);
   });
 
@@ -272,8 +278,8 @@ describe("EnvConfig readers", () => {
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(
           readOptionalConfigString("TOKEN")
         );
-      expect(yield* withProvider("first")).toEqual(O.some("first"));
-      expect(yield* withProvider("second")).toEqual(O.some("second"));
+      assertSome(yield* withProvider("first"), "first");
+      assertSome(yield* withProvider("second"), "second");
       const missing = provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         configStringOption("TOKEN")
       );
@@ -341,7 +347,7 @@ describe("Github plumbing", () => {
         onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
       })
     );
-    expect(result).toEqual(O.some("next"));
+    assertSome(result, "next");
   });
 
   it("nextCursor fails when another page has no end cursor", () => {
@@ -483,7 +489,7 @@ describe("readOptionalRedactedConfigString", () => {
       const present = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: "secret" })))(
         readOptionalRedactedConfigString("TOKEN")
       );
-      expect(O.map(present, Redacted.value)).toEqual(O.some("secret"));
+      assertSome(O.map(present, Redacted.value), "secret");
 
       const missing = yield* provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
         readOptionalRedactedConfigString("TOKEN")

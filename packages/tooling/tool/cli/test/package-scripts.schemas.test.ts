@@ -10,12 +10,12 @@ import {
   taskScriptRules,
 } from "@beep/repo-cli/test/PackageScripts";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PackageScriptsReportWire } from "@beep/repo-cli/test/PackageScripts";
@@ -74,7 +74,7 @@ describe("canonical package scripts schemas", () => {
     Effect.fnUntraced(function* () {
       const input = { build: "bun run beep:build", "beep:build": "custom $BUILD", dev: "vite", "beep:custom": "owned" };
       const block = yield* decodeApp(input);
-      expect(HashMap.get(block.tasks, "build")).toEqual(O.some("bun run beep:build"));
+      assertSome(HashMap.get(block.tasks, "build"), "bun run beep:build");
       expect(HashMap.size(block.impls)).toBe(1);
       expect(HashMap.size(block.extras)).toBe(2);
       expect(yield* encodeApp(block)).toEqual(input);

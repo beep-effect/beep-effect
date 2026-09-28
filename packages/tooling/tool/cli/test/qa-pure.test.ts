@@ -86,7 +86,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import type { ActionEvent } from "@beep/qa-capture";
@@ -279,7 +279,7 @@ describe("commands/Qa Qa.session filesystem helpers", () => {
           const hintPath = `${dir}/record-hint.json`;
           assertNone(yield* readRecordStartHint(hintPath));
           yield* writeRecordStartHint(hintPath, 1754000000123);
-          expect(yield* readRecordStartHint(hintPath)).toEqual(O.some(1754000000123));
+          assertSome(yield* readRecordStartHint(hintPath), 1754000000123);
         })
       )
     ));

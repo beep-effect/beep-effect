@@ -289,7 +289,10 @@ describe("yeet review-thread classification", () => {
         })
       );
 
-      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
     })
   );
 
@@ -356,7 +359,10 @@ describe("yeet review-thread classification", () => {
         })
       );
 
-      expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+      assertSome(
+        O.map(mergeReady, (value) => value.ready),
+        true
+      );
     })
   );
 
@@ -485,8 +491,14 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 1, unresolvedReviewThreadCount: 2 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      false
+    );
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "required-checks-green"
+    );
   });
 
   it("treats a still-pending pipeline as not green", () => {
@@ -495,7 +507,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 3 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "required-checks-green"
+    );
   });
 
   it("names threads-resolved once the pipeline is green", () => {
@@ -504,7 +519,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 1 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "threads-resolved"
+    );
   });
 
   it("counts unresolved closeout issues as an open-thread blocker", () => {
@@ -513,7 +531,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "threads-resolved"
+    );
   });
 
   it("blocks on closeout-run when the closeout artifact is missing without mislabeling threads", () => {
@@ -526,9 +547,18 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
-    expect(O.map(mergeReady, (value) => value.criteria.threadsResolved)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      false
+    );
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "closeout-run"
+    );
+    assertSome(
+      O.map(mergeReady, (value) => value.criteria.threadsResolved),
+      true
+    );
   });
 
   it("blocks on closeout-run when the reviewed head no longer matches the remote head", () => {
@@ -543,7 +573,10 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "closeout-run"
+    );
   });
 
   it("satisfies closeout-run when the reviewed and remote heads match", () => {
@@ -558,8 +591,14 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.map(mergeReady, (value) => value.criteria.closeoutRun)).toStrictEqual(O.some(true));
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.criteria.closeoutRun),
+      true
+    );
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
   });
 
   it.effect("decodes a legacy headless closeout report and treats it as stale", () =>
@@ -587,7 +626,10 @@ describe("yeet merge readiness", () => {
       );
 
       assertNone(report.reviewedHeadSha);
-      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("closeout-run"));
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "closeout-run"
+      );
     })
   );
 
@@ -670,9 +712,15 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
     assertNone(O.flatMap(mergeReady, (value) => value.failing));
-    expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.criteria.greptileScore),
+      "4/5"
+    );
   });
 
   it("treats gh's empty review decision as absent", () => {
@@ -687,7 +735,10 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      true
+    );
     assertNone(O.flatMap(mergeReady, (value) => value.failing));
   });
 
@@ -763,7 +814,10 @@ describe("yeet merge readiness", () => {
       })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some(criterion));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      criterion
+    );
   });
 });
 
@@ -893,10 +947,14 @@ describe("yeet status snapshot rendering and encoding", () => {
       // snapshot, which rendered Option fields as {"_id":"Option",...} and
       // produced an artifact that no longer decoded.
       expect(json).not.toContain('"_id":"Option"');
-      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
-      expect(
-        O.map(decoded.remote.unresolvedThreads, (threads) => A.map(threads, (thread) => thread.commentDatabaseId))
-      ).toStrictEqual(O.some([O.some(2412551122)]));
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
+      assertSome(
+        O.map(decoded.remote.unresolvedThreads, (threads) => A.map(threads, (thread) => thread.commentDatabaseId)),
+        [O.some(2412551122)]
+      );
     })
   );
 

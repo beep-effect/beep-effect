@@ -27,7 +27,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -132,8 +132,8 @@ describe("internal/cli/UnknownProbe", () => {
   });
 
   it("reads present properties data-first and data-last, rejecting arrays and missing keys", () => {
-    expect(unknownRecordProperty({ name: "beep" }, "name")).toStrictEqual(O.some("beep"));
-    expect(unknownRecordProperty("name")({ name: "beep" })).toStrictEqual(O.some("beep"));
+    assertSome(unknownRecordProperty({ name: "beep" }, "name"), "beep");
+    assertSome(unknownRecordProperty("name")({ name: "beep" }), "beep");
     unknownRecordProperty({ name: "beep" }, "missing").pipe(O.isNone, assertTrue);
     unknownRecordProperty([1, 2], "0").pipe(O.isNone, assertTrue);
   });

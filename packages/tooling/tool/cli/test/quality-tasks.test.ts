@@ -1288,7 +1288,12 @@ describe("quality task adapter", () => {
           expect(failures).toHaveLength(1);
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["passed", "failed"]);
           expect(A.map(report.lanes, (lane) => lane.exitCode)).toEqual([O.some(0), O.some(7)]);
-          expect(report.lanes[0]?.inputDigest).toStrictEqual(O.some("turbo-task-hash"));
+          {
+            const optionUnderTest = report.lanes[0]?.inputDigest;
+            const expectedOptionValue = "turbo-task-hash";
+            assertDefined(optionUnderTest);
+            assertSome(optionUnderTest, expectedOptionValue);
+          }
           {
             const optionUnderTest = report.lanes[1]?.inputDigest;
             assertDefined(optionUnderTest);
@@ -1607,7 +1612,7 @@ describe("quality task adapter", () => {
         expect(lines).toHaveLength(2);
         const report = yield* pipe(A.get(lines, 1), O.getOrThrow, decodeQualityTaskLaneRunReportJson);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
-        expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
+        assertSome(report.parentLaneId, "full:02-ci-parity");
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
         const emitted = pipe(
           yield* TestConsole.logLines,
@@ -1935,10 +1940,15 @@ describe("quality task adapter", () => {
             ["preflight:b", "not-run-early-stop"],
             ["heavy:check", "not-run-early-stop"],
           ]);
-          expect(report.firstRed).toStrictEqual(O.some("preflight:a"));
+          assertSome(report.firstRed, "preflight:a");
           expect(report.skippedAfterRed).toBe(2);
           (laneReport.lanes[0]?.startedAt ?? O.none()).pipe(O.isSome, assertTrue);
-          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
+          {
+            const optionUnderTest = laneReport.lanes[0]?.redSchedulingDecision;
+            const expectedOptionValue = "stop-after-red";
+            assertDefined(optionUnderTest);
+            assertSome(optionUnderTest, expectedOptionValue);
+          }
           {
             const optionUnderTest = laneReport.lanes[1]?.inputDigest;
             assertDefined(optionUnderTest);
@@ -1981,9 +1991,14 @@ describe("quality task adapter", () => {
       ).pipe(
         Effect.map(({ laneReport, report }) => {
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
-          expect(report.firstRed).toStrictEqual(O.some("preflight:imprecise"));
+          assertSome(report.firstRed, "preflight:imprecise");
           expect(report.skippedAfterRed).toBe(0);
-          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("continue-after-imprecise-red"));
+          {
+            const optionUnderTest = laneReport.lanes[0]?.redSchedulingDecision;
+            const expectedOptionValue = "continue-after-imprecise-red";
+            assertDefined(optionUnderTest);
+            assertSome(optionUnderTest, expectedOptionValue);
+          }
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -2007,9 +2022,14 @@ describe("quality task adapter", () => {
       ).pipe(
         Effect.map(({ laneReport, report }) => {
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
-          expect(report.firstRed).toStrictEqual(O.some("preflight:unclassified"));
+          assertSome(report.firstRed, "preflight:unclassified");
           expect(report.skippedAfterRed).toBe(1);
-          expect(laneReport.lanes[0]?.redSchedulingDecision).toStrictEqual(O.some("stop-after-red"));
+          {
+            const optionUnderTest = laneReport.lanes[0]?.redSchedulingDecision;
+            const expectedOptionValue = "stop-after-red";
+            assertDefined(optionUnderTest);
+            assertSome(optionUnderTest, expectedOptionValue);
+          }
         }),
         provideScopedLayer(PlatformLayer)
       )
@@ -2675,7 +2695,7 @@ describe("quality task adapter", () => {
         const runOf = (id: string) => O.getOrThrow(A.findFirst(result.laneReport.lanes, (lane) => lane.id === id));
 
         expect(A.map(result.failures, (failure) => failure.label)).toEqual(["goals:index-check", "lint:allowlist"]);
-        expect(result.report.firstRed).toStrictEqual(O.some("goals:index-check"));
+        assertSome(result.report.firstRed, "goals:index-check");
         expect(result.report.skippedAfterRed).toBe(0);
         expect(A.map(result.report.lanes, (lane) => [lane.id, lane.status])).toEqual([
           ["goals:index-check", "failed"],
@@ -2719,7 +2739,7 @@ describe("quality task adapter", () => {
       ).pipe(
         Effect.map(({ failures, report }) => {
           expect(A.map(failures, (failure) => failure.label)).toEqual(["quality:secrets"]);
-          expect(report.firstRed).toStrictEqual(O.some("quality:secrets"));
+          assertSome(report.firstRed, "quality:secrets");
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual([
             "failed",
             "passed",
@@ -3209,17 +3229,14 @@ describe("quality task adapter", () => {
   });
 
   it("names packages missing the required test tsgo Turbo script", () => {
-    expect(
+    assertSome(
       missingTestTsgoTaskMessageForTesting([
         { packageName: "@beep/ready", hasTaskScript: true },
         { packageName: "@beep/zulu", hasTaskScript: false },
         { packageName: "@beep/alpha", hasTaskScript: false },
-      ])
-    ).toEqual(
-      O.some(
-        '[quality:test-tsgo] missing required "package-test-typecheck" package script for @beep/alpha, ' +
-          '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
-      )
+      ]),
+      '[quality:test-tsgo] missing required "package-test-typecheck" package script for @beep/alpha, ' +
+        '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
     );
     assertNone(missingTestTsgoTaskMessageForTesting([{ packageName: "@beep/ready", hasTaskScript: true }]));
   });
@@ -3271,8 +3288,9 @@ describe("quality task adapter", () => {
       "--",
       "--explain",
     ]);
-    expect(testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n")).toEqual(
-      O.some(".turbo/runs/example.json")
+    assertSome(
+      testTsgoPlanningForTesting.turboSummaryPath("ok\nSummary: .turbo/runs/example.json\n"),
+      ".turbo/runs/example.json"
     );
     assertNone(testTsgoPlanningForTesting.turboSummaryPath("no summary"));
     assertNone(testTsgoPlanningForTesting.turboSummaryPath("Summary:   "));
@@ -3486,18 +3504,19 @@ describe("quality task adapter", () => {
       expect(step.args).toContain("--continue=dependencies-successful");
       expect(step.args).not.toContain(LABS_EXCLUDE_FILTER);
     }
-    expect(A.last(local)).toEqual(
-      O.some(
-        expect.objectContaining({
-          args: repoCliEntryArgs(
-            "quality",
-            "jsdoc-ratchet",
-            "--inventory",
-            ".beep/ci/jsdoc-documentation.inventory.jsonc"
-          ),
-        })
-      )
-    );
+    {
+      const optionUnderTest = A.last(local);
+      const expectedOptionValue = expect.objectContaining({
+        args: repoCliEntryArgs(
+          "quality",
+          "jsdoc-ratchet",
+          "--inventory",
+          ".beep/ci/jsdoc-documentation.inventory.jsonc"
+        ),
+      });
+      optionUnderTest.pipe(O.isSome, assertTrue);
+      expect(O.getOrThrow(optionUnderTest)).toEqual(expectedOptionValue);
+    }
     const full = rootLintPolicyStepsForTesting("/repo");
     expect(A.map(full, (step) => step.label)).toEqual([
       "lint:policy:cheap",
@@ -3824,7 +3843,7 @@ describe("quality task adapter", () => {
       ["...A", ["@beep/repo-cli", "A", "B", "C"], 2],
     ];
     for (const [selector, names, workers] of cases) {
-      expect(resolveCoverageSelector(owners, selector)).toEqual(O.some(names));
+      assertSome(resolveCoverageSelector(owners, selector), names);
       expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 3)).toEqual([
         "--",
         "--fileParallelism=true",
@@ -7239,12 +7258,13 @@ describe("quality task adapter", () => {
   });
 
   it("requires explicit test SQL URLs over generic application defaults", () => {
-    expect(
+    assertSome(
       sqlIntegrationConnectionUriFromEnvForTesting({
         BEEP_TEST_DATABASE_URL: "postgres://test:secret@127.0.0.1:5432/test",
         DATABASE_URL: "postgres://other:secret@127.0.0.1:5432/other",
-      })
-    ).toEqual(O.some("postgres://test:secret@127.0.0.1:5432/test"));
+      }),
+      "postgres://test:secret@127.0.0.1:5432/test"
+    );
 
     assertNone(
       sqlIntegrationConnectionUriFromEnvForTesting({
@@ -7882,7 +7902,7 @@ describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
     });
 
   it("opts a credential-free step into op run only when a session is needed", () => {
-    expect(turboStepLocalEnvForTesting(undefined, true)).toEqual(O.some(true));
+    assertSome(turboStepLocalEnvForTesting(undefined, true), true);
     assertNone(turboStepLocalEnvForTesting(undefined, false));
     assertNone(turboStepLocalEnvForTesting({ CI: "true" }, true));
   });

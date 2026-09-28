@@ -5141,3 +5141,11 @@ emitting helper calls; parse validity and argument-text equality are not enough.
 Evidence: installed `@effect/vitest/src/utils.ts`, the existing root lint policy
 step test, and private `cli-option-some-equality-proposal.json`. This was caught
 in draft review before application; it is not a production defect.
+
+The same Some batch's typed helper check also exposed three expected numeric
+literals whose subjects carry `NonNegativeInt` brands. Reusing the existing
+schema constructor preserves the numbers without casts. The final generated
+Effect diagnostic artifact is clean. Include expected-value brand compatibility
+in migration preparation, alongside optional subjects and asymmetric matchers.
+Private before/final receipts: `cli-option-some-equality-typecheck.json` and
+`cli-option-some-equality-final-typecheck.json`.

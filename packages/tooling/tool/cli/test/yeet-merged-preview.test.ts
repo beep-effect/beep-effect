@@ -17,9 +17,8 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
-import * as O from "effect/Option";
 
 const TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 const BASE_SHA = "1111111111111111111111111111111111111111";
@@ -104,7 +103,7 @@ describe("yeet merge-tree parsing", () => {
     const noisy = `warning: something advisory\n${TREE_SHA}\n`;
 
     expect(parseYeetMergeTreeResult(0, noisy).status).toBe("merged");
-    expect(gitObjectIdFromOutput(noisy)).toStrictEqual(O.some(TREE_SHA));
+    assertSome(gitObjectIdFromOutput(noisy), TREE_SHA);
   });
 
   it("reads no object id out of a capture that carries only prose", () => {

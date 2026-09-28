@@ -77,7 +77,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import {
   Clock,
   ConfigProvider,
@@ -158,7 +158,7 @@ describe("admission escalation", () => {
 
 describe("memory stats", () => {
   it("parses valid meminfo fields and rejects missing or invalid values", () => {
-    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: 2097152 kB\n", "MemTotal:")).toEqual(O.some(2));
+    assertSome(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: 2097152 kB\n", "MemTotal:"), 2);
     assertNone(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: unavailable kB\n", "MemTotal:"));
     assertNone(qualitySchedulerForTesting.parseMeminfoFieldGib("MemFree: 1024 kB\n", "MemTotal:"));
   });
@@ -1177,8 +1177,8 @@ describe("quality-scheduler", () => {
             });
             expect(released.nonce).toBe(admitted.nonce);
             expect(released.pid).toBe(admitted.pid);
-            expect(admitted.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
-            expect(released.attemptId).toStrictEqual(O.some(JOURNALED_ATTEMPT_ID));
+            assertSome(admitted.attemptId, JOURNALED_ATTEMPT_ID);
+            assertSome(released.attemptId, JOURNALED_ATTEMPT_ID);
             expect(admitted.enqueuedAtMillis).toBeLessThanOrEqual(admitted.admittedAtMillis);
             expect(admitted.admittedAtMillis).toBeLessThanOrEqual(released.releasedAtMillis);
           })
@@ -1422,11 +1422,11 @@ describe("quality-scheduler", () => {
             for (const event of A.flatMap(A.range(1300, 1302), queuedPair)) {
               yield* appendAdmissionJournalEvent(tempRoot.root, event);
               const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-              expect(A.head(lines)).toStrictEqual(O.some(opaque));
+              assertSome(A.head(lines), opaque);
               expect(lines).toHaveLength(2401);
               const decoded = yield* Effect.forEach(A.drop(lines, 1), (line) => decodeAdmissionJournalEvent(line));
               expect(A.filter(decoded, AdmissionJournalEvent.guards["admission-admitted"])).toStrictEqual(admissions);
-              expect(A.last(decoded)).toStrictEqual(O.some(event));
+              assertSome(A.last(decoded), event);
             }
             const expectedTail = yield* Effect.forEach(
               A.takeRight(A.flatMap(A.range(0, 1302), queuedPair), 2400 - admittedCount),

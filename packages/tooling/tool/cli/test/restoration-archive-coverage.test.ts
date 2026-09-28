@@ -10,7 +10,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
@@ -645,7 +645,7 @@ describe("restoration archive boundary helpers", () => {
         const claimPath = path.join(root, "writer.claim");
         expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(true);
         expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(false);
-        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.some(claimText));
+        assertSome(yield* RA.readCanonicalCoordinationFile(claimPath), claimText);
         expect(yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation")).toBe(false);
         expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
         assertNone(yield* RA.readCanonicalCoordinationFile(claimPath));

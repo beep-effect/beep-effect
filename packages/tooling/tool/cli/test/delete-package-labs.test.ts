@@ -21,7 +21,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
@@ -105,7 +105,7 @@ const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0
 describe("delete-package labs surface declarations", () => {
   it("routes the labs identity segment through the generatedLabComposers group", () => {
     const identity = O.getOrThrow(identitySurfaceOf(labTarget));
-    expect(identity.generatedGroup).toEqual(O.some("generatedLabComposers"));
+    assertSome(identity.generatedGroup, "generatedLabComposers");
     const inverse = O.getOrThrow(operationById(labTarget, "identity-segment"));
     expect(inverse.detail).toContain("generatedLabComposers");
   });

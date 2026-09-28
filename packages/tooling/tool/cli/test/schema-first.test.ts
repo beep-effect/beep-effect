@@ -22,7 +22,7 @@ import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScr
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -182,17 +182,15 @@ describe("packages/tooling/tool/cli schema-first models", () => {
   });
 
   it("resolves schema-crispening wave families by path prefix", () => {
-    expect(schemaCrispeningFamilyForFile("packages/foundation/modeling/schema/src/Foo.ts")).toEqual(
-      O.some("foundation")
-    );
-    expect(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Foo.ts")).toEqual(O.some("drivers"));
-    expect(schemaCrispeningFamilyForFile("packages/tooling/tool/cli/src/Foo.ts")).toEqual(O.some("tooling"));
-    expect(schemaCrispeningFamilyForFile("apps/web/src/Foo.tsx")).toEqual(O.some("apps-slices"));
-    expect(schemaCrispeningFamilyForFile("packages/agents/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(schemaCrispeningFamilyForFile("packages/architecture-lab/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(schemaCrispeningFamilyForFile("packages/epistemic/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(schemaCrispeningFamilyForFile("packages/law-practice/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(schemaCrispeningFamilyForFile("packages/workspace/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    assertSome(schemaCrispeningFamilyForFile("packages/foundation/modeling/schema/src/Foo.ts"), "foundation");
+    assertSome(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Foo.ts"), "drivers");
+    assertSome(schemaCrispeningFamilyForFile("packages/tooling/tool/cli/src/Foo.ts"), "tooling");
+    assertSome(schemaCrispeningFamilyForFile("apps/web/src/Foo.tsx"), "apps-slices");
+    assertSome(schemaCrispeningFamilyForFile("packages/agents/src/Foo.ts"), "apps-slices");
+    assertSome(schemaCrispeningFamilyForFile("packages/architecture-lab/src/Foo.ts"), "apps-slices");
+    assertSome(schemaCrispeningFamilyForFile("packages/epistemic/src/Foo.ts"), "apps-slices");
+    assertSome(schemaCrispeningFamilyForFile("packages/law-practice/src/Foo.ts"), "apps-slices");
+    assertSome(schemaCrispeningFamilyForFile("packages/workspace/src/Foo.ts"), "apps-slices");
     schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts").pipe(O.isNone, assertTrue);
     schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts").pipe(O.isNone, assertTrue);
     schemaCrispeningFamilyForFile("README.md").pipe(O.isNone, assertTrue);
@@ -290,9 +288,18 @@ describe("fnSchemaEntryFromFunctionLike", () => {
     const entry = fnSchemaEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     entry.pipe(O.isSome, assertTrue);
-    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
-    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("updateWidget"));
-    expect(O.map(entry, (found) => found.status)).toEqual(O.some("advisory"));
+    assertSome(
+      O.map(entry, (found) => found.ruleId),
+      "SFV4-fn-schema"
+    );
+    assertSome(
+      O.map(entry, (found) => found.symbol),
+      "updateWidget"
+    );
+    assertSome(
+      O.map(entry, (found) => found.status),
+      "advisory"
+    );
   });
 
   it("does not fire for a generic exported function", () => {
@@ -330,8 +337,14 @@ describe("normalizationEntryFromCallExpression", () => {
     const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     entry.pipe(O.isSome, assertTrue);
-    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
-    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("normalizeName.trim"));
+    assertSome(
+      O.map(entry, (found) => found.ruleId),
+      "SFV4-normalization"
+    );
+    assertSome(
+      O.map(entry, (found) => found.symbol),
+      "normalizeName.trim"
+    );
   });
 
   it("does not fire for a module-top-level trim() call", () => {
@@ -355,8 +368,14 @@ describe("nullReturnEntryFromFunctionLike", () => {
     const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     entry.pipe(O.isSome, assertTrue);
-    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
-    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("findUser"));
+    assertSome(
+      O.map(entry, (found) => found.ruleId),
+      "SFV4-null-return"
+    );
+    assertSome(
+      O.map(entry, (found) => found.symbol),
+      "findUser"
+    );
   });
 
   it("does not fire for a function without an explicit return annotation", () => {
@@ -407,8 +426,14 @@ describe("getsomesStructEntryFromCallExpression", () => {
     const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     entry.pipe(O.isSome, assertTrue);
-    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
-    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("pickSomes.R.getSomes"));
+    assertSome(
+      O.map(entry, (found) => found.ruleId),
+      "SFV4-getsomes-struct"
+    );
+    assertSome(
+      O.map(entry, (found) => found.symbol),
+      "pickSomes.R.getSomes"
+    );
   });
 
   it("does not fire for R.getSomes over an identifier dictionary argument", () => {
@@ -458,8 +483,8 @@ describe("G4 foundation family-flip regression fixture", () => {
   const appsViolation = fnSchemaViolationForFile(appsFile);
 
   it("resolves the fixture paths to the flipped and still-exempt families", () => {
-    expect(schemaCrispeningFamilyForFile(foundationFile)).toEqual(O.some("foundation"));
-    expect(schemaCrispeningFamilyForFile(driversFile)).toEqual(O.some("drivers"));
+    assertSome(schemaCrispeningFamilyForFile(foundationFile), "foundation");
+    assertSome(schemaCrispeningFamilyForFile(driversFile), "drivers");
     expect(foundationViolation.ruleId).toBe("SFV4-fn-schema");
     expect(driversViolation.ruleId).toBe("SFV4-fn-schema");
   });
@@ -499,10 +524,10 @@ describe("G4 foundation family-flip regression fixture", () => {
 
       expect(isExempt(foundationViolation)).toBe(false);
       expect(isExempt(driversViolation)).toBe(false);
-      expect(schemaCrispeningFamilyForFile(toolingFile)).toEqual(O.some("tooling"));
+      assertSome(schemaCrispeningFamilyForFile(toolingFile), "tooling");
       expect(isExempt(toolingViolation)).toBe(false);
       // All four families are flipped — the ratchet is fully closed.
-      expect(schemaCrispeningFamilyForFile(appsFile)).toEqual(O.some("apps-slices"));
+      assertSome(schemaCrispeningFamilyForFile(appsFile), "apps-slices");
       expect(isExempt(appsViolation)).toBe(false);
       // A path outside every wave family resolves to no family and stays exempt
       // (PLAN: unassigned surfaces are non-blocking by construction).

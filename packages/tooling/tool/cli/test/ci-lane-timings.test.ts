@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -390,7 +390,7 @@ describe("ci lane timings attempt filter", () => {
   );
 
   it("reports job-level pickup latency on the first attempt", () => {
-    expect(attemptOnePickupSeconds(job())).toStrictEqual(O.some(30));
+    assertSome(attemptOnePickupSeconds(job()), 30);
   });
 
   it("refuses pickup latency for any later attempt", () => {
@@ -413,7 +413,7 @@ describe("ci lane timings attempt filter", () => {
 
     expect(report.jobCount).toBe(2);
     expect(report.attemptOneJobCount).toBe(1);
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(30));
+    assertSome(report.medianAttemptOnePickupSeconds, 30);
   });
 
   it("reports no pickup median for an empty recent-run population", () => {
@@ -437,7 +437,7 @@ describe("ci lane timings attempt filter", () => {
       ciLaneTimingRow(job({ id: 992, started_at: "2026-08-06T12:01:39Z" })),
     ]);
 
-    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.some(50));
+    assertSome(report.medianAttemptOnePickupSeconds, 50);
   });
 
   it.effect("rejects a jobs payload that omits run_attempt", () =>
@@ -617,8 +617,8 @@ describe("ci lane timings derivations", () => {
   it("sums setup and install seconds from the step timings", () => {
     const row = ciLaneTimingRow(job());
 
-    expect(row.setupSeconds).toStrictEqual(O.some(5));
-    expect(row.installSeconds).toStrictEqual(O.some(60));
+    assertSome(row.setupSeconds, 5);
+    assertSome(row.installSeconds, 60);
   });
 
   it("classifies runner pools from labels and refuses to guess", () => {
@@ -678,7 +678,7 @@ describe("ci lane timings derivations", () => {
 
     expect(report.managedJobCount).toBe(2);
     expect(report.managedInfraFailureCount).toBe(1);
-    expect(report.managedInfraSuccessRate).toStrictEqual(O.some(0.5));
+    assertSome(report.managedInfraSuccessRate, 0.5);
   });
 
   it("reports no rate rather than zero when no managed job was collected", () => {
@@ -699,9 +699,12 @@ describe("ci lane timings derivations", () => {
       assertDefined(optionUnderTest);
       assertNone(optionUnderTest);
     }
-    expect(withCiLanePeakRss(rows, { "Test Unit": 25_000_000_000 })[0]?.peakRssBytes).toStrictEqual(
-      O.some(25_000_000_000)
-    );
+    {
+      const optionUnderTest = withCiLanePeakRss(rows, { "Test Unit": 25_000_000_000 })[0]?.peakRssBytes;
+      const expectedOptionValue = 25_000_000_000;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     {
       const optionUnderTest = withCiLanePeakRss(rows, { Coverage: 1 })[0]?.peakRssBytes;
       assertDefined(optionUnderTest);
@@ -786,9 +789,9 @@ describe("ci lane timing admission window", () => {
 
       expect(report.contextCount).toBe(18);
       expect(laneStat(report, "Check").n).toBe(1);
-      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(10));
+      assertSome(laneStat(report, "Check").p95Seconds, 10);
       expect(laneStat(report, "Lint").n).toBe(1);
-      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(600));
+      assertSome(laneStat(report, "Lint").p95Seconds, 600);
       expect(laneStat(report, "Test Unit").n).toBe(0);
       expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
       expect(attributionStat(report, "Docgen").failures).toBe(1);
@@ -797,7 +800,7 @@ describe("ci lane timing admission window", () => {
       expect(attributionStat(report, "Knip").laterAttempts).toBe(1);
       expect(attributionStat(report, "Knip").laterSuccesses).toBe(1);
       expect(report.pickup.n).toBe(4);
-      expect(report.pickup.p95Seconds).toStrictEqual(O.some(420));
+      assertSome(report.pickup.p95Seconds, 420);
       expect(report.pickup.breached).toBe(true);
 
       const markdown = renderCiLaneTimingWindowMarkdown(report);
@@ -892,7 +895,7 @@ describe("ci lane timing admission window", () => {
       ]);
 
       expect(laneStat(report, "Lint").n).toBe(1);
-      expect(laneStat(report, "Lint").p95Seconds).toStrictEqual(O.some(780));
+      assertSome(laneStat(report, "Lint").p95Seconds, 780);
       expect(attributionStat(report, "Lint").laterAttempts).toBe(1);
       expect(attributionStat(report, "Lint").laterSuccesses).toBe(1);
       const attemptTwoRows = A.filter(report.rows, (row) => row.runAttempt === 2);
@@ -1037,7 +1040,7 @@ describe("ci lane timing admission window", () => {
       ]);
 
       expect(laneStat(report, "Test Unit").n).toBe(1);
-      expect(laneStat(report, "Test Unit").p95Seconds).toStrictEqual(O.some(780));
+      assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
       expect(laneStat(report, "Test Unit").state).toBe("Pass");
     })
   );
@@ -1104,9 +1107,9 @@ describe("ci lane timing admission window", () => {
       });
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, runs);
 
-      expect(laneStat(report, "Check").p50Seconds).toStrictEqual(O.some(20));
-      expect(laneStat(report, "Check").p95Seconds).toStrictEqual(O.some(30));
-      expect(laneStat(report, "Check").maxSeconds).toStrictEqual(O.some(30));
+      assertSome(laneStat(report, "Check").p50Seconds, 20);
+      assertSome(laneStat(report, "Check").p95Seconds, 30);
+      assertSome(laneStat(report, "Check").maxSeconds, 30);
     })
   );
 
@@ -1128,7 +1131,10 @@ describe("ci lane timing admission window", () => {
 
       expect(report.runCount).toBe(1);
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       const population = "ruleset 10240248 version 48600030 effective 2026-09-03T17:12:53.589Z";
       expect(renderCiLaneTimingWindowSummary(report)).toContain(population);
       expect(renderCiLaneTimingWindowMarkdown(report)).toContain(population);
@@ -1168,7 +1174,10 @@ describe("ci lane timing admission window", () => {
         })
       );
       expect(report.contextCount).toBe(17);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(49479116));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        49479116
+      );
       expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
       expect(A.some(commands, Str.includes("/actions/"))).toBe(true);
       const markdown = renderCiLaneTimingWindowMarkdown(report);
@@ -1257,7 +1266,10 @@ describe("ci lane timing admission window", () => {
         })
       );
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
@@ -1278,7 +1290,10 @@ describe("ci lane timing admission window", () => {
       const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
 
       expect(report.contextCount).toBe(18);
-      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(48600030));
+      assertSome(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        48600030
+      );
       const historyCommands = A.filter(commands, Str.includes("/history?"));
       expect(historyCommands).toHaveLength(2);
       expect(A.some(historyCommands, Str.includes("per_page=100&page=2"))).toBe(true);

@@ -35,7 +35,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -356,9 +356,9 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         expect(state.bunVersionFile).toBe("1.4.0");
         expect(state.packageManagerField).toBe("1.4.0");
-        expect(state.vercelInstallVersion).toEqual(O.some("1.3.14"));
-        expect(state.vercelBuildVersion).toEqual(O.some("1.3.14"));
-        expect(state.bunArchiveSha256).toEqual(O.some(digest));
+        assertSome(state.vercelInstallVersion, "1.3.14");
+        assertSome(state.vercelBuildVersion, "1.3.14");
+        assertSome(state.bunArchiveSha256, digest);
         assertNone(state.expectedBunArchiveSha256);
 
         yield* fs.remove(tmpDir, { recursive: true });
@@ -441,7 +441,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
     it("extracts the Linux x64 archive digest from Bun's checksum manifest", () => {
       const digest = "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452";
-      expect(extractBunArchiveChecksum(`${digest}  bun-linux-x64.zip\n`)).toEqual(O.some(digest));
+      assertSome(extractBunArchiveChecksum(`${digest}  bun-linux-x64.zip\n`), digest);
       assertNone(extractBunArchiveChecksum(`${digest}  bun-linux-aarch64.zip\n`));
     });
   });
@@ -660,7 +660,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         ]);
         expect(report.category).toBe("turbo");
         expect(report.status).toBe("drift");
-        expect(report.latest).toEqual(O.some("2.10.14"));
+        assertSome(report.latest, "2.10.14");
         expect(A.map(report.items, (item) => [item.file, item.field, item.current, item.expected])).toEqual([
           [
             "turbo.json",
@@ -722,7 +722,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
 
         expect(report.status).toBe("error");
         expect(report.items).toHaveLength(0);
-        expect(report.error).toEqual(O.some("Unsupported turbo version specifier: 2.11.0-canary.1"));
+        assertSome(report.error, "Unsupported turbo version specifier: 2.11.0-canary.1");
       })
     );
   });
@@ -940,7 +940,7 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
 
       expect(report.status).toBe("ok");
       expect(report.items).toHaveLength(0);
-      expect(report.error).toEqual(O.some("turbo not found in bun.lock, the root catalog, or devDependencies"));
+      assertSome(report.error, "turbo not found in bun.lock, the root catalog, or devDependencies");
     });
 
     it.effect(

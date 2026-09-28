@@ -19,7 +19,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as Exit from "effect/Exit";
@@ -287,9 +287,9 @@ describe("delete-package registration geometry", () => {
               A.findFirst(report.hits, (hit) => Str.equivalence(hit.file, file)),
               O.map((hit) => hit.kind)
             );
-          expect(kindOf("goals/lab-x/PLAN.md")).toStrictEqual(O.some("packet"));
-          expect(kindOf("goals/lab-x/history/p4-evidence.md")).toStrictEqual(O.some("historical-doc"));
-          expect(kindOf("goals/lab-x/research/OPPORTUNITIES.md")).toStrictEqual(O.some("historical-doc"));
+          assertSome(kindOf("goals/lab-x/PLAN.md"), "packet");
+          assertSome(kindOf("goals/lab-x/history/p4-evidence.md"), "historical-doc");
+          assertSome(kindOf("goals/lab-x/research/OPPORTUNITIES.md"), "historical-doc");
         })
       ).pipe(provideScopedLayer(commandLayer))
     ));

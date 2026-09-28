@@ -15,7 +15,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Schedule } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
@@ -919,7 +919,7 @@ describe("ai-metrics command", () => {
           A.findFirst((source) => source.sourceKind === "codex")
         );
         const output = yield* loggedText();
-        expect(result.maxFileBytes).toEqual(O.some(128));
+        assertSome(result.maxFileBytes, 128);
         codex.pipe(O.isSome, assertTrue);
         if (O.isSome(codex)) {
           expect(codex.value.fileCount).toBe(1);

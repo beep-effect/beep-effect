@@ -154,7 +154,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -590,7 +590,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
               expect(current.number).toBe(874);
               expect(current.headRefName).toBe(tempContext.branch);
-              expect(O.map(found, (view) => view.number)).toEqual(O.some(874));
+              assertSome(
+                O.map(found, (view) => view.number),
+                874
+              );
             })
           );
         })
@@ -1644,8 +1647,9 @@ describe("yeet planner", () => {
   });
 
   it("warns when publish push target differs from upstream tracking", () => {
-    expect(publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/main")).toEqual(
-      O.some('[yeet] warning: branch "feat/yeet" tracks "origin/main"; publish will push HEAD to origin/feat/yeet.')
+    assertSome(
+      publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/main"),
+      '[yeet] warning: branch "feat/yeet" tracks "origin/main"; publish will push HEAD to origin/feat/yeet.'
     );
     assertNone(publishUpstreamMismatchWarningForTesting("feat/yeet", "origin/feat/yeet"));
   });
@@ -3910,8 +3914,8 @@ describe("yeet attempt journal", () => {
         assertNone(legacy.resolvedHeadSha);
         assertNone(legacy.diffFingerprint);
         assertNone(legacy.proofTier);
-        expect(current.resolvedHeadSha).toStrictEqual(O.some("0123456789abcdef0123456789abcdef01234567"));
-        expect(current.proofTier).toStrictEqual(O.some("full"));
+        assertSome(current.resolvedHeadSha, "0123456789abcdef0123456789abcdef01234567");
+        assertSome(current.proofTier, "full");
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 });
@@ -4121,10 +4125,9 @@ describe("yeet publish scope helpers", () => {
 
         expect(result.exitCode).not.toBe(0);
         expect(result.output).toContain("Frozen-lockfile clean-HEAD install preflight failed");
-        expect(knownSubLaneRemediationFromOutput(result.output)).toEqual(
-          O.some(
-            "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`."
-          )
+        assertSome(
+          knownSubLaneRemediationFromOutput(result.output),
+          "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`."
         );
         expect(yield* runGitCapture(tmpDir, ["worktree", "list", "--porcelain"])).not.toContain(
           "beep-yeet-head-install-"
@@ -4265,7 +4268,7 @@ describe("yeet publish scope helpers", () => {
       }),
     ]);
 
-    expect(summary).toStrictEqual(O.some({ firstRed: "quality:lint", skippedAfterRed: 2 }));
+    assertSome(summary, { firstRed: "quality:lint", skippedAfterRed: 2 });
   });
 
   it("round-trips the verdict schema and marks executed push lanes", () =>
@@ -4384,9 +4387,24 @@ describe("yeet publish scope helpers", () => {
       durationMs: 1000,
       exitCode: 0,
     });
-    expect(verdict.lanes[1]?.tier).toStrictEqual(O.some("full"));
-    expect(verdict.lanes[1]?.startedAt).toStrictEqual(O.some("2026-09-03T00:00:00.000Z"));
-    expect(verdict.lanes[1]?.endedAt).toStrictEqual(O.some("2026-09-03T00:00:01.000Z"));
+    {
+      const optionUnderTest = verdict.lanes[1]?.tier;
+      const expectedOptionValue = "full";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
+    {
+      const optionUnderTest = verdict.lanes[1]?.startedAt;
+      const expectedOptionValue = "2026-09-03T00:00:00.000Z";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
+    {
+      const optionUnderTest = verdict.lanes[1]?.endedAt;
+      const expectedOptionValue = "2026-09-03T00:00:01.000Z";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     {
       const optionUnderTest = verdict.lanes[1]?.inputDigest;
       assertDefined(optionUnderTest);

@@ -21,7 +21,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Layer, Path, Ref, Schedule, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -222,8 +222,14 @@ describe("yeet monitor comment cursor persistence", () => {
 
         const watermark = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
 
-        expect(O.map(watermark, (mark) => mark.issue.createdAt)).toEqual(O.some(EARLIER_COMMENT_AT));
-        expect(O.map(watermark, (mark) => mark.review.id)).toEqual(O.some(44));
+        assertSome(
+          O.map(watermark, (mark) => mark.issue.createdAt),
+          EARLIER_COMMENT_AT
+        );
+        assertSome(
+          O.map(watermark, (mark) => mark.review.id),
+          44
+        );
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -262,8 +268,9 @@ describe("yeet monitor comment cursor persistence", () => {
 
         expect(A.map(comments, (comment) => comment.id)).toStrictEqual([44]);
         expect((yield* Ref.get(watermarkRef)).issue.id).toBe(1);
-        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
-          O.some(1)
+        assertSome(
+          O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+          1
         );
 
         // Both monitor surfaces emit before they call this seam. If emission
@@ -272,8 +279,9 @@ describe("yeet monitor comment cursor persistence", () => {
         yield* acknowledgeYeetMonitorComments(context, PR_NUMBER, watermarkRef, comments);
 
         expect((yield* Ref.get(watermarkRef)).issue.id).toBe(44);
-        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
-          O.some(44)
+        assertSome(
+          O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+          44
         );
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, commentEndpointStub))));
@@ -294,7 +302,10 @@ describe("yeet monitor comment cursor persistence", () => {
         // would send the next run back to its own clock, straight past any
         // comment posted in between.
         const persisted = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
-        expect(O.map(persisted, (mark) => mark.issue.id)).toEqual(O.some(0));
+        assertSome(
+          O.map(persisted, (mark) => mark.issue.id),
+          0
+        );
         persisted.pipe(O.isSome, assertTrue);
       })
     ).pipe(
@@ -325,8 +336,14 @@ describe("yeet monitor comment cursor persistence", () => {
         yield* Effect.raceFirst(until(streamed), runYeetPullRequestCommentMonitor(context, PR_NUMBER));
 
         const persisted = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
-        expect(O.map(persisted, (mark) => mark.issue.id)).toEqual(O.some(44));
-        expect(O.map(persisted, (mark) => mark.issue.createdAt)).toEqual(O.some(LATER_COMMENT_AT));
+        assertSome(
+          O.map(persisted, (mark) => mark.issue.id),
+          44
+        );
+        assertSome(
+          O.map(persisted, (mark) => mark.issue.createdAt),
+          LATER_COMMENT_AT
+        );
 
         // The second run must ask GitHub for everything since the saved
         // position — not since its own start — or a comment posted between the
@@ -339,7 +356,7 @@ describe("yeet monitor comment cursor persistence", () => {
 
         const secondRunCommands = A.drop(yield* Ref.get(commandsRef), firstRunCommandCount);
         const issuePoll = A.findFirst(secondRunCommands, Str.includes("/issues/"));
-        expect(O.map(issuePoll, Str.includes(`since=${LATER_COMMENT_AT}`))).toEqual(O.some(true));
+        assertSome(O.map(issuePoll, Str.includes(`since=${LATER_COMMENT_AT}`)), true);
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, commentEndpointStub))));
   });
@@ -441,9 +458,18 @@ describe("yeet monitor comment replay", () => {
         expect(printed).toContain("coderabbit: 2 actionable, 11 nitpick(s), 0 outside diff (advisory)");
 
         const persisted = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
-        expect(O.map(persisted, (mark) => mark.review.id)).toEqual(O.some(43));
-        expect(O.map(persisted, (mark) => mark.issue.id)).toEqual(O.some(44));
-        expect(O.map(persisted, (mark) => mark.reviewBody.id)).toEqual(O.some(5275652920));
+        assertSome(
+          O.map(persisted, (mark) => mark.review.id),
+          43
+        );
+        assertSome(
+          O.map(persisted, (mark) => mark.issue.id),
+          44
+        );
+        assertSome(
+          O.map(persisted, (mark) => mark.reviewBody.id),
+          5275652920
+        );
         expect(yield* readStateText(context)).toContain("yeet-monitor-comments/v2");
       })
     ).pipe(
@@ -464,7 +490,10 @@ describe("yeet monitor comment replay", () => {
 
         // Nothing in a v1 artifact knows about review bodies, so the only seed
         // that cannot skip one is the furthest back it reaches.
-        expect(O.map(persisted, (mark) => mark.reviewBody.createdAt)).toEqual(O.some(MISSED_AT));
+        assertSome(
+          O.map(persisted, (mark) => mark.reviewBody.createdAt),
+          MISSED_AT
+        );
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, missedStub))));
   });
@@ -504,8 +533,9 @@ describe("yeet monitor comment replay", () => {
 
         const warnings = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
         expect(warnings).toContain("comment replay unavailable");
-        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
-          O.some(1)
+        assertSome(
+          O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+          1
         );
       })
     ).pipe(
@@ -562,8 +592,9 @@ describe("yeet monitor comment truncation", () => {
         // A clipped read is no longer a failed read: what was read is streamed,
         // and the cursor stops at it so the rest repeats rather than vanishing.
         expect(A.map(comments, (comment) => comment.id)).toStrictEqual([1]);
-        expect(O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id)).toEqual(
-          O.some(1)
+        assertSome(
+          O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+          1
         );
         const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
         expect(warned).toContain("was clipped by the capture bound");

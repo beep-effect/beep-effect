@@ -24,7 +24,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, HashSet, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -106,7 +106,7 @@ describe("yeet monitor flake fingerprints", () => {
   });
 
   it("recognizes the no-location TS2589 signature through GitHub log decoration", () => {
-    expect(detectYeetMonitorFlakeClass(ts2589FlakeLog)).toStrictEqual(O.some("ts2589-no-location"));
+    assertSome(detectYeetMonitorFlakeClass(ts2589FlakeLog), "ts2589-no-location");
   });
 
   it("refuses a TS2589 that carries a file location", () => {
@@ -120,8 +120,8 @@ describe("yeet monitor flake fingerprints", () => {
   });
 
   it("recognizes both suite-level and job-level timeouts", () => {
-    expect(detectYeetMonitorFlakeClass(suiteTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
-    expect(detectYeetMonitorFlakeClass(jobTimeoutLog)).toStrictEqual(O.some("ci-timeout"));
+    assertSome(detectYeetMonitorFlakeClass(suiteTimeoutLog), "ci-timeout");
+    assertSome(detectYeetMonitorFlakeClass(jobTimeoutLog), "ci-timeout");
   });
 
   it("refuses a bare cancellation", () => {
@@ -144,19 +144,17 @@ describe("yeet monitor job-shape fingerprints", () => {
     // rerun cannot paper over branch state.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes the setup failure under the runner-setup step name too", () => {
-    expect(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")]))).toStrictEqual(
-      O.some("setup-5xx")
-    );
+    assertSome(detectGithubJobShapeClass(jobRecord("failure", [jobStep("Set up runner", "failure")])), "setup-5xx");
   });
 
   it("recognizes runner loss when the job failed and no step ever concluded", () => {
     const job = jobRecord("failure", [jobStep("Set up job", null), jobStep("Run bun run test", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("runner-loss"));
+    assertSome(detectGithubJobShapeClass(job), "runner-loss");
   });
 
   it("refuses runner loss when any step reached a conclusion", () => {
@@ -189,7 +187,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // names the actual remedy in the operator line.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Complete job", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("recognizes an install step that failed before any lane ran", () => {
@@ -202,7 +200,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Run bun run codegen", null),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("still recognizes an install failure past GitHub's own cleanup steps", () => {
@@ -216,7 +214,7 @@ describe("yeet monitor job-shape fingerprints", () => {
       jobStep("Complete job", "success"),
     ]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("install-failure"));
+    assertSome(detectGithubJobShapeClass(job), "install-failure");
   });
 
   it("refuses an install failure when a lane afterwards actually ran", () => {
@@ -235,7 +233,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     // vaguer class shadow the precise one.
     const job = jobRecord("failure", [jobStep("Set up job", "failure"), jobStep("Install dependencies", null)]);
 
-    expect(detectGithubJobShapeClass(job)).toStrictEqual(O.some("setup-5xx"));
+    assertSome(detectGithubJobShapeClass(job), "setup-5xx");
   });
 
   it("carries every shape class into the rerun plan with its evidence", () => {
@@ -640,8 +638,8 @@ describe("applyYeetMonitorJobDecision", () => {
 
 describe("yeet monitor loop control", () => {
   it("reads the terminal state out of a gh pr view state string", () => {
-    expect(yeetMonitorTerminalState(O.some("MERGED"))).toStrictEqual(O.some("merged"));
-    expect(yeetMonitorTerminalState(O.some("closed"))).toStrictEqual(O.some("closed"));
+    assertSome(yeetMonitorTerminalState(O.some("MERGED")), "merged");
+    assertSome(yeetMonitorTerminalState(O.some("closed")), "closed");
     O.some("OPEN").pipe(yeetMonitorTerminalState, assertNone);
     O.none().pipe(yeetMonitorTerminalState, assertNone);
   });

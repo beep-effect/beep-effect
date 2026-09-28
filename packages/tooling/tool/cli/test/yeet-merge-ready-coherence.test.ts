@@ -5,7 +5,7 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -55,7 +55,7 @@ describe("YeetMergeReady coherence", () => {
       });
 
       expect(decoded.ready).toBe(false);
-      expect(decoded.failing).toStrictEqual(O.some("required-checks-green"));
+      assertSome(decoded.failing, "required-checks-green");
     })
   );
 
@@ -68,7 +68,7 @@ describe("YeetMergeReady coherence", () => {
 
       expect(decoded.ready).toBe(true);
       assertNone(decoded.failing);
-      expect(decoded.criteria.greptileScore).toStrictEqual(O.some("5/5"));
+      assertSome(decoded.criteria.greptileScore, "5/5");
     })
   );
 
@@ -138,7 +138,7 @@ describe("YeetMergeReady coherence", () => {
       }),
     });
 
-    expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
+    assertSome(mergeReady.failing, "threads-resolved");
   });
 });
 
@@ -151,7 +151,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
+      assertSome(mergeReady.failing, "pr-open");
       expect(mergeReady.criteria.prOpen).toBe(false);
     })
   );
@@ -166,7 +166,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       expect(mergeReady.ready).toBe(false);
-      expect(mergeReady.failing).toStrictEqual(O.some("pr-open"));
+      assertSome(mergeReady.failing, "pr-open");
       expect(mergeReady.criteria.closeoutRun).toBe(false);
     })
   );
@@ -179,7 +179,10 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
         )
       );
 
-      expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "required-checks-green"
+      );
     })
   );
 

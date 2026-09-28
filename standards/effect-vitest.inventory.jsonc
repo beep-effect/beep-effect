@@ -8527,7 +8527,7 @@
       "line": 257,
       "endLine": 293,
       "symbol": "runPromise",
-      "occurrence": "v2:219812b0cab0890ca6959da213b18a6d70723acf8928e8aed25cd97229f3e5f1",
+      "occurrence": "v2:e38e4f089c79f74c26c77da753af41f27239eaa2b067b37513c82818af09672d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString( path.join(repoRoot, \"pac",
       "replacement": {
@@ -18040,7 +18040,7 @@
       "line": 275,
       "endLine": 284,
       "symbol": "runPromise",
-      "occurrence": "v2:e95ddb8a83e53803c191f9465efaed7355ea3a18d4bd8ae4d21bf3de5737bdaa",
+      "occurrence": "v2:6b019aa91d1ce59dd8cad7c073595b40add08212a3206944946cb23e179f8e9d",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const hintPath = `${dir}/record-hint.json`; assertNone(yield* readRecordStartHint(hintPath)); yield* writeRecordStartHint(hintPath,",
       "replacement": {
@@ -18922,7 +18922,7 @@
       "line": 1125,
       "endLine": 1188,
       "symbol": "runPromise",
-      "occurrence": "v2:09281ca127bc6b8e20b96542e2977ed45fcc0630875843dd6efb41f6553b8dfe",
+      "occurrence": "v2:df2f756dbabeaedf78dc94ca30534f858576685d14b4b4b53cdb4be43eddf05c",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const gibRef = yield* Ref.make(50); yield* withAdmissionTempRoot(gibRef, (tempRoot) => Effect.gen(function* () { const admissionRequest = request({ attempt",
       "replacement": {
@@ -19069,7 +19069,7 @@
       "line": 1391,
       "endLine": 1445,
       "symbol": "runPromise",
-      "occurrence": "v2:1a21dcf5b498b17b7ea167386416f5950d5177c815b0bb9e348caf784df7a4c4",
+      "occurrence": "v2:d0a08730953d32e829e340de7c0b9cd5a0718a062d7f61c581c18a48a511fe39",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const gibRef = yield* Ref.make(50); yield* withAdmissionTempRoot(gibRef, (tempRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; y",
       "replacement": {
@@ -20855,7 +20855,7 @@
       "line": 1276,
       "endLine": 1297,
       "symbol": "runPromise",
-      "occurrence": "v2:7a98748960430203034224170cd311b3af96f48ad6ccf8c816461b99cbc8062a",
+      "occurrence": "v2:273e4a7bd2370e8f7417921560dc6badaded9140536003370b2994484ce7de44",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectQualityTaskLaneRunsForTesting( \"ci:local\", [ [\"check\", bunScriptStep(\"ci:check\", \"process.exit(0)\"), O.some(\"turbo-task-hash\")], [\"nix\", bunScriptStep(\"ci:nix\", \"process.exit",
       "replacement": {
@@ -20981,7 +20981,7 @@
       "line": 1472,
       "endLine": 1508,
       "symbol": "runPromise",
-      "occurrence": "v2:4ff89b915c175253a5a48b5eb474102bfabb69cfac850cec2722068d9850dafd",
+      "occurrence": "v2:4b2c46b383a9cd18695f2d3fbdca9686b87dde8f73761ddd1ddd4128fd29a7ce",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD",
       "replacement": {
@@ -21086,7 +21086,7 @@
       "line": 1782,
       "endLine": 1831,
       "symbol": "runPromise",
-      "occurrence": "v2:5b2db85e395f0ea7a9a00ef3f3a90dbcf2054e0560c03d46caf7828359734b92",
+      "occurrence": "v2:e3c1ab674e821268e7874e182fc7a8e75293a235c54294976083728cfb5e73de",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:a\", \"preflight\", \"process.exit(2)\", O",
       "replacement": {
@@ -21107,7 +21107,7 @@
       "line": 1834,
       "endLine": 1866,
       "symbol": "runPromise",
-      "occurrence": "v2:fd1d7f3a8ecc84a45cd754d05805a9f3bf0f71ffd14e1f81b85725876bd420b4",
+      "occurrence": "v2:b1bbddd5e50c5fa2786a32fc4821be3543848757ee611490f60d827e2446f6e4",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:imprecise\", \"preflight\", \"process.exi",
       "replacement": {
@@ -21128,7 +21128,7 @@
       "line": 1869,
       "endLine": 1892,
       "symbol": "runPromise",
-      "occurrence": "v2:7b918518a71711da2e43a21b2373ebeb1fdab459fa9848fe514d2856078b71c6",
+      "occurrence": "v2:a5db7546adb63056b7d7db9ed89244e4d59de4ad31cc80cded194b20ebf0d963",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"quality\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [githubCheckTestLane(\"preflight:unclassified\", \"preflight\", \"process.exi",
       "replacement": {
@@ -21191,7 +21191,7 @@
       "line": 2521,
       "endLine": 2574,
       "symbol": "runPromise",
-      "occurrence": "v2:c1fd81f813089308a867ae1906c15191592f9bc39560d6ca1527051c49f11b31",
+      "occurrence": "v2:2a454c1af6571b50e4884a5d7caab0e8fc692c58bd6b8b7d08d84ba641688295",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD",
       "replacement": {
@@ -21212,7 +21212,7 @@
       "line": 2577,
       "endLine": 2610,
       "symbol": "runPromise",
-      "occurrence": "v2:c1da4871152298c7b5e91cc00dd2bcd3095150133a503d5407e1628d8603e632",
+      "occurrence": "v2:bc467599e0b12b363e1e05926894d06413e77c4d2d6fb2889ef3189cfea95523",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane(\"quality:secrets\", \"preflight\", \"process.exit(1)\"",
       "replacement": {
@@ -24656,7 +24656,7 @@
       "line": 3869,
       "endLine": 3915,
       "symbol": "runPromise",
-      "occurrence": "v2:09b1d1595e611c494ce7f08ee1edc6b1fbb43e1c97360857b49273a9eb918f82",
+      "occurrence": "v2:365ffd63a45bf1b8e8a1450762ba3811783b0d68d8f3d5bc0b8af5809efa330f",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const fixtureRoot = path.join(repoRoot, \"pa",
       "replacement": {
@@ -25496,7 +25496,7 @@
       "line": 566,
       "endLine": 597,
       "symbol": "runPromise",
-      "occurrence": "v2:36037aa575a7fd26d7e410437d01772e112a1541f916d99a57c96729e16a1e22",
+      "occurrence": "v2:184a668eb9c54472fd8406a74208ae7bed32254c1b0dfe1cb4c412d25c42821a",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTrackedFileRepo(({ tempContext, tmpDir }) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const binDir = path.join(tmpDir, \"",
       "replacement": {
@@ -30885,7 +30885,7 @@
       "line": 271,
       "endLine": 271,
       "symbol": "provideCrypto",
-      "occurrence": "v2:a8360179805d38ef3039ffa03d0cf5fb229867d7264fc6769829a2524e76bd90",
+      "occurrence": "v2:51b2960b6e024d15d2f3a03a006ae66d77dc2fdad0273dd6bb3bc7af7db86d72",
       "class": "unresolved-layer-provide",
       "evidence": "provideCrypto",
       "replacement": {
@@ -31956,7 +31956,7 @@
       "line": 1149,
       "endLine": 1149,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1b79e88d23adc264b610bf0e0be537171ca1a139543fd418ff458b90bfb0b586",
+      "occurrence": "v2:7da67c95734033fbc27909832b7187cbfd841e9fd6958cb71ca643f4a611da93",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands))",
       "replacement": {
@@ -31977,7 +31977,7 @@
       "line": 1169,
       "endLine": 1169,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:68370cdef02c66ae1c33cc5b49277aa4411e4389ba8c4b85a74b8d7751514e5f",
+      "occurrence": "v2:b839020fafaeae86491b73c0b05279bb258d075f6215e8f89e506e72ac8ff716",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands))",
       "replacement": {
@@ -32061,7 +32061,7 @@
       "line": 1253,
       "endLine": 1253,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:75d99912e1a98f6b91146f771637e558545eae9e21622f580e99f7a987b08f51",
+      "occurrence": "v2:c478be2f0de9f8edb53d6481efcbf5bbe2395bb02a8eff2cc6b7750737dfacf8",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands))",
       "replacement": {
@@ -32082,7 +32082,7 @@
       "line": 1276,
       "endLine": 1276,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:37adbdd1d0bc42e0cc47639d2642c865b2dd22c1babccc59e90ef06af45efc1d",
+      "occurrence": "v2:6edd1cbb024bdcae28b107ce62aad990d41199c51d3b9a13c9044886786c5aa1",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(windowGithubLayer(commands, response))",
       "replacement": {
@@ -33321,7 +33321,7 @@
       "line": 1891,
       "endLine": 1891,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:b6cc8cfb21a18c5d75cb1aa009f047f0070cf7f2a22411df85daac842fb7639c",
+      "occurrence": "v2:3f1705463e29534d3d09e9c6d6b175d8eadbe938dc4e4a85c908b5ca22540d1d",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33468,7 +33468,7 @@
       "line": 262,
       "endLine": 262,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:e3bc127d72f235c8b9f0ffd8c0f9b96a10dc65ae721aeb5f58fdf1f42433457d",
+      "occurrence": "v2:c3be71355b25888ed1ac6912a35ba35322a100e4dc48b831953aa39cd7298c15",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33489,7 +33489,7 @@
       "line": 2637,
       "endLine": 2637,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:2020239868b5ca3c57c2207c25fdead38b2ce59221ccff3ef9c4b04ed019fd75",
+      "occurrence": "v2:2a44a0774c966f0d4b6da5b2f44935235c7fddefb64771f82da61a6c2a25fc74",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33615,7 +33615,7 @@
       "line": 2920,
       "endLine": 2920,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:59a7ef7e945cc20422f8ba1724f42fcf83120f3e463758cc54d536109238b418",
+      "occurrence": "v2:799de007c04b774d07a7890df3d6e3d34f7c4895925cda153c4bd11734901c9f",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33678,7 +33678,7 @@
       "line": 3208,
       "endLine": 3208,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:fcdd76c829b589aa65ed771f759b4612af8618dee09c0d07ff77bb1e248a8348",
+      "occurrence": "v2:54cc56e0f5e905fbdcc82fca70c3d68ed14e9eaebea746a93873fcefcf868fbd",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33762,7 +33762,7 @@
       "line": 3475,
       "endLine": 3475,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:1cb87d23087207f7e8816ffec6c32f39f16e6c8774c4d16415c3af251ac0694f",
+      "occurrence": "v2:ea594cb0ee10cac33ee101dd4d3f35cd87a689098c6f87bce0d7d0f67d56bfec",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -33951,7 +33951,7 @@
       "line": 872,
       "endLine": 872,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:daab0504da5ae4efbd505ca70508593d472bd922eeeaade671cd5263aa2f58af",
+      "occurrence": "v2:7046dc20097a3c87c7fba8d9bde720594b3b6c5b8334db5794d905007d6164cd",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -37983,7 +37983,7 @@
       "line": 246,
       "endLine": 246,
       "symbol": "run",
-      "occurrence": "v2:0f0fc19303d02cf459a22685b36bb9a89d4685b57d57ef8cc433f8955447657a",
+      "occurrence": "v2:970200f218b5f471a56d5bcced8eddd1ec038e0b149935d77ffc6a8838f2ec3a",
       "class": "unresolved-layer-provide",
       "evidence": "run",
       "replacement": {
@@ -38025,7 +38025,7 @@
       "line": 66,
       "endLine": 66,
       "symbol": "run",
-      "occurrence": "v2:165c9d4abf352bc4ef228cd7dad7d552bfb739903cdcefe3b8980675e5f32029",
+      "occurrence": "v2:cdbfa8579fc60500680e6513c8e476f609393d88cf14b75b1c32e85d30269186",
       "class": "unresolved-layer-provide",
       "evidence": "run",
       "replacement": {
@@ -41029,7 +41029,7 @@
       "line": 755,
       "endLine": 755,
       "symbol": "provideTestLayer",
-      "occurrence": "v2:b424e868355954a74da7bc187d81cc2935d65de0a500039d616690bd078d1201",
+      "occurrence": "v2:2a5fb4a9bd50857837be940092e53f2f860780a7c53f42df1507fd663f3f3cc1",
       "class": "unresolved-layer-provide",
       "evidence": "provideTestLayer",
       "replacement": {
@@ -45271,7 +45271,7 @@
       "line": 227,
       "endLine": 227,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:ba5a69bf2d2ec5762f8e1d6ea12f13edd77c02cd4f8bd770bc66aa29b8eb6f55",
+      "occurrence": "v2:61cc6b99ac2db9fd2472e9edb88cb864a3451d4f45500f11eceabd1aa6197c2d",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45334,7 +45334,7 @@
       "line": 278,
       "endLine": 278,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e511c04b165f837de4318196dc8d0e8f2ca570fde5ff8370a8cee1af31cae22",
+      "occurrence": "v2:75bccd10c7c00254c8263775c057e491982b52c8f375f8c91eaa1c3d143f5782",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, commentEndpointStub)))",
       "replacement": {
@@ -45355,7 +45355,7 @@
       "line": 300,
       "endLine": 305,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:98582e8bbed6796b2ebe3d761a25fa737b0009553b72cd728621acbd2e5a3c4e",
+      "occurrence": "v2:becb73ce1fad53cccc3cf9fb65f59033d124c45a9e8544e874132c84e186f717",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( PlatformLayer, recordingSpawnerLayer(commandsRef, () => ({ exitCode: 0, output: EMPTY_PAGE })) ) )",
       "replacement": {
@@ -45376,7 +45376,7 @@
       "line": 343,
       "endLine": 343,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:b7a2e4a51ebc9f0a2b7a9e757cdb8add91242c59e9af6054a2612892797ff7e1",
+      "occurrence": "v2:10fab504553e61771a1f03ecd84270044d6667e2245460e36b0a010ee2771dec",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, commentEndpointStub)))",
       "replacement": {
@@ -45439,7 +45439,7 @@
       "line": 449,
       "endLine": 451,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:a1e5b2a179d4d802460921b55b84670b1d37f4d353702d1b49bb60d07fe51724",
+      "occurrence": "v2:5aa2050a83d5bcbda1118f74e23de5e4734584564ab204530c2a811b0ea5c176",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(commandsRef, missedStub)) )",
       "replacement": {
@@ -45460,7 +45460,7 @@
       "line": 468,
       "endLine": 468,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:a80b8057b2974d18aa57ab596724e5a1bff4618e9a7c60d3ba3665008abf812f",
+      "occurrence": "v2:9c4a3d804ea92a06dc357c757716912381017d45d33f9903020ba5e0e899953a",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(commandsRef, missedStub)))",
       "replacement": {
@@ -45502,7 +45502,7 @@
       "line": 511,
       "endLine": 513,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:eb58b9734f9a7daf38e7416e8f451310126d7c66a40f66d98c285d3e4cdac451",
+      "occurrence": "v2:d2f81fb850e1d3e42c818502d40d2d112bcde375307f2559703f350bd9d74ab3",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(commandsRef, deniedStub)) )",
       "replacement": {
@@ -45523,7 +45523,7 @@
       "line": 571,
       "endLine": 581,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:f11a10de71ee9783a1dba975edad8888cd4920e6be7238a4d7db779f1bef98c8",
+      "occurrence": "v2:f88d949436b7c9c75e94c5d8e30f555477e08cac7ec3292e7e098515d8c74280",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer( Layer.mergeAll( PlatformLayer, TestConsole.layer, recordingSpawnerLayer(commandsRef, (commandLine) => endpointOf(commandLine) === \"issues\" ? { exitCode: 0, output: clipped } : { ex",
       "replacement": {
@@ -45796,7 +45796,7 @@
       "line": 135,
       "endLine": 135,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:274db7c68bcb3c71571c30a36450ec13afa63315835dc6d5bcda738a569b1ba0",
+      "occurrence": "v2:87a3eec9f5b2fc67d22d1752c6b88815a5156464896fc219ed9eceb35f0f326e",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45817,7 +45817,7 @@
       "line": 150,
       "endLine": 150,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:68f53a800ef48771a0a84c7b73656aa0785561cb809662db4af4a7163ae49826",
+      "occurrence": "v2:4422d8f3ae1d4f661eb65a8b0f78264ea529d726fbed25cf9d83906a67247fe7",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45838,7 +45838,7 @@
       "line": 175,
       "endLine": 175,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:efe4515104d51bdd2ffee5e84f7e32e4c26aea6a06b19268369630b02b8bb8e7",
+      "occurrence": "v2:f2e3f79c422cec31627aaaba7522f4b47a8afa2c44a82afa079ffd018f5621eb",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45859,7 +45859,7 @@
       "line": 206,
       "endLine": 206,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:febb3bddefc507b171589c8070022cea46862f10c2e0eeb5f6eb4be5ccd59ac8",
+      "occurrence": "v2:00c9dc1ed14b681f4c9d02078d1ee14ff1d46e9e8c4ad00766e047225bf0fc38",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45880,7 +45880,7 @@
       "line": 235,
       "endLine": 235,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:08ee2da9109de47a7a0a9debbefd3b9ca94dcee217534ac4df1a982bd41cb098",
+      "occurrence": "v2:c80b823c807be0e8d3a8a784672f24c0841603948d3553337856a4e338774c40",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -45901,7 +45901,7 @@
       "line": 84,
       "endLine": 84,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:5749ead752d44308a4dd8dd9b89ee13372f787005194dae834bd8ccbe8c4032a",
+      "occurrence": "v2:b560e06835462d3a264b76e26a21de5c2d1ae7655c1d3948f85943451a1d7ff0",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -46846,7 +46846,7 @@
       "line": 200,
       "endLine": 200,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:bd7d183c7bc5591dd3551d0d485fd285e28f646fde923008fc912ccda4bf167c",
+      "occurrence": "v2:37e523fc38fcac93c8b9aea868494a92fee4da5e06f73d0a1c5b56367280f821",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(TestLayer)",
       "replacement": {
@@ -47098,7 +47098,7 @@
       "line": 475,
       "endLine": 475,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:90b2c798bc7a81bc7e94255e598442d6af6e83fbf3267ec5edf82fa244d19f61",
+      "occurrence": "v2:2da43b54dc1333c2f259f281e2c4fcf3a1d9843489ea0106ee992053c1f24842",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(TestLayer)",
       "replacement": {
@@ -47287,7 +47287,7 @@
       "line": 648,
       "endLine": 648,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:11a23af3446605578d42fb060cbbdf7884e96fddbc4d91500524a26263c3969b",
+      "occurrence": "v2:3b1d88b7d5d730425ce2cbdf4db306661ce5c39bd070379e31f4fb975a2e10c5",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(sweepTestLayer(mergedSweepStubs))",
       "replacement": {
@@ -51704,7 +51704,7 @@
       "line": 873,
       "endLine": 930,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:3cf615517ed3c65774cfd571ed83685b7fb52e0ca6816b514792ac33a4e8282a",
+      "occurrence": "v2:99829871f80069ae06223f50c3b473f5b745847ba46ac53838cf145e23f246e7",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const path = yield* Path.Path; const homeDir = path.join(tmpDir, \"home\"); const repoRoot = path.join(tmpDir, \"repo\"); const claudeProjectName =",
       "replacement": {
@@ -53657,7 +53657,7 @@
       "line": 347,
       "endLine": 358,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:4d19dd2234f77af1d96068f8d6b0d36aa66cf680212fc436fd379d7436490dce",
+      "occurrence": "v2:0fcf48346ffafbdb002a0cd798154505f63bfbf34b9ca6a0b99e15c80b72cb75",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory( Effect.fnUntraced(function* (tmpDir) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const reportPath = path.join(tmpDir, \"nested\", \"bake-report.json\"); yi",
       "replacement": {
@@ -53699,7 +53699,7 @@
       "line": 526,
       "endLine": 586,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:a4dc495b6c30a4193b40b446253aec67f6b5ed12758a52b1f12a08b57b600703",
+      "occurrence": "v2:7a9c8f9c01a4b215d122dd211b6970820e16dceb682375898774813c209ce432",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory( Effect.fnUntraced(function* (tmpDir) { const path = yield* Path.Path; const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty()); // AWS CLI v2 hands back get",
       "replacement": {
@@ -55694,7 +55694,7 @@
       "line": 4098,
       "endLine": 4132,
       "symbol": "withTempDirectory",
-      "occurrence": "v2:82742b75d5478117d142f89301c4c07f5c09f10b750baaff31e7c474c6e3171b",
+      "occurrence": "v2:e1e6b6663b5f26c3d3f4d19b9dfc70f8fa8086bd365e429096525750fbf2fc77",
       "class": "resource-wrapper",
       "evidence": "withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* runGit(tmpDir, [\"init\"]); yield* runGit(tmpDir, [\"config\", \"user.",
       "replacement": {
@@ -56706,7 +56706,7 @@
       "line": 1890,
       "endLine": 1890,
       "symbol": "scoped",
-      "occurrence": "v2:b6cc8cfb21a18c5d75cb1aa009f047f0070cf7f2a22411df85daac842fb7639c",
+      "occurrence": "v2:3f1705463e29534d3d09e9c6d6b175d8eadbe938dc4e4a85c908b5ca22540d1d",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -56853,7 +56853,7 @@
       "line": 261,
       "endLine": 261,
       "symbol": "scoped",
-      "occurrence": "v2:e3bc127d72f235c8b9f0ffd8c0f9b96a10dc65ae721aeb5f58fdf1f42433457d",
+      "occurrence": "v2:c3be71355b25888ed1ac6912a35ba35322a100e4dc48b831953aa39cd7298c15",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -56874,7 +56874,7 @@
       "line": 2636,
       "endLine": 2636,
       "symbol": "scoped",
-      "occurrence": "v2:2020239868b5ca3c57c2207c25fdead38b2ce59221ccff3ef9c4b04ed019fd75",
+      "occurrence": "v2:2a44a0774c966f0d4b6da5b2f44935235c7fddefb64771f82da61a6c2a25fc74",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57000,7 +57000,7 @@
       "line": 2919,
       "endLine": 2919,
       "symbol": "scoped",
-      "occurrence": "v2:59a7ef7e945cc20422f8ba1724f42fcf83120f3e463758cc54d536109238b418",
+      "occurrence": "v2:799de007c04b774d07a7890df3d6e3d34f7c4895925cda153c4bd11734901c9f",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57063,7 +57063,7 @@
       "line": 3207,
       "endLine": 3207,
       "symbol": "scoped",
-      "occurrence": "v2:fcdd76c829b589aa65ed771f759b4612af8618dee09c0d07ff77bb1e248a8348",
+      "occurrence": "v2:54cc56e0f5e905fbdcc82fca70c3d68ed14e9eaebea746a93873fcefcf868fbd",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57147,7 +57147,7 @@
       "line": 3474,
       "endLine": 3474,
       "symbol": "scoped",
-      "occurrence": "v2:1cb87d23087207f7e8816ffec6c32f39f16e6c8774c4d16415c3af251ac0694f",
+      "occurrence": "v2:ea594cb0ee10cac33ee101dd4d3f35cd87a689098c6f87bce0d7d0f67d56bfec",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -57336,7 +57336,7 @@
       "line": 871,
       "endLine": 871,
       "symbol": "scoped",
-      "occurrence": "v2:daab0504da5ae4efbd505ca70508593d472bd922eeeaade671cd5263aa2f58af",
+      "occurrence": "v2:7046dc20097a3c87c7fba8d9bde720594b3b6c5b8334db5794d905007d6164cd",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -58764,7 +58764,7 @@
       "line": 754,
       "endLine": 754,
       "symbol": "scoped",
-      "occurrence": "v2:b424e868355954a74da7bc187d81cc2935d65de0a500039d616690bd078d1201",
+      "occurrence": "v2:2a5fb4a9bd50857837be940092e53f2f860780a7c53f42df1507fd663f3f3cc1",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -82820,7 +82820,7 @@
       "line": 70,
       "endLine": 82,
       "symbol": "checkEffect",
-      "occurrence": "v2:1e3471d992b2f78a370b3705b9aa2f2b46e8a00b3cdc5716c72261bc0c93d57e",
+      "occurrence": "v2:b7ff188c421f3f5301dd3922ce4d583c90249548ae641cb9ff1e64994d27f886",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.all([scriptsArbitrary]), ([scripts]) => { const actual = Result.getOrThrow(decodeAppResult(scripts)); const expected = policy.expected(\"app\", actual, noEvidence); expe",
       "replacement": {
@@ -85096,7 +85096,7 @@
       "line": 281,
       "endLine": 307,
       "symbol": "it.live",
-      "occurrence": "v2:32a7d500b21a806e563f84539cd8bd0db6d415d3bbec798a33d0e80ac0452290",
+      "occurrence": "v2:fa4f82805095cb1a664c320c6d247bd95fe5215efee5e5534ff8e91bbd6b4d26",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"writes its starting position even when the pull request is quiet\", () => { const commandsRef = Ref.makeUnsafe<ReadonlyArray<string>>(A.empty()); return withTempDirectory((root) => Effect.gen(",
       "replacement": {
@@ -85117,7 +85117,7 @@
       "line": 309,
       "endLine": 344,
       "symbol": "it.live",
-      "occurrence": "v2:035ab25bf1a9b9530b15ed2699b79668a8c13a6e411a5ed35844d622e5f43172",
+      "occurrence": "v2:84d4201d4e89457bb79274e9d4b58a5e01f2f07e78b8f6f8c530652cf82cba07",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"persists the cursor of a streamed comment, and resumes from it next run\", () => { // Both runs share one recorder because one spawner is provided once, at the // test's edge; the second run's",
       "replacement": {
@@ -95440,7 +95440,7 @@
       "line": 575,
       "endLine": 575,
       "symbol": "it.layer",
-      "occurrence": "v2:758a389eff2e5822e70218b40cdd15c842156c09d682110cb66b6adacf5b1346",
+      "occurrence": "v2:3bb4798eab28aa5f01bb70393f0add6cdb0e331d6cbbeef36c6b4ab46b276472",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {
@@ -95461,7 +95461,7 @@
       "line": 61,
       "endLine": 61,
       "symbol": "it.layer",
-      "occurrence": "v2:11254deccc94d87bc99230ae11d96e6d37b0db92f30b65c5fca984983ce030c2",
+      "occurrence": "v2:508ff28d7169dfbc9c958f13d0550914932392cfdd5faeb94a1d648a64f77ebd",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {
@@ -95503,7 +95503,7 @@
       "line": 881,
       "endLine": 881,
       "symbol": "it.layer",
-      "occurrence": "v2:6684f876a3e53216b171fbac8b461fc9e8428866695ccd132a32843961ebf9a0",
+      "occurrence": "v2:6acfe2b65fa4e9fe3db1ada02244aeb0d063ddfbabad7cc55ce2058a45c0a89e",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(VersionSyncTestLayer)",
       "replacement": {

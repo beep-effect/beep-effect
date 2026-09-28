@@ -15,7 +15,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -77,9 +77,7 @@ describe("yeet resume", () => {
       expect((yield* parsePrRef("42")).pr).toBe(42);
       const url = yield* parsePrRef("https://github.com/Beep-Effect/Beep-Effect/pull/43");
       expect(url.pr).toBe(43);
-      expect(url.repository).toStrictEqual(
-        O.some(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }))
-      );
+      assertSome(url.repository, PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }));
     })
   );
 
@@ -153,14 +151,17 @@ describe("yeet resume", () => {
     const monitored = makeRecord({ role: "monitored", recordedAt: "2026-09-03T14:00:00Z", sessionId: "monitor" });
     const created = makeRecord({ role: "created", recordedAt: "2026-09-03T13:00:00Z", sessionId: "creator" });
     const rows = [created, monitored];
-    expect(O.flatMap(selectResumeRecord(rows, O.none()), (record) => record.sessionId)).toStrictEqual(
-      O.some("creator")
+    assertSome(
+      O.flatMap(selectResumeRecord(rows, O.none()), (record) => record.sessionId),
+      "creator"
     );
-    expect(O.flatMap(selectResumeRecord(rows, O.some(1)), (record) => record.sessionId)).toStrictEqual(
-      O.some("monitor")
+    assertSome(
+      O.flatMap(selectResumeRecord(rows, O.some(1)), (record) => record.sessionId),
+      "monitor"
     );
-    expect(O.flatMap(selectResumeRecord([monitored], O.none()), (record) => record.sessionId)).toStrictEqual(
-      O.some("monitor")
+    assertSome(
+      O.flatMap(selectResumeRecord([monitored], O.none()), (record) => record.sessionId),
+      "monitor"
     );
   });
 
@@ -174,12 +175,14 @@ describe("yeet resume", () => {
       recordedAt: "2026-09-03T10:00:00Z",
       sessionId: "codex-session",
     });
-    expect(
-      O.flatMap(selectResumeRecord([created, pushed, monitored, codex], O.some(1)), (record) => record.sessionId)
-    ).toStrictEqual(O.some("same-session"));
-    expect(
-      O.flatMap(selectResumeRecord([created, pushed, monitored, codex], O.some(2)), (record) => record.sessionId)
-    ).toStrictEqual(O.some("codex-session"));
+    assertSome(
+      O.flatMap(selectResumeRecord([created, pushed, monitored, codex], O.some(1)), (record) => record.sessionId),
+      "same-session"
+    );
+    assertSome(
+      O.flatMap(selectResumeRecord([created, pushed, monitored, codex], O.some(2)), (record) => record.sessionId),
+      "codex-session"
+    );
     assertNone(selectResumeRecord([created, pushed, monitored, codex], O.some(3)));
   });
 
@@ -197,7 +200,7 @@ describe("yeet resume", () => {
         '{"pid":123,"sessionId":"session-local-only","cwd":"/workspace","name":"FABLE"}'
       );
       const live = yield* isClaudeSessionLive(makeRecord(), sessions, proc);
-      expect(live.pipe(O.map((value) => value.pid))).toStrictEqual(O.some(123));
+      assertSome(live.pipe(O.map((value) => value.pid)), 123);
     }).pipe(provideScopedLayer(TestLayer))
   );
 
@@ -472,7 +475,7 @@ describe("yeet resume", () => {
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
       expect(yield* Ref.get(spawned)).toStrictEqual(["codex", "resume", "codex-thread"]);
-      expect(yield* Ref.get(spawnCwd)).toStrictEqual(O.some(root));
+      assertSome(yield* Ref.get(spawnCwd), root);
     }).pipe(provideScopedLayer(TestLayer))
   );
 

@@ -32,7 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -159,12 +159,18 @@ const settledOutcomes = (actions: ReadonlyArray<ReplyAction>): ReadonlyArray<Rep
 describe("findReplyThread", () => {
   it("matches a draft that names the GraphQL thread id", () => {
     const draft = ReplyDraft.make({ threadId: O.some("PRRT_resolved"), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_resolved"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_resolved"
+    );
   });
 
   it("maps a REST comment id onto its thread through the comment databaseId", () => {
     const draft = ReplyDraft.make({ commentId: O.some(OPEN_COMMENT_ID), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_open"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_open"
+    );
   });
 
   it("prefers the thread id when a draft carries both handles", () => {
@@ -173,7 +179,10 @@ describe("findReplyThread", () => {
       commentId: O.some(OPEN_COMMENT_ID),
       body: "ack",
     });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_resolved"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_resolved"
+    );
   });
 
   it("falls back to the comment id when the named thread id is not live", () => {
@@ -182,7 +191,10 @@ describe("findReplyThread", () => {
       commentId: O.some(OPEN_COMMENT_ID),
       body: "ack",
     });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_open"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_open"
+    );
   });
 
   it("returns None for a comment id no live thread carries", () => {
@@ -192,7 +204,10 @@ describe("findReplyThread", () => {
 
   it("skips comments whose databaseId is absent instead of matching them", () => {
     const draft = ReplyDraft.make({ commentId: O.some(OUTDATED_COMMENT_ID), body: "ack" });
-    expect(O.map(findReplyThread(liveThreads, draft), (thread) => thread.id)).toEqual(O.some("PRRT_outdated"));
+    assertSome(
+      O.map(findReplyThread(liveThreads, draft), (thread) => thread.id),
+      "PRRT_outdated"
+    );
   });
 });
 
@@ -306,7 +321,12 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_resolved"), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("stale");
-    expect(outcome?.threadId).toEqual(O.some("PRRT_resolved"));
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_resolved";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain("already resolved upstream");
     expect(outcome?.detail).toContain("src/commands/Yeet/internal/Verdict.ts:7");
   });
@@ -316,7 +336,12 @@ describe("planReplyActions", () => {
       planReplyActions(draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_gone"), body: "ack" })]), liveThreads)
     );
     expect(outcome?.status).toBe("failed");
-    expect(outcome?.threadId).toEqual(O.some("PRRT_gone"));
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_gone";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain("thread id PRRT_gone");
     expect(outcome?.detail).toContain("pull request #558");
   });
@@ -331,7 +356,12 @@ describe("planReplyActions", () => {
       assertDefined(optionUnderTest);
       assertNone(optionUnderTest);
     }
-    expect(outcome?.commentId).toEqual(O.some(UNKNOWN_COMMENT_ID));
+    {
+      const optionUnderTest = outcome?.commentId;
+      const expectedOptionValue = UNKNOWN_COMMENT_ID;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
     expect(outcome?.detail).toContain(`comment id ${UNKNOWN_COMMENT_ID}`);
   });
 
@@ -359,8 +389,18 @@ describe("planReplyActions", () => {
     const [outcome] = settledOutcomes(actions);
     expect(outcome?.status).toBe("failed");
     expect(outcome?.detail).toContain("already targeted by an earlier draft");
-    expect(outcome?.commentId).toEqual(O.some(OPEN_COMMENT_ID));
-    expect(outcome?.threadId).toEqual(O.some("PRRT_open"));
+    {
+      const optionUnderTest = outcome?.commentId;
+      const expectedOptionValue = OPEN_COMMENT_ID;
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
+    {
+      const optionUnderTest = outcome?.threadId;
+      const expectedOptionValue = "PRRT_open";
+      assertDefined(optionUnderTest);
+      assertSome(optionUnderTest, expectedOptionValue);
+    }
   });
 
   it("emits exactly one action per draft, in drafts-file order", () => {

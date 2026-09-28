@@ -642,7 +642,7 @@ describe("executeSweep", () => {
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const state = yield* observeSweepGitState(sweepContext(root));
-        expect(state.pullRequestHeadBranch).toEqual(O.some("feat/merge-loop"));
+        assertSome(state.pullRequestHeadBranch, "feat/merge-loop");
         expect(blockerText(state, "delete-local-branch")).toEqual([]);
       })
     ).pipe(provideScopedLayer(sweepTestLayer(mergedSweepStubs)))
