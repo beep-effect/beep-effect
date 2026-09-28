@@ -4311,3 +4311,17 @@ missing metric. Keep metric-producing contract programs and their child fibers
 inside one owned registry rather than clearing a shared global registry. Retain
 negative controls that suppress only the observed program's emissions; a positive
 snapshot alone cannot establish which program produced its counts.
+
+## Desktop runner migration exposed hoisted-mock and Node Wasm constraints
+
+Moving `vi` through the Effect/Vitest re-export broke four Desktop suites with
+`There are some problems in resolving the mocks API`. Keep only those hoisted
+mock imports direct from Vitest; route registration through the instrumented
+runner. A migration rule that treats every Vitest export identically would break
+otherwise unchanged tests. Four specific detector exceptions retain this proof.
+
+The Node integration command fails four suites importing PGlite initdb Wasm with
+`Cannot find package 'env'`. The pre-migration Pglite equivalence test reproduces
+it; the Bun integration run passes 30 tests. Fix Node/Vite asset loading and rerun
+the original suite; do not replace the native PGlite subject or count collection
+of opt-in sidecar/provider files as execution.

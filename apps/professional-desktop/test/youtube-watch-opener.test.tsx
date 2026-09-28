@@ -1,9 +1,10 @@
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import "@testing-library/jest-dom/vitest";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, beforeEach, describe, expect } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, beforeEach, describe, expect, vi } from "vitest";
+import { vi } from "vitest";
 import { YouTubeWatchOpener } from "@/chat/ui/YouTubeWatchOpener";
 
 const opener = vi.hoisted(() => vi.fn<() => Promise<void>>(() => Promise.resolve()));

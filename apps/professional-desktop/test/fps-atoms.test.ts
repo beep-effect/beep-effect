@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
-import { afterEach, vi } from "vitest";
 import { fpsSampleAtoms } from "@/spikes/Fps.atoms";
 
 afterEach(() => {

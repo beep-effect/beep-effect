@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
 import { ProfessionalAtomProvider } from "@/runtime/ProfessionalAtomProvider";
 
 afterEach(cleanup);

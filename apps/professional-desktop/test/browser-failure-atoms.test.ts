@@ -1,4 +1,5 @@
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -6,7 +7,6 @@ import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { AtomRegistry } from "effect/reactivity";
 import * as Schedule from "effect/Schedule";
-import { describe, expect } from "vitest";
 import {
   BrowserFailure,
   browserFailureListenersAtom,

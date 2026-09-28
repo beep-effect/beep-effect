@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
-import { afterEach, describe, expect, vi } from "vitest";
 import { SurfaceBoundary } from "@/App";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 

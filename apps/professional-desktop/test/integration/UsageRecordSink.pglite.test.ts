@@ -1,11 +1,12 @@
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
 import { makeDrizzle, makeDrizzleLayer, migrateBundle } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -73,7 +74,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Professional desktop UsageRecordSink Drizzle PgLite integration", () => {});
 } else {
   describe("Professional desktop UsageRecordSink Drizzle PgLite integration", { concurrent: false }, () => {
-    layer(UsageRecordSinkLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(UsageRecordSinkLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "preserves legacy activity provenance and persists a finalized turn UsageRecord",
         Effect.fnUntraced(function* () {

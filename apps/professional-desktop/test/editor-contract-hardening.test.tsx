@@ -20,8 +20,9 @@ import { documentSafetyIssues, refineSafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, vi } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as Arbitrary from "effect/Arbitrary";
@@ -32,7 +33,6 @@ import * as Result from "effect/Result";
 import { AsyncResult, AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
-import { afterEach, beforeEach, vi } from "vitest";
 import {
   composerDocumentSafetyGateAtoms,
   composerSerializedChangeHandlerAtoms,

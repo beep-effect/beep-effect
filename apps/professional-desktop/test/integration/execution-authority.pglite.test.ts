@@ -21,9 +21,10 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -135,7 +136,7 @@ describe("professional desktop execution-authority schema laws", () => {
 });
 
 describe("professional desktop execution authority PgLite acceptance", { concurrent: false }, () => {
-  layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
+  it.layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
     it.effect(
       "denies a destination parsed from a poisoned MCP read at egress while the session gate allows publication",
       Effect.fnUntraced(function* () {
@@ -328,7 +329,7 @@ SELECT ?destination WHERE {
     );
   });
 
-  layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
+  it.layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
     it.effect(
       "pins exact ledger columns and stores no reachable publish-body canary",
       Effect.fnUntraced(function* () {
@@ -458,7 +459,7 @@ SELECT ?value WHERE {
     );
   });
 
-  layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
+  it.layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {
     it.effect(
       "counts tier-only and governed-egress write deltas structurally",
       Effect.fnUntraced(function* () {

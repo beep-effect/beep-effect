@@ -10,8 +10,9 @@ import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
-import { it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -21,7 +22,6 @@ import { Atom, AtomRegistry, Reactivity } from "effect/reactivity";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { describe, expect } from "vitest";
 import { composerSurfaceAtoms, dispatchTurnWithConfirm } from "@/chat/ui/Composer.atoms";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 

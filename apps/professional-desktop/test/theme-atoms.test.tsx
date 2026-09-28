@@ -1,12 +1,12 @@
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { ThemeMode } from "@beep/ui/themes";
 import { RegistryProvider } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { AtomRegistry } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { afterEach, vi } from "vitest";
 import { ThemeToggle } from "@/chat/ui/ThemeToggle";
 import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime";
 import { migrateWorkbenchThemeMode, resolvedWorkbenchThemeModeAtom, workbenchThemeModeAtom } from "@/theme/Theme.atoms";

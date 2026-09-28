@@ -3,11 +3,11 @@ import { EditorViewer } from "@beep/editor/viewer";
 import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
 import "@testing-library/jest-dom/vitest";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterAll, afterEach, beforeAll, describe, expect } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { afterAll, afterEach, beforeAll, describe, expect } from "vitest";
 
 const mermaidDocument = MdModel.Document.make({
   children: [

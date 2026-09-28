@@ -20,13 +20,14 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { AgentTurnKernel } from "@beep/agents-use-cases/public";
 import { makeDrizzleLayer } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -131,7 +132,7 @@ if (!shouldRunRealAnthropic) {
   });
 } else if (shouldRun) {
   describe("Professional desktop real Anthropic chat parity E2E", { concurrent: false }, () => {
-    layer(RealAnthropicChatLayer, { timeout: "10 minutes" })((it) => {
+    it.layer(RealAnthropicChatLayer, { timeout: "10 minutes" })((it) => {
       it.effect(
         "streams and persists mermaid, table, and youtube blocks as @beep/md",
         Effect.fnUntraced(function* () {

@@ -3,10 +3,10 @@ import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe";
 import { NonNegativeInt } from "@beep/schema/Number";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import { describe, expect } from "vitest";
 import {
   ComposerSendDecision,
   composerPolicy,

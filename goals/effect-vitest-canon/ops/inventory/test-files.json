@@ -234,35 +234,35 @@
     "file": "apps/professional-desktop/test/App.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1768,
-    "lines": 45
+    "bytes": 1812,
+    "lines": 46
   },
   {
     "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1132,
-    "lines": 23
+    "bytes": 1168,
+    "lines": 24
   },
   {
     "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5405,
-    "lines": 111
+    "bytes": 5441,
+    "lines": 112
   },
   {
     "file": "apps/professional-desktop/test/UsagePricing.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1277,
-    "lines": 37
+    "bytes": 1313,
+    "lines": 38
   },
   {
     "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3211,
+    "bytes": 3213,
     "lines": 82
   },
   {
@@ -276,245 +276,245 @@
     "file": "apps/professional-desktop/test/chat-ui.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 10759,
-    "lines": 248
+    "bytes": 10795,
+    "lines": 249
   },
   {
     "file": "apps/professional-desktop/test/code-block.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2115,
+    "bytes": 2126,
     "lines": 47
   },
   {
     "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2261,
+    "bytes": 2263,
     "lines": 54
   },
   {
     "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6204,
+    "bytes": 6206,
     "lines": 151
   },
   {
     "file": "apps/professional-desktop/test/composer-policy.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5338,
+    "bytes": 5349,
     "lines": 142
   },
   {
     "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3416,
+    "bytes": 3427,
     "lines": 77
   },
   {
     "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18311,
-    "lines": 501
+    "bytes": 18464,
+    "lines": 507
   },
   {
     "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1299,
+    "bytes": 1310,
     "lines": 39
   },
   {
     "file": "apps/professional-desktop/test/dock-shell.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8056,
+    "bytes": 8058,
     "lines": 195
   },
   {
     "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 57422,
-    "lines": 1353
+    "bytes": 57304,
+    "lines": 1349
   },
   {
     "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1606,
+    "bytes": 1617,
     "lines": 33
   },
   {
     "file": "apps/professional-desktop/test/failure-message.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2042,
-    "lines": 60
+    "bytes": 2086,
+    "lines": 61
   },
   {
     "file": "apps/professional-desktop/test/failure-observability.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 743,
-    "lines": 18
+    "bytes": 787,
+    "lines": 19
   },
   {
     "file": "apps/professional-desktop/test/fps-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1517,
+    "bytes": 1519,
     "lines": 46
   },
   {
     "file": "apps/professional-desktop/test/intake-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18683,
-    "lines": 470
+    "bytes": 18710,
+    "lines": 471
   },
   {
     "file": "apps/professional-desktop/test/intake-refusal.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1101,
-    "lines": 27
+    "bytes": 1137,
+    "lines": 28
   },
   {
     "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1047,
-    "lines": 28
+    "bytes": 1083,
+    "lines": 29
   },
   {
     "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 12657,
-    "lines": 316
+    "bytes": 13213,
+    "lines": 321
   },
   {
     "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6192,
-    "lines": 156
+    "bytes": 6254,
+    "lines": 157
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6258,
-    "lines": 135
+    "bytes": 6301,
+    "lines": 136
   },
   {
     "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6996,
-    "lines": 170
+    "bytes": 7035,
+    "lines": 171
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 12934,
-    "lines": 304
+    "bytes": 12970,
+    "lines": 305
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2411,
-    "lines": 61
+    "bytes": 2438,
+    "lines": 62
   },
   {
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 28896,
-    "lines": 588
+    "bytes": 29348,
+    "lines": 597
   },
   {
     "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 25098,
-    "lines": 531
+    "bytes": 25580,
+    "lines": 540
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6610,
-    "lines": 174
+    "bytes": 6635,
+    "lines": 175
   },
   {
     "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3604,
-    "lines": 78
+    "bytes": 3638,
+    "lines": 79
   },
   {
     "file": "apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts",
     "package": "@beep/professional-desktop",
     "kind": "support",
-    "bytes": 12157,
-    "lines": 264
+    "bytes": 14500,
+    "lines": 309
   },
   {
     "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 8521,
+    "bytes": 8532,
     "lines": 194
   },
   {
     "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5303,
-    "lines": 130
+    "bytes": 5461,
+    "lines": 133
   },
   {
     "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3356,
+    "bytes": 3347,
     "lines": 86
   },
   {
     "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 18259,
-    "lines": 493
+    "bytes": 18216,
+    "lines": 492
   },
   {
     "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1089,
-    "lines": 23
+    "bytes": 1133,
+    "lines": 24
   },
   {
     "file": "apps/professional-desktop/test/professional-atom-provider.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 603,
-    "lines": 18
+    "bytes": 647,
+    "lines": 19
   },
   {
     "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1923,
+    "bytes": 1934,
     "lines": 55
   },
   {
@@ -528,8 +528,8 @@
     "file": "apps/professional-desktop/test/schema-parity.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 11416,
-    "lines": 255
+    "bytes": 11433,
+    "lines": 256
   },
   {
     "file": "apps/professional-desktop/test/setup.dom.ts",
@@ -542,106 +542,106 @@
     "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3187,
-    "lines": 81
+    "bytes": 3214,
+    "lines": 82
   },
   {
     "file": "apps/professional-desktop/test/spike-schema.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 3511,
-    "lines": 90
+    "bytes": 3528,
+    "lines": 91
   },
   {
     "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4955,
+    "bytes": 4966,
     "lines": 116
   },
   {
     "file": "apps/professional-desktop/test/sync-atoms.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5764,
+    "bytes": 5766,
     "lines": 124
   },
   {
     "file": "apps/professional-desktop/test/sync-retry.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1378,
+    "bytes": 1389,
     "lines": 35
   },
   {
     "file": "apps/professional-desktop/test/table-layout.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2365,
+    "bytes": 2376,
     "lines": 59
   },
   {
     "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2354,
+    "bytes": 2316,
     "lines": 49
   },
   {
     "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 5891,
-    "lines": 157
+    "bytes": 5918,
+    "lines": 158
   },
   {
     "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4943,
-    "lines": 107
+    "bytes": 4987,
+    "lines": 108
   },
   {
     "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 6162,
+    "bytes": 6208,
     "lines": 162
   },
   {
     "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4454,
-    "lines": 123
+    "bytes": 4489,
+    "lines": 124
   },
   {
     "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4156,
-    "lines": 115
+    "bytes": 4747,
+    "lines": 127
   },
   {
     "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 7532,
-    "lines": 164
+    "bytes": 8241,
+    "lines": 197
   },
   {
     "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 1924,
+    "bytes": 1935,
     "lines": 46
   },
   {
     "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 4052,
-    "lines": 107
+    "bytes": 4088,
+    "lines": 108
   },
   {
     "file": "apps/todox/test/app.test.tsx",

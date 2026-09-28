@@ -1,4 +1,5 @@
-import { describe, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { beforeEach, describe, expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -6,7 +7,7 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Scope from "effect/Scope";
 import { Socket } from "effect/socket";
-import { beforeEach, expect, vi } from "vitest";
+import { vi } from "vitest";
 import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket";
 
 const { invoke, listen, unlisten } = vi.hoisted(() => ({ invoke: vi.fn(), listen: vi.fn(), unlisten: vi.fn() }));

@@ -7,12 +7,13 @@ import {
 import * as MdModel from "@beep/md/Md.model";
 import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
+import { afterEach, describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry } from "effect/reactivity";
-import { afterEach, describe, expect, it } from "vitest";
 import { visibleThreadTurnsAtoms } from "@/chat/ui/Thread.atoms";
 
 const threadId = WorkspaceIdentity.ThreadId.make(7);

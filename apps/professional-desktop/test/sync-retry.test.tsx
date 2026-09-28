@@ -1,10 +1,10 @@
 import { VaultSyncPanel } from "@/sync/VaultSyncPanel";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, describe, expect } from "vitest";
 
 describe("a failed sync query is not a dead end", () => {
   afterEach(cleanup);

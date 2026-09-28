@@ -15,14 +15,14 @@ import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspa
 import { Composer } from "@/chat/ui/Composer";
 import { Thread } from "@/chat/ui/Thread";
 import "@testing-library/jest-dom/vitest";
+import { it } from "@beep/test-runner";
 import { RegistryProvider, useAtomRefresh, useAtomSet } from "@effect/atom-react";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeAll, describe, expect, vi } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AsyncResult, Reactivity } from "effect/reactivity";
-import { afterEach, beforeAll, vi } from "vitest";
 import type { JSX } from "react";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);

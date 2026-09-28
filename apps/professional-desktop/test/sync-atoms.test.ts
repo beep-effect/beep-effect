@@ -1,7 +1,8 @@
 import { VaultSyncActionError } from "@beep/documents-use-cases/public";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -11,7 +12,6 @@ import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
 import * as Schedule from "effect/Schedule";
-import { describe, expect } from "vitest";
 import {
   DesktopSyncClient,
   VaultSyncCommand,

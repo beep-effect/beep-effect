@@ -3,10 +3,10 @@ import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as MdModel from "@beep/md/Md.model";
 import { RegistryProvider } from "@effect/atom-react";
 import "@testing-library/jest-dom/vitest";
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { afterEach, describe, expect, vi } from "vitest";
 
 // The desktop registry sweeps atoms with an idle TTL (`ProfessionalAtomProvider`
 // sets 30s). Any node with no listeners and no dependents is disposed once its

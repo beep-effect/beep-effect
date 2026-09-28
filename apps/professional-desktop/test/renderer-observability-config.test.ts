@@ -1,7 +1,7 @@
-import { it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { describe, expect } from "vitest";
 import { RendererObservabilityConfig } from "@/runtime/RendererObservabilityConfig";
 
 describe("RendererObservabilityConfig", () => {

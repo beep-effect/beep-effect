@@ -27,13 +27,14 @@ import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AgentTurnKernel } from "@beep/agents-use-cases/public";
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
 import { makeDrizzle, makeDrizzleLayer } from "@beep/postgres";
+import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
@@ -72,7 +73,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("Professional desktop chat persistence PgLite integration", () => {});
 } else {
   describe("Professional desktop chat persistence PgLite integration", { concurrent: false }, () => {
-    layer(ChatPersistLayer, { timeout: "5 minutes" })((it) => {
+    it.layer(ChatPersistLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "finalizes a streamed assistant turn into the jsonb content column and reads it back identically",
         Effect.fnUntraced(function* () {

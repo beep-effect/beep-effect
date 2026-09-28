@@ -1,7 +1,8 @@
 import { YouTubeWatchRequest } from "@beep/editor/youtube-embed";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownYouTubeWatchRequestResult = S.decodeUnknownResult(YouTubeWatchRequest);
 
