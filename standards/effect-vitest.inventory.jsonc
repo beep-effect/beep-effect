@@ -60432,15 +60432,15 @@
       "status": "open"
     },
     {
-      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:250:result@30#1",
+      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:328:result@32#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 250,
-      "endLine": 250,
+      "line": 328,
+      "endLine": 328,
       "symbol": "result",
-      "occurrence": "v2:6a8b6aca8847b799bf2add6e5dc0d64119ec77be534c153a2999d1c2752a657a",
+      "occurrence": "v2:199274b912aca460f07c104edea0d620644cc62bdbb16f070a36a5e5065d958c",
       "class": "result-outcome-assertion",
       "evidence": "Effect.result(seedContradictionQaFixtures())",
       "replacement": {
@@ -60453,15 +60453,15 @@
       "status": "open"
     },
     {
-      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:290:result@30#1",
+      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:355:result@32#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 290,
-      "endLine": 290,
+      "line": 355,
+      "endLine": 355,
       "symbol": "result",
-      "occurrence": "v2:fed9708b9968dc02aa6097749b24048b173ed2506ef9dde97ba020057a00ddb5",
+      "occurrence": "v2:358f7cf1fa7a4783de51292aaeea5c30478a01d2c5ffe1d722606fc855a5c6dd",
       "class": "result-outcome-assertion",
       "evidence": "Effect.result(seedContradictionQaFixtures())",
       "replacement": {

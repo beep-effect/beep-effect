@@ -4617,3 +4617,20 @@ sharing the captured repository/resolver state. A temporary identity probe
 required six distinct, initially empty captures objects while all original cases
 passed. The first package check caught the obsolete `provideScopedLayer` import;
 removing it completes the migration without suppressing the compiler diagnostic.
+
+## Configuration must reach operations as well as fixture acquisition
+
+While migrating the contradiction QA seed tests to public layers, providing the
+original environment only to layer construction made the body-level seed
+operation observe its default disabled setting. The initial Node and Bun runs
+failed three cases, including the exact seed counts and source-conflict witness.
+Using Layer.provideMerge exports the same ConfigProvider to the test body and
+restores the original behavior. Fixture examples should distinguish acquisition
+configuration from configuration used by operations after acquisition.
+
+Public-layer extraction also changed the syntax fingerprints of two unchanged
+EV005 result-outcome assertions. The ratchet initially reported two new findings
+while the assertion-preservation check passed. Matching the owned entries by
+file, rule, symbol, candidate class, expression, and case order allowed a narrow
+identity reanchor; both entries remain open. Location/structure migration needs
+a reviewed identity mapping rather than a whole-baseline refresh.

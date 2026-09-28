@@ -423,15 +423,15 @@
     "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 13036,
-    "lines": 307
+    "bytes": 16015,
+    "lines": 367
   },
   {
     "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
     "package": "@beep/professional-desktop",
     "kind": "test",
-    "bytes": 2438,
-    "lines": 62
+    "bytes": 2545,
+    "lines": 65
   },
   {
     "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",

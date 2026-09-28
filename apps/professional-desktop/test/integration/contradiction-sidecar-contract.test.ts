@@ -11,9 +11,8 @@ import { ContradictionListPayload } from "@beep/epistemic-use-cases/public";
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,41 +21,45 @@ import * as Result from "effect/Result";
 import { RpcTest } from "effect/rpc";
 import * as S from "effect/Schema";
 import { RuntimeTest } from "@/runtime/Layer";
+import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
 
+const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));
 
-describe("@beep/professional-desktop desktop rpc contract", () => {
+const RuntimeFixtureLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({
+      prefix: "contradiction-sidecar-contract-",
+    });
+    return RuntimeTest.pipe(
+      Layer.provide(
+        ConfigProvider.layer(
+          ConfigProvider.fromUnknown({
+            ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
+          })
+        )
+      )
+    );
+  })
+).pipe(Layer.provide(BunFileSystem.layer));
+
+it.layer(RuntimeFixtureLive, { timeout: fixtureTimeout })("@beep/professional-desktop desktop rpc contract", (it) => {
   it.effect(
     "serves contradiction triage through the exact merged group and fixture runtime",
     Effect.fnUntraced(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "contradiction-sidecar-contract-",
-      });
-      const runtime = RuntimeTest.pipe(
-        Layer.provide(
-          ConfigProvider.layer(
-            ConfigProvider.fromUnknown({
-              ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
-            })
-          )
-        )
+      const client = yield* RpcTest.makeClient(DesktopRpcs);
+      const page = yield* client.ListContradictionCandidates(
+        ContradictionListPayload.make({
+          disposition: "open",
+          knownAt: instant,
+          limit: PosInt.make(20),
+          offset: NonNegativeInt.make(0),
+          validAt: instant,
+        })
       );
-      const page = yield* Effect.gen(function* () {
-        const client = yield* RpcTest.makeClient(DesktopRpcs);
-        return yield* client.ListContradictionCandidates(
-          ContradictionListPayload.make({
-            disposition: "open",
-            knownAt: instant,
-            limit: PosInt.make(20),
-            offset: NonNegativeInt.make(0),
-            validAt: instant,
-          })
-        );
-      }).pipe(provideScopedLayer(runtime));
-
       expect(page.total).toBe(0);
-    }, provideScopedLayer(BunFileSystem.layer))
+    })
   );
 });
