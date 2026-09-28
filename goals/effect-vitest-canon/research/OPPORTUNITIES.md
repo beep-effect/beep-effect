@@ -3741,3 +3741,14 @@ keeps both modules and avoids changing Vite or the application implementation.
   field and unrelated entry. No new exception or baseline-wide rewrite is made.
 - Prevention: stable symbol identities would avoid re-adjudicating unchanged
   exceptions after import-only line movement.
+
+
+### Schema advisory identity drift during law-practice test migration
+
+Adding runner and assertion imports moved the existing CandorPolicy schema-codec
+advisory from line 39 to 41. `bun run lint:schema-first` reported one missing and
+one stale entry. The canonical `--write` refreshed the location but also replaced
+the prior justified exception with an advisory and reordered unrelated entries.
+The final edit preserves every original entry and reason, changing only the owned
+line location. Stable advisory identities independent of line offsets, with
+exception preservation during regeneration, would prevent this repair.

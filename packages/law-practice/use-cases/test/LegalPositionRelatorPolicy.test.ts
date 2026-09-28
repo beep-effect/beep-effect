@@ -32,9 +32,11 @@ import {
   LegalPositionRelatorPolicyLive,
 } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
-import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Equal } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { Effect, Equal, pipe } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
@@ -189,15 +191,15 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
       const reached = HashSet.fromIterable(
         A.flatMap(everyPosition, (position) => [correlativePosition(position).kind, oppositePosition(position).kind])
       );
-      expect(Equal.equals(reached, HohfeldPositionKind.HashSet)).toBe(true);
+      pipe(Equal.equals(reached, HohfeldPositionKind.HashSet), assertTrue);
     })
   );
 
   it.effect("are involutive: applying either derivation twice returns the position it started from", () =>
     Effect.sync(() => {
       for (const position of everyPosition) {
-        expect(Equal.equals(correlativePosition(correlativePosition(position)), position)).toBe(true);
-        expect(Equal.equals(oppositePosition(oppositePosition(position)), position)).toBe(true);
+        pipe(Equal.equals(correlativePosition(correlativePosition(position)), position), assertTrue);
+        pipe(Equal.equals(oppositePosition(oppositePosition(position)), position), assertTrue);
       }
     })
   );
@@ -205,9 +207,13 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
   it.effect("commute: correlative after opposite is opposite after correlative", () =>
     Effect.sync(() => {
       for (const position of everyPosition) {
-        expect(
-          Equal.equals(correlativePosition(oppositePosition(position)), oppositePosition(correlativePosition(position)))
-        ).toBe(true);
+        pipe(
+          Equal.equals(
+            correlativePosition(oppositePosition(position)),
+            oppositePosition(correlativePosition(position))
+          ),
+          assertTrue
+        );
       }
     })
   );
@@ -220,7 +226,7 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
           ? DeonticPositionKind.HashSet
           : PotestativePositionKind.HashSet;
         expect(HashSet.size(orbit)).toBe(4);
-        expect(Equal.equals(orbit, expected)).toBe(true);
+        pipe(Equal.equals(orbit, expected), assertTrue);
       }
     })
   );
@@ -230,7 +236,7 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
       const stored = A.filter(everyPosition, (position) => HashSet.has(AdvantagePositionKind.HashSet, position.kind));
       expect(A.length(stored)).toBe(4);
       for (const position of stored) {
-        expect(HashSet.has(AdvantagePositionKind.HashSet, oppositePosition(position).kind)).toBe(false);
+        pipe(HashSet.has(AdvantagePositionKind.HashSet, oppositePosition(position).kind), assertFalse);
       }
     })
   );
@@ -253,7 +259,7 @@ describe("LegalPositionRelatorPolicy — kind and content move together, or not 
       for (const position of everyPosition) {
         const correlative = correlativePosition(position);
         expect(correlative.kind).not.toBe(position.kind);
-        expect(legalActContentEquivalence(correlative.content, position.content)).toBe(true);
+        pipe(legalActContentEquivalence(correlative.content, position.content), assertTrue);
       }
     })
   );
@@ -280,7 +286,7 @@ describe("LegalPositionRelatorPolicy — kind and content move together, or not 
       ] extends [never]
         ? true
         : false = true;
-      expect(exported).toBe(true);
+      pipe(exported, assertTrue);
       expect(A.filter(halves, (half) => Object.hasOwn(LawPracticeDomain, half))).toEqual([]);
     })
   );
@@ -291,7 +297,7 @@ describe("LegalPositionRelatorPolicy — kind and content move together, or not 
 // ---------------------------------------------------------------------------
 
 describe("LegalPositionRelatorPolicy — admission", () => {
-  layer(LegalPositionRelatorPolicyLive)((it) => {
+  it.layer(LegalPositionRelatorPolicyLive)((it) => {
     it.effect("admits a complete advantage-side record", () =>
       Effect.gen(function* () {
         const policy = yield* LegalPositionRelatorPolicy;
@@ -336,7 +342,7 @@ describe("LegalPositionRelatorPolicy — admission", () => {
 // ---------------------------------------------------------------------------
 
 describe("LegalPositionRelatorPolicy — one stored relation, every other reading derived", () => {
-  layer(LegalPositionRelatorPolicyLive)((it) => {
+  it.layer(LegalPositionRelatorPolicyLive)((it) => {
     it.effect("derives both views from a single record, and neither view is storable", () =>
       Effect.gen(function* () {
         const policy = yield* LegalPositionRelatorPolicy;
@@ -351,7 +357,7 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
         expect(correlative.bearer.player).toBe(stored.counterparty.player);
         expect(correlative.counterparty.player).toBe(stored.bearer.player);
         expect(correlative.position.kind).toBe("noRight");
-        expect(legalActContentEquivalence(correlative.position.content, stored.content)).toBe(true);
+        pipe(legalActContentEquivalence(correlative.position.content, stored.content), assertTrue);
 
         // The same-party negation: roles stay put, kind and polarity move together.
         expect(opposite.viewKind).toBe("opposite");
@@ -364,8 +370,8 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
 
         // Both views are burden-side, so neither could ever have been stored,
         // and the one stored relation is exactly what it was.
-        expect(HashSet.has(AdvantagePositionKind.HashSet, correlative.position.kind)).toBe(false);
-        expect(HashSet.has(AdvantagePositionKind.HashSet, opposite.position.kind)).toBe(false);
+        pipe(HashSet.has(AdvantagePositionKind.HashSet, correlative.position.kind), assertFalse);
+        pipe(HashSet.has(AdvantagePositionKind.HashSet, opposite.position.kind), assertFalse);
         expect(stored.positionKind).toBe("privilege");
         expect(stored.content.polarity).toBe("act");
       })
@@ -378,7 +384,7 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
 // ---------------------------------------------------------------------------
 
 describe("LegalPositionRelatorPolicy — scope overlap and prima facie opposition", () => {
-  layer(LegalPositionRelatorPolicyLive)((it) => {
+  it.layer(LegalPositionRelatorPolicyLive)((it) => {
     it.effect("emits nothing for Hohfeld's coexisting privilege(enter) and duty(enter)", () =>
       Effect.gen(function* () {
         const policy = yield* LegalPositionRelatorPolicy;
@@ -409,7 +415,7 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         const opposite = policy.oppositeView(privilege);
         const correlative = policy.correlativeView(claim);
         expect(opposite.position.kind).toBe(correlative.position.kind);
-        expect(legalActContentEquivalence(opposite.position.content, correlative.position.content)).toBe(true);
+        pipe(legalActContentEquivalence(opposite.position.content, correlative.position.content), assertTrue);
 
         // The whole emission is asserted, not one sampled member: exactly one
         // candidate, carrying the unordered pair and the values that qualified it.
@@ -427,7 +433,7 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
 
         const candidates = policy.screenForOpposition([privilege, claim]);
         expect(HashSet.size(candidates)).toBe(1);
-        expect(Equal.equals(candidates, HashSet.make(expected))).toBe(true);
+        pipe(Equal.equals(candidates, HashSet.make(expected)), assertTrue);
       })
     );
 
@@ -440,7 +446,7 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         const opposite = policy.oppositeView(privilege);
         const correlative = policy.correlativeView(claim);
         expect(opposite.position.kind).toBe(correlative.position.kind);
-        expect(legalActContentEquivalence(opposite.position.content, correlative.position.content)).toBe(true);
+        pipe(legalActContentEquivalence(opposite.position.content, correlative.position.content), assertTrue);
 
         expect(HashSet.size(policy.screenForOpposition([privilege, claim]))).toBe(0);
       })
@@ -455,7 +461,7 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         const forwards = policy.screenForOpposition([privilege, claim]);
         const backwards = policy.screenForOpposition([claim, privilege]);
         expect(HashSet.size(backwards)).toBe(1);
-        expect(Equal.equals(forwards, backwards)).toBe(true);
+        pipe(Equal.equals(forwards, backwards), assertTrue);
       })
     );
 

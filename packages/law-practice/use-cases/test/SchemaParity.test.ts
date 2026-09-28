@@ -19,9 +19,11 @@ import {
   PracticeKgToolkit,
 } from "@beep/law-practice-use-cases/server";
 import { EntityInput } from "@beep/law-practice-use-cases/test";
-import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -35,43 +37,88 @@ const encodeOfficeActionReviewError = S.encodeEffect(OfficeActionReviewError);
 
 const assertSchemaEncodeDecodeRoundTrip = Effect.fn("SchemaParityTest.assertSchemaEncodeDecodeRoundTrip")(function* <
   Schema extends S.Codec<unknown>,
->(
-  schema: Schema,
-  options?: {
-    readonly runs?: number;
-  }
-) {
+>(schema: Schema, value: Schema["Type"]) {
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeEffect(schema);
   const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      Effect.gen(function* () {
-        return equivalent(yield* decode(yield* encode(value)), value);
-      }),
-    fcRuns(options?.runs ?? 50)
-  );
-
-  expect(result._tag).toBe("Passed");
+  assertTrue(equivalent(yield* decode(yield* encode(value)), value));
+});
+const assertArbitraryValueDecodesToSelf = Effect.fn("SchemaParityTest.assertArbitraryValueDecodesToSelf")(function* <
+  Schema extends S.Codec<unknown>,
+>(schema: Schema, value: Schema["Type"]) {
+  const decode = S.decodeUnknownEffect(schema);
+  const equivalent = S.toEquivalence(schema);
+  const isValue = S.is(schema);
+  const decoded = yield* decode(value);
+  assertTrue(isValue(value) && equivalent(decoded, value));
 });
 
 describe("@beep/law-practice-use-cases schema parity", () => {
-  it.effect(
+  it.effect.prop(
     "round-trips schema-derived values through their source schemas",
-    Effect.fnUntraced(function* () {
-      assertSchemaArbitraryDecodesToSelf(OfficeActionExtractionLabel, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(IrToLawExtractionErrorReason, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(OfficeActionReviewInput, { runs: 10 });
-      assertSchemaArbitraryDecodesToSelf(EntityInput, { runs: 25 });
-      assertSchemaArbitraryDecodesToSelf(PracticeKgCandidateClaimToolRow, { runs: 10 });
-      assertSchemaArbitraryDecodesToSelf(PracticeKgDocumentToolRow, { runs: 10 });
-      assertSchemaArbitraryDecodesToSelf(PracticeKgEmailToolRow, { runs: 10 });
-      assertSchemaArbitraryDecodesToSelf(PracticeKgFamilyToolRow, { runs: 10 });
-      assertSchemaArbitraryDecodesToSelf(PracticeKgGraphToolRow, { runs: 10 });
-      yield* assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, { runs: 25 });
-      yield* assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, { runs: 10 });
-    })
+    [Arbitrary.schema(OfficeActionExtractionLabel)],
+    ([value]) => assertArbitraryValueDecodesToSelf(OfficeActionExtractionLabel, value),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (IrToLawExtractionErrorReason)",
+    [Arbitrary.schema(IrToLawExtractionErrorReason)],
+    ([value]) => assertArbitraryValueDecodesToSelf(IrToLawExtractionErrorReason, value),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (OfficeActionReviewInput)",
+    [Arbitrary.schema(OfficeActionReviewInput)],
+    ([value]) => assertArbitraryValueDecodesToSelf(OfficeActionReviewInput, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (EntityInput)",
+    [Arbitrary.schema(EntityInput)],
+    ([value]) => assertArbitraryValueDecodesToSelf(EntityInput, value),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (PracticeKgCandidateClaimToolRow)",
+    [Arbitrary.schema(PracticeKgCandidateClaimToolRow)],
+    ([value]) => assertArbitraryValueDecodesToSelf(PracticeKgCandidateClaimToolRow, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (PracticeKgDocumentToolRow)",
+    [Arbitrary.schema(PracticeKgDocumentToolRow)],
+    ([value]) => assertArbitraryValueDecodesToSelf(PracticeKgDocumentToolRow, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (PracticeKgEmailToolRow)",
+    [Arbitrary.schema(PracticeKgEmailToolRow)],
+    ([value]) => assertArbitraryValueDecodesToSelf(PracticeKgEmailToolRow, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (PracticeKgFamilyToolRow)",
+    [Arbitrary.schema(PracticeKgFamilyToolRow)],
+    ([value]) => assertArbitraryValueDecodesToSelf(PracticeKgFamilyToolRow, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (PracticeKgGraphToolRow)",
+    [Arbitrary.schema(PracticeKgGraphToolRow)],
+    ([value]) => assertArbitraryValueDecodesToSelf(PracticeKgGraphToolRow, value),
+    { arbitrary: fcRuns(10) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (IrToLawExtractionError)",
+    [Arbitrary.schema(IrToLawExtractionError)],
+    ([value]) => assertSchemaEncodeDecodeRoundTrip(IrToLawExtractionError, value),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips schema-derived values through their source schemas (OfficeActionReviewError)",
+    [Arbitrary.schema(OfficeActionReviewError)],
+    ([value]) => assertSchemaEncodeDecodeRoundTrip(OfficeActionReviewError, value),
+    { arbitrary: fcRuns(10) }
   );
 
   it("composes the nine-tool practice KG surface with a typed claims not-loaded branch", () => {
@@ -83,7 +130,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     });
 
     expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(9);
-    expect(PracticeKgCandidateClaimsResult.is(notLoaded)).toBe(true);
+    pipe(PracticeKgCandidateClaimsResult.is(notLoaded), assertTrue);
   });
 
   it.effect(
@@ -99,7 +146,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
         message: "The distinction could not be grounded.",
       });
 
-      expect(O.isNone(missing.alignmentStatus)).toBe(true);
+      assertNone(missing.alignmentStatus);
       expect(yield* encodeIrToLawExtractionError(missing)).toStrictEqual({
         _tag: "IrToLawExtractionError",
         label: "claim",
@@ -166,15 +213,15 @@ describe("@beep/law-practice-use-cases schema parity", () => {
 
       const encoded = yield* encodeOfficeActionReviewError(error);
 
-      expect(OfficeActionReviewError.is(error)).toBe(true);
-      expect(O.isSome(OfficeActionReviewError.decodeUnknownOption(encoded))).toBe(true);
+      pipe(OfficeActionReviewError.is(error), assertTrue);
+      pipe(OfficeActionReviewError.decodeUnknownOption(encoded), O.isSome, assertTrue);
     })
   );
 
   // `toLaw` is a declared schema whose guard is the only thing standing between
   // the port and a non-callable value, so both branches are asserted here.
   it("accepts only a callable toLaw port", () => {
-    expect(Result.isSuccess(decodeUnknownIrToLawShapeResult({ toLaw: () => Effect.void }))).toBe(true);
-    expect(Result.isFailure(decodeUnknownIrToLawShapeResult({ toLaw: "not-a-function" }))).toBe(true);
+    pipe(decodeUnknownIrToLawShapeResult({ toLaw: () => Effect.void }), Result.isSuccess, assertTrue);
+    pipe(decodeUnknownIrToLawShapeResult({ toLaw: "not-a-function" }), Result.isFailure, assertTrue);
   });
 });

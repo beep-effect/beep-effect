@@ -2332,6 +2332,7 @@
           "@beep/nlp",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -2346,6 +2347,7 @@
           "@beep/nlp",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-runner",
           "@beep/test-utils"
         ]
       },
