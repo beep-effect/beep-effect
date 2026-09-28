@@ -4910,36 +4910,36 @@
     "file": "packages/law-practice/use-cases/test/CandorPolicy.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 28048,
-    "lines": 714
+    "bytes": 28820,
+    "lines": 719
   },
   {
     "file": "packages/law-practice/use-cases/test/LegalPositionRelatorPolicy.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 19338,
-    "lines": 471
+    "bytes": 19477,
+    "lines": 477
   },
   {
     "file": "packages/law-practice/use-cases/test/PatentClaimCandidate.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 5985,
-    "lines": 129
+    "bytes": 6021,
+    "lines": 130
   },
   {
     "file": "packages/law-practice/use-cases/test/SchemaParity.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 6290,
-    "lines": 166
+    "bytes": 9033,
+    "lines": 227
   },
   {
     "file": "packages/law-practice/use-cases/test/TaggedError.equivalence.test.ts",
     "package": "@beep/law-practice-use-cases",
     "kind": "test",
-    "bytes": 3967,
-    "lines": 80
+    "bytes": 4088,
+    "lines": 83
   },
   {
     "file": "packages/ontology/client/test/Session.atoms.test.ts",
