@@ -3,7 +3,8 @@
 The batch consumes 89 saved actions: 82 detector findings, three resource
 findings and four flake findings. The adjacent driver-failure test and the new
 shared PostgreSQL observer also receive explicit review. Inventory reconciliation
-is pending; these counts are not a claim that the full goal is complete.
+is complete at source commit `c90b51ae3b5f658cf61b4558fbe3102a7c30e965`; this
+is not a claim that the full goal is complete.
 
 ## Behavior and preservation
 
@@ -83,7 +84,8 @@ The cache review covers 14 owned nodes and adds the runner edge to nine dependen
 lists without changing commands, qualification, configuration or unrelated nodes.
 See [cache review](epistemic-server-runner-cache-review.md).
 
-Final timings, ledger/census reconciliation and remote publication remain open.
+Source is published in #1312; final timings and ledger/census reconciliation
+are now recorded. Hosted closeout remains open.
 Host load and pressure accompany timings; a single before/after observation
 cannot establish a causal performance improvement. This batch does not satisfy
 the goal's final empty-baseline, adversarial-review or hosted closeout gates.
@@ -95,3 +97,26 @@ The user requested that PR #1307 remain at its published head while its remainin
 heavy jobs finish, so they can merge it. PR #1307 is now merged as `c2b75455dff12367794abd4ebf52136f52553c15`.
 All 29 pending files transferred to a new sibling worktree with matching hashes.
 This batch belongs to `codex/effect-vitest-followup`; the goal remains active.
+
+
+## Inventory and timing closeout
+
+The 89 saved actions and the adjacent rollback-cleanup repair are reconciled to
+source commit `c90b51ae3b5f658cf61b4558fbe3102a7c30e965`. The ledger retains
+156 historical/current detector rows, including historical IDs that existed only
+in the root baseline. All 16 current test and support files have census records
+and four human-lens judgments. The ten current resource exceptions each explain
+a native-storage or shorter-lifetime subject; they do not discharge the goal's
+final empty-baseline requirement.
+
+Strict validation passes for the root inventory, all 15,066 unique ledger rows,
+the census and timing summaries, with no invalid records or duplicate IDs.
+Hashes of 683 unrelated ledger files and raw unrelated root/census objects are
+preserved. The remaining saved queue contains five packages and 429 actions.
+
+Both timing selections pass 38 unit cases on Node and Bun with stable source
+hashes. Whole-command observations are Node 6.124 to 4.371 seconds and Bun 3.570
+to 2.368 seconds. The four public timing/context artifacts retain load, pressure,
+limits, source hashes and the integration-exclusion boundary. These are single
+observations, not causal speedup measurements. Full package verification on the
+new main-based worktree also passes, with audit 15.6 seconds and docgen 5.1 seconds.

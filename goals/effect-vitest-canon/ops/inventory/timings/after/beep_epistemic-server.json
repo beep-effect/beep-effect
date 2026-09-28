@@ -1,0 +1,96 @@
+{
+  "package": "@beep/epistemic-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-28T05:36:28.045000+00:00",
+  "totalMs": 4045.68115234375,
+  "testCount": 38,
+  "files": [
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "ms": 12.1123046875,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/server/test/ContradictionTriage.observability.test.ts",
+      "ms": 7.678466796875,
+      "tests": 2
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicRepositoryDriverFailure.pglite.test.ts",
+      "ms": 806.68115234375,
+      "tests": 3
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicServer.test.ts",
+      "ms": 4.95751953125,
+      "tests": 1
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "ms": 34.98193359375,
+      "tests": 13
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "ms": 25.408447265625,
+      "tests": 12
+    },
+    {
+      "file": "packages/epistemic/server/test/IdentityShaclProjection.e2e.test.ts",
+      "ms": 7.197509765625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/server/test/EpistemicRepositoryDriverFailure.pglite.test.ts",
+      "testName": "Epistemic repository driver failures redacts claim disposition reads to ClaimDispositionRepositoryUnavailable",
+      "ms": 785.78197
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "testName": "GovernedEgress returns successful responses and keeps authorizing when an outcome write stalls",
+      "ms": 30.79471300000023
+    },
+    {
+      "file": "packages/epistemic/server/test/EpistemicRepositoryDriverFailure.pglite.test.ts",
+      "testName": "Epistemic repository driver failures redacts every execution ledger read to ExecutionLedgerUnavailable",
+      "ms": 20.029696000000058
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "testName": "GovernedEgress delivers an allowlisted destination and records the allowed decision",
+      "ms": 17.65383299999985
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "testName": "GovernedEgress records a failed outcome when the base fetch rejects",
+      "ms": 17.440122999999858
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "testName": "GovernedEgress records a failed outcome when the base fetch throws synchronously",
+      "ms": 17.41253000000006
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedEgress.test.ts",
+      "testName": "GovernedEgress does not fail a successful request when the outcome write fails",
+      "ms": 17.400290999999925
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "testName": "GovernedTierGate keeps the settlement vocabulary member-equal with the domain's ExecutionSettlement",
+      "ms": 15.117240000000038
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "testName": "GovernedTierGate writes the allowed decision ahead of the effect and settles it after",
+      "ms": 14.931962999999996
+    },
+    {
+      "file": "packages/epistemic/server/test/GovernedTierGate.test.ts",
+      "testName": "GovernedTierGate chains consecutive decisions of one session into one verified run",
+      "ms": 14.917219999999816
+    }
+  ]
+}
