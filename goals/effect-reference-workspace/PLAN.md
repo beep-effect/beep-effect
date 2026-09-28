@@ -2,9 +2,17 @@
 
 ## Status
 
-Status: `P3 complete, P4 pending` (2026-09-25). Packet landed via PR #1244; implementation merged
-via PR #1257 (`217e308592`); lint-policy follow-up in PR #1271 (`fix/refs-lint-policy`). Evidence in
-`history/2026-09-25-p2-p3-closeout.md`.
+Status: `completed-retained` (closed 2026-09-28). Packet landed via PR #1244; implementation merged
+via PR #1257 (`217e308592`); lint-policy follow-up merged via PR #1271 (`9de64fb848`); the model
+cooldown preflight and receipt detail ship in PR #1311. Evidence in
+`history/2026-09-25-p2-p3-closeout.md` and `history/reflections/2026-09-28-fable.md`.
+
+The packet's deliverable is the workspace, the tooling, the nightly timer, and the cooldown fix. The
+first two scheduled nights are recorded: on 2026-09-26 the run ended with exit 130 when the user
+manager restarted, and on 2026-09-27 the model cooled down. Reading back the first clean scheduled
+night is deferred to an operator follow-up. It is recorded in `research/OPPORTUNITIES.md` when it
+lands, from the receipt at `$HOME/.local/state/beep/refs/last-refresh.json`;
+`docs/runbooks/graft-local-recovery.md` describes how to read it.
 
 ## Phases
 
@@ -14,7 +22,7 @@ via PR #1257 (`217e308592`); lint-policy follow-up in PR #1271 (`fix/refs-lint-p
 | P1 Implement | complete | Slices S1–S4 below, in order. | `SPEC.md` acceptance criteria met. |
 | P2 Verify | complete | Run the verification matrix and capture evidence under `history/`. | Green, or blockers documented with command output. |
 | P3 Yeet: PR to mergeable | complete | `bun run beep yeet publish --start-pr-early --monitor --pr`; drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Closeout reflection, packet state flip. | Reflection exists and lints; README/manifest updated. |
+| P4 Close | complete | Closeout reflection, packet state flip. | Reflection exists and lints; README/manifest updated; first two scheduled nights recorded. The first clean scheduled night's readback is an operator follow-up in `research/OPPORTUNITIES.md`. |
 
 ### Operator path inputs
 
@@ -111,7 +119,9 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase statuses +
    `initiative.status`.
 4. Confirm the next-morning deep tier: `test -s "$refs_root/effect/graft/manifest.json"`
-   and the status file's coverage; record in `history/`.
+   and the status file's coverage; record in `history/`. Revised 2026-09-28: the first clean
+   scheduled night's readback is an operator follow-up in `research/OPPORTUNITIES.md`, because
+   the first two scheduled nights failed for reasons outside the packet (see Status).
 
 ## Execution Notes
 

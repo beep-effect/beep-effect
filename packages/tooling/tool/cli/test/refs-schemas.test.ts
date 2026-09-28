@@ -1,9 +1,25 @@
-import { ReferenceMember, ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs";
+import { fcRuns } from "@beep/fc-runs";
+import {
+  MEMBER_REFRESH_DETAIL_MAX_CHARS,
+  MemberRefreshOutcome,
+  MemberRefreshReport,
+  ReferenceMember,
+  ReferenceWorkspaceManifest,
+} from "@beep/repo-cli/commands/Refs";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { testPlatform } from "./refs-test-utils.ts";
+
+const ReportJson = S.fromJsonString(MemberRefreshReport);
+const encodeReport = S.encodeEffect(ReportJson);
+const decodeReport = S.decodeEffect(ReportJson);
+const decodeReportUnknown = S.decodeUnknownEffect(MemberRefreshReport);
+const reportEquivalent = S.toEquivalence(MemberRefreshReport);
 
 describe("reference manifest schemas", () => {
   it.effect(
@@ -37,4 +53,51 @@ describe("reference manifest schemas", () => {
       })
     );
   }
+
+  it("recognizes the cooldown outcome", () => {
+    expect(MemberRefreshOutcome.is["skipped-cooldown"]("skipped-cooldown")).toBe(true);
+  });
+
+  it.effect(
+    "round-trips failure detail and omits the key when absent",
+    Effect.fnUntraced(function* () {
+      const detail = "model claude-opus-5 cooling down at http://127.0.0.1:8317/v1; retry-after 55516s";
+      const cooled = MemberRefreshReport.make({
+        name: "effect",
+        outcome: "skipped-cooldown",
+        coverage: O.none(),
+        detail: O.some(detail),
+      });
+      const decoded = yield* decodeReport(yield* encodeReport(cooled));
+      assertSome(decoded.detail, detail);
+      const clean = yield* encodeReport(
+        MemberRefreshReport.make({ name: "effect", outcome: "unchanged", coverage: O.none(), detail: O.none() })
+      );
+      expect(clean).not.toContain("detail");
+      // Receipts written before the field existed still decode.
+      assertNone((yield* decodeReport('{"name":"effect","outcome":"build-failed"}')).detail);
+    })
+  );
+
+  it.effect(
+    "rejects detail beyond the bound",
+    Effect.fnUntraced(function* () {
+      const input = {
+        name: "effect",
+        outcome: "build-failed",
+        detail: Str.repeat(MEMBER_REFRESH_DETAIL_MAX_CHARS + 1)("x"),
+      };
+      expect((yield* decodeReportUnknown(input).pipe(Effect.result))._tag).toBe("Failure");
+    })
+  );
+
+  it.effect.prop(
+    "round-trips member reports through the JSON codec",
+    [Arbitrary.schema(MemberRefreshReport)],
+    Effect.fnUntraced(function* ([report]) {
+      const decoded = yield* decodeReport(yield* encodeReport(report));
+      expect(reportEquivalent(decoded, report)).toBe(true);
+    }),
+    { arbitrary: fcRuns(100) }
+  );
 });
