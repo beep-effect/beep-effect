@@ -27,8 +27,10 @@ Of the removals, 213 match existing open rows by file, rule, occurrence and
 duplicate ordinal. Two newer assertions were absent from the historical
 inventory: quality-tasks global exclusion and a fourth remediation-wave
 absence check. All three historical copies of the latter expression already
-map uniquely to other current occurrences. These two captured findings will
-receive their own fixed records, preserving existing identities.
+map uniquely to other current occurrences. These two captured findings now have their own fixed records, preserving
+existing identities. All 215 records reference source commit
+`038fe84ce41e31e59b61f10e6eda184ade7b4478`; ledger reconciliation is saved in
+`bf7d16642909cc4988899b31cb8c6b1713e97c86`.
 
 ## Proof status
 
@@ -40,7 +42,9 @@ this baseline. The after Node cohort passes the same 1,194 tests in
 212.852870993 seconds; Bun after-proof passes all 1,194 tests in
 156.009124865 seconds. Both preserve stable source hashes. All four runs have
 identical file/title registration multiplicities with zero skips/failures. Full
-CLI package verification is still running; its result is not yet claimed.
+CLI package verification passes: audit in 776.8 seconds and docgen in 21.3
+seconds. The source remained unchanged throughout that proof; only packet
+evidence and inventory records were committed during the run.
 
 Load averages, CPU/memory/I/O pressure, runtime versions and process limits
 are captured per run. Parallel proof activity means these durations do not
