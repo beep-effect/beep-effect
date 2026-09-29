@@ -16,8 +16,28 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse as parseJsonc } from "jsonc-parser";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runCaptured } from "../../internal/process/index.ts";
+import { resolveGitCommit, runGitLines } from "../../internal/repo-run/GitExec.ts";
+import {
+  CHECK_CENSUS_BASELINE_PATH,
+  CheckCensusBaselineProvenance,
+  CheckCensusGateReport,
+  CheckCensusSampler,
+  CheckCensusSamplerOptions,
+  checkCensusGateFailed,
+  measureCheckCensusBaseline,
+  readCheckCensusBaseline,
+  readCheckCensusMetrics,
+  renderCheckCensusBaselineLines,
+  renderCheckCensusGateLines,
+  resolveCheckCensusTargets,
+  runCheckCensusGate,
+  writeCheckCensusBaseline,
+} from "./CheckCensusGate.ts";
+import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
+import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Crypto from "effect/Crypto";
@@ -74,19 +94,39 @@ const censusProgramFields = {
   upstreamDist: CensusCount,
   wallMs: CensusCount,
   diagnostics: CensusCount,
+  instantiations: CensusCount,
+  types: CensusCount,
+  checkTimeMs: CensusCount,
 } as const;
 
 /**
  * One measured tsgo program: program size, upstream source and declaration
- * files it consumed, wall time of the `--extendedDiagnostics` run, and the
- * number of diagnostics it reported.
+ * files it consumed, wall time of the `--extendedDiagnostics` run, the
+ * number of diagnostics it reported, and the instantiations, types, and
+ * check time that run printed.
+ *
+ * **Details**
+ *
+ * The census measures in tsgo's default mode (several checkers), so
+ * `instantiations` and `types` depend on how tsgo partitions files across
+ * checkers and are advisory. The hard gate compares single-checker samples
+ * (`@beep/repo-cli/commands/Quality/CheckCensusGate`).
  *
  * **Example** (Build a measurement)
  *
  * ```ts
  * import { CheckCensusProgram } from "@beep/repo-cli/commands/Quality/CheckCensus"
  *
- * const program = CheckCensusProgram.make({ files: 2712, upstreamSrc: 537, upstreamDist: 0, wallMs: 8100, diagnostics: 0 })
+ * const program = CheckCensusProgram.make({
+ *   files: 2712,
+ *   upstreamSrc: 537,
+ *   upstreamDist: 0,
+ *   wallMs: 8100,
+ *   diagnostics: 0,
+ *   instantiations: 4153241,
+ *   types: 1067103,
+ *   checkTimeMs: 5210,
+ * })
  * console.log(program.upstreamSrc) // 537
  * ```
  *
@@ -96,7 +136,8 @@ const censusProgramFields = {
 export class CheckCensusProgram extends S.Class<CheckCensusProgram>($I`CheckCensusProgram`)(
   censusProgramFields,
   $I.annote("CheckCensusProgram", {
-    description: "Size, upstream consumption, wall time, and diagnostic count of one measured tsgo program.",
+    description:
+      "Size, upstream consumption, wall time, diagnostic count, and default-mode instantiations, types, and check time of one measured tsgo program.",
   })
 ) {}
 
@@ -109,7 +150,16 @@ export class CheckCensusProgram extends S.Class<CheckCensusProgram>($I`CheckCens
  * ```ts
  * import { CheckCensusDelta } from "@beep/repo-cli/commands/Quality/CheckCensus"
  *
- * const delta = CheckCensusDelta.make({ files: -371, upstreamSrc: -537, upstreamDist: 452, wallMs: -3600, diagnostics: 0 })
+ * const delta = CheckCensusDelta.make({
+ *   files: -371,
+ *   upstreamSrc: -537,
+ *   upstreamDist: 452,
+ *   wallMs: -3600,
+ *   diagnostics: 0,
+ *   instantiations: -12000,
+ *   types: -900,
+ *   checkTimeMs: -2100,
+ * })
  * console.log(delta.diagnostics) // 0
  * ```
  *
@@ -123,6 +173,9 @@ export class CheckCensusDelta extends S.Class<CheckCensusDelta>($I`CheckCensusDe
     upstreamDist: CensusDelta,
     wallMs: CensusDelta,
     diagnostics: CensusDelta,
+    instantiations: CensusDelta,
+    types: CensusDelta,
+    checkTimeMs: CensusDelta,
   },
   $I.annote("CheckCensusDelta", {
     description: "Reference-keeping overlay minus committed check overlay, per measured field.",
@@ -168,6 +221,12 @@ export class CheckCensusRow extends S.Class<CheckCensusRow>($I`CheckCensusRow`)(
 /**
  * The census report written to `--output-json`.
  *
+ * **Details**
+ *
+ * `gate` holds the single-checker comparison against the committed baseline
+ * when the run gated (every run except `--write-baseline`); it is absent from
+ * the JSON otherwise.
+ *
  * **Example** (Count rows)
  *
  * ```ts
@@ -185,6 +244,9 @@ export class CheckCensusReport extends S.Class<CheckCensusReport>($I`CheckCensus
     generatedAt: S.String,
     concurrency: CensusCount,
     rows: S.Array(CheckCensusRow),
+    gate: S.OptionFromOptionalKey(CheckCensusGateReport).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<CheckCensusGateReport>()))
+    ),
   },
   $I.annote("CheckCensusReport", {
     description: "Check-program census over every measured workspace package.",
@@ -293,11 +355,6 @@ const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
 
 type CensusEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
 
-const diagnosticLinePattern = /\berror TS\d+:/u;
-const isDiagnosticLine = (line: string): boolean => diagnosticLinePattern.test(line);
-const outputLines = (output: string): ReadonlyArray<string> =>
-  pipe(Str.split(output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
 const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   tsgoPath: string,
   configPath: string,
@@ -316,8 +373,8 @@ const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   }).pipe(QualityScriptCommandError.mapError(`Failed to list program files for ${configPath}.`));
 
   return pipe(
-    outputLines(result.output),
-    A.filter((line) => !isDiagnosticLine(line))
+    compilerOutputLines(result.output),
+    A.filter((line) => !isCompilerDiagnosticLine(line))
   );
 });
 
@@ -326,7 +383,13 @@ const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function*
   configPath: string,
   cwd: string
 ): Effect.fn.Return<
-  { readonly wallMs: number; readonly diagnostics: number },
+  {
+    readonly wallMs: number;
+    readonly diagnostics: number;
+    readonly instantiations: number;
+    readonly types: number;
+    readonly checkTimeMs: number;
+  },
   QualityScriptCommandError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
@@ -337,10 +400,16 @@ const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function*
     source: "all",
     trim: true,
   }).pipe(QualityScriptCommandError.mapError(`Failed to check ${configPath}.`), Effect.timed);
+  const metrics = yield* Effect.fromResult(readCheckCensusMetrics(result.output, configPath)).pipe(
+    Effect.mapError((missing) => QualityScriptCommandError.make({ message: missing.message }))
+  );
 
   return {
     wallMs: Math.round(Duration.toMillis(elapsed)),
-    diagnostics: A.length(A.filter(outputLines(result.output), isDiagnosticLine)),
+    diagnostics: A.length(A.filter(compilerOutputLines(result.output), isCompilerDiagnosticLine)),
+    instantiations: metrics.instantiations,
+    types: metrics.types,
+    checkTimeMs: metrics.checkTimeMs,
   };
 });
 
@@ -374,15 +443,14 @@ const measureProgram = Effect.fn("CheckCensus.measureProgram")(function* (
     A.map((file) => repoRelativeUpstreamFile(repoRoot, packageDir, file)),
     A.getSomes
   );
-  const { diagnostics, wallMs } = yield* measureDiagnostics(tsgoPath, configPath, packageDir);
+  const measured = yield* measureDiagnostics(tsgoPath, configPath, packageDir);
 
   return {
     program: CheckCensusProgram.make({
       files: A.length(files),
       upstreamSrc: A.length(A.filter(upstream, (file) => isSrcFile(file) && !isDistFile(file))),
       upstreamDist: A.length(A.filter(upstream, isDistFile)),
-      wallMs,
-      diagnostics,
+      ...measured,
     }),
     files: HashSet.fromIterable(files),
   };
@@ -631,6 +699,9 @@ const censusPackage = Effect.fn("CheckCensus.censusPackage")(function* (
       upstreamDist: referenceKeeping.program.upstreamDist - overlay.program.upstreamDist,
       wallMs: referenceKeeping.program.wallMs - overlay.program.wallMs,
       diagnostics: referenceKeeping.program.diagnostics - overlay.program.diagnostics,
+      instantiations: referenceKeeping.program.instantiations - overlay.program.instantiations,
+      types: referenceKeeping.program.types - overlay.program.types,
+      checkTimeMs: referenceKeeping.program.checkTimeMs - overlay.program.checkTimeMs,
     }),
     buildOverlapFiles: A.length(A.filter(buildFiles, (file) => HashSet.has(overlay.files, file))),
   });
@@ -762,9 +833,6 @@ const hasCheckOverlay = Effect.fn("CheckCensus.hasCheckOverlay")(function* (
   return overlay && build;
 });
 
-const nameMatches = (filter: O.Option<string>, name: string): boolean =>
-  O.match(filter, { onNone: () => true, onSome: (needle) => Str.includes(needle)(name) });
-
 /**
  * Resolve the workspace packages that own both `tsconfig.json` and
  * `tsconfig.check.json`, optionally narrowed by a name substring.
@@ -798,7 +866,7 @@ export const selectCheckCensusPackages = Effect.fn("CheckCensus.selectPackages")
   );
   const candidates = pipe(
     HashMap.toEntries(workspaces),
-    A.filter(([name]) => nameMatches(filter, name)),
+    A.filter(([name]) => nameFilterPredicate(filter)(name)),
     A.map(([name, workspace]) => CheckCensusPackage.make({ name, dir: workspace.dir })),
     A.sortWith((pkg) => pkg.name, Order.String)
   );
@@ -806,27 +874,23 @@ export const selectCheckCensusPackages = Effect.fn("CheckCensus.selectPackages")
   return yield* Effect.filter(candidates, (pkg) => hasCheckOverlay(pkg.dir));
 });
 
-const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (
+const encodeCheckCensusReport = S.encodeEffect(CheckCensusReport);
+
+const writeCheckCensusReport = Effect.fn("CheckCensus.writeReport")(function* (
+  repoRoot: string,
   outputJsonPath: string,
-  filter: O.Option<string>
-): Effect.fn.Return<void, QualityScriptCommandError, CensusEnvironment | FsUtils> {
+  report: CheckCensusReport
+): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
-  const packages = yield* selectCheckCensusPackages(repoRoot, filter);
-  const report = yield* runCheckCensus(
-    CheckCensusOptions.make({
-      repoRoot,
-      tsgoPath: path.join(repoRoot, "node_modules", ".bin", "tsgo"),
-      packages,
-    })
-  );
   const outputPath = path.resolve(repoRoot, outputJsonPath);
-  const json = yield* jsonStringifyPretty(report).pipe(
+  const encoded = yield* encodeCheckCensusReport(report).pipe(
+    QualityScriptCommandError.mapError("Failed to encode the check census report.")
+  );
+  const json = yield* jsonStringifyPretty(encoded).pipe(
     QualityScriptCommandError.mapError("Failed to encode the check census report.")
   );
 
-  yield* printLines(renderCheckCensusLines(report));
   yield* fs
     .makeDirectory(path.dirname(outputPath), { recursive: true })
     .pipe(QualityScriptCommandError.mapError(`Failed to create ${path.dirname(outputPath)}.`));
@@ -836,11 +900,118 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (
   yield* Console.log(`wrote ${path.relative(repoRoot, outputPath)}`);
 });
 
+// `--gate-only` skips the overlay census; the report then carries no rows.
+const runCensusSection = Effect.fn("CheckCensus.censusSection")(function* (
+  repoRoot: string,
+  filter: O.Option<string>,
+  gateOnly: boolean
+): Effect.fn.Return<CheckCensusReport, QualityScriptCommandError, CensusEnvironment | FsUtils> {
+  const path = yield* Path.Path;
+  if (gateOnly) {
+    const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+    return CheckCensusReport.make({ generatedAt, concurrency: CHECK_CENSUS_CONCURRENCY, rows: A.empty() });
+  }
+  const packages = yield* selectCheckCensusPackages(repoRoot, filter);
+  const report = yield* runCheckCensus(
+    CheckCensusOptions.make({
+      repoRoot,
+      tsgoPath: path.join(repoRoot, "node_modules", ".bin", "tsgo"),
+      packages,
+    })
+  );
+
+  yield* printLines(renderCheckCensusLines(report));
+  return report;
+});
+
+const checkCensusBaselineProvenance = Effect.fn("CheckCensus.baselineProvenance")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  CheckCensusBaselineProvenance,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const commit = yield* resolveGitCommit(repoRoot, "HEAD", jsdocGitErrorAdapter);
+  const status = yield* runGitLines(repoRoot, ["status", "--porcelain"], jsdocGitErrorAdapter);
+  const measuredAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+
+  return CheckCensusBaselineProvenance.make({ measuredAt, commit, dirtyWorktree: A.isReadonlyArrayNonEmpty(status) });
+});
+
+const writeCheckCensusBaselineCli = Effect.fn("CheckCensus.writeBaselineCli")(function* (
+  repoRoot: string,
+  baselinePath: string
+) {
+  const path = yield* Path.Path;
+  const targets = yield* resolveCheckCensusTargets(baselinePath);
+  const provenance = yield* checkCensusBaselineProvenance(repoRoot);
+  const baseline = yield* measureCheckCensusBaseline(targets, provenance);
+
+  yield* writeCheckCensusBaseline(baselinePath, baseline);
+  yield* printLines(renderCheckCensusBaselineLines(baseline));
+  yield* Console.log(`wrote ${path.relative(repoRoot, baselinePath)}`);
+});
+
+const gateCheckCensusCli = Effect.fn("CheckCensus.gateCli")(function* (
+  repoRoot: string,
+  baselinePath: string,
+  input: CheckCensusCliInput
+) {
+  const census = yield* runCensusSection(repoRoot, input.filter, input.gateOnly);
+  const baseline = yield* readCheckCensusBaseline(baselinePath);
+  const gate = yield* runCheckCensusGate(baseline, input.filter).pipe(
+    Effect.map((report) => CheckCensusGateReport.make({ ...report, baselinePath: input.baseline }))
+  );
+
+  yield* printLines(renderCheckCensusGateLines(gate));
+  yield* writeCheckCensusReport(repoRoot, input.outputJson, CheckCensusReport.make({ ...census, gate: O.some(gate) }));
+  if (checkCensusGateFailed(gate)) {
+    return yield* failWithReportedExit(
+      `check-census gate failed: single-checker instantiations increased or the compiler changed (baseline ${input.baseline}).`
+    );
+  }
+});
+
+type CheckCensusCliInput = {
+  readonly outputJson: string;
+  readonly filter: O.Option<string>;
+  readonly baseline: string;
+  readonly writeBaseline: boolean;
+  readonly gateOnly: boolean;
+};
+
+const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCensusCliInput) {
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const baselinePath = path.resolve(repoRoot, input.baseline);
+  const sampler = yield* CheckCensusSampler.make(
+    CheckCensusSamplerOptions.make({ repoRoot, tscPath: path.join(repoRoot, "node_modules", ".bin", "tsc") })
+  );
+
+  return yield* (
+    input.writeBaseline
+      ? writeCheckCensusBaselineCli(repoRoot, baselinePath)
+      : gateCheckCensusCli(repoRoot, baselinePath, input)
+  ).pipe(Effect.provideService(CheckCensusSampler, sampler));
+});
+
 /**
  * `beep quality check-census`: measure every check overlay against a
- * reference-keeping overlay and write the report (evidence for the PR-2
- * overlay switch; exit 0 unless the census itself fails). Requires a built
- * tree: every referenced project's declaration output must exist.
+ * reference-keeping overlay, then gate the committed single-checker
+ * baseline, and write the report. Requires a built tree: every referenced
+ * project's declaration output must exist.
+ *
+ * **Details**
+ *
+ * The overlay census is evidence and never fails on what it counts. The
+ * gate re-measures every baseline row (narrowed by `--filter`) with
+ * `tsc --singleThreaded --extendedDiagnostics` and exits non-zero when a
+ * row's instantiation count increased or the compiler differs from the
+ * baseline's; check time beyond the 5% band is an advisory line and an
+ * instantiation decrease prints a tighten hint. `--gate-only` skips the overlay census;
+ * `--write-baseline` re-measures every baseline row (the built-in defaults
+ * when no baseline exists) and rewrites the baseline, refusing any program
+ * with type errors.
  *
  * **Example** (Register the subcommand)
  *
@@ -861,13 +1032,27 @@ export const checkCensusCommand = Command.make(
       Flag.withDescription("JSON report path, relative to the repository root")
     ),
     filter: Flag.String("filter").pipe(
-      Flag.withDescription("Only census packages whose name contains this text"),
+      Flag.withDescription("Only census packages (and gate baseline rows) whose name contains this text"),
       Flag.optional
     ),
+    baseline: Flag.String("baseline").pipe(
+      Flag.withDefault(CHECK_CENSUS_BASELINE_PATH),
+      Flag.withDescription("Single-checker baseline path, relative to the repository root")
+    ),
+    writeBaseline: Flag.Boolean("write-baseline").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Re-measure every baseline row single-threaded and rewrite the baseline (refuses type errors); skips the census"
+      )
+    ),
+    gateOnly: Flag.Boolean("gate-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Skip the overlay census; only gate the baselined programs against the baseline")
+    ),
   },
-  ({ filter, outputJson }) => runCheckCensusCli(outputJson, filter)
+  runCheckCensusCli
 ).pipe(
   Command.withDescription(
-    "Measure check overlays against a reference-keeping overlay (program size, upstream, wall); needs a built tree"
+    "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree"
   )
 );
