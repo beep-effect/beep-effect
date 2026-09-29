@@ -37,6 +37,8 @@ const byStartThenEnd: Order.Order<SchemaParityCodemodEdit> = Order.combine(
  * console.log(sorted[0]?.text) // "f("
  * ```
  *
+ * @param edits - The planned edits, in plan order.
+ * @returns The edits ordered by start, then end, with plan order kept for equal ranges.
  * @category utilities
  * @since 0.0.0
  */
@@ -66,6 +68,8 @@ export const sortSchemaParityCodemodEdits = (
  * console.log(O.isSome(overlap)) // true
  * ```
  *
+ * @param edits - The planned edits, in any order.
+ * @returns The first overlapping pair in sorted order, or none when no two edits intersect.
  * @category utilities
  * @since 0.0.0
  */

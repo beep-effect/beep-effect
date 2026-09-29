@@ -170,6 +170,10 @@ const isMappedDirectionFacet = (access: PropertyAccessExpression): boolean =>
  * The symbol `name` resolves to at `site`, across every enclosing scope
  * (parameters, catch bindings, nested declarations, the module, globals) and
  * every meaning (value, type, namespace).
+ *
+ * @param site - The node whose scope chain the lookup starts from.
+ * @param name - The identifier text to resolve.
+ * @returns The resolved symbol, or none when the name is free at the site.
  */
 const resolveAt = (site: Node, name: string): O.Option<ts.Symbol> =>
   O.fromNullishOr(
@@ -359,6 +363,10 @@ const importedBaseRewrite = (receiver: Expression, baseName: string): Result.Res
  * kit instead. Same-module bases are referenced directly; cross-module bases
  * are imported from the module the receiver itself was imported from, when
  * that module exports them.
+ *
+ * @param receiver - The decorated schema expression the rewrite replaces.
+ * @param base - The identifier of the kit the decorator was applied to.
+ * @returns The receiver rewrite, or the reason the base cannot be referenced here.
  */
 const sameModuleBaseRewrite = (receiver: Expression, base: Identifier): Result.Result<ReceiverRewrite, string> =>
   pipe(
