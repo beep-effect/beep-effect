@@ -42,11 +42,13 @@ performance claims. Synthetic scheduler Vitest report durations are Node
 Historical line/evidence/title checks match all 23 stream/normalization runtime
 rows uniquely. The synthetic runtime row is reconciled separately. No resource
 wrapper, platform review or historically absent finding is closed by this work.
-Full grouped package verification remains required after the source commit.
+Full grouped package verification passed after the source commit:
+`bun run beep quality package-verify @beep/repo-cli` exited zero, with audit
+656.2 seconds and docgen 19.7 seconds.
 
 Source commit: `bd22fc4a501a921872cffaf650bd79694e0db9ad`. Historical reconciliation
 closes exactly 24 runtime rows (12 stream, 11 normalization, one synthetic
 scheduler), adds no rows, and preserves all remaining obligations. Strict
 validation passes for all 3,495 CLI rows and 687 schema rows. CLI totals are
-1,857 fixed, 12 exceptions and 1,626 open. The grouped package proof is active;
+1,857 fixed, 12 exceptions and 1,626 open. The grouped package proof passed;
 these totals describe source remediation, not full goal acceptance.

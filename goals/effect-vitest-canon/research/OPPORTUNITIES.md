@@ -5698,3 +5698,13 @@ calls changed. The outstanding runtime boundary still requires migration.
 Preserve that obligation and its historical lineage when resolving the ratchet;
 a broad baseline refresh would obscure the distinction between an identity
 change and newly introduced debt. Receipt: cli-scheduler-schema-hoist-proof.md.
+
+### Package type wrapper success is not a clean diagnostic artifact
+
+During stream/normalization verification, `bun run package-test-typecheck`
+exited zero while `.turbo/package-test-typecheck-result.json` recorded exitCode
+1 and five TS377015 chained-pipe diagnostics. Reading the artifact exposed the
+failures; flattening the pipes produced a new empty artifact with exitCode 0.
+Consumers should clearly distinguish diagnostic collection success from a
+clean type result. A visible summary or separate strict mode would prevent
+an operator from treating the wrapper's zero status as type proof.
