@@ -43,5 +43,6 @@ EV007 slug-property row against that original fix SHA, preserving all other
 rows. The renamed index runtime remains open. See
 `cli-bootstrap-property-backfill.json` for exact identities and lineage.
 Strict CLI/schema ledger validation passes. CLI totals become 1,899 fixed,
-12 exceptions and 1,584 open. The current grouped package proof is pending;
-the focused 26-case baseline above is not full package or goal acceptance.
+12 exceptions and 1,584 open. The current grouped package proof passed with unchanged package source:
+`bun run beep quality package-verify @beep/repo-cli` exited zero, audit 702.1
+seconds and docgen 20.0 seconds. This is not goal-wide acceptance.

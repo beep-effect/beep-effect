@@ -41,11 +41,12 @@ load and pressure. Concurrent checks prevent causal performance claims.
 
 Historical line/evidence/title matching uniquely identifies all 13 runtime
 rows; wrapper reconciliation must use the two original occurrence fingerprints.
-Full grouped package verification is pending. This is focused migration proof,
-not goal-wide completion or hosted merge readiness.
+Full grouped package verification passed: `bun run beep quality package-verify
+@beep/repo-cli` exited zero, with audit 702.1 seconds and docgen 20.0 seconds.
+This does not establish goal-wide completion or hosted merge readiness.
 
 Source commit: `8410b6eb98924f2913a5cd3edd5ea720c134f88d`.
 Reconciliation closes exactly 15 historical rows, adds none and preserves all
 unrelated rows. Strict validation passes for all 3,495 CLI and 687 schema rows.
 CLI status counts are 1,896 fixed, 12 exceptions and 1,587 open. The grouped
-package proof is running; its result must be recorded before package handoff.
+package proof passed with the source unchanged.

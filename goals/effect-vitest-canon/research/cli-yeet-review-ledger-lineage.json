@@ -247,5 +247,5 @@
     "fixed": 1896,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof"
+  "fullPackageProof": "passed: audit 702.1s, docgen 20.0s; package source unchanged"
 }

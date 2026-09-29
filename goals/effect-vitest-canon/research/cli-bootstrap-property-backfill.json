@@ -46,6 +46,6 @@
     "exception": 12
   },
   "addedCurrentRows": 0,
-  "fullPackageProof": "pending grouped CLI proof",
+  "fullPackageProof": "passed: audit 702.1s, docgen 20.0s; package source unchanged",
   "renamedIndexRuntime": "left open; current refreshed-projection case still opens a runtime"
 }
