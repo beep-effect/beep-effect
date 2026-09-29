@@ -9,7 +9,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, identity, Match, Number as N, Order, Path, pipe, SchemaTransformation } from "effect";
 import * as Bool from "effect/Boolean";
@@ -18,6 +17,7 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { decodeYamlTextWith } from "../../../../internal/schema/TextCodec.ts";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,
@@ -108,6 +108,8 @@ class DockerComposeDocument extends S.Class<DockerComposeDocument>($I`DockerComp
     description: "Subset of docker-compose fields required for image version resolution.",
   })
 ) {}
+
+const decodeDockerComposeDocument = decodeYamlTextWith(S.decodeUnknownEffect(DockerComposeDocument));
 /**
  * Resolved Docker image state.
  *
@@ -339,7 +341,7 @@ export const resolveDockerImages: {
       .readFileString(composePath)
       .pipe(VersionSyncError.mapError("Failed to read docker-compose.yml", "docker-compose.yml"));
 
-    const composeDocument = yield* decodeYamlTextAs(DockerComposeDocument)(content).pipe(
+    const composeDocument = yield* decodeDockerComposeDocument(content).pipe(
       VersionSyncError.mapError("Failed to parse docker-compose.yml", "docker-compose.yml")
     );
 

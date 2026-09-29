@@ -2239,7 +2239,6 @@
         "jsonc-parser": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
-        "yaml": "catalog:",
       },
       "devDependencies": {
         "@beep/fc-runs": "workspace:^",

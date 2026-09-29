@@ -690,14 +690,8 @@
       "@beep/schema/HttpHeaders": [
         "./packages/foundation/modeling/schema/src/HttpHeaders/index.ts"
       ],
-      "@beep/schema/HttpMethod": [
-        "./packages/foundation/modeling/schema/src/HttpMethod/index.ts"
-      ],
       "@beep/schema/HttpProtocol": [
         "./packages/foundation/modeling/schema/src/HttpProtocol/index.ts"
-      ],
-      "@beep/schema/HttpStatus": [
-        "./packages/foundation/modeling/schema/src/HttpStatus/index.ts"
       ],
       "@beep/schema/NoOpen": [
         "./packages/foundation/modeling/schema/src/NoOpen/index.ts"
@@ -846,9 +840,6 @@
       "@beep/schema/Jsonc": [
         "./packages/foundation/modeling/schema/src/Jsonc.ts"
       ],
-      "@beep/schema/Jsonl": [
-        "./packages/foundation/modeling/schema/src/Jsonl.ts"
-      ],
       "@beep/schema/KebabStr": [
         "./packages/foundation/modeling/schema/src/KebabStr.ts"
       ],
@@ -930,9 +921,6 @@
       "@beep/schema/Timezone": [
         "./packages/foundation/modeling/schema/src/Timezone.ts"
       ],
-      "@beep/schema/Toml": [
-        "./packages/foundation/modeling/schema/src/Toml.ts"
-      ],
       "@beep/schema/Transformations": [
         "./packages/foundation/modeling/schema/src/Transformations.ts"
       ],
@@ -941,16 +929,10 @@
         "./packages/foundation/modeling/schema/src/Unknown.ts"
       ],
       "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
-      "@beep/schema/Yaml": [
-        "./packages/foundation/modeling/schema/src/Yaml.ts"
-      ],
       "@beep/ai-sync": ["./packages/tooling/library/ai-sync/src/index.ts"],
       "@beep/ai-sync/*": ["./packages/tooling/library/ai-sync/src/*"],
       "@beep/schema/test/Markdown": [
         "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
-      ],
-      "@beep/schema/test/Yaml": [
-        "./packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
       ],
       "@beep/nlp/Algebra": [
         "./packages/foundation/modeling/nlp/src/Algebra/index.ts"

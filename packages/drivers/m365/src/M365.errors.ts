@@ -7,18 +7,17 @@
 
 import { $M365Id } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $M365Id.create("M365.errors");
 
-const M365HttpStatusArbitraryValues = A.map(HttpStatus.Pairs, ([, code]) => code);
-const M365HttpStatus = S.Literals(M365HttpStatusArbitraryValues).pipe(
+const M365HttpStatus = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("M365HttpStatus", {
     description: "Numeric HTTP status code carried by Microsoft 365 driver errors.",
   })
@@ -103,7 +102,7 @@ class M365ErrorOptionsInput extends S.Class<M365ErrorOptionsInput>($I`M365ErrorO
 const decodeRetryAfterSecondsOption = S.decodeUnknownOption(NonNegativeInt);
 const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
+  O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
 );
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({

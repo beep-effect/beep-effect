@@ -10,13 +10,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
-import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { decodeYamlTextWith } from "../../../../internal/schema/TextCodec.ts";
 import {
   VersionCategoryReport,
   VersionDriftItem,
@@ -105,6 +105,8 @@ class WorkflowDocument extends S.Class<WorkflowDocument>($I`WorkflowDocument`)(
   })
 ) {}
 
+const decodeWorkflowDocument = decodeYamlTextWith(S.decodeUnknownEffect(WorkflowDocument));
+
 const UnknownNodeVersionValueToString = S.Unknown.pipe(
   S.decodeTo(
     S.String,
@@ -188,7 +190,7 @@ const findNodeVersionLocations: (
 ) => Effect.Effect<Array<NodeVersionLocation>, VersionSyncError> = Effect.fn(function* (content, relativeFile) {
   let locations = A.empty<NodeVersionLocation>();
 
-  const workflow = yield* decodeYamlTextAs(WorkflowDocument)(content).pipe(
+  const workflow = yield* decodeWorkflowDocument(content).pipe(
     VersionSyncError.mapError("Failed to parse workflow YAML", relativeFile)
   );
 

@@ -23135,13 +23135,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1011:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1010:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 1011,
-      "endLine": 1124,
+      "line": 1010,
+      "endLine": 1123,
       "symbol": "runPromise",
       "occurrence": "v2:4fcd4a14eb6d3fddcf26093fac4e2d21235bc94701d4ab8b248c489c694fed9b",
       "class": "runtime-boundary-in-test",
@@ -23156,13 +23156,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1131:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1130:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 1131,
-      "endLine": 1212,
+      "line": 1130,
+      "endLine": 1211,
       "symbol": "runPromise",
       "occurrence": "v2:b7f7d7979aba835cacee2f3f5c94670f6358957e61d5d571c77f005eb74aa8cd",
       "class": "runtime-boundary-in-test",
@@ -23177,13 +23177,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1219:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:1218:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 1219,
-      "endLine": 1277,
+      "line": 1218,
+      "endLine": 1276,
       "symbol": "runPromise",
       "occurrence": "v2:c77ec286a8304a8c4e4678040796f6574032edc40f3ab7e5bffa65f1bcc15cc3",
       "class": "runtime-boundary-in-test",
@@ -23198,13 +23198,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:215:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:216:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 215,
-      "endLine": 240,
+      "line": 216,
+      "endLine": 241,
       "symbol": "runPromise",
       "occurrence": "v2:42ffb742b7eccabb30ea0a7df5903b369fbcf35ce651f88d9cca07c940284d93",
       "class": "runtime-boundary-in-test",
@@ -23219,13 +23219,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:245:runPromise@4#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:246:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 245,
-      "endLine": 302,
+      "line": 246,
+      "endLine": 303,
       "symbol": "runPromise",
       "occurrence": "v2:d86c19605a0ac0697452ecba122fcb9115f7df3ce656595a8cd66c8f374ab1ec",
       "class": "runtime-boundary-in-test",
@@ -23240,13 +23240,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:381:runPromise@4#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:382:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 381,
-      "endLine": 446,
+      "line": 382,
+      "endLine": 447,
       "symbol": "runPromise",
       "occurrence": "v2:4e88ce35548fe6cc949a78bafec4f3be573c7fad8a3a2ef49347e151296ec2e8",
       "class": "runtime-boundary-in-test",
@@ -23261,13 +23261,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:449:runPromise@4#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:450:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 449,
-      "endLine": 495,
+      "line": 450,
+      "endLine": 496,
       "symbol": "runPromise",
       "occurrence": "v2:27872df45786a9c599cfb7eb312ecdbee2233ada568285dea4f7cac48ce02a24",
       "class": "runtime-boundary-in-test",
@@ -23282,15 +23282,15 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:498:runPromise@4#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:499:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 498,
+      "line": 499,
       "endLine": 610,
       "symbol": "runPromise",
-      "occurrence": "v2:9b02a8e1911e24413fc3806c542b85d76dc83cbf4fdee31f6f9c42b14e501c2b",
+      "occurrence": "v2:f6239c2fffe027af162bbc1fd8d55726bc06b38cb7fbe17e5269cf2e90e8a60f",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\"],",
       "replacement": {
@@ -23309,9 +23309,9 @@
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
       "line": 615,
-      "endLine": 751,
+      "endLine": 750,
       "symbol": "runPromise",
-      "occurrence": "v2:160b8f65d45924e8b31c63d7d778b3a5d8475b668bffbe5619dd22bf26dedb8a",
+      "occurrence": "v2:79edb119aea244dfb7d237e8677887f7a053ae5f42212f3aecf44c693685073b",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const path = yield* Path.Path; const rootDir = process.cwd(); yield* bootstrapRootConfig(rootDir, { workspaces: [\"packages/foundation/*/*\", \"",
       "replacement": {
@@ -23324,13 +23324,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:758:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:757:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 758,
-      "endLine": 821,
+      "line": 757,
+      "endLine": 820,
       "symbol": "runPromise",
       "occurrence": "v2:9bea51780d409050dae483a3f2ccacf5ccb188d204cf77f5fd5ec07cc94126a2",
       "class": "runtime-boundary-in-test",
@@ -23345,13 +23345,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:828:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:827:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 828,
-      "endLine": 924,
+      "line": 827,
+      "endLine": 923,
       "symbol": "runPromise",
       "occurrence": "v2:d2e2984639bd3d71578ed2e7ad367c727358baaae44d9d9e60f48ae92d1ab715",
       "class": "runtime-boundary-in-test",
@@ -23366,13 +23366,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:931:runPromise@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:930:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 931,
-      "endLine": 1004,
+      "line": 930,
+      "endLine": 1003,
       "symbol": "runPromise",
       "occurrence": "v2:6a92c8a45faa80f2914434384e03f66452f3aabbbbf27a16450ac37ac1a9182b",
       "class": "runtime-boundary-in-test",
@@ -23384,6 +23384,90 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45:withTempRepo@21#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 45,
+      "endLine": 63,
+      "symbol": "withTempRepo",
+      "occurrence": "v2:ff75dc010b303c23d210f7f6e6362f7196f2a633b782ecf1ebbc233c3e6b6f67",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTempD",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:897:expect@12#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 897,
+      "endLine": 899,
+      "symbol": "expect",
+      "occurrence": "v2:7f5441e29dce414f66a13594f9cec6bda59c96c4fd723197d93371b36e62299b",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(O.map(overlayChange, (change) => change.summary)).toEqual( O.some(\"references: 0 -> 1 (add 1, remove 0)\") )",
+      "replacement": {
+        "primitive": "utils.assertSome",
+        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:10:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:8:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "line": 8,
+      "endLine": 8,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
       "status": "open"
     },
     {
@@ -54143,27 +54227,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:44:withTempRepo@21#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 44,
-      "endLine": 62,
-      "symbol": "withTempRepo",
-      "occurrence": "v2:ff75dc010b303c23d210f7f6e6362f7196f2a633b782ecf1ebbc233c3e6b6f67",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTempD",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/worktree-command.test.ts:1000:withScratchRepo@4#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -77321,27 +77384,6 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:898:expect@12#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 898,
-      "endLine": 900,
-      "symbol": "expect",
-      "occurrence": "v2:7f5441e29dce414f66a13594f9cec6bda59c96c4fd723197d93371b36e62299b",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.map(overlayChange, (change) => change.summary)).toEqual( O.some(\"references: 0 -> 1 (add 1, remove 0)\") )",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV006:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:102:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -90515,48 +90557,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:7:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 7,
-      "endLine": 7,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:9:@effect/platform-node/NodeServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 9,
-      "endLine": 9,
-      "symbol": "@effect/platform-node/NodeServices",
-      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:21:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -103071,13 +103071,13 @@
       "status": "open"
     },
     {
-      "id": "EV015:packages/drivers/m365/test/M365.service.test.ts:734:TestClock.adjust@15#1",
+      "id": "EV015:packages/drivers/m365/test/M365.service.test.ts:733:TestClock.adjust@15#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/m365",
       "file": "packages/drivers/m365/test/M365.service.test.ts",
-      "line": 734,
-      "endLine": 734,
+      "line": 733,
+      "endLine": 733,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:61f3a9faaf76f8c1f505ee5e99811e9f9590ab1d33961115f2910cb1faf73819",
       "class": "shared-test-clock-adjustment",

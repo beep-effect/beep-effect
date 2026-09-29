@@ -7,7 +7,6 @@
 
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
@@ -18,6 +17,7 @@ import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -61,17 +61,15 @@ export const VENICE_CHAT_MODEL = "venice-uncensored-1-2";
 const normalizeBaseUrl = Str.replace(/\/+$/, "");
 const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, URLStr.make);
 const defaultVeniceAIBaseUrl = makeVeniceAIBaseUrl(VENICE_API_URL);
-const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.From.Enum) as [HttpStatus, ...Array<HttpStatus>];
-const isVeniceAIHttpStatus = (status: number): status is HttpStatus =>
-  pipe(VeniceAIHttpStatusArbitraryValues as ReadonlyArray<number>, A.contains(status));
-const makeHttpStatus: (status: number) => HttpStatus = flow(
-  O.liftPredicate(isVeniceAIHttpStatus),
-  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
-);
-const VeniceAIHttpStatus = S.Literals(VeniceAIHttpStatusArbitraryValues).pipe(
+const VeniceAIHttpStatus = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("VeniceAIHttpStatus", {
     description: "Numeric HTTP status code accepted by the Venice AI driver.",
   })
+);
+type VeniceAIHttpStatus = typeof VeniceAIHttpStatus.Type;
+const makeHttpStatus: (status: number) => VeniceAIHttpStatus = flow(
+  S.decodeUnknownOption(VeniceAIHttpStatus),
+  O.getOrElse(() => HttpStatus.fromLiteral("InternalServerError"))
 );
 
 const VeniceAIBaseUrl = URLStr.pipe(
@@ -653,7 +651,6 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  * **Example** (Make response status error)
  *
  * ```ts
- * import { HttpStatus } from "@beep/schema/HttpStatus"
  * import { VeniceAIError } from "@beep/venice-ai"
  * import * as O from "effect/Option"
  *
@@ -662,7 +659,7 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  *   operation: O.some("listModels"),
  *   path: O.some("/models"),
  *   reason: "response status",
- *   status: O.some(HttpStatus.make(500))
+ *   status: O.some(500)
  * })
  *
  * console.log(error)
@@ -812,7 +809,7 @@ class VeniceAIErrorOptions extends S.Class<VeniceAIErrorOptions>($I`VeniceAIErro
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Original native or third-party cause when one was available." })
     ),
-    status: S.OptionFromOptionalKey(HttpStatus).pipe(
+    status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "HTTP response status code associated with the failure when one was available." })
     ),
