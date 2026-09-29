@@ -54,13 +54,6 @@ export * from "./internal/SchemaParityCodemodImports.ts";
  */
 export * from "./internal/SchemaParityCodemodLiteralKitRule.ts";
 /**
- * The `unknown-json-retirement` and `opaque-record-retirement` codemod rules.
- *
- * @category policies
- * @since 0.0.0
- */
-export * from "./internal/SchemaParityCodemodRetirementRules.ts";
-/**
  * Judge-rubric lens drift lint utilities.
  *
  * @category cli-commands

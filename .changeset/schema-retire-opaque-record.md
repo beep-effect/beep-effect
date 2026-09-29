@@ -63,7 +63,7 @@ subpath and path-alias entries, with no alias left behind: `Defect`,
 `S.withConstructorDefault` + `S.withDecodingDefaultTypeKey` with unchanged
 behavior. Every consumer migrates in the same change.
 
-Codemod evidence: commit 7c88e924ec cherry-picks ce83cf6929 (from PR 3-i) to add
+Codemod evidence: commit 52050b5de9 cherry-picks ce83cf6929 (from PR 3-i) to add
 the transient repo-cli rules `unknown-json-retirement` and
 `opaque-record-retirement`. This PR applies `opaque-record-retirement` to
 packages, apps, scratchpad and infra, tooling first (147 files, 0 quarantined;
@@ -74,7 +74,8 @@ evidence) and removes both rules in its last commit.
 - `Defect(options)` becomes `S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))`
   at the owning field, so `S.toEquivalence` of the owning error keeps ignoring
   the cause; `OpaqueUnknown` becomes the same override over `S.Unknown`. Encoded
-  JSON is unchanged. The epistemic use-case errors share the rewritten
+  JSON is unchanged. repo-cli's 44 cause fields share that composition as one
+  internal `OpaqueDefect` schema, and the epistemic use-case errors share their
   optional-defect field through one internal helper.
 - `UnknownRecord` becomes `S.Record(S.String, S.Unknown)` (a file-local
   `UnknownRecord` const where a file uses it more than once) and
@@ -87,4 +88,31 @@ evidence) and removes both rules in its last commit.
   identifier annotations. `@beep/schema` drops its now-unused `@beep/types`
   dev dependency.
 
-MEASUREMENTS_PLACEHOLDER
+Type-check cost, tsgo 7.0.2, fresh build-info, before (PR 3-i head 579c05d32d) → after.
+The gate is the `--singleThreaded` instantiation count:
+
+| Package (`--singleThreaded`, gate) | Instantiations | Types | Check time |
+| --- | --- | --- | --- |
+| `@beep/schema` | 709,201 → 702,336 | 202,247 → 200,195 | 1.085 → 1.052 s |
+| `@beep/repo-cli` | 4,152,422 → 4,152,561 | 1,067,031 → 1,066,974 | 11.644 → 10.891 s |
+| `@beep/law-practice-domain` | 874,290 → 874,290 | 259,707 → 259,707 | 1.092 → 1.228 s |
+
+Flagged: `@beep/repo-cli` rises by 139 instantiations. The retired `Defect()`
+hid `S.overrideToEquivalence` behind a declared `S.Defect` return type; the
+first use of the override in the repo-cli program costs about 150
+instantiations (sharing one `S.Defect({ includeStack: true })` without the
+override measures 4,152,409). Keeping the always-true equivalence facet the
+audit requires makes that cost unavoidable; the shared `OpaqueDefect` removes
+the per-site cost (inline at all 44 sites measured 4,152,904). Against
+`origin/main` 7cc0aa9b33 (4,152,690) repo-cli is 129 lower after PRs 3-i and
+3-ii. `@beep/law-practice-domain` check time rose 12.5% with identical
+instantiations and types, on a shared, loaded workstation; check time is
+advisory within a 5% band.
+
+The default four-checker run is advisory:
+
+| Package (default, 4 checkers, advisory) | Instantiations | Types | Check time |
+| --- | --- | --- | --- |
+| `@beep/schema` | 1,109,966 → 1,109,261 | 366,181 → 368,356 | 0.487 → 0.474 s |
+| `@beep/repo-cli` | 8,427,502 → 8,428,353 | 2,149,094 → 2,149,041 | 4.329 → 4.500 s |
+| `@beep/law-practice-domain` | 1,289,799 → 1,289,799 | 376,131 → 376,131 | 0.665 → 0.709 s |
