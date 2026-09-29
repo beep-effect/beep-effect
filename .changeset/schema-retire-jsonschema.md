@@ -1,5 +1,6 @@
 ---
 "@beep/schema": minor
+"@beep/repo-configs": patch
 ---
 
 Retire the `JSONSchema` concept under the "Upstream-First Foundation/Modeling" decision
