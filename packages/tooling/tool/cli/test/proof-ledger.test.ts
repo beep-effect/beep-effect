@@ -510,6 +510,29 @@ describe("ProofLedger", () => {
     );
 
     it.effect(
+      "keeps the ledger inside a separated git dir that has no commondir file",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const base = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-separate-git-dir-" });
+        // `git init --separate-git-dir <base>/store/repo.git <base>/checkout`: the checkout's `.git`
+        // names the git dir directly, and that git dir is its own common dir (no `commondir` file).
+        const gitDir = path.join(base, "store", "repo.git");
+        const checkout = path.join(base, "checkout");
+        yield* fs.makeDirectory(gitDir, { recursive: true });
+        yield* fs.makeDirectory(checkout, { recursive: true });
+        yield* fs.writeFileString(path.join(checkout, ".git"), "gitdir: ../store/repo.git\n");
+        expect(yield* resolveProofLedgerLocation(checkout)).toStrictEqual(
+          ProofLedgerLocation.make({
+            originRoot: checkout,
+            ledgerRoot: gitDir,
+            ledgerPath: path.join(gitDir, ".beep", "yeet", "proof-ledger.ndjson"),
+          })
+        );
+      })
+    );
+
+    it.effect(
       "refuses a .git file that names no gitdir instead of splitting the sample",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

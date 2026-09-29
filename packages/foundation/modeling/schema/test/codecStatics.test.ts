@@ -225,6 +225,15 @@ describe("staticDescriptorInstaller", () => {
     expect(target.is).toBe(is);
   });
 
+  it("replaces configurable legacy statics that carry a different value", () => {
+    const previous = () => false;
+    const next = () => true;
+    const target = { is: previous };
+
+    expect(staticDescriptorInstaller.install(target, { is: next })).toBe(target);
+    expect(target.is).toBe(next);
+  });
+
   it("replaces a different configurable static in legacy mode", () => {
     const target = { value: 1 };
 

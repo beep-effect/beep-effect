@@ -1,15 +1,18 @@
 import { VaultSyncPanel } from "@/sync/VaultSyncPanel";
 import "@testing-library/jest-dom/vitest";
-import { DmsMirrorDisconnectReason, VaultSyncStatus } from "@beep/documents-use-cases/public";
+import { DmsMirrorDisconnectReason, VaultSyncActionError, VaultSyncStatus } from "@beep/documents-use-cases/public";
 import { it } from "@beep/test-runner";
 import { RegistryProvider } from "@effect/atom-react";
 import { afterEach, describe, expect } from "@effect/vitest";
-import { cleanup, render, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AsyncResult } from "effect/reactivity";
+import { AsyncResult, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
 import {
+  DesktopSyncClient,
   VaultSyncPanelState,
   vaultSyncConflictsAtom,
   vaultSyncPanelStateAtoms,
@@ -162,6 +165,36 @@ describe("vault sync panel", () => {
       const note = screen.getByTestId("vault-sync-setup-note");
       expect(note).toHaveTextContent("Retry shortly");
       expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
+    })
+  );
+
+  it.effect(
+    "forces a fresh sidecar probe when Reconnect is pressed",
+    Effect.fnUntraced(function* () {
+      const called = yield* Deferred.make<void>();
+      const client = DesktopSyncClient.of((() =>
+        Deferred.succeed(called, undefined).pipe(
+          Effect.andThen(VaultSyncActionError.failEffect("sidecar unavailable"))
+        )) as unknown as DesktopSyncClient["Service"]);
+      const clientLayer = Layer.mergeAll(Layer.succeed(DesktopSyncClient, client), Reactivity.layer);
+      const { container } = render(
+        <RegistryProvider
+          initialValues={[
+            [DesktopSyncClient.runtime.layer, clientLayer],
+            [
+              vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID),
+              AsyncResult.success(yield* statusWith(false, O.some("transient"))),
+            ],
+            [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(noConflicts)],
+          ]}
+        >
+          <VaultSyncPanel floating={false} />
+        </RegistryProvider>
+      );
+
+      fireEvent.click(within(container).getByTestId("vault-sync-reconnect"));
+
+      yield* Deferred.await(called).pipe(Effect.timeout("4 seconds"));
     })
   );
 
