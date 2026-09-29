@@ -318,6 +318,69 @@ const formatTouchedFiles = Effect.fn("SchemaParityCodemod.formatTouchedFiles")(f
   }
 });
 
+type PlannedWrite = {
+  readonly filePath: string;
+  readonly nextText: string;
+};
+
+const STAGED_SUFFIX = ".schema-parity-codemod-staged";
+
+/**
+ * Write planned files atomically with respect to formatting.
+ *
+ * Every rewrite is first written next to its destination under a staged name
+ * that keeps the extension (so biome applies the same configuration), biome
+ * formats the staged files, and only when every chunk exits 0 are they renamed
+ * over their destinations. A staging or format failure leaves every
+ * destination untouched; staged files are always removed.
+ */
+const applyPlannedWrites = Effect.fn("SchemaParityCodemod.applyPlannedWrites")(function* (
+  repoRoot: string,
+  writes: ReadonlyArray<PlannedWrite>,
+  format: boolean
+): Effect.fn.Return<
+  void,
+  SchemaParityCodemodError,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const staged = A.map(writes, (write) => {
+    const extension = path.extname(write.filePath);
+    const stem = Str.slice(0, write.filePath.length - extension.length)(write.filePath);
+    return { ...write, stagedPath: `${stem}${STAGED_SUFFIX}${extension}` };
+  });
+  const removeStaged = Effect.forEach(
+    staged,
+    (entry) => fs.remove(path.join(repoRoot, entry.stagedPath), { force: true }).pipe(Effect.ignore),
+    { concurrency: 8, discard: true }
+  );
+  yield* Effect.gen(function* () {
+    yield* Effect.forEach(
+      staged,
+      (entry) =>
+        fs
+          .writeFileString(path.join(repoRoot, entry.stagedPath), entry.nextText)
+          .pipe(SchemaParityCodemodError.mapError(`Failed to stage ${entry.filePath}.`)),
+      { concurrency: 8, discard: true }
+    );
+    if (format) {
+      yield* formatTouchedFiles(
+        repoRoot,
+        A.map(staged, (entry) => entry.stagedPath)
+      );
+    }
+    yield* Effect.forEach(
+      staged,
+      (entry) =>
+        fs
+          .rename(path.join(repoRoot, entry.stagedPath), path.join(repoRoot, entry.filePath))
+          .pipe(SchemaParityCodemodError.mapError(`Failed to move the rewrite of ${entry.filePath} into place.`)),
+      { concurrency: 8, discard: true }
+    );
+  }).pipe(Effect.ensuring(removeStaged));
+});
+
 const facetCounts = (sites: ReadonlyArray<SchemaParityCodemodSite>): ReadonlyArray<SchemaParityCodemodFacetCount> =>
   pipe(
     R.values(A.groupBy(sites, (site) => `${site.ruleId}\u0000${site.facet}`)),
@@ -361,9 +424,11 @@ type RunServices =
  * `tsconfig.json` by default, so `@beep/*` aliases resolve to source), and
  * planned with
  * {@link planSchemaParityCodemodFile}. A dry run writes nothing. A write run
- * writes every planned file whose text changed and, unless `format` is off,
- * runs biome's formatter and import organizer over them. The report is
- * printed and, with `report`, written as JSONC.
+ * stages every planned file whose text changed next to its destination, runs
+ * biome's formatter and import organizer over the staged files unless
+ * `format` is off, and renames them into place only after biome succeeds, so
+ * a failed format leaves the tree untouched. The report is printed and, with
+ * `report`, written as JSONC, after the write completes.
  *
  * **Example** (Build a dry-run Effect)
  *
@@ -423,15 +488,8 @@ export const runSchemaParityCodemod = Effect.fn("SchemaParityCodemod.run")(funct
   );
   const quarantinedOutcomes = A.filter(outcomes, SchemaParityCodemodFileOutcome.guards.Quarantined);
 
-  if (options.write) {
-    yield* Effect.forEach(
-      changed,
-      (outcome) =>
-        fs
-          .writeFileString(path.join(repoRoot, outcome.filePath), outcome.nextText)
-          .pipe(SchemaParityCodemodError.mapError(`Failed to write ${outcome.filePath}.`)),
-      { concurrency: 8, discard: true }
-    );
+  if (options.write && A.isReadonlyArrayNonEmpty(changed)) {
+    yield* applyPlannedWrites(repoRoot, changed, options.format);
   }
 
   const report = SchemaParityCodemodReport.make({
@@ -464,13 +522,6 @@ export const runSchemaParityCodemod = Effect.fn("SchemaParityCodemod.run")(funct
     });
   }
   yield* Console.log(A.join(renderReportLines(report), "\n"));
-
-  if (options.write && options.format && A.isReadonlyArrayNonEmpty(changed)) {
-    yield* formatTouchedFiles(
-      repoRoot,
-      A.map(changed, (outcome) => outcome.filePath)
-    );
-  }
   return report;
 });
 

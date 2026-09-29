@@ -9,10 +9,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { HashSet, pipe, Result } from "effect";
+import { pipe, Result } from "effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
 import {
   SchemaParityCodemodEdit,
   SchemaParityCodemodImport,
@@ -24,6 +25,7 @@ import {
 import { renderSchemaParityCodemodEdits } from "./SchemaParityCodemodEdits.ts";
 import { schemaParityCodemodValueImports } from "./SchemaParityCodemodImports.ts";
 import type {
+  ElementAccessExpression,
   Expression,
   Identifier,
   ImportDeclaration,
@@ -103,6 +105,8 @@ export const LiteralKitFacetOwnerModules: ReadonlyArray<string> = [
   "/schema/src/SchemaUtils/withLiteralKitStatics.ts",
 ];
 
+const MAPPED_LITERAL_KIT_MODULE = "/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts";
+
 type SiteDecision =
   | {
       readonly _tag: "Rewrite";
@@ -151,61 +155,76 @@ const isKitFacetAccess = (access: PropertyAccessExpression): boolean =>
 
 const hasLiteralsMember = (expression: Node): boolean => expression.getType().getProperty("literals") !== undefined;
 
-const importedLocalNames = (sourceFile: SourceFile): ReadonlyArray<string> =>
-  A.flatMap(sourceFile.getImportDeclarations(), (declaration) =>
-    A.getSomes([
-      O.map(O.fromNullishOr(declaration.getDefaultImport()), (node) => node.getText()),
-      O.map(O.fromNullishOr(declaration.getNamespaceImport()), (node) => node.getText()),
-      ...A.map(declaration.getNamedImports(), (specifier) =>
-        O.some(
-          pipe(
-            O.fromNullishOr(specifier.getAliasNode()),
-            O.map((node) => node.getText()),
-            O.getOrElse(() => specifier.getName())
-          )
-        )
-      ),
-    ])
+const isDeclaredIn =
+  (moduleSuffix: string) =>
+  (declaration: Node): boolean =>
+    Str.endsWith(moduleSuffix)(declaration.getSourceFile().getFilePath());
+
+const isMappedDirectionFacet = (access: PropertyAccessExpression): boolean =>
+  pipe(
+    O.fromNullishOr(access.getNameNode().getSymbol()),
+    O.exists((symbol) => A.every(symbol.getDeclarations(), isDeclaredIn(MAPPED_LITERAL_KIT_MODULE)))
   );
 
-const declaredLocalNames = (sourceFile: SourceFile): ReadonlyArray<string> =>
-  A.getSomes([
-    ...A.flatMap(sourceFile.getVariableDeclarations(), (declaration) =>
-      A.map(declaration.getNameNode().getDescendantsOfKind(SyntaxKind.Identifier), (node) => O.some(node.getText()))
-    ),
-    ...A.map(sourceFile.getVariableDeclarations(), (declaration) =>
-      Node.isIdentifier(declaration.getNameNode()) ? O.some(declaration.getName()) : O.none()
-    ),
-    ...A.map(sourceFile.getFunctions(), (declaration) => O.fromNullishOr(declaration.getName())),
-    ...A.map(sourceFile.getClasses(), (declaration) => O.fromNullishOr(declaration.getName())),
-    ...A.map(sourceFile.getEnums(), (declaration) => O.some(declaration.getName())),
-    ...A.map(sourceFile.getInterfaces(), (declaration) => O.some(declaration.getName())),
-    ...A.map(sourceFile.getTypeAliases(), (declaration) => O.some(declaration.getName())),
-    ...A.map(sourceFile.getModules(), (declaration) => O.some(declaration.getName())),
-  ]);
+/**
+ * The symbol `name` resolves to at `site`, across every enclosing scope
+ * (parameters, catch bindings, nested declarations, the module, globals) and
+ * every meaning (value, type, namespace).
+ */
+const resolveAt = (site: Node, name: string): O.Option<ts.Symbol> =>
+  O.fromNullishOr(
+    site.getProject().getTypeChecker().compilerObject.resolveName(name, site.compilerNode, ts.SymbolFlags.All, false)
+  );
 
-const moduleBindingNames = (sourceFile: SourceFile): HashSet.HashSet<string> =>
-  HashSet.fromIterable([...importedLocalNames(sourceFile), ...declaredLocalNames(sourceFile)]);
+const isFreeAt = (site: Node, name: string): boolean => O.isNone(resolveAt(site, name));
 
-const namespaceAliasFor = (sourceFile: SourceFile, moduleSpecifier: string): O.Option<string> =>
+const resolvesTo = (site: Node, name: string, declaration: Node): boolean =>
+  pipe(
+    resolveAt(site, name),
+    O.exists((symbol) => A.some(symbol.declarations ?? A.empty(), (node) => node === declaration.compilerNode))
+  );
+
+type ImportBinding = {
+  readonly local: string;
+  readonly declaration: Node;
+};
+
+const namespaceBinding = (sourceFile: SourceFile, moduleSpecifier: string): O.Option<ImportBinding> =>
   A.findFirst(schemaParityCodemodValueImports(sourceFile, moduleSpecifier), (declaration) =>
-    O.map(O.fromNullishOr(declaration.getNamespaceImport()), (node) => node.getText())
+    pipe(
+      O.fromNullishOr(declaration.getNamespaceImport()),
+      O.flatMap((name) =>
+        O.map(O.fromNullishOr(name.getParent()), (node) => ({ local: name.getText(), declaration: node }))
+      )
+    )
   );
 
-const namedValueImportLocal = (sourceFile: SourceFile, moduleSpecifier: string, name: string): O.Option<string> =>
+const namedValueBinding = (sourceFile: SourceFile, moduleSpecifier: string, name: string): O.Option<ImportBinding> =>
   A.findFirst(schemaParityCodemodValueImports(sourceFile, moduleSpecifier), (declaration) =>
     A.findFirst(declaration.getNamedImports(), (specifier) =>
       !specifier.isTypeOnly() && specifier.getName() === name
-        ? O.some(
-            pipe(
+        ? O.some({
+            local: pipe(
               O.fromNullishOr(specifier.getAliasNode()),
               O.map((node) => node.getText()),
               O.getOrElse(() => name)
-            )
-          )
+            ),
+            declaration: specifier,
+          })
         : O.none()
     )
   );
+
+// An existing import is reused only where its name still resolves to it; a
+// parameter, catch binding or nested declaration of the same name shadows it.
+const reuseBinding = (
+  site: Node,
+  binding: ImportBinding,
+  reference: (local: string) => string
+): O.Option<ModuleReference> =>
+  resolvesTo(site, binding.local, binding.declaration)
+    ? O.some({ reference: reference(binding.local), imports: A.empty() })
+    : O.none();
 
 const hasNamedValueImportDeclaration = (sourceFile: SourceFile, moduleSpecifier: string): boolean =>
   A.some(
@@ -220,14 +239,15 @@ const namespaceImport = (moduleSpecifier: string, alias: string): SchemaParityCo
 const namedImport = (moduleSpecifier: string, name: string): SchemaParityCodemodImport =>
   SchemaParityCodemodImport.cases.NamedImport.make({ moduleSpecifier, name });
 
-const hashSetReference = (sourceFile: SourceFile): O.Option<ModuleReference> => {
-  const existing = O.orElse(namespaceAliasFor(sourceFile, "effect/HashSet"), () =>
-    namedValueImportLocal(sourceFile, "effect", "HashSet")
+const hashSetReference = (site: Node): O.Option<ModuleReference> => {
+  const sourceFile = site.getSourceFile();
+  const existing = O.orElse(namespaceBinding(sourceFile, "effect/HashSet"), () =>
+    namedValueBinding(sourceFile, "effect", "HashSet")
   );
   if (O.isSome(existing)) {
-    return O.some({ reference: existing.value, imports: A.empty() });
+    return reuseBinding(site, existing.value, identity);
   }
-  if (HashSet.has(moduleBindingNames(sourceFile), "HashSet")) {
+  if (!isFreeAt(site, "HashSet")) {
     return O.none();
   }
   return O.some({
@@ -240,22 +260,23 @@ const hashSetReference = (sourceFile: SourceFile): O.Option<ModuleReference> => 
   });
 };
 
-const constantReference = (sourceFile: SourceFile): O.Option<ModuleReference> => {
-  const namespace = namespaceAliasFor(sourceFile, "effect/Function");
-  if (O.isSome(namespace)) {
-    return O.some({ reference: `${namespace.value}.constant`, imports: A.empty() });
-  }
-  const named = namedValueImportLocal(sourceFile, "effect/Function", "constant");
-  if (O.isSome(named)) {
-    return O.some({ reference: named.value, imports: A.empty() });
-  }
-  const bound = moduleBindingNames(sourceFile);
-  if (hasNamedValueImportDeclaration(sourceFile, "effect/Function") && !HashSet.has(bound, "constant")) {
+const freshConstantReference = (site: Node): O.Option<ModuleReference> => {
+  if (hasNamedValueImportDeclaration(site.getSourceFile(), "effect/Function") && isFreeAt(site, "constant")) {
     return O.some({ reference: "constant", imports: [namedImport("effect/Function", "constant")] });
   }
-  return HashSet.has(bound, "F")
-    ? O.none()
-    : O.some({ reference: "F.constant", imports: [namespaceImport("effect/Function", "F")] });
+  return isFreeAt(site, "F")
+    ? O.some({ reference: "F.constant", imports: [namespaceImport("effect/Function", "F")] })
+    : O.none();
+};
+
+const constantReference = (site: Node): O.Option<ModuleReference> => {
+  const sourceFile = site.getSourceFile();
+  const namespace = namespaceBinding(sourceFile, "effect/Function");
+  if (O.isSome(namespace)) {
+    return reuseBinding(site, namespace.value, (local) => `${local}.constant`);
+  }
+  const named = namedValueBinding(sourceFile, "effect/Function", "constant");
+  return O.isSome(named) ? reuseBinding(site, named.value, identity) : freshConstantReference(site);
 };
 
 const isWithLiteralKitStaticsCall = (node: Node): boolean => {
@@ -321,7 +342,7 @@ const importedBaseRewrite = (receiver: Expression, baseName: string): Result.Res
     Result.fromOption(() => "decorated-base-not-importable"),
     Result.filterOrFail(exportsName(baseName), () => "decorated-base-not-exported"),
     Result.filterOrFail(
-      () => !HashSet.has(moduleBindingNames(receiver.getSourceFile()), baseName),
+      () => isFreeAt(receiver, baseName),
       () => "decorated-base-name-conflict"
     ),
     Result.map((importDeclaration) => ({
@@ -339,16 +360,25 @@ const importedBaseRewrite = (receiver: Expression, baseName: string): Result.Res
  * are imported from the module the receiver itself was imported from, when
  * that module exports them.
  */
+const sameModuleBaseRewrite = (receiver: Expression, base: Identifier): Result.Result<ReceiverRewrite, string> =>
+  pipe(
+    O.fromNullishOr(base.getSymbol()?.getValueDeclaration()),
+    O.filter((declaration) => resolvesTo(receiver, base.getText(), declaration)),
+    Result.fromOption(() => "decorated-base-shadowed"),
+    Result.map(() => ({
+      edits: [replaceNode(receiver, base.getText())],
+      imports: A.empty<SchemaParityCodemodImport>(),
+    }))
+  );
+
 const resolveDecoratedBase = (receiver: Expression): Result.Result<ReceiverRewrite, string> =>
   pipe(
     decoratedDeclaration(receiver),
-    Result.flatMap((declaration) =>
-      Result.map(decoratorBase(declaration), (base) => ({ declaration, baseName: base.getText() }))
-    ),
-    Result.flatMap(({ baseName, declaration }) =>
+    Result.flatMap((declaration) => Result.map(decoratorBase(declaration), (base) => ({ declaration, base }))),
+    Result.flatMap(({ base, declaration }) =>
       declaration.getSourceFile() === receiver.getSourceFile()
-        ? Result.succeed({ edits: [replaceNode(receiver, baseName)], imports: A.empty<SchemaParityCodemodImport>() })
-        : importedBaseRewrite(receiver, baseName)
+        ? sameModuleBaseRewrite(receiver, base)
+        : importedBaseRewrite(receiver, base.getText())
     )
   );
 
@@ -394,16 +424,52 @@ const planPickOptions = (access: PropertyAccessExpression): SiteDecision => {
 
 const isLiteralType = (type: Type): boolean => type.isLiteral() || type.isBooleanLiteral();
 
-const literalTypesOf = (type: Type): ReadonlyArray<Type> =>
-  type.isTuple()
-    ? type.getTupleElements()
-    : pipe(
-        O.fromNullishOr(type.getNumberIndexType()),
-        O.map((element) => (element.isUnion() ? element.getUnionTypes() : [element])),
-        O.getOrElse(A.empty<Type>)
-      );
-
 const sameType = (left: Type) => (right: Type) => left.compilerType === right.compilerType;
+
+const receiverLiterals = (access: PropertyAccessExpression): Result.Result<ReadonlyArray<Type>, string> =>
+  pipe(
+    O.fromNullishOr(access.getExpression().getType().getProperty("Options")?.getTypeAtLocation(access)),
+    O.filter((type) => type.isTuple()),
+    O.map((type) => type.getTupleElements()),
+    O.filter((elements) => A.every(elements, isLiteralType)),
+    Result.fromOption(() => "omitOptions-receiver-not-a-literal-tuple")
+  );
+
+// The omitted argument must be a tuple of literals the receiver declares; a
+// union of tuples or a widened array would omit more than any one call does.
+const omittedLiterals = (omitted: Node, literals: ReadonlyArray<Type>): Result.Result<ReadonlyArray<Type>, string> =>
+  pipe(
+    Result.succeed(omitted.getType()),
+    Result.filterOrFail(
+      (type) => type.isTuple(),
+      () => "omitOptions-argument-not-a-tuple"
+    ),
+    Result.map((type) => type.getTupleElements()),
+    Result.filterOrFail(
+      (types) =>
+        A.isReadonlyArrayNonEmpty(types) &&
+        A.every(types, (type) => isLiteralType(type) && A.some(literals, sameType(type))),
+      () => "omitOptions-argument-not-literal"
+    )
+  );
+
+const omitComplement = (access: PropertyAccessExpression, omitted: Node): Result.Result<string, string> =>
+  pipe(
+    receiverLiterals(access),
+    Result.flatMap((literals) =>
+      Result.map(omittedLiterals(omitted, literals), (omittedTypes) =>
+        A.filter(literals, (literal) => !A.some(omittedTypes, sameType(literal)))
+      )
+    ),
+    Result.filterOrFail(A.isReadonlyArrayNonEmpty, () => "omitOptions-empty-complement"),
+    Result.map(
+      (complement) =>
+        `[${A.join(
+          A.map(complement, (type) => type.getText()),
+          ", "
+        )}]`
+    )
+  );
 
 const planOmitOptions = (access: PropertyAccessExpression): SiteDecision => {
   const call = calledAccess(access);
@@ -414,49 +480,26 @@ const planOmitOptions = (access: PropertyAccessExpression): SiteDecision => {
   if (omitted === undefined || A.isReadonlyArrayNonEmpty(rest)) {
     return residue(call.value, "omitOptions-unexpected-arguments");
   }
-  const optionsType = O.fromNullishOr(
-    access.getExpression().getType().getProperty("Options")?.getTypeAtLocation(access)
-  );
-  const literals = pipe(
-    optionsType,
-    O.filter((type) => type.isTuple()),
-    O.map((type) => type.getTupleElements()),
-    O.filter((elements) => A.every(elements, isLiteralType))
-  );
-  if (O.isNone(literals)) {
-    return residue(call.value, "omitOptions-receiver-not-a-literal-tuple");
-  }
-  const omittedTypes = literalTypesOf(omitted.getType());
-  if (
-    A.isReadonlyArrayEmpty(omittedTypes) ||
-    !A.every(omittedTypes, (type) => isLiteralType(type) && A.some(literals.value, sameType(type)))
-  ) {
-    return residue(call.value, "omitOptions-argument-not-literal");
-  }
-  const complement = A.filter(literals.value, (literal) => !A.some(omittedTypes, sameType(literal)));
-  if (A.isReadonlyArrayEmpty(complement)) {
-    return residue(call.value, "omitOptions-empty-complement");
-  }
-  const pickText = `[${A.join(
-    A.map(complement, (type) => type.getText()),
-    ", "
-  )}]`;
-  return withReceiver(
-    access.getExpression(),
-    call.value,
-    O.some(omitted)
-  )(() => [
-    [
-      replaceNode(access.getNameNode(), "pick"),
-      replaceNode(omitted, pickText),
-      insertAt(call.value.getEnd(), ".literals"),
-    ],
-    A.empty(),
-  ]);
+  return Result.match(omitComplement(access, omitted), {
+    onFailure: (reason) => residue(call.value, reason),
+    onSuccess: (pickText) =>
+      withReceiver(
+        access.getExpression(),
+        call.value,
+        O.some(omitted)
+      )(() => [
+        [
+          replaceNode(access.getNameNode(), "pick"),
+          replaceNode(omitted, pickText),
+          insertAt(call.value.getEnd(), ".literals"),
+        ],
+        A.empty(),
+      ]),
+  });
 };
 
 const planHashSet = (access: PropertyAccessExpression): SiteDecision => {
-  const reference = hashSetReference(access.getSourceFile());
+  const reference = hashSetReference(access);
   if (O.isNone(reference)) {
     return residue(access, "HashSet-binding-conflict");
   }
@@ -473,63 +516,105 @@ const planHashSet = (access: PropertyAccessExpression): SiteDecision => {
   ]);
 };
 
-const planThunk = (access: PropertyAccessExpression): SiteDecision => {
-  const member = pipe(
-    O.fromNullishOr(access.getParent()),
-    O.filter(
-      (parent) =>
-        (Node.isPropertyAccessExpression(parent) || Node.isElementAccessExpression(parent)) &&
-        parent.getExpression() === access
-    )
+const isMemberOf =
+  (object: Node) =>
+  (node: Node): node is PropertyAccessExpression | ElementAccessExpression =>
+    (Node.isPropertyAccessExpression(node) || Node.isElementAccessExpression(node)) && node.getExpression() === object;
+
+// `const X = Kit.thunk` hides every later `X.k`: report each member use so a
+// hand edit can find them, including uses in other loaded modules.
+const thunkAliasMemberResidue = (access: PropertyAccessExpression): ReadonlyArray<SiteDecision> =>
+  pipe(
+    O.fromNullishOr(access.getParentIfKind(SyntaxKind.VariableDeclaration)),
+    O.filter((declaration) => declaration.getInitializer() === access),
+    O.map((declaration) => declaration.getNameNode()),
+    O.filter(Node.isIdentifier),
+    O.map((name) =>
+      A.getSomes(
+        A.map(name.findReferencesAsNodes(), (reference) =>
+          pipe(
+            O.fromNullishOr(reference.getParent()),
+            O.filter(isMemberOf(reference)),
+            O.map((member) => residue(member, "thunk-alias-member"))
+          )
+        )
+      )
+    ),
+    O.getOrElse(A.empty<SiteDecision>)
   );
-  if (O.isNone(member)) {
-    return residue(access, "thunk-used-as-value");
-  }
+
+const planThunkMember = (
+  access: PropertyAccessExpression,
+  member: PropertyAccessExpression | ElementAccessExpression
+): SiteDecision => {
   const invoked = pipe(
-    O.fromNullishOr(member.value.getParentIfKind(SyntaxKind.CallExpression)),
-    O.filter((call) => call.getExpression() === member.value && A.isReadonlyArrayEmpty(call.getArguments()))
+    O.fromNullishOr(member.getParentIfKind(SyntaxKind.CallExpression)),
+    O.filter((call) => call.getExpression() === member && A.isReadonlyArrayEmpty(call.getArguments()))
   );
   if (O.isSome(invoked)) {
     return rewrite(invoked.value, [
       replaceNode(access.getNameNode(), "Enum"),
-      SchemaParityCodemodEdit.make({ start: member.value.getEnd(), end: invoked.value.getEnd(), text: "" }),
+      SchemaParityCodemodEdit.make({ start: member.getEnd(), end: invoked.value.getEnd(), text: "" }),
     ]);
   }
-  const reference = constantReference(access.getSourceFile());
+  const reference = constantReference(member);
   if (O.isNone(reference)) {
-    return residue(member.value, "Function-binding-conflict");
+    return residue(member, "Function-binding-conflict");
   }
   return rewrite(
-    member.value,
+    member,
     [
-      insertAt(member.value.getStart(), `${reference.value.reference}(`),
+      insertAt(member.getStart(), `${reference.value.reference}(`),
       replaceNode(access.getNameNode(), "Enum"),
-      insertAt(member.value.getEnd(), ")"),
+      insertAt(member.getEnd(), ")"),
     ],
     reference.value.imports
   );
 };
 
-const planFacet = (access: PropertyAccessExpression, facet: LiteralKitRetiredFacet): SiteDecision =>
+const planThunk = (access: PropertyAccessExpression): ReadonlyArray<SiteDecision> =>
+  pipe(
+    O.fromNullishOr(access.getParent()),
+    O.filter(isMemberOf(access)),
+    O.match({
+      onNone: () => [residue(access, "thunk-used-as-value"), ...thunkAliasMemberResidue(access)],
+      onSome: (member) => [planThunkMember(access, member)],
+    })
+  );
+
+const planKitFacet = (access: PropertyAccessExpression, facet: LiteralKitRetiredFacet): ReadonlyArray<SiteDecision> =>
   LiteralKitRetiredFacet.$match(facet, {
-    Options: () => planOptions(access),
-    pickOptions: () => planPickOptions(access),
-    omitOptions: () => planOmitOptions(access),
-    HashSet: () => planHashSet(access),
+    Options: () => [planOptions(access)],
+    pickOptions: () => [planPickOptions(access)],
+    omitOptions: () => [planOmitOptions(access)],
+    HashSet: () => [planHashSet(access)],
     thunk: () => planThunk(access),
   });
+
+// A MappedLiteralKit direction is an `S.Union` of transformations, not an
+// `S.Literals`, so it has no `.literals`/`.pick`; its tuple comes from `Pairs`.
+const planFacet = (access: PropertyAccessExpression, facet: LiteralKitRetiredFacet): ReadonlyArray<SiteDecision> =>
+  isMappedDirectionFacet(access)
+    ? [residue(access, "mapped-literal-kit-direction-has-no-literals")]
+    : planKitFacet(access, facet);
 
 const planLiteralKitFacets = (
   sourceFile: SourceFile,
   context: SchemaParityCodemodRuleContext
 ): SchemaParityCodemodRulePlan => {
   const text = sourceFile.getFullText();
-  const location = (node: Node) => sourceFile.getLineAndColumnAtPos(node.getStart());
-  const planned = A.filterMap(sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression), (access) => {
+  const absolutePath = sourceFile.getFilePath();
+  const rootPrefix = Str.slice(0, absolutePath.length - context.filePath.length)(absolutePath);
+  const pathOf = (node: Node): string =>
+    node.getSourceFile() === sourceFile
+      ? context.filePath
+      : Str.slice(rootPrefix.length)(node.getSourceFile().getFilePath());
+  const location = (node: Node) => node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+  const planned = A.flatMap(sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression), (access) => {
     const facet = access.getName();
     return isLiteralKitRetiredFacet(facet) && isKitFacetAccess(access)
-      ? Result.succeed({ facet, decision: planFacet(access, facet) })
-      : Result.failVoid;
+      ? A.map(planFacet(access, facet), (decision) => ({ facet, decision }))
+      : A.empty<{ readonly facet: LiteralKitRetiredFacet; readonly decision: SiteDecision }>();
   });
   // A rewrite that replaces a whole subexpression (the omitOptions argument)
   // subsumes every site inside it; keeping them would overlap its edit.
@@ -537,7 +622,13 @@ const planLiteralKitFacets = (
     A.map(planned, ({ decision }) => (decision._tag === "Rewrite" ? decision.consumes : O.none()))
   );
   const isConsumed = (node: Node): boolean =>
-    A.some(consumed, (range) => node.getStart() >= range.getStart() && node.getEnd() <= range.getEnd());
+    A.some(
+      consumed,
+      (range) =>
+        node.getSourceFile() === range.getSourceFile() &&
+        node.getStart() >= range.getStart() &&
+        node.getEnd() <= range.getEnd()
+    );
   const decisions = A.filter(planned, ({ decision }) => !isConsumed(decision.siteNode));
   const rewrites = A.filterMap(decisions, ({ decision, facet }) =>
     decision._tag === "Rewrite" ? Result.succeed({ decision, facet }) : Result.failVoid
@@ -567,7 +658,7 @@ const planLiteralKitFacets = (
             SchemaParityCodemodResidue.make({
               ruleId: RULE_ID,
               facet,
-              filePath: context.filePath,
+              filePath: pathOf(decision.siteNode),
               line: location(decision.siteNode).line,
               column: location(decision.siteNode).column,
               text: decision.siteNode.getText(),

@@ -11,7 +11,7 @@ import {
   SchemaParityCodemodRulePlan,
 } from "@beep/repo-cli/test/Lint";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -54,6 +54,16 @@ export declare function withLiteralKitStatics<const L extends Literals>(
 ): <S extends object>(schema: S) => S & Pick<LiteralKit<L>, "Options" | "HashSet" | "Enum" | "thunk" | "pickOptions">;
 `;
 
+const MAPPED_MODULE = "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts";
+const MAPPED_IMPORT = '"../../foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts"';
+
+const MAPPED_STUB = `import type { Literals } from "../LiteralKit/LiteralKit.schema.ts";
+export interface Direction<L extends Literals> {
+  readonly Options: L;
+}
+export declare function MappedLiteralKit<const L extends Literals>(from: L): Direction<L> & { readonly To: Direction<L> };
+`;
+
 const compilerOptions = {
   strict: true,
   target: ts.ScriptTarget.ES2022,
@@ -67,6 +77,7 @@ const makeProject = (extraFiles: ReadonlyArray<readonly [string, string]> = []):
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions });
   project.createSourceFile(`/repo/${KIT_MODULE}`, KIT_STUB);
   project.createSourceFile(`/repo/${STATICS_MODULE}`, STATICS_STUB);
+  project.createSourceFile(`/repo/${MAPPED_MODULE}`, MAPPED_STUB);
   A.forEach(extraFiles, ([filePath, text]) => void project.createSourceFile(`/repo/${filePath}`, text));
   return project;
 };
@@ -85,6 +96,9 @@ const plannedText = (outcome: SchemaParityCodemodFileOutcome): string => {
   assert.strictEqual(outcome._tag, "Planned");
   return SchemaParityCodemodFileOutcome.guards.Planned(outcome) ? outcome.nextText : "";
 };
+
+const residueReasons = (outcome: SchemaParityCodemodFileOutcome): ReadonlyArray<string> =>
+  SchemaParityCodemodFileOutcome.guards.Planned(outcome) ? A.map(outcome.plan.residue, (entry) => entry.reason) : [];
 
 const kitImport = `import { LiteralKit } from ${KIT_IMPORT};\n`;
 const statusDeclaration = 'export const Status = LiteralKit(["draft", "live", "gone"]);\n';
@@ -197,10 +211,6 @@ export const Mode = withLiteralKitStatics(ModeBase)(brand(ModeBase));
   });
 
   it("reports decorated receivers whose base kit cannot be reached as residue", () => {
-    const residueReasons = (outcome: SchemaParityCodemodFileOutcome): ReadonlyArray<string> =>
-      SchemaParityCodemodFileOutcome.guards.Planned(outcome)
-        ? A.map(outcome.plan.residue, (entry) => entry.reason)
-        : [];
     const owner = (body: string): readonly [string, string] => [
       "packages/example/src/owner.ts",
       `import { brand, LiteralKit } from ${KIT_IMPORT};
@@ -245,6 +255,66 @@ ${body}`,
       ),
       ["decorated-base-name-conflict"]
     );
+  });
+
+  it("does not emit a name a parameter shadows at the use site", () => {
+    const text = `${kitHeader}export const read = (F: number, HashSet: number) => [F, HashSet, Status.thunk.draft, Status.HashSet];\n`;
+    const outcome = planFixture(text);
+    assert.strictEqual(plannedText(outcome), text);
+    assert.deepStrictEqual(residueReasons(outcome), ["Function-binding-conflict", "HashSet-binding-conflict"]);
+
+    const header = `import * as F from "effect/Function";\n${kitHeader}`;
+    const shadowed = `${header}export const inner = (F: number) => [F, Status.thunk.draft];\nexport const outer = Status.thunk.live;\n`;
+    assert.strictEqual(
+      plannedText(planFixture(shadowed)),
+      `${header}export const inner = (F: number) => [F, Status.thunk.draft];\nexport const outer = F.constant(Status.Enum.live);\n`
+    );
+  });
+
+  it("keeps a decorated-base rewrite only where the base name resolves to the base", () => {
+    const sameModule = `import { brand, LiteralKit } from ${KIT_IMPORT};
+import { withLiteralKitStatics } from ${STATICS_IMPORT};
+const StatusBase = LiteralKit(["draft", "live"]);
+export const Status = withLiteralKitStatics(StatusBase)(brand(StatusBase));
+export const read = (StatusBase: number) => [StatusBase, Status.Options];
+`;
+    assert.deepStrictEqual(residueReasons(planFixture(sameModule)), ["decorated-base-shadowed"]);
+
+    const owner: readonly [string, string] = [
+      "packages/example/src/owner.ts",
+      `import { brand, LiteralKit } from ${KIT_IMPORT};
+import { withLiteralKitStatics } from ${STATICS_IMPORT};
+export const ModeBase = LiteralKit(["fast", "slow"]);
+export const Mode = withLiteralKitStatics(ModeBase)(brand(ModeBase));
+`,
+    ];
+    const imported =
+      'import { Mode } from "./owner.ts";\nexport const read = (ModeBase: number) => [ModeBase, Mode.Options];\n';
+    assert.deepStrictEqual(residueReasons(planFixture(imported, [owner])), ["decorated-base-name-conflict"]);
+  });
+
+  it("reports every member use of a stored thunk object", () => {
+    const text = `${kitHeader}const thunks = Status.thunk;\nexport const a = thunks.draft;\nexport const b = thunks["live"]();\n`;
+    const outcome = planFixture(text);
+    assert.strictEqual(plannedText(outcome), text);
+    assert.deepStrictEqual(residueReasons(outcome), [
+      "thunk-used-as-value",
+      "thunk-alias-member",
+      "thunk-alias-member",
+    ]);
+  });
+
+  it("requires a tuple omitOptions argument", () => {
+    const text = `${kitHeader}declare const which: readonly ["draft"] | readonly ["gone"];\nexport const rest = Status.omitOptions(which);\n`;
+    assert.deepStrictEqual(residueReasons(planFixture(text)), ["omitOptions-argument-not-a-tuple"]);
+  });
+
+  it("reports MappedLiteralKit directions as having no literals", () => {
+    const text = `import { MappedLiteralKit } from ${MAPPED_IMPORT};\nconst Codes = MappedLiteralKit(["a", "b"]);\nexport const all = [Codes.Options, Codes.To.Options];\n`;
+    assert.deepStrictEqual(residueReasons(planFixture(text)), [
+      "mapped-literal-kit-direction-has-no-literals",
+      "mapped-literal-kit-direction-has-no-literals",
+    ]);
   });
 
   it("never rewrites same-named members owned by other modules", () => {
@@ -295,6 +365,8 @@ ${body}`,
     });
     const outcome = planFixture(`${kitHeader}export const all = Status.Options;\n`, [], [overlapping]);
     assert.strictEqual(outcome._tag, "Quarantined");
+    const reason = SchemaParityCodemodFileOutcome.guards.Quarantined(outcome) ? outcome.quarantine.reason : "";
+    assert.isTrue(Str.startsWith("overlapping edits")(reason), reason);
   });
 });
 
@@ -351,6 +423,10 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
         yield* fs.readFileString(path.join(root, FIXTURE_MODULE)),
         `${kitHeader}export const all = Status.literals;\nexport const one = Status.Enum.live;\n`
       );
+      const leftovers = A.filter(yield* fs.readDirectory(path.join(root, "packages/example/src")), (name) =>
+        Str.includes(".schema-parity-codemod-staged")(name)
+      );
+      assert.deepStrictEqual(leftovers, []);
     })
   );
 
