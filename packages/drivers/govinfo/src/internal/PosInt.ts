@@ -1,6 +1,8 @@
 /**
  * Positive integer schema shared by this package's modules.
  *
+ * **Details**
+ *
  * `@beep/schema` retired its branded `PosInt` in favor of upstream
  * `effect/Schema`, which has no named positive-integer schema, so the package
  * names the composition once here instead of repeating it at each use.
