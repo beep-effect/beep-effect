@@ -1,6 +1,7 @@
 /**
  * Optional defect cause field shared by the epistemic use-case errors.
  *
+ * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -17,6 +18,17 @@ import * as S from "effect/Schema";
  * owning error's equivalence: `S.overrideToEquivalence` makes any two causes
  * equal, so `S.toEquivalence(ErrorClass)` compares the declared diagnostic
  * fields only.
+ *
+ * **Example** (Declare an optional cause field)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { optionalDefect } from "./OptionalDefect.ts"
+ *
+ * const Failure = S.Struct({ cause: optionalDefect("Underlying driver defect.") })
+ * console.log(O.isNone(Failure.make({}).cause)) // true
+ * ```
  *
  * @param description - Field description attached to the property key.
  * @returns The optional defect field schema.

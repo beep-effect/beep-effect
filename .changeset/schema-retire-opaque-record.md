@@ -82,8 +82,12 @@ evidence) and removes both rules in its last commit.
   `Readonly<Record<string, unknown>>` in type positions.
 - `SafeObject` moves into scratchpad CodeMode as a local schema with the same
   `SafeObject` brand; `OptionFromOptionalNullishKey(S.String)` becomes
-  `S.OptionFromOptionalNullOr(S.String)`; `FileDiff`'s `file` and `patch` use
-  `S.optionalKey(S.String)`, dropping `| undefined` from the decoded type.
+  `S.OptionFromOptionalNullOr(S.String)`; `FileDiff`'s `file` and `patch` keep
+  the retired `SchemaUtils.optional` shape through a file-local
+  `S.optionalKey(S.String)` decoded to `S.toType(S.optional(S.String))`: the key
+  stays optional on the wire, `{ file: undefined }` still fails to decode, and the
+  decoded type keeps `| undefined`, so `make({ file: undefined })` encodes with
+  the key omitted.
 - Schemas that referenced the retired members lose their `@beep/schema`
   identifier annotations. `@beep/schema` drops its now-unused `@beep/types`
   dev dependency.
@@ -93,10 +97,10 @@ The gate is the `--singleThreaded` instantiation count:
 
 | Package (`--singleThreaded`, gate) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 709,201 → 702,336 | 202,247 → 200,195 | 1.085 → 1.052 s |
-| `@beep/repo-cli` | 4,152,422 → 4,152,561 | 1,067,031 → 1,066,974 | 11.644 → 10.891 s |
-| `@beep/law-practice-domain` | 874,290 → 874,290 | 259,707 → 259,707 | 1.092 → 1.228 s |
-| `@beep/repo-cli`, cumulative from `origin/main` 7cc0aa9b33 (before PR 3-i) | 4,152,690 → 4,152,561 | 1,067,045 → 1,066,974 | 11.846 → 10.891 s |
+| `@beep/schema` | 709,201 → 703,163 | 202,247 → 200,410 | 1.085 → 1.020 s |
+| `@beep/repo-cli` | 4,152,422 → 4,152,561 | 1,067,031 → 1,066,974 | 11.644 → 10.784 s |
+| `@beep/law-practice-domain` | 874,290 → 874,290 | 259,707 → 259,707 | 1.092 → 1.208 s |
+| `@beep/repo-cli`, cumulative from `origin/main` 7cc0aa9b33 (before PR 3-i) | 4,152,690 → 4,152,561 | 1,067,045 → 1,066,974 | 11.846 → 10.784 s |
 
 Flagged: `@beep/repo-cli` rises by 139 instantiations. The retired `Defect()`
 hid `S.overrideToEquivalence` behind a declared `S.Defect` return type; the
@@ -106,7 +110,7 @@ override measures 4,152,409). Keeping the always-true equivalence facet the
 audit requires makes that cost unavoidable; the shared `OpaqueDefect` removes
 the per-site cost (inline at all 44 sites measured 4,152,904). Against
 `origin/main` 7cc0aa9b33 (4,152,690) repo-cli is 129 lower after PRs 3-i and
-3-ii. `@beep/law-practice-domain` check time rose 12.5% with identical
+3-ii. `@beep/law-practice-domain` check time rose 10.6% with identical
 instantiations and types, on a shared, loaded workstation; check time is
 advisory within a 5% band.
 
@@ -114,6 +118,6 @@ The default four-checker run is advisory:
 
 | Package (default, 4 checkers, advisory) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 1,109,966 → 1,109,261 | 366,181 → 368,356 | 0.487 → 0.474 s |
-| `@beep/repo-cli` | 8,427,502 → 8,428,353 | 2,149,094 → 2,149,041 | 4.329 → 4.500 s |
-| `@beep/law-practice-domain` | 1,289,799 → 1,289,799 | 376,131 → 376,131 | 0.665 → 0.709 s |
+| `@beep/schema` | 1,109,966 → 1,110,150 | 366,181 → 368,595 | 0.487 → 0.473 s |
+| `@beep/repo-cli` | 8,427,502 → 8,428,353 | 2,149,094 → 2,149,041 | 4.329 → 4.237 s |
+| `@beep/law-practice-domain` | 1,289,799 → 1,289,799 | 376,131 → 376,131 | 0.665 → 0.696 s |
