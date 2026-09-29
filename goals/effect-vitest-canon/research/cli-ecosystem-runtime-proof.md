@@ -30,13 +30,16 @@ The checked command source contains no timer or retry path.
 - The root ratchet scans 1,217 files: 2,863 findings, zero introduced and
   2,168 resolved against the existing baseline.
 - Targeted detection drops from four findings to zero. Four historical runtime
-  records match exactly by rule and occurrence. Ledger status remains open
-  pending full package proof; other lens judgments are untouched.
+  records match exactly by rule and occurrence. All four rows are fixed with
+  the source commit below; other lens judgments are untouched.
 
-Full CLI package verification is running on the restored migration source. Its
-terminal result remains required. The source is saved in commit
+Full CLI package verification passed: audit 776.2 seconds and docgen 21.7
+seconds, with exit zero. These durations reflect shared workstation load. The source is saved in commit
 `f18ae4a35e19ba67e8a510625962746abe484c8e`. Signing recovered without changing
 configuration. The commit hook sorted imports; test bodies are unchanged and
 the committed revision passes all four cases on Node (3.84 seconds) and Bun
 (1.76 seconds).
 This is local migration evidence, not hosted readiness or goal completion.
+
+The CLI ledger has 3,497 unique schema-valid rows: 1,982 fixed, twelve
+exceptions and 1,503 open. Historical identities are preserved.

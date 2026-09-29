@@ -475,3 +475,11 @@ actual test-type diagnostics and package quick gates pass. The ledger has
 3,497 unique rows: 1,978 fixed, twelve exceptions and 1,507 open. Ecosystem
 resource findings remain open while their separate full package proof runs.
 See the CI hook-budget and CLI-kits proof receipts in research for scope.
+
+
+## Ecosystem fixture proof completed
+
+Full CLI audit (776.2 seconds) and docgen (21.7 seconds) pass. Four historical
+runtime rows close with source commit `f18ae4a35e`; the ledger now has 3,497
+rows: 1,982 fixed, twelve exceptions and 1,503 open. Runtime, assertion and
+cleanup evidence is in research/cli-ecosystem-runtime-proof.md.
