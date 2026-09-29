@@ -50,6 +50,9 @@ The root ratchet passes across 1,217 files with 3,066 findings, zero introduced
 and 1,956 resolved against the unchanged baseline. The two newly migrated
 files remove 32 runtime findings and one wrapper finding; the native-filesystem
 judgment remains. Exact historical source/title matching verifies all 32
-runtime rows; wrapper occurrence reconciliation follows the source commit.
+runtime rows; the deleted wrapper also matches exact occurrence/evidence.
+All 33 historical rows are fixed by source 0509e81669. No new rows were needed.
+The CLI ledger contains 3,495 unique rows: 1,776 fixed, 12 exceptions and
+1,707 open. Strict validation passes for all CLI rows and all 687 schema rows.
 The QA helper clock correction does not re-close its previously fixed rows.
-Full grouped CLI package verification remains pending.
+Full grouped CLI package verification is running against source 0509e81669.

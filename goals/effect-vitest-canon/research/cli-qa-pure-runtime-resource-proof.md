@@ -53,3 +53,10 @@ capture cleanup timers. Its planned live-clock correction is tracked in the
 grouped CLI preparation and OPPORTUNITIES.md; this proof does not establish
 that the inherited-writer deadline path was exercised. The correction requires
 fresh focused verification and the next grouped package proof.
+
+
+The native Git clock correction is applied in 0509e81669. All 75 tests in the
+expanded grouped cohort pass on Node/Bun, and actual-suite clock probes verify
+advancement inside the corrected callback on both runtimes. See the grouped
+terse-effect/package-verification proof for the pending full package run and
+its exact scope. This does not claim an escaped-descendant stress test.
