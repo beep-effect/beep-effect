@@ -15,7 +15,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
-// unary by contract: `options` stays reachable through `S.encodeUnknownSync(...)`;
+// unary by contract: `options` stays reachable through `S.encodeUnknownResult(...)`;
 // a dual is undecidable here because `input` is `unknown`.
 export const encodeConfig: (input: unknown) => string = flow(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown)),

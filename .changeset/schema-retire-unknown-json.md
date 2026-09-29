@@ -63,13 +63,12 @@ follow-up PR cherry-picks ce83cf6929 for `opaque-record-retirement`.
   `decodeUnknownJsonEffect` for reads inside function bodies, so no codec is
   compiled inside a function. A file that needs the composition more than once
   shares one `UnknownJson` const.
-- Behavior change: the Sync statics (`encodeUnknownSync`, `decodeUnknownSync`;
-  51 codec declarations) become `flow(S.<codec>Result(schema), Result.getOrThrow)`, because
-  `effect(schemaSync)` rejects `S.*Sync` calls. On failure they now throw the
-  `SchemaError` value instead of the `Error` the Sync runner threw. No caller
-  catches, inspects or asserts on that thrown value: every site encodes a
-  string or a plain JSON record, and the nearby `try`/`catch` blocks wrap
-  other operations.
+- The Sync statics (`encodeUnknownSync`, `decodeUnknownSync`; 51 codec
+  declarations) become `flow(S.<codec>Result(schema), Result.getOrThrow)`, because
+  `effect(schemaSync)` rejects `S.*Sync` calls. The thrown value is unchanged:
+  both forms throw the same `SchemaError` with the same message (malformed JSON:
+  "Expected a valid JSON string"; circular or bigint input: "Expected a
+  JSON-serializable value").
 - Encoded JSON bytes are unchanged; `S.fromJsonString(S.Unknown)` is the
   composition the retired schema was built from. Schemas that referenced
   `Unknown`, `UnknownFromJsonString` or `JsonObject` as a value lose those
