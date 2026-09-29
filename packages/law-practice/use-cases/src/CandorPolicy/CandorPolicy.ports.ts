@@ -8,9 +8,10 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
-import { EffectSchema, Fn } from "@beep/schema";
+import { Fn } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
+import { EffectOutput } from "../internal/effectOutput.ts";
 import { CandorFilingScope } from "./CandorPolicy.values.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type * as Crypto from "effect/Crypto";
@@ -102,7 +103,7 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
   {
     snapshotForFiling: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<CandorRecordSnapshot, CandorRecordReadError, never>(),
+      output: EffectOutput<CandorRecordSnapshot, CandorRecordReadError>(),
     }).annotateKey({
       description: "Read events and dispositions for one filing from one protected snapshot.",
     }),
@@ -211,7 +212,7 @@ export class CandorPolicyShape extends S.Class<CandorPolicyShape>($I`CandorPolic
   {
     evaluate: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<
+      output: EffectOutput<
         CandorGateVerdict,
         CandorRecordReadError,
         CandorRecordReader | SourceTextResolver | Crypto.Crypto
