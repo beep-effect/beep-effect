@@ -5459,3 +5459,15 @@ setup leak, success, setup failure, body failure, interruption and retained
 ignore-on-remove behavior. All 254 actual suite cases pass on each runtime,
 894 assertion trees are preserved, and the root ratchet introduces no findings.
 Full package verification remains the next gate.
+
+
+### Packet-core test temporary directories need scope ownership
+
+Preparing the next existing inventory cohort found six `makeTempDirectory`
+allocations in `test/goals-packet-core.test.ts`. The file-name-mismatch and
+deep-unknown-input cases never remove their directories; the robustness and
+append-refusal cases remove four directories only at the successful end of
+the test. A failed assertion or interrupted native operation can skip cleanup.
+Use the public Effect test scope and scoped filesystem acquisition in the next
+batch, retaining assertions, native fixture reads and setup semantics. This is
+source-review evidence; runtime cleanup controls are still pending.
