@@ -5555,3 +5555,18 @@ lineage-aware judgment transition for necessary scopes, including how it
 satisfies the packet's zero-new-findings and final-empty-baseline gates.
 Do not suppress recognition or remove meaningful lifetimes to pass the gate.
 This is recorded before application; source and baseline remain unchanged.
+
+
+### Use parsed syntax for assertion-preservation audits
+
+A private QA helper assertion audit initially compared scanner tokens without
+parser-driven template rescanning. It therefore included indentation after a
+template expression in a false difference, despite unchanged assertions.
+Replacing that comparison with parsed syntax-tree leaves verifies all 106
+assertion trees unchanged, with zero exclusions. Reuse parser-derived trees
+for future audits; a raw scanner needs template-context rescanning to be sound.
+
+The QA helper timing samples are also slightly slower after migration (Node
+3.520 -> 3.770 seconds; Bun 1.667 -> 1.967 seconds). Retain the load/pressure
+receipts and include this file in a matched-load comparison before attributing
+a performance change to fixture structure or console construction.
