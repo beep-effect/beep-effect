@@ -55,8 +55,18 @@ Bun 2.568 -> 2.518 seconds. Private receipts include versions, hashes, load and
 pressure. Shared workstation activity prevents causal performance conclusions.
 
 Historical matching identifies ten reflection and nine remaining bootstrap
-rows uniquely. The bootstrap helper row includes its eleven caller migrations,
+rows uniquely; eight bootstrap rows are removed and one checkEffect row remains
+open. The bootstrap helper row includes its eleven caller migrations,
 and the renamed index case maps to its current refresh-stale behavior. Three
 other bootstrap property rows were already reconciled to their merged-main fix
 in cli-bootstrap-property-backfill.json. Full grouped package proof for these
 new source edits is pending; no goal-wide acceptance is claimed.
+
+
+Source commit: `d3677d2270cccc173ba2fc4b9e94441be7a7c1a3`.
+Reconciliation closes exactly 18 historical runtime rows, adds none, and leaves
+the retained property row and all unrelated rows unchanged. An initial script
+count included the retained row; its afterMatches guard refused the write.
+The corrected reconciliation explicitly retains that row. Strict validation
+passes for all 3,495 CLI and 687 schema rows. CLI totals are 1,917 fixed,
+12 exceptions and 1,566 open. The grouped package proof is running.
