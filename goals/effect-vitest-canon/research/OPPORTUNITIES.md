@@ -5076,8 +5076,9 @@ Receipt: `research/pr1323-ci-repair.md`; hosted jobs 109092814626,
 
 Full checkpoint verification failed knowledge-reference policy on six path
 observations in two copies of inventory evidence. The excerpts came from
-knowledge-semantic-delta redaction tests and contained synthetic absolute home
-paths. Redact authored evidence excerpts to portable home notation while
-retaining the original test source, finding IDs, occurrence fingerprints,
-status and assertions. Future inventory generation should apply the public
-evidence redaction policy before serializing source excerpts.
+knowledge-semantic-delta redaction tests. Evidence-only redaction failed the
+ratchet because evidence participates in finding identity. Extracting the
+three unchanged diagnostic strings into named fixtures keeps the redaction
+tests intact and produces portable source excerpts. Four finding identities
+were reconciled without changing status. Future inventory generation should
+model sanitized display evidence separately from stable source identity.

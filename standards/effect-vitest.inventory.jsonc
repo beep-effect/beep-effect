@@ -37169,15 +37169,15 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1398:provideScopedLayer@11#1",
+      "id": "EV002:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1403:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1398,
-      "endLine": 1398,
+      "line": 1403,
+      "endLine": 1403,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:4cdd4699713101e402a5fc46737f1e95a964474802e3faac20197ccd94432fb3",
+      "occurrence": "v2:4fc11d9cc95a877d5e0511c6cfb76b02581406fb8d1b33ff217534f9b0337d08",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -37232,15 +37232,15 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1473:provideScopedLayer@11#1",
+      "id": "EV002:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1478:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1473,
-      "endLine": 1473,
+      "line": 1478,
+      "endLine": 1478,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:71542a3d44860cd2d6f2e5a8d2645f9119bce5581f3e23c5c45f7726f6710157",
+      "occurrence": "v2:e5f1e2f922d2eeb57dbc0692598f84900c6df5224c933e3ee8569decc6f8c1b6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(testLayer)",
       "replacement": {
@@ -58158,17 +58158,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1381:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1386:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1381,
-      "endLine": 1398,
+      "line": 1386,
+      "endLine": 1403,
       "symbol": "scoped",
-      "occurrence": "v2:4cdd4699713101e402a5fc46737f1e95a964474802e3faac20197ccd94432fb3",
+      "occurrence": "v2:4fc11d9cc95a877d5e0511c6cfb76b02581406fb8d1b33ff217534f9b0337d08",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", \"\\u001B[31mwarning\\u001B[0m at ~/private/runtime.ts\\u0001\" ); const err",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", probeWarningStderr ); const error = yield* Effect.flip(harness.oracle.probeCommands(",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -58221,17 +58221,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1436:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1441:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1436,
-      "endLine": 1473,
+      "line": 1441,
+      "endLine": 1478,
       "symbol": "scoped",
-      "occurrence": "v2:71542a3d44860cd2d6f2e5a8d2645f9119bce5581f3e23c5c45f7726f6710157",
+      "occurrence": "v2:e5f1e2f922d2eeb57dbc0692598f84900c6df5224c933e3ee8569decc6f8c1b6",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"unsafe stdout from ~/private/stdout.ts\", \"\\u001B[31mSyntaxError\\u001B[0m in ~/private/stder",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( probeFailureStdout, probeFailureStderr, 1 ); const error = yield* Effect.flip(harness.oracle.probeCommands([[\"goals\",",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."

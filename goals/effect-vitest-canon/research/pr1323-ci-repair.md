@@ -34,7 +34,11 @@ These are PR repairs, not completion of the migration goal.
 
 The full branch proof passed build, docgen, integration, doctest, JSDoc ratchet
 and lint, then failed knowledge-reference policy. Six observations came from
-synthetic home paths in four evidence excerpts across the baseline and packet
-ledger. Those excerpts now use portable home notation. Test source, IDs,
-occurrence fingerprints and statuses are unchanged. This is evidence
-redaction, not a baseline waiver or assertion change.
+synthetic home paths copied into source excerpts in the baseline and packet
+ledger. Evidence-only redaction was rejected by the ratchet and superseded.
+
+Three diagnostic strings now live in named test fixtures. Their exact runtime
+values and all assertions remain unchanged. Four affected provider/scope
+findings are reconciled by file, rule, symbol and occurrence, preserving their
+statuses and multiplicities. No baseline waiver is added. The focused suite
+passes all 64 tests under CI logging on Node.
