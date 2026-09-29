@@ -293,6 +293,7 @@ export const renderEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRende
   return EffectSchemaInventoryRendered.make({ receipt, files });
 });
 
+const decodeIndexHeader = S.decodeEffect(EffectSchemaInventoryIndexHeader);
 const PIN_LINE = /^Pin: `([0-9a-f]{40})`.* TypeScript parser: `([^`]+)`\./mu;
 const DIGEST_LINE = /^Row digest: `([0-9a-f]{64})`/mu;
 
@@ -330,7 +331,7 @@ export const readEffectSchemaInventoryIndexHeader = Effect.fn("EffectSchemaInven
   });
   if (O.isNone(fields))
     return yield* EffectSchemaInventoryError.new("INDEX.md lacks its Pin, TypeScript parser, or Row digest line.");
-  return yield* S.decodeEffect(EffectSchemaInventoryIndexHeader)(fields.value).pipe(
+  return yield* decodeIndexHeader(fields.value).pipe(
     EffectSchemaInventoryError.mapError("INDEX.md header does not decode")
   );
 });

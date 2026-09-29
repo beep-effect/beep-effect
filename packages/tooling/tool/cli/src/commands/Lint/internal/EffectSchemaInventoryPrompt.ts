@@ -73,10 +73,7 @@ const statementNames = (statement: ts.Statement): ReadonlyArray<string> => {
     ts.isEnumDeclaration(statement) ||
     ts.isModuleDeclaration(statement)
   )
-    return O.match(O.fromUndefinedOr(statement.name), {
-      onNone: A.empty<string>,
-      onSome: (name) => (ts.isIdentifier(name) || ts.isStringLiteral(name) ? [name.text] : []),
-    });
+    return O.match(O.fromUndefinedOr(statement.name), { onNone: A.empty<string>, onSome: (name) => [name.text] });
   return [];
 };
 
@@ -108,18 +105,23 @@ const declarationGroups = (
 const exportedLocals = (
   statement: ts.Statement,
   byName: MutableHashMap.MutableHashMap<string, ts.Statement>
-): ReadonlyArray<ts.Statement> => {
-  if (!ts.isExportDeclaration(statement) || statement.moduleSpecifier !== undefined) return [];
-  const clause = statement.exportClause;
-  if (clause === undefined || !ts.isNamedExports(clause)) return [];
-  // AST nodes compare by reference: Effect's structural equality would walk the whole tree.
-  return A.dedupeWith(
-    A.getSomes(
-      A.map(clause.elements, (element) => MutableHashMap.get(byName, (element.propertyName ?? element.name).text))
+): ReadonlyArray<ts.Statement> =>
+  pipe(
+    O.liftPredicate(statement, ts.isExportDeclaration),
+    O.filter((declaration) => declaration.moduleSpecifier === undefined),
+    O.flatMap((declaration) => O.fromUndefinedOr(declaration.exportClause)),
+    O.filter(ts.isNamedExports),
+    O.map((clause) =>
+      // AST nodes compare by reference: Effect's structural equality would walk the whole tree.
+      A.dedupeWith(
+        A.getSomes(
+          A.map(clause.elements, (element) => MutableHashMap.get(byName, (element.propertyName ?? element.name).text))
+        ),
+        (self, that) => self === that
+      )
     ),
-    (self, that) => self === that
+    O.getOrElse(A.empty<ts.Statement>)
   );
-};
 
 const fenceFor = (content: string): string => {
   const longestRun = A.reduce(A.fromIterable(Str.matchAll(/`+/gu)(content)), 0, (longest, match) =>
@@ -495,8 +497,9 @@ export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventor
       )
     )
   );
-  const drift = yield* Effect.forEach(owned, ([name, entry]) =>
-    Effect.gen(function* () {
+  const drift = yield* Effect.forEach(
+    owned,
+    Effect.fnUntraced(function* ([name, entry]) {
       const file = `${EffectSchemaInventoryPromptRoot}/${name}`;
       const committed = yield* fs
         .readFileString(path.join(directory, name))

@@ -14,7 +14,7 @@
 
 import { A, Str } from "@beep/utils";
 import { Effect, HashSet, Match, MutableHashMap, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -389,7 +389,7 @@ const visitNamespaceExport = (visit: Visit, declaration: ts.ExportDeclaration, c
     return;
   }
   visit.walk.failures.push(
-    `${visit.walk.module.file} re-exports ${O.getOrElse(target, () => declaration.getText())} as a namespace; add it to the module list first`
+    `${visit.walk.module.file} re-exports ${O.getOrElse(target, constant(declaration.getText()))} as a namespace; add it to the module list first`
   );
 };
 

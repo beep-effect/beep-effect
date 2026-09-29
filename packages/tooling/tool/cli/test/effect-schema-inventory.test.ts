@@ -21,7 +21,10 @@ import {
   effectSchemaInventoryRequestFromFlags,
   encodeEffectSchemaInventoryRowJson,
   extractEffectSchemaInventory,
+  findEffectSchemaInventoryModule,
   generateEffectSchemaInventory,
+  generateEffectSchemaInventoryPrompt,
+  makeLintEffectSchemaInventoryCommand,
   parseEffectSchemaInventoryPin,
   readEffectSchemaInventoryFixture,
   readEffectSchemaInventoryIndexHeader,
@@ -34,8 +37,9 @@ import { Sha256Hex } from "@beep/schema/Sha256";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { assertFalse, assertInclude, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Order, Path, Ref } from "effect";
+import { assertFalse, assertInclude, assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { Effect, FileSystem, HashMap, Layer, Order, Path, Ref } from "effect";
+import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";
 
@@ -206,7 +210,37 @@ export enum E { A, B }
 const hidden = 2
 export { hidden as renamed }
 export interface WithIndex { [key: string]: number; new (x: number): WithIndex }
+const shown = 3
+export { shown }
+export interface Dup { readonly a: number } export declare namespace Dup { export type T = string }
 `;
+
+const provenanceBranchModule = EffectSchemaInventoryModule.make({
+  file: "packages/effect/src/internal/Branches.ts",
+  module: "effect/internal/Branches",
+  slug: "effect-internal-Branches",
+  importable: false,
+});
+
+const promptBranchSource = `/**
+ * Old formatter.
+ *
+ * @deprecated use a
+ */
+export function old(x: string): string
+export function old(x: unknown): string {
+  return ""
+}
+const shared = 1
+export {
+  /** Shared value. */
+  shared,
+  /** Same value, second name. */
+  shared as sharedAlias
+}
+`;
+
+const enableModule = O.getOrThrow(findEffectSchemaInventoryModule("effect/schema/SchemaJITCompiler/enable"));
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory", (it) => {
   it.effect(
@@ -527,7 +561,10 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       strictEqual(row("renamed", "const").line, 14);
       strictEqual(row("WithIndex.<new>", "constructor").overloads, 1);
       strictEqual(row("WithIndex.<index>", "property").signature, "[key: string]: number;");
-      strictEqual(rows.length, 19);
+      strictEqual(row("shown", "const").signature, "const shown: <inferred; see source>");
+      strictEqual(row("Dup", "interface").line, row("Dup", "namespace").line);
+      strictEqual(row("Dup.T", "type").signature, "export type T = string");
+      strictEqual(rows.length, 24);
     })
   );
 
@@ -646,6 +683,158 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const stale = O.getOrThrow(A.head(drift));
       assertTrue(stale._tag === "stale");
       strictEqual(stale.file, `${EffectSchemaInventoryPromptRoot}/effect-Demo.md`);
+    })
+  );
+  it.effect(
+    "rejects a module list that names one file twice",
+    Effect.fnUntraced(function* () {
+      const failure = yield* Effect.flip(
+        extractEffectSchemaInventory(PIN, [
+          [demoModule, demoSource],
+          [demoModule, demoSource],
+        ])
+      );
+      assertInclude(failure.message, "Duplicate file");
+    })
+  );
+
+  it("looks modules up by import path", () => {
+    strictEqual(enableModule.slug, "effect-schema-SchemaJITCompiler-enable");
+    assertNone(findEffectSchemaInventoryModule("effect/Nope"));
+  });
+
+  it.effect(
+    "renders deprecated, overloaded, and provenance-only rows and shared export locals once",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[provenanceBranchModule, promptBranchSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const graft = EffectSchemaInventoryGraftContext.make({
+        head: PIN,
+        workingTreeMatchesPin: true,
+        entries: [
+          EffectSchemaInventoryGraftEntry.make({
+            name: "old",
+            kind: "function",
+            span: "L6-L10",
+            signature: O.none(),
+            summary: O.none(),
+          }),
+        ],
+      });
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: provenanceBranchModule,
+        pin: PIN,
+        rows,
+        source: promptBranchSource,
+        graft,
+      });
+      assertInclude(prompt, "provenance only: Effect's exports map nulls this path");
+      assertInclude(prompt, "1 overload signature, deprecated, not importable");
+      assertInclude(prompt, "| L6-L10 | function | `old` |  |");
+      assertInclude(prompt, 'export function old(x: unknown): string {\n  return ""\n}');
+      strictEqual(A.length(Str.split(prompt, "const shared = 1")) - 1, 1);
+      const foreign = yield* Effect.flip(
+        renderEffectSchemaInventoryPrompt({
+          module: provenanceBranchModule,
+          pin: ABSENT_PIN,
+          rows,
+          source: promptBranchSource,
+          graft,
+        })
+      );
+      assertInclude(foreign.message, "must all read");
+    })
+  );
+
+  it.effect(
+    "reports a prompt without a graft section and fails when a prompt's module source is missing",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const extraction = yield* extractDemo;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompt-edges-" });
+      const directory = path.join(root, EffectSchemaInventoryPromptRoot);
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "effect-Demo.md"), "# Lane prompt without sections\n");
+      const drift = yield* checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [[demoModule, demoSource]]);
+      deepStrictEqual(
+        A.map(drift, (entry) => entry._tag),
+        ["stale"]
+      );
+      const missing = yield* Effect.flip(checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, []));
+      assertInclude(missing.message, "No pinned source was read for effect/Demo");
+    })
+  );
+
+  it.effect(
+    "generates a prompt through the source service and refuses unsafe or stale inputs",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const reads = yield* Ref.make(0);
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-generate-" });
+      const fixture = path.join(root, EffectSchemaInventoryFixturePath);
+      yield* fs.makeDirectory(fixture, { recursive: true });
+      yield* fs.writeFileString(path.join(fixture, "effect-schema-SchemaJITCompiler-enable.jsonl"), "");
+      const staleLine = yield* encodeEffectSchemaInventoryRowJson(
+        EffectSchemaInventoryRow.make({
+          ...makeRow({ line: 1, symbol: "isIssue", hasExample: false }),
+          sha: ABSENT_PIN,
+          module: "effect/SchemaIssue",
+          file: "packages/effect/src/SchemaIssue.ts",
+        })
+      );
+      yield* fs.writeFileString(path.join(fixture, "effect-SchemaIssue.jsonl"), `${staleLine}\n`);
+      const generate = (module: string, out: O.Option<string>) =>
+        generateEffectSchemaInventoryPrompt(root, module, out).pipe(
+          Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
+        );
+
+      const relative = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some("prompts/enable.md"));
+      strictEqual(relative.target, "prompts/enable.md");
+      strictEqual(relative.rows, 0);
+      assertInclude(
+        yield* fs.readFileString(path.join(root, "prompts/enable.md")),
+        "| Declarations | 0 top-level declarations"
+      );
+      const defaulted = yield* generate("effect/schema/SchemaJITCompiler/enable", O.none());
+      strictEqual(defaulted.target, `${EffectSchemaInventoryPromptRoot}/effect-schema-SchemaJITCompiler-enable.md`);
+      const outside = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-outside-" });
+      const absolute = yield* generate("effect/schema/SchemaJITCompiler/enable", O.some(path.join(outside, "p.md")));
+      strictEqual(absolute.target, path.join(outside, "p.md"));
+
+      assertInclude((yield* Effect.flip(generate("effect/Nope", O.none()))).message, "Unknown inventory module");
+      assertInclude(
+        (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some("../escape.md")))).message,
+        "resolves outside the repository root"
+      );
+      assertInclude((yield* Effect.flip(generate("effect/SchemaIssue", O.none()))).message, "is not at inventoryPin");
+      assertInclude(
+        (yield* Effect.flip(generate("effect/schema/SchemaJITCompiler/enable", O.some(outside)))).message,
+        "Unable to write"
+      );
+    })
+  );
+
+  it.effect(
+    "runs the command handler for --check and --prompt through the flag parser",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const reads = yield* Ref.make(0);
+      const run = Command.runWith(
+        makeLintEffectSchemaInventoryCommand(Layer.succeed(EffectSchemaInventorySource, fakeSource({}, reads))),
+        { version: "0.0.0" }
+      );
+      // The fake sources cannot reproduce the committed fixture, so --check reports drift without writing.
+      const check = yield* Effect.flip(run(["--check"]));
+      assertTrue(check._tag === "EffectSchemaInventoryDriftError");
+      assertTrue(A.some(check.drift, (entry) => entry.file === "INDEX.md"));
+      const out = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-command-" }), "p.md");
+      yield* run(["--prompt", "effect/schema/SchemaJITCompiler/enable", "--out", out]);
+      assertInclude(yield* fs.readFileString(out), "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
+      const conflict = yield* Effect.flip(run(["--write", "--check"]));
+      assertTrue(conflict._tag === "EffectSchemaInventoryError");
     })
   );
 });
