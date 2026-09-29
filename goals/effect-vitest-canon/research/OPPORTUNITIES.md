@@ -5933,3 +5933,8 @@ ts-morph. Reviewing platform provenance before merge would avoid rediscovery.
 Keep detector branch coverage and complexity checks together as assertion
 recognition grows. The same run also reported changeset and health gate failures;
 these remain under investigation, not waived.
+
+The detector complexity repair separates membership provenance and piped
+absence recognition, and flattens the membership guard. Node/Bun each pass
+260 tests; all 2,861 detection rows are preserved. Fallow audit and health now
+pass without suppressions or threshold changes. Full package proof is pending.

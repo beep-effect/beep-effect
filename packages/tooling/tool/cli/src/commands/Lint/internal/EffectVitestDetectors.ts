@@ -950,6 +950,17 @@ const constructorAssertionReplacement = (
   });
 };
 
+const isOptionContainsCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  const expression = call.getExpression();
+  return (
+    (call.getArguments().length === 2 && isProvenanceCall(call, imports, OPTION_MODULES, "Option", ["contains"])) ||
+    (call.getArguments().length === 1 &&
+      Node.isCallExpression(expression) &&
+      expression.getArguments().length === 1 &&
+      isProvenanceCall(expression, imports, OPTION_MODULES, "Option", ["contains"]))
+  );
+};
+
 const dataAssertionRoute = (
   actual: MorphNode | undefined,
   expected: MorphNode | undefined,
@@ -969,25 +980,19 @@ const dataAssertionRoute = (
     );
     return { judgment: replacement.primitive !== "utils.assertNone", replacement };
   }
-  if (O.isSome(truth) && Node.isCallExpression(actual)) {
-    const expression = actual.getExpression();
-    const contains =
-      (actual.getArguments().length === 2 &&
-        isProvenanceCall(actual, imports, OPTION_MODULES, "Option", ["contains"])) ||
-      (actual.getArguments().length === 1 &&
-        Node.isCallExpression(expression) &&
-        expression.getArguments().length === 1 &&
-        isProvenanceCall(expression, imports, OPTION_MODULES, "Option", ["contains"]));
-    if (contains || arrayPredicateDataShape(actual, imports)) {
-      return {
-        judgment: true,
-        replacement: EffectVitestReplacement.make({
-          primitive: truth.value ? "utils.assertTrue" : "utils.assertFalse",
-          sketch:
-            "Preserve the complete Boolean membership or aggregate predicate, its operands and truth polarity. Membership retains Effect Equal semantics; do not invent payload or structural equality expectations.",
-        }),
-      };
-    }
+  if (
+    O.isSome(truth) &&
+    Node.isCallExpression(actual) &&
+    (isOptionContainsCall(actual, imports) || arrayPredicateDataShape(actual, imports))
+  ) {
+    return {
+      judgment: true,
+      replacement: EffectVitestReplacement.make({
+        primitive: truth.value ? "utils.assertTrue" : "utils.assertFalse",
+        sketch:
+          "Preserve the complete Boolean membership or aggregate predicate, its operands and truth polarity. Membership retains Effect Equal semantics; do not invent payload or structural equality expectations.",
+      }),
+    };
   }
   return {
     judgment: true,
@@ -1058,39 +1063,42 @@ const booleanAssertionTruth = (call: CallExpression, imports: EffectVitestImport
   return O.some(true);
 };
 
+const pipedAbsenceAssertion = (call: CallExpression, imports: EffectVitestImports) => {
+  const pipeStage = O.getOrUndefined(terminalPipeStage(call, imports));
+  const arguments_ = call.getArguments();
+  const predicateStage = arguments_[arguments_.length - 2];
+  if (!Node.isExpression(pipeStage) || !Node.isExpression(predicateStage)) return O.none();
+  return A.findFirst(
+    [
+      { predicate: "isNone", assertion: "assertTrue", truth: true },
+      { predicate: "isSome", assertion: "assertFalse", truth: false },
+    ],
+    ({ predicate, assertion }) =>
+      isProvenanceExpression(predicateStage, imports, OPTION_MODULES, "Option", [predicate]) &&
+      isProvenanceExpression(pipeStage, imports, ["@effect/vitest/utils"], "utils", [assertion])
+  ).pipe(O.map(({ predicate, truth }) => predicateAssertionReplacement("Option", predicate, truth)));
+};
+
 const detectBooleanDataShape = (
   { call, member, inTest }: ReturnType<typeof inspectContext>,
   state: DetectorState
 ): void => {
   const { imports, makeFinding, findings, file, owner } = state;
   if (!inTest) return;
-  const pipeStage = O.getOrUndefined(terminalPipeStage(call, imports));
-  const arguments_ = call.getArguments();
-  const predicateStage = arguments_[arguments_.length - 2];
-  if (Node.isExpression(pipeStage) && Node.isExpression(predicateStage)) {
-    const absence = A.findFirst(
-      [
-        { predicate: "isNone", assertion: "assertTrue", truth: true },
-        { predicate: "isSome", assertion: "assertFalse", truth: false },
-      ],
-      ({ predicate, assertion }) =>
-        isProvenanceExpression(predicateStage, imports, OPTION_MODULES, "Option", [predicate]) &&
-        isProvenanceExpression(pipeStage, imports, ["@effect/vitest/utils"], "utils", [assertion])
+  const absence = pipedAbsenceAssertion(call, imports);
+  if (O.isSome(absence)) {
+    findings.push(
+      makeFinding({
+        ruleId: "EV006",
+        node: call,
+        file,
+        owner,
+        symbol: member,
+        judgment: false,
+        replacement: absence.value,
+      })
     );
-    if (O.isSome(absence)) {
-      findings.push(
-        makeFinding({
-          ruleId: "EV006",
-          node: call,
-          file,
-          owner,
-          symbol: member,
-          judgment: false,
-          replacement: predicateAssertionReplacement("Option", absence.value.predicate, absence.value.truth),
-        })
-      );
-      return;
-    }
+    return;
   }
   if (
     !isBooleanAssertion(call, imports) ||
