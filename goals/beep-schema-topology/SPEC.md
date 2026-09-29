@@ -72,7 +72,7 @@ Do not publish broad suite aggregators such as `@beep/schema/Blockchain`,
 `@beep/schema/Dom`, `@beep/schema/Http`, `@beep/schema/Location`, or
 `@beep/schema/Person`. Consumers import leaf concept modules directly, for
 example `@beep/schema/EvmAddress`, `@beep/schema/DomReactNode`, and
-`@beep/schema/HttpStatus`.
+`@beep/schema/HttpHeaders`.
 
 `Csv` is a same-concept schema module. CSV parser, formatter, option, and error
 helpers live in sibling leaf modules such as `@beep/schema/CsvParser` and are
@@ -139,7 +139,7 @@ The migration is closed around the canonical topology:
   `@beep/schema/XSSProtection`; use `ExpectCt` and `XssProtection`.
 - Keep concept role files private and publish only concept indexes.
 - Keep parser internals private; source tests use `@beep/schema/test/Markdown`
-  and `@beep/schema/test/Yaml` instead of `@beep/schema/internal/*`.
+  instead of `@beep/schema/internal/*`.
 - Keep the broad package wildcard removed.
 
 ## Acceptance Criteria

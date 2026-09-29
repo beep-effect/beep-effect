@@ -7,10 +7,11 @@
 
 import { $AiSyncId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { decodeTomlTextAs } from "@beep/schema/Toml";
 import { O, Str } from "@beep/utils";
 import { Effect, FileSystem, Match, Path, SchemaIssue } from "effect";
 import * as A from "effect/Array";
+import * as Toml from "effect/encoding/Toml";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
 import { ClaudeMcpJson, ClaudeSettings, CodexConfig, NormalizedAgentInstructionDocument } from "./schemas.ts";
@@ -20,7 +21,24 @@ const $I = $AiSyncId.create("validation");
 
 const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(S.fromJsonString(schema));
 
-const decodeCodexToml = decodeTomlTextAs(CodexConfig);
+// effect/encoding/Toml ships the parser but no schema codec; Codex config is only ever read,
+// and a parse failure surfaces as the same SchemaError a schema codec would raise.
+const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.try({
+    try: () => Toml.parse(text),
+    catch: (cause) =>
+      new S.SchemaError(
+        new SchemaIssue.InvalidValue({
+          message: `Invalid TOML input (${P.isError(cause) ? cause.message : String(cause)}).`,
+        })
+      ),
+  });
+const decodeTomlTextWith =
+  <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
+  (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
+    Effect.flatMap(parseTomlText(text), decode);
+
+const decodeCodexToml = decodeTomlTextWith(S.decodeUnknownEffect(CodexConfig));
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);
 const decodeClaudeSettingsJson = decodeJsonTextAs(ClaudeSettings);
 
@@ -45,7 +63,7 @@ class CodexRepoSafetyPolicy extends S.Class<CodexRepoSafetyPolicy>($I`CodexRepoS
   })
 ) {}
 
-const decodeCodexRepoSafetyPolicy = decodeTomlTextAs(CodexRepoSafetyPolicy);
+const decodeCodexRepoSafetyPolicy = decodeTomlTextWith(S.decodeUnknownEffect(CodexRepoSafetyPolicy));
 
 const ClaudeRepoPermissionMode = LiteralKit([
   "default",

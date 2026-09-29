@@ -305,7 +305,7 @@ exact public subpaths. Lowercase topical source and public paths such as
 `@beep/schema/http/headers` are retired topology, not compatibility surfaces.
 Suite aggregate modules such as `@beep/schema/Dom` and `@beep/schema/Http` are
 retired; import leaf concept modules such as `@beep/schema/DomReactNode` and
-`@beep/schema/HttpStatus` instead.
+`@beep/schema/HttpHeaders` instead.
 
 Core role suffixes are `.schema.ts`, `.input.ts`, `.transforms.ts`,
 `.constructors.ts`, `.guards.ts`, `.errors.ts`, and `.types.ts`. Earned
@@ -317,8 +317,8 @@ Inside the namespace, concise role names are canonical. Prefer
 such as `Duration.DurationInput` in new code. Legacy full names may remain as
 aliases while consumers migrate.
 Promote source concepts rather than individual exported symbols; for example,
-`HttpStatus` remains one concept module rather than a public subpath per status
-literal.
+`Color` remains one concept module rather than a public subpath per color
+schema.
 The repo enforces the closed topology with
 `bun run beep lint schema-topology`, which checks `@beep/schema` source
 directories, package exports, role-file privacy, retired suite aggregators,

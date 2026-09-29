@@ -1,10 +1,8 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
-import { parseYaml } from "@beep/schema/Yaml";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
@@ -169,7 +167,7 @@ const readSwagger = Effect.gen(function* () {
         reason: "request encoding",
       }),
   });
-  return yield* decodeOpenApiSpec(parseYaml(raw));
+  return yield* decodeOpenApiSpec(Bun.YAML.parse(raw));
 });
 
 const hasOperationId = (operation: unknown): operation is { readonly operationId: string } =>
@@ -463,7 +461,7 @@ describe("@beep/venice-ai", () => {
             body: { ok: true },
             contentType: O.some("application/json"),
             headers: {},
-            status: HttpStatus.make(200),
+            status: 200,
           })
         )
       ).toEqual({
@@ -478,7 +476,7 @@ describe("@beep/venice-ai", () => {
           VeniceAITextResponse.make({
             contentType: O.none(),
             headers: {},
-            status: HttpStatus.make(200),
+            status: 200,
             text: "ok",
           })
         )
@@ -509,7 +507,7 @@ describe("@beep/venice-ai", () => {
         yield* encodeVeniceAIError(
           VeniceAIError.make({
             reason: "response status",
-            status: O.some(HttpStatus.make(500)),
+            status: O.some(500),
           })
         )
       ).toEqual({

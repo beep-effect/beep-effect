@@ -13,7 +13,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
@@ -258,6 +257,25 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt).pipe
  * @since 0.0.0
  */
 export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
+
+/**
+ * HTTP response status code in the standard three-digit range from 100 through 599.
+ *
+ * **Example** (Make an HTTP status code)
+ * ```ts
+ * import { HttpStatusCode } from "@effect-ontology/Error/Base"
+ *
+ * console.log(HttpStatusCode.make(404)) // 404
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("HttpStatusCode", {
+    description: "HTTP response status code in the standard three-digit range from 100 through 599.",
+  })
+);
 
 /**
  * Optional HTTP response status normalized from an absent object key.

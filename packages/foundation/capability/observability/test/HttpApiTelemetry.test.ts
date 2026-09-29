@@ -8,11 +8,10 @@ import {
   observeHttpApiHandler,
 } from "@beep/observability/server";
 import { NonNegativeInt } from "@beep/schema";
-import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertExitFailure, assertSome } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Cause, Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
@@ -24,8 +23,12 @@ const decodeUnknownHttpStatusCodeOption = S.decodeUnknownOption(HttpStatusCode);
 const encodeHttpStatusCodeOption = S.encodeOption(HttpStatusCode);
 
 describe("HttpApiTelemetry", () => {
-  it("preserves the schema package's canonical HTTP status export", () => {
-    expect(HttpStatusCode).toBe(CanonicalHttpStatusCode);
+  it("bounds HTTP status codes to the three-digit range", () => {
+    assertSome(decodeUnknownHttpStatusCodeOption(100), HttpStatusCode.make(100));
+    assertSome(decodeUnknownHttpStatusCodeOption(599), HttpStatusCode.make(599));
+    assertNone(decodeUnknownHttpStatusCodeOption(99));
+    assertNone(decodeUnknownHttpStatusCodeOption(600));
+    assertNone(decodeUnknownHttpStatusCodeOption(404.5));
   });
 
   it("reads explicit HttpApiSchema statuses", () => {

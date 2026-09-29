@@ -28,7 +28,6 @@ import {
   M365SkippedEncryptedItem,
 } from "@beep/m365";
 import { NonNegativeInt, PosInt } from "@beep/schema";
-import { HttpStatus } from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -685,7 +684,7 @@ describe("@beep/m365 service", () => {
         );
         assertSome(
           O.flatMap(error, (error) => error.status),
-          HttpStatus.make(429)
+          429
         );
       })
     );
