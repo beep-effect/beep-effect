@@ -5,7 +5,7 @@
 "@beep/ai-provider-cli": patch
 "@beep/ai-sync": patch
 "@beep/brand": patch
-"@beep/chalk": patch
+"@beep/chalk": minor
 "@beep/dock": patch
 "@beep/documents-server": patch
 "@beep/editor": patch
@@ -25,7 +25,7 @@
 "@beep/libpff": patch
 "@beep/m365": patch
 "@beep/mcp-kit": patch
-"@beep/md": patch
+"@beep/md": minor
 "@beep/nlp": patch
 "@beep/observability": patch
 "@beep/ontology": patch
