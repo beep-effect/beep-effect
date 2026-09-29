@@ -6,16 +6,19 @@ import {
   RepoRunContext,
   YeetStagedPublishIntent,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
@@ -53,21 +56,10 @@ const goalManifest = (slug: string): string =>
     2
   );
 
-const withTempDirectory = <Result, Error, Requirements>(
-  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
-) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  ).pipe(provideScopedLayer(PlatformLayer));
+const temporaryDirectory = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.makeTempDirectoryScoped();
+});
 
 type TempPortfolioRepo = {
   readonly indexPath: string;
@@ -111,102 +103,99 @@ const initPortfolioRepo = Effect.fn("initPortfolioRepo")(function* (tmpDir: stri
   } satisfies TempPortfolioRepo;
 });
 
-const withPortfolioRepo = <Result, Error, Requirements>(
-  use: (repo: TempPortfolioRepo) => Effect.Effect<Result, Error, Requirements>,
-  slugs: ReadonlyArray<string> = ["alpha-packet", "beta-packet"]
-) =>
-  withTempDirectory((tmpDir) =>
-    Effect.gen(function* () {
-      return yield* use(yield* initPortfolioRepo(tmpDir, slugs));
-    })
-  );
+const portfolioRepo = Effect.fnUntraced(function* (slugs: ReadonlyArray<string> = ["alpha-packet", "beta-packet"]) {
+  const tmpDir = yield* temporaryDirectory;
+  return yield* initPortfolioRepo(tmpDir, slugs);
+});
 
-const withPortfolioRepoAndOutside = <Result, Error, Requirements>(
-  use: (repo: TempPortfolioRepo, outsideRoot: string) => Effect.Effect<Result, Error, Requirements>
-) =>
-  withTempDirectory((tempRoot) =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const repoRoot = path.join(tempRoot, "repo");
-      const outsideRoot = path.join(tempRoot, "outside");
-      yield* fs.makeDirectory(repoRoot);
-      yield* fs.makeDirectory(outsideRoot);
-      return yield* use(yield* initPortfolioRepo(repoRoot, ["alpha-packet", "beta-packet"]), outsideRoot);
-    })
-  );
+const portfolioRepoAndOutside = Effect.gen(function* () {
+  const tempRoot = yield* temporaryDirectory;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = path.join(tempRoot, "repo");
+  const outsideRoot = path.join(tempRoot, "outside");
+  yield* fs.makeDirectory(repoRoot);
+  yield* fs.makeDirectory(outsideRoot);
+  return Tuple.make(yield* initPortfolioRepo(repoRoot, ["alpha-packet", "beta-packet"]), outsideRoot);
+});
 
-describe("yeet publish derived goals index", () => {
-  it("treats a checkout without a goals portfolio as out of scope", () => {
-    expect(
-      portfolioIndexPublishDisposition({
-        committed: O.none(),
-        present: false,
-        regenerated: "# Goals Index\n",
-        staged: true,
-        stagedDeletion: false,
-      })
-    ).toBe("absent");
-  });
+it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
+  describe("yeet publish derived goals index", { concurrent: false }, () => {
+    it("treats a checkout without a goals portfolio as out of scope", () => {
+      expect(
+        portfolioIndexPublishDisposition({
+          committed: O.none(),
+          present: false,
+          regenerated: "# Goals Index\n",
+          staged: true,
+          stagedDeletion: false,
+        })
+      ).toBe("absent");
+    });
 
-  it("accepts an unstaged current projection and refuses a staged copy", () => {
-    const regenerated = "# Goals Index\n\n1 packets\n";
-    expect(
-      portfolioIndexPublishDisposition({
-        committed: O.some(regenerated),
-        present: true,
-        regenerated,
-        staged: false,
-        stagedDeletion: false,
-      })
-    ).toBe("current");
-    expect(
-      portfolioIndexPublishDisposition({
-        committed: O.some(regenerated),
-        present: true,
-        regenerated,
-        staged: true,
-        stagedDeletion: false,
-      })
-    ).toBe("drifted");
-  });
+    it("accepts an unstaged current projection and refuses a staged copy", () => {
+      const regenerated = "# Goals Index\n\n1 packets\n";
+      expect(
+        portfolioIndexPublishDisposition({
+          committed: O.some(regenerated),
+          present: true,
+          regenerated,
+          staged: false,
+          stagedDeletion: false,
+        })
+      ).toBe("current");
+      expect(
+        portfolioIndexPublishDisposition({
+          committed: O.some(regenerated),
+          present: true,
+          regenerated,
+          staged: true,
+          stagedDeletion: false,
+        })
+      ).toBe("drifted");
+    });
 
-  it("regenerates an unstaged stale index and refuses a hand-staged one", () => {
-    const regenerated = "# Goals Index\n\n2 packets\n";
-    const committed = O.some("# Goals Index\n\nhand written\n");
-    expect(
-      portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: false, stagedDeletion: false })
-    ).toBe("regenerated");
-    expect(
-      portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: true, stagedDeletion: false })
-    ).toBe("drifted");
-    expect(
-      portfolioIndexPublishDisposition({
-        committed: O.none(),
-        present: true,
-        regenerated,
-        staged: false,
-        stagedDeletion: false,
-      })
-    ).toBe("regenerated");
-  });
+    it("regenerates an unstaged stale index and refuses a hand-staged one", () => {
+      const regenerated = "# Goals Index\n\n2 packets\n";
+      const committed = O.some("# Goals Index\n\nhand written\n");
+      expect(
+        portfolioIndexPublishDisposition({
+          committed,
+          present: true,
+          regenerated,
+          staged: false,
+          stagedDeletion: false,
+        })
+      ).toBe("regenerated");
+      expect(
+        portfolioIndexPublishDisposition({ committed, present: true, regenerated, staged: true, stagedDeletion: false })
+      ).toBe("drifted");
+      expect(
+        portfolioIndexPublishDisposition({
+          committed: O.none(),
+          present: true,
+          regenerated,
+          staged: false,
+          stagedDeletion: false,
+        })
+      ).toBe("regenerated");
+    });
 
-  it("accepts a staged deletion that retires a legacy tracked projection", () => {
-    const regenerated = "# Goals Index\n\n2 packets\n";
-    expect(
-      portfolioIndexPublishDisposition({
-        committed: O.some(regenerated),
-        present: true,
-        regenerated,
-        staged: true,
-        stagedDeletion: true,
-      })
-    ).toBe("removed");
-  });
+    it("accepts a staged deletion that retires a legacy tracked projection", () => {
+      const regenerated = "# Goals Index\n\n2 packets\n";
+      expect(
+        portfolioIndexPublishDisposition({
+          committed: O.some(regenerated),
+          present: true,
+          regenerated,
+          staged: true,
+          stagedDeletion: true,
+        })
+      ).toBe("removed");
+    });
 
-  it("leaves a repo without goals/ untouched", () =>
-    Effect.runPromise(
-      withTempDirectory((tmpDir) =>
+    it.effect("leaves a repo without goals/ untouched", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -230,12 +219,11 @@ describe("yeet publish derived goals index", () => {
           expect(disposition).toBe("absent");
           expect(yield* fs.exists(path.join(tmpDir, PORTFOLIO_INDEX_PATH))).toBe(false);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("regenerates a missing index without staging it", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("regenerates a missing index without staging it", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
 
@@ -248,12 +236,11 @@ describe("yeet publish derived goals index", () => {
           expect(yield* fs.readFileString(indexPath)).toBe(yield* buildPortfolioIndexContent(tmpDir));
           expect(yield* runGitStatus(tmpDir)).toBe(`?? ${PORTFOLIO_INDEX_PATH}`);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("leaves a current unstaged local projection untouched", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("leaves a current unstaged local projection untouched", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const current = yield* buildPortfolioIndexContent(tmpDir);
@@ -267,12 +254,11 @@ describe("yeet publish derived goals index", () => {
           expect(disposition).toBe("current");
           expect(yield* fs.readFileString(indexPath)).toBe(current);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("overwrites a stale unstaged index without staging the refresh", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("overwrites a stale unstaged index without staging the refresh", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString(indexPath, "# Goals Index\n\nstale copy from a merge\n");
@@ -289,12 +275,11 @@ describe("yeet publish derived goals index", () => {
           expect(yield* runGitStatus(tmpDir)).toBe(`M ${PORTFOLIO_INDEX_PATH}`);
           expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("rejects a symlinked index file without writing or staging its destination", () =>
-    Effect.runPromise(
-      withPortfolioRepoAndOutside(({ indexPath, tempContext, tmpDir }, outsideRoot) =>
+    it.effect("rejects a symlinked index file without writing or staging its destination", () =>
+      Effect.flatMap(portfolioRepoAndOutside, ([{ indexPath, tempContext, tmpDir }, outsideRoot]) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -312,12 +297,11 @@ describe("yeet publish derived goals index", () => {
           expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
           expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("rejects a symlinked index parent without writing or staging through it", () =>
-    Effect.runPromise(
-      withPortfolioRepoAndOutside(({ tempContext, tmpDir }, outsideRoot) =>
+    it.effect("rejects a symlinked index parent without writing or staging through it", () =>
+      Effect.flatMap(portfolioRepoAndOutside, ([{ tempContext, tmpDir }, outsideRoot]) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -338,12 +322,11 @@ describe("yeet publish derived goals index", () => {
           expect(yield* fs.readFileString(outsideIndex)).toBe(sentinel);
           expect(Str.trim(yield* spawnGit(tmpDir, ["diff", "--cached", "--name-only"]))).toBe("");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("refuses a staged index even when it equals the regenerated projection", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("refuses a staged index even when it equals the regenerated projection", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
@@ -357,12 +340,11 @@ describe("yeet publish derived goals index", () => {
           expect(failure.message).toContain("must never enter a commit");
           expect(yield* runGitStatus(tmpDir)).toContain(`A  ${PORTFOLIO_INDEX_PATH}`);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("preserves a staged deletion while regenerating the ignored local projection", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("preserves a staged deletion while regenerating the ignored local projection", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString(indexPath, yield* buildPortfolioIndexContent(tmpDir));
@@ -382,12 +364,11 @@ describe("yeet publish derived goals index", () => {
             PORTFOLIO_INDEX_PATH
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
 
-  it("refuses a hand-staged index that disagrees with the manifests", () =>
-    Effect.runPromise(
-      withPortfolioRepo(({ indexPath, tempContext, tmpDir }) =>
+    it.effect("refuses a hand-staged index that disagrees with the manifests", () =>
+      Effect.flatMap(portfolioRepo(), ({ indexPath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const handEdited = "# Goals Index\n\nhand-merged by an agent\n";
@@ -404,6 +385,7 @@ describe("yeet publish derived goals index", () => {
           // The refusal must never silently replace the agent's staged copy.
           expect(yield* fs.readFileString(indexPath)).toBe(handEdited);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+  });
 });
