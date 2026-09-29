@@ -5538,3 +5538,20 @@ than evidence of a causal regression. A controlled repeated comparison could
 separate service-fixture retention, per-test console cost and workstation
 contention before any performance change is justified. Do not claim a speedup
 from this batch or weaken resource isolation to improve one timing sample.
+
+
+### Preserve reviewed shorter scopes during wrapper migration
+
+The qa-round-pipeline private draft removes its callback resource wrapper,
+but six existing Effect.exit calls observe the wrapper's completed cleanup
+before asserting the Exit. Explicitly retaining those boundaries produces
+six EV004 shorter-scope judgment findings. Draft controls on Node and Bun
+prove cleanup-before-continuation and visible cleanup defects. Hoisting all
+six releases to test end would change that contract.
+
+The syntax ratchet compares membership regardless of exception status:
+adding a reason alone does not admit these new instances. Document an exact
+lineage-aware judgment transition for necessary scopes, including how it
+satisfies the packet's zero-new-findings and final-empty-baseline gates.
+Do not suppress recognition or remove meaningful lifetimes to pass the gate.
+This is recorded before application; source and baseline remain unchanged.
