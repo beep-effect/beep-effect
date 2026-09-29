@@ -326,5 +326,5 @@
     "fixed": 1743,
     "exception": 12
   },
-  "fullPackageProof": "pending CLI package proof"
+  "fullPackageProof": "Passed CLI proof at source 812b73e0c5: audit 674.9 seconds, docgen 24.1 seconds; package source unchanged. Subsequent native-capture clock follow-up is tracked separately and is not covered by this proof."
 }

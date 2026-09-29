@@ -46,4 +46,10 @@ and evidence. All 19 historical rows are fixed by source commit 812b73e0c5;
 no new rows were needed. The native-filesystem judgment remains open.
 The CLI ledger has 3,495 unique rows: 1,743 fixed, 12 exceptions and 1,740 open.
 Strict validation passes for all CLI rows and all 687 schema rows.
-Full CLI package proof is running against source 812b73e0c5 and is pending.
+Full CLI package proof passed against source 812b73e0c5: audit 674.9 seconds
+and docgen 24.1 seconds, with package source unchanged throughout the run.
+A subsequent transitive audit identified the Git provenance case's native
+capture cleanup timers. Its planned live-clock correction is tracked in the
+grouped CLI preparation and OPPORTUNITIES.md; this proof does not establish
+that the inherited-writer deadline path was exercised. The correction requires
+fresh focused verification and the next grouped package proof.
