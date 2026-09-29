@@ -81,6 +81,7 @@ export {
   GhStatusCheck,
   summarizeRemoteChecksForTesting,
   YeetStatusThreadTriage,
+  yeetStatusArtifactFromCloseoutForTesting,
   yeetStatusThreadTriageForTesting,
 } from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";

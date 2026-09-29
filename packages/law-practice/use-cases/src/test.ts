@@ -6,6 +6,24 @@
  */
 
 /**
+ * Port-output schema for the `Effect` a law-practice port method returns,
+ * exported for package-local guard and codec tests.
+ *
+ * **Example** (Guard a port output)
+ *
+ * ```ts
+ * import { EffectOutput } from "@beep/law-practice-use-cases/test"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EffectOutput<number>())(Effect.succeed(1))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { EffectOutput } from "./internal/effectOutput.ts";
+/**
  * Spike entity input schema exported for package-local schema parity tests.
  *
  * **Example** (Decode entity input schema)

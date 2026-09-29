@@ -84,6 +84,41 @@ machine ids, quote only the minimal identifying error text.
   text now names it the count of record with the `rg` shape as a cross-check. The retirement audit tool should
   check each upstream target against the installed `dist/*.d.ts` before it
   prints the row.
+
+## 2026-09-29 — The instantiation gate fires on file deletion under tsgo's parallel checkers
+
+- **What I was doing:** P3 PR 1 (group A), taking the before/after
+  `--extendedDiagnostics` numbers on `@beep/schema` with the command the
+  phase contract prescribes (default checker count, fresh build-info).
+- **Evidence:** deleting 13 files moved `@beep/schema` from 1,115,008 to
+  1,157,412 instantiations. Bisecting by restoring files: putting back any one
+  of `DomDragEvent`, `DomHtmlElement` or `DomMouseEvent` alone drops the total
+  to about 1,103,850, below the baseline, while putting back `DomEvent` raises
+  it. The same trees under `--singleThreaded` read 710,979 before and 706,043
+  after. The compiler is tsgo 7.0.2, which splits files across four checkers
+  with separate caches, so the default-checker total depends on how files fall
+  into those partitions, not only on what they cost.
+- **What would have prevented it:** measure the hard gate with
+  `--singleThreaded` (or `--checkers 1`) so a deletion cannot move the total up
+  by repartitioning, and keep the default-checker run as the advisory
+  check-time figure. The P5 `quality check-census` baseline should record the
+  flag it measured with.
+
+## 2026-09-29 — Regenerating the catalog and JSDoc inventory drags in weeks of unrelated drift
+
+- **What I was doing:** regenerating the tracked baselines for P3 PR 1, which
+  deletes 13 `@beep/schema` source files and one catalog entry.
+- **Evidence:** `bun run beep lint schema-catalog --write` produced a 428 KB
+  diff (+8,247 / -146 lines, last regenerated in #927 on 2026-08-31, not
+  CI-gated). One entry of it belonged to this PR. `bun run beep quality
+  jsdoc-inventory` produced a 786 KB diff, mostly line-anchor shifts from files
+  other PRs changed after #1234. Either one alone approaches or passes the
+  512 KiB Yeet capture cap in SPEC §Constraints.
+- **What would have prevented it:** a scheduled or post-merge regeneration on
+  `main` for generated files that no gate checks, or a `--check` lane that
+  keeps them current. Then a retirement PR's regeneration diff contains only
+  its own rows.
+
 ## 2026-09-29 — A new test file cannot enter the effect-vitest baseline without rewriting it
 
 - **What I was doing:** P1, adding the two repo-cli tests for
