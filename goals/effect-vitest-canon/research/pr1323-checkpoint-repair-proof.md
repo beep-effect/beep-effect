@@ -25,3 +25,29 @@ no bulk baseline refresh was used.
 Review closeout reports zero actionable review comments. The PR remains open
 with hosted jobs pending; complete branch verification and monitor readiness
 are still required. None of this proves completion of the full migration goal.
+
+## Fixture evidence repair
+
+The subsequent full branch proof exposed synthetic absolute paths in inventory
+excerpts. Commit `5b9088c6f1` extracted the three diagnostic strings into named
+constants without changing their runtime values or assertions. Both Node and
+Bun pass all 64 knowledge-semantic-delta tests with CI enabled. Inlining the
+constants restores the original whole-file AST. The reference check reports
+zero live gated observations.
+
+Commit formatting then changed two EV004 display excerpts. Commit
+`1d01a323d6` aligned those exact inventory rows with the committed source;
+occurrence hashes and ledger statuses were preserved. The post-commit ratchet
+passes across 1,218 files: 4,488 findings, zero introduced, 529 resolved.
+
+Full CLI package verification after the source repair passed: audit 793.1
+seconds and docgen 24.8 seconds. The later excerpt-only commit did not change
+CLI source. These durations describe observed runs under shared workstation
+load, not a controlled performance comparison.
+
+At `1d01a323d6`, review closeout reports zero issues, zero actionable threads,
+and zero unresolved threads. Hosted CLI unit shard 2 and JSDoc Ratchet pass.
+The two Vercel failures explicitly report deployment rate limits and were
+acknowledged as environment-only. Full branch verification and the remaining
+hosted jobs are still pending; neither package proof nor review closeout
+establishes merge readiness by itself.
