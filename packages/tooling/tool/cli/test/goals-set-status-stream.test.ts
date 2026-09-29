@@ -10,15 +10,17 @@ import {
   packetEventFileName,
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
@@ -61,7 +63,7 @@ const listEventFiles = Effect.fnUntraced(function* (slug: string) {
 });
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -79,7 +81,7 @@ describe("set-status guarded stream writer", () => {
             yield* writeStreamPacket("stream-demo");
 
             const first = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "paused"]));
-            expect(Exit.isSuccess(first)).toBe(true);
+            assertTrue(Exit.isSuccess(first));
 
             const afterFirst = yield* listEventFiles("stream-demo");
             expect(A.length(afterFirst)).toBe(2);
@@ -95,7 +97,7 @@ describe("set-status guarded stream writer", () => {
             expect(manifest).toContain('"status": "paused"');
 
             const second = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "active"]));
-            expect(Exit.isSuccess(second)).toBe(true);
+            assertTrue(Exit.isSuccess(second));
             const afterSecond = yield* listEventFiles("stream-demo");
             expect(A.length(afterSecond)).toBe(3);
             const traceAfter = yield* fs.readFileString("goals/stream-demo/ops/trace.json");
@@ -117,7 +119,7 @@ describe("set-status guarded stream writer", () => {
             yield* writeStreamPacket("preview-demo");
 
             const exit = yield* Effect.exit(runGoalsCommand(["set-status", "preview-demo", "paused", "--preview"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
 
             expect(A.length(yield* listEventFiles("preview-demo"))).toBe(0);
             const traceExists = yield* fs.exists("goals/preview-demo/ops/trace.json");
@@ -140,7 +142,7 @@ describe("set-status guarded stream writer", () => {
             yield* writeStreamPacket("forked-demo");
 
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "forked-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             // Handcraft a second child of the genesis event (a fork).
             const store = yield* PacketEventStore;
@@ -223,7 +225,7 @@ describe("set-status guarded stream writer", () => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("idempotent-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "idempotent-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             const beforeFiles = yield* listEventFiles("idempotent-demo");
             const beforeTrace = yield* fs.readFileString("goals/idempotent-demo/ops/trace.json");
@@ -266,7 +268,7 @@ describe("set-status guarded stream writer", () => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-stale-trace-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-stale-trace-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             const tracePath = "goals/skip-stale-trace-demo/ops/trace.json";
             const freshTrace = yield* fs.readFileString(tracePath);
@@ -310,7 +312,7 @@ describe("set-status guarded stream writer", () => {
           Effect.gen(function* () {
             yield* writeStreamPacket("skip-cas-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-cas-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             const locator = PacketStreamLocator.make({
               packet: "skip-cas-demo",
@@ -343,7 +345,7 @@ describe("set-status guarded stream writer", () => {
             expect((yield* writer.commit(concurrent)).appended).toBe(1);
 
             const refused = yield* Effect.exit(writer.commit(stalePlan));
-            expect(Exit.isFailure(refused)).toBe(true);
+            assertTrue(Exit.isFailure(refused));
             if (Exit.isFailure(refused)) {
               expect(String(Cause.squash(refused.cause))).toContain("stream moved between plan and commit");
             }
@@ -362,7 +364,7 @@ describe("set-status guarded stream writer", () => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-preview-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-preview-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             const beforeFiles = yield* listEventFiles("skip-preview-demo");
             const beforeTrace = yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json");
@@ -370,7 +372,7 @@ describe("set-status guarded stream writer", () => {
             const previewed = yield* Effect.exit(
               runGoalsCommand(["set-status", "skip-preview-demo", "paused", "--preview"])
             );
-            expect(Exit.isSuccess(previewed)).toBe(true);
+            assertTrue(Exit.isSuccess(previewed));
             expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
             expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
           })
@@ -388,11 +390,11 @@ describe("set-status guarded stream writer", () => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-write-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             const beforeFiles = yield* listEventFiles("skip-write-demo");
             const repeated = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
-            expect(Exit.isSuccess(repeated)).toBe(true);
+            assertTrue(Exit.isSuccess(repeated));
 
             expect(yield* listEventFiles("skip-write-demo")).toStrictEqual(beforeFiles);
             const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
@@ -417,7 +419,7 @@ describe("set-status guarded stream writer", () => {
               at: "2026-08-17T10:00:00.000Z",
             })
           );
-          expect(Exit.isFailure(decoded)).toBe(true);
+          assertTrue(Exit.isFailure(decoded));
           if (Exit.isFailure(decoded)) {
             expect(String(Cause.squash(decoded.cause))).toContain("Expected a non-empty actor");
           }
@@ -434,7 +436,7 @@ describe("set-status guarded stream writer", () => {
           Effect.gen(function* () {
             yield* writeStreamPacket("retry-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "retry-demo", "paused"]));
-            expect(Exit.isSuccess(seeded)).toBe(true);
+            assertTrue(Exit.isSuccess(seeded));
 
             // A retry after a partial failure re-reads the manifest before the
             // manifest edit landed: previousStatus arrives stale ("active"),
@@ -501,7 +503,7 @@ describe("set-status guarded stream writer", () => {
               body: { type: "packet-created", status: "active" },
             });
             const conflict = yield* Effect.exit(store.append(locator, rival));
-            expect(Exit.isFailure(conflict)).toBe(true);
+            assertTrue(Exit.isFailure(conflict));
             if (Exit.isFailure(conflict)) {
               const error = Cause.squash(conflict.cause);
               expect(String(error)).toContain("revision");

@@ -11,7 +11,9 @@ import {
   SweepStepNeedsOperator,
   SweepStepSkipped,
 } from "@beep/repo-cli/test/Yeet";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 
@@ -110,7 +112,7 @@ describe("SweepPlan", () => {
           '{"schemaVersion":"yeet-sweep-plan/v1","createdAt":"2026-08-04T00:00:00.000Z","branch":"feat/merge-loop","steps":[{"id":"rm-rf-node-modules","action":"nope","preconditions":[],"requiresOperator":false}]}'
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });

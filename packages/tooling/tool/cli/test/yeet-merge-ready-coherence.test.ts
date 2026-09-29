@@ -5,6 +5,7 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -83,7 +84,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -97,7 +98,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -110,7 +111,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -123,7 +124,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -203,7 +204,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });

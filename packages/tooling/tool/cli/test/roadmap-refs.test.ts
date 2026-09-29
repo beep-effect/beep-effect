@@ -3,15 +3,17 @@ import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path, pipe } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const FIXTURE_PATH = "packages/tooling/tool/cli/test/roadmap-refs.fixture.md";
@@ -67,7 +69,7 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
               "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
             );
             const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
@@ -89,7 +91,7 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
               yield* writeFixture(roadmap);
               const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
               expectReportedExit(exit);
-              expect(Exit.isFailure(exit)).toBe(true);
+              assertTrue(Exit.isFailure(exit));
 
               const issueLines = pipe(
                 yield* TestConsole.errorLines,

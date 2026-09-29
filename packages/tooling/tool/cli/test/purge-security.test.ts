@@ -1,8 +1,9 @@
 import { purgeAtRoot } from "@beep/repo-cli/commands/Purge";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
