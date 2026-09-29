@@ -5,7 +5,7 @@
     "title": "Boolean-Creep Eradication",
     "status": "active",
     "created": "2026-08-17",
-    "updated": "2026-09-22",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/boolean-creep",
@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until every implementation and the final reflection/completed-retained closeout are merged to main after Yeet proves each exact PR head merge-ready.",
+    "statement": "Not achieved until the single remaining PR contains all implementation, reflection and completed-retained lifecycle, is exact-head merge-ready and merged through the authorized Chrome extension route, and two exact-main dry rounds verify completion.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -68,13 +68,13 @@
       "id": "P3",
       "name": "Independent review and delegated GATE 2 transition",
       "status": "pending",
-      "exit": "A replacement exact-source receipt covers 100% of qualified records and designs with zero findings; the packet-only ratification PR is merged."
+      "exit": "A replacement exact-source receipt covers all qualified records and designs with zero findings; delegated GATE 2 ratification is recorded in the consolidated PR."
     },
     {
       "id": "P4",
-      "name": "Apply and land serial Tier 1 batches and Tier 2 singletons",
+      "name": "Apply in dependency order within the consolidated PR",
       "status": "pending",
-      "exit": "Every implementation PR is merged to main and each implemented inventory record is applied on canonical main."
+      "exit": "Every qualified owner is implemented with compatibility and guard-deletion evidence; all applied records land in the single remaining PR."
     },
     {
       "id": "P5",
@@ -94,7 +94,6 @@
   "stopConditions": [
     "A sweep lane cannot honor the evidence gate after one prompt correction.",
     "A design requires persisted/wire encoded-shape changes without a viable byte-compatible proof.",
-    "Verification failures attribute as inherited/unrelated/environment-only.",
     "The same blocker repeats after reasonable investigation."
   ],
   "provides": ["quality/boolean-creep-eradication"],

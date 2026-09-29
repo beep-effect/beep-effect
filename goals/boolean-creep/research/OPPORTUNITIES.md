@@ -1817,3 +1817,64 @@ The public review receipt now uses explicit `file`/`sha256` rows while retaining
 all paths and values. Its artifact index is rebound; the private original is
 preserved. Use this structured binding shape for future receipts rather than
 weakening secret detection or adding hash-specific suppressions.
+
+## 2026-09-28 — inherited dependency advisory blocks checkpoint proof
+
+PR #1328 and `bun run beep yeet publish --start-pr-early --monitor --pr`
+failed Security on `fast-uri@3.1.6`, advisory `GHSA-58mr-gqgx-xq4g`;
+OSV reports the fix in `3.1.7`. The branch and main have identical `bun.lock`
+blobs. All other 31 pre-push lanes passed. The goal's dependency boundary and
+SPEC's inherited-failure stop condition require a separate scope decision.
+The narrow repair question is pending; acknowledging the inbox rows does not
+waive Security or establish merge readiness. A dependency-owner repair on main,
+or explicit authorization for the bounded lockfile repair, would unblock it.
+
+## 2026-09-28 — preparation and review environment drift
+
+R45 preparation refused `config changed`: the global Grok default effort moved
+from `xhigh` to `medium`. The effective isolated profile and command remain
+`low`. Preserve the failed preparation, refresh the observed global binding,
+and validate external provider inputs before materializing prepared artifacts.
+No global configuration was changed and no provider call was made.
+
+The independent review's first `systemd-run --user --scope` failed before
+starting because `DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` were absent.
+The existing user bus and ownership were verified; setting those two variables
+for the retry preserved the required scope and slice. A launcher that resolves
+and validates the user bus explicitly would prevent this shell-environment
+failure without moving heavy work outside the admitted slice.
+
+## 2026-09-28 — split-stream capability probe refused new housekeeping warnings
+
+The independently reviewed R45 runtime passed 74 tests, including kernel
+confinement and historical telemetry replay. Its single bounded capability
+probe exited zero and completed all five tools, but correctly refused two
+unknown diagnostics: `pin GC: grove data dir sweep failed` and
+`proactive bundle sync failed`. The attempted paths were under the read-only
+private HOME and the read-only bundled skills tree. A separate kernel check
+proved `EROFS` for both paths; all static profile hashes matched afterward,
+private HOME remained empty, and session counters were zero.
+
+Preserve the failed probe, both streams and matching diagnostic/success
+snapshots. Review the exact messages and path bindings before admitting a
+successor policy or another probe. Do not suppress arbitrary warnings or make
+those trees writable. Identifying background maintenance attempts during the
+initial confinement design would have avoided this capability-test refusal.
+
+A separate preflight also caught the global default effort changing back from
+`medium` to `xhigh`. The effective isolated profile and command remain `low`.
+The global configuration was observed and rebound for the probe, never edited;
+formal census preparation still needs a fresh configuration/source binding.
+
+The 2026-09-28 delegation resolves the dependency scope hold. Bun's targeted
+update selected fast-uri 3.1.8 within the existing range; the only lockfile
+change is that package's version and integrity. No manifest or other dependency
+resolution changed. The full campaign now uses the existing PR #1328 to avoid
+repeated hosted CI for incremental checkpoints.
+
+A fresh Security scan then reported `GHSA-3wwx-pv8p-q78v` in existing undici
+6.28.0, 7.29.0 and 8.10.0 resolutions. The targeted Bun update retained the
+existing major ranges, selecting 6.29.0 and 7.30.0 and deduplicating 8.x to the
+already locked 8.11.2. `bun install --frozen-lockfile` and the complete
+`bun run beep ci lane security` both passed; OSV reported no issues.
+The owner delegated judgment, so no additional scope interview was needed.
