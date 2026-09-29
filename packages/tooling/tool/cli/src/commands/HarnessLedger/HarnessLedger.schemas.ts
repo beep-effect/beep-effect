@@ -511,9 +511,15 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
  * harness hash; the two skip counts say how many newer sessions ran under
  * another regime or carry no stamp. `undecodableLines` counts hook-pulse lines
  * that did not decode as `HookPulseV1`; they are skipped, not fatal.
- * `alreadyProposed` counts zero-touch surfaces skipped because an open
- * `proposed` chain already targets them. `written` is true only when `--write`
- * appended the proposal rows.
+ * `windowFull` is true when `sessionsObserved` reached `windowSessions`;
+ * `--write` appends only then, and a partial window's proposals are shown but
+ * never written. `alreadyProposed` counts zero-touch surfaces skipped because
+ * an open `proposed` chain already targets them, under any harness.
+ * `decidedUnderHarness` counts those skipped because a chain targeting them
+ * ends in a human decision (`accepted`, `rejected`, `deferred`, `waived`)
+ * recorded under the current harness hash; a decision under an older harness
+ * has expired and does not block, and a tombstone never blocks. `written` is
+ * true only when `--write` appended the proposal rows.
  *
  * **Example** (Checking a dry run)
  *
@@ -531,6 +537,7 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     windowSessions: WindowSessions,
     harnessHash: HarnessHash,
     sessionsObserved: S.Finite,
+    windowFull: S.Boolean,
     sessionsSkippedOutOfRegime: S.Finite,
     sessionsSkippedUnstamped: S.Finite,
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
@@ -539,6 +546,7 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     candidates: S.Finite,
     touchedCandidates: S.Finite,
     alreadyProposed: S.Finite,
+    decidedUnderHarness: S.Finite,
     proposals: S.Array(PruneProposal),
     written: S.Boolean,
   },

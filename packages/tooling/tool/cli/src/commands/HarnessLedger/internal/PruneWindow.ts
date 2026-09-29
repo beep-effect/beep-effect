@@ -87,12 +87,23 @@ type IndexedShard = {
   readonly session: string;
 };
 
+// A calendar day the name spells exactly: `2026-99-99` does not parse and
+// `2026-02-30` would roll over to another day, so both are refused.
+const calendarDay = (date: string): O.Option<string> =>
+  pipe(
+    DateTime.make(`${date}T00:00:00.000Z`),
+    O.map(DateTime.formatIsoDateUtc),
+    O.filter((day) => day === date)
+  );
+
+// A name whose date is not a real calendar day is not indexed; the shard is
+// then read like any other shard outside the naming scheme.
 const indexShard = (name: string): O.Option<IndexedShard> =>
   pipe(
     O.fromNullishOr(INDEXED_SHARD.exec(name)),
     O.flatMap((match) =>
       pipe(
-        O.all([O.fromUndefinedOr(match[1]), O.fromUndefinedOr(match[2])]),
+        O.all([O.flatMap(O.fromUndefinedOr(match[1]), calendarDay), O.fromUndefinedOr(match[2])]),
         O.map(([date, session]) => ({ name, date, session }))
       )
     )
@@ -138,8 +149,8 @@ const byNewestFirst = Order.flip(Order.mapInput(Order.Number, (tally: SessionTal
  *
  * **Details**
  *
- * Shards named `hook-pulse-<YYYY-MM-DD>-<sessionId>.ndjson` are indexed by
- * session and date without being read. Sessions are visited newest day first
+ * Shards named `hook-pulse-<YYYY-MM-DD>-<sessionId>.ndjson`, whose date is a
+ * real calendar day, are indexed by session and date without being read. Sessions are visited newest day first
  * (by their newest shard date, or by the newest row date for rows found in
  * shards that do not follow the naming scheme, which are always read), and
  * every shard of a visited session is read, so its regime is decided from all

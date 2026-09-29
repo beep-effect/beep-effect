@@ -76,6 +76,25 @@ skipped; the output reports both skip counts. Zero in-regime sessions is no
 evidence, so nothing is proposed. Proposal evidence names the regime by the
 first 12 hex characters of the hash, never by a path.
 
+`--write` needs a full window: it appends only when N in-regime sessions were
+observed for `--window N`, so every written row's `windowSessions` equals N. A
+partial window writes nothing and says so (`nothing written: window not full
+(<n> of <N> sessions under the current harness hash)`). A dry run still lists
+what the partial window would propose and marks it as partial.
+
+A chain that targets a surface can stop that surface from being proposed
+again:
+
+- a chain whose latest row is `proposed` blocks under any harness hash;
+- a chain whose latest row is a human decision (`accepted`, `rejected`,
+  `deferred`, `waived`) blocks only while that row's fingerprint derives the
+  current harness hash. After a harness edit the decision's evidence has
+  expired, and a full window under the new hash may propose the surface again;
+- a `tombstoned` chain never blocks.
+
+The output counts both kinds of block, as `already proposed` and `decided
+under this harness`.
+
 The writer drops the stamp, never the row, whenever it cannot prove its shell
 walk matches the TypeScript snapshot (for example a non-ASCII path, 1000 or
 more config files, or a missing tool). Such sessions count as unstamped, as

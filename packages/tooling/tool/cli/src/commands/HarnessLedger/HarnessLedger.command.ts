@@ -18,9 +18,9 @@ import {
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Config, Console, DateTime, Effect } from "effect";
-import * as Bool from "effect/Boolean";
+import { Config, Console, DateTime, Effect, Match } from "effect";
 import { Command, Flag } from "effect/cli";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";
@@ -406,34 +406,78 @@ const resolveHookPulseDir = Effect.gen(function* () {
   Effect.catchTag("ConfigError", () => HarnessLedgerInputError.new("Failed to read the state-home environment."))
 );
 
-const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => [
-  `window: last ${report.windowSessions} sessions under harness hash ${Str.slice(0, 12)(report.harnessHash)}; observed ${
-    report.sessionsObserved
-  } ending ${O.match(report.windowEnd, {
-    onNone: () => "-",
-    onSome: DateTime.formatIso,
-  })}`,
-  `sessions skipped: ${report.sessionsSkippedOutOfRegime} under another or mixed harness; ${report.sessionsSkippedUnstamped} without a SessionStart harness stamp`,
-  `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines}`,
-  `candidates: ${report.candidates}; touched: ${report.touchedCandidates}; already proposed: ${report.alreadyProposed}`,
-  ...A.match(report.proposals, {
-    onEmpty: () => ["No pruning proposals."],
-    onNonEmpty: (proposals) =>
-      A.map(
-        proposals,
-        (proposal) =>
-          `${proposal.row.rowId}\t${proposal.candidate.kind}:${proposal.candidate.name}\t${proposal.row.mechanismClass}\t${O.getOrElse(proposal.row.dispositionEvidence, () => "-")}`
-      ),
-  }),
-  Bool.match(report.written, {
-    onTrue: () => `written: appended ${A.length(report.proposals)} proposed rows to harness-ledger/rows.`,
-    onFalse: () =>
-      A.match(report.proposals, {
-        onEmpty: () => "nothing written: no fresh proposals.",
-        onNonEmpty: () => "dry run: nothing written (pass --write to append these proposals).",
-      }),
-  }),
-];
+const windowCount = (report: HarnessLedgerPruneReport): string =>
+  `${report.sessionsObserved} of ${report.windowSessions} sessions under the current harness hash`;
+
+// The last line says honestly whether anything was written, and why not.
+const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =>
+  Match.value({
+    written: report.written,
+    write,
+    full: report.windowFull,
+    empty: A.isReadonlyArrayEmpty(report.proposals),
+  }).pipe(
+    Match.when(
+      { written: true },
+      () => `written: appended ${A.length(report.proposals)} proposed rows to harness-ledger/rows.`
+    ),
+    Match.when({ write: true, full: false }, () => `nothing written: window not full (${windowCount(report)}).`),
+    Match.when({ empty: true }, () => "nothing written: no fresh proposals."),
+    Match.when(
+      { full: false },
+      () => `dry run: nothing written; partial window (${windowCount(report)}), so --write would append nothing.`
+    ),
+    Match.orElse(() => "dry run: nothing written (pass --write to append these proposals).")
+  );
+
+/**
+ * Render a pruning report for the terminal: the window, skip and decode
+ * tallies, candidate counts, one tab-separated line per proposal, and a last
+ * line saying whether rows were appended.
+ *
+ * **Example** (Rendering a dry run)
+ *
+ * ```ts
+ * import { harnessLedgerPruneReportLines } from "@beep/repo-cli/commands/HarnessLedger"
+ *
+ * // Data-last: bind `write` first, then map reports to lines.
+ * const renderDryRun = harnessLedgerPruneReportLines(false)
+ * console.log(typeof renderDryRun) // "function"
+ * ```
+ *
+ * @param report - The report `pruneProposals` returned.
+ * @param write - Whether `--write` was requested; a partial window is then named as the reason nothing was written.
+ * @returns The output lines, in print order.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const harnessLedgerPruneReportLines: {
+  (write: boolean): (report: HarnessLedgerPruneReport) => ReadonlyArray<string>;
+  (report: HarnessLedgerPruneReport, write: boolean): ReadonlyArray<string>;
+} = dual(
+  2,
+  (report: HarnessLedgerPruneReport, write: boolean): ReadonlyArray<string> => [
+    `window: last ${report.windowSessions} sessions under harness hash ${Str.slice(0, 12)(report.harnessHash)}; observed ${
+      report.sessionsObserved
+    }${report.windowFull ? "" : " (partial window)"} ending ${O.match(report.windowEnd, {
+      onNone: () => "-",
+      onSome: DateTime.formatIso,
+    })}`,
+    `sessions skipped: ${report.sessionsSkippedOutOfRegime} under another or mixed harness; ${report.sessionsSkippedUnstamped} without a SessionStart harness stamp`,
+    `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines}`,
+    `candidates: ${report.candidates}; touched: ${report.touchedCandidates}; already proposed: ${report.alreadyProposed}; decided under this harness: ${report.decidedUnderHarness}`,
+    ...A.match(report.proposals, {
+      onEmpty: () => ["No pruning proposals."],
+      onNonEmpty: (proposals) =>
+        A.map(
+          proposals,
+          (proposal) =>
+            `${proposal.row.rowId}\t${proposal.candidate.kind}:${proposal.candidate.name}\t${proposal.row.mechanismClass}\t${O.getOrElse(proposal.row.dispositionEvidence, () => "-")}`
+        ),
+    }),
+    outcomeLine(report, write),
+  ]
+);
 
 /**
  * `bun run beep harness-ledger prune-proposals` — propose retiring skills
@@ -447,7 +491,10 @@ const pruneLines = (report: HarnessLedgerPruneReport): ReadonlyArray<string> => 
  * the hash captured now count. Sessions under another or mixed harness, and
  * unstamped sessions, are skipped and counted. Without `--write` nothing is
  * written; with it, fresh `proposed` rows are appended under the ledger write
- * fence.
+ * fence, but only once the window is full (N sessions observed): a partial
+ * window is shown and nothing is written. A surface is not proposed again while
+ * an open proposal targets it or a decision on it stands under the current
+ * harness hash.
  *
  * **Example** (Log command name)
  *
@@ -508,7 +555,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
         );
         return yield* printCommandJson(encoded);
       }
-      return yield* printLines(pruneLines(report));
+      return yield* printLines(harnessLedgerPruneReportLines(report, input.write));
     }).pipe(
       Effect.catchTags({
         HarnessLedgerBusyError: reportFailure("prune-proposals"),
