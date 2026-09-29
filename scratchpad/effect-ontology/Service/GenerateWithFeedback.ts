@@ -6,7 +6,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Effect, Ref } from "effect";
 import type * as Cause from "effect/Cause";
 import * as P from "effect/Predicate";
@@ -22,6 +21,7 @@ import { RetryPolicy, retryEffect } from "./Retry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GenerateWithFeedback");
 
+const generateWithFeedbackPolicyRetryPolicyDefault = RetryPolicy.make({});
 /**
  * Normalized retry policy for schema-backed language-model generation.
  *
@@ -49,11 +49,11 @@ export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPoli
       description: "Stable service name attached to retry diagnostics.",
     }),
     retryPolicy: RetryPolicy.pipe(
-      SchemaUtils.withKeyDefaults(RetryPolicy.make({})),
+      S.withConstructorDefault(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)),
       S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
     ),
     enablePromptCaching: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether structured system prompts opt into provider prompt caching." })
     ),
   },

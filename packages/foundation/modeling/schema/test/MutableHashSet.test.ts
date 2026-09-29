@@ -1,6 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
 import { isMutableHashSet, MutableHashSet, MutableHashSetFromSelf } from "@beep/schema/MutableHashSet";
-import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
@@ -125,8 +124,12 @@ describe("MutableHashSet", () => {
   it.effect(
     "supports decoded mutable hash set defaults for missing struct keys",
     Effect.fnUntraced(function* () {
+      const schemaValuesDefault = MutableHashSet_.empty<string>();
       const schema = S.Struct({
-        values: MutableHashSet(S.String).pipe(withKeyDefaults(MutableHashSet_.empty<string>())),
+        values: MutableHashSet(S.String).pipe(
+          S.withConstructorDefault(Effect.succeed(schemaValuesDefault)),
+          S.withDecodingDefaultTypeKey(Effect.succeed(schemaValuesDefault))
+        ),
       });
 
       const constructed = schema.make({});

@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Cause, Effect, Exit, Match } from "effect";
 import * as A from "effect/Array";
@@ -680,9 +680,9 @@ export class ProofJobRequest extends S.Class<ProofJobRequest>($I`ProofJobRequest
 export class ProofJobSubmitter extends S.Class<ProofJobSubmitter>($I`ProofJobSubmitter`)(
   {
     pid: S.Int,
-    procStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    procStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     cwd: S.NonEmptyString,
-    harness: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    harness: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobSubmitter", {
     description: "Pid, process-start identity, working directory, and optional harness name of the submitting process.",
@@ -723,8 +723,8 @@ export class ProofJobUnit extends S.Class<ProofJobUnit>($I`ProofJobUnit`)(
     logPath: S.NonEmptyString,
     execStart: S.Array(S.String),
     execStopPost: S.Array(S.String),
-    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    invocationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    invocationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobUnit", {
     description:
@@ -751,8 +751,8 @@ export class ProofJobUnit extends S.Class<ProofJobUnit>($I`ProofJobUnit`)(
 export class ProofJobRunner extends S.Class<ProofJobRunner>($I`ProofJobRunner`)(
   {
     pid: S.Int,
-    procStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    procStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     startedAt: S.String,
   },
   $I.annote("ProofJobRunner", {
@@ -784,8 +784,8 @@ export class ProofJobRunner extends S.Class<ProofJobRunner>($I`ProofJobRunner`)(
 export class ProofJobOutcome extends S.Class<ProofJobOutcome>($I`ProofJobOutcome`)(
   {
     verdictOutcome: YeetOutcome,
-    verdictPath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    verdictPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     endedAt: S.String,
   },
   $I.annote("ProofJobOutcome", {
@@ -889,9 +889,9 @@ export const proofJobOutcomeForExit: {
 export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`ProofJobSystemdResult`)(
   {
     serviceResult: ProofJobServiceResult,
-    exitCode: ProofJobExitCode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    exitStatus: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    invocationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    exitCode: ProofJobExitCode.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    exitStatus: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    invocationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     finalizedAt: S.String,
   },
   $I.annote("ProofJobSystemdResult", {
@@ -900,6 +900,7 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
   })
 ) {}
 
+const proofJobRecordReturnedWaveRowIdsDefault = A.empty<string>();
 /**
  * One durable job record, `.beep/yeet/jobs/<jobId>.json` (ruling 36).
  *
@@ -964,15 +965,21 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
     request: ProofJobRequest,
     submitter: ProofJobSubmitter,
     unit: ProofJobUnit,
-    runner: ProofJobRunner.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    outcome: ProofJobOutcome.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    terminationReason: ProofJobTerminationReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    publishedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    returnedWaveRowIds: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    returnedWaveRedSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    runner: ProofJobRunner.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    outcome: ProofJobOutcome.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    terminationReason: ProofJobTerminationReason.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    returnedWaveRowIds: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(proofJobRecordReturnedWaveRowIdsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(proofJobRecordReturnedWaveRowIdsDefault))
+    ),
+    returnedWaveRedSetKey: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobRecord", {
     description:
@@ -1137,7 +1144,7 @@ export class ProofJobSubmission extends S.Class<ProofJobSubmission>($I`ProofJobS
     submitter: ProofJobSubmitter,
     execPath: S.NonEmptyString,
     entrypoint: S.NonEmptyString,
-    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxRuntimeSeconds: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProofJobSubmission", {
     description:
@@ -1163,7 +1170,7 @@ export class ProofJobSubmission extends S.Class<ProofJobSubmission>($I`ProofJobS
  */
 export class ProofJobWaitOptions extends S.Class<ProofJobWaitOptions>($I`ProofJobWaitOptions`)(
   {
-    timeoutMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    timeoutMs: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pollIntervalMs: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(2000))),
   },
   $I.annote("ProofJobWaitOptions", {
@@ -1345,7 +1352,7 @@ export const proofJobSettledWaitOutcome = (record: Pick<ProofJobRecord, "phase" 
 export class ProofJobFinalization extends S.Class<ProofJobFinalization>($I`ProofJobFinalization`)(
   {
     record: ProofJobRecord,
-    inboxRowId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    inboxRowId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     attemptTerminated: S.Boolean,
     duplicate: S.Boolean,
   },

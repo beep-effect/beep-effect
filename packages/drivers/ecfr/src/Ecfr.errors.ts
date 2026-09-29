@@ -8,6 +8,7 @@
 import { $EcfrId } from "@beep/identity";
 import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.errors");
@@ -81,13 +82,13 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
     ),
     status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",
       })
@@ -117,7 +118,7 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
@@ -126,7 +127,7 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
       description: "Redacted technical error reason.",
     }),
     status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",
       })

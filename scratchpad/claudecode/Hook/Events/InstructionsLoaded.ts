@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { envelopeFields } from "../Envelope.ts";
@@ -129,9 +129,9 @@ export class Input extends S.Class<Input>($I`InstructionsLoadedInput`)(
     file_path: S.String,
     memory_type: MemoryType,
     load_reason: LoadReason,
-    globs: S.OptionFromOptionalKey(GlobPatterns).pipe(SchemaUtils.withNoneDefault),
-    trigger_file_path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    parent_file_path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    globs: S.OptionFromOptionalKey(GlobPatterns).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    trigger_file_path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    parent_file_path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InstructionsLoadedInput", {
     description: "Input for the InstructionsLoaded hook event.",
@@ -162,11 +162,11 @@ export class Input extends S.Class<Input>($I`InstructionsLoadedInput`)(
  */
 export class Output extends S.Class<Output>($I`InstructionsLoadedOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InstructionsLoadedOutput", {
     description: "Output returned by an InstructionsLoaded hook handler.",

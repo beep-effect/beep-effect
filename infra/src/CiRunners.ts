@@ -53,7 +53,6 @@
  */
 
 import { $InfraId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, Bool, O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
@@ -399,12 +398,30 @@ export const CiRunnersPulumiConfigValues = S.Class<CiRunnersPulumiConfigValuesFi
 export type CiRunnersPulumiConfigValues = typeof CiRunnersPulumiConfigValues.Type;
 
 const ciRunnersNetworkConfigStruct = S.Struct({
-  availabilityZoneA: AwsAvailabilityZone.pipe(SchemaUtils.withKeyDefaults(defaultAvailabilityZoneA)),
-  availabilityZoneB: AwsAvailabilityZone.pipe(SchemaUtils.withKeyDefaults(defaultAvailabilityZoneB)),
-  publicSubnetACidr: Ipv4Cidr.pipe(SchemaUtils.withKeyDefaults(defaultPublicSubnetACidr)),
-  publicSubnetBCidr: Ipv4Cidr.pipe(SchemaUtils.withKeyDefaults(defaultPublicSubnetBCidr)),
-  region: AwsRegion.pipe(SchemaUtils.withKeyDefaults(defaultAwsRegion)),
-  vpcCidr: Ipv4Cidr.pipe(SchemaUtils.withKeyDefaults(defaultVpcCidr)),
+  availabilityZoneA: AwsAvailabilityZone.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneA)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneA))
+  ),
+  availabilityZoneB: AwsAvailabilityZone.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAvailabilityZoneB)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAvailabilityZoneB))
+  ),
+  publicSubnetACidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultPublicSubnetACidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetACidr))
+  ),
+  publicSubnetBCidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultPublicSubnetBCidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultPublicSubnetBCidr))
+  ),
+  region: AwsRegion.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultAwsRegion)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultAwsRegion))
+  ),
+  vpcCidr: Ipv4Cidr.pipe(
+    S.withConstructorDefault(Effect.succeed(defaultVpcCidr)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(defaultVpcCidr))
+  ),
 });
 
 const CiRunnersNetworkZonesWithinRegionCheck = S.makeFilter<typeof ciRunnersNetworkConfigStruct.Type>(
@@ -523,8 +540,11 @@ export class CiRunnersNetworkConfig extends S.Class<CiRunnersNetworkConfig>($I`C
  */
 export class CiRunnersImageConfig extends S.Class<CiRunnersImageConfig>($I`CiRunnersImageConfig`)(
   {
-    amiId: S.OptionFromOptionalKey(AmiId).pipe(SchemaUtils.withNoneDefault),
-    ssmParameterName: SsmParameterName.pipe(SchemaUtils.withKeyDefaults(defaultAmiSsmParameterName)),
+    amiId: S.OptionFromOptionalKey(AmiId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ssmParameterName: SsmParameterName.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultAmiSsmParameterName)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultAmiSsmParameterName))
+    ),
   },
   $I.annote("CiRunnersImageConfig", {
     description: "AMI selection: Canonical Ubuntu 24.04 via public SSM parameter, overridable by a pinned AMI id.",
@@ -548,9 +568,18 @@ export class CiRunnersImageConfig extends S.Class<CiRunnersImageConfig>($I`CiRun
  */
 export class CiRunnersWorkerConfig extends S.Class<CiRunnersWorkerConfig>($I`CiRunnersWorkerConfig`)(
   {
-    instanceType: Ec2InstanceType.pipe(SchemaUtils.withKeyDefaults(defaultInstanceType)),
-    maxRunMinutes: MaxRunMinutes.pipe(SchemaUtils.withKeyDefaults(defaultMaxRunMinutes)),
-    rootVolumeSizeGb: RootVolumeSizeGb.pipe(SchemaUtils.withKeyDefaults(defaultRootVolumeSizeGb)),
+    instanceType: Ec2InstanceType.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultInstanceType)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultInstanceType))
+    ),
+    maxRunMinutes: MaxRunMinutes.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultMaxRunMinutes)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultMaxRunMinutes))
+    ),
+    rootVolumeSizeGb: RootVolumeSizeGb.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRootVolumeSizeGb)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRootVolumeSizeGb))
+    ),
   },
   $I.annote("CiRunnersWorkerConfig", {
     description: "Per-worker shape: instance type, root volume, and in-guest self-destruct deadline.",
@@ -574,7 +603,10 @@ export class CiRunnersWorkerConfig extends S.Class<CiRunnersWorkerConfig>($I`CiR
  */
 export class CiRunnersReaperConfig extends S.Class<CiRunnersReaperConfig>($I`CiRunnersReaperConfig`)(
   {
-    ttlMinutes: ReaperTtlMinutes.pipe(SchemaUtils.withKeyDefaults(defaultReaperTtlMinutes)),
+    ttlMinutes: ReaperTtlMinutes.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultReaperTtlMinutes)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultReaperTtlMinutes))
+    ),
   },
   $I.annote("CiRunnersReaperConfig", {
     description: "AWS-side reaper policy: the fleet-wide instance TTL enforced from outside the guest.",

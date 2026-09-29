@@ -5,13 +5,15 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { DirectedGraph, NodeIndex, NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 
 import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
 import { EntityId } from "./shared.ts";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGraph");
 
@@ -147,6 +149,7 @@ export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
   })
 ) {}
 
+const clusteringResultClustersDefault = A.empty<EntityCluster>();
 /**
  * Clustering output together with the embeddings used to derive it.
  *
@@ -165,7 +168,7 @@ export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
 export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringResult`)(
   {
     clusters: S.Array(EntityCluster).pipe(
-      SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
+      S.withConstructorDefault(Effect.succeed(clusteringResultClustersDefault)), S.withDecodingDefaultType(Effect.succeed(clusteringResultClustersDefault)),
       S.annotateKey({ description: "Entity clusters produced by the resolver." })
     ),
     embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({

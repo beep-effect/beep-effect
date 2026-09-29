@@ -86,7 +86,7 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
 export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
   },
   $I.annoteError<ParserOptionsError>("ParserOptionsError", {
@@ -112,6 +112,9 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
     )
   );
 
+const parserOptionsMaxRowsDefault = NonNegativeInt.make(0);
+const parserOptionsSkipLinesDefault = NonNegativeInt.make(0);
+const parserOptionsSkipRowsDefault = NonNegativeInt.make(0);
 /**
  * Schema-backed CSV parser options.
  *
@@ -137,35 +140,53 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
 export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
   {
     objectMode: SchemaUtils.BoolKeyDefaultTrue,
-    delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
+    delimiter: SingleCharacterText.pipe(
+      S.withConstructorDefault(Effect.succeed(",")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(","))
+    ),
     ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(S.String).pipe(
       S.withConstructorDefault(Effect.succeedSome('"')),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     comment: S.OptionFromNullOr(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     ltrim: SchemaUtils.BoolKeyDefaultFalse,
     rtrim: SchemaUtils.BoolKeyDefaultFalse,
     trim: SchemaUtils.BoolKeyDefaultFalse,
     headers: S.OptionFromNullOr(HeaderValueInput).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     renameHeaders: SchemaUtils.BoolKeyDefaultFalse,
     strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
     discardUnmappedColumns: SchemaUtils.BoolKeyDefaultFalse,
-    carriageReturn: S.String.pipe(SchemaUtils.withKeyDefaults("\r")),
-    encoding: BuffEncoding.pipe(SchemaUtils.withKeyDefaults(BuffEncoding.Enum.utf8)),
-    maxRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipLines: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    carriageReturn: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("\r")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("\r"))
+    ),
+    encoding: BuffEncoding.pipe(
+      S.withConstructorDefault(Effect.succeed(BuffEncoding.Enum.utf8)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BuffEncoding.Enum.utf8))
+    ),
+    maxRows: NonNegativeInt.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsMaxRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsMaxRowsDefault))
+    ),
+    skipLines: NonNegativeInt.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsSkipLinesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipLinesDefault))
+    ),
+    skipRows: NonNegativeInt.pipe(
+      S.withConstructorDefault(Effect.succeed(parserOptionsSkipRowsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(parserOptionsSkipRowsDefault))
+    ),
   },
   $I.annote("ParserOptions", {
     description: "Schema-backed CSV parser options.",

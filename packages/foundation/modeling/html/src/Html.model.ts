@@ -12,7 +12,8 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 // WHATWG's lowercase global event handler names are normative.
@@ -188,7 +189,7 @@ export declare namespace Fragment {
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "#document",
   {
-    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Document", { description: "An HTML document root." })
@@ -284,7 +285,9 @@ export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElem
   {
     namespace: ForeignNamespace,
     name: ForeignElementName,
-    attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(SchemaUtils.withNoneDefault),
+    attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     children: HtmlChildren,
   },
   $I.annote("ForeignElement", { description: "Opaque SVG or MathML element embedded in HTML." })
@@ -348,21 +351,21 @@ export class A extends S.TaggedClass<A>($I`A`)(
   "a",
   {
     ...GlobalAttributes,
-    charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    coords: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    download: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
-    rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    urn: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    coords: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    download: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    href: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hreflang: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    methods: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ping: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rev: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shape: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    urn: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("A", { description: "The <a> element." })
@@ -658,20 +661,20 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
   "area",
   {
     ...GlobalAttributes,
-    alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    coords: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    download: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    nohref: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
+    alt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    coords: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    download: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    href: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hreflang: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nohref: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ping: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(S.withConstructorDefault(Effect.succeedNone)),
     shape: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["circle", "default", "poly", "rect"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Area", { description: "The <area> element." })
 ) {}
@@ -856,18 +859,18 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
   "audio",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(S.withConstructorDefault(Effect.succeedNone)),
     loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Audio", { description: "The <audio> element." })
@@ -986,8 +989,8 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
   "base",
   {
     ...GlobalAttributes,
-    href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    href: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Base", { description: "The <base> element." })
 ) {}
@@ -1340,7 +1343,7 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
   "blockquote",
   {
     ...GlobalAttributes,
-    cite: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cite: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Blockquote", { description: "The <blockquote> element." })
@@ -1394,35 +1397,35 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
   "body",
   {
     ...GlobalAttributes,
-    alink: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bottommargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    leftmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    link: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onafterprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onbeforeprint: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onbeforeunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onhashchange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onlanguagechange: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onmessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onmessageerror: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onoffline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ononline: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onpagehide: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onpagereveal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onpageshow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onpageswap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onpopstate: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onrejectionhandled: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onstorage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onunhandledrejection: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    onunload: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rightmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    text: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    topmargin: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vlink: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    alink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgcolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bottommargin: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    leftmargin: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    link: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    marginheight: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    marginwidth: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onafterprint: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onbeforeprint: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onbeforeunload: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onhashchange: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onlanguagechange: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onmessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onmessageerror: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onoffline: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ononline: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onpagehide: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onpagereveal: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onpageshow: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onpageswap: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onpopstate: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onrejectionhandled: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onstorage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onunhandledrejection: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    onunload: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rightmargin: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    text: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    topmargin: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vlink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Body", { description: "The <body> element." })
@@ -1532,7 +1535,7 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
   "br",
   {
     ...GlobalAttributes,
-    clear: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    clear: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Br", { description: "The <br> element." })
 ) {}
@@ -1583,34 +1586,36 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
   "button",
   {
     ...GlobalAttributes,
-    action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    command: S.OptionFromOptionalKey(ButtonCommand).pipe(SchemaUtils.withNoneDefault),
-    commandfor: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    action: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    command: S.OptionFromOptionalKey(ButtonCommand).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    commandfor: S.OptionFromOptionalKey(HtmlIdValue).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     enctype: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
-    ).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formaction: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     formenctype: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
-    ).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formtarget: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    method: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     type: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["submit", "reset", "button"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Button", { description: "The <button> element." })
@@ -1702,8 +1707,8 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
   "canvas",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Canvas", { description: "The <canvas> element." })
@@ -1759,7 +1764,7 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
   "caption",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Caption", { description: "The <caption> element." })
@@ -1966,12 +1971,12 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
   "col",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
-    valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    char: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    charoff: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    valign: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Col", { description: "The <col> element." })
 ) {}
@@ -2032,7 +2037,7 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
   "colgroup",
   {
     ...GlobalAttributes,
-    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Colgroup", { description: "The <colgroup> element." })
@@ -2086,7 +2091,7 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
   "data",
   {
     ...GlobalAttributes,
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Data", { description: "The <data> element." })
@@ -2242,8 +2247,8 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
   "del",
   {
     ...GlobalAttributes,
-    cite: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    datetime: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cite: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    datetime: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Del", { description: "The <del> element." })
@@ -2299,8 +2304,8 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
   "details",
   {
     ...GlobalAttributes,
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Details", { description: "The <details> element." })
@@ -2408,9 +2413,9 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
   {
     ...GlobalAttributes,
     closedby: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["any", "closerequest", "none"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Dialog", { description: "The <dialog> element." })
@@ -2517,7 +2522,7 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
   "div",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Div", { description: "The <div> element." })
@@ -2571,7 +2576,7 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
   "dl",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Dl", { description: "The <dl> element." })
@@ -2727,14 +2732,14 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
   "embed",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Embed", { description: "The <embed> element." })
 ) {}
@@ -2799,10 +2804,10 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
   "fieldset",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Fieldset", { description: "The <fieldset> element." })
@@ -3066,25 +3071,25 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
   "form",
   {
     ...GlobalAttributes,
-    accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    "accept-charset": S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
-    action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(FormAutocomplete).pipe(SchemaUtils.withNoneDefault),
+    accept: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "accept-charset": S.OptionFromOptionalKey(Utf8Charset).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    action: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autocomplete: S.OptionFromOptionalKey(FormAutocomplete).pipe(S.withConstructorDefault(Effect.succeedNone)),
     enctype: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
-    ).pipe(SchemaUtils.withNoneDefault),
-    formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formmethod: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formaction: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formenctype: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formmethod: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formtarget: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     method: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(SchemaUtils.withNoneDefault),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rel: S.OptionFromOptionalKey(HtmlRelationList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Form", { description: "The <form> element." })
@@ -3265,7 +3270,7 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
   "h1",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H1", { description: "The <h1> element." })
@@ -3319,7 +3324,7 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
   "h2",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H2", { description: "The <h2> element." })
@@ -3373,7 +3378,7 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
   "h3",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H3", { description: "The <h3> element." })
@@ -3427,7 +3432,7 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
   "h4",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H4", { description: "The <h4> element." })
@@ -3481,7 +3486,7 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
   "h5",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H5", { description: "The <h5> element." })
@@ -3535,7 +3540,7 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
   "h6",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("H6", { description: "The <h6> element." })
@@ -3589,7 +3594,7 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
   "head",
   {
     ...GlobalAttributes,
-    profile: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    profile: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Head", { description: "The <head> element." })
@@ -3745,11 +3750,11 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
   "hr",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    noshade: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    color: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    noshade: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Hr", { description: "The <hr> element." })
 ) {}
@@ -3808,8 +3813,8 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
   "html",
   {
     ...GlobalAttributes,
-    manifest: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    version: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    manifest: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    version: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Html", { description: "The <html> element." })
@@ -3916,22 +3921,22 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
   "iframe",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    allow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    allowfullscreen: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    allowtransparency: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    frameborder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    framespacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allow: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowfullscreen: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    allowtransparency: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    frameborder: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    framespacing: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    marginheight: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    marginwidth: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
+    longdesc: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    marginheight: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    marginwidth: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sandbox: S.OptionFromOptionalKey(
       makeSpaceSeparatedTokenList([
         "allow-popups",
@@ -3948,12 +3953,12 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
         "allow-downloads",
         "allow-top-navigation-to-custom-protocols",
       ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    scrolling: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    srcdoc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scrolling: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    srcdoc: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     content: S.String,
   },
   $I.annote("Iframe", { description: "The <iframe> element." })
@@ -4055,33 +4060,33 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
   "img",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    alt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    border: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(S.withConstructorDefault(Effect.succeedNone)),
     decoding: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["sync", "async", "auto"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    lowsrc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
-    sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    longdesc: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lowsrc: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sizes: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    srcset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    usemap: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Img", { description: "The <img> element." })
 ) {}
@@ -4182,47 +4187,49 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
   "input",
   {
     ...GlobalAttributes,
-    accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    alpha: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    checked: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    accept: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    alpha: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    alt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    border: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    checked: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     colorspace: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["limited-srgb", "display-p3"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    dirname: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formaction: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     formenctype: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
-    ).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     formmethod: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["get", "post", "dialog"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    list: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    min: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    pattern: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    popovertarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    step: S.OptionFromOptionalKey(HtmlStep).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    formtarget: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    list: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    max: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    min: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pattern: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    placeholder: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    popovertarget: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    step: S.OptionFromOptionalKey(HtmlStep).pipe(S.withConstructorDefault(Effect.succeedNone)),
     type: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated([
         "hidden",
@@ -4248,11 +4255,11 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
         "reset",
         "button",
       ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    usemap: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Input", { description: "The <input> element." })
 ) {}
@@ -4404,8 +4411,8 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
   "ins",
   {
     ...GlobalAttributes,
-    cite: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    datetime: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cite: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    datetime: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Ins", { description: "The <ins> element." })
@@ -4608,7 +4615,7 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
   "label",
   {
     ...GlobalAttributes,
-    for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    for: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Label", { description: "The <label> element." })
@@ -4662,7 +4669,7 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
   "legend",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Legend", { description: "The <legend> element." })
@@ -4716,8 +4723,8 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
   "li",
   {
     ...GlobalAttributes,
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Li", { description: "The <li> element." })
@@ -4789,29 +4796,31 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
         "track",
         "worker",
       ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
-    charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
-      SchemaUtils.withNoneDefault
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    imagesizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    imagesrcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
-    rel: S.OptionFromOptionalKey(LinkRelationList).pipe(SchemaUtils.withNoneDefault),
-    rev: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    urn: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    color: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    href: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hreflang: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    imagesizes: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    imagesrcset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    integrity: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    media: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    methods: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rel: S.OptionFromOptionalKey(LinkRelationList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rev: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sizes: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    target: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    urn: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Link", { description: "The <link> element." })
 ) {}
@@ -5028,7 +5037,7 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
   "map",
   {
     ...GlobalAttributes,
-    name: S.OptionFromOptionalKey(HtmlIdValue).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(HtmlIdValue).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("MapElement", { description: "The <map> element." })
@@ -5133,10 +5142,10 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
   "marquee",
   {
     ...GlobalAttributes,
-    behavior: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    direction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    truespeed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    behavior: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    direction: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    truespeed: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Marquee", { description: "The <marquee> element. Obsolete / non-conforming (WHATWG §16.2)." })
@@ -5196,9 +5205,9 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
   "menu",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Menu", { description: "The <menu> element." })
@@ -5307,8 +5316,8 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
   "meta",
   {
     ...GlobalAttributes,
-    charset: S.OptionFromOptionalKey(Utf8Charset).pipe(SchemaUtils.withNoneDefault),
-    content: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(Utf8Charset).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    content: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     "http-equiv": S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated([
         "content-type",
@@ -5317,10 +5326,10 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
         "x-ua-compatible",
         "content-security-policy",
       ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(MetadataName).pipe(SchemaUtils.withNoneDefault),
-    scheme: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    media: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(MetadataName).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scheme: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Meta", { description: "The <meta> element." })
 ) {}
@@ -5383,12 +5392,12 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
   "meter",
   {
     ...GlobalAttributes,
-    high: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
-    low: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
-    max: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
-    min: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
-    optimum: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(SchemaUtils.withNoneDefault),
+    high: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    low: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    max: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    min: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    optimum: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(HtmlFiniteNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Meter", { description: "The <meter> element." })
@@ -5806,27 +5815,27 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
   "object",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    archive: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    classid: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    codebase: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    codetype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    data: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    declare: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    standby: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    typemustmatch: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    archive: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    border: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    classid: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    code: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    codebase: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    codetype: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    data: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    declare: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    standby: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    typemustmatch: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    usemap: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    vspace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("ObjectElement", { description: "The <object> element." })
@@ -5920,10 +5929,12 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
   "ol",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    reversed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    start: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.Literals(["1", "a", "A", "i", "I"])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reversed: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    start: S.OptionFromOptionalKey(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.Literals(["1", "a", "A", "i", "I"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     children: HtmlChildren,
   },
   $I.annote("Ol", { description: "The <ol> element." })
@@ -5983,8 +5994,8 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
   "optgroup",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Optgroup", { description: "The <optgroup> element." })
@@ -6040,11 +6051,11 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
   "option",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    selected: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    selected: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Option", { description: "The <option> element." })
@@ -6106,11 +6117,11 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
   "output",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    for: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    for: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Output", { description: "The <output> element." })
@@ -6172,7 +6183,7 @@ export class P extends S.TaggedClass<P>($I`P`)(
   "p",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("P", { description: "The <p> element." })
@@ -6376,7 +6387,7 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
   "pre",
   {
     ...GlobalAttributes,
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Pre", { description: "The <pre> element." })
@@ -6430,8 +6441,8 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
   "progress",
   {
     ...GlobalAttributes,
-    max: S.OptionFromOptionalKey(HtmlPositiveNumber).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(HtmlNonNegativeNumber).pipe(SchemaUtils.withNoneDefault),
+    max: S.OptionFromOptionalKey(HtmlPositiveNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(HtmlNonNegativeNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Progress", { description: "The <progress> element." })
@@ -6487,7 +6498,7 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
   "q",
   {
     ...GlobalAttributes,
-    cite: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cite: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Q", { description: "The <q> element." })
@@ -6898,22 +6909,24 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
   "script",
   {
     ...GlobalAttributes,
-    async: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
-    charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
-    defer: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
-      SchemaUtils.withNoneDefault
+    async: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    language: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    nomodule: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    charset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defer: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    event: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    fetchpriority: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["high", "low", "auto"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    for: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    integrity: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    language: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nomodule: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    referrerpolicy: S.OptionFromOptionalKey(ReferrerPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     content: S.String,
   },
   $I.annote("Script", { description: "The <script> element." })
@@ -7105,13 +7118,13 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
   "select",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Select", { description: "The <select> element." })
@@ -7228,7 +7241,7 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
   "slot",
   {
     ...GlobalAttributes,
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Slot", { description: "The <slot> element." })
@@ -7333,13 +7346,13 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
   "source",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    media: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sizes: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    srcset: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Source", { description: "The <source> element." })
 ) {}
@@ -7603,9 +7616,11 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
   "style",
   {
     ...GlobalAttributes,
-    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(SchemaUtils.withNoneDefault),
-    media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    blocking: S.OptionFromOptionalKey(makeSpaceSeparatedTokenList(["render"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    media: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     content: S.String,
   },
   $I.annote("Style", { description: "The <style> element." })
@@ -7816,18 +7831,18 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
   "table",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bordercolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    cellpadding: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    cellspacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    datapagesize: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    frame: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    rules: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgcolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    border: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bordercolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cellpadding: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cellspacing: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    datapagesize: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    frame: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rules: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    summary: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Table", { description: "The <table> element." })
@@ -7903,11 +7918,11 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
   "tbody",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    char: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    charoff: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    valign: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Tbody", { description: "The <tbody> element." })
@@ -7969,24 +7984,24 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
   "td",
   {
     ...GlobalAttributes,
-    abbr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    axis: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    abbr: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    axis: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgcolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    char: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    charoff: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    scope: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    scope: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    valign: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Td", { description: "The <td> element." })
@@ -8066,15 +8081,21 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
   "template",
   {
     ...GlobalAttributes,
-    shadowrootclonable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootcustomelementregistry: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootdelegatesfocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    shadowrootmode: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["open", "closed"])).pipe(
-      SchemaUtils.withNoneDefault
+    shadowrootclonable: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shadowrootcustomelementregistry: S.OptionFromOptionalKey(BooleanAttribute).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    shadowrootserializable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    shadowrootdelegatesfocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    shadowrootmode: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["open", "closed"])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    shadowrootserializable: S.OptionFromOptionalKey(BooleanAttribute).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     shadowrootslotassignment: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["named", "manual"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     children: HtmlChildren,
   },
@@ -8139,20 +8160,20 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
   "textarea",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
-    cols: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
-    dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    rows: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cols: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    dirname: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    form: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    placeholder: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rows: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     wrap: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["soft", "hard"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     content: S.String,
   },
@@ -8282,26 +8303,26 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
   "th",
   {
     ...GlobalAttributes,
-    abbr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    axis: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    abbr: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    axis: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgcolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    char: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    charoff: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     scope: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["row", "col", "rowgroup", "colgroup"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    valign: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Th", { description: "The <th> element." })
@@ -8432,7 +8453,7 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
   "time",
   {
     ...GlobalAttributes,
-    datetime: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    datetime: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Time", { description: "The <time> element." })
@@ -8537,12 +8558,12 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
   "tr",
   {
     ...GlobalAttributes,
-    align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
-    valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    align: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    bgcolor: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    char: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    charoff: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    valign: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Tr", { description: "The <tr> element." })
@@ -8606,13 +8627,13 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
   "track",
   {
     ...GlobalAttributes,
-    default: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    default: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
     kind: S.OptionFromOptionalKey(
       makeAsciiCaseInsensitiveEnumerated(["subtitles", "captions", "descriptions", "chapters", "metadata"])
-    ).pipe(SchemaUtils.withNoneDefault),
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    srclang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    srclang: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Track", { description: "The <track> element." })
 ) {}
@@ -8773,8 +8794,8 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
   "ul",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Ul", { description: "The <ul> element." })
@@ -8881,22 +8902,22 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
   "video",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    crossorigin: S.OptionFromOptionalKey(CrossOrigin).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     loading: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["lazy", "eager"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    playsinline: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    poster: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    playsinline: S.OptionFromOptionalKey(BooleanAttribute).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    poster: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     preload: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["auto", "none", "metadata"])).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
-    src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    src: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: HtmlChildren,
   },
   $I.annote("Video", { description: "The <video> element." })

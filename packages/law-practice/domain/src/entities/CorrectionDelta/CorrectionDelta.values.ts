@@ -19,6 +19,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ActFrameElementRef } from "../../values/ActFrameElementRef/index.ts";
 import { NormSourceReference } from "../../values/NormSourceReference/index.ts";
@@ -250,7 +251,7 @@ export type CandidateRouting = typeof CandidateRouting.Type;
  */
 export class ValidatorFinding extends S.Class<ValidatorFinding>($I`ValidatorFinding`)(
   {
-    element: S.OptionFromNullOr(ActFrameElementRef).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    element: S.OptionFromNullOr(ActFrameElementRef).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Frame element the finding is about, absent when it concerns the interpretation as a whole.",
     }),
     message: S.NonEmptyString.annotateKey({

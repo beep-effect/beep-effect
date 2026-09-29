@@ -6,7 +6,7 @@
  */
 
 import { $BoxProvisioningId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect, Equal, HashMap } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -71,7 +71,7 @@ const journalFields = {
   actionKey: Sha256Hex,
   logicalKeyDigest: Sha256Hex,
   resourceKind: BoxResourceKind,
-  providerId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
+  providerId: S.OptionFromOptionalKey(BoxProviderId).pipe(S.withConstructorDefault(Effect.succeedNone)),
 } satisfies S.Struct.Fields;
 
 /**
@@ -133,7 +133,7 @@ export class BoxApplyJournalApplied extends S.Class<BoxApplyJournalApplied>($I`B
   {
     ...journalFields,
     phase: S.tag("Applied"),
-    parentProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
+    parentProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BoxApplyJournalApplied", {
     description: "Sanitized apply-journal entry persisted after one provider mutation succeeds.",
@@ -451,7 +451,7 @@ export type BoxApplyOutcome = typeof BoxApplyOutcome.Type;
 export class BoxApplyReceipt extends S.Class<BoxApplyReceipt>($I`BoxApplyReceipt`)(
   {
     version: S.Literal("box-provisioning-receipt/v1").pipe(
-      SchemaUtils.withConstantDefault("box-provisioning-receipt/v1")
+      S.withConstructorDefault(Effect.succeed("box-provisioning-receipt/v1"))
     ),
     planDigest: Sha256Hex,
     appliedAt: S.DateTimeUtc,

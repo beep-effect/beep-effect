@@ -11,7 +11,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { dual } from "effect/Function";
@@ -55,7 +54,7 @@ const optionalInstantSchema = S.NullOr(S.String).pipe(
       ),
     ),
   }),
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
 );
 
 const optionalInstant = (column: string, description: string) =>

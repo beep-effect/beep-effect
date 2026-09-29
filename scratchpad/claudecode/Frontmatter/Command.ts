@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { HooksSection } from "../Settings/HooksSection.ts";
 import { EffortLevel, FrontmatterShell, StringOrStringArray } from "./Skill.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
 
@@ -44,22 +44,22 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
  */
 export class CommandFrontmatter_ extends S.Class<CommandFrontmatter_>($I`CommandFrontmatter`)(
   {
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    when_to_use: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    arguments: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    argumentHint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    allowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    disallowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    disableModelInvocation: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    userInvocable: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    context: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agent: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSection).pipe(SchemaUtils.withNoneDefault),
-    effort: S.OptionFromOptionalKey(EffortLevel).pipe(SchemaUtils.withNoneDefault),
-    paths: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    shell: S.OptionFromOptionalKey(FrontmatterShell).pipe(SchemaUtils.withNoneDefault),
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    when_to_use: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    arguments: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    argumentHint: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    allowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disallowedTools: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    disableModelInvocation: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    userInvocable: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    context: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agent: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSection).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    effort: S.OptionFromOptionalKey(EffortLevel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    paths: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shell: S.OptionFromOptionalKey(FrontmatterShell).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CommandFrontmatter", {
     description: "Runtime model for the YAML frontmatter of a legacy Claude Code slash-command file.",

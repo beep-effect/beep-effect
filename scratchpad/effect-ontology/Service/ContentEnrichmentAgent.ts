@@ -16,7 +16,6 @@ import * as Crypto from "effect/Crypto";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -63,7 +62,7 @@ export class ContentEnrichmentError extends S.TaggedError<ContentEnrichmentError
       description: "Human-readable content enrichment failure diagnostic.",
     }),
     url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional source URL associated with the failed enrichment.",
       })

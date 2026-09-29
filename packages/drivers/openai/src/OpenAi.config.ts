@@ -7,7 +7,8 @@
  */
 
 import { $OpenaiId } from "@beep/identity/packages";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import type { OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";
 
@@ -137,7 +138,10 @@ export const OPENAI_DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small" satisfies
  */
 export class OpenAiLanguageModelOptions extends S.Class<OpenAiLanguageModelOptions>($I`OpenAiLanguageModelOptions`)(
   {
-    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_MODEL).annotateKey({
+    model: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_MODEL))
+    ).annotateKey({
       description: "OpenAI Responses API model identifier used by the language-model Layer.",
     }),
   },
@@ -175,7 +179,10 @@ export class OpenAiEmbeddingModelOptions extends S.Class<OpenAiEmbeddingModelOpt
     dimensions: PosInt.annotateKey({
       description: "Positive embedding vector size provided as `EmbeddingModel.Dimensions`.",
     }),
-    model: SchemaUtils.withKeyDefaults(S.NonEmptyString, OPENAI_DEFAULT_EMBEDDING_MODEL).annotateKey({
+    model: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(OPENAI_DEFAULT_EMBEDDING_MODEL))
+    ).annotateKey({
       description: "OpenAI embeddings API model identifier used by the embedding-model Layer.",
     }),
   },

@@ -13,7 +13,6 @@ import { sql, type SQL } from "drizzle-orm";
 import type { ExtraConfigColumn } from "drizzle-orm/pg-core";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Model } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import * as DateTime from "effect/DateTime";
@@ -382,7 +381,7 @@ const optionalWire = <Wire extends S.ConstraintDecoder<unknown>, Value extends S
         ),
       ),
     }),
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
   );
 
 const optionalUtcTimestamp = optionalWire(S.String, UtcTimestamp);

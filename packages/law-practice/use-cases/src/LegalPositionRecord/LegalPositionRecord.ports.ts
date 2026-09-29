@@ -17,7 +17,7 @@ import {
   PowerExercise,
 } from "@beep/law-practice-domain";
 import { Defect, EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ActFrameRecordScope, LegalPositionRecordScope } from "./LegalPositionRecord.values.ts";
@@ -105,7 +105,7 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<Lega
   "LegalPositionRecordRepositoryUnavailable",
   {
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Optional underlying driver defect captured when the repository could not serve a request.",
       }),

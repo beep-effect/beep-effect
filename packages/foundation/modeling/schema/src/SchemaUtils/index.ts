@@ -54,11 +54,6 @@ export * from "./withCodecStatics.ts";
  * @since 0.0.0
  * @category utilities
  */
-export * from "./withConstructorDefaults.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
 export * from "./withEncodeDefault.ts";
 /**
  * @since 0.0.0

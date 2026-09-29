@@ -5,10 +5,9 @@
  * @since 0.0.0
  */
 import { $AgentsDomainId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { Struct } from "effect";
+import { Effect, Struct } from "effect";
 import * as S from "effect/Schema";
 import { SkillFixtureKey, SkillName } from "../Fixture.values.ts";
 
@@ -41,14 +40,17 @@ export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
     fixtureKey: SkillFixtureKey.pipe(pg.text(), pg.columnName("fixture_key")),
     name: SkillName.pipe(pg.varchar()),
     description: S.NonEmptyString.pipe(pg.varchar(1024)),
-    license: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault, pg.text()),
+    license: S.OptionFromNullOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone), pg.text()),
     compatibility: S.OptionFromNullOr(S.NonEmptyString.check(S.isMaxLength(500))).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       pg.varchar()
     ),
-    metadata: S.OptionFromNullOr(S.Record(S.NonEmptyString, S.String)).pipe(SchemaUtils.withNoneDefault, pg.jsonb()),
+    metadata: S.OptionFromNullOr(S.Record(S.NonEmptyString, S.String)).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      pg.jsonb()
+    ),
     allowedTools: S.OptionFromNullOr(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       pg.text(),
       pg.columnName("allowed_tools")
     ),

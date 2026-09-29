@@ -1,6 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
 import { HashSet } from "@beep/schema/HashSet";
-import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
@@ -72,8 +71,12 @@ describe("HashSet", () => {
   it.effect(
     "supports decoded hash set defaults for missing struct keys",
     Effect.fnUntraced(function* () {
+      const schemaValuesDefault = HashSet_.empty<string>();
       const schema = S.Struct({
-        values: HashSet(S.String).pipe(withKeyDefaults(HashSet_.empty<string>())),
+        values: HashSet(S.String).pipe(
+          S.withConstructorDefault(Effect.succeed(schemaValuesDefault)),
+          S.withDecodingDefaultTypeKey(Effect.succeed(schemaValuesDefault))
+        ),
       });
 
       const constructed = schema.make({});

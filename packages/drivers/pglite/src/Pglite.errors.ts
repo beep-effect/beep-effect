@@ -6,8 +6,9 @@
  */
 
 import { $PgliteId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { O } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $PgliteId.create("Pglite.errors");
@@ -47,13 +48,13 @@ export class PgliteError extends S.TaggedError<PgliteError>($I`PgliteError`)(
       description: "Driver operation that failed.",
     }),
     cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
     ),
     message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Non-empty message extracted from the originating failure.",
       })

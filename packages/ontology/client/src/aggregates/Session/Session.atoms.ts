@@ -49,7 +49,7 @@ import {
 import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, P, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
 import { Atom, AtomRpc, Reactivity } from "effect/reactivity";
@@ -160,7 +160,7 @@ export class OpenOntologyDocumentInput extends S.Class<OpenOntologyDocumentInput
   {
     sessionId: SessionId,
     path: OntologyFilePath,
-    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OpenOntologyDocumentInput", {
     description: "Open ontology document payload for the client atom.",

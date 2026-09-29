@@ -13,10 +13,10 @@ import {
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { Path } from "effect";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
@@ -28,7 +28,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.schemas");
  * must never be written through kg_node/kg_edge.
  */
 const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
-  SchemaUtils.withConstantDefault<PracticeKgEpistemicStatus>("derived-from-official-records")
+  S.withConstructorDefault(Effect.succeed<PracticeKgEpistemicStatus>("derived-from-official-records"))
 );
 
 /**
@@ -40,6 +40,7 @@ const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
  */
 export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-practice-domain/values";
 
+const practiceKgOptionsMaxTextBytesDefault = PosInt.make(2_097_152);
 /**
  * Validated options used by `corpus graph`.
  *
@@ -76,7 +77,10 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
     bundleOut: S.optionalKey(S.String),
     corpusRoot: S.String,
     includeRefresh: S.Boolean,
-    maxTextBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2_097_152))),
+    maxTextBytes: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(practiceKgOptionsMaxTextBytesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(practiceKgOptionsMaxTextBytesDefault))
+    ),
     overwrite: S.Boolean,
     skipEmails: S.Boolean,
   },

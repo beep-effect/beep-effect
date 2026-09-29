@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { HookToolDecodeError } from "../Errors.ts";
@@ -144,9 +144,9 @@ export const definePostAdapter = <const TName extends string, TTool, TResponse>(
 export class BashToolInput extends S.Class<BashToolInput>($I`BashToolInput`)(
   {
     command: S.String,
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    timeout: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    run_in_background: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timeout: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    run_in_background: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BashToolInput", {
     description: "Typed input payload for Claude Code's Bash tool.",
@@ -172,10 +172,10 @@ export class BashToolInput extends S.Class<BashToolInput>($I`BashToolInput`)(
  */
 export class BashToolResponse extends S.Class<BashToolResponse>($I`BashToolResponse`)(
   {
-    stdout: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    stderr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    interrupted: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    isImage: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    interrupted: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    isImage: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BashToolResponse", {
     description: "Typed response payload from Claude Code's Bash tool.",
@@ -201,8 +201,8 @@ export class BashToolResponse extends S.Class<BashToolResponse>($I`BashToolRespo
 export class ReadToolInput extends S.Class<ReadToolInput>($I`ReadToolInput`)(
   {
     file_path: S.String,
-    offset: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    limit: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    offset: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    limit: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ReadToolInput", {
     description: "Typed input payload for Claude Code's Read tool.",
@@ -227,7 +227,7 @@ export class ReadToolInput extends S.Class<ReadToolInput>($I`ReadToolInput`)(
  *
  */
 export class ReadToolResponse extends S.Class<ReadToolResponse>($I`ReadToolResponse`)(
-  { content: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault) },
+  { content: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)) },
   $I.annote("ReadToolResponse", {
     description: "Typed response payload from Claude Code's Read tool.",
   })
@@ -284,7 +284,7 @@ export class EditToolInput extends S.Class<EditToolInput>($I`EditToolInput`)(
     file_path: S.String,
     old_string: S.String,
     new_string: S.String,
-    replace_all: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    replace_all: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("EditToolInput", {
     description: "Typed input payload for Claude Code's Edit tool.",
@@ -308,7 +308,7 @@ export class EditToolInput extends S.Class<EditToolInput>($I`EditToolInput`)(
  *
  */
 export class GlobToolInput extends S.Class<GlobToolInput>($I`GlobToolInput`)(
-  { pattern: S.String, path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault) },
+  { pattern: S.String, path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)) },
   $I.annote("GlobToolInput", {
     description: "Typed input payload for Claude Code's Glob tool.",
   })
@@ -364,11 +364,11 @@ export type GrepOutputMode = typeof GrepOutputMode.Type;
 export class GrepToolInput extends S.Class<GrepToolInput>($I`GrepToolInput`)(
   {
     pattern: S.String,
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    glob: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    output_mode: S.OptionFromOptionalKey(GrepOutputMode).pipe(SchemaUtils.withNoneDefault),
-    "-i": S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    multiline: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    glob: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    output_mode: S.OptionFromOptionalKey(GrepOutputMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "-i": S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    multiline: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GrepToolInput", {
     description: "Typed input payload for Claude Code's Grep tool.",
@@ -427,8 +427,8 @@ const DomainNames = S.String.pipe(
 export class WebSearchToolInput extends S.Class<WebSearchToolInput>($I`WebSearchToolInput`)(
   {
     query: S.String,
-    allowed_domains: S.OptionFromOptionalKey(DomainNames).pipe(SchemaUtils.withNoneDefault),
-    blocked_domains: S.OptionFromOptionalKey(DomainNames).pipe(SchemaUtils.withNoneDefault),
+    allowed_domains: S.OptionFromOptionalKey(DomainNames).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    blocked_domains: S.OptionFromOptionalKey(DomainNames).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("WebSearchToolInput", {
     description: "Typed input payload for Claude Code's WebSearch tool.",
@@ -460,7 +460,7 @@ export class AgentToolInput extends S.Class<AgentToolInput>($I`AgentToolInput`)(
     prompt: S.String,
     description: S.String,
     subagent_type: S.String,
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentToolInput", {
     description: "Typed input payload for Claude Code's Agent tool.",
@@ -501,16 +501,16 @@ const AgentToolContent = S.Unknown.pipe(
  */
 export class AgentToolResponse extends S.Class<AgentToolResponse>($I`AgentToolResponse`)(
   {
-    status: S.OptionFromOptionalKey(AgentToolStatus).pipe(SchemaUtils.withNoneDefault),
-    agentId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    content: S.OptionFromOptionalKey(AgentToolContent).pipe(SchemaUtils.withNoneDefault),
-    totalTokens: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    totalDurationMs: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    totalToolUseCount: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    usage: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    prompt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    outputFile: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(AgentToolStatus).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agentId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    content: S.OptionFromOptionalKey(AgentToolContent).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    totalTokens: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    totalDurationMs: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    totalToolUseCount: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    usage: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    prompt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    outputFile: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AgentToolResponse", {
     description: "Typed response payload from Claude Code's Agent tool.",
@@ -534,7 +534,7 @@ export class AgentToolResponse extends S.Class<AgentToolResponse>($I`AgentToolRe
  *
  */
 export class AskUserQuestionOption extends S.Class<AskUserQuestionOption>($I`AskUserQuestionOption`)(
-  { label: S.String, description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault) },
+  { label: S.String, description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)) },
   $I.annote("AskUserQuestionOption", {
     description: "One selectable answer for an AskUserQuestion prompt.",
   })
@@ -565,7 +565,7 @@ export class AskUserQuestionQuestion extends S.Class<AskUserQuestionQuestion>($I
     question: S.String,
     header: S.String,
     options: S.Array(AskUserQuestionOption),
-    multiSelect: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    multiSelect: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AskUserQuestionQuestion", {
     description: "One question in an AskUserQuestion tool request.",
@@ -596,7 +596,7 @@ export class AskUserQuestionQuestion extends S.Class<AskUserQuestionQuestion>($I
 export class AskUserQuestionToolInput extends S.Class<AskUserQuestionToolInput>($I`AskUserQuestionToolInput`)(
   {
     questions: S.Array(AskUserQuestionQuestion),
-    answers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
+    answers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AskUserQuestionToolInput", {
     description: "Typed input payload for Claude Code's AskUserQuestion tool.",
@@ -659,7 +659,7 @@ export class ExitPlanModeToolInput extends S.Class<ExitPlanModeToolInput>($I`Exi
   {
     plan: S.String,
     planFilePath: S.String,
-    allowedPrompts: S.OptionFromOptionalKey(ExitPlanAllowedPrompts).pipe(SchemaUtils.withNoneDefault),
+    allowedPrompts: S.OptionFromOptionalKey(ExitPlanAllowedPrompts).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExitPlanModeToolInput", {
     description: "Typed input payload for Claude Code's ExitPlanMode tool.",
@@ -687,9 +687,9 @@ export class ExitPlanModeToolInput extends S.Class<ExitPlanModeToolInput>($I`Exi
  */
 export class ExitPlanModeToolResponse extends S.Class<ExitPlanModeToolResponse>($I`ExitPlanModeToolResponse`)(
   {
-    plan: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    filePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    approved: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    plan: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    filePath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    approved: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExitPlanModeToolResponse", {
     description: "Typed response payload from Claude Code's ExitPlanMode tool.",

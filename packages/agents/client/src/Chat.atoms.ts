@@ -17,7 +17,7 @@ import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
 import { SafeDocument } from "@beep/md/Md.safe";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, Clock, Config, Duration, Effect, Match, Metric, Random, Stream } from "effect";
@@ -443,7 +443,7 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
       description: "Thread this locally rendered turn belongs to.",
     }),
     /** Exact request receipt used to retire uncertain local turns safely. */
-    requestId: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    requestId: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Client request id used for exact persistence reconciliation when available.",
     }),
     /** Optimistic rendering of the just-sent user message. */
@@ -451,7 +451,7 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
       description: "Optimistic rendering of the just-sent user message.",
     }),
     /** For edits: hide this turn and everything after it while rendered locally. */
-    truncateFrom: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    truncateFrom: S.Option(WorkspaceIdentity.TurnId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Turn id to truncate from while an edit-regenerate turn is rendered locally.",
     }),
     /** Evidence that controls when the local turn may retire. */

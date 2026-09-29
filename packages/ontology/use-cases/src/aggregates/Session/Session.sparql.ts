@@ -8,7 +8,7 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, graphPartitionIri, Session } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import {
   SparqlConstructResult,
   SparqlQueryRequest,
@@ -168,7 +168,7 @@ export class RunOntologySparqlInput extends S.Class<RunOntologySparqlInput>($I`R
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
-    inference: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(SchemaUtils.withNoneDefault),
+    inference: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(S.withConstructorDefault(Effect.succeedNone)),
     safeguards: OntologySparqlSafeguards.pipe(
       S.withConstructorDefault(Effect.succeed(OntologySparqlSafeguards.make({}))),
       S.withDecodingDefaultKey(Effect.succeed(OntologySparqlSafeguards.make({})))

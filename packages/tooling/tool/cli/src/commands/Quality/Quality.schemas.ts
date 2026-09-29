@@ -1854,7 +1854,10 @@ export class GateOrderHandoff extends S.Class<GateOrderHandoff>($I`GateOrderHand
  */
 export const GateOrderHandoffJson = JsonStringCodec(GateOrderHandoff);
 
-const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(EffectRuntime.succeedNone)
+);
 
 /**
  * Executable lane specification for GitHub check collectors.
@@ -1948,17 +1951,27 @@ export const GithubCheckLaneRunStatus = LiteralKit(["passed", "reused", "failed"
  */
 export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
 
-const OptionalLaneRunString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
-const OptionalLaneRunFinite = S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalLaneRunString = S.String.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(EffectRuntime.succeedNone)
+);
+const OptionalLaneRunFinite = S.Finite.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(EffectRuntime.succeedNone)
+);
 const OptionalGateRedSchedulingDecision = GateRedSchedulingDecision.pipe(
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault
+  S.withConstructorDefault(EffectRuntime.succeedNone)
 );
 const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(EffectRuntime.succeedNone),
   S.withDecodingDefaultKey(EffectRuntime.succeed(null))
 );
-const LaneInputPackages = S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>());
+const laneInputPackagesDefault = A.empty<string>();
+const LaneInputPackages = S.Array(S.String).pipe(
+  S.withConstructorDefault(EffectRuntime.succeed(laneInputPackagesDefault)),
+  S.withDecodingDefaultType(EffectRuntime.succeed(laneInputPackagesDefault))
+);
 
 /**
  * Timing and outcome facts for one lane executed inside a wrapper command.
@@ -2110,8 +2123,11 @@ export class GithubCheckRunReport extends S.Class<GithubCheckRunReport>($I`Githu
     schemaVersion: S.Literal("github-check-run/v1"),
     failurePolicy: GithubCheckFailurePolicy,
     lanes: S.Array(GithubCheckLaneRun),
-    firstRed: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    skippedAfterRed: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
+    firstRed: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(EffectRuntime.succeedNone)),
+    skippedAfterRed: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.withConstructorDefault(EffectRuntime.succeed(0)),
+      S.withDecodingDefaultTypeKey(EffectRuntime.succeed(0))
+    ),
   },
   $I.annote("GithubCheckRunReport", {
     description: "Machine-readable lane outcomes and failure policy for a local GitHub-check wave run.",
