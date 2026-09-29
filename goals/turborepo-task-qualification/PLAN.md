@@ -2729,3 +2729,16 @@ This demonstrates relocation with shared dependency bytes, not portability
 across independent installations. Signed replay, complete input closure,
 representative shadow and tuple promotion remain open. These receipts postdate
 the 107-review canonical attachment.
+
+### Patched dependency profile: native I/O observation
+
+The [renewed I/O review](research/current-patched-native-io-review.json) records
+one successful direct lint invocation at `b410da2b6d`, with read-only source
+and dependencies, isolated networking and bounded private traces. Review
+attributes 439 repository read paths and 21 explicit writes. `.git` remains the
+only repository read outside the compared native input maps; process tracing
+attributes the pointer, common-directory pointer and exclusion reads to Biome.
+Read payloads are suppressed and shared Git metadata is not a frozen host
+snapshot. Five successful ring submissions remain undecoded. Dependency bytes
+match before and after; this renews bounded I/O evidence without claiming
+complete semantic closure, signed replay or tuple qualification.
