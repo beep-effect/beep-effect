@@ -266,6 +266,14 @@ describe("FileTypeChecker schemas", () => {
     expect(fileContentEquivalence(new Uint8Array([1, 2]).buffer, new Uint8Array([1, 3]).buffer)).toBe(false);
   });
 
+  it("encodes ArrayBuffer content to the same base64 JSON as Uint8Array content", () => {
+    const encodeFileContentJson = S.encodeUnknownResult(S.toCodecJson(FileContent));
+
+    expect(Result.getOrThrow(encodeFileContentJson(new Uint8Array([104, 105]).buffer))).toBe("aGk=");
+    expect(Result.getOrThrow(encodeFileContentJson(new ArrayBuffer(0)))).toBe("");
+    expect(Result.getOrThrow(encodeFileContentJson(new Uint8Array([104, 105])))).toBe("aGk=");
+  });
+
   it("keeps catalog keys correlated, exhaustive, and schema-valid", () => {
     const catalogKeys = R.keys(FileTypeCatalog);
     expect(catalogKeys).toHaveLength(FileType.Options.length);

@@ -6,11 +6,12 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaIssue, SchemaTransformation } from "effect";
+import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
 import { Defect } from "../Opaque.ts";
@@ -46,20 +47,14 @@ const RegExpPatternCheck = S.makeFilter(canMakeRegExp, {
 });
 
 // The encoded side stays a plain pattern string, never the `{ source, flags }`
-// object that `S.toCodecJson(S.RegExp)` writes.
+// object that `S.toCodecJson(S.RegExp)` writes. The pattern check runs before
+// the transformation, so constructing the RegExp cannot throw.
 const RegExpFromPattern = S.String.check(RegExpPatternCheck).pipe(
   S.decodeTo(
     S.RegExp,
-    SchemaTransformation.transformEffect({
-      decode: (pattern: string) =>
-        Effect.try({
-          try: () => new globalThis.RegExp(pattern),
-          catch: (cause) =>
-            new SchemaIssue.InvalidValue({
-              message: P.isError(cause) ? cause.message : "Expected a valid regular expression pattern string",
-            }),
-        }),
-      encode: (regexp: globalThis.RegExp) => Effect.succeed(regexp.source),
+    SchemaTransformation.transform({
+      decode: (pattern: string) => new globalThis.RegExp(pattern),
+      encode: Struct.get("source"),
     })
   ),
   $I.annoteSchema("RegExpFromPattern", {
