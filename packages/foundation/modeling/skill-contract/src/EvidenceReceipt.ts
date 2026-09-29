@@ -197,7 +197,7 @@ export class GateSummaryVerifier extends S.Class<GateSummaryVerifier>($I`GateSum
  * ```ts import.meta.vitest name="Inspect verification results"
  * import { GateVerificationResult } from "@beep/skill-contract"
  *
- * GateVerificationResult.Options // => ["PASSED", "FAILED"]
+ * GateVerificationResult.literals // => ["PASSED", "FAILED"]
  * ```
  *
  * @category schemas
@@ -225,7 +225,7 @@ export type GateVerificationResult = typeof GateVerificationResult.Type;
  * ```ts
  * import { GateVerifiedLevel } from "@beep/skill-contract"
  *
- * console.log(GateVerifiedLevel.Options)
+ * console.log(GateVerifiedLevel.literals)
  * ```
  *
  * @category schemas

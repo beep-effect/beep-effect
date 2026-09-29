@@ -34,7 +34,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
  * ```ts
  * import { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * console.log(EmbeddingProviderId.Options)
+ * console.log(EmbeddingProviderId.literals)
  * ```
  *
  * @category schemas

@@ -1062,7 +1062,7 @@ const missCounts = (rows: ReadonlyArray<ProofLedgerShadowRow>): ReadonlyArray<Pr
     }
   }
   return A.getSomes(
-    A.map(ProofMissReason.Options, (reason) =>
+    A.map(ProofMissReason.literals, (reason) =>
       O.map(MutableHashMap.get(counts, reason), (count) => ProofShadowMissCount.make({ reason, count }))
     )
   );

@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, Tuple } from "effect";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.ts";
@@ -96,7 +97,7 @@ export const VersionCategory = VersionCategoryKit.pipe(
  * @category models
  * @since 0.0.0
  */
-export const VersionCategoryOptions = VersionCategoryKit.Options;
+export const VersionCategoryOptions = VersionCategoryKit.literals;
 /**
  * Version category for grouping drift items.
  *
@@ -171,21 +172,6 @@ export const VersionCategoryStatusMatch = VersionCategoryStatusKit.$match;
  */
 export const VersionCategoryStatusEnum = VersionCategoryStatusKit.Enum;
 /**
- * Thunk helpers for version category status literals.
- *
- * **Example** (Import status thunk helpers)
- *
- * ```ts
- * import { VersionCategoryStatusThunk } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
- *
- * console.log(typeof VersionCategoryStatusThunk !== "undefined") // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const VersionCategoryStatusThunk = VersionCategoryStatusKit.thunk;
-/**
  * Status of a version category.
  *
  * **Example** (Annotate status type)
@@ -201,6 +187,28 @@ export const VersionCategoryStatusThunk = VersionCategoryStatusKit.thunk;
  * @since 0.0.0
  */
 export type VersionCategoryStatus = typeof VersionCategoryStatus.Type;
+
+/**
+ * Status of a version category from its drift items: `ok` when there are
+ * none, `drift` otherwise.
+ *
+ * **Example** (Derive a status from drift items)
+ *
+ * ```ts
+ * import { versionCategoryStatusFromDrift } from "@beep/repo-cli/commands/VersionSync/VersionSync.schemas"
+ *
+ * console.log(versionCategoryStatusFromDrift([])) // "ok"
+ * console.log(versionCategoryStatusFromDrift(["biome"])) // "drift"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const versionCategoryStatusFromDrift = (items: ReadonlyArray<unknown>): VersionCategoryStatus =>
+  A.match(items, {
+    onEmpty: F.constant(VersionCategoryStatusEnum.ok),
+    onNonEmpty: F.constant(VersionCategoryStatusEnum.drift),
+  });
 
 class VersionCategoryReportBun extends S.Class<VersionCategoryReportBun>($I`VersionCategoryReportBun`)(
   {

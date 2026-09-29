@@ -240,7 +240,7 @@ export class ReplyDrafts extends S.Class<ReplyDrafts>($I`ReplyDrafts`)(
  * ```ts
  * import { ReplyOutcomeStatus } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(ReplyOutcomeStatus.Options)
+ * console.log(ReplyOutcomeStatus.literals)
  * ```
  *
  * @category models

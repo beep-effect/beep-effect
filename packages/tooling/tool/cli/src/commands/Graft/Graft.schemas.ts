@@ -30,7 +30,7 @@ const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
  *
  * ```ts import.meta.vitest name="Inspect copy order"
  * import { GraftCacheArtifact } from "@beep/repo-cli/commands/Graft"
- * console.log(GraftCacheArtifact.Options) // ["summaries", "concepts", "wiring", "manifest"]
+ * console.log(GraftCacheArtifact.literals) // ["summaries", "concepts", "wiring", "manifest"]
  * ```
  *
  * @category schemas
@@ -210,7 +210,7 @@ export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`Graft
  *
  * ```ts import.meta.vitest name="Inspect the refresh stages"
  * import { GraftDeepRefreshPhase } from "@beep/repo-cli/commands/Graft"
- * console.log(GraftDeepRefreshPhase.Options)
+ * console.log(GraftDeepRefreshPhase.literals)
  * // ["preflight", "pull", "install", "build", "seed", "rebuild", "done"]
  * ```
  *

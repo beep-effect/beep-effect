@@ -107,7 +107,7 @@ export type RoutingRole = typeof RoutingRole.Type;
  * @category models
  * @since 0.0.0
  */
-export const RoutingRoleOptions = RoutingRoleKit.Options;
+export const RoutingRoleOptions = RoutingRoleKit.literals;
 
 /**
  * Derived per-literal guards for {@link RoutingRole}.
@@ -187,7 +187,7 @@ export type RoutingSurface = typeof RoutingSurface.Type;
  * @category models
  * @since 0.0.0
  */
-export const RoutingSurfaceOptions = RoutingSurfaceKit.Options;
+export const RoutingSurfaceOptions = RoutingSurfaceKit.literals;
 
 /**
  * Derived per-literal guards for {@link RoutingSurface}.

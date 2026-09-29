@@ -321,7 +321,7 @@ const compareTotals = (
 
 const selectRatchetedTotals = (totals: JSDocTrackedTotals): JSDocTrackedTotals =>
   R.fromEntries(
-    A.map(JSDocRatchetedTotalName.Options, (metric): readonly [string, number] => [
+    A.map(JSDocRatchetedTotalName.literals, (metric): readonly [string, number] => [
       metric,
       pipe(
         R.get(totals, metric),
@@ -603,7 +603,7 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
             return A.empty<JSDocLegacyFileFinding>();
           }
           const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
-          return A.flatMap(JSDocLegacyTag.Options, (tag) =>
+          return A.flatMap(JSDocLegacyTag.literals, (tag) =>
             A.contains(tags, tag) ? [JSDocLegacyFileFinding.make({ filePath, tag })] : []
           );
         })

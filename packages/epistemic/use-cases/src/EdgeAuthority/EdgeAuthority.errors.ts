@@ -67,7 +67,7 @@ export const EdgeAuthorityOperation = EdgeAuthorityOperationBase.pipe(
  */
 export type EdgeAuthorityOperation = typeof EdgeAuthorityOperation.Type;
 
-const EdgeWriteOperationBase = LiteralKit(EdgeAuthorityOperationBase.pickOptions(["record", "supersede"]));
+const EdgeWriteOperationBase = LiteralKit(EdgeAuthorityOperationBase.pick(["record", "supersede"]).literals);
 
 /**
  * The subset of {@link EdgeAuthorityOperation} that writes. Constraint violations

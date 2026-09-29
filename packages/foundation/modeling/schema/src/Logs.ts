@@ -44,7 +44,7 @@ export const LogLevel = LiteralKit(["All", "Fatal", "Error", "Warn", "Info", "De
  * import { LogLevel } from "@beep/schema/Logs"
  *
  * const level: LogLevel = "Info"
- * console.log(LogLevel.Options.includes(level))
+ * console.log(LogLevel.literals.includes(level))
  * ```
  *
  * @category models
@@ -85,7 +85,7 @@ export const LogSeverity = LiteralKit(["Fatal", "Error", "Warn", "Info", "Debug"
  * import { LogSeverity } from "@beep/schema/Logs"
  *
  * const severity: LogSeverity = "Warn"
- * console.log(LogSeverity.Options.includes(severity))
+ * console.log(LogSeverity.literals.includes(severity))
  * ```
  *
  * @category models

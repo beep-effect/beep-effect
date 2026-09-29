@@ -62,7 +62,7 @@ export const CoopValue = CoopValueBase.pipe(
 export type CoopValue = typeof CoopValue.Type;
 const isCoopValue = S.is(CoopValue);
 
-const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.Options]);
+const CrossOriginOpenerPolicyOptionBase = LiteralKit([false, ...CoopValueBase.literals]);
 
 /**
  * Schema for `Cross-Origin-Opener-Policy` option values, including `false` to disable.

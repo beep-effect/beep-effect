@@ -756,7 +756,7 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
                         ready: n >= 4,
                         criteria: ready,
                         failing: A.findFirst(
-                          YeetMergeReadyCriterion.Options,
+                          YeetMergeReadyCriterion.literals,
                           (criterion) => !mergeReadyCriterionHolds(ready, criterion)
                         ),
                       })

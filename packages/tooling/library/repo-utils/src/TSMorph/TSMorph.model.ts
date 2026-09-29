@@ -16,6 +16,7 @@ import {
 } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Match, Result, SchemaGetter, Tuple } from "effect";
+import * as F from "effect/Function";
 import * as S from "effect/Schema";
 import { Project, SourceFile, Node as TsMorphNode } from "ts-morph";
 import { TSSyntaxKind } from "../TypeScript/index.ts";
@@ -101,7 +102,7 @@ const typeScriptDeclarationFilePathChecks = S.makeFilterGroup(
   }
 );
 
-const symbolKindOptions = TSSyntaxKind.pickOptions([
+const symbolKindOptions = TSSyntaxKind.pick([
   "FunctionDeclaration",
   "ClassDeclaration",
   "MethodDeclaration",
@@ -111,7 +112,7 @@ const symbolKindOptions = TSSyntaxKind.pickOptions([
   "InterfaceDeclaration",
   "TypeAliasDeclaration",
   "EnumDeclaration",
-] as const);
+] as const).literals;
 
 /**
  * Repository root directory path schema.
@@ -539,15 +540,15 @@ export type SymbolCategory = typeof SymbolCategory.Type;
  * @since 0.0.0
  */
 export const symbolCategoryFromKind = SymbolKind.$match({
-  FunctionDeclaration: SymbolCategory.thunk.function,
-  ClassDeclaration: SymbolCategory.thunk.class,
-  MethodDeclaration: SymbolCategory.thunk.member,
-  Constructor: SymbolCategory.thunk.member,
-  GetAccessor: SymbolCategory.thunk.member,
-  SetAccessor: SymbolCategory.thunk.member,
-  InterfaceDeclaration: SymbolCategory.thunk.type,
-  TypeAliasDeclaration: SymbolCategory.thunk.type,
-  EnumDeclaration: SymbolCategory.thunk.type,
+  FunctionDeclaration: F.constant(SymbolCategory.Enum.function),
+  ClassDeclaration: F.constant(SymbolCategory.Enum.class),
+  MethodDeclaration: F.constant(SymbolCategory.Enum.member),
+  Constructor: F.constant(SymbolCategory.Enum.member),
+  GetAccessor: F.constant(SymbolCategory.Enum.member),
+  SetAccessor: F.constant(SymbolCategory.Enum.member),
+  InterfaceDeclaration: F.constant(SymbolCategory.Enum.type),
+  TypeAliasDeclaration: F.constant(SymbolCategory.Enum.type),
+  EnumDeclaration: F.constant(SymbolCategory.Enum.type),
 });
 
 /**

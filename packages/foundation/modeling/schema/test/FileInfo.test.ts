@@ -22,7 +22,7 @@ describe("FileInfoType", () => {
   it.effect(
     "accepts supported file-system entry kinds",
     Effect.fnUntraced(function* () {
-      for (const kind of FileInfoType.Options) {
+      for (const kind of FileInfoType.literals) {
         expect(yield* decodeUnknownFileInfoTypeEffect(kind)).toBe(kind);
       }
     })
@@ -53,7 +53,7 @@ describe("FileInfo", () => {
   });
 
   it("constructs every entry kind with a matching type", () => {
-    for (const kind of FileInfoType.Options) {
+    for (const kind of FileInfoType.literals) {
       const info = FileInfo.cases[kind].make({ dev: 1, mode: 0o600, size: ByteSize.bytes(0n) });
       expect(info.type).toBe(kind);
     }

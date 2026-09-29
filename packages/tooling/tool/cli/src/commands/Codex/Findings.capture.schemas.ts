@@ -36,7 +36,7 @@ const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
  * ```ts
  * import { CodexFindingSeverity } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
  *
- * console.log(CodexFindingSeverity.Options.indexOf("Medium")) // 2
+ * console.log(CodexFindingSeverity.literals.indexOf("Medium")) // 2
  * console.log(CodexFindingSeverity.is.Critical("Critical")) // true
  * ```
  *

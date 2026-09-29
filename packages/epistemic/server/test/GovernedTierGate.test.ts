@@ -125,7 +125,7 @@ describe("GovernedTierGate", () => {
     // The literals are deliberately mirrored without an import — foundation
     // may not import slices — and the domain designates this package as the
     // home of the member-equality assertion (ExecutionRecord.model.ts).
-    expect([...TierGateSettlement.Options]).toEqual([...ExecutionSettlement.Options]);
+    expect([...TierGateSettlement.literals]).toEqual([...ExecutionSettlement.literals]);
   });
 
   it.effect(
@@ -380,7 +380,7 @@ describe("GovernedTierGate", () => {
       expect(reasons).toEqual([refusalGuidance, refusalGuidance, refusalGuidance]);
       // And the constant carries none of the bounded vocabulary.
       pipe(
-        A.some(DenialReason.Options, (reason) => Str.includes(reason)(refusalGuidance)),
+        A.some(DenialReason.literals, (reason) => Str.includes(reason)(refusalGuidance)),
         assertFalse
       );
     })

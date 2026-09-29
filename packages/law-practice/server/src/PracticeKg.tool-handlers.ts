@@ -46,7 +46,7 @@ const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-record
 const candidateStatus = PracticeKgEpistemicStatus.Enum["candidate-unreviewed"];
 const emailLinkageNote =
   "Matter linkage is archive-level confidence only; a matching message header is not message-level matter proof.";
-const tierOrder = A.reverse(FieldTierName.Options);
+const tierOrder = A.reverse(FieldTierName.literals);
 
 const likePattern = (value: string | undefined): string | null =>
   O.map(O.fromUndefinedOr(value), (fragment) => `%${fragment}%`).pipe(O.getOrNull);

@@ -35,7 +35,7 @@ import { HasNullByte, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePat
 
 const $I = $SchemaId.create("FileName");
 
-const fileExtensionSet = HashSet.fromIterable(FileExtension.Options);
+const fileExtensionSet = HashSet.fromIterable(FileExtension.literals);
 const isHasNullByte = HasNullByte.is;
 const isFileExtension = (value: string): value is FileExtension => HashSet.has(fileExtensionSet, value);
 const isNonEmptyString = S.is(S.NonEmptyString);
@@ -87,7 +87,7 @@ const FileNameChecks = S.makeFilterGroup(
     S.makeFilter(flow(fileNameExtension, isFileExtension), {
       identifier: $I`FileNameKnownExtensionCheck`,
       arbitraryConstraint: {
-        patterns: [{ source: `^[a-zA-Z0-9_-]{1,16}\\.(?:${A.join(FileExtension.Options, "|")})$`, flags: "" }],
+        patterns: [{ source: `^[a-zA-Z0-9_-]{1,16}\\.(?:${A.join(FileExtension.literals, "|")})$`, flags: "" }],
       },
       title: "File Name Known Extension",
       description: "A file name whose final extension segment is a known file extension.",

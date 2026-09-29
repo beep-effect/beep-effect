@@ -812,7 +812,7 @@ describe("HookPulseV1", () => {
       // Every member of `HookPulseEvent` survives derivation and both round-trip
       // hops; a member added to the literal domain without a fixture here would
       // otherwise ride along untested.
-      expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.Options.length);
+      expect(A.dedupe(A.map(roundTripped, (record) => record.hookEvent)).length).toBe(HookPulseEvent.literals.length);
       expect(A.map(roundTripped, (record) => record.waitReason)).toEqual([
         "none",
         "tool-permission",

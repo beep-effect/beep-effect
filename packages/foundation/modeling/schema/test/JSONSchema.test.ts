@@ -593,7 +593,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
   describe("vocabulary drift guard", () => {
     it("Node's fields are exactly the canonical keywords plus extensions", () => {
       const fieldKeys = Struct.keys(Node.fields).filter((key) => key !== "extensions");
-      expect([...fieldKeys].sort()).toEqual([...CanonicalKeyword.Options].sort());
+      expect([...fieldKeys].sort()).toEqual([...CanonicalKeyword.literals].sort());
       expect(fieldKeys.every(isCanonicalKeyword)).toBe(true);
     });
   });

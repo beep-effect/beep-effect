@@ -59,7 +59,7 @@ export const harnessFingerprintUnknown = "unknown";
  * ```ts
  * import { ContextSurfaceKind } from "@beep/repo-ai-metrics"
  *
- * console.log(ContextSurfaceKind.Options.length) // 8
+ * console.log(ContextSurfaceKind.literals.length) // 8
  * console.log(ContextSurfaceKind.is.skill(ContextSurfaceKind.Enum.skill)) // true
  * ```
  *
@@ -567,7 +567,7 @@ export const makeHarnessFingerprint = Effect.fn("AiMetrics.makeHarnessFingerprin
  * ```ts
  * import { HarnessEditRefKind } from "@beep/repo-ai-metrics"
  *
- * console.log(HarnessEditRefKind.Options) // ["commit", "diff-digest", "pending"]
+ * console.log(HarnessEditRefKind.literals) // ["commit", "diff-digest", "pending"]
  * ```
  *
  * @category models

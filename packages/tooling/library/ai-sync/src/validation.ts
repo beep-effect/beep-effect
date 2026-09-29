@@ -267,7 +267,7 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
       );
       const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudePermission);
       const missingRequiredDenyPermissions = A.filter(
-        RequiredClaudeRepoDenyPermission.Options,
+        RequiredClaudeRepoDenyPermission.literals,
         (permission) => !A.contains(deniedPermissions, permission)
       );
       const unexpectedDenyPermissions = A.filter(

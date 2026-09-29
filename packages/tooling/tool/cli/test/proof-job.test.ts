@@ -832,7 +832,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
 
 describe("job wait wave return", () => {
   it("maps every wait outcome through one exit table, with the wave on 2", () => {
-    expect(A.map(Job.proofJobWaitExitTable, (row) => row.outcome)).toEqual(Job.ProofJobWaitOutcome.Options);
+    expect(A.map(Job.proofJobWaitExitTable, (row) => row.outcome)).toEqual(Job.ProofJobWaitOutcome.literals);
     expect(A.map(Job.proofJobWaitExitTable, (row) => [row.outcome, row.exitCode])).toEqual([
       ["success", 0],
       ["failure", 1],

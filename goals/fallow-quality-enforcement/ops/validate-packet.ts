@@ -917,7 +917,7 @@ const decodeBoundaryProvenanceDocument = S.decodeUnknownEffect(BoundaryProvenanc
 const decodeSchemaCompanionDocument = S.decodeUnknownEffect(SchemaCompanionDocument);
 const decodeInitiativeManifestDocument = S.decodeUnknownEffect(InitiativeManifestDocument);
 
-const expectedFeatureFamilies = FeatureFamily.Options;
+const expectedFeatureFamilies = FeatureFamily.literals;
 const expectedKnipSurfaces = [
   "entry",
   "project",
@@ -1077,7 +1077,7 @@ const manifestRootRequired = [
   "verification",
   "decisions",
 ];
-const reportEnvelopeStatuses = FallowEnvelopeStatus.Options;
+const reportEnvelopeStatuses = FallowEnvelopeStatus.literals;
 const reportEnvelopeSharedKeys = [
   "schemaVersion",
   "toolVersion",
@@ -2001,29 +2001,29 @@ const taskParityGateDiagnostics = (tasks: TasksDocument, knipParity: KnipParityD
 
 const enumValues = {
   featureFamily: expectedFeatureFamilies,
-  ruleSourceClass: RuleSourceClass.Options,
-  boundaryEnforcementScope: BoundaryEnforcementScope.Options,
-  baselineStatus: BaselineStatus.Options,
-  falsePositiveStatus: FalsePositiveStatus.Options,
-  ciMode: CiMode.Options,
-  promotionStatus: PromotionStatus.Options,
-  runtimeScope: RuntimeScope.Options,
-  knipRemovalRecommendation: KnipRemovalRecommendation.Options,
-  gapStatus: GapStatus.Options,
-  retirementDecision: RetirementDecision.Options,
-  status: TaskStatus.Options,
-  riskLevel: RiskLevel.Options,
-  phase: TaskPhase.Options,
-  repoCommandPhase: RepoCommandPhase.Options,
-  commandImplementationStatus: CommandImplementationStatus.Options,
-  attributionMode: AttributionMode.Options,
-  basePolicy: BasePolicy.Options,
-  adjacentFindingPolicy: AdjacentFindingPolicy.Options,
-  findingAttributionKind: FindingAttributionKind.Options,
-  residualRiskLevel: ResidualRiskLevel.Options,
-  reviewFindingSeverity: ReviewFindingSeverity.Options,
-  reviewClosureStatus: ReviewClosureStatus.Options,
-  fallowEnvelopeStatus: FallowEnvelopeStatus.Options,
+  ruleSourceClass: RuleSourceClass.literals,
+  boundaryEnforcementScope: BoundaryEnforcementScope.literals,
+  baselineStatus: BaselineStatus.literals,
+  falsePositiveStatus: FalsePositiveStatus.literals,
+  ciMode: CiMode.literals,
+  promotionStatus: PromotionStatus.literals,
+  runtimeScope: RuntimeScope.literals,
+  knipRemovalRecommendation: KnipRemovalRecommendation.literals,
+  gapStatus: GapStatus.literals,
+  retirementDecision: RetirementDecision.literals,
+  status: TaskStatus.literals,
+  riskLevel: RiskLevel.literals,
+  phase: TaskPhase.literals,
+  repoCommandPhase: RepoCommandPhase.literals,
+  commandImplementationStatus: CommandImplementationStatus.literals,
+  attributionMode: AttributionMode.literals,
+  basePolicy: BasePolicy.literals,
+  adjacentFindingPolicy: AdjacentFindingPolicy.literals,
+  findingAttributionKind: FindingAttributionKind.literals,
+  residualRiskLevel: ResidualRiskLevel.literals,
+  reviewFindingSeverity: ReviewFindingSeverity.literals,
+  reviewClosureStatus: ReviewClosureStatus.literals,
+  fallowEnvelopeStatus: FallowEnvelopeStatus.literals,
 };
 
 const schemaCompanionDiagnostics = (
@@ -2175,10 +2175,10 @@ const reportFixtureDiagnostics = (document: ReportFixtureDocument): ReadonlyArra
     ...sameSetDiagnostics("Yeet issue fixture source refs", expectedYeetIssueRefs, actualYeetIssueRefs),
     ...sameSetDiagnostics(
       "report envelope attribution kinds",
-      FindingAttributionKind.Options,
+      FindingAttributionKind.literals,
       envelopeAttributionKinds
     ),
-    ...sameSetDiagnostics("Yeet issue attribution kinds", FindingAttributionKind.Options, yeetAttributionKinds),
+    ...sameSetDiagnostics("Yeet issue attribution kinds", FindingAttributionKind.literals, yeetAttributionKinds),
     ...A.flatMap(document.fixtures, (fixture) => {
       const diagnostics: Array<string> = [];
       const expectedPath = `.beep/fallow/${fixture.subcommand}.json`;
@@ -2201,7 +2201,7 @@ const reportFixtureDiagnostics = (document: ReportFixtureDocument): ReadonlyArra
         if (fixture.report.findingCount !== fixture.report.findings.length) {
           diagnostics.push(`${fixture.status}: report.findingCount must match report.findings length`);
         }
-        for (const kind of FindingAttributionKind.Options) {
+        for (const kind of FindingAttributionKind.literals) {
           if (summary[kind] !== counts[kind]) {
             diagnostics.push(`${fixture.status}: findingAttributionSummary.${kind} must match report.findings`);
           }
@@ -2226,7 +2226,7 @@ const reportFixtureDiagnostics = (document: ReportFixtureDocument): ReadonlyArra
             fixture.attributionKinds
           )
         );
-        for (const kind of FindingAttributionKind.Options) {
+        for (const kind of FindingAttributionKind.literals) {
           if (summary[kind] !== 0) {
             diagnostics.push(`${fixture.status}: failure envelopes must not claim decoded finding counts`);
           }

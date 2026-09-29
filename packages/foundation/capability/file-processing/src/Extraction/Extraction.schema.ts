@@ -32,7 +32,7 @@ class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
  * ```ts import.meta.vitest name="Check skipped status option"
  * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
  *
- * SourceProcessingStatus.Options.includes("skipped") // => true
+ * SourceProcessingStatus.literals.includes("skipped") // => true
  * ```
  *
  * @category schemas

@@ -13,7 +13,7 @@ import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, identity, Match, Number as N, Order, Path, pipe, SchemaTransformation } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -21,7 +21,7 @@ import * as S from "effect/Schema";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,
-  VersionCategoryStatusThunk,
+  VersionCategoryStatusEnum,
   VersionDriftItem,
   VersionSyncError,
 } from "../../VersionSync.schemas.ts";
@@ -466,11 +466,11 @@ export const buildDockerReport: (state: DockerImageState) => VersionCategoryRepo
 
   return VersionCategoryReport.cases.docker.make({
     status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
+      onEmpty: constant(VersionCategoryStatusEnum.ok),
       onNonEmpty: () =>
         Bool.match(hasUnpinned, {
-          onTrue: VersionCategoryStatusThunk.unpinned,
-          onFalse: VersionCategoryStatusThunk.drift,
+          onTrue: constant(VersionCategoryStatusEnum.unpinned),
+          onFalse: constant(VersionCategoryStatusEnum.drift),
         }),
     }),
     items,

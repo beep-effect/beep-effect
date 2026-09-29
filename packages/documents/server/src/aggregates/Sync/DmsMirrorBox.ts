@@ -49,6 +49,7 @@ import {
   SchemaTransformation,
 } from "effect";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -253,10 +254,10 @@ const boxFailureReason = (error: BoxError): string => {
  */
 const disconnectReasonFromStatus: (status: number) => DmsMirrorDisconnectReason = Match.type<number>().pipe(
   Match.withReturnType<DmsMirrorDisconnectReason>(),
-  Match.when(401, DmsMirrorDisconnectReason.thunk["auth-failed"]),
-  Match.whenOr(403, 404, DmsMirrorDisconnectReason.thunk["root-unreachable"]),
-  Match.when(transientBoxStatus, DmsMirrorDisconnectReason.thunk.transient),
-  Match.orElse(DmsMirrorDisconnectReason.thunk["probe-failed"])
+  Match.when(401, F.constant(DmsMirrorDisconnectReason.Enum["auth-failed"])),
+  Match.whenOr(403, 404, F.constant(DmsMirrorDisconnectReason.Enum["root-unreachable"])),
+  Match.when(transientBoxStatus, F.constant(DmsMirrorDisconnectReason.Enum.transient)),
+  Match.orElse(F.constant(DmsMirrorDisconnectReason.Enum["probe-failed"]))
 );
 
 const boxDisconnectReason = (error: BoxError): DmsMirrorDisconnectReason =>
@@ -343,7 +344,7 @@ const dmsEventTypeFromBox = (eventType: string | undefined): DmsEventType =>
   pipe(
     O.fromUndefinedOr(eventType),
     O.flatMap((value) => R.get(boxEventTypeMap, value)),
-    O.getOrElse(DmsEventType.thunk.unknown)
+    O.getOrElse(F.constant(DmsEventType.Enum.unknown))
   );
 
 type BoxSourceInfo = {
@@ -789,7 +790,7 @@ type MirrorProbeFailure = DmsMirrorUnavailable | S.SchemaError;
 
 const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectReason =>
   P.isTagged(error, "DmsMirrorUnavailable")
-    ? O.getOrElse(error.disconnectReason, DmsMirrorDisconnectReason.thunk["probe-failed"])
+    ? O.getOrElse(error.disconnectReason, F.constant(DmsMirrorDisconnectReason.Enum["probe-failed"]))
     : DmsMirrorDisconnectReason.Enum["probe-failed"];
 
 /**

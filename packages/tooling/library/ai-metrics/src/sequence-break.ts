@@ -8,6 +8,7 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Number as Num, Order } from "effect";
+import * as F from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { HookPulseAgentKind, HookPulseWaitReason } from "./hook-pulse.ts";
@@ -361,9 +362,9 @@ export const SequenceBreakDeliveryOutcome = S.Union([
 export type SequenceBreakDeliveryOutcome = typeof SequenceBreakDeliveryOutcome.Type;
 
 const waitReasonForTarget = SequenceBreakTarget.$match({
-  "human-input": HookPulseWaitReason.thunk["tool-permission"],
-  "plan-approval": HookPulseWaitReason.thunk["plan-approval"],
-  "tool-permission": HookPulseWaitReason.thunk["tool-permission"],
+  "human-input": F.constant(HookPulseWaitReason.Enum["tool-permission"]),
+  "plan-approval": F.constant(HookPulseWaitReason.Enum["plan-approval"]),
+  "tool-permission": F.constant(HookPulseWaitReason.Enum["tool-permission"]),
 });
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
 const isGreaterThanOrEqualToNumber = Order.isGreaterThanOrEqualTo(Num.Order);

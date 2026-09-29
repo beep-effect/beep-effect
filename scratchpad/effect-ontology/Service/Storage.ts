@@ -301,7 +301,7 @@ export class StorageService extends Context.Service<StorageService, StorageServi
  * ```ts
  * import { StorageBackend } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageBackend.Options)
+ * console.log(StorageBackend.literals)
  * ```
  *
  * @category schemas

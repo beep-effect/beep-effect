@@ -161,7 +161,7 @@ export const FirecrawlErrorReason = FirecrawlErrorReasonBase.pipe(
 export type FirecrawlErrorReason = typeof FirecrawlErrorReason.Type;
 
 const FirecrawlCodecErrorReasonBase = LiteralKit(
-  FirecrawlErrorReason.pickOptions(["request encoding", "response decoding"])
+  FirecrawlErrorReason.pick(["request encoding", "response decoding"]).literals
 );
 
 /**

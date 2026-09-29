@@ -43,7 +43,9 @@ const $I = $LangExtractId.create("Alignment");
  * @category schemas
  * @since 0.0.0
  */
-export const AlignedStatus = LiteralKit(AlignmentStatus.omitOptions(["unaligned"])).pipe(
+export const AlignedStatus = LiteralKit(
+  AlignmentStatus.pick(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"]).literals
+).pipe(
   $I.annoteSchema("AlignedStatus", {
     description:
       "Alignment status of a successfully matched candidate; absence of a match is Option.none, never a member.",

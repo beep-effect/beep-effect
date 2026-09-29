@@ -90,7 +90,7 @@ export type DenialReason = typeof DenialReason.Type;
  * @category constants
  * @since 0.0.0
  */
-export const evaluatorDenialReasons = DenialReason.pickOptions([
+export const evaluatorDenialReasons = DenialReason.pick([
   "grant-set-digest-mismatch",
   "policy-revision-mismatch",
   "principal-not-granted",
@@ -99,7 +99,7 @@ export const evaluatorDenialReasons = DenialReason.pickOptions([
   "audience-not-granted",
   "destination-not-granted",
   "grant-expired",
-]);
+]).literals;
 
 /**
  * The denial reasons only the enforcement boundary can produce: a request with
@@ -118,7 +118,7 @@ export const evaluatorDenialReasons = DenialReason.pickOptions([
  * @category constants
  * @since 0.0.0
  */
-export const boundaryDenialReasons = DenialReason.pickOptions(["no-grant-in-scope", "ledger-unavailable"]);
+export const boundaryDenialReasons = DenialReason.pick(["no-grant-in-scope", "ledger-unavailable"]).literals;
 
 /**
  * Constant operator guidance per denial reason — a total lookup, never

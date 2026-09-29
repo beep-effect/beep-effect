@@ -126,7 +126,7 @@ describe("YeetVerdictJson", () => {
   );
 
   it("keeps the Greptile score out of the hard criterion domain", () => {
-    expect(YeetMergeReadyCriterion.Options).toEqual([
+    expect(YeetMergeReadyCriterion.literals).toEqual([
       "pr-open",
       "not-draft",
       "closeout-run",

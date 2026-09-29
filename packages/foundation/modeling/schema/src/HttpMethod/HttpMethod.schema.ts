@@ -21,7 +21,7 @@ const HttpMethodBase = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEA
  * ```ts
  * import { Literal } from "@beep/schema/HttpMethod"
  *
- * console.log(Literal.Options.includes("GET"))
+ * console.log(Literal.literals.includes("GET"))
  * ```
  *
  * @category schemas
@@ -34,7 +34,7 @@ export const HttpMethod_ = HttpMethodBase.pipe(
   SchemaUtils.withLiteralKitStatics(HttpMethodBase)
 );
 
-const NoBodyBase = LiteralKit(HttpMethod_.pickOptions(["GET", "HEAD", "OPTIONS", "TRACE"]));
+const NoBodyBase = LiteralKit(HttpMethod_.pick(["GET", "HEAD", "OPTIONS", "TRACE"]).literals);
 
 const NoBody = NoBodyBase.pipe(
   $I.annoteSchema("NoBody", {
@@ -45,7 +45,7 @@ const NoBody = NoBodyBase.pipe(
 
 type NoBody = typeof NoBody.Type;
 
-const WithBodyBase = LiteralKit(HttpMethod_.omitOptions(NoBody.Options));
+const WithBodyBase = LiteralKit(HttpMethod_.pick(["POST", "PUT", "DELETE", "PATCH", "QUERY"]).literals);
 
 const WithBody = WithBodyBase.pipe(
   $I.annoteSchema("WithBody", {
@@ -81,7 +81,7 @@ export const HttpMethod = HttpMethod_.pipe(
     () =>
       ({
         hasBody,
-        all: HashSet.fromIterable(HttpMethod_.Options),
+        all: HashSet.fromIterable(HttpMethod_.literals),
         allShort: [
           ["GET", "get"],
           ["POST", "post"],

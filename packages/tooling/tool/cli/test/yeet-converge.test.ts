@@ -106,7 +106,7 @@ const snapshot = (root: string, input: SnapshotInput) => {
     greptileScore: O.none(),
   });
   const failing = A.findFirst(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
   );
   return YeetStatusSnapshot.make({

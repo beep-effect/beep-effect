@@ -9,7 +9,7 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -627,11 +627,11 @@ const ReconstructedEvidenceTier = LiteralKit([
 
 const atMostReconstructedEvidenceTier = (tiers: ReadonlyArray<EvidenceTier>) =>
   EvidenceTier.$match({
-    observed: EvidenceTier.thunk.reconstructed,
-    derived: EvidenceTier.thunk.reconstructed,
-    reconstructed: EvidenceTier.thunk.reconstructed,
-    heuristic: EvidenceTier.thunk.heuristic,
-    unknown: EvidenceTier.thunk.unknown,
+    observed: constant(EvidenceTier.Enum.reconstructed),
+    derived: constant(EvidenceTier.Enum.reconstructed),
+    reconstructed: constant(EvidenceTier.Enum.reconstructed),
+    heuristic: constant(EvidenceTier.Enum.heuristic),
+    unknown: constant(EvidenceTier.Enum.unknown),
   })(weakestEvidenceTier(tiers));
 
 /**

@@ -64,7 +64,7 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  * import { KnowledgeFindingKind } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeFindingKind.is["index-drift"]("index-drift")) // true
- * console.log(KnowledgeFindingKind.Options.length) // 14
+ * console.log(KnowledgeFindingKind.literals.length) // 14
  * ```
  *
  * @category models
@@ -131,7 +131,7 @@ export const isKnowledgeFindingKind = S.is(KnowledgeFindingKind);
  * import { KnowledgeFindingSeverity } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeFindingSeverity.is.blocking("blocking")) // true
- * console.log(KnowledgeFindingSeverity.Options.length) // 2
+ * console.log(KnowledgeFindingSeverity.literals.length) // 2
  * ```
  *
  * @category models
@@ -200,7 +200,7 @@ export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
  * import { KnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeProbePolicy.is.enabled("enabled")) // true
- * console.log(KnowledgeProbePolicy.Options.length) // 3
+ * console.log(KnowledgeProbePolicy.literals.length) // 3
  * ```
  *
  * @category models

@@ -35,7 +35,7 @@ const NonNegativeCounter = S.Finite.check(
  * ```ts
  * import { CircuitState } from "@effect-ontology/Runtime/CircuitBreaker"
  *
- * console.log(CircuitState.Options)
+ * console.log(CircuitState.literals)
  * ```
  *
  * @category schemas

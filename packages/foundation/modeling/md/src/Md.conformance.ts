@@ -30,6 +30,7 @@ import {
   CommonMarkProfileDefinition,
   GfmConformanceAnnotation,
   GfmProfileDefinition,
+  MarkdownProfileIds,
 } from "./internal/conformance/Md.profile-registry.ts";
 import {
   formatMarkdownConformanceIssue,
@@ -152,7 +153,7 @@ export const BeepMarkdownSpecificationProfile = Conformance.ConformanceProfile.m
  * import { MarkdownConformanceError, MarkdownConformanceIssue, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
  *
  * const error = MarkdownConformanceError.make({
- *   profile: MarkdownConformanceProfile.Enum.CommonMark,
+ *   profile: MarkdownConformanceProfile.Enum["commonmark-0.31.2"],
  *   issues: [MarkdownConformanceIssue.cases.EmptyList.make({ path: ["children", 0], listTag: "ul" })]
  * })
  * error._tag // => "MarkdownConformanceError"
@@ -173,8 +174,7 @@ export class MarkdownConformanceError extends S.TaggedError<MarkdownConformanceE
 ) {}
 
 const CommonMarkDocumentCheck = S.makeFilter<Document>(
-  (document) =>
-    !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)),
+  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownProfileIds.CommonMark)),
   {
     identifier: $I`CommonMarkDocumentCheck`,
     title: "CommonMark semantic document",
@@ -184,7 +184,7 @@ const CommonMarkDocumentCheck = S.makeFilter<Document>(
 );
 
 const GfmDocumentCheck = S.makeFilter<Document>(
-  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Gfm)),
+  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownProfileIds.Gfm)),
   {
     identifier: $I`GfmDocumentCheck`,
     title: "GFM semantic document",
@@ -194,7 +194,7 @@ const GfmDocumentCheck = S.makeFilter<Document>(
 );
 
 const BeepMarkdownDocumentCheck = S.makeFilter<Document>(
-  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Beep)),
+  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownProfileIds.Beep)),
   {
     identifier: $I`BeepMarkdownDocumentCheck`,
     title: "Beep Markdown semantic document",
@@ -355,9 +355,9 @@ export type StrictMarkdownDocument = CommonMarkDocument | GfmDocument | BeepMark
 
 const makeStrictMarkdownDocument = (document: Document, profile: MarkdownConformanceProfile): StrictMarkdownDocument =>
   MarkdownConformanceProfile.$match(profile, {
-    CommonMark: () => CommonMarkDocument.make(document),
-    Gfm: () => GfmDocument.make(document),
-    Beep: () => BeepMarkdownDocument.make(document),
+    [MarkdownProfileIds.CommonMark]: () => CommonMarkDocument.make(document),
+    [MarkdownProfileIds.Gfm]: () => GfmDocument.make(document),
+    [MarkdownProfileIds.Beep]: () => BeepMarkdownDocument.make(document),
   });
 
 /**
@@ -371,7 +371,7 @@ const makeStrictMarkdownDocument = (document: Document, profile: MarkdownConform
  * import { Result } from "effect"
  *
  * const document = Md.make([Md.table([["cell"]])])
- * Result.isFailure(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Gfm)) // => true
+ * Result.isFailure(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum["gfm-0.29.0.gfm.13"])) // => true
  * ```
  *
  * @returns A profile-branded document or a typed error containing every implemented violation.
@@ -401,15 +401,15 @@ export const refineStrictMarkdownDocument: {
 );
 
 const sharedProfileFor = MarkdownConformanceProfile.$match({
-  CommonMark: () => CommonMarkSpecificationProfile,
-  Gfm: () => GfmSpecificationProfile,
-  Beep: () => BeepMarkdownSpecificationProfile,
+  [MarkdownProfileIds.CommonMark]: () => CommonMarkSpecificationProfile,
+  [MarkdownProfileIds.Gfm]: () => GfmSpecificationProfile,
+  [MarkdownProfileIds.Beep]: () => BeepMarkdownSpecificationProfile,
 });
 
 const checkedInvariantIdsFor = MarkdownConformanceProfile.$match({
-  CommonMark: () => CommonMarkCheckedInvariantIds,
-  Gfm: () => GfmCheckedInvariantIds,
-  Beep: () => BeepCheckedInvariantIds,
+  [MarkdownProfileIds.CommonMark]: () => CommonMarkCheckedInvariantIds,
+  [MarkdownProfileIds.Gfm]: () => GfmCheckedInvariantIds,
+  [MarkdownProfileIds.Beep]: () => BeepCheckedInvariantIds,
 });
 
 const must = (): Conformance.RequirementStrength => "must";
@@ -453,7 +453,7 @@ const toSharedViolation = (issue: MarkdownConformanceIssue) =>
  * import { Md } from "@beep/md"
  *
  * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
- * const report = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * const report = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
  * report.status // => "nonConforming"
  * ```
  *

@@ -233,7 +233,7 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
     );
     const sourceNames = HashSet.fromIterable(A.prepend(conceptNames, "INDEX.md"));
     const artifacts = yield* Effect.forEach(
-      GraftCacheArtifact.Options,
+      GraftCacheArtifact.literals,
       Effect.fn("GraftCacheSync.artifacts")(function* (artifact) {
         const relativePaths = Match.value(artifact).pipe(
           Match.when("summaries", () => [path.join("graft", ".cache", "summaries.json")]),

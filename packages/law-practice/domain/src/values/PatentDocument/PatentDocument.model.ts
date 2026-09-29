@@ -30,8 +30,8 @@ const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.mod
  * ```ts
  * import { PatentApplicationSectionRole } from "@beep/law-practice-domain/values/PatentDocument"
  *
- * console.log(PatentApplicationSectionRole.Options[0]) // "title-of-invention"
- * console.log(PatentApplicationSectionRole.Options[12]) // "sequence-listing"
+ * console.log(PatentApplicationSectionRole.literals[0]) // "title-of-invention"
+ * console.log(PatentApplicationSectionRole.literals[12]) // "sequence-listing"
  * ```
  *
  * @see {@link https://www.ecfr.gov/current/title-37/section-1.77} for the controlling section order.
@@ -501,7 +501,7 @@ const PatentApplicationSectionIssue = PatentApplicationSectionIssueKind.toTagged
 
 const sectionRoleIndex = (role: PatentApplicationSectionRole): number =>
   pipe(
-    A.findFirstIndex(PatentApplicationSectionRole.Options, (candidate) => Eq.equals(candidate, role)),
+    A.findFirstIndex(PatentApplicationSectionRole.literals, (candidate) => Eq.equals(candidate, role)),
     O.getOrThrow
   );
 

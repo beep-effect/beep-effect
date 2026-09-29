@@ -66,21 +66,21 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
     "publicModules": 2905,
-    "publicExports": 20526,
-    "openModules": 377,
-    "openExports": 3097,
+    "publicExports": 20521,
+    "openModules": 376,
+    "openExports": 3096,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3335,
+    "exampleImportFindings": 3334,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
     "multiple-description-paragraphs": 434,
     "leading-blank": 0,
-    "trailing-blank": 1,
+    "trailing-blank": 0,
     "invalid-heading": 1,
     "section-out-of-order": 0,
     "duplicate-section": 0,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3334,
+    "no-root-package-import": 3333,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -18080,7 +18080,7 @@
         "srcDir": "src",
         "sourceFileCount": 263,
         "publicModuleCount": 263,
-        "publicExportCount": 1606
+        "publicExportCount": 1601
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -18089,22 +18089,22 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 25,
-        "openExports": 168,
+        "openModules": 24,
+        "openExports": 167,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 190,
+        "exampleImportFindings": 189,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 1,
           "multiple-description-paragraphs": 22,
           "leading-blank": 0,
-          "trailing-blank": 1,
+          "trailing-blank": 0,
           "invalid-heading": 0,
           "section-out-of-order": 0,
           "duplicate-section": 0,
@@ -18115,7 +18115,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 190
+          "no-root-package-import": 189
         }
       },
       "modules": [
@@ -21902,13 +21902,31 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "trailing-blank"
-            }
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 1,
+          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-1-module",
+          "currentTags": [
+            "@since",
+            "@packageDocumentation"
           ],
-          "exportCount": 11,
-          "remediationStatus": "open"
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -22000,28 +22018,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 4,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-1-module",
-          "currentTags": [
-            "@since",
-            "@packageDocumentation"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -47709,58 +47705,8 @@
           "exportKind": "function",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 732,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-732-literalkit",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "LiteralKit",
-          "exportKind": "function",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 752,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-752-literalkit",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LiteralKit",
-          "exportKind": "function",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 772,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-772-literalkit",
+          "line": 350,
+          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-350-literalkit",
           "currentTags": [
             "@category",
             "@since"
@@ -47781,8 +47727,8 @@
           "exportKind": "interface",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 675,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-675-literalkit",
+          "line": 284,
+          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-284-literalkit",
           "currentTags": [
             "@category",
             "@since"
@@ -47803,8 +47749,8 @@
           "exportKind": "type",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 48,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-48-literaltokey",
+          "line": 43,
+          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-43-literaltokey",
           "currentTags": [
             "@category",
             "@since"
@@ -47825,96 +47771,8 @@
           "exportKind": "const",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 226,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-226-matchliteral",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LiteralNotInSetError",
-          "exportKind": "class",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 306,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-306-literalnotinseterror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LiteralKitKeyCollisionError",
-          "exportKind": "class",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 338,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-338-literalkitkeycollisionerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LiteralKitEnumMappingDuplicateLiteralError",
-          "exportKind": "class",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 375,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-375-literalkitenummappingduplicateliteralerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LiteralKitEnumMappingCoverageError",
-          "exportKind": "class",
-          "filePath": "src/LiteralKit/LiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 411,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-411-literalkitenummappingcoverageerror",
+          "line": 160,
+          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-160-matchliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -47935,8 +47793,96 @@
           "exportKind": "class",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-          "line": 445,
-          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-445-literalkittaggedunionliteralerror",
+          "line": 201,
+          "anchor": "packages-foundation-modeling-schema-src-literalkit-literalkit-schema-ts-201-literalkittaggedunionliteralerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MappedLiteralKit",
+          "exportKind": "function",
+          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 350,
+          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-350-mappedliteralkit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MappedLiteralKit",
+          "exportKind": "interface",
+          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 316,
+          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-316-mappedliteralkit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DirectionalKit",
+          "exportKind": "interface",
+          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 75,
+          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-75-directionalkit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MappedLiteralDuplicateError",
+          "exportKind": "class",
+          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+          "line": 105,
+          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-105-mappedliteralduplicateerror",
           "currentTags": [
             "@category",
             "@since"
@@ -48617,72 +48563,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
           "line": 94,
           "anchor": "packages-foundation-modeling-schema-src-logs-ts-94-logseverity",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "MappedLiteralKit",
-          "exportKind": "function",
-          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "line": 351,
-          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-351-mappedliteralkit",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "MappedLiteralKit",
-          "exportKind": "interface",
-          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "line": 317,
-          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-317-mappedliteralkit",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "MappedLiteralDuplicateError",
-          "exportKind": "class",
-          "filePath": "src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-          "line": 84,
-          "anchor": "packages-foundation-modeling-schema-src-mappedliteralkit-mappedliteralkit-schema-ts-84-mappedliteralduplicateerror",
           "currentTags": [
             "@category",
             "@since"
@@ -437375,8 +437255,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 23,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-23-export-networkunavailableerror-versionsyncdrifterror-versionsyncerror-from-versionsync-errors-ts",
+          "line": 24,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-24-export-networkunavailableerror-versionsyncdrifterror-versionsyncerror-from-versionsync-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -437397,8 +437277,8 @@
           "exportKind": "class",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 45,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-45-versiondriftitem",
+          "line": 46,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-46-versiondriftitem",
           "currentTags": [
             "@category",
             "@since"
@@ -437419,8 +437299,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 80,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-80-versioncategory",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-81-versioncategory",
           "currentTags": [
             "@category",
             "@since"
@@ -437441,8 +437321,8 @@
           "exportKind": "type",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-115-versioncategory",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-116-versioncategory",
           "currentTags": [
             "@category",
             "@since"
@@ -437463,8 +437343,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-99-versioncategoryoptions",
+          "line": 100,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-100-versioncategoryoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -437485,8 +437365,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 138,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-138-versioncategorystatus",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-139-versioncategorystatus",
           "currentTags": [
             "@category",
             "@since"
@@ -437507,8 +437387,8 @@
           "exportKind": "type",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 203,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-203-versioncategorystatus",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-189-versioncategorystatus",
           "currentTags": [
             "@category",
             "@since"
@@ -437529,8 +437409,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 157,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-157-versioncategorystatusmatch",
+          "line": 158,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-158-versioncategorystatusmatch",
           "currentTags": [
             "@category",
             "@since"
@@ -437551,8 +437431,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 172,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-172-versioncategorystatusenum",
+          "line": 173,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-173-versioncategorystatusenum",
           "currentTags": [
             "@category",
             "@since"
@@ -437569,12 +437449,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "VersionCategoryStatusThunk",
+          "symbolName": "versionCategoryStatusFromDrift",
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-187-versioncategorystatusthunk",
+          "line": 207,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-207-versioncategorystatusfromdrift",
           "currentTags": [
             "@category",
             "@since"
@@ -437595,8 +437475,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-317-versioncategoryreport",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-325-versioncategoryreport",
           "currentTags": [
             "@returns",
             "@category",
@@ -437618,8 +437498,8 @@
           "exportKind": "type",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 347,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-347-versioncategoryreport",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-355-versioncategoryreport",
           "currentTags": [
             "@category",
             "@since"
@@ -437640,8 +437520,8 @@
           "exportKind": "class",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 363,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-363-versionsyncreport",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-371-versionsyncreport",
           "currentTags": [
             "@category",
             "@since"
@@ -437662,8 +437542,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 388,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-388-versionsyncmode",
+          "line": 396,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-396-versionsyncmode",
           "currentTags": [
             "@category",
             "@since"
@@ -437684,8 +437564,8 @@
           "exportKind": "type",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 421,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-421-versionsyncmode",
+          "line": 429,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-429-versionsyncmode",
           "currentTags": [
             "@category",
             "@since"
@@ -437706,8 +437586,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 404,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-404-versionsyncmodematch",
+          "line": 412,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-412-versionsyncmodematch",
           "currentTags": [
             "@category",
             "@since"
@@ -437728,8 +437608,8 @@
           "exportKind": "const",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 492,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-492-versionsyncoptions",
+          "line": 500,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-500-versionsyncoptions",
           "currentTags": [
             "@returns",
             "@category",
@@ -437751,8 +437631,8 @@
           "exportKind": "type",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 516,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-516-versionsyncoptions",
+          "line": 524,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-524-versionsyncoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -437773,8 +437653,8 @@
           "exportKind": "class",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 532,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-532-versionsyncupdatelocation",
+          "line": 540,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-540-versionsyncupdatelocation",
           "currentTags": [
             "@category",
             "@since"
@@ -437795,8 +437675,8 @@
           "exportKind": "class",
           "filePath": "src/commands/VersionSync/VersionSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
-          "line": 556,
-          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-556-versionsyncresolution",
+          "line": 564,
+          "anchor": "packages-tooling-tool-cli-src-commands-versionsync-versionsync-schemas-ts-564-versionsyncresolution",
           "currentTags": [
             "@category",
             "@since"

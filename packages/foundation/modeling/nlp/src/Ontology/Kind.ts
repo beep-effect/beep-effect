@@ -409,28 +409,28 @@ export const Lemma: TypedTextConstructor<"Lemma"> = makeTyped("Lemma");
 export class KindContainment extends S.Class<KindContainment>($I`KindContainment`)(
   {
     Character: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Chunk: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token"]))),
+    Chunk: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pick(["Token"]).literals)),
     Dependency: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
     Document: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Paragraph", "Sentence"]))
+      SchemaUtils.withKeyDefaults(TextKind.pick(["Paragraph", "Sentence"]).literals)
     ),
     Embedding: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
     Entity: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
     Lemma: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Paragraph: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Sentence"]))),
+    Paragraph: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pick(["Sentence"]).literals)),
     POS: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
     Relation: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
     Sentence: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token", "Chunk", "Dependency", "Entity", "Relation"]))
+      SchemaUtils.withKeyDefaults(TextKind.pick(["Token", "Chunk", "Dependency", "Entity", "Relation"]).literals)
     ),
     Token: TextKind.pipe(
       S.Array,
       S.optionalKey,
-      SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Character", "POS", "Lemma"]))
+      SchemaUtils.withKeyDefaults(TextKind.pick(["Character", "POS", "Lemma"]).literals)
     ),
   },
   $I.annote("KindContainment", {

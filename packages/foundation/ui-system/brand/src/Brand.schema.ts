@@ -66,7 +66,7 @@ export type PrintableText = typeof PrintableText.Type;
  * ```ts
  * import { ScaleStep } from "@beep/brand"
  *
- * console.log(ScaleStep.Options.length)
+ * console.log(ScaleStep.literals.length)
  * ```
  *
  * @category models
@@ -101,7 +101,7 @@ export type ScaleStep = typeof ScaleStep.Type;
  * ```ts
  * import { SurfaceStep } from "@beep/brand"
  *
- * console.log(SurfaceStep.Options)
+ * console.log(SurfaceStep.literals)
  * ```
  *
  * @category models

@@ -60,7 +60,7 @@ export type TmpfsReapClass = typeof TmpfsReapClass.Type;
  * ```ts
  * import { TmpfsReapAction } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(TmpfsReapAction.Options) // ["worktree-remove", "remove-dir", "skip"]
+ * console.log(TmpfsReapAction.literals) // ["worktree-remove", "remove-dir", "skip"]
  * ```
  *
  * @category models

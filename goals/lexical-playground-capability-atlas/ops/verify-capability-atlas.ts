@@ -444,7 +444,7 @@ for (const capability of atlas.capabilities) {
     }
   }
   const formats = capability.compatibility.map((item) => item.format);
-  compareExactInventory(`${capability.id} compatibility formats`, formats, CompatibilityFormat.Options);
+  compareExactInventory(`${capability.id} compatibility formats`, formats, CompatibilityFormat.literals);
   for (const command of capability.commands) {
     if (!stableIdPattern.test(command.id)) {
       fail(`${capability.id} has incomplete command ID ${command.id}`);

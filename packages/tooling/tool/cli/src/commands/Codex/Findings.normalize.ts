@@ -44,7 +44,7 @@ import type { CodexFindingSeverity, CodexFindingsCapturePayload } from "./Findin
  * @category utilities
  * @since 0.0.0
  */
-export const severityRank = (severity: CodexFindingSeverity): number => Severity.Options.indexOf(severity);
+export const severityRank = (severity: CodexFindingSeverity): number => Severity.literals.indexOf(severity);
 
 /** Minimal shape {@link captureOrder} needs to place a finding. */
 type OrderableFinding = {
@@ -131,7 +131,7 @@ export const severityCountsOf = (
   findings: ReadonlyArray<{ readonly severity: CodexFindingSeverity }>
 ): CodexSeverityCounts =>
   CodexSeverityCounts.make(
-    A.reduce(Severity.Options, {} as Record<string, number>, (counts, severity) => {
+    A.reduce(Severity.literals, {} as Record<string, number>, (counts, severity) => {
       const total = A.length(A.filter(findings, (finding) => finding.severity === severity));
       return total === 0 ? counts : { ...counts, [severity]: total };
     })

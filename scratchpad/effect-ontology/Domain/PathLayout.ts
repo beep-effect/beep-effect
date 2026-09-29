@@ -1219,7 +1219,7 @@ export {
    * ```ts
    * import { OutputFilename } from "@effect-ontology/PathLayout"
    *
-   * console.log(OutputFilename.Enum.graphJsonld) // "graph.jsonld"
+   * console.log(OutputFilename.Enum["graph.jsonld"]) // "graph.jsonld"
    * ```
    *
    * @category models

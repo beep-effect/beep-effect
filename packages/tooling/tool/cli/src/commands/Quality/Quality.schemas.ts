@@ -81,7 +81,7 @@ export class LintPolicySweeps extends S.Class<LintPolicySweeps>($I`LintPolicySwe
  *
  * ```ts
  * import { QualityCheckConcurrency } from "@beep/repo-cli/commands/Quality"
- * console.log(QualityCheckConcurrency.Options) // ["2", "3"]
+ * console.log(QualityCheckConcurrency.literals) // ["2", "3"]
  * ```
  *
  * @category configuration
@@ -1212,7 +1212,7 @@ export type GateOrderRule = typeof GateOrderRule.Type;
  * ```ts
  * import { GateOrderSortKey } from "@beep/repo-cli/commands/Quality"
  *
- * console.log(GateOrderSortKey.Options[0]) // "seeded"
+ * console.log(GateOrderSortKey.literals[0]) // "seeded"
  * ```
  *
  * @category policies

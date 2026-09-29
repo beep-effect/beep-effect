@@ -83,7 +83,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/GateStaleness");
  * ```ts
  * import { GateArtifactKind } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(GateArtifactKind.Options)
+ * console.log(GateArtifactKind.literals)
  * ```
  *
  * @category models

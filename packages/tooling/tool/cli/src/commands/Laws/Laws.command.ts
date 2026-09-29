@@ -251,7 +251,7 @@ const lawsEffectImportsCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Dry-run an explicit include scope before promoting it; cannot be combined with --write")
     ),
-    mode: Flag.Literals("mode", EffectImportCorpusMode.Options).pipe(
+    mode: Flag.Literals("mode", EffectImportCorpusMode.literals).pipe(
       Flag.withDefault("code"),
       Flag.withDescription("Corpus representation to scan: executable code, JSDoc fences, or Markdown fences")
     ),

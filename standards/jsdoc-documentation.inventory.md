@@ -15,21 +15,21 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2905 |
-| publicExports | 20526 |
-| openModules | 377 |
-| openExports | 3097 |
+| publicExports | 20521 |
+| openModules | 376 |
+| openExports | 3096 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3334 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
 | multiple-description-paragraphs | 434 |
 | leading-blank | 0 |
-| trailing-blank | 1 |
+| trailing-blank | 0 |
 | invalid-heading | 1 |
 | section-out-of-order | 0 |
 | duplicate-section | 0 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3333 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1606 | 25 | 168 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1601 | 24 | 167 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -623,7 +623,6 @@ Module findings:
 - `src/Fn/Fn.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/JSONSchema/JSONSchema.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/JSONSchema/JSONSchema.shared.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/LiteralKit/LiteralKit.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -725,7 +724,6 @@ Export findings:
 - `src/Jsonl.ts:151` `decodeJsonlTextAs` (const) - 1 example import violation(s)
 - `src/KebabStr.ts:29` `KebabCaseStr` (const) - 1 example import violation(s)
 - `src/KebabStr.ts:58` `KebabCaseStr` (type) - 2 example import violation(s)
-- `src/LiteralKit/LiteralKit.schema.ts:732` `LiteralKit` (function) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:249` `fromString` (const) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:322` `todayEffect` (const) - 1 example import violation(s)
 - `src/LocalDate/LocalDate.schema.ts:343` `fromDateTime` (const) - 1 example import violation(s)

@@ -288,7 +288,7 @@ export class VerifiedSpanEngine extends S.Class<VerifiedSpanEngine>($I`VerifiedS
  * ```ts import.meta.vitest name="Inspect attempt kinds"
  * import { VerifiedSpanAttemptKind } from "@beep/langextract/VerifiedSpan"
  *
- * VerifiedSpanAttemptKind.Options // => ["verification", "re-anchor"]
+ * VerifiedSpanAttemptKind.literals // => ["verification", "re-anchor"]
  * ```
  *
  * @category schemas

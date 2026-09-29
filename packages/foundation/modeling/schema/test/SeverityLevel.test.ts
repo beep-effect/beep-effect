@@ -4,7 +4,7 @@ import { describe, expect } from "@effect/vitest";
 
 describe("SeverityLevel", () => {
   it("exports the shared severity literals", () => {
-    expect(SeverityLevel.Options).toEqual(["low", "medium", "high", "critical"]);
+    expect(SeverityLevel.literals).toEqual(["low", "medium", "high", "critical"]);
   });
 
   it("provides literal guards", () => {

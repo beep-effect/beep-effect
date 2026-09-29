@@ -101,7 +101,7 @@ const isAiMetricsOtlpAttributeKey = S.is(AiMetricsOtlpAttributeKey);
  * @category constants
  * @since 0.0.0
  */
-export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.Options;
+export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = AiMetricsOtlpAttributeKey.literals;
 
 const OpenInferenceSpanKind = LiteralKit(["AGENT", "CHAIN", "LLM", "TOOL"]);
 const OtlpTraceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/u)).pipe(

@@ -66,6 +66,8 @@ import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -389,6 +391,18 @@ describe("@beep/law-practice-domain", () => {
       }),
     { arbitrary: fcRuns(3) }
   );
+
+  it("keeps the WIPO ST.13 office set equal to every ST.3 office except US and XX", () => {
+    // WipoSt13OfficeCode spells its complement out as an explicit pick; this
+    // fails when OfficeCode gains a code the pick does not list.
+    const expected = HashSet.fromIterable(
+      A.filter(OfficeCode.literals, (code) => !OfficeCode.is.US(code) && !OfficeCode.is.XX(code))
+    );
+    const actual = HashSet.fromIterable(WipoSt13OfficeCode.literals);
+
+    expect(HashSet.size(actual)).toBe(WipoSt13OfficeCode.literals.length);
+    assertTrue(Equal.equals(actual, expected));
+  });
 
   it("wires Matter to the law-practice product-entity identity", () => {
     expect(Matter.sql.tableName).toBe(LawPractice.MatterId.tableName);

@@ -53,7 +53,7 @@ export const EdgeRelation = EdgeRelationBase.pipe(
  */
 export type EdgeRelation = typeof EdgeRelation.Type;
 
-const SymmetricEdgeRelationBase = LiteralKit(EdgeRelationBase.pickOptions(["contradicts"]));
+const SymmetricEdgeRelationBase = LiteralKit(EdgeRelationBase.pick(["contradicts"]).literals);
 
 /**
  * The subset of {@link EdgeRelation} whose meaning is order-independent: an edge
@@ -112,7 +112,7 @@ export type SymmetricEdgeRelation = typeof SymmetricEdgeRelation.Type;
  * @category constants
  * @since 0.0.0
  */
-export const symmetricEdgeRelations: ReadonlyArray<EdgeRelation> = SymmetricEdgeRelation.Options;
+export const symmetricEdgeRelations: ReadonlyArray<EdgeRelation> = SymmetricEdgeRelation.literals;
 
 /**
  * Whether a relation's endpoint ordering carries no meaning, derived from the

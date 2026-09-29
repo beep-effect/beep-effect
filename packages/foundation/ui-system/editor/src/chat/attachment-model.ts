@@ -48,7 +48,7 @@ const decodeMimeType = S.decodeUnknownResult(MimeType);
  * @category configuration
  * @since 0.0.0
  */
-export const IMAGE_MIME_TYPES = ImageMimeType.pickOptions(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+export const IMAGE_MIME_TYPES = ImageMimeType.pick(["image/png", "image/jpeg", "image/webp", "image/gif"]).literals;
 
 /**
  * Schema for the vision-eligible image MIME subset, used to guard whether a

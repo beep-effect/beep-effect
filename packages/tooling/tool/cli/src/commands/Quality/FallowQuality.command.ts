@@ -48,7 +48,7 @@ import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnv
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
-const fallowFeatureValues: ReadonlyArray<FallowFeature> = FallowFeatureFamily.Options;
+const fallowFeatureValues: ReadonlyArray<FallowFeature> = FallowFeatureFamily.literals;
 const isFallowFeature = S.is(FallowFeatureFamily);
 
 const commonEnvelopeKeys = [

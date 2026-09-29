@@ -97,7 +97,7 @@ const reportOf = (steps: ReadonlyArray<SweepReportStep>): SweepReport =>
 
 describe("buildSweepPlan shape", () => {
   it("plans every step id exactly once, in execution order", () => {
-    expect(A.map(buildSweepPlan(mergedState, createdAt).steps, (step) => step.id)).toEqual([...SweepStepId.Options]);
+    expect(A.map(buildSweepPlan(mergedState, createdAt).steps, (step) => step.id)).toEqual([...SweepStepId.literals]);
   });
 
   it("stamps the schema version, branch, and creation timestamp", () => {
@@ -112,7 +112,7 @@ describe("buildSweepPlan shape", () => {
       A.filter(buildSweepPlan(mergedState, createdAt).steps, (step) => A.isReadonlyArrayEmpty(sweepStepBlockers(step))),
       (step) => step.id
     );
-    expect(blocked).toEqual([...SweepStepId.Options]);
+    expect(blocked).toEqual([...SweepStepId.literals]);
   });
 });
 
@@ -612,7 +612,7 @@ describe("executeSweep", () => {
       Effect.gen(function* () {
         const context = sweepContext(root);
         const report = yield* executeSweep(context);
-        expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.Options]);
+        expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.literals]);
         expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(
           A.map(report.steps, (step) => (step.id === "tmpfs-worktrees" ? "skipped" : "executed"))
         );

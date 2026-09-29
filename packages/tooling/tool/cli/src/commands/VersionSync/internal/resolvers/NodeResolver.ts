@@ -19,9 +19,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
   VersionCategoryReport,
-  VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
+  versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/NodeResolver");
@@ -252,10 +252,7 @@ export const buildNodeReport: (state: NodeVersionState) => VersionCategoryReport
   }
 
   return VersionCategoryReport.cases.node.make({
-    status: A.match(items, {
-      onEmpty: VersionCategoryStatusThunk.ok,
-      onNonEmpty: VersionCategoryStatusThunk.drift,
-    }),
+    status: versionCategoryStatusFromDrift(items),
     items,
     latest: O.none(),
     error: O.none(),

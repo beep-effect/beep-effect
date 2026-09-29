@@ -299,3 +299,33 @@ export class EffectVitestPrimitiveGraphError extends S.TaggedError<EffectVitestP
     EffectVitestPrimitiveGraphError.new(messageWithCause(message, cause))
   );
 }
+
+/**
+ * Reports a schema-parity codemod run that cannot discover, read, write or
+ * format its files, or whose biome pass fails.
+ *
+ * **Example** (Describe a failed format pass)
+ *
+ * ```ts
+ * import { SchemaParityCodemodError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = SchemaParityCodemodError.new("biome check exited 1.")
+ * console.log(error._tag) // "SchemaParityCodemodError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class SchemaParityCodemodError extends S.TaggedError<SchemaParityCodemodError>($I`SchemaParityCodemodError`)(
+  "SchemaParityCodemodError",
+  { message: S.NonEmptyString },
+  $I.annoteError<SchemaParityCodemodError>("SchemaParityCodemodError", {
+    description: "Raised when a schema-parity codemod run cannot discover, read, write or format its files.",
+  })
+) {
+  static readonly new = (message: string): SchemaParityCodemodError => SchemaParityCodemodError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<SchemaParityCodemodError, [message: string]>((cause, message) =>
+    SchemaParityCodemodError.new(messageWithCause(message, cause))
+  );
+}

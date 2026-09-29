@@ -445,7 +445,7 @@ const renderViolation = (violation: TsconfigOverlayViolation): string => {
   return `  - ${violation.file} ${location}: ${violation.detail}`;
 };
 
-const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(TsconfigOverlayDocumentKey.Options, ", ")} and compilerOptions { ${A.join(TsconfigOverlayCompilerOptionKey.Options, ", ")} }; move anything else into the package's tsconfig.json so build and check inherit it together`;
+const allowlistHint = `[tsconfig-overlay] an overlay may set only ${A.join(TsconfigOverlayDocumentKey.literals, ", ")} and compilerOptions { ${A.join(TsconfigOverlayCompilerOptionKey.literals, ", ")} }; move anything else into the package's tsconfig.json so build and check inherit it together`;
 const referencesHint = `[tsconfig-overlay] an overlay's references must equal those of its owner tsconfig (tsconfig.build.json when present, else tsconfig.json) verbatim (extends does not inherit them); regenerate with: ${syncCommand}`;
 const isReferencesViolation = (violation: TsconfigOverlayViolation): boolean =>
   TsconfigOverlayViolationScope.is.references(violation.scope);

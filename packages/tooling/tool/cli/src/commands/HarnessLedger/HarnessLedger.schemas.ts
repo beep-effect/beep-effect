@@ -49,7 +49,9 @@ const WindowSessions = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1));
  * @category models
  * @since 0.0.0
  */
-export const HarnessLedgerAdmission = LiteralKit(LedgerDisposition.omitOptions(["proposed"])).pipe(
+export const HarnessLedgerAdmission = LiteralKit(
+  LedgerDisposition.pick(["accepted", "rejected", "deferred", "waived", "tombstoned"]).literals
+).pipe(
   $I.annoteSchema("HarnessLedgerAdmission", {
     description: "Human admission outcome recorded by a disposition row.",
   })
@@ -71,13 +73,13 @@ export type HarnessLedgerAdmission = typeof HarnessLedgerAdmission.Type;
  * ```ts
  * import { PrunableSurfaceKind } from "@beep/repo-cli/commands/HarnessLedger"
  *
- * console.log(PrunableSurfaceKind.Options) // ["skill", "hook", "mcp-server"]
+ * console.log(PrunableSurfaceKind.literals) // ["skill", "hook", "mcp-server"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pickOptions(["skill", "hook", "mcp-server"])).pipe(
+export const PrunableSurfaceKind = LiteralKit(ContextSurfaceKind.pick(["skill", "hook", "mcp-server"]).literals).pipe(
   $I.annoteSchema("PrunableSurfaceKind", {
     description: "Pruning surface kinds; hook rows remain decodable, but enumeration waits for execution telemetry.",
   })
@@ -234,7 +236,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
  */
 export const parseHarnessSurfaceSpec = Effect.fn("HarnessLedger.parseHarnessSurfaceSpec")(function* (spec: string) {
   const invalid = HarnessLedgerInputError.new(
-    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.Options.join(" | ")}.`
+    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.literals.join(" | ")}.`
   );
   const [kind, name] = yield* Effect.fromOption(splitPrefixed(spec)).pipe(Effect.mapError(() => invalid));
   return yield* decodeSurfaceRef({ kind, name }).pipe(Effect.mapError(() => invalid));

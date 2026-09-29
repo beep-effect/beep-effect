@@ -1070,7 +1070,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
       ? A.empty()
       : [YeetMergeabilityChanged.make({ at, headSha: next.headSha, from: prev.mergeable, to: next.mergeable })];
 
-  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.Options, (criterion): ReadonlyArray<YeetWatchEvent> => {
+  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.literals, (criterion): ReadonlyArray<YeetWatchEvent> => {
     const before = mergeReadyCriterionHolds(prev.criteria, criterion);
     const after = mergeReadyCriterionHolds(next.criteria, criterion);
     return before === after

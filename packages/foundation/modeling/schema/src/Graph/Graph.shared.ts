@@ -39,7 +39,7 @@ export const $I = $SchemaId.create("Graph");
  * ```ts
  * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
  *
- * console.log(GraphKindValue.Options.includes("directed"))
+ * console.log(GraphKindValue.literals.includes("directed"))
  * ```
  *
  * @category type-level
@@ -60,7 +60,7 @@ export const GraphKindValue = LiteralKit(["directed", "undirected"]).pipe(
  * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
  *
  * const kind: GraphKindValue = "directed"
- * console.log(GraphKindValue.Options.includes(kind))
+ * console.log(GraphKindValue.literals.includes(kind))
  * ```
  *
  * @category type-level

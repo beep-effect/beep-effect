@@ -80,7 +80,7 @@ export const BEEP_QA_XMP_GROUP = `XMP-${BEEP_QA_XMP_NAMESPACE_PREFIX}`;
  * ```ts
  * import { BeepQaTagName } from "@beep/exiftool"
  *
- * console.log(BeepQaTagName.Options)
+ * console.log(BeepQaTagName.literals)
  * ```
  *
  * @category schemas
@@ -289,7 +289,7 @@ export class RenderBeepQaConfigOptions extends S.Class<RenderBeepQaConfigOptions
       })
     ),
     propertyNames: S.Array(XmpPropertyName).pipe(
-      SchemaUtils.withKeyDefaults(BeepQaTagName.Options),
+      SchemaUtils.withKeyDefaults(BeepQaTagName.literals),
       $I.annoteKey("RenderBeepQaConfigOptions.propertyNames", {
         description: "String-writable property names declared inside the namespace.",
       })

@@ -579,7 +579,7 @@ describe("C0 schema exports", () => {
       isRunId(evalRun.id),
       isCanonicalText(canonicalText),
     ]).toEqual([true, true, true, true, true, true, true]);
-    expect(MediaType.Options).toEqual(FixtureMediaType.Options);
+    expect(MediaType.literals).toEqual(FixtureMediaType.literals);
     pipe(ProviderFamily.is.anthropic("anthropic"), assertTrue);
     pipe(TaskType.is.extraction("extraction"), assertTrue);
     pipe(RequestKind.is["generate-text"]("generate-text"), assertTrue);
@@ -1467,7 +1467,7 @@ describe("evaluation refinements", () => {
 
 describe("F1 degraded-kind subset", () => {
   it("decodes every fixture degraded kind through the shared C0 DegradedKind", () => {
-    expect(FixtureDegradedKind.Options).toEqual(["invalid-utf8", "truncated", "extraction-failed"]);
-    pipe(A.every(FixtureDegradedKind.Options, isDegradedKind), assertTrue);
+    expect(FixtureDegradedKind.literals).toEqual(["invalid-utf8", "truncated", "extraction-failed"]);
+    pipe(A.every(FixtureDegradedKind.literals, isDegradedKind), assertTrue);
   });
 });

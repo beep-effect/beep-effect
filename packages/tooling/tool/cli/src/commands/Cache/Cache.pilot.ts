@@ -606,7 +606,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     const firstRoot = O.getOrThrow(A.head(roots));
     const verifySandboxLibraries = Effect.fn("CachePilot.verifySandboxLibraries")(function* () {
       yield* Effect.forEach(
-        CacheRuntimeExecutable.Options,
+        CacheRuntimeExecutable.literals,
         Effect.fn("CachePilot.verifySandboxLibrary")(function* (role) {
           const executable = CacheRuntimeExecutable.$match({
             bun: () => "/tools/bun",
@@ -1146,7 +1146,10 @@ const runPilot = Effect.fn("CachePilot.run")(
     const runMutationControls = Effect.fn("CachePilot.runMutationControls")(function* () {
       const runMutationControl = Effect.fn("CachePilot.runMutationControl")(function* (id: typeof mutationIds.Type) {
         const fixture = yield* prepare(sourceRoots[0], "root-a", `mutation-${id}`);
-        const expectedBaselineExit = A.contains(mutationIds.pickOptions(["root-lint-config", "dependency-source"]), id)
+        const expectedBaselineExit = A.contains(
+          mutationIds.pick(["root-lint-config", "dependency-source"]).literals,
+          id
+        )
           ? 1
           : 0;
         if (id === "root-lint-config")
@@ -1270,7 +1273,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         });
         yield* applyMutation();
         if (
-          !A.contains(mutationIds.pickOptions(["child-task-config", "missing-child-config", "dependency-source"]), id)
+          !A.contains(mutationIds.pick(["child-task-config", "missing-child-config", "dependency-source"]).literals, id)
         )
           changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
         if (needsProfile && id === "root-lint-config")
@@ -1300,7 +1303,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         checks.push(CacheSyntheticCheck.make({ name: `invalidation-${id}`, passed }));
         return passed;
       });
-      for (const id of mutationIds.Options) {
+      for (const id of mutationIds.literals) {
         if (!(yield* runMutationControl(id))) break;
       }
     });
@@ -1400,7 +1403,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         }
         return true;
       });
-      for (const reason of CachePilotNonExecution.fields.reason.Options) {
+      for (const reason of CachePilotNonExecution.fields.reason.literals) {
         if (!(yield* runNonExecutionControl(reason))) break;
       }
     });

@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 
 const $I = $M365Id.create("M365.errors");
 
-const M365HttpStatusArbitraryValues = HttpStatus.To.Options as readonly [number, ...ReadonlyArray<number>];
+const M365HttpStatusArbitraryValues = A.map(HttpStatus.Pairs, ([, code]) => code);
 const M365HttpStatus = S.Literals(M365HttpStatusArbitraryValues).pipe(
   $I.annoteSchema("M365HttpStatus", {
     description: "Numeric HTTP status code carried by Microsoft 365 driver errors.",

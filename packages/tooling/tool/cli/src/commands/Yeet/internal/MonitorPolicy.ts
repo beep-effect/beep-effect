@@ -95,7 +95,7 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * ```ts
  * import { YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorTerminalState.Options.length) // 6
+ * console.log(YeetMonitorTerminalState.literals.length) // 6
  * ```
  *
  * @category models
@@ -139,7 +139,7 @@ export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
  * ```ts
  * import { YeetMonitorAttachment } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorAttachment.Options) // ["attached", "detached"]
+ * console.log(YeetMonitorAttachment.literals) // ["attached", "detached"]
  * ```
  *
  * @category models
@@ -431,14 +431,14 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
  * ```ts
  * import { yeetMonitorExitTable, YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(yeetMonitorExitTable.length === YeetMonitorTerminalState.Options.length) // true
+ * console.log(yeetMonitorExitTable.length === YeetMonitorTerminalState.literals.length) // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
 export const yeetMonitorExitTable: ReadonlyArray<YeetMonitorExit> = A.map(
-  YeetMonitorTerminalState.Options,
+  YeetMonitorTerminalState.literals,
   yeetMonitorExitFor
 );
 
@@ -868,7 +868,7 @@ const renderPushToAckStage = (
  */
 export const renderYeetPushToAckTimeline = (timeline: YeetPushToAckTimeline): string => {
   const pushed = O.flatMap(timeline.pushedAt, epochMillis);
-  const [, clauses] = A.mapAccum(YeetPushToAckStage.Options, O.none<number>(), (previous, stage) =>
+  const [, clauses] = A.mapAccum(YeetPushToAckStage.literals, O.none<number>(), (previous, stage) =>
     renderPushToAckStage(pushed, previous, stage, pushToAckInstant(timeline, stage))
   );
   return `push→row→ack ${Str.slice(0, 7)(timeline.headSha)}: ${A.join(clauses, ", ")}`;

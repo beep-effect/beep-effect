@@ -1,12 +1,6 @@
 import { BlockedHostError } from "@beep/schema";
 import { CsvError } from "@beep/schema/CsvError";
-import {
-  LiteralKitEnumMappingCoverageError,
-  LiteralKitEnumMappingDuplicateLiteralError,
-  LiteralKitKeyCollisionError,
-  LiteralKitTaggedUnionLiteralError,
-  LiteralNotInSetError,
-} from "@beep/schema/LiteralKit";
+import { LiteralKitTaggedUnionLiteralError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError } from "@beep/schema/MappedLiteralKit";
 import { ParserOptionsError } from "@beep/schema/ParserOptions";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -68,49 +62,6 @@ describe("@beep/schema tagged-error declared equivalence", { concurrent: false }
       CsvError.make({ message: "Invalid CSV", offset: 4 }),
       CsvError.make({ message: "Invalid CSV", offset: 5 }),
       "CsvError"
-    );
-    expectDeclaredEquivalence(
-      LiteralNotInSetError,
-      LiteralNotInSetError.make({ input: ["blocked"], literals: ["ready"] }),
-      LiteralNotInSetError.make({ input: ["blocked"], literals: ["ready"] }),
-      LiteralNotInSetError.make({ input: ["missing"], literals: ["ready"] }),
-      "LiteralNotInSetError"
-    );
-    expectDeclaredEquivalence(
-      LiteralKitKeyCollisionError,
-      LiteralKitKeyCollisionError.make({ existing: "one", incoming: 1, key: "number1" }),
-      LiteralKitKeyCollisionError.make({ existing: "one", incoming: 1, key: "number1" }),
-      LiteralKitKeyCollisionError.make({ existing: "one", incoming: 2, key: "number1" }),
-      "LiteralKitKeyCollisionError"
-    );
-    expectDeclaredEquivalence(
-      LiteralKitEnumMappingDuplicateLiteralError,
-      LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 2 }),
-      LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 2 }),
-      LiteralKitEnumMappingDuplicateLiteralError.make({ firstIndex: 0, literal: "ready", secondIndex: 3 }),
-      "LiteralKitEnumMappingDuplicateLiteralError"
-    );
-    expectDeclaredEquivalence(
-      LiteralKitEnumMappingCoverageError,
-      LiteralKitEnumMappingCoverageError.make({
-        literals: ["read", "write"],
-        mappingLiterals: ["read"],
-        missing: ["write"],
-        unexpected: [],
-      }),
-      LiteralKitEnumMappingCoverageError.make({
-        literals: ["read", "write"],
-        mappingLiterals: ["read"],
-        missing: ["write"],
-        unexpected: [],
-      }),
-      LiteralKitEnumMappingCoverageError.make({
-        literals: ["read", "write"],
-        mappingLiterals: ["read", "write"],
-        missing: [],
-        unexpected: [],
-      }),
-      "LiteralKitEnumMappingCoverageError"
     );
     expectDeclaredEquivalence(
       LiteralKitTaggedUnionLiteralError,

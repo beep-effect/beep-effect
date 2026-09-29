@@ -53,13 +53,13 @@ const AdmissionPriorityKit = LiteralKit(["publish", "verify"]);
  * ```ts
  * import { AdmissionPriority } from "@/projection/Schemas"
  *
- * console.log(AdmissionPriority.Options) // ["publish", "verify"]
+ * console.log(AdmissionPriority.literals) // ["publish", "verify"]
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionPriority = S.Literals(AdmissionPriorityKit.Options).pipe(
+export const AdmissionPriority = S.Literals(AdmissionPriorityKit.literals).pipe(
   $I.annoteSchema("AdmissionPriority", {
     description: "Priority class attached to a pending admission request.",
   }),
@@ -67,12 +67,7 @@ export const AdmissionPriority = S.Literals(AdmissionPriorityKit.Options).pipe(
   SchemaUtils.withStatics(() => ({
     $match: AdmissionPriorityKit.$match,
     Enum: AdmissionPriorityKit.Enum,
-    HashSet: AdmissionPriorityKit.HashSet,
     is: AdmissionPriorityKit.is,
-    omitOptions: AdmissionPriorityKit.omitOptions,
-    Options: AdmissionPriorityKit.Options,
-    pickOptions: AdmissionPriorityKit.pickOptions,
-    thunk: AdmissionPriorityKit.thunk,
     toTaggedUnion: AdmissionPriorityKit.toTaggedUnion,
   }))
 );

@@ -982,7 +982,7 @@ const baseOnlyComparison = (baseline: CoverageRegressionBaseline): CoverageCompa
 
 const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(VitestCoverageSummary));
 
-const metricNames = CoverageMetricName.Options;
+const metricNames = CoverageMetricName.literals;
 
 /**
  * Whether the pull request's row is a stricter floor than the base revision's

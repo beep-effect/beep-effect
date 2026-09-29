@@ -36,7 +36,7 @@ const $I = $RepoCliId.create("commands/Qa/Inventory.schemas");
  * import { QaSeverity } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
  * console.log(QaSeverity.is.P0("P0")) // true
- * console.log(QaSeverity.Options.length) // 3
+ * console.log(QaSeverity.literals.length) // 3
  * ```
  *
  * @category schemas
@@ -132,7 +132,7 @@ export type QaLens = typeof QaLens.Type;
  * ```ts
  * import { QaEvidenceKind } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  *
- * console.log(QaEvidenceKind.Options.length) // 5
+ * console.log(QaEvidenceKind.literals.length) // 5
  * ```
  *
  * @category schemas

@@ -216,7 +216,7 @@ const mergeLoopPollInterval = Duration.seconds(30);
  * ```ts
  * import { YeetMonitorFlakeClass } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorFlakeClass.Options)
+ * console.log(YeetMonitorFlakeClass.literals)
  * ```
  *
  * @category models
@@ -1217,7 +1217,7 @@ const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVer
     mergeReady: O.map(snapshot.mergeReady, (ready) => {
       const criteria = YeetMergeReadyCriteria.make({ ...ready.criteria, requiredChecksGreen: false });
       const failing = A.findFirst(
-        YeetMergeReadyCriterion.Options,
+        YeetMergeReadyCriterion.literals,
         (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
       );
       return YeetMergeReady.make({ ready: false, criteria, failing });

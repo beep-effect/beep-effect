@@ -358,12 +358,12 @@ export type MiscFileExtension = typeof MiscFileExtension.Type;
  * @since 0.0.0
  */
 export const FileExtension = LiteralKit([
-  ...ApplicationFileExtension.Options,
-  ...VideoFileExtension.Options,
-  ...TextFileExtension.Options,
-  ...ImageFileExtension.Options,
-  ...AudioFileExtension.Options,
-  ...MiscFileExtension.Options,
+  ...ApplicationFileExtension.literals,
+  ...VideoFileExtension.literals,
+  ...TextFileExtension.literals,
+  ...ImageFileExtension.literals,
+  ...AudioFileExtension.literals,
+  ...MiscFileExtension.literals,
 ]).pipe(
   $I.annoteSchema("FileExtension", {
     description: "A file extension for a mime type.",

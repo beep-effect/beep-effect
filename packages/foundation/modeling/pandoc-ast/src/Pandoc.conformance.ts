@@ -93,7 +93,7 @@ export const PandocCheckedInvariantIds = S.Tuple(PandocConformanceInvariantId.me
  */
 export type PandocCheckedInvariantIds = typeof PandocCheckedInvariantIds.Type;
 
-const checkedInvariantIds = PandocCheckedInvariantIds.make(PandocConformanceInvariantId.Options);
+const checkedInvariantIds = PandocCheckedInvariantIds.make(PandocConformanceInvariantId.literals);
 
 const PandocConformanceWire = S.Record(S.String, S.Json).pipe(
   $I.annoteSchema("PandocConformanceWire", {

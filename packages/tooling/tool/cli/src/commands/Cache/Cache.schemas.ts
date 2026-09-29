@@ -576,7 +576,7 @@ export type CacheLinkerResolution = typeof CacheLinkerResolution.Type;
  *
  * ```ts
  * import { CacheRuntimeExecutable } from "@beep/repo-cli/commands/Cache"
- * console.assert(CacheRuntimeExecutable.Options.length === 6)
+ * console.assert(CacheRuntimeExecutable.literals.length === 6)
  * ```
  *
  * @category schemas

@@ -34,7 +34,7 @@ const translationTable = [
 
 describe("TikaErrorReason", () => {
   it("keeps the technical reason domain and encoded shapes stable", () => {
-    expect(TikaErrorReason.Options).toEqual([
+    expect(TikaErrorReason.literals).toEqual([
       "config",
       "engine-unavailable",
       "output-budget",
@@ -67,7 +67,7 @@ describe("tikaOperationError", () => {
         A.map(translationTable, (row) => row.reason),
         Order.String
       )
-    ).toEqual(A.sort(TikaErrorReason.Options, Order.String));
+    ).toEqual(A.sort(TikaErrorReason.literals, Order.String));
   });
 
   it.effect(

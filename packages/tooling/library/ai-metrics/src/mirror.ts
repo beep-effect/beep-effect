@@ -992,7 +992,7 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
     bundleId,
     createdAtEpochMillis,
     includedTables: A.map(tables, (table) => table.tableName),
-    omittedDataClasses: AiMetricsMirrorOmittedDataClass.Options,
+    omittedDataClasses: AiMetricsMirrorOmittedDataClass.literals,
     omittedTables: A.fromIterable(omittedMirrorTables),
     p6ProofPreserved: true,
     privacyProof: AiMetricsMirrorPrivacyProof.make({

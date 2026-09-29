@@ -73,7 +73,7 @@ const signatureEquivalence = S.toEquivalence(FileSignature);
 const fileTypeEquivalence = S.toEquivalence(FileType);
 
 const catalogCases = pipe(
-  FileType.Options,
+  FileType.literals,
   A.flatMap((type) =>
     A.map(FileTypeCatalog[type].signatures, (signature, signatureIndex) => ({
       signature,
@@ -255,9 +255,9 @@ describe("FileTypeChecker schemas", () => {
 
   it("keeps catalog keys correlated, exhaustive, and schema-valid", () => {
     const catalogKeys = R.keys(FileTypeCatalog);
-    expect(catalogKeys).toHaveLength(FileType.Options.length);
-    expect(A.every(FileType.Options, (type) => A.contains(catalogKeys, type))).toBe(true);
-    for (const type of FileType.Options) {
+    expect(catalogKeys).toHaveLength(FileType.literals.length);
+    expect(A.every(FileType.literals, (type) => A.contains(catalogKeys, type))).toBe(true);
+    for (const type of FileType.literals) {
       const info = FileTypeCatalog[type];
       expect(info.extension).toBe(type);
       expect(isFileTypeInfo(info)).toBe(true);

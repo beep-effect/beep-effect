@@ -10,7 +10,7 @@ import { Defect, HtmlFragment } from "@beep/schema";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
 import { Effect, flow, identity, Match, Number as N, Order, Result, Tuple } from "effect";
-import { cast, dual, pipe } from "effect/Function";
+import { cast, constant, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -259,7 +259,7 @@ const renderMarkdownDestinationWithTitle = (
 ): string => `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
 
 const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
-  pipe(A.get(align, index), O.getOrElse(TableAlignment.thunk.none));
+  pipe(A.get(align, index), O.getOrElse(constant(TableAlignment.Enum.none)));
 
 const tableRowColumnCount = (row: TableRow): number => A.length(row.children);
 

@@ -66,7 +66,7 @@ const isSuccessStatus = S.is(SuccessStatus);
  * @category schemas
  * @since 0.0.0
  */
-export const ParameterLocation = LiteralKit(InputLocation.omitOptions(["body"])).pipe(
+export const ParameterLocation = LiteralKit(InputLocation.pick(["path", "query", "header"]).literals).pipe(
   $I.annoteSchema("ParameterLocation", {
     description: "OpenAPI parameter locations supported by CodeMode.",
   })
@@ -794,7 +794,7 @@ const operationParameters = (
         Result.all,
         Result.map(A.getSomes),
         Result.map((fields) =>
-          A.flatMap(ParameterLocation.Options, (location) => A.filter(fields, (field) => field.location === location))
+          A.flatMap(ParameterLocation.literals, (location) => A.filter(fields, (field) => field.location === location))
         )
       )
     )

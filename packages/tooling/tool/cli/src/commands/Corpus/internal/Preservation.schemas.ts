@@ -247,7 +247,7 @@ class UnreadableOutcome extends S.Class<UnreadableOutcome>($I`UnreadableOutcome`
  * ```ts
  * import { PreservationAttemptKind } from "@beep/repo-cli/commands/Corpus"
  *
- * console.log(PreservationAttemptKind.Options.length) // 6
+ * console.log(PreservationAttemptKind.literals.length) // 6
  * ```
  *
  * @category schemas
@@ -307,7 +307,7 @@ export type PreservationAttemptKind = typeof PreservationAttemptKind.Type;
  * @since 0.0.0
  */
 export const PreservationPassKind = LiteralKit(
-  PreservationAttemptKind.pickOptions(["copied", "resume-completed", "already-complete"])
+  PreservationAttemptKind.pick(["copied", "resume-completed", "already-complete"]).literals
 ).pipe(
   $I.annoteSchema("PreservationPassKind", {
     title: "Preservation Pass Kind",

@@ -9,9 +9,8 @@ import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { HashMap, pipe } from "effect";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { LiteralKit, LiteralKitKeyCollisionError, matchLiteral } from "../LiteralKit/index.ts";
+import { LiteralKit, matchLiteral } from "../LiteralKit/index.ts";
 import { isNonNegative } from "../Number.ts";
 import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
@@ -41,11 +40,8 @@ type ReverseEnumMap<M extends MappedPairs> = {
 };
 
 type DirectionalHelpers<From extends Literals, Enum extends Record<string, LiteralValue>> = {
-  readonly Options: LiteralKitSchema<From>["Options"];
   readonly is: LiteralKitSchema<From>["is"];
   readonly Enum: Enum;
-  readonly pickOptions: LiteralKitSchema<From>["pickOptions"];
-  readonly omitOptions: LiteralKitSchema<From>["omitOptions"];
   readonly $match: LiteralKitSchema<From>["$match"];
 };
 
@@ -54,11 +50,36 @@ type TransformedLiteralsSchema<
   To extends { readonly [I in keyof From]: LiteralValue },
 > = S.Union<{ readonly [I in keyof From]: S.decodeTo<S.Literal<To[I]>, S.Literal<From[I]>> }>;
 
-type DirectionalKit<
+/**
+ * One direction of a {@link MappedLiteralKit}: the transformed literal union
+ * plus keyed helpers (`is`, `Enum`, `$match`) over its encoded literals.
+ *
+ * **Details**
+ *
+ * `Rebuild` is the direction itself, so `annotate`, `annotateKey`, and
+ * `check` keep the helpers. The literal tuple of a direction is derived from
+ * the owning kit's `Pairs`.
+ *
+ * **Example** (Read the reverse direction)
+ *
+ * ```ts
+ * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
+ *
+ * const Status = MappedLiteralKit([["OK", 200], ["NOT_FOUND", 404]])
+ * console.log(Status.To.Enum.number404) // "NOT_FOUND"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface DirectionalKit<
   From extends Literals,
   To extends { readonly [I in keyof From]: LiteralValue },
   Enum extends Record<string, LiteralValue>,
-> = TransformedLiteralsSchema<From, To> & DirectionalHelpers<From, Enum>;
+> extends TransformedLiteralsSchema<From, To>,
+    DirectionalHelpers<From, Enum> {
+  readonly Rebuild: DirectionalKit<From, To, Enum>;
+}
 
 /**
  * Error thrown when `MappedLiteralKit` receives duplicate literals on the
@@ -101,8 +122,6 @@ type SeenState = {
   readonly from: HashMap.HashMap<LiteralValue, number>;
   readonly to: HashMap.HashMap<LiteralValue, number>;
 };
-
-type SeenLiteralKeys = HashMap.HashMap<string, LiteralValue>;
 
 const makeForwardEnum = <M extends MappedPairs>(mappings: M): ForwardEnumMap<M> =>
   A.reduce({} as ForwardEnumMap<M>, (acc, entry: M[number]) => {
@@ -159,25 +178,6 @@ const validateMappings = <M extends MappedPairs>(mappings: M): void =>
     )
   );
 
-const validateHelperKeys = <L extends Literals>(literals: L): void =>
-  void pipe(
-    literals,
-    A.reduce(HashMap.empty<string, LiteralValue>(), (seen, literal): SeenLiteralKeys => {
-      const key = matchLiteral(literal);
-      const existing = HashMap.get(seen, key);
-
-      if (O.isSome(existing) && !Object.is(existing.value, literal)) {
-        throw LiteralKitKeyCollisionError.make({
-          key,
-          existing: existing.value,
-          incoming: literal,
-        });
-      }
-
-      return HashMap.set(seen, key, literal);
-    })
-  );
-
 const splitMappings = <M extends MappedPairs>(
   mappings: M
 ): {
@@ -194,28 +194,28 @@ const splitMappings = <M extends MappedPairs>(
   ) as ToLiterals<M>,
 });
 
-const attachHelperDescriptors = <T extends object>(
+/**
+ * Attach the directional statics and keep them attached across every
+ * derivation: upstream's `annotate`, `annotateKey` and `check` all return
+ * `this.rebuild(ast)`, so the instance-level `rebuild` re-attaches them.
+ */
+const attachHelperDescriptors = <T extends S.Top>(
   schema: T,
   makeDescriptors: (schema: T) => PropertyDescriptorMap
 ): T => {
-  const originalAnnotate = Reflect.get(schema, "annotate");
-  const descriptors = makeDescriptors(schema);
+  const upstreamRebuild: (ast: SchemaAST.AST) => S.Top = schema.rebuild;
 
   return Object.defineProperties(schema, {
-    ...descriptors,
-    ...(P.isFunction(originalAnnotate)
-      ? {
-          annotate: {
-            value(annotation: unknown) {
-              return attachHelperDescriptors(originalAnnotate.call(schema, annotation) as T, makeDescriptors);
-            },
-            enumerable: false,
-            writable: false,
-            configurable: true,
-          },
-        }
-      : {}),
-  }) as T;
+    ...makeDescriptors(schema),
+    rebuild: {
+      value(this: S.Top, ast: SchemaAST.AST): S.Top {
+        return attachHelperDescriptors(upstreamRebuild.call(this, ast) as T, makeDescriptors);
+      },
+      enumerable: false,
+      writable: false,
+      configurable: true,
+    },
+  });
 };
 
 const makeDirectionalKit = <
@@ -237,11 +237,8 @@ const makeDirectionalKit = <
   });
 
   return attachHelperDescriptors(base, () => ({
-    Options: readonlyProperty(literalKit.Options),
     is: readonlyProperty(literalKit.is),
     Enum: readonlyProperty(Enum),
-    pickOptions: readonlyProperty(literalKit.pickOptions),
-    omitOptions: readonlyProperty(literalKit.omitOptions),
     $match: readonlyProperty(literalKit.$match),
   })) as DirectionalKit<From, To, Enum>;
 };
@@ -253,8 +250,10 @@ const makeDirectionalKit = <
  *
  * - `decode` maps `From` literals to `To` literals.
  * - `encode` maps `To` literals back to `From` literals.
- * - Top-level helpers (`Enum`, `is`, `$match`, etc.) are aliases of `From`.
- * - Both sides must be unique by literal value and by `LiteralToKey` helper key encoding.
+ * - Top-level helpers (`Enum`, `is`, `$match`) are aliases of `From`.
+ * - Both sides must be unique by literal value.
+ * - The helpers survive `annotate`, `annotateKey`, and `check` on the kit and
+ *   on its `From` / `To` directions.
  *
  * **Example** (Map SQL state literals)
  *
@@ -325,8 +324,8 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
  * **Details**
  *
  * Requires one-to-one mappings. Exact duplicate literals on either side throw
- * {@link MappedLiteralDuplicateError}. Helper-key collisions on either side
- * throw {@link LiteralKitKeyCollisionError}.
+ * {@link MappedLiteralDuplicateError}. The literal tuple of either side is
+ * derived from `Pairs`, for example `A.map(Kit.Pairs, ([from]) => from)`.
  *
  * **Example** (Build HTTP status mapping)
  *
@@ -351,8 +350,6 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
 export function MappedLiteralKit<const M extends MappedPairs>(mappings: M): MappedLiteralKit<M> {
   validateMappings(mappings);
   const { from, to } = splitMappings(mappings);
-  validateHelperKeys(from);
-  validateHelperKeys(to);
   const forwardEnum = makeForwardEnum(mappings);
   const reverseEnum = makeReverseEnum(mappings);
 
@@ -367,11 +364,8 @@ export function MappedLiteralKit<const M extends MappedPairs>(mappings: M): Mapp
   });
 
   return attachHelperDescriptors(From, (schema) => ({
-    Options: readonlyProperty(From.Options),
     is: readonlyProperty(From.is),
     Enum: readonlyProperty(From.Enum),
-    pickOptions: readonlyProperty(From.pickOptions),
-    omitOptions: readonlyProperty(From.omitOptions),
     $match: readonlyProperty(From.$match),
     From: readonlyProperty(schema),
     To: readonlyProperty(To),

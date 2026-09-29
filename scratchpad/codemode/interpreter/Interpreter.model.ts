@@ -658,7 +658,7 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
  * ```ts
  * import { GeneratorMethodKind } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * console.log(GeneratorMethodKind.Options.includes("iterator"))
+ * console.log(GeneratorMethodKind.literals.includes("iterator"))
  * // true
  * console.log(GeneratorMethodKind.is.iterator("iterator"))
  * // true
@@ -668,7 +668,7 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
  * @category models
  * @since 0.0.0
  */
-export const GeneratorMethodKind = LiteralKit([...GeneratorRequestKind.Options, "iterator"]).pipe(
+export const GeneratorMethodKind = LiteralKit([...GeneratorRequestKind.literals, "iterator"]).pipe(
   $I.annoteSchema("GeneratorMethodKind", {
     description: "Operation exposed by a bound guest generator method.",
   })
@@ -1057,7 +1057,7 @@ export class PromiseMethodReference extends S.TaggedClass<PromiseMethodReference
  * ```ts
  * import { PromiseInstanceMethodName } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * console.log(PromiseInstanceMethodName.Options)
+ * console.log(PromiseInstanceMethodName.literals)
  * // [ "then", "catch", "finally" ]
  * ```
  *

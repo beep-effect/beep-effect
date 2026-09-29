@@ -117,7 +117,7 @@ export type CodexVerdict = typeof CodexVerdict.Type;
  * ```ts
  * import { CodexWorkStatus } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
  *
- * console.log(CodexWorkStatus.Options[0]) // "pending"
+ * console.log(CodexWorkStatus.literals[0]) // "pending"
  * ```
  *
  * @category schemas

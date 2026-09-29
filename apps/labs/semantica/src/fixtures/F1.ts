@@ -166,7 +166,7 @@ export type FixtureExpectation = typeof FixtureExpectation.Type;
  * @since 0.0.0
  */
 export const FixtureDegradedKind = LiteralKit(
-  DegradedKind.pickOptions(["invalid-utf8", "truncated", "extraction-failed"])
+  DegradedKind.pick(["invalid-utf8", "truncated", "extraction-failed"]).literals
 ).annotate(
   $I.annote("FixtureDegradedKind", {
     description: "Invalid UTF-8, truncation, or extraction failure declared by a degraded F1 fixture.",
@@ -286,10 +286,10 @@ const countFixtures = (index: F1IndexFields, mediaType: FixtureMediaType, expect
   );
 
 const f1HasOneDegradedPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
+  A.every(FixtureMediaType.literals, (mediaType) => Equal.equals(countFixtures(index, mediaType, "degraded"), 1));
 
 const f1HasTwoParsingFixturesPerMediaType = (index: F1IndexFields): boolean =>
-  A.every(FixtureMediaType.Options, (mediaType) =>
+  A.every(FixtureMediaType.literals, (mediaType) =>
     N.isGreaterThanOrEqualTo(countFixtures(index, mediaType, "parses"), 2)
   );
 

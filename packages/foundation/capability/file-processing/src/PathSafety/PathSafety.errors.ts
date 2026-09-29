@@ -24,7 +24,7 @@ const $I = $FileProcessingId.create("PathSafety");
  * ```ts
  * import { PathSafetyViolationReason } from "@beep/file-processing/PathSafety"
  *
- * console.log(PathSafetyViolationReason.Options)
+ * console.log(PathSafetyViolationReason.literals)
  * ```
  *
  * @category errors

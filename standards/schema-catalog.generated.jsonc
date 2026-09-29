@@ -20016,31 +20016,7 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-      "symbol": "LiteralKitEnumMappingCoverageError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-      "symbol": "LiteralKitEnumMappingDuplicateLiteralError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-      "symbol": "LiteralKitKeyCollisionError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
       "symbol": "LiteralKitTaggedUnionLiteralError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-      "symbol": "LiteralNotInSetError",
       "kind": "tagged-error",
       "owner": "@beep/schema"
     },

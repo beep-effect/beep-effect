@@ -284,7 +284,7 @@ export const ProofJobPhase = LiteralKit(["submitted", "running", "finished", "te
  *
  * ```ts
  * import { ProofJobPhase } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobPhase.Options.length > 0) // true
+ * console.log(ProofJobPhase.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -353,7 +353,7 @@ export const ProofJobServiceResult = LiteralKit([
  *
  * ```ts
  * import { ProofJobServiceResult } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobServiceResult.Options.length > 0) // true
+ * console.log(ProofJobServiceResult.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -388,7 +388,7 @@ export const ProofJobExitCode = LiteralKit(["exited", "killed", "dumped"]).pipe(
  *
  * ```ts
  * import { ProofJobExitCode } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobExitCode.Options.length > 0) // true
+ * console.log(ProofJobExitCode.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -434,7 +434,7 @@ export const ProofJobTerminationReason = LiteralKit([
  *
  * ```ts
  * import { ProofJobTerminationReason } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobTerminationReason.Options.length > 0) // true
+ * console.log(ProofJobTerminationReason.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -513,7 +513,7 @@ export const ProofJobRowSeverity = LiteralKit(["P1", "P2"]).pipe(
  *
  * ```ts
  * import { ProofJobRowSeverity } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobRowSeverity.Options.length > 0) // true
+ * console.log(ProofJobRowSeverity.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -548,7 +548,7 @@ export const ProofJobObservedVia = LiteralKit(["job-wait", "job-status", "inbox-
  *
  * ```ts
  * import { ProofJobObservedVia } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobObservedVia.Options.length > 0) // true
+ * console.log(ProofJobObservedVia.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -589,7 +589,7 @@ export const ProofJobCancelOutcome = LiteralKit([
  *
  * ```ts
  * import { ProofJobCancelOutcome } from "@beep/repo-cli/test/Yeet"
- * console.log(ProofJobCancelOutcome.Options.length > 0) // true
+ * console.log(ProofJobCancelOutcome.literals.length > 0) // true
  * ```
  *
  * @category type-level
@@ -1187,7 +1187,7 @@ export class ProofJobWaitOptions extends S.Class<ProofJobWaitOptions>($I`ProofJo
  * ```ts
  * import { ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(ProofJobWaitOutcome.Options) // ["success", "failure", "wave", "terminated"]
+ * console.log(ProofJobWaitOutcome.literals) // ["success", "failure", "wave", "terminated"]
  * ```
  *
  * @category models
@@ -1284,14 +1284,14 @@ export const proofJobWaitExitFor = (outcome: ProofJobWaitOutcome): ProofJobWaitE
  * ```ts
  * import { proofJobWaitExitTable, ProofJobWaitOutcome } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(proofJobWaitExitTable.length === ProofJobWaitOutcome.Options.length) // true
+ * console.log(proofJobWaitExitTable.length === ProofJobWaitOutcome.literals.length) // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
 export const proofJobWaitExitTable: ReadonlyArray<ProofJobWaitExit> = A.map(
-  ProofJobWaitOutcome.Options,
+  ProofJobWaitOutcome.literals,
   proofJobWaitExitFor
 );
 

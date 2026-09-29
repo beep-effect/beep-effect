@@ -397,7 +397,7 @@ export const isCacheTransitionAllowed: {
 const sameKey = S.toEquivalence(CacheQualificationKey);
 const samePins = S.toEquivalence(CacheQualificationPins);
 const sameClient = S.toEquivalence(CacheClientPin);
-const pairKinds = CacheEvidenceKind.pickOptions(["fresh-fresh", "fresh-remote-hit"]);
+const pairKinds = CacheEvidenceKind.pick(["fresh-fresh", "fresh-remote-hit"]).literals;
 
 const contractPromotionFailures = (
   contract: CacheTaskContract,
@@ -522,7 +522,7 @@ export const cachePromotionFailures: {
     );
     return A.appendAll(
       contractPromotionFailures(contract, observations),
-      A.flatMap(CacheClientChannel.Options, (channel) => {
+      A.flatMap(CacheClientChannel.literals, (channel) => {
         const rows = A.filter(valid, (entry) => entry.channel === channel);
         return [
           ...isolatedPairFailures(channel, rows),

@@ -15,7 +15,7 @@ describe("Timezone", () => {
     Effect.fnUntraced(function* () {
       expect(yield* decodeTimezoneEffect("UTC")).toBe("UTC");
       expect(yield* decodeTimezoneEffect("America/New_York")).toBe("America/New_York");
-      expect(Timezone.Options).toContain("Europe/London");
+      expect(Timezone.literals).toContain("Europe/London");
     })
   );
 

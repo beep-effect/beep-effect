@@ -86,7 +86,7 @@ export const JUDGE_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/resources/j
  * ```ts
  * import { JudgeEvidenceKind } from "@beep/repo-cli/commands/Qa/JudgePack"
  *
- * console.log(JudgeEvidenceKind.Options.length) // 3
+ * console.log(JudgeEvidenceKind.literals.length) // 3
  * ```
  *
  * @category schemas

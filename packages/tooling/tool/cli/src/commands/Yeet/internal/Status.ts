@@ -1472,7 +1472,7 @@ const closeoutBindsCurrentHead = (closeout: YeetStatusArtifact, remote: YeetStat
 // merge protocol asks an operator to walk.
 const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetMergeReadyCriterion> =>
   pipe(
-    YeetMergeReadyCriterion.Options,
+    YeetMergeReadyCriterion.literals,
     A.findFirst((criterion) => !mergeReadyCriterionHolds(criteria, criterion))
   );
 
@@ -1556,7 +1556,7 @@ const threadsAreTheOnlyBlocker = (mergeReady: O.Option<YeetMergeReady>): boolean
     (value) =>
       !mergeReadyCriterionHolds(value.criteria, "threads-resolved") &&
       A.every(
-        YeetMergeReadyCriterion.Options,
+        YeetMergeReadyCriterion.literals,
         (criterion) =>
           Str.Equivalence(criterion, "threads-resolved") || mergeReadyCriterionHolds(value.criteria, criterion)
       )
