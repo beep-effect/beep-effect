@@ -141,6 +141,34 @@ class LoopControlsTest(unittest.TestCase):
         self.assertNotIn(str(repo_root()), text)
         self.assertNotIn("schema-first-development", text)
 
+    def test_repeat_of_a_screened_candidate_is_exported_as_not_evaluated(self) -> None:
+        # Review F5, end to end: step 2 proposes the step-1 text again, the
+        # trainer's sel_cache answers (0, 0), and no rollout or screen runs.
+        from beep_skillopt import ledger
+
+        _summary, dirs = run_stub_training(
+            self.tmp, {1: history_skill(1), 2: history_skill(1)}, ["env.screen_candidates=true", "env.baseline_repeats=0"]
+        )
+        out_root = self.tmp / "out"
+        self.assertNotIn("steps/step_0002/selection_eval", dirs)
+        log = [json.loads(line)["step"] for line in (out_root / "screen-log.jsonl").read_text().splitlines()]
+        self.assertEqual(log, [1])
+        history = json.loads((out_root / "history.json").read_text())
+        self.assertEqual((history[1]["action"], history[1]["selection_soft"]), ("reject", 0.0))
+
+        steps = build_steps(out_root)
+        self.assertEqual(steps[1]["not_evaluated_reason"], "screen-cache-hit")
+        self.assertEqual(steps[1]["repeats_step"], 1)
+        self.assertIsNone(steps[1]["selection_soft"])
+        export_steps(out_root)
+        lines: list[str] = []
+        self.assertEqual(ledger.record(out_root, cli=["fake"], echo=lines.append), 0)
+        step2 = [line for line in lines if "<rowId of step 2 propose>" in line]
+        self.assertEqual(len(step2), 1)
+        self.assertIn("repeats the candidate screened out at step 1", step2[0])
+        self.assertNotIn("--score", step2[0])
+        self.assertNotIn("loop gate", step2[0])
+
     def test_screen_off_evaluates_everything(self) -> None:
         candidates = {1: history_skill(1), 2: history_skill(2)}
         _summary, dirs = run_stub_training(
@@ -148,6 +176,36 @@ class LoopControlsTest(unittest.TestCase):
         )
         self.assertIn("steps/step_0001/selection_eval", dirs)
         self.assertFalse((self.tmp / "out/screen-log.jsonl").exists())
+
+    def test_screen_refuses_a_gate_off_trainer(self) -> None:
+        # Review F8: with the gate off the trainer force-accepts a screened candidate.
+        from beep_skillopt.controls import ScreenBypassError
+
+        with self.assertRaisesRegex(ScreenBypassError, "use_gate"):
+            run_stub_training(
+                self.tmp,
+                {1: history_skill(1), 2: history_skill(1)},
+                ["env.screen_candidates=true", "env.baseline_repeats=0", "evaluation.use_gate=false"],
+            )
+        # Refused before any rollout or state file.
+        self.assertFalse((self.tmp / "out/history.json").exists())
+        self.assertFalse((self.tmp / "out/selection_eval_baseline").exists())
+
+    def test_screen_refuses_slow_update(self) -> None:
+        from beep_skillopt.controls import LoopControls, ScreenBypassError, screen_bypass_reasons
+
+        base = {"out_root": str(self.tmp / "out"), "screen_candidates": True, "use_gate": True}
+        gated = {**base, "use_slow_update": True, "slow_update_gate_with_selection": True}
+        ungated = {**base, "use_slow_update": True, "slow_update_gate_with_selection": False}
+        self.assertIn("never screened", screen_bypass_reasons(gated)[0])
+        self.assertIn("no evaluation", screen_bypass_reasons(ungated)[0])
+        self.assertEqual(screen_bypass_reasons({**base, "use_gate": "false"})[0][:25], "evaluation.use_gate is fa")
+        for cfg in (gated, ungated):
+            with self.assertRaises(ScreenBypassError):
+                LoopControls(cfg, repo_root())
+        # Screen off, or gate on without slow update: allowed.
+        LoopControls({**gated, "screen_candidates": False}, repo_root())
+        LoopControls({**base, "use_slow_update": False}, repo_root())
 
     def test_baseline_noise_band_bypasses_the_cache(self) -> None:
         out_root = self.tmp / "out"

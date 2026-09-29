@@ -11,6 +11,10 @@ reads ``<out_root>/steps.jsonl`` (see :mod:`beep_skillopt.export`) and plans:
   gate rejected (negative evidence). A gate-rejected row carries
   ``--score`` (candidate minus current gate score) and ``--cost`` (skill
   characters added);
+* a ``disposition --to rejected`` row WITHOUT ``--score``/``--cost`` for a
+  candidate that repeats an earlier screened-out one (export's
+  ``not_evaluated_reason = "screen-cache-hit"``): the trainer's cache recorded
+  0.0 for it without a rollout, so there is no measurement to report;
 * nothing more for a candidate the loop gate accepted: it stays ``proposed``
   because only a human admits (D2). This module never writes ``accepted``.
 
@@ -96,20 +100,54 @@ def skill_name(config: dict[str, Any]) -> str:
     return name or "trained"
 
 
+def _full(value: Any) -> str:
+    """Full-precision number text (a 4-decimal rounding hides a 2.5e-7 tie gap)."""
+    return "n/a" if value is None else repr(float(value))
+
+
+def incumbent(row: dict[str, Any]) -> Any:
+    """The score the loop gate compared against (export's ``previous_best``)."""
+    value = row.get("previous_best")
+    return row.get("prev_current") if value is None else value
+
+
+def noise_note(row: dict[str, Any]) -> str:
+    """One clause on the measured baseline noise band, or '' without one."""
+    within, spread, delta = row.get("within_baseline_noise"), row.get("baseline_noise_spread"), row.get("gate_delta")
+    if within is None or spread is None or delta is None:
+        return ""
+    where = "within" if within else "outside"
+    return f"; delta {float(delta):+.6g} is {where} the measured baseline noise spread {float(spread):.6g}"
+
+
 def hypothesis_for(row: dict[str, Any], skill: str) -> str:
     applied = row.get("edits_applied")
     edits = f"{applied} applied edit(s)" if applied is not None else "its edits"
-    return (
+    text = (
         f"SkillOpt rerun step {row['step']} (epoch {row.get('epoch')}) candidate for the {skill} skill "
         f"with {edits} under edit budget {row.get('edit_budget')} "
         f"({row.get('skill_chars_before')} -> {row.get('skill_chars_after')} chars) raises the "
         f"selection {row.get('gate_metric') or 'soft'} score above the current "
-        f"{_fmt(row.get('prev_current'))}"
+        f"{_fmt(incumbent(row))}"
     )
+    if row.get("gate_verdict") == "accept":
+        cand = row.get("candidate_gate_score")
+        text += (
+            f". Loop gate accepted it at {_full(cand)} over incumbent {_full(incumbent(row))}"
+            f"{noise_note(row)}; not admitted (a human admits)"
+        )
+    return text
 
 
 def rejection_for(row: dict[str, Any]) -> tuple[str, list[str]] | None:
     """Evidence text plus extra flags when the row was rejected, else None."""
+    if row.get("not_evaluated_reason") == "screen-cache-hit":
+        earlier = row.get("repeats_step")
+        evidence = (
+            f"pre-evaluation screen (cached): repeats the candidate screened out at step {earlier}; "
+            "the trainer's selection cache recorded 0.0 without a rollout, so no score was measured"
+        )
+        return evidence, []
     if row.get("screen_verdict") == "reject":
         codes = ", ".join(row.get("screen_codes") or []) or "rejected"
         rules = ", ".join(row.get("screen_rules") or [])
@@ -120,16 +158,16 @@ def rejection_for(row: dict[str, Any]) -> tuple[str, list[str]] | None:
         cand = row.get("candidate_gate_score")
         if cand is None:
             cand = row.get("selection_soft")
-        current = row.get("prev_current")
+        current = incumbent(row)
         evidence = (
             f"loop gate: {metric} {_fmt(cand)} <= current {_fmt(current)} "
-            f"(best {_fmt(row.get('prev_best'))}); score = candidate minus current, "
+            f"(best {_fmt(row.get('prev_best'))}){noise_note(row)}; score = candidate minus current, "
             "cost = skill chars added"
         )
         flags: list[str] = []
         before, after = row.get("skill_chars_before"), row.get("skill_chars_after")
         if cand is not None and current is not None and before is not None and after is not None:
-            flags = ["--score", f"{float(cand) - float(current):.4f}", "--cost", str(int(after) - int(before))]
+            flags = ["--score", f"{float(cand) - float(current):.6f}", "--cost", str(int(after) - int(before))]
         return evidence, flags
     return None
 
@@ -151,7 +189,11 @@ def plan(
         digest = row.get("diff_digest")
         # A candidate is recorded once the screen rejected it or the loop gate
         # decided on it; a step without a candidate (skip) has no digest.
-        decided = row.get("screen_verdict") == "reject" or row.get("gate_verdict") in ("accept", "reject")
+        decided = (
+            row.get("screen_verdict") == "reject"
+            or row.get("not_evaluated_reason") == "screen-cache-hit"
+            or row.get("gate_verdict") in ("accept", "reject")
+        )
         if not digest or not decided:
             continue
         propose = [

@@ -43,15 +43,24 @@ These live in `tools/skillopt/src/beep_skillopt/` and wrap the adapter's
 quota. No installed SkillOpt code is modified.
 
 - **Pre-evaluation screen** (`screen.py`, `controls.py`). Before a candidate
-  skill is evaluated, the screen diffs it against the current skill and reads
-  only the added words. It rejects evaluation-environment fitting (added text
-  naming the scorer, its lanes, the fixture layout, or sandbox tool config)
-  and task leakage (a 5-word shingle shared with any corpus task prompt, or a
-  task's own export name). A rejected candidate is never rolled out. The
+  skill is evaluated, the screen diffs it against the current skill. Text
+  the candidate leaves unchanged is never a reason. It rejects
+  evaluation-environment fitting (a rule match that touches an added word and
+  names the scorer, its lanes, the fixture layout, or sandbox tool config) and
+  task leakage (a 5-word shingle that the candidate has, the current skill
+  lacks, and a corpus task prompt contains, or a task's own export name).
+  Both checks read the whole candidate, so rewording an existing line into a
+  task quote or a scorer term is caught the same way as appending one. A rejected candidate is never rolled out. The
   trainer's strict-greater gate then rejects it and the loop continues with
   the current skill. Every decision goes to `out/screen-log.jsonl` (verdict,
   rule ids, SHA-256 of the unified diff, sizes; no skill or task text). Size
   growth is reported, never a rejection reason.
+- **The screen needs the gate.** A screened candidate becomes a rejection only
+  because the gate scores its empty result set 0.0. With
+  `env.screen_candidates` on, the controls refuse to start (and preflight
+  fails) when `evaluation.use_gate` is false, since the trainer would then
+  force-accept the screened text, or when `optimizer.use_slow_update` is on,
+  since slow-update candidates are never screened.
 - **Baseline noise band.** Before the loop's own baseline, the baseline runs
   `env.baseline_repeats` (3) more times on identical inputs in fresh
   `out/baseline-noise/run_NN/` directories, never the cached
@@ -87,8 +96,9 @@ cd ../..
 
 Run from the repository root. It refuses to launch, with a message, when the
 Claude Code CLI is missing or logged out (`claude auth status`, which makes no
-model call), when `out_root` already holds a previous run's outputs, or when
-the checkout's Yeet inbox has unacknowledged P0 rows:
+model call), when `out_root` already holds a previous run's outputs, when the
+screen is on but the gate is off or slow update is on, or when the checkout's
+Yeet inbox has unacknowledged P0 rows:
 
 ```sh
 uv run --project tools/skillopt python -m beep_skillopt.preflight \
@@ -96,8 +106,11 @@ uv run --project tools/skillopt python -m beep_skillopt.preflight \
 ```
 
 - `--resume` continues an interrupted run in the same `out_root` on purpose.
-- `--force` moves an old `out_root` aside to `out.prev-<UTC stamp>`. Nothing
-  is deleted.
+- `--force` moves an old `out_root` aside to `out.prev-<UTC stamp>`, and only
+  after every other check has passed, so a refused launch leaves `out_root` in
+  place. Nothing is deleted. `.gitignore` covers `p4-rerun/out*/`, so the
+  moved run stays out of `git status`. Pointing a config at another directory
+  needs a matching ignore rule first.
 - Acknowledge inbox P0 rows with `bun run beep yeet inbox ack <id> ...`
   before launching. The SessionStart hook injects them into every rollout.
 
@@ -149,7 +162,7 @@ The step export can run at any time during the run:
 ```sh
 uv run --project tools/skillopt python -m beep_skillopt.export \
   --out-root goals/harness-evidence-ledger/history/p4-rerun/out
-jq -c '{step, screen_verdict, gate_verdict, selection_soft, prev_best, wall_seconds}' \
+jq -c '{step, screen_verdict, gate_verdict, not_evaluated_reason, selection_soft, previous_best, within_baseline_noise, wall_seconds}' \
   goals/harness-evidence-ledger/history/p4-rerun/out/steps.jsonl
 ```
 
@@ -178,6 +191,11 @@ Run these from the repository root, in order:
 uv run --project tools/skillopt python -m beep_skillopt.export \
   --out-root goals/harness-evidence-ledger/history/p4-rerun/out
 
+# Re-run the CURRENT screen over every step's candidate (analysis only):
+# rescreen.jsonl flags candidates the run's own screen let through (changed=true).
+uv run --project tools/skillopt python -m beep_skillopt.rescreen \
+  --out-root goals/harness-evidence-ledger/history/p4-rerun/out
+
 # Ledger rows, dry run (the default): prints the exact CLI invocations.
 uv run --project tools/skillopt python -m beep_skillopt.ledger \
   --out-root goals/harness-evidence-ledger/history/p4-rerun/out
@@ -192,9 +210,25 @@ candidate (`--edit diff:<sha256 of the unified diff>`). A candidate the
 screen or the gate rejected also gets a `disposition --to rejected` row with
 the screen rules or the gate scores as evidence. Gate rejections carry
 `--score` (candidate minus current) and `--cost` (skill characters added). A
+candidate that repeats an earlier screened-out one never ran: the trainer's
+selection cache records 0.0 for its hash without a rollout. `steps.jsonl`
+marks it `not-evaluated` with `not_evaluated_reason: screen-cache-hit`, and
+the recorder rejects it with evidence naming the earlier step and no score or
+cost. A
 gate-accepted candidate stays `proposed`: only a human admits (D2), and the
 recorder never writes `accepted`. `out/ledger-rows.json` maps each step to its
 row ids, so rerunning `--write` never records a step twice.
+
+Reading `steps.jsonl` scores:
+
+- `previous_best` is the score the gate compared against: the loop baseline
+  for the first step, then the running current score. It and `selection_soft`
+  are full precision.
+- `within_baseline_noise` is true when `|candidate - previous_best|` is at
+  most the spread of the baseline noise runs (plus 1e-6 for the scorer's
+  six-decimal rounding). The 2026-09-29 rerun's step 2 won by 2.5e-7, which is
+  a rounding gap, and both of its accepts are within noise. The gate itself is
+  unchanged (SPEC non-goal); this flag and the recorder's text only report it.
 
 ## 7. Expected wall time
 

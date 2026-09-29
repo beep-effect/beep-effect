@@ -109,7 +109,7 @@ class RecorderTest(unittest.TestCase):
         gate_reject = calls[3]
         evidence = gate_reject[gate_reject.index("--evidence") + 1]
         self.assertTrue(evidence.startswith("loop gate: soft 0.4200 <= current 0.5000"), evidence)
-        self.assertEqual(gate_reject[gate_reject.index("--score") + 1], "-0.0800")
+        self.assertEqual(gate_reject[gate_reject.index("--score") + 1], "-0.080000")
         self.assertEqual(gate_reject[gate_reject.index("--cost") + 1], "171")
 
         for call in calls:
@@ -153,6 +153,143 @@ class RecorderTest(unittest.TestCase):
 
     def test_parse_row_id_tolerates_noise(self) -> None:
         self.assertEqual(ledger.parse_row_id('$ bun run x\n{\n  "rowId": "hl-20260929-0000beef"\n}\n'), "hl-20260929-0000beef")
+
+
+def _write_run(out_root: Path, history: list[dict], screens: list[dict], noise_items: list[list[float]]) -> None:
+    """A synthetic out_root shaped like the 2026-09-29 rerun (numbers only, no skill text)."""
+    out_root.mkdir(parents=True, exist_ok=True)
+    (out_root / "config.json").write_text(json.dumps({"gate_metric": "soft", "target_model": "claude-opus-5-5",
+                                                      "target_backend": "claude_code_exec",
+                                                      "claude_code_exec_effort": "medium"}))
+    (out_root / "history.json").write_text(json.dumps(history))
+    (out_root / "screen-log.jsonl").write_text("".join(json.dumps(row) + "\n" for row in screens))
+    base = out_root / "selection_eval_baseline"
+    base.mkdir()
+    # Per-item soft scores rounded to six decimals, as the scorer writes them.
+    items = [("t-a", 1.0, 1.0), ("t-b", 0.833333, 0.0), ("t-c", 1.0, 1.0), ("t-d", 0.833333, 0.0)]
+    (base / "results.jsonl").write_text("".join(json.dumps({"id": i, "soft": s, "hard": h}) + "\n" for i, s, h in items))
+    runs = [
+        {"run": n + 1, "soft": round(sum(softs) / len(softs), 6), "hard": 0.5,
+         "per_task": [{"task_id": f"t-{i}", "soft": value, "hard": 1.0 if value == 1.0 else 0.0}
+                      for i, value in enumerate(softs)]}
+        for n, softs in enumerate(noise_items)
+    ]
+    (out_root / "baseline-noise.json").write_text(json.dumps({"runs": runs}))
+    skills = out_root / "skills"
+    skills.mkdir()
+    for rec in history:
+        step = rec["step"]
+        (skills / f"skill_v{step - 1:04d}.md").write_text(f"skill before step {step}\n")
+        step_dir = out_root / "steps" / f"step_{step:04d}"
+        step_dir.mkdir(parents=True)
+        (step_dir / "candidate_skill.md").write_text(f"candidate {rec['candidate_hash']}\n")
+
+
+def _rec(step: int, action: str, soft: float, current: float, cand_hash: str) -> dict:
+    return {"step": step, "epoch": 1, "action": action, "candidate_hash": cand_hash, "selection_soft": soft,
+            "selection_hard": 0.0, "candidate_gate_score": soft, "gate_metric": "soft", "current_score": current,
+            "best_score": current, "edit_budget": 4, "edit_apply_summary": {"applied": 2}}
+
+
+class ExportTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.out_root = Path(self._tmp.name) / "out"
+        base = 0.9166665
+        history = [
+            _rec(1, "reject", 0.0, base, "aaaa"),                    # screened out
+            _rec(2, "accept_new_best", 0.91666675, 0.91666675, "bbbb"),  # tie accept by rounding
+            _rec(3, "reject", 0.0, 0.91666675, "aaaa"),              # repeats step 1: cache hit
+            _rec(4, "reject", 0.875, 0.91666675, "cccc"),            # evaluated, within noise
+            _rec(5, "reject", 0.5, 0.91666675, "dddd"),              # evaluated, outside noise
+            _rec(6, "accept_new_best", 1.0, 1.0, "eeee"),             # gain equal to the spread
+        ]
+        screens = [
+            {"step": 1, "verdict": "reject", "codes": ["evaluation-environment-fitting"], "reasons": [{"rule": "fixture"}]},
+            {"step": 2, "verdict": "pass", "codes": [], "reasons": []},
+            {"step": 4, "verdict": "pass", "codes": [], "reasons": []},
+            {"step": 5, "verdict": "pass", "codes": [], "reasons": []},
+            {"step": 6, "verdict": "pass", "codes": [], "reasons": []},
+        ]
+        # Per-run item scores like the rerun's noise band: means 0.95833325, 0.95833325, 0.875.
+        noise = [[1.0, 0.833333, 1.0, 1.0], [1.0, 1.0, 0.833333, 1.0], [1.0, 0.833333, 0.666667, 1.0]]
+        _write_run(self.out_root, history, screens, noise)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_previous_best_is_the_incumbent_at_full_precision(self) -> None:
+        from beep_skillopt.export import build_steps
+
+        rows = {row["step"]: row for row in build_steps(self.out_root)}
+        self.assertAlmostEqual(rows[1]["previous_best"], 0.9166665, places=12)
+        self.assertAlmostEqual(rows[2]["previous_best"], 0.9166665, places=12)  # the loop baseline, unrounded
+        self.assertEqual(rows[2]["selection_soft"], 0.91666675)
+        self.assertAlmostEqual(rows[2]["gate_delta"], 2.5e-7, places=12)
+        self.assertTrue(rows[2]["within_baseline_noise"])
+        # Unrounded from per-task scores (the rounded run means would give 0.083333).
+        self.assertAlmostEqual(rows[2]["baseline_noise_spread"], 0.08333325, places=12)
+        self.assertEqual(rows[4]["previous_best"], 0.91666675)  # the running current score
+        self.assertTrue(rows[4]["within_baseline_noise"])
+        self.assertFalse(rows[5]["within_baseline_noise"])
+        # A gain equal to the spread up to float error counts as within noise.
+        self.assertAlmostEqual(rows[6]["gate_delta"], 0.08333325, places=12)
+        self.assertTrue(rows[6]["within_baseline_noise"])
+        self.assertIsNone(rows[1]["within_baseline_noise"])  # not evaluated
+
+    def test_repeat_of_a_screened_candidate_is_not_a_measurement(self) -> None:
+        # Review F5: the trainer's cache hit recorded (0, 0) with no rollout.
+        from beep_skillopt.export import build_steps
+
+        rows = {row["step"]: row for row in build_steps(self.out_root)}
+        self.assertEqual(rows[1]["not_evaluated_reason"], "screen-rejected")
+        row = rows[3]
+        self.assertEqual(row["gate_verdict"], "not-evaluated")
+        self.assertEqual(row["not_evaluated_reason"], "screen-cache-hit")
+        self.assertEqual(row["repeats_step"], 1)
+        self.assertEqual(row["screen_verdict"], "cached-reject")
+        for key in ("selection_soft", "selection_hard", "candidate_gate_score", "gate_delta", "within_baseline_noise"):
+            self.assertIsNone(row[key], key)
+        self.assertEqual(rows[4]["gate_verdict"], "reject")
+        self.assertIsNone(rows[4]["not_evaluated_reason"])
+
+    def test_cache_hit_is_found_from_candidate_text_when_history_lacks_the_hash(self) -> None:
+        from beep_skillopt.export import build_steps
+
+        history = json.loads((self.out_root / "history.json").read_text())
+        for rec in history:
+            del rec["candidate_hash"]
+        (self.out_root / "history.json").write_text(json.dumps(history))
+        rows = {row["step"]: row for row in build_steps(self.out_root)}
+        self.assertEqual(rows[3]["not_evaluated_reason"], "screen-cache-hit")
+        self.assertEqual(rows[4]["gate_verdict"], "reject")
+
+    def test_recorder_text_for_cache_hits_ties_and_noise(self) -> None:
+        from beep_skillopt.export import export_steps
+
+        export_steps(self.out_root)
+        lines: list[str] = []
+        self.assertEqual(ledger.record(self.out_root, cli=["fake"], echo=lines.append), 0)
+        commands = [shlex.split(line) for line in lines if not line.startswith("#")]
+        by_row = {}
+        for argv in commands:
+            if argv[1] == "disposition":
+                by_row[argv[argv.index("--row") + 1]] = argv
+        cached = by_row["<rowId of step 3 propose>"]
+        evidence = cached[cached.index("--evidence") + 1]
+        self.assertIn("repeats the candidate screened out at step 1", evidence)
+        self.assertNotIn("--score", cached)
+        self.assertNotIn("--cost", cached)
+        within = by_row["<rowId of step 4 propose>"]
+        self.assertIn("within the measured baseline noise spread 0.0833333", within[within.index("--evidence") + 1])
+        self.assertEqual(within[within.index("--score") + 1], "-0.041667")
+        outside = by_row["<rowId of step 5 propose>"]
+        self.assertIn("outside the measured baseline noise", outside[outside.index("--evidence") + 1])
+        accepted = [argv for argv in commands if argv[1] == "propose" and "step 2 " in argv[argv.index("--hypothesis") + 1]]
+        hypothesis = accepted[0][accepted[0].index("--hypothesis") + 1]
+        self.assertIn("accepted it at 0.91666675 over incumbent 0.9166665", hypothesis)
+        self.assertIn("within the measured baseline noise", hypothesis)
+        self.assertEqual(len(by_row), 4)  # steps 1, 3, 4, 5 rejected; steps 2 and 6 stay proposed
 
 
 if __name__ == "__main__":

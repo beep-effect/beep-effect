@@ -15,8 +15,16 @@ Checks (all read-only, none spends model quota):
 2. ``out_root`` holds no previous run's outputs (a relaunch otherwise reuses a
    cached ``selection_eval_baseline`` or resumes a stale run). ``--resume``
    allows it on purpose; ``--force`` moves the old directory aside to
-   ``<out_root>.prev-<UTC stamp>`` (nothing is deleted).
-3. The checkout's Yeet inbox has no unacknowledged, live P0 rows. The
+   ``<out_root>.prev-<UTC stamp>`` (nothing is deleted). The move happens only
+   after every other check has passed, so a refused launch leaves ``out_root``
+   where it was. The sibling must be git-ignored (``.gitignore`` covers
+   ``p4-rerun/out*/``); a moved-aside run holds skill snapshots and rollout
+   output and must never become committable content.
+3. The screen cannot be bypassed: with ``env.screen_candidates`` on,
+   ``evaluation.use_gate: false`` or ``optimizer.use_slow_update: true`` would
+   let a screened candidate into the skill
+   (:func:`beep_skillopt.controls.screen_bypass_reasons`).
+4. The checkout's Yeet inbox has no unacknowledged, live P0 rows. The
    SessionStart hook injects them into every Claude Code rollout, and the
    write-blocking hook failed the 2026-09-25 run. The inbox is read the same
    way ``.claude/hooks/yeet-inbox.sh`` reads it, without writing anything.
@@ -35,6 +43,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from beep_skillopt.controls import screen_bypass_reasons
 
 PREVIOUS_RUN_MARKERS = (
     "history.json",
@@ -169,24 +179,45 @@ def previous_outputs(out_root: Path) -> list[str]:
     return [name for name in PREVIOUS_RUN_MARKERS if (out_root / name).exists()]
 
 
-def check_out_root(out_root: Path, *, resume: bool, force: bool, report: Report) -> None:
+def check_out_root(out_root: Path, *, resume: bool, force: bool, report: Report) -> Path | None:
+    """Check ``out_root``; return the directory to move aside (``--force``) or None.
+
+    Never moves anything itself: :func:`run_preflight` moves it only once every
+    other check has passed.
+    """
     found = previous_outputs(out_root)
     if not found:
         report.note("out_root: empty or absent")
-        return
+        return None
     if resume:
         report.note(f"out_root: resuming over previous outputs ({', '.join(found)})")
-        return
+        return None
     if force:
-        stamp = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
-        target = out_root.with_name(f"{out_root.name}.prev-{stamp}")
-        out_root.rename(target)
-        report.note(f"out_root: previous outputs moved aside to {target.name}")
-        return
+        return out_root
     report.fail(
         f"out_root already holds a previous run's outputs ({', '.join(found)}); "
         "pass --resume to continue it or --force to move it aside"
     )
+    return None
+
+
+def move_aside(out_root: Path, report: Report) -> Path:
+    stamp = _dt.datetime.now(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+    target = out_root.with_name(f"{out_root.name}.prev-{stamp}")
+    out_root.rename(target)
+    report.note(f"out_root: previous outputs moved aside to {target.name}")
+    return target
+
+
+def check_screen(cfg: dict[str, Any], report: Report) -> None:
+    if not cfg.get("screen_candidates"):
+        report.note("screen: OFF (env.screen_candidates is not set)")
+        return
+    reasons = screen_bypass_reasons(cfg)
+    if reasons:
+        report.fail("screen: on, but the trainer would bypass it: " + "; ".join(reasons))
+        return
+    report.note("screen: on, gate on, no slow update")
 
 
 # ---------------------------------------------------------------------------
@@ -305,11 +336,15 @@ def run_preflight(
     report = Report()
     if check_clis:
         check_backends(cfg, report)
-    check_out_root(Path(str(cfg["out_root"])), resume=resume, force=force, report=report)
+    to_move = check_out_root(Path(str(cfg["out_root"])), resume=resume, force=force, report=report)
+    check_screen(cfg, report)
     check_inbox(repo_root, report)
-    if not cfg.get("screen_candidates"):
-        report.note("screen: OFF (env.screen_candidates is not set)")
     report.note(f"baseline repeats: {int(cfg.get('baseline_repeats') or 0)}")
+    if to_move is not None:
+        if report.failures:
+            report.note("out_root: left in place because another check failed (--force moves it only on a pass)")
+        else:
+            move_aside(to_move, report)
     return report
 
 

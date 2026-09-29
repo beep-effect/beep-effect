@@ -173,8 +173,9 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 # Workstation-local backup of Codex hook configuration.
 /.codex/hooks.json.hookpulse.bak
 
-# harness-evidence-ledger P2 and P4 rerun artifacts (SkillOpt out_root + run log)
+# harness-evidence-ledger P2 and P4 rerun artifacts (SkillOpt out_root + run log).
+# p4-rerun/out*/ also covers out.prev-<stamp>/, where `preflight --force` moves a prior run.
 goals/harness-evidence-ledger/history/p2-rerun/out/
 goals/harness-evidence-ledger/history/p2-rerun/run.log
-goals/harness-evidence-ledger/history/p4-rerun/out/
+goals/harness-evidence-ledger/history/p4-rerun/out*/
 goals/harness-evidence-ledger/history/p4-rerun/run.log

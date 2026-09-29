@@ -10,14 +10,18 @@ deletes text always passes.
 
 Checks
 ------
-* ``evaluation-environment-fitting``: added text names the scorer, its lanes or
-  checks, the fixture layout, or the sandbox's tool configuration. The rules are
+* ``evaluation-environment-fitting``: a rule match anywhere in the candidate
+  that touches an added word (so a reworded line such as "biome on" ->
+  "biome check on" counts) names the scorer, its lanes or checks, the fixture
+  layout, or the sandbox's tool configuration. The rules are
   regexes (``DEFAULT_ENV_RULES``), tuned against the stopped 2026-09-25 run:
   the step-1 diff (``skill_v0000 -> skill_v0001``) fires ``fixture``,
   ``tsconfig``, ``tool-config``, ``ts-error-code``, ``scorer-lane`` and
   ``scorer``; general guidance that mentions Biome or TypeScript does not.
-* ``task-leakage``: added text shares a ``shingle_k``-word shingle with any
-  corpus task prompt (train, validation, and test splits), or names a
+* ``task-leakage``: the candidate has a ``shingle_k``-word shingle that the
+  current skill does not (whole-text shingle difference, so a reworded line is
+  covered, not only appended text) and that also occurs in any corpus task
+  prompt (train, validation, and test splits), or names a
   task-specific identifier from a task's completion criteria (a required export
   or a mixed-case, non-library name from its patterns) that the current skill
   does not already contain. Library vocabulary such as ``S.Class`` or
@@ -230,6 +234,31 @@ def added_segments(before: str, after: str) -> list[str]:
     return segments
 
 
+def added_spans(before: str, after: str) -> list[tuple[int, int]]:
+    """Character spans of ``after`` covered by tokens not aligned to ``before``.
+
+    Same alignment as :func:`added_segments`, reported as ``(start, end)``
+    offsets into ``after`` so a rule can match across the WHOLE candidate text
+    and still count only matches that touch added words. A reworded line whose
+    new words sit between unchanged ones ("biome on" -> "biome check on") is
+    therefore caught, while a match lying entirely in unchanged text is not.
+    """
+    before_tokens = _TOKEN.findall(before)
+    after_matches = list(_TOKEN.finditer(after))
+    after_tokens = [match.group(0) for match in after_matches]
+    matcher = difflib.SequenceMatcher(None, before_tokens, after_tokens, autojunk=False)
+    spans: list[tuple[int, int]] = []
+    for op, _i1, _i2, j1, j2 in matcher.get_opcodes():
+        if op in ("insert", "replace") and j2 > j1:
+            spans.append((after_matches[j1].start(), after_matches[j2 - 1].end()))
+    return spans
+
+
+def _touches(span: tuple[int, int], spans: Sequence[tuple[int, int]]) -> bool:
+    start, end = span
+    return any(start < s_end and s_start < end for s_start, s_end in spans)
+
+
 def _words(text: str) -> list[str]:
     return _WORD.findall(text.lower())
 
@@ -357,19 +386,23 @@ def screen_candidate(
     if not segments:
         return verdict
 
-    # Evaluation-environment fitting.
+    # Evaluation-environment fitting: a rule match anywhere in the candidate
+    # counts when it touches an added word. Matching per added segment would
+    # miss a multi-word term whose other words were already on the line.
+    spans = added_spans(before, after)
     for rule in config.env_rules:
         regex = rule.compiled()
-        hits = sum(len(regex.findall(segment)) for segment in segments)
+        hits = sum(1 for match in regex.finditer(after) if _touches(match.span(), spans))
         if hits:
             verdict.reasons.append(ScreenReason(ENV_FITTING, rule.rule_id, hits))
 
-    # Task leakage: long shingles shared with a task prompt.
-    segment_shingles: set[tuple[str, ...]] = set()
-    for segment in segments:
-        segment_shingles |= _shingles(_words(segment), config.shingle_k)
+    # Task leakage: long shingles the candidate has and the current skill does
+    # not, computed over whole texts. Per-segment shingles would miss a quote
+    # that rewrites an existing line, because words aligned to the old line
+    # ("the", "that") split the quote into pieces shorter than k.
+    new_shingles = _shingles(_words(after), config.shingle_k) - _shingles(_words(before), config.shingle_k)
     for task in tasks:
-        shared = segment_shingles & _shingles(_words(task.prompt), config.shingle_k)
+        shared = new_shingles & _shingles(_words(task.prompt), config.shingle_k)
         if shared:
             verdict.reasons.append(
                 ScreenReason(TASK_LEAKAGE, f"prompt-shingle-{config.shingle_k}", len(shared), task.task_id)

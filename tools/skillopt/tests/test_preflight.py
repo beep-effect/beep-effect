@@ -70,6 +70,37 @@ class PreflightTest(unittest.TestCase):
         self.assertEqual(len(moved), 1)
         self.assertTrue((moved[0] / "history.json").exists())  # moved aside, never deleted
 
+    def test_force_moves_nothing_when_another_check_fails(self) -> None:
+        # Review F6: the rename used to run before the inbox check.
+        (self.out_root / "steps").mkdir(parents=True)
+        (self.out_root / "history.json").write_text("[]")
+        self.inbox.mkdir(parents=True)
+        (self.inbox / "failures.ndjson").write_text(_row("p0-open") + "\n")
+        report = self._run(self._cfg(), force=True)
+        self.assertEqual(len(report.failures), 1)
+        self.assertTrue((self.out_root / "history.json").exists())
+        self.assertEqual([p.name for p in self.root.iterdir() if p.name.startswith("out.prev-")], [])
+        self.assertTrue(any("left in place" in note for note in report.notes))
+
+    def test_moved_aside_run_is_git_ignored(self) -> None:
+        import subprocess
+
+        from _support import repo_root
+
+        rerun = "goals/harness-evidence-ledger/history/p4-rerun"
+        paths = [f"{rerun}/out/history.json", f"{rerun}/out.prev-20260929T000000Z/history.json"]
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", *paths], cwd=repo_root(), capture_output=True, text=True
+        )
+        self.assertEqual(sorted(result.stdout.split()), sorted(paths), result.stderr)
+
+    def test_screen_bypass_refuses(self) -> None:
+        failures = self._run(self._cfg(use_gate=False)).failures
+        self.assertEqual(len(failures), 1)
+        self.assertIn("use_gate", failures[0])
+        self.assertIn("use_slow_update", self._run(self._cfg(use_slow_update=True)).failures[0])
+        self.assertEqual(self._run(self._cfg(screen_candidates=False, use_gate=False)).failures, [])
+
     def test_unacknowledged_p0_refuses(self) -> None:
         self.inbox.mkdir(parents=True)
         (self.inbox / "failures.ndjson").write_text("\n".join([_row("p0-open"), _row("p1-row", severity="P1")]) + "\n")

@@ -24,6 +24,18 @@ Controls
   directories (never the cached ``selection_eval_baseline``) and summarized in
   ``<out_root>/baseline-noise.json``. This is rerun analysis only; the loop's
   gate still uses its own baseline.
+
+Requirements
+------------
+The screen only becomes a rejection because (a) the trainer's gate is on, so
+the empty result set scores ``(0.0, 0.0)`` and loses the strict-greater
+comparison, and (b) the only place a candidate can enter the current skill is
+a step's ``selection_eval``. ``evaluation.use_gate: false`` force-accepts a
+screened candidate as the current skill, and ``optimizer.use_slow_update``
+adds an end-of-epoch candidate that is either evaluated under
+``slow_update/epoch_NN/selection_eval`` (never screened) or force-accepted with
+no evaluation at all. :class:`LoopControls` therefore refuses to start when the
+screen is on together with either setting (:func:`screen_bypass_reasons`).
 """
 
 from __future__ import annotations
@@ -54,6 +66,34 @@ def _truthy(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     return str(value or "").strip().lower() in _TRUE
+
+
+def _disabled(value: Any) -> bool:
+    if isinstance(value, bool):
+        return not value
+    return str(value).strip().lower() in {"0", "false", "no", "off"}
+
+
+def screen_bypass_reasons(cfg: dict[str, Any]) -> list[str]:
+    """Trainer settings under which a screened-out candidate still enters the skill."""
+    reasons: list[str] = []
+    if "use_gate" in cfg and _disabled(cfg.get("use_gate")):
+        reasons.append(
+            "evaluation.use_gate is false: the trainer force-accepts every candidate, "
+            "including one the screen rejected"
+        )
+    if _truthy(cfg.get("use_slow_update")):
+        mode = (
+            "evaluates its candidate under slow_update/epoch_NN/selection_eval, which is never screened"
+            if _truthy(cfg.get("slow_update_gate_with_selection"))
+            else "force-accepts its candidate with no evaluation"
+        )
+        reasons.append(f"optimizer.use_slow_update is true: the slow update {mode}")
+    return reasons
+
+
+class ScreenBypassError(ValueError):
+    """The screen is on but the trainer configuration can route around it."""
 
 
 def _now() -> str:
@@ -119,6 +159,12 @@ class LoopControls:
         self.out_root = Path(str(cfg.get("out_root") or ".")).resolve()
         self.repo_root = Path(repo_root)
         self.screen_enabled = _truthy(cfg.get("screen_candidates"))
+        if self.screen_enabled:
+            bypass = screen_bypass_reasons(cfg)
+            if bypass:
+                raise ScreenBypassError(
+                    "env.screen_candidates is on, but the trainer would bypass it: " + "; ".join(bypass)
+                )
         self.baseline_repeats = max(0, int(cfg.get("baseline_repeats") or 0))
         self.screen_config = ScreenConfig.from_cfg(cfg)
         self.split_dir = str(cfg.get("split_dir") or "")
