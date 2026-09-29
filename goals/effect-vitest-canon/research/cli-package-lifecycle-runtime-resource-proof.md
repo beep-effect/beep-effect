@@ -53,7 +53,15 @@ judgment remains open. Therefore the net detector reduction of 46 represents
 40 runtime boundaries, five removed wrappers and one recognition gap, not
 46 resolved inventory items. Native-platform judgments also remain open.
 
-Historical runtime and prior property migration mappings are prepared, but
-ledger updates still need the source commit. Full CLI package proof for this
-three-file cohort remains pending. The earlier grouped packet-core and
-import-rule proof passed separately at source 05440996f6.
+The ledger reconciliation closes 51 historical rows with explicit lineage:
+40 runtime boundaries and five removed wrappers are fixed by e5eda0f280;
+three runSync property boundaries and three direct checkEffect rows were
+already fixed by b1aa7e320c. No new inventory rows were needed. The CLI ledger
+now contains 3,495 unique rows: 1,724 fixed, 12 exceptions and 1,759 open.
+Strict schema validation passes for every CLI row and all 687 schema rows.
+The retained withBunShim and native-platform judgments remain open.
+
+Full CLI package proof for this three-file cohort is running against source
+e5eda0f280 and remains pending. The earlier grouped packet-core and
+import-rule proof passed separately at source 05440996f6, with audit taking
+778.0 seconds and docgen 29.9 seconds.
