@@ -1915,3 +1915,13 @@ retain exact tool restrictions and rejection of unknown diagnostic text.
 The rejected attempt gains no retrospective acceptance. A recursive-search
 canary test at the first confinement review would have exposed the metadata
 leak before the payload probes.
+
+## 2026-09-29 — stale header provenance after reviewed design correction
+
+PR #1328 thread `PRRT_kwDOPbO_N86m_2DD` found that the minimal-fold search
+design's R45 evidence correction left the old source SHAs in its header.
+Correcting the two fields after the R46 input refresh invalidates that
+candidate's exact-source binding. Checking header provenance against each
+design's latest evidence section during install review would have prevented
+this extra refresh. Preserve the prior bytes and refresh the binding; no
+semantic or acceptance credit follows from this metadata repair.
