@@ -48,3 +48,13 @@ counts/messages, rejects unexpected assertion failures, and restores source
 bytes in finally. Applied-source assertion, detector, timing and historical
 lineage scripts are prepared. Actual application and verification remain gated
 on the preceding package proof finishing.
+
+## Applied revision
+
+The initial retained-wrapper plan was superseded after root ratchet verification
+exposed its changed fingerprint. Both wrappers are now migrated, with six
+explicit directory acquisitions and a shared scoped coordinator acquisition.
+Stateless memory services are provided directly. Applied Node/Bun verification,
+including lock-before-directory release controls, is recorded in
+`cli-yeet-review-runtime-proof.md`; the earlier draft-only statements above
+record preparation history, not current proof status.

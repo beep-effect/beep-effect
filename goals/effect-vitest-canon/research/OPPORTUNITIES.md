@@ -5708,3 +5708,16 @@ failures; flattening the pipes produced a new empty artifact with exitCode 0.
 Consumers should clearly distinguish diagnostic collection success from a
 clean type result. A visible summary or separate strict mode would prevent
 an operator from treating the wrapper's zero status as type proof.
+
+### Partially migrating a nested fixture changes the retained wrapper identity
+
+The Yeet review-fixes migration removed its inner directory wrapper but kept
+its coordinator wrapper. Root `beep lint effect-vitest` then rejected one new
+fingerprint despite unchanged remaining rule counts. Completing the coordinator
+migration exposed three previously hidden dynamic layer provisions. Scoped
+acquisition plus direct provision of the stateless memory service removed both
+issues without refreshing the baseline. Migration previews should compare
+fingerprints as well as counts and inspect nested providers before application.
+Lock-release probes now verify removal while the temporary root still exists,
+so directory cleanup cannot hide a broken lock finalizer. Receipt:
+`cli-yeet-review-runtime-proof.md`.
