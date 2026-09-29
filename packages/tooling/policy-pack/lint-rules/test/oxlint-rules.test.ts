@@ -77,6 +77,23 @@ describe("oxlint rules", () => {
       specifiers: [{ local: identifier("S"), type: "ImportNamespaceSpecifier" }],
       type: "ImportDeclaration",
     } as never);
+    visitors.Program!({
+      body: [
+        {
+          declarations: [{ id: identifier("Model"), init: null, type: "VariableDeclarator" }],
+          kind: "const",
+          type: "VariableDeclaration",
+        },
+        {
+          importKind: "value",
+          source: { type: "Literal", value: "./models" },
+          specifiers: [{ local: identifier("Models"), type: "ImportNamespaceSpecifier" }],
+          type: "ImportDeclaration",
+        },
+      ],
+      sourceType: "module",
+      type: "Program",
+    } as never);
     visitors.FunctionDeclaration!({} as never);
     const staticArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]);
     const staticMember = schemaCall("decodeSync", [member(identifier("Models"), "User")]);

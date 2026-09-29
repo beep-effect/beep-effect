@@ -185,6 +185,33 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
 
   "no-inline-schema-compile": {
     invalid: [
+      // A lowercase module-level schema binding is hoistable; the name's spelling does not matter.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const model = S.Struct({});`,
+          `export const h8 = () => S.decodeSync(S.Array(model))([]);`
+        ),
+      },
+      // A module-level binding declared below its use is still a module binding.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const h9 = () => S.decodeSync(S.Array(later))([]);`,
+          `const later = S.Struct({});`
+        ),
+      },
+      // An imported lowercase schema is a module binding.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `import { model } from "./model";`,
+          `export const h10 = () => S.decodeSync(S.Array(model))([]);`
+        ),
+      },
       // In-function IIFE over an inline schema: Schema.decodeUnknownSync(Schema.Struct(...))(x).
       {
         count: 1,
@@ -260,6 +287,25 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
       },
     ],
     valid: [
+      // A schema built from a function parameter cannot be hoisted, whatever its name.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const p1 = (rowSchema: S.Schema<unknown>) => S.decodeSync(S.Array(rowSchema))([]);`
+        ),
+      },
+      // A schema declared inside the function body is local state, not a module binding.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const p2 = (n: number) => {`,
+          `  const Local = S.Literal(n);`,
+          `  return S.decodeSync(S.Array(Local))([]);`,
+          `};`
+        ),
+      },
       // A plain schema reference inside a function hits the per-AST parser cache.
       {
         count: 0,

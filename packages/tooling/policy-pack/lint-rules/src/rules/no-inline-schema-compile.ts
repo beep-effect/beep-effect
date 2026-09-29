@@ -61,17 +61,8 @@ const COMPILER_METHODS = HashSet.fromIterable([
 const SCHEMA_NAMED_SOURCES = HashSet.fromIterable(["effect", "effect/Schema"]);
 const SCHEMA_MODULE_SOURCES = HashSet.fromIterable(["effect/Schema"]);
 
-const isStaticSchemaReference = (node: MaybeNode): boolean => {
-  const expression = unwrapExpression(node);
-  if (O.isNone(expression)) return false;
-
-  if (expression.value.type === "Identifier") {
-    const [firstChar] = expression.value.name;
-    return firstChar !== undefined && Str.toUpperCase(firstChar) === firstChar;
-  }
-
-  return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
-};
+type ModuleStatement = ESTree.Program["body"][number];
+type BindingTarget = { readonly type: string; readonly name?: string } | null | undefined;
 
 const inlineSchemaMessage = (method: string) =>
   `Hoist the schema passed to Schema.${method}(...) to module scope: inline schema construction defeats the per-AST parser cache, so every call builds and compiles a new schema.`;
@@ -86,6 +77,12 @@ const inlineSchemaMessage = (method: string) =>
  * parser per AST, so `Schema.decodeUnknownSync(Model)` inside a function
  * compiles `Model` once. Only inline construction such as
  * `Schema.decodeSync(Schema.Array(Model))` builds a new AST per call.
+ *
+ * An inline construction is reported only when it is hoistable: every leaf
+ * identifier resolves to a module-scope binding (an import local or a
+ * top-level `const`, `class` or `function`), whatever its spelling. A schema
+ * built from a function parameter or a body-local binding cannot move to
+ * module scope and is left alone.
  *
  * **Example** (Schema compile rule description)
  *
@@ -112,11 +109,43 @@ export default defineRule({
   createOnce(context) {
     // Local names bound to the Schema module via imports (namespace, default, named, aliases).
     const schemaIdentifiers = MutableHashSet.empty<string>();
+    // Names bound at module scope: import locals and top-level const/let/var, class and function
+    // declarations, collected up front so a use above its declaration still resolves.
+    const moduleBindings = MutableHashSet.empty<string>();
     let functionDepth = 0;
 
     const before = () => {
       MutableHashSet.clear(schemaIdentifiers);
+      MutableHashSet.clear(moduleBindings);
       functionDepth = 0;
+    };
+
+    const recordModuleBinding = (target: BindingTarget) => {
+      if (P.isNotNullish(target) && Str.Equivalence(target.type, "Identifier") && P.isString(target.name)) {
+        MutableHashSet.add(moduleBindings, target.name);
+      }
+    };
+
+    const recordModuleStatement = (statement: ModuleStatement | null): void =>
+      Match.value(statement).pipe(
+        Match.when({ type: "VariableDeclaration" }, ({ declarations }) =>
+          A.forEach(declarations, (d) => recordModuleBinding(d.id))
+        ),
+        Match.when({ type: "ClassDeclaration" }, ({ id }) => recordModuleBinding(id)),
+        Match.when({ type: "FunctionDeclaration" }, ({ id }) => recordModuleBinding(id)),
+        Match.when({ type: "ImportDeclaration" }, ({ specifiers }) =>
+          A.forEach(specifiers, (s) => recordModuleBinding(s.local))
+        ),
+        Match.when({ type: "ExportNamedDeclaration" }, ({ declaration }) => recordModuleStatement(declaration)),
+        Match.orElse(() => undefined)
+      );
+
+    // A schema expression is hoistable only when every leaf resolves to a module-scope binding.
+    const isStaticSchemaReference = (node: MaybeNode): boolean => {
+      const expression = unwrapExpression(node);
+      if (O.isNone(expression)) return false;
+      if (expression.value.type === "Identifier") return MutableHashSet.has(moduleBindings, expression.value.name);
+      return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
     };
 
     const isSchemaReceiver = (node: O.Option<AstNode>): boolean =>
@@ -223,6 +252,9 @@ export default defineRule({
 
     return {
       before,
+      Program(node) {
+        A.forEach(node.body, recordModuleStatement);
+      },
       ImportDeclaration(node) {
         if (node.importKind === "type") return;
         const source = node.source.value;
