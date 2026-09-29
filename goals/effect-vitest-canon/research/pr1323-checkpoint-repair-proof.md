@@ -65,3 +65,16 @@ the same head without source or configuration changes. Its test step took
 258.47 seconds. The failure was acknowledged as transient environment behavior
 with both outcomes preserved. A new full proof has been submitted to complete
 the remaining evidence; its final result is still pending.
+
+## Watch coverage repair package proof
+
+Commit `90cd89d70c` adds regressions for skipped required checks and invalid
+completion timestamp ordering. Focused Node coverage passes all 98 tests in
+three files with every statement, function, and branch covered in WatchMode
+and WatchStream. The same 98 tests pass under Bun with CI enabled. The Effect
+Vitest ratchet remains at zero introduced findings and 529 resolved findings.
+
+Full CLI package verification passed after this commit: audit 695.6 seconds,
+docgen 22.8 seconds. Review closeout for the same head reports zero issues and
+zero unresolved threads. Full repository proof and hosted heavy checks remain
+pending; this receipt does not claim merge readiness.
