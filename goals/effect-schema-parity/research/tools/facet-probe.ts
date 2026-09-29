@@ -22,24 +22,41 @@ const out: Array<string> = [];
 
 // --- 1. Opaque identity exclusion -------------------------------------------
 
-const alwaysEquivalent = S.overrideToEquivalence(() => () => true);
+const alwaysEquivalent = <Self extends S.Top>(self: Self): Self["Rebuild"] =>
+  S.overrideToEquivalence<Self>(() => () => true)(self);
 const left = new Error("left");
 const right = new Error("right");
+// Each case names the `@beep/schema` field it would replace, so encoded JSON compares like for like.
 const opaqueCases = [
-  ["@beep/schema Defect()", Defect()],
-  ["S.Defect()", S.Defect()],
-  ["S.Defect().pipe(S.overrideToEquivalence(() => () => true))", S.Defect().pipe(alwaysEquivalent)],
-  ["@beep/schema OpaqueUnknown", OpaqueUnknown],
-  ["S.Unknown", S.Unknown],
-  ["S.Unknown.pipe(S.overrideToEquivalence(() => () => true))", S.Unknown.pipe(alwaysEquivalent)],
+  ["@beep/schema Defect()", Defect(), Defect()],
+  ["S.Defect()", S.Defect(), Defect()],
+  ["S.Defect().pipe(S.overrideToEquivalence(() => () => true))", S.Defect().pipe(alwaysEquivalent), Defect()],
+  ["@beep/schema Defect({ includeStack: true })", Defect({ includeStack: true }), Defect({ includeStack: true })],
+  ["S.Defect({ includeStack: true })", S.Defect({ includeStack: true }), Defect({ includeStack: true })],
+  [
+    "S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))",
+    S.Defect({ includeStack: true }).pipe(alwaysEquivalent),
+    Defect({ includeStack: true }),
+  ],
+  ["@beep/schema OpaqueUnknown", OpaqueUnknown, OpaqueUnknown],
+  ["S.Unknown", S.Unknown, OpaqueUnknown],
+  ["S.Unknown.pipe(S.overrideToEquivalence(() => () => true))", S.Unknown.pipe(alwaysEquivalent), OpaqueUnknown],
 ] as const;
+
+// Encoded keys only: a stack trace carries machine paths, so the bytes are compared, not printed.
+const encodedJson = (field: (typeof opaqueCases)[number][1]): string =>
+  JSON.stringify(S.encodeUnknownSync(field)(left));
+const encodedKeys = (json: string): string => {
+  const parsed: unknown = JSON.parse(json);
+  return P.isObject(parsed) ? `{${A.join(Object.keys(parsed), ", ")}}` : json;
+};
 
 out.push(
   "## Opaque identity exclusion\n",
-  "| Field schema | S.toEquivalence(Struct), different causes | S.toEquivalence(TaggedError), different causes | Equal.equals(TaggedError), different causes | Equal.equals(TaggedError), same cause |",
-  "| --- | --- | --- | --- | --- |"
+  "| Field schema | S.toEquivalence(Struct), different causes | S.toEquivalence(TaggedError), different causes | Equal.equals(TaggedError), different causes | Equal.equals(TaggedError), same cause | JSON encode of an Error: keys | JSON bytes identical to today's field |",
+  "| --- | --- | --- | --- | --- | --- | --- |"
 );
-for (const [label, field] of opaqueCases) {
+for (const [label, field, today] of opaqueCases) {
   class ProbeError extends S.TaggedError<ProbeError>("ProbeError")("ProbeError", { cause: field }) {}
   const fieldEquivalent = S.toEquivalence(S.Struct({ cause: field }))({ cause: left }, { cause: right });
   const schemaEquivalent = S.toEquivalence(ProbeError)(
@@ -48,7 +65,10 @@ for (const [label, field] of opaqueCases) {
   );
   const errorsEqual = Equal.equals(new ProbeError({ cause: left }), new ProbeError({ cause: right }));
   const sameCauseEqual = Equal.equals(new ProbeError({ cause: left }), new ProbeError({ cause: left }));
-  out.push(`| \`${label}\` | ${fieldEquivalent} | ${schemaEquivalent} | ${errorsEqual} | ${sameCauseEqual} |`);
+  const json = encodedJson(field);
+  out.push(
+    `| \`${label}\` | ${fieldEquivalent} | ${schemaEquivalent} | ${errorsEqual} | ${sameCauseEqual} | ${encodedKeys(json)} | ${json === encodedJson(today)} |`
+  );
 }
 
 // --- 2. PR 3b default helper shapes -------------------------------------------

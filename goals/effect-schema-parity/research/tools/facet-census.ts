@@ -184,7 +184,10 @@ const placement = (node: ts.Node): string => {
 };
 
 // Name of the schema a point-free `withNoneDefault` applies to: the previous `.pipe` argument, else the receiver.
-const nameOf = (expression: ts.Expression): string => {
+// A call is named by its callee (`S.OptionFromOptionalKey(...)` and a bare
+// `optionalKey(...)` alike). A bare identifier is a function passed point-free when it
+// is a previous `.pipe` argument, and a named schema when it is the receiver.
+const nameOf = (expression: ts.Expression, receiver: boolean): string => {
   let current = expression;
   while (
     ts.isCallExpression(current) &&
@@ -193,18 +196,27 @@ const nameOf = (expression: ts.Expression): string => {
   )
     current = current.expression.expression;
   const callee = ts.isCallExpression(current) ? current.expression : current;
-  return ts.isPropertyAccessExpression(callee) ? callee.name.text : ts.isIdentifier(callee) ? "(local)" : "other";
+  if (ts.isPropertyAccessExpression(callee)) return callee.name.text;
+  if (!ts.isIdentifier(callee)) return "other";
+  return receiver && !ts.isCallExpression(current) ? "(local)" : callee.text;
 };
-const OPTIONAL_KEY = ["OptionFromOptionalKey", "OptionFromOptional", "OptionFromOptionalNullOr", "optionalKey"];
+// `OptionFromOptionalNullishKey` is the `@beep/schema` Options codec (group C); it also decodes a missing key to None.
+const OPTIONAL_KEY = [
+  "OptionFromOptionalKey",
+  "OptionFromOptional",
+  "OptionFromOptionalNullOr",
+  "optionalKey",
+  "OptionFromOptionalNullishKey",
+];
 const REQUIRED_KEY = ["Option", "OptionFromNullOr", "OptionFromUndefinedOr", "OptionFromNullishOr"];
 const subjectOf = (call: ts.CallExpression, ref: ts.Expression): string => {
   const index = call.arguments.indexOf(ref);
   const previous = index > 0 ? call.arguments[index - 1] : undefined;
   const name =
     previous !== undefined
-      ? nameOf(previous)
+      ? nameOf(previous, false)
       : ts.isPropertyAccessExpression(call.expression)
-        ? nameOf(call.expression.expression)
+        ? nameOf(call.expression.expression, true)
         : "other";
   return A.contains(OPTIONAL_KEY, name)
     ? "optional-key Option codec (missing key decodes to None)"
