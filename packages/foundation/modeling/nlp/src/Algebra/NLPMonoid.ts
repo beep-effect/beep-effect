@@ -37,13 +37,19 @@ const NonNegativeCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   })
 );
 
-// In-memory carrier. The codec link to an entry array is what arbitrary and
-// JSON derivation read; decoding a live map passes it through unchanged.
-const TermNumberMap = S.declare(MutableHashMap.isMutableHashMap<string, number>, {
-  expected: "MutableHashMap",
+const TermNumberEntry = S.Tuple([S.String, S.Finite]);
+const isTermNumberEntry = S.is(TermNumberEntry);
+
+const isTermNumberMap = (value: unknown): value is MutableHashMap.MutableHashMap<string, number> =>
+  MutableHashMap.isMutableHashMap(value) && A.every(A.fromIterable(value), isTermNumberEntry);
+
+// In-memory carrier. Every entry must be a string term and a finite number;
+// the codec link to an entry array is what arbitrary and JSON derivation read.
+const TermNumberMap = S.declare(isTermNumberMap, {
+  expected: "MutableHashMap<string, finite number>",
   toCodec: () =>
     S.link<MutableHashMap.MutableHashMap<string, number>>()(
-      S.Array(S.Tuple([S.String, S.Finite])),
+      S.Array(TermNumberEntry),
       SchemaTransformation.transform({
         decode: MutableHashMap.fromIterable,
         encode: A.fromIterable,

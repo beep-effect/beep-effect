@@ -189,6 +189,40 @@ describe("Linguistic Monoids", () => {
   });
 });
 
+describe("BagOfWords", () => {
+  const isBagOfWords = S.is(NLP.BagOfWords);
+  const decodeBagOfWords = S.decodeUnknownEffect(NLP.BagOfWords);
+
+  it("accepts string terms with finite counts", () => {
+    expect(isBagOfWords(MutableHashMap.make(["effect", 2], ["schema", 0.5]))).toBe(true);
+    expect(isBagOfWords(MutableHashMap.empty<string, number>())).toBe(true);
+  });
+
+  it("rejects non-finite counts, non-number counts, and non-string terms", () => {
+    expect(isBagOfWords(MutableHashMap.make(["x", Number.POSITIVE_INFINITY]))).toBe(false);
+    expect(isBagOfWords(MutableHashMap.make(["x", Number.NaN]))).toBe(false);
+    expect(isBagOfWords(MutableHashMap.make(["x", "no"]))).toBe(false);
+    expect(isBagOfWords(MutableHashMap.make([1, 1]))).toBe(false);
+    expect(isBagOfWords(new Map([["x", 1]]))).toBe(false);
+  });
+
+  it.effect("fails decode and encode of a text analysis carrying an invalid bag", () =>
+    Effect.gen(function* () {
+      const analysis = {
+        bow: MutableHashMap.make(["x", Number.POSITIVE_INFINITY]),
+        entities: [],
+        sentenceCount: 1,
+        vocabulary: HashSet.make("x"),
+      };
+      const decoded = yield* analysis.bow.pipe(decodeBagOfWords, Effect.exit);
+      const encoded = yield* Effect.exit(S.encodeUnknownEffect(NLP.TextAnalysis)(analysis));
+
+      expect(decoded._tag).toBe("Failure");
+      expect(encoded._tag).toBe("Failure");
+    })
+  );
+});
+
 describe("TextAnalysis", () => {
   const analysisEquals = S.toEquivalence(NLP.TextAnalysis);
   it.effect.prop(
