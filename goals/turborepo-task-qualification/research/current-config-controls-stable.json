@@ -1,0 +1,110 @@
+{
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "cases": [
+    {
+      "case": "fresh",
+      "origin": "MISS",
+      "taskHash": "1cde1c1e6cfeab67"
+    },
+    {
+      "case": "replay",
+      "origin": "HIT",
+      "taskHash": "1cde1c1e6cfeab67"
+    },
+    {
+      "case": "child-config",
+      "origin": "MISS",
+      "taskHash": "1ad929bfb14931a9"
+    },
+    {
+      "case": "child-restored",
+      "origin": "HIT",
+      "taskHash": "1cde1c1e6cfeab67"
+    },
+    {
+      "case": "root-config",
+      "origin": "MISS",
+      "taskHash": "79fd699ed13eae37"
+    },
+    {
+      "case": "root-restored",
+      "origin": "HIT",
+      "taskHash": "1cde1c1e6cfeab67"
+    },
+    {
+      "case": "profile-config",
+      "origin": "PREFLIGHT_REJECTED",
+      "taskHash": null
+    },
+    {
+      "case": "profile-restored",
+      "origin": "HIT",
+      "taskHash": "1cde1c1e6cfeab67"
+    },
+    {
+      "case": "orchestration",
+      "origin": "HIT",
+      "taskHash": "1cde1c1e6cfeab67"
+    }
+  ],
+  "changedInputPaths": {
+    "child-config": [
+      "turbo.json"
+    ],
+    "root-config": [
+      "../../../../turbo.json"
+    ]
+  },
+  "archives": [
+    {
+      "taskHash": "1ad929bfb14931a9",
+      "sha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "1cde1c1e6cfeab67",
+      "sha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "79fd699ed13eae37",
+      "sha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    }
+  ],
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "taskLogBytes": 53,
+  "profileDriftRejectedBeforeTurbo": true,
+  "profileRejectionCacheUnchanged": true,
+  "restoredInputMapsEqual": true,
+  "orchestrationHashedEnvironmentEqual": true,
+  "nativeControlValuesVerified": true,
+  "sourceConfigsUnchanged": true,
+  "receiptSha256": "ad230f1535f3ca20e45c4f1cee4e09597028ea0c6d34c5075441f8611b8b1fa4",
+  "limits": [
+    "One configured input example per class, not complete semantic-input closure.",
+    "Same frozen source and dependency profile; no evidence renewal after security lock changes.",
+    "Local cache only, no signed remote, shadow completion or promotion."
+  ],
+  "retention": {
+    "reference": "config-controls-stable-7f53b4a840",
+    "files": 1572,
+    "manifestSha256": "913782fde19a6db4de69e8d7a06bd0543f13d8c5a2679c2589fd1789eef03870",
+    "reviewSha256": "0ed7dfbac57e9b5a93aa9b1e561b366355a5d3fbb21ddafcb49988482ef04187"
+  }
+}

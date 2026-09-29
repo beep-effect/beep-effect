@@ -1,0 +1,103 @@
+{
+  "authority": "current-canary-invalidation-review",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "cases": [
+    {
+      "case": "fresh",
+      "exitCode": 0,
+      "taskHash": "09c592cc5530dbaf",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "replay",
+      "exitCode": 0,
+      "taskHash": "09c592cc5530dbaf",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    },
+    {
+      "case": "source-change",
+      "exitCode": 0,
+      "taskHash": "bb35101c9456c5b1",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "changed-replay",
+      "exitCode": 0,
+      "taskHash": "bb35101c9456c5b1",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    },
+    {
+      "case": "invalid-task-source",
+      "exitCode": 1,
+      "taskHash": "9b92c4f833c4243d",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "invalid-task-repeat",
+      "exitCode": 1,
+      "taskHash": "9b92c4f833c4243d",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "restored",
+      "exitCode": 0,
+      "taskHash": "09c592cc5530dbaf",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    }
+  ],
+  "inputMapDifferences": {
+    "validMutation": [
+      "src/index.ts"
+    ],
+    "invalidTaskMutation": [
+      "src/qualification-probe.ts"
+    ]
+  },
+  "failedTaskArchiveAbsent": true,
+  "successfulArchiveLogsEqual": true,
+  "successfulTaskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "originalReceiptSha256": "995a5a2a2e91b30c94aeae150e9e87cd521a84099f752dff9acfbb4deb572667",
+  "limits": [
+    "Canary native executable overlay, unchanged launcher and package declarations, local cache, frozen source only. No full matrix or signed-remote acceptance.",
+    "Native summary turboVersion was checked for every case; executable version was checked outside the repo to avoid delegation to the installed stable client.",
+    "No latest-head runtime renewal, complete semantic input closure, or qualification promotion."
+  ],
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/evidence/current-canary-invalidation-zp755q6z",
+  "observationDirectory": "~/.cache/beep/turbo-qualification/observations/current-canary-invalidation-zp755q6z",
+  "observationManifestSha256": "62592946115b3dbfef3ecc08b69fbbdb079b88b1660359d4672369e3c0dd4531",
+  "retainedFiles": 1562,
+  "runnerSha256": "154b4f2e66e2d0849680771bb4c5b1841e2a34e262263beefca4c69ea16c62cf",
+  "reviewerSha256": "4b42f23378d4eb1b287b8d5cebd908af1334f6f26855a8145a84d7e96154f6f6"
+}

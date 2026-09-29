@@ -546,6 +546,28 @@ describe("ProofLedger", () => {
     );
 
     it.effect(
+      "keeps a separate git directory without commondir as the ledger owner",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const base = yield* fs.makeTempDirectoryScoped({ prefix: "proof-ledger-separate-" });
+        const checkout = path.join(base, "checkout");
+        const gitDir = path.join(base, "metadata.git");
+        yield* fs.makeDirectory(checkout);
+        yield* fs.makeDirectory(gitDir);
+        yield* fs.writeFileString(path.join(checkout, ".git"), "gitdir: ../metadata.git\n");
+
+        expect(yield* resolveProofLedgerLocation(checkout)).toStrictEqual(
+          ProofLedgerLocation.make({
+            originRoot: checkout,
+            ledgerRoot: gitDir,
+            ledgerPath: path.join(gitDir, ".beep", "yeet", "proof-ledger.ndjson"),
+          })
+        );
+      })
+    );
+
+    it.effect(
       "shares one sample: a fact recorded from one lane is read by a sibling lane and the clone",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

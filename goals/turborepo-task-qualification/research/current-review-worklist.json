@@ -1,0 +1,367 @@
+{
+  "authority": "Review-worklist consolidation, not qualification or semantic coverage certification",
+  "structuralDeltaPopulation": 44,
+  "withExplicitBoundedReferences": 44,
+  "withoutConsolidatedReference": [],
+  "rows": [
+    {
+      "path": "apps/oip-web/vitest.config.ts",
+      "sha256": "4581bfa6854225343282728ff60e91dc4e2c659cdce66f687b56c83d38a8f23e",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "40b3d524cc8ac578e3ae292eedf6527eeab103402556400844d2dbb5d786402e",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-lock-and-fallow-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "eslint.config.mjs",
+      "sha256": "1220f32f78d6dfb7b96b3bfc64fc1d7219c98ccc898fae7c156e48ed2f72ff26",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-bootstrap-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/drivers/box/scripts/generate.ts",
+      "sha256": "83aaa8601acdd6e4b321131b14f59e0eeb3e4f058575c186581415c627b0ce51",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+      "sha256": "fab8c7111af4d62f9994e45f2a6e35d46b53bea5355887253949fedf3086cfa5",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-source-migration-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/epistemic/server/vitest.config.ts",
+      "sha256": "70c5cebc9da2dfc31f33989c4c56e772e9bd0e456f7e08b8fcc0cdbf68cdc6ef",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/bin-main.ts",
+      "sha256": "55efc06a9a599388d535d3291c412801187d1132ce8c09716edd1cf478f7db2a",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-bootstrap-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+      "sha256": "908e40ad1ff2f3c9f12ed591c7fb06adb48e7b2fba036a0460b67d1d90a00f38",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "sha256": "632f01e0eebb7e8ede30aa2b9e9970d9be592e8dd373a6e4f5b009b559f63d8c",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-bootstrap-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "8f28a011a026d68d0be5956b76b73d29e64216d135e1088b6737b6e05316f2b3",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-failed-lane-digest-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
+      "sha256": "ee622ee26904cfce6390faa56fd1839252d9f7c54748e0616cb363f16e2ecf6e",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "49d76b5b1f27e8893470839833554de96384cdf2031c63a53d9c47e75baa15ee",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "sha256": "ab91c9bdea6d5511910cc05229f12c11fd2f4bac60adda4c8da76e83c433c641",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-failed-lane-digest-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+      "sha256": "163e4fe2c69ce95915d1d043cc346d6227f384f056c402a28d9188c383b3ab55",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-reference-refresh-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+      "sha256": "2358ad8df0aa93d8a8fde58d802f7a6d737de49f14d05dcd40a1e1ce627f4957",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-reference-refresh-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "sha256": "4ee6d8ca2321a3af0792892d8dfb462120135dc7e05897dbd445cc1e99882143",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
+      "sha256": "20015a85d30e86b1d28b72f242fa4fe56481375ee89ccfc1349531d348f27dd3",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-ledger-storage-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+      "sha256": "44f06e12df027b511ed2b40531939371a49e6138e8f070c3e54ec07afe4107ad",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-source-migration-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "sha256": "dba108fa8f43850b2b792588bc590d941a3359fa5b4b9eccebb925d40b85f262",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-monitor-escalation-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofDigest.ts",
+      "sha256": "2eeabe756f8cfc08286ed8952a06f67c0a341b08022012ff8122812a0bafcb20",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-source-migration-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+      "sha256": "c01dfffab4c1736d6ffa6fe6015af493d7ad0b89204454c518f33f227702fdac",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "sha256": "701275211b70396632847a02984d500d4e4468b87164f985b8702d7becdba000",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-failed-lane-digest-review.json",
+        "goals/turborepo-task-qualification/research/current-proof-ledger-storage-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      "sha256": "dd11f7f02911cb5e19923c43df849ac50f56126af492aa91369c574d62fc51ff",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-shadow-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+      "sha256": "dbbd7462ad4a40334e19ee7651f5c131682ab31c0425b25f7086b3a581a7f7d7",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
+      "sha256": "a15e5996ab83a930a05b11b6d0d1cc63196e16421d109198a07427217bb5bd33",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
+      "sha256": "f3c62afddb6288e37cd6a94375c7d29e37f0deb2c743d6b4531c38fbc5bfc3e9",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-source-migration-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "sha256": "c1aa1a44cb224c438337d6b53a69113068b666c0cd028e6b705b12441eeeb80f",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-remaining-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "sha256": "7d33b8415fc51880d68b27c20e9deff9bc391f570334e0b91d48e14131cca257",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-sweep-ordering-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "8800ff9fc0da274f1b09e0991974cb6890855e9fd36313a5c4a44cca1389f567",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-sweep-ordering-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
+      "sha256": "cb34b6a8fbbfb0c7866bdbedd875feb48994709aa286d40290d774be51c57737",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "vitest.aliases.generated.json",
+      "sha256": "8d9e532f43e74676f91e92b8fec8b221e23595148d009aca3baf5bf18aae121c",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-bootstrap-config-review.json",
+        ".beep/qualification-current/vitest-alias-delta.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "vitest.shared.ts",
+      "sha256": "effbdbfbaa906adc5729f4776b0b583a343c93f5b92702efdb62ce218a809cef",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "standards/fallow.boundaries.generated.jsonc",
+      "sha256": "51fe3e19cc56be13a575de474f90a4bdd4e145b069dd27e754ee651b0f4b9b4d",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-lock-and-fallow-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "sha256": "58e183f6153ea828bcfe3ec10d9c89ec9bf742e5988429f6c638436777d25c99",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-test-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "sha256": "db56873bee352299fa98f4f94cfe033ab2b90ebdb0bfcbe3a97323a5e4b72600",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-test-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "sha256": "90fbfeb25540feb334a43b66261c6537fa9ce74e18aa3bda9aa0f45448b0f0c6",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-test-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "apps/storybook/.storybook/main.ts",
+      "sha256": "6c3d3459632e481d6230c6b8db92397c61e8d65542465c2d0eb09fb68caffce2",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "apps/professional-desktop/vite.config.ts",
+      "sha256": "497aa3c0660a9cd3b0ea80e1c77a735255eeef368c89f3554311d95875554aae",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "apps/labs/semantica/vite.config.ts",
+      "sha256": "31368426b1e61d2ad50818c60a2ad949305c1928bfb774e8247419b0c53da2c7",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "apps/labs/lejeune-bolt-workbench/vite.config.ts",
+      "sha256": "4ba01d664bddc3bd5d60356aee62f4f79527187228a1a1e58ea05d31433b2c03",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-vitest-config-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "sha256": "076a7aee4a95e753415154c9ccfbc8a846fe119ba6b9d37af4f13276c6920970",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-test-source-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/refs-test-utils.ts",
+      "sha256": "fd18ee6dda8639cf48a678d3448e211e60df326eb7de69f1c53e63327706f2ad",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-reference-refresh-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "goals/time-to-certainty/research/economics.json",
+      "sha256": "70a7f12944660b83f8a4bda1c8ccf51419378399656ccdb6171fd09b224601dd",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    },
+    {
+      "path": "goals/time-to-certainty/research/gate-order-handoff.json",
+      "sha256": "a4d7d22edb457c14b6cfaac8c69cd5bd505bf1bcc18fd3fc8be5ec3aa6417ff8",
+      "boundedReviewReferences": [
+        "goals/turborepo-task-qualification/research/current-proof-metadata-review.json"
+      ],
+      "disposition": "bounded review reference present; semantic closure unproven"
+    }
+  ],
+  "limits": [
+    "Reference presence does not mean all behavior, transitive inputs or runtime outcomes are covered.",
+    "Historical source-migration helper equivalence evidence is not yet consolidated into these rows.",
+    "Current pilot configuration changed after the census comparison and requires its own refreshed source binding and runtime renewal."
+  ]
+}

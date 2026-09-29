@@ -11,7 +11,13 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AsyncResult, Reactivity } from "effect/reactivity";
 import * as S from "effect/Schema";
-import { DesktopSyncClient, vaultSyncConflictsAtom, vaultSyncStatusAtom } from "@/sync/Sync.atoms";
+import {
+  DesktopSyncClient,
+  VaultSyncPanelState,
+  vaultSyncConflictsAtom,
+  vaultSyncPanelStateAtoms,
+  vaultSyncStatusAtom,
+} from "@/sync/Sync.atoms";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 
@@ -41,13 +47,15 @@ const noConflicts: ReadonlyArray<SyncConflict> = [];
 
 const renderWithStatus = (
   status: VaultSyncStatus,
-  conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown> = AsyncResult.success(noConflicts)
+  conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown> = AsyncResult.success(noConflicts),
+  panelState: VaultSyncPanelState = VaultSyncPanelState.cases.idle.make()
 ) =>
   render(
     <RegistryProvider
       initialValues={[
         [vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(status)],
         [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), conflicts],
+        [vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID), panelState],
       ]}
     >
       <VaultSyncPanel floating={false} />
@@ -56,6 +64,40 @@ const renderWithStatus = (
 
 describe("vault sync panel", () => {
   afterEach(cleanup);
+
+  it.effect(
+    "announces a completed sync action without showing an error",
+    Effect.fnUntraced(function* () {
+      const { container } = renderWithStatus(
+        yield* statusWith(true, O.none()),
+        AsyncResult.success(noConflicts),
+        VaultSyncPanelState.cases.succeeded.make({ message: "Vault sync completed." })
+      );
+      const screen = within(container);
+
+      expect(screen.getByTestId("vault-sync-complete")).toHaveTextContent("Vault sync completed.");
+      expect(screen.getByTestId("vault-sync-complete")).toHaveAttribute("role", "status");
+      expect(screen.queryByTestId("vault-sync-error")).not.toBeInTheDocument();
+      expect(screen.getByTestId("vault-sync-trigger")).toBeEnabled();
+    })
+  );
+
+  it.effect(
+    "announces a failed sync action while allowing another attempt",
+    Effect.fnUntraced(function* () {
+      const { container } = renderWithStatus(
+        yield* statusWith(true, O.none()),
+        AsyncResult.success(noConflicts),
+        VaultSyncPanelState.cases.failed.make({ message: "The sync request failed safely." })
+      );
+      const screen = within(container);
+
+      expect(screen.getByTestId("vault-sync-error")).toHaveTextContent("The sync request failed safely.");
+      expect(screen.getByTestId("vault-sync-error")).toHaveAttribute("role", "status");
+      expect(screen.queryByTestId("vault-sync-complete")).not.toBeInTheDocument();
+      expect(screen.getByTestId("vault-sync-trigger")).toBeEnabled();
+    })
+  );
 
   it.effect(
     "lists both supported credential modes when credentials are missing",

@@ -1,0 +1,157 @@
+{
+  "authority": "Independent retained-summary and output-tree comparison of three fresh/fresh pairs",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "observations": [
+    {
+      "receiptSha256": "ccbfb87f9a123d563a52a41f2fd168cf1b0fbb231300816265966c494443dcc8",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 1
+    },
+    {
+      "receiptSha256": "18f434da5b34ebbadeb53f0c7b42b94122d93b3d12715e71549166c23d07c966",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 2
+    },
+    {
+      "receiptSha256": "0cc7134ad5f7c9158a0cd8a0ef7dac38d8d0c2d60ed3df2c35d778f9fcde11e1",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 3
+    },
+    {
+      "receiptSha256": "5cc926ae23077e38675cdfb74482fbf3eda694f74378afb1140f79f4ce33740c",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 4
+    },
+    {
+      "receiptSha256": "482a8d13d9474325301e50240768018af6915e0f850f5f429f2313d06224eda4",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 5
+    },
+    {
+      "receiptSha256": "02de86e56dab274465bbd5407642c0e84b8a658dd6a385b9e6c7b03afc258266",
+      "taskHash": "7d536d47d5b63a1a",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 6
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 2,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 3,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    }
+  ],
+  "limits": [
+    "Stable client only; each isolated execution also performs two local replay controls.",
+    "Identity overlay file-tree and task-log equality are checked; unrelated dependency logs and whole CLI streams are not asserted equal.",
+    "No signed remote comparison, complete semantic closure, cross-root equivalence, canary or shadow acceptance is established.",
+    "No tuple is promoted and normal checkout caching remains disabled.",
+    "This renews only stable fresh/fresh and local replay evidence for the patched profile; older invalidation, configuration, concurrency, cross-root and native-I/O controls are not automatically renewed."
+  ],
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "retainedEvidence": "fresh-pairs-2.11.4-b410da2b6d",
+  "observationManifestSha256": "96811a335d58be7052a59528b66676f26b7f9822e1156c2be03bd30f6905583d",
+  "retainedFiles": 9282,
+  "freshExecutions": 6,
+  "localReplayControls": 12,
+  "exitCode": 0,
+  "runnerSha256": "174f1231e3a3416d98756f70b63954e10544745ff191fe7146e6307b877d7d11",
+  "matrixRunnerSha256": "7839603b116e1033cae246f25143cf74a6740f78b81775b8a10442174761e7b8",
+  "matrixReviewerSha256": "cc85dee85012c73bc2b64aeef678013751814a423ad9b65f0d2d1aa8ab45201f",
+  "dependencyParity": {
+    "before": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "after": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "equal": true,
+    "command": [
+      "tar",
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--hard-dereference",
+      "--pax-option=delete=atime,delete=ctime",
+      "-cf",
+      "-",
+      "node_modules"
+    ]
+  },
+  "installation": {
+    "revision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+    "lockfileSha256": "7c69a4c119d863794daa86db4e65a95078251e27a1be3c400a448645449ae150",
+    "installation": "bun install --frozen-lockfile; postinstall enabled",
+    "installLogSha256": "2d589c4b6b1980f333211a193a7ca4fe29db634613f22458642f895985aa1524",
+    "trackedWorktreeClean": true
+  }
+}

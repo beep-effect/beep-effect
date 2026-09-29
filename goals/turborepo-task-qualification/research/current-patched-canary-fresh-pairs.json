@@ -1,0 +1,159 @@
+{
+  "authority": "Independent retained-summary and output-tree comparison of three fresh/fresh pairs",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "observations": [
+    {
+      "receiptSha256": "9216763d8cc26272ee761c443642f157a5e72257aa5fd8f3d1099feda75fb95d",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 1
+    },
+    {
+      "receiptSha256": "2e888551534e01053b1e3233ea7e49144a767e66d6967f71806ce9fd5740b538",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 2
+    },
+    {
+      "receiptSha256": "39e4032b9b6c1eb7df3dc9f528f04cdb06c9db68c338cff3c6ba2073e3e96815",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 3
+    },
+    {
+      "receiptSha256": "79418494581514089f853a820232fd6d70dd9700e886846947a73ac5700ffd91",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 4
+    },
+    {
+      "receiptSha256": "7fd9bfad7b2fb57825558811dbb770d25e1220117f6a1609fd675d067f514b17",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 5
+    },
+    {
+      "receiptSha256": "6d8d1c2f5a2023a530fae157e5c54f738582cbac6bda9d0ef835205a534dc29b",
+      "taskHash": "18fbb1ef6ee4bd88",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+      "observation": 6
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 2,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 3,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    }
+  ],
+  "limits": [
+    "Exact canary client only; each isolated execution also performs two local replay controls.",
+    "Identity overlay file-tree and task-log equality are checked; unrelated dependency logs and whole CLI streams are not asserted equal.",
+    "No signed remote comparison, complete semantic closure, cross-root equivalence or shadow acceptance is established.",
+    "No tuple is promoted and normal checkout caching remains disabled.",
+    "This renews only exact-canary fresh/fresh and local replay evidence for the patched profile; older perturbation, concurrency, cross-root and native-I/O controls are not automatically renewed."
+  ],
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "retainedEvidence": "fresh-pairs-2.11.5-canary.2-b410da2b6d",
+  "observationManifestSha256": "dced2f3cca8707a147941c0e2ae7be081fe989592b25716e7d103b6784249d4a",
+  "retainedFiles": 9282,
+  "freshExecutions": 6,
+  "localReplayControls": 12,
+  "exitCode": 0,
+  "runnerSha256": "757383c916784743b5d89f8b06e309a82db12f941b4f32c4949ec811bb71dc2b",
+  "matrixRunnerSha256": "6fe3b0d754aa2da2ebbb7a73b44c27d2fee0f4aa0c1d9ba9ffe527573308431b",
+  "matrixReviewerSha256": "cc85dee85012c73bc2b64aeef678013751814a423ad9b65f0d2d1aa8ab45201f",
+  "executionReviewerSha256": "961a0463cb846446fea56bcb497d59034edade42fc42ad0c2276fb6375cbe001",
+  "dependencyParity": {
+    "before": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "after": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "equal": true,
+    "command": [
+      "tar",
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--hard-dereference",
+      "--pax-option=delete=atime,delete=ctime",
+      "-cf",
+      "-",
+      "node_modules"
+    ]
+  },
+  "installation": {
+    "revision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+    "lockfileSha256": "7c69a4c119d863794daa86db4e65a95078251e27a1be3c400a448645449ae150",
+    "installation": "bun install --frozen-lockfile; postinstall enabled",
+    "installLogSha256": "2d589c4b6b1980f333211a193a7ca4fe29db634613f22458642f895985aa1524",
+    "trackedWorktreeClean": true
+  },
+  "nativeClientVersionVerified": "2.11.5-canary.2"
+}

@@ -1,6 +1,6 @@
 import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
 import { it } from "@beep/test-runner";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -27,6 +27,55 @@ const profileWithNavigator = (navigatorValue: unknown) =>
   });
 
 describe("detectEngineProfile", () => {
+  it.effect(
+    "distinguishes Safari, Chromium and Firefox independently of the host",
+    Effect.fnUntraced(function* () {
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() =>
+          vi.stubGlobal("navigator", {
+            vendor: "Apple Computer, Inc.",
+            userAgent: "Version/18.0 Safari/605.1.15",
+          })
+        ),
+        () =>
+          Effect.sync(() => {
+            expect(detectEngineProfile()).toMatchObject({
+              lineFitEpsilon: 1 / 64,
+              carryCJKAfterClosingQuote: false,
+              breakKeepAllAfterPunctuation: false,
+              preferPrefixWidthsForBreakableRuns: true,
+              preferEarlySoftHyphenBreak: true,
+            });
+
+            vi.stubGlobal("navigator", {
+              vendor: "Apple Computer, Inc.",
+              userAgent: "CriOS/130.0.0.0 Mobile Safari/604.1",
+            });
+            expect(detectEngineProfile()).toMatchObject({
+              lineFitEpsilon: 0.005,
+              carryCJKAfterClosingQuote: true,
+              breakKeepAllAfterPunctuation: true,
+              preferPrefixWidthsForBreakableRuns: false,
+              preferEarlySoftHyphenBreak: false,
+            });
+
+            vi.stubGlobal("navigator", {
+              vendor: "",
+              userAgent: "Firefox/130.0",
+            });
+            expect(detectEngineProfile()).toMatchObject({
+              lineFitEpsilon: 0.005,
+              carryCJKAfterClosingQuote: false,
+              breakKeepAllAfterPunctuation: true,
+              preferPrefixWidthsForBreakableRuns: false,
+              preferEarlySoftHyphenBreak: false,
+            });
+          }),
+        () => Effect.sync(() => vi.unstubAllGlobals())
+      );
+    })
+  );
+
   it.effect(
     "pins the non-browser fence values mirrored from upstream v0.0.8",
     Effect.fnUntraced(function* () {

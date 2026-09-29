@@ -1,0 +1,47 @@
+{
+  "revision": "a9253136f01be03316ca4f251e33b61f0cef826e",
+  "checks": [
+    {
+      "command": "bun run beep goals doctor",
+      "exitCode": 0,
+      "result": "No new blocking findings; inherited fleet notices remain."
+    },
+    {
+      "command": "bun run beep explore --check",
+      "exitCode": 0,
+      "result": "No stream-integrity or fleet-graph findings."
+    },
+    {
+      "command": "bun run beep lint reflection-artifacts",
+      "exitCode": 0,
+      "blockingFindings": 0,
+      "advisoryFindings": 0
+    },
+    {
+      "command": "wc -m < goals/turborepo-task-qualification/GOAL.md",
+      "characters": 2755,
+      "maximum": 4000
+    }
+  ],
+  "retention": {
+    "reference": "packet-verification-a9253136f0",
+    "logs": [
+      {
+        "file": "current-goals-doctor.log",
+        "sha256": "af82b3ea02cbd808e1ccb36883968f1e9ae0a55945a4183f4d15472a88f6349e"
+      },
+      {
+        "file": "current-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      {
+        "file": "current-reflection-artifacts.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    ]
+  },
+  "limits": [
+    "Packet convention checks do not prove runtime qualification or final reflection completeness.",
+    "Goal remains active; final evidence and same-PR lifecycle closeout are not yet accepted."
+  ]
+}
