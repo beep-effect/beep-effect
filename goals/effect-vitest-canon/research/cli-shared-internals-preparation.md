@@ -23,4 +23,29 @@ The suite also clears a process-global cache-session verdict map. Preparation
 must audit ordering, clock requirements and stub finalizers before choosing the
 fixture scope. Fresh-console controls must cover existing Effect tests as well
 as newly converted callbacks. No source draft is applied and no inventory rows
-are closed. The portfolio guard package proof remains the source-edit gate.
+are closed. The portfolio guard package proof has passed; PR 1323 CI repair currently takes
+priority over applying the draft.
+
+## Private draft and API audit
+
+The prepared draft converts fifteen plain callbacks and supplies fresh consoles
+to all twenty-four Effect callbacks. The shared layer supplies BunCrypto and
+Path; serial describe scopes protect the existing cache-verdict behavior.
+Synchronous public API cases and module-level environment seeding remain.
+
+Local Effect reference source confirms that FileSystem.layerNoop wraps
+FileSystem.makeNoop in Layer.succeed. ConfigProvider.layer likewise wraps a
+pure provider in Layer.succeed. Direct service injection therefore preserves
+the mock construction and per-call configuration overrides without rebuilding
+those layers. The subprocess path reaches runToExit and the mocked child
+handle, without the capture drain timers used by native capture tests. The
+admission preparation and registration path contains no sleeps; absent or
+inherited workload bindings return without owned-workload registration.
+
+The draft retains all 105 assertion trees. The comparison normalizes only
+parentheses, yield expressions, and the removed Effect.runSync boundary; it
+excludes no assertion. The initial comparison correctly rejected the two
+runSync expressions inside assertions until that intended boundary change was
+explicitly normalized. Private receipts: cli-shared-internals-proposal.json
+and cli-shared-internals-draft-assertions.json. Runtime proof, resource probes,
+types and inventory lineage reconciliation remain required before closure.

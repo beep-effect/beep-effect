@@ -45,5 +45,5 @@ Source commit: `9d96c2670eb4fa55f58513279e9a7451ce1d4c54`.
 Reconciliation closes exactly ten historical rows, adds none, and preserves
 all unrelated rows. Strict validation passes for 3,495 CLI and 687 schema rows.
 CLI totals are 1,946 fixed, 12 exceptions and 1,537 open. Full CLI package
-proof is running and must finish before package handoff. This is not goal-wide
-or hosted acceptance.
+verification passed: audit 666.8 seconds and docgen 20.5 seconds. This is not
+goal-wide or hosted acceptance.
