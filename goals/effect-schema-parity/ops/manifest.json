@@ -39,7 +39,11 @@
     "explorations/effect-schema-parity/BRIEF.md",
     "explorations/effect-schema-parity/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/2026-09-29-p3-gates.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -50,3 +50,23 @@ machine ids, quote only the minimal identifying error text.
   packet only, per the existing per-packet precedent; a generic rule is a
   decision for the explorations convention. Also: route a cheap-gates red to
   the lane that actually failed, not the first lane in the repair hint.
+
+## 2026-09-29 — The SPEC facet-census command reads zero for the dominant facets
+
+- **What I was doing:** Running the P3 Facet Census Gate for `Number`, `Int`,
+  `Unknown` and `Opaque` with the command shape in `SPEC.md` §Facet Census Gate.
+- **Evidence:** The shape `rg -c -e '\.<member>\b' ... --glob '!**/<Concept>/**'`
+  returned 0 lines for `NonNegativeInt` and `UnknownFromJsonString`, which the
+  import-anchored count puts at 2,129 and 170 lines, because consumers use
+  bare named imports. It returned 926 lines for `.Int` and 342 for `.Unknown`,
+  almost all upstream `S.Int` and `S.Unknown`. The directory glob also never
+  excludes the concept's own file, since all four concepts are single files.
+  Separately, the audit's upstream target for `UnknownFromJsonString`
+  (`S.UnknownFromJsonString`) is `@internal` at the pin and missing from the
+  installed `Schema.d.ts`.
+- **What would have prevented it:** A census tool that resolves imports
+  instead of matching `.<member>`; one is now committed at
+  `goals/effect-schema-parity/research/tools/facet-census.ts`, and the gate
+  text now names it the count of record with the `rg` shape as a cross-check. The retirement audit tool should
+  check each upstream target against the installed `dist/*.d.ts` before it
+  prints the row.
