@@ -25,7 +25,8 @@ import {
   validatePathSegment,
   variadicStrings,
 } from "@beep/repo-cli/test/Cli";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

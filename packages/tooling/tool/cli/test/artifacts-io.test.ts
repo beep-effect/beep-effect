@@ -11,6 +11,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Data, Effect, Exit, FileSystem, Layer, Option, Path } from "effect";
 import * as S from "effect/Schema";
 
@@ -81,7 +82,7 @@ describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
             onDecodeError: toArtifactError,
           }).pipe(Effect.exit);
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const failure = Cause.findErrorOption(exit.cause);
             if (Option.isSome(failure)) {
@@ -103,14 +104,14 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
         check: true,
         onConflict: conflict,
       }).pipe(Effect.exit);
-      expect(Exit.isFailure(bothExit)).toBe(true);
+      assertTrue(Exit.isFailure(bothExit));
 
       const okExit = yield* assertExclusiveModeFlags({
         write: true,
         check: false,
         onConflict: conflict,
       }).pipe(Effect.exit);
-      expect(Exit.isSuccess(okExit)).toBe(true);
+      assertTrue(Exit.isSuccess(okExit));
     })
   );
 

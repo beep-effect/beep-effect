@@ -37,10 +37,12 @@ import {
   renderFilesProgressBar,
   runMatchPerson,
 } from "@beep/repo-cli/test/Files";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";
@@ -110,7 +112,7 @@ const expectFilesCommandFailure = Effect.fn("FilesCommandTest.expectFilesCommand
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runFilesCommand(args));
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -1412,7 +1414,7 @@ describe("files command", { concurrent: false }, () => {
             ).pipe(provideScopedLayer(FilesCommandServiceLive))
           );
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           if (Exit.isFailure(exit)) {
             const error = Cause.squash(exit.cause);
             expect(P.hasProperty(error, "exitCode") && error.exitCode === 2).toBe(true);
@@ -2994,7 +2996,7 @@ exit 74
             ]).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem), Effect.exit)
           );
 
-          expect(Exit.isFailure(rollbackExit)).toBe(true);
+          assertTrue(Exit.isFailure(rollbackExit));
           expect(stagedRenameCount).toBe(2);
           expect(linkCallCount).toBe(0);
           expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");

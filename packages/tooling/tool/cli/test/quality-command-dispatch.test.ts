@@ -1,15 +1,17 @@
 import { qualityCommand } from "@beep/repo-cli/commands/Quality";
 import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import { FsUtilsLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Sink, Stream } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 
 const FixedMemoryStatsLayer = Layer.succeed(
   MemoryStats,
@@ -125,7 +127,7 @@ describe("quality command dispatch", () => {
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         expect(spawned).toEqual(["node --test scripts/test-onnxruntime-installer-patch.mjs"]);
       }).pipe(provideScopedLayer(Layer.mergeAll(CommandTestLayer, recordingSpawnerLayer(spawned, failedHandle))))
     );

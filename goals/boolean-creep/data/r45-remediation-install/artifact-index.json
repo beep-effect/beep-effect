@@ -1,0 +1,41 @@
+{
+  "kind": "boolean-creep-public-artifact-index/v1",
+  "artifacts": [
+    {
+      "file": "goals/boolean-creep/data/r45-remediation-install/README.md",
+      "sha256": "a61a277f372f96986c5b0366ed8fb342965c0e4580d73f29b4c533cdd467ad1e"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-remediation-install/install-receipt.json",
+      "sha256": "30f82710f5aa11f56ee143f4dfbd2798aab80439af494c983b28f4b4c0da66cc"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-remediation-install/parent-timing-ruling.json",
+      "sha256": "52874ca6fbee1ee90b34ab41a7df8445f471477c5d6c55199a36eccdf594bb1b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-remediation-install/verdict-binding-relocation.json",
+      "sha256": "28292ecef2c358bdd1c2a75707bb32bf5393451d51891abe6682351086e6ce98"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/color-support-level-flags.md",
+      "sha256": "57cdde407a66b52710e9d8256b9fcf48501036a4734c08ae52592d07606ad876"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/duckdb-transaction-began-closed.md",
+      "sha256": "8b0bab86da531e270cce38a0b2473a266208d63244a737f5b16ca7f905e8759e"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/r2-foundation-unique-match-search.md",
+      "sha256": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29"
+    },
+    {
+      "file": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/r3-foundation-invariant-enforcement-channels.md",
+      "sha256": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-29-pre-r45-remediation-install.jsonl",
+      "sha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c"
+    }
+  ]
+}

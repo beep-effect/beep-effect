@@ -1027,7 +1027,7 @@ describe("yeet planner", () => {
       "pr",
       "checks",
       "--json",
-      "name,state,bucket,link,workflow,completedAt,startedAt",
+      "name,state,bucket,link,workflow,completedAt,startedAt,description",
     ]);
   });
 

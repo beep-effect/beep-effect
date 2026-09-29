@@ -1,0 +1,253 @@
+{
+  "kind": "boolean-creep-parent-lane-reconciliation-summary/v1",
+  "round": "refresh-2026-09-29-r45-main-dcf643",
+  "sourceSha": "224222d1389c30170d0518f00a0d58ee87014843",
+  "originMainSha": "dcf64397ec9835e989e7ea94e9c708582a035f22",
+  "lanes": [
+    {
+      "lane": "r45-foundation-primitive",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 15,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "09b7332e49f44f2385f6307a9643956fad36d0b572a76d18a7d7da5813ebe45e",
+      "parentAcceptanceSha256": "66f36f0847cfdadf9640f10f1fd44c45c4e1fa77fec52c5cf78bdb3d390917be",
+      "independentReviewSha256": "49a2a421b6c43bcf663557bcc9071e1a55b544ce2dfb30a174d2c2f37fcff62a",
+      "reviewInputManifestSha256": "d5f4c6c7df8a48d5eaa944d79a9259d858aa6785cceba2dfebd7c765604f8ecf",
+      "verifiedBindings": 45,
+      "coverageAccepted": true,
+      "runtimeAccepted": null,
+      "runtimeReviewRequired": false,
+      "findings": [],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false,
+      "runtimeAcceptedNote": "Not recorded by the parent: the lane raised no teardown warning and required no parent runtime review.",
+      "versionEvidenceClarification": "The parent's first search missed an abbreviated version field; the independent reviewer located it and the parent re-verified 188 records. The version-evidence contract stays enforced."
+    },
+    {
+      "lane": "r45-foundation-capability",
+      "executionStatus": "provisional-awaiting-independent-runtime-review",
+      "exitCode": 0,
+      "numTurns": 24,
+      "reportSha256": "26cc4b25e2c6872a2b3205425e19701bd4b924673dce43364a6a50477d120f70",
+      "transcriptSha256": "cc3c4b2f92f8255e0130b86c27882327378af3dcd3f0fff9462ebfeaea2c7afc",
+      "parentAcceptanceSha256": "84808ca8a78ca3e35d4a5464b6dd2130566c526e3b99cd5cec01bb87f85b3a8b",
+      "independentReviewSha256": "a3c087af1f866e36b90b3e48d2d0d7d6a1ce263d2c3eb55d28833e98aa303129",
+      "reviewInputManifestSha256": "24075a5f5efe020b5ce8c72c5684677537a2f4fd6ca49c37445812564e90fd2e",
+      "verifiedBindings": 186,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": true,
+      "findings": [
+        {
+          "id": "CAP-1",
+          "severity": "medium",
+          "disposition": "reviewed-correction-candidate-not-installed",
+          "summary": "color-support-level-flags co-carries the four-alternative level field; representable cardinality is 32, not 8. Legal stays 3. Qualification is unchanged."
+        },
+        {
+          "id": "CAP-2",
+          "severity": "low",
+          "disposition": "reviewed-correction-candidate-not-installed",
+          "summary": "r2-foundation-unique-match-search should anchor MinimalFoldMatchSearch at Alignment.behavior.ts:114 and drop the non-Boolean match member. Qualification is unchanged."
+        },
+        {
+          "id": "CAP-3",
+          "severity": "info",
+          "disposition": "withdrawn",
+          "summary": "Validator-run process finding withdrawn by the capability remediation review: the full bound prompt assigned validation to the parent merge."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false
+    },
+    {
+      "lane": "r45-foundation-modeling-rest",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 28,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "cce29db7bdc9d2afe3498d2d195580f0fa940c29847f0072b64ff46020fb5159",
+      "parentAcceptanceSha256": "2014b9ee523a7e792b3ba9747e66773cdeec9b48fca0e746b8ad16425ede9568",
+      "independentReviewSha256": "a472ea4f4ece947ddfb4ce8931e3e00e5c9376c2acc4a878ecd0ee257a6b43ea",
+      "reviewInputManifestSha256": "e9cfa1e89871901ace4ee5939f1248e59ec9e72f6ebbf93a2b4c62706eb129f7",
+      "verifiedBindings": 199,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": false,
+      "findings": [
+        {
+          "id": "MR-1",
+          "severity": "info",
+          "disposition": "no-inventory-change",
+          "summary": "The lane described generated rdf vocabulary facades as excluded; they are in scope. The independent scan found no Boolean owner in any of the nine facades."
+        },
+        {
+          "id": "MR-2",
+          "severity": "info",
+          "disposition": "no-inventory-change",
+          "summary": "inspectLinkResponsiveRelationships is split across two canonical records sharing one local. This is a consistent partition, not a duplicate."
+        },
+        {
+          "id": "MR-3",
+          "severity": "info",
+          "disposition": "withdrawn",
+          "summary": "Validator-run process finding withdrawn by the capability remediation review (same correction as CAP-3)."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false
+    },
+    {
+      "lane": "r45-foundation-schema-a-m",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 20,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "af7aa7734fa8c7f0fa3782172bd2faab81ad37d2c92d286d5d1a1a216bf7de7e",
+      "parentAcceptanceSha256": "bcf98c49516a87cdfbf6e5f978863e3bc7edd781104f8c0effc996b5761382ba",
+      "independentReviewSha256": "4b188cbfe1c867a5f55165dc8eaa642c867265d1e7d931446b9881bf22034857",
+      "reviewInputManifestSha256": "bb5e656dc9c0edff2732bc55a702dda5336bc6fe1ec8582fc7680ee0243776d0",
+      "verifiedBindings": 206,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": false,
+      "findings": [
+        {
+          "id": "AM-1",
+          "severity": "medium",
+          "disposition": "historical-evidence-retained-read-scope-remediation-pending",
+          "summary": "The lane listed a runtime isolation directory outside the repository checkout. Only entry names were returned; no out-of-repository file content was read and nothing was written except the lane report. No inventory conclusion changes. Runtime read-scope hardening is future-runtime work, not part of this closeout."
+        },
+        {
+          "id": "AM-2",
+          "severity": "low",
+          "disposition": "no-inventory-change",
+          "summary": "The transcript alone does not prove coverage; the independent whole-lane review found zero omitted eligible owners."
+        },
+        {
+          "id": "AM-3",
+          "severity": "low",
+          "disposition": "reviewed-design-candidate-not-installed",
+          "summary": "r3-foundation-invariant-enforcement-channels has stale test-impact anchors and audit baseline. Source spans, qualification, cardinality and target shape are unchanged."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false
+    },
+    {
+      "lane": "r45-foundation-schema-n-z",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 18,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "962da7ee73458a9f62327506758ddd1201f1a92823ff15c5105e00889f004496",
+      "parentAcceptanceSha256": "544f6f41e5c01b78bf92d5c4f466b97f7fe3349156832d84e3ceede255579283",
+      "independentReviewSha256": "45812b1075477f7d843af1eb6b120173ef2a606c958e0f87599a7b65826512a8",
+      "reviewInputManifestSha256": "d681f4c0c648d8a0b27b8b6daaced0f16fdfdf3c55c3c00697148f69dcdc7f03",
+      "verifiedBindings": 99,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": false,
+      "findings": [
+        {
+          "id": "NZ-1",
+          "severity": "low",
+          "disposition": "no-inventory-change",
+          "summary": "An early whole-lane glob grep returned zero matches; later per-root greps covered the lane and no record was withheld."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false
+    },
+    {
+      "lane": "r45-foundation-ui",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 50,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "67665003cbd1d32b383940ee9ba30800bb8a6784aedf9b7b17e393c095805b8a",
+      "parentAcceptanceSha256": "20bd26126ab8e5f5bed4f791b3283e153af590a319b0826eadd70a07232bed9f",
+      "independentReviewSha256": "5f697999bb2797f304142422f2a7607fb39df9e6471edd91cf9ee7de512382b8",
+      "reviewInputManifestSha256": "20876bd7432a96c2b4a0c2d3057229f925a7a919b8686b5a3851da91263ea4b8",
+      "verifiedBindings": 248,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": false,
+      "findings": [
+        {
+          "id": "UI-1",
+          "severity": "low",
+          "disposition": "withdrawn-by-owner-disposition-review",
+          "summary": "react-atoms.ts: a parametric Atom.family is a factory handle, not a second coexisting Boolean atom. No census addition."
+        },
+        {
+          "id": "UI-2",
+          "severity": "info",
+          "disposition": "optional-anchor-refinement",
+          "summary": "foundation-ui-system-menus-open cites a comment line; the exclusive writes are two lines later and the design range is already correct."
+        },
+        {
+          "id": "UI-3",
+          "severity": "info",
+          "disposition": "optional-anchor-refinement",
+          "summary": "Some seed lines anchor a member instead of the first co-carried member; all anchors are inside current owners."
+        },
+        {
+          "id": "UI-4",
+          "severity": "info",
+          "disposition": "no-inventory-change",
+          "summary": "Two owners carry consistent overlapping partitions; the co-landing requirement is preserved."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false,
+      "ownerDispositionReviewSha256": "8aa9c50ea3d289f15921d424d62a286a10e853a7a149ae482d4f2ced8e6b0e52"
+    },
+    {
+      "lane": "r45-drivers-a-f",
+      "executionStatus": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "numTurns": 33,
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "transcriptSha256": "7c38d702f8cca63424470aed3d71e38a3204941ab49d51ab7840cd7d78876863",
+      "parentAcceptanceSha256": "f007d92b4a9ea1b64ca9fd0e05ee6b729930797f7836b7c65053c29d53e5915a",
+      "independentReviewSha256": "18ed5567b31f6e2e827cac5d9455ecf11baadef5729bbc9bf2fe9ebc6869ebb3",
+      "reviewInputManifestSha256": "246f2ad4af5e1cece5acdfb9b482db3d644408de840f36616e088d136f98a0cf",
+      "verifiedBindings": 120,
+      "coverageAccepted": true,
+      "runtimeAccepted": true,
+      "runtimeReviewRequired": false,
+      "findings": [
+        {
+          "id": "DAF-1",
+          "severity": "low",
+          "disposition": "no-inventory-change",
+          "summary": "The transcript alone does not prove coverage; the independent full-lane review found zero omitted eligible owners."
+        },
+        {
+          "id": "DAF-2",
+          "severity": "low",
+          "disposition": "reviewed-design-candidate-not-installed",
+          "summary": "duckdb-transaction-began-closed cites test-impact lines in a since-reorganized test file. Qualification, cardinality, target shape, migration and guard deletion are unchanged."
+        }
+      ],
+      "dryCredit": false,
+      "P3": false,
+      "fullRoundApproved": false
+    }
+  ],
+  "reconciledLanes": 7,
+  "failedLane": {
+    "lane": "r45-drivers-g-m",
+    "coverageAccepted": false,
+    "note": "Failed lanes are not reconciled or retroactively accepted."
+  },
+  "privateReceipts": "Full independent reviews and parent acceptances stay private and are bound here by sha256. Finding text is restated without home paths, run identifiers or runtime telemetry."
+}

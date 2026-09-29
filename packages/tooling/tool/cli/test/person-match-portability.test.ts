@@ -7,10 +7,11 @@ import {
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,
 } from "@beep/repo-cli/test/Files";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { PersonMatchWorkerErrorCode } from "@beep/repo-cli/test/Files";
@@ -190,7 +191,7 @@ describe("person-match backend portability", () => {
       expect(A.map(yield* TestConsole.errorLines, String)).toEqual([
         "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
       ]);
-    }).pipe(provideScopedLayer(TestConsole.layer))
+    }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)))
   );
 
   it("removes ROCm loader paths only from the CPU attempt", () => {

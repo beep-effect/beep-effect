@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "boolean-creep-partial-round-verdict/v1",
+  "round": "refresh-2026-09-28-r43-main-8c16e6",
+  "sourceSha": "df3b127353a95a3bf2e53b81020a3224cc209e58",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "complete": false,
+  "classification": "incomplete-runtime-guard-refusal",
+  "sourceStableAtTermination": true,
+  "successfulLanes": [],
+  "failedLanes": [
+    {
+      "lane": "r43-foundation-primitive",
+      "processExitCode": 0,
+      "accepted": false,
+      "errors": ["Runtime profile changed after the lane."],
+      "transcriptSha256": "a5165293fcf96a0800091a1e5934ab8b400116d30b45d1e5ea08f1bf246ca3d4"
+    }
+  ],
+  "notExecutedLanes": [
+    "r43-foundation-capability",
+    "r43-foundation-modeling-rest",
+    "r43-foundation-schema-a-m",
+    "r43-foundation-schema-n-z",
+    "r43-foundation-ui",
+    "r43-drivers-a-f",
+    "r43-drivers-g-m",
+    "r43-drivers-n-r",
+    "r43-drivers-s-z",
+    "r43-architecture-ecosystem-internal",
+    "r43-agents-workspace",
+    "r43-epistemic-ontology",
+    "r43-shared-documents",
+    "r43-law-practice-domain",
+    "r43-law-practice-runtime",
+    "r43-apps",
+    "r43-tooling-library-observability",
+    "r43-tooling-library-support",
+    "r43-tooling-policy",
+    "r43-tool-docgen",
+    "r43-cli-internal-root",
+    "r43-cli-commands-a-c",
+    "r43-cli-commands-d-k",
+    "r43-cli-commands-l-q",
+    "r43-cli-commands-r-z",
+    "r43-cli-yeet"
+  ],
+  "successfulLanesReconciled": 0,
+  "rawQualifiedCandidates": 0,
+  "acceptedNewQualified": 0,
+  "inventoryCounts": {
+    "total": 725,
+    "qualified": 108,
+    "disqualified": 617,
+    "applied": 0
+  },
+  "dry": false,
+  "dryStreak": 0,
+  "P3Credit": false,
+  "implementationCredit": false,
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r43-main-8c16e6/execution-summary.json",
+      "sha256": "90ca20904365fc3861a205611c739183857ee3b333d3161d2a0bb33aa57e6227"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r43-main-8c16e6/lane-map.json",
+      "sha256": "543a0d9d9b602b569087ba197fcd2ae924d56fb4248ef4daea730aae17b63b57"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r43-main-8c16e6/source-sha.txt",
+      "sha256": "4a850b2d6b891f20a139893b022d72e5995399614f1160d267af160690552938"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r43-main-8c16e6/runtime-refusal.json",
+      "sha256": "6d11c777b9671121156ce6d2b066b4c703336e5a5036c471d991d545b228e664"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-28-r43-main-8c16e6/r43-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91"
+    }
+  ],
+  "limitation": "One process completed and its empty report validated, but post-lane runtime admission failed. No lane receives coverage credit. The next attempt must cover the entire current corpus."
+}

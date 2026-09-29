@@ -27,7 +27,7 @@ import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -1849,7 +1849,7 @@ layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check")
     it.effect("does not compare a stale inventory after the Turbo inventory task fails", () =>
       Effect.gen(function* () {
         const result = yield* runCiLane("jsdoc-ratchet", baseOptions).pipe(Effect.exit);
-        expect(Exit.isFailure(result)).toBe(true);
+        result.pipe(Exit.isFailure, assertTrue);
         expect(failedInventoryCommands).toHaveLength(1);
         expect(failedInventoryCommands[0]).toContain("cache execute -- run jsdoc:inventory:check");
       })
