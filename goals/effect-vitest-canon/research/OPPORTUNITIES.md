@@ -5721,3 +5721,14 @@ fingerprints as well as counts and inspect nested providers before application.
 Lock-release probes now verify removal while the temporary root still exists,
 so directory cleanup cannot hide a broken lock finalizer. Receipt:
 `cli-yeet-review-runtime-proof.md`.
+
+### Reflection lint success case does not exercise the default it names
+
+While preparing reflection-lint.test.ts, the case named "passes when a completed
+goal without reflectionRequired has a valid reflection" explicitly supplies
+reflectionRequired: false. It duplicates opt-out behavior instead of proving
+successful validation when the field is absent. Add a distinct omitted-field
+success case or correct this fixture in a behavior-focused follow-up, preserving
+the explicit opt-out test. The migration draft retains the current fixture and
+assertions and does not claim this missing coverage. Receipt:
+`cli-reflection-lint-preparation.md`.
