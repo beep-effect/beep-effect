@@ -7,6 +7,23 @@ schemas, codecs, schema combinators, typed schema errors, and schema-adjacent
 modeling helpers that slices, shared-kernel packages, drivers, and tooling may
 reuse without taking product-domain dependencies.
 
+## Upstream First
+
+Upstream Effect comes first. Before adding a schema, codec, or helper here,
+check the public API in the installed `effect` declarations, and do not add a
+concept upstream already covers. Where upstream covers a `foundation/modeling`
+concept's intent, its covered facets retire in the same PR that migrates their
+consumers, with no alias; the whole concept retires unless the lines reading
+its uncovered members outnumber the lines using its covered facets (ADAPT, per
+the facet census). Retirement leaves no shim or compat module. LiteralKit is
+ADAPT: it keeps `Enum`, `is`, `$match`, `toTaggedUnion` and `LiteralToKey`.
+Persisted and served encodings stay byte-identical.
+
+Decision: `standards/architecture/DECISIONS.md`, "Upstream-First
+Foundation/Modeling". Operational rules:
+`standards/architecture/11-evolution-and-deprecation.md`, "Upstream-first
+retirement in `foundation/modeling`".
+
 ## Topology
 
 Canonical schema concept imports are namespace-first:
