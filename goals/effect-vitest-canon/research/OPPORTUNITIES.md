@@ -5483,3 +5483,16 @@ on either runtime. Actual-suite failure and self-interruption probes verify
 cleanup in all four resource-owning cases on both runtimes; all six allocation
 sites are covered by the success runs. Probe changes are removed. The root
 ratchet passes without baseline changes; full package proof remains pending.
+
+
+### Effect-import tests duplicated an unsafe cwd acquisition wrapper
+
+The effect-import test suite kept a private Layer.build wrapper and an
+acquireUseRelease cwd wrapper that allocated a directory before process.chdir
+without registering release until the whole acquisition returned. The suite
+now reuses support/CommandTest's scope-owned temporaryWorkingDirectory under
+public it.effect and it.layer. Actual-constructor Node/Bun controls verify
+cleanup and cwd restoration even when chdir defects; success, body failure
+and interruption also pass. Reusing the existing constructor avoids maintaining
+a second cleanup implementation. All 23 actual tests and console isolation
+controls pass; grouped full package proof remains pending.

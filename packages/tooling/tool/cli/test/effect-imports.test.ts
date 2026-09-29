@@ -6,41 +6,15 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TestConsole.layer
-);
+const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const decodeJson = UnknownFromJsonString.decodeUnknownSync;
 const runLawsCommand = Command.runWith(lawsCommand, { version: "0.0.0" });
-
-const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
-      const previousCwd = process.cwd();
-      process.chdir(tmpDir);
-      return { fs, previousCwd, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  );
-
 const writeProjectFile = Effect.fn(function* (relativePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -139,14 +113,15 @@ const demoSource = A.join(
   "\n"
 );
 
-describe("effect import laws", () => {
-  it("keeps the promoted-family ratchet empty after the P2 stop", () => {
-    expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(A.empty<string>());
-  });
+it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
+  describe("effect import laws", () => {
+    it("keeps the promoted-family ratchet empty after the P2 stop", () => {
+      expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(A.empty<string>());
+    });
 
-  it("validates candidate CLI flags and renders text and JSON summaries", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("validates candidate CLI flags and renders text and JSON summaries", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile(
@@ -201,12 +176,12 @@ describe("effect import laws", () => {
             strictFailure: true,
           });
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("is a no-op before a family is promoted", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("is a no-op before a family is promoted", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
@@ -221,12 +196,12 @@ describe("effect import laws", () => {
           expect(summary.strictFailure).toBe(false);
           expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(demoSource);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("plans aliases, Function bindings, and type-only namespaces in candidate mode without writing", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("plans aliases, Function bindings, and type-only namespaces in candidate mode without writing", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("packages/ecosystem/member/test/index.test.ts", demoSource);
@@ -250,12 +225,12 @@ describe("effect import laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(yield* readProjectFile("packages/ecosystem/member/test/index.test.ts")).toBe(demoSource);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rejects candidate writes at the exported runner boundary", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rejects candidate writes at the exported runner boundary", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("apps/demo/src/index.ts", demoSource);
@@ -273,12 +248,12 @@ describe("effect import laws", () => {
           expect(failure.message).toContain("dry-run only");
           expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(demoSource);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("scans the union of explicit files and include prefixes", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("scans the union of explicit files and include prefixes", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("apps/explicit.ts", demoSource);
@@ -300,12 +275,12 @@ describe("effect import laws", () => {
           expect(summary.rootImportsRewritten).toBe(2);
           expect(summary.changedFiles).toEqual(["apps/explicit.ts", "packages/demo/src/prefix.ts"]);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("leaves generated source files to their owning generators", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("leaves generated source files to their owning generators", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
@@ -329,12 +304,12 @@ describe("effect import laws", () => {
           expect(yield* readProjectFile("packages/demo/src/generated/client.ts")).toBe(demoSource);
           expect(yield* readProjectFile("packages/demo/src/schema.gen.ts")).toBe(demoSource);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rewrites promoted roots to per-module imports and never reverses stable submodules", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rewrites promoted roots to per-module imports and never reverses stable submodules", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
@@ -375,12 +350,12 @@ describe("effect import laws", () => {
           expect(second.strictFailure).toBe(false);
           expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("keeps executable shebangs ahead of newly emitted imports", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("keeps executable shebangs ahead of newly emitted imports", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -429,12 +404,12 @@ describe("effect import laws", () => {
           expect(second.touchedFiles).toBe(0);
           expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(rewritten);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("routes side-effect-only root imports to manual review", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("routes side-effect-only root imports to manual review", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = 'import "effect";\nexport const value = 1;\n';
@@ -458,12 +433,12 @@ describe("effect import laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("keeps manual-review line numbers anchored after a shebang prefix", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("keeps manual-review line numbers anchored after a shebang prefix", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -493,12 +468,12 @@ describe("effect import laws", () => {
           expect(summary.manualReviews[0]?.line).toBe(3);
           expect(yield* readProjectFile("apps/demo/src/bin.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("leaves an entire declaration unchanged when any binding is unmapped", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("leaves an entire declaration unchanged when any binding is unmapped", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = 'import { Effect, FutureModule } from "effect";\nexport const value = Effect.void;\n';
@@ -520,12 +495,12 @@ describe("effect import laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(yield* readProjectFile("infra/example.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("derives foundation mappings from source barrels and both export maps", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("derives foundation mappings from source barrels and both export maps", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeDemoFoundationPackage(true);
@@ -561,12 +536,12 @@ describe("effect import laws", () => {
           expect(rewritten).toContain('import type { Model } from "@beep/demo/Models";');
           expect(rewritten).not.toContain('from "@beep/demo"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("refuses a foundation target missing from the published export map", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("refuses a foundation target missing from the published export map", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeDemoFoundationPackage(false);
@@ -587,12 +562,12 @@ describe("effect import laws", () => {
           expect(summary.manualReviews[0]?.binding).toBe("Model");
           expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("refuses foundation targets when a private package has no published export map", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("refuses foundation targets when a private package has no published export map", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeDemoFoundationPackage(true, false, false);
@@ -614,12 +589,12 @@ describe("effect import laws", () => {
           expect(summary.manualReviews[0]?.binding).toBe("Demo");
           expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("queues an ambiguous review when two public leaves expose the same source module", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("queues an ambiguous review when two public leaves expose the same source module", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeDemoFoundationPackage(true, true);
@@ -641,12 +616,12 @@ describe("effect import laws", () => {
           expect(summary.manualReviews[0]?.binding).toBe("renamedHelper");
           expect(yield* readProjectFile("apps/demo/src/index.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("merges compatible destination imports and preserves declaration comments", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("merges compatible destination imports and preserves declaration comments", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -677,12 +652,12 @@ describe("effect import laws", () => {
           expect(rewritten).toContain("Root import rationale.");
           expect(rewritten).toContain("trailing-root-comment");
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("merges a comment-bearing declaration without deleting unrelated unused imports", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("merges a comment-bearing declaration without deleting unrelated unused imports", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -715,12 +690,12 @@ describe("effect import laws", () => {
           expect(rewritten).toContain("keep-this-trailing-comment");
           expect(rewritten.match(/effect\/Function/g)).toHaveLength(1);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("preserves aliases instead of inventing collision-prone canonical names", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("preserves aliases instead of inventing collision-prone canonical names", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -749,12 +724,12 @@ describe("effect import laws", () => {
           expect(rewritten).toContain("const O = { sentinel: true };");
           expect(rewritten).not.toContain("import * as O");
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rewrites named root re-exports and preserves their exported aliases", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rewrites named root re-exports and preserves their exported aliases", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           yield* writeDemoFoundationPackage(true);
@@ -787,12 +762,12 @@ describe("effect import laws", () => {
           expect(rewritten).not.toContain('from "@beep/demo"');
           expect(rewritten).not.toContain('from "effect"');
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("routes dynamic, import-type, and import-equals roots to structured manual review", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("routes dynamic, import-type, and import-equals roots to structured manual review", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -827,12 +802,12 @@ describe("effect import laws", () => {
           expect(summary.strictFailure).toBe(true);
           expect(yield* readProjectFile("infra/manual.ts")).toBe(source);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("rewrites imports inside JSDoc TypeScript fences without touching executable imports", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("rewrites imports inside JSDoc TypeScript fences without touching executable imports", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = A.join(
@@ -887,12 +862,12 @@ describe("effect import laws", () => {
           expect(second.touchedFiles).toBe(0);
           expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(rewritten);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("keeps the Markdown gate advisory until explicitly enforced and supports promoted writes", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("keeps the Markdown gate advisory until explicitly enforced and supports promoted writes", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           yield* writeTsconfig;
           const markdown = A.join(
@@ -949,6 +924,7 @@ describe("effect import laws", () => {
           expect(enforced.touchedFiles).toBe(0);
           expect(enforced.strictFailure).toBe(false);
         })
-      ).pipe(provideScopedLayer(testLayer))
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

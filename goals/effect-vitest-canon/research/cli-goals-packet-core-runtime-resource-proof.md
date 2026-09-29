@@ -35,4 +35,9 @@ Actual generated type diagnostics have exit zero and empty output.
 
 The root ratchet passes across 1,217 files with 3,188 findings, zero introduced
 and 1,834 resolved against the unchanged baseline. Historical lineage
-reconciliation and full CLI package proof for this batch remain pending.
+reconciliation closes 25 existing rows: 23 runtime rows credited to bbf8459571
+and two property/checkEffect rows credited to their earlier b1aa7e320c migration.
+No additional current occurrences are needed. The native-platform judgment
+remains open. The public ledger-lineage receipt records these mappings.
+Full CLI package proof will cover this batch together with the next focused
+CLI batch; it remains pending.
