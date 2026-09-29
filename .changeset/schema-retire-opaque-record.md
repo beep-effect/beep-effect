@@ -96,6 +96,7 @@ The gate is the `--singleThreaded` instantiation count:
 | `@beep/schema` | 709,201 → 702,336 | 202,247 → 200,195 | 1.085 → 1.052 s |
 | `@beep/repo-cli` | 4,152,422 → 4,152,561 | 1,067,031 → 1,066,974 | 11.644 → 10.891 s |
 | `@beep/law-practice-domain` | 874,290 → 874,290 | 259,707 → 259,707 | 1.092 → 1.228 s |
+| `@beep/repo-cli`, cumulative from `origin/main` 7cc0aa9b33 (before PR 3-i) | 4,152,690 → 4,152,561 | 1,067,045 → 1,066,974 | 11.846 → 10.891 s |
 
 Flagged: `@beep/repo-cli` rises by 139 instantiations. The retired `Defect()`
 hid `S.overrideToEquivalence` behind a declared `S.Defect` return type; the
