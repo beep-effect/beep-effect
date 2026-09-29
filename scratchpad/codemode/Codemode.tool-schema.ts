@@ -6,24 +6,108 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { JSONSchema, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { A, O, P, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { flow, HashSet, JsonPointer, Result } from "effect";
+import { A, O, P, pipe, R, Str } from "@beep/utils";
+import { flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
-import type { JsonSchema } from "effect/JsonSchema";
+import type { JsonSchema, Type as JsonSchemaType } from "effect/JsonSchema";
 import * as S from "effect/Schema";
 import * as Tool from "effect/ai/Tool";
-const decodeUnknownJSONSchemaDocumentResult = S.decodeUnknownResult(JSONSchema.Document);
-const encodeUnknownJSONSchemaNodeCodecResult = S.encodeUnknownResult(JSONSchema.NodeCodec);
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-schema");
 
-type Node = JSONSchema.Node.Type;
-type SubSchema = JSONSchema.SubSchema.Type;
-type Definitions = Readonly<Record<string, SubSchema>>;
+// Render view of upstream `effect/JsonSchema` records: only the keywords the
+// renderer reads, decoded once at the boundary. Other keywords stay unchecked.
+type SubSchema = boolean | Node;
+type Definitions = { readonly [name: string]: SubSchema };
 
-const decodeNode = S.decodeUnknownResult(JSONSchema.NodeCodec);
+interface Node {
+  readonly $defs: O.Option<Definitions>;
+  readonly $ref: O.Option<string>;
+  readonly additionalProperties: O.Option<SubSchema>;
+  readonly allOf: O.Option<A.NonEmptyReadonlyArray<SubSchema>>;
+  readonly anyOf: O.Option<A.NonEmptyReadonlyArray<SubSchema>>;
+  readonly const: O.Option<S.Json>;
+  readonly default: O.Option<S.Json>;
+  readonly deprecated: O.Option<boolean>;
+  readonly description: O.Option<string>;
+  readonly enum: O.Option<ReadonlyArray<S.Json>>;
+  readonly format: O.Option<string>;
+  readonly items: O.Option<SubSchema>;
+  readonly maxItems: O.Option<NonNegativeInt>;
+  readonly minItems: O.Option<NonNegativeInt>;
+  readonly not: O.Option<boolean | JsonSchema>;
+  readonly oneOf: O.Option<A.NonEmptyReadonlyArray<SubSchema>>;
+  readonly properties: O.Option<Definitions>;
+  readonly required: O.Option<ReadonlyArray<string>>;
+  readonly type: O.Option<JsonSchemaType | A.NonEmptyReadonlyArray<JsonSchemaType>>;
+}
+
+const TypeName = S.Literals(["array", "boolean", "integer", "null", "number", "object", "string"]).pipe(
+  $I.annoteSchema("TypeName", {
+    description: "A JSON Schema `type` keyword name, mirroring upstream `JsonSchema.Type`.",
+  })
+);
+
+const SubSchema = S.Union([S.Boolean, S.suspend((): S.Codec<Node, JsonSchema> => Node)]).pipe(
+  $I.annoteSchema("SubSchema", {
+    description: "A boolean JSON Schema or a render view of an object JSON Schema.",
+  })
+);
+
+const SubSchemaList = S.NonEmptyArray(SubSchema);
+const SubSchemaRecord = S.Record(S.String, SubSchema);
+const Types = S.Union([TypeName, S.NonEmptyArray(TypeName).check(S.isUnique())]);
+const RequiredKeys = S.Array(S.String).check(S.isUnique());
+const RawJsonSchema = S.Record(S.String, S.Unknown);
+// `not` is only tested for emptiness, so it stays a raw upstream record.
+const RawSubSchema = S.Union([S.Boolean, RawJsonSchema]);
+
+const Node = RawJsonSchema.pipe(
+  S.decodeTo(
+    S.Struct({
+      $defs: S.OptionFromOptionalKey(SubSchemaRecord),
+      $ref: S.OptionFromOptionalKey(S.String),
+      additionalProperties: S.OptionFromOptionalKey(SubSchema),
+      allOf: S.OptionFromOptionalKey(SubSchemaList),
+      anyOf: S.OptionFromOptionalKey(SubSchemaList),
+      const: S.OptionFromOptionalKey(S.Json),
+      default: S.OptionFromOptionalKey(S.Json),
+      deprecated: S.OptionFromOptionalKey(S.Boolean),
+      description: S.OptionFromOptionalKey(S.String),
+      enum: S.Array(S.Json).pipe(S.OptionFromOptionalKey),
+      format: S.OptionFromOptionalKey(S.String),
+      items: S.OptionFromOptionalKey(SubSchema),
+      maxItems: S.OptionFromOptionalKey(NonNegativeInt),
+      minItems: S.OptionFromOptionalKey(NonNegativeInt),
+      not: S.OptionFromOptionalKey(RawSubSchema),
+      oneOf: S.OptionFromOptionalKey(SubSchemaList),
+      properties: S.OptionFromOptionalKey(SubSchemaRecord),
+      required: S.OptionFromOptionalKey(RequiredKeys),
+      type: S.OptionFromOptionalKey(Types),
+    }),
+    SchemaTransformation.passthroughSupertype()
+  ),
+  $I.annoteSchema("Node", {
+    description: "Render view of an object JSON Schema: the keywords the TypeScript renderer reads.",
+  })
+);
+
+const Document = S.Struct({
+  schema: Node,
+  definitions: S.Record(S.String, Node),
+}).pipe(
+  $I.annoteSchema("Document", {
+    description: "Render view of an upstream draft-2020-12 JSON Schema document.",
+  })
+);
+
+const decodeNode = S.decodeResult(Node);
+const decodeDocument = S.decodeResult(Document);
+const isNode = S.is(Node);
+const isTypeName: P.Refinement<unknown, JsonSchemaType> = S.is(TypeName);
 const encodeJsonString = UnknownFromJsonString.encodeUnknownResult;
 
 const renderLiteral = (value: unknown): string =>
@@ -84,7 +168,7 @@ export const identifierSegment = IdentifierSegment.is;
 
 const renderKey = (name: string): string => (identifierSegment(name) ? name : renderLiteral(name));
 
-const hasType = (node: Node, expected: JSONSchema.TypeName): boolean =>
+const hasType = (node: Node, expected: JsonSchemaType): boolean =>
   pipe(
     node.type,
     O.exists((value) => (P.isString(value) ? value === expected : A.some(value, (candidate) => candidate === expected)))
@@ -118,6 +202,18 @@ const intersection = (members: ReadonlyArray<string>): string => {
 };
 
 const MAX_RENDER_DEPTH = 8;
+
+// Exhaustive over upstream `JsonSchema.Type`; `array` and `object` render structurally below.
+const primitiveTypeScript: { readonly [Name in JsonSchemaType]: O.Option<string> } = {
+  array: O.none(),
+  boolean: O.some("boolean"),
+  integer: O.some("number"),
+  null: O.some("null"),
+  number: O.some("number"),
+  object: O.none(),
+  string: O.some("string"),
+};
+
 const localRefPrefixes = A.make("#/$defs/", "#/definitions/");
 
 type RenderContext = {
@@ -189,15 +285,6 @@ const hasUnresolvedRef = (
     unresolvedSelf || A.some(schemaChildren(schema), (child) => hasUnresolvedRef(child, definitions, seen, nextVisited))
   );
 };
-
-const isEmptyNode = (node: Node): boolean =>
-  pipe(
-    encodeUnknownJSONSchemaNodeCodecResult(node),
-    Result.match({
-      onFailure: thunkFalse,
-      onSuccess: R.isEmptyReadonlyRecord,
-    })
-  );
 
 const docTags = (schema: Node): ReadonlyArray<string> =>
   pipe(
@@ -298,14 +385,16 @@ const renderSchema = (
     ) {
       return "number";
     }
+    const [first, second] = members;
     if (
       A.length(members) === 2 &&
-      !P.isBoolean(members[0]) &&
-      hasType(members[0], "object") &&
-      O.isNone(members[0].properties) &&
-      !P.isBoolean(members[1]) &&
-      hasType(members[1], "array") &&
-      O.isNone(members[1].items)
+      !P.isBoolean(first) &&
+      hasType(first, "object") &&
+      O.isNone(first.properties) &&
+      P.isNotUndefined(second) &&
+      !P.isBoolean(second) &&
+      hasType(second, "array") &&
+      O.isNone(second.items)
     ) {
       return "{}";
     }
@@ -330,7 +419,7 @@ const renderSchema = (
   if (
     pipe(
       schema.not,
-      O.exists((negated) => (P.isBoolean(negated) ? negated : isEmptyNode(negated)))
+      O.exists((negated) => (P.isBoolean(negated) ? negated : R.isEmptyReadonlyRecord(negated)))
     )
   ) {
     return "never";
@@ -344,20 +433,11 @@ const renderSchema = (
     );
   }
 
-  const type = pipe(schema.type, O.filter(P.isString), O.getOrUndefined);
-  if (type === "string" || type === "number" || type === "integer" || type === "boolean" || type === "null") {
-    return JSONSchema.TypeName.$match(type, {
-      array: () => "unknown",
-      boolean: () => "boolean",
-      integer: () => "number",
-      null: () => "null",
-      number: () => "number",
-      object: () => "unknown",
-      string: () => "string",
-    });
-  }
+  const type = pipe(schema.type, O.filter(isTypeName));
+  const primitive = O.flatMap(type, (name) => primitiveTypeScript[name]);
+  if (O.isSome(primitive)) return primitive.value;
 
-  if (type === "array") {
+  if (O.contains(type, "array")) {
     return `Array<${renderSchema(
       pipe(
         schema.items,
@@ -369,7 +449,7 @@ const renderSchema = (
     )}>`;
   }
 
-  if (type === "object" || O.isSome(schema.properties)) {
+  if (O.contains(type, "object") || O.isSome(schema.properties)) {
     const required = pipe(schema.required, O.map(HashSet.fromIterable), O.getOrElse(HashSet.empty<string>));
     const properties = pipe(schema.properties, O.map(R.toEntries), O.getOrElse(A.empty));
     const indexType = pipe(
@@ -453,7 +533,7 @@ export const toTypeScript: {
         try: () => S.toJsonSchemaDocument(decoded === true ? S.toType(schema) : schema),
         catch: (cause) => cause,
       }),
-      Result.flatMap(decodeUnknownJSONSchemaDocumentResult),
+      Result.flatMap(decodeDocument),
       Result.match({
         onFailure: () => "unknown",
         onSuccess: (document) =>
@@ -471,7 +551,8 @@ export const toTypeScript: {
  * **Gotchas**
  *
  * JSON Schema decode failure becomes the string `"unknown"` rather than a
- * typed error.
+ * typed error. Only the keywords the renderer reads are decoded; malformed
+ * values in other keywords (`pattern`, `minLength`, ...) are ignored.
  *
  * **Example** (Render a number JSON Schema)
  *
@@ -585,7 +666,7 @@ export const inputProperties = (tool: Tool.Any): ReadonlyArray<InputProperty> =>
         root.$ref,
         O.flatMap(definitionName),
         O.flatMap((name) => R.get(definitions, name)),
-        O.filter(JSONSchema.Node.is),
+        O.filter(isNode),
         O.getOrElse(() => root)
       );
       const required = pipe(schema.required, O.map(HashSet.fromIterable), O.getOrElse(HashSet.empty<string>));

@@ -14,20 +14,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2905 |
-| publicExports | 20526 |
-| openModules | 377 |
-| openExports | 3097 |
+| publicModules | 2902 |
+| publicExports | 20480 |
+| openModules | 375 |
+| openExports | 3096 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3334 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 434 |
+| multiple-description-paragraphs | 432 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3333 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1606 | 25 | 168 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 260 | 1560 | 23 | 167 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -621,8 +621,6 @@ Module findings:
 - `src/Float32Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Float64Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Fn/Fn.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/JSONSchema/JSONSchema.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/JSONSchema/JSONSchema.shared.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LiteralKit/LiteralKit.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -801,7 +799,6 @@ Export findings:
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
 - `src/index.ts:226` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:262` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:362` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
 - `src/index.ts:407` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 

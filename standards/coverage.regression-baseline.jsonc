@@ -32355,42 +32355,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts": {
-          "lines": 99.24,
-          "statements": 99.29,
-          "branches": 92.68,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 6,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/JSONSchema/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Json.ts": {
           "lines": 100,
           "statements": 100,
