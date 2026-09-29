@@ -73,20 +73,19 @@ truly requires it.
 
 ## 5. Model Reusable Literal Domains
 
-Use `LiteralKit(...)` when the literal set needs any of:
+Use `LiteralKit(...)` for a named literal domain, especially when it needs any
+of:
 
-- guards
-- enums
-- options or subsets
-- thunks
-- member mapping
+- guards (`.is`)
+- enums (`.Enum`)
+- record-form matching (`$match`)
+- member mapping (`.mapMembers(...)`)
 - direct annotation
 
 Inline array literals passed directly to `LiteralKit(...)` should omit
 `as const`; `LiteralKit` preserves them through const type parameters.
 
-Use a one-off literal union only when the value is genuinely local and no helper
-surface is needed.
+Use `S.Literals(...)` for an anonymous inline union never referenced by name.
 
 ## 6. Model Tagged Unions
 
@@ -126,8 +125,8 @@ Use:
 - `S.toEquivalence(schema)` for comparisons
 - `S.toArbitrary(schema)` for schema-modeled property tests
 - schema tagged-union `.cases`, `.guards`, `.isAnyOf`, and `.match`
-- `LiteralKit.Options`, `.Enum`, `.is`, `.pickOptions`, `.omitOptions`,
-  `.$match`, `.thunk`, and `.toTaggedUnion`
+- `LiteralKit.Enum`, `.is`, `.$match`, and `.toTaggedUnion`, plus the
+  inherited `S.Literals` members `.literals` and `.pick(...)`
 - `S.decodeUnknownEffect` / `S.decodeEffect` for default decoders
 - `S.encodeUnknownEffect` / `S.encodeEffect` for default encoders
 - `S.decodeUnknownResult`, `S.decodeResult`, or `S.decodeUnknownOption` only
@@ -189,7 +188,7 @@ If the check is reusable, include:
 - Manual branch helpers for schema tagged unions
   Replace with `.match`, `.guards`, `.isAnyOf`, and `.cases`
 - Duplicate literal constants for reusable literal domains
-  Replace with `LiteralKit.Enum`, `LiteralKit.Options`, and subset helpers
+  Replace with `LiteralKit.Enum`, `.literals`, and `.pick(...)`
 - Ad-hoc string predicates
   Replace with local shared schemas, built-in checks, or a reusable metadata-rich
   filter

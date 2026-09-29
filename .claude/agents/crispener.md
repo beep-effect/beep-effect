@@ -18,8 +18,10 @@ Given code that already works, make the schema the single source of truth:
 - Delete decode walls and guard walls that re-check what the schema already
   proves.
 - Remove `*Defaults` constants by moving defaults into the schema where safe.
-- Collapse hand-rolled literal families into `LiteralKit` domains and derived
-  guards.
+- Collapse hand-rolled literal families into named `LiteralKit` domains and
+  derived guards (`S.Literals` for anonymous inline unions never referenced by
+  name). Where upstream Effect covers a concept's intent, use upstream
+  (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Option-ify nullish fields instead of scattering null checks.
 - Tear down helper walls whose only job is to re-shape schema-known data;
   colocate behavior with the schema that owns it.

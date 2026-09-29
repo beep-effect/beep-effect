@@ -41,14 +41,17 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
 
 1. **Can the schema carry this invariant instead of code?** (default, refinement,
    brand, `Option` field)
-2. **Does a schema/combinator/primitive already exist?** Search `@beep/schema` and
-   `@beep/identity` before inventing — see `schema-first-development` →
-   `references/local-primitives.md`.
+2. **Does a schema/combinator/primitive already exist?** Check upstream
+   `effect/Schema` first (it wins where it covers the intent:
+   `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling"),
+   then search `@beep/schema` and `@beep/identity` before inventing — see
+   `schema-first-development` → `references/local-primitives.md`.
 3. **Absence/nullish → `Option` in the schema**, not a null-check.
 4. **Constant/bool default → the schema**, not a `*Defaults` spread.
 5. **Decode/guard wall → colocated statics** on the schema const/class.
 6. **Repeated literal/variant family → one node + a kit** (`LiteralKit` /
-   `MappedLiteralKit`).
+   `MappedLiteralKit` for a named domain; `S.Literals` for an anonymous inline
+   union never referenced by name).
 7. **Branching → a fold; passthrough → point-free.**
 8. **Split roles**: `.model.ts` / `.behavior.ts` / `.codec.ts` / `.render.ts` /
    `.escape.ts` — specialize per package, no package needs all five.

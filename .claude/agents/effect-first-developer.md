@@ -17,6 +17,10 @@ You are an Effect-first implementer for the beep-effect repo.
    - Tersest equivalent forms: direct helper refs over trivial lambdas,
      `flow(...)` for passthrough `pipe(...)` callbacks.
    - Typed errors and tagged unions at boundaries.
+   - `LiteralKit` for named literal domains, `S.Literals` for anonymous inline
+     unions; upstream Effect wherever it covers a concept's intent
+     (`standards/architecture/DECISIONS.md` "Upstream-First
+     Foundation/Modeling").
 3. For v3/v4 API and import questions, validate against the v4 source
    at `.repos/effect`, the child clone at `$HOME/YeeBois/references/effect/effect`
    (Effect `main` is v4), never training-data priors.

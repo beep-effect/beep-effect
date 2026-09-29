@@ -11,6 +11,10 @@ Use `Schema` for pure data models.
   the same shape.
 - Service contracts may stay interfaces, but wire payloads, persisted rows,
   config payloads, and domain object models should be schema-first.
+- Prefer upstream Effect where it covers a concept's intent. A `@beep/schema`
+  concept that upstream covers retires in the same PR that migrates its
+  consumers, with no alias (`standards/architecture/DECISIONS.md`
+  "Upstream-First Foundation/Modeling").
 
 The repo enforces this inventory with `packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts`.
 
@@ -161,8 +165,8 @@ Use:
 - `S.toArbitrary(schema)` for schema-modeled laws and boundary invariants
 - `S.TaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
 - `S.toTaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
-- `LiteralKit.Options`, `.Enum`, `.is`, `.pickOptions`, `.omitOptions`,
-  `.$match`, `.thunk`, and `.toTaggedUnion`
+- `LiteralKit.Enum`, `.is`, `.$match`, and `.toTaggedUnion`, plus the
+  inherited `S.Literals` members `.literals` and `.pick(...)`
 - `MappedLiteralKit.From`, `.To`, and `.Pairs` for directional literal maps
 
 Avoid ad-hoc duplicate helpers when the schema already expresses the domain
@@ -190,7 +194,8 @@ S.makeFilter(Str.includes("/"), {
 
 ## 9. Literal Domains and Tagged Unions Follow Repo Style
 
-- Use `LiteralKit` for reusable literal domains.
+- Use `LiteralKit` for named literal domains; use `S.Literals` for anonymous
+  inline unions never referenced by name.
 - Model finite variants, lifecycle states, status/result cases, and
   case-specific payloads as discriminated unions instead of optional/nullish
   payload bags.
@@ -203,8 +208,8 @@ S.makeFilter(Str.includes("/"), {
 - Prefer `LiteralKit + mapMembers + Tuple.evolve + S.toTaggedUnion(...)` for
   reusable literal domains, and prefer the schema-derived `.match` helper when
   branching directly on the tagged union.
-- Use `LiteralKit.Enum` and subset helpers instead of duplicate literal arrays
-  or enum-like constants.
+- Use `LiteralKit.Enum`, `.literals`, and `.pick(...)` instead of duplicate
+  literal arrays or enum-like constants.
 
 ## 9b. Source Schemas Must Be Precise Enough to Generate Test Data
 

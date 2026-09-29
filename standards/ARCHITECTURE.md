@@ -771,6 +771,13 @@ schema-topology` enforces the retired lowercase topology, retired suite
 aggregators, private role-file exports, promoted concept folder exports,
 private parser seams, and generated root alias drift.
 
+`foundation/modeling` is upstream-first: where upstream Effect covers a
+concept's intent, the repo concept retires in the same PR that migrates every
+consumer, with no alias, and a new concept is not added
+(`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
+Named internal literal domains use `LiteralKit`; anonymous inline unions never
+referenced by name use `S.Literals`.
+
 Script-only pseudo-packages are not canonical. If an artifact matters enough to
 name in the architecture, it should have a real family/kind contract and a real
 entrypoint surface.

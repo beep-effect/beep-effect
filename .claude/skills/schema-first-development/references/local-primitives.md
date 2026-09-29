@@ -4,7 +4,9 @@ This repo uses both upstream `effect/Schema` and local helpers from
 `@beep/schema`.
 
 Reach for existing local building blocks before inventing new schemas or custom
-filters.
+filters. Upstream comes first: where upstream Effect covers a concept's intent,
+use it instead of a `@beep/schema` concept, and do not add a local one
+(`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Import Baseline
 
@@ -29,22 +31,20 @@ annotation metadata.
 
 ## Prefer `LiteralKit` for Internal Literal Domains
 
-Use `LiteralKit` when the literal set needs more than just a one-off union.
-Do not add `as const` to inline array literals passed directly to
-`LiteralKit(...)`; its const type parameters preserve the literal tuple.
+Use `LiteralKit` for a named literal domain. An anonymous inline union never
+referenced by name uses `S.Literals`. Do not add `as const` to inline array
+literals passed directly to `LiteralKit(...)`; its const type parameters
+preserve the literal tuple.
 
 What it gives you:
 
 - schema value
-- `.Options`
 - `.Enum`
 - `.is`
-- `.thunk`
-- `.pickOptions(...)`
-- `.omitOptions(...)`
 - `$match`
-- `.mapMembers(...)` for tagged-union assembly
 - `.toTaggedUnion(...)` for direct literal-to-member tagged unions
+- the inherited `S.Literals` members: `.literals`, `.pick(...)`, and
+  `.mapMembers(...)` for tagged-union assembly
 
 Good fits:
 
@@ -153,7 +153,8 @@ Use `@beep/schema` when:
 
 - Do not rebuild boolean, path, or email normalization from scratch if
   `@beep/schema` already provides it.
-- Do not use `S.Literals(...)` where `LiteralKit(...)` is expected for reuse.
+- Do not use `S.Literals(...)` for a literal domain referenced by name; keep
+  it for anonymous inline unions.
 - Do not define schema helpers without annotation metadata when they are shared
   across files or modules.
 - Do not create plain TS types beside a reusable schema primitive unless the

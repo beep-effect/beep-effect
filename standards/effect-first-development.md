@@ -284,8 +284,9 @@ export type Tenant = typeof Tenant.Type
 
 - If an intermediate domain concept is named, reused, matched on, or structurally validated, model it as a schema first instead of an ad-hoc boolean helper.
 - Prefer built-in schema constructors/checks such as `S.NonEmptyString`, `S.NonEmptyArray`, `S.TupleWithRest`, `S.Union`, `S.isPattern`, and `S.isIncludes` before reaching for `S.makeFilter`.
+- Prefer upstream Effect wherever it covers a concept's intent; a `@beep/schema` concept that upstream covers retires in the same PR that migrates its consumers, with no alias (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Derive domain guards with `S.is(SomeSchema)`.
-- If an internal literal domain needs `.is`, `.thunk`, `$match`, or an annotation-bearing schema value, use `LiteralKit`.
+- Use `LiteralKit` for a named internal literal domain, especially one that needs `.Enum`, `.is`, `$match`, `.toTaggedUnion`, or an annotation-bearing schema value; use `S.Literals` for anonymous inline unions never referenced by name.
 - Do not add `as const` to inline array literals passed directly to `LiteralKit(...)`; `LiteralKit` uses const type parameters already.
 - Prefer named intermediate schemas; export and document them when reusable or when they materially clarify the module’s domain model, otherwise keep them module-local.
 
@@ -868,9 +869,9 @@ export class VersionSyncOptions extends S.Class<VersionSyncOptions>($I`VersionSy
 - If a domain constraint is named, reused, matched on, or structurally validated, model it as a schema first rather than a forest of ad-hoc predicate helpers.
 - Prefer built-in schema constructors/checks before `S.makeFilter`.
 - Keep guard intent and reusable check intent in schema annotations and check metadata.
-- Use `LiteralKit` for internal literal domains whenever `.Options`, `.Enum`,
-  `.is`, `.thunk`, `$match`, subset helpers, or annotation-bearing schema
-  values are useful.
+- Use `LiteralKit` for named internal literal domains whenever `.Enum`, `.is`,
+  `$match`, `.toTaggedUnion`, or annotation-bearing schema values are useful;
+  use `S.Literals` for anonymous inline unions never referenced by name.
 - Use `MappedLiteralKit` when a literal protocol/code map needs helpers on both
   the encoded and decoded sides.
 - Treat broad exported/domain/boundary primitives such as `S.String`,
@@ -984,9 +985,9 @@ Avoid this:
 - Use `S.TaggedUnion` / `S.toTaggedUnion` static APIs (`.cases`, `.guards`,
   `.isAnyOf`, `.match`) for construction, guards, grouped checks, and
   exhaustive branching.
-- Use `LiteralKit` static APIs (`.Options`, `.Enum`, `.is`, `.pickOptions`,
-  `.omitOptions`, `.$match`, `.thunk`, `.toTaggedUnion`) instead of duplicate
-  literal arrays, enum-like objects, and ad-hoc literal guards.
+- Use `LiteralKit` static APIs (`.Enum`, `.is`, `.$match`, `.toTaggedUnion`)
+  and the `S.Literals` members it inherits (`.literals`, `.pick(...)`) instead
+  of duplicate literal arrays, enum-like objects, and ad-hoc literal guards.
 - Use class-local statics for repeated `decode`, `encode`, `arbitrary`, and
   `equivalence` helpers when they reduce repeated plumbing without introducing
   import cycles.
@@ -1369,7 +1370,7 @@ Use this before submitting code:
 29. Expected failures use `Effect.fail`; defects are reserved for invariants.
 30. Isolation-sensitive layer provisioning uses `{ local: true }` or `Layer.fresh`.
 31. New domain data models are schema-first; plain `type` / `interface` is used only when schema is not a practical fit.
-32. Finite variants, lifecycle states, status/result cases, and case-specific payloads are modeled as discriminated unions; literal-string discriminants and internal literal domains use `LiteralKit` when `.mapMembers`, `.is`, `.thunk`, `$match`, or annotation-bearing schema values are needed.
+32. Finite variants, lifecycle states, status/result cases, and case-specific payloads are modeled as discriminated unions; literal-string discriminants and named internal literal domains use `LiteralKit` when `.mapMembers`, `.Enum`, `.is`, `$match`, or annotation-bearing schema values are needed; anonymous inline unions never referenced by name use `S.Literals`.
 33. Schema defaults use `S.withConstructorDefault` / `S.withDecodingDefault*`, not ad-hoc fallback objects in handlers/services.
 34. Named or reused domain constraints are modeled as schemas first; built-in schema constructors/checks are preferred before `S.makeFilter`.
 35. Guard helpers for domain strings/paths/tags come from branded schemas with `S.is(...)`, not ad-hoc `regex.test(...)` predicates.

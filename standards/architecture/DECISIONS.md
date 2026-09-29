@@ -2008,6 +2008,75 @@ settle promotion-record lint, a real cross-slice workflow diagnostic, the
 published deprecation windows, span names in a live trace, or a new
 contributor walking the drawing.
 
+## 2026-09-29: Upstream-First Foundation/Modeling
+
+- **Status:** Active
+
+Decision:
+
+`foundation/modeling` packages use upstream Effect wherever it covers a
+concept's intent, and a new concept is not added where upstream already covers
+it. An existing concept that upstream covers is retired: its implementation,
+exports, and tests are deleted and every consumer moves to the upstream API in
+the same PR, with no alias left behind (no deprecation shim, re-export alias,
+or compat module).
+
+- Intent is judged per facet on the consumed surface: the schema value and
+  each member or static consumers read. A facet is covered when public
+  upstream API covers what consumers use it for, checked against the installed
+  `effect` declarations (`dist/*.d.ts`); an `@internal` symbol never counts.
+  The upstream API may live outside `effect/Schema` or be an inline
+  composition at the consumer, such as `S.String.check(S.isPattern(...))`.
+- A concept is ADAPT when the consumer lines that read its uncovered members
+  outnumber the lines that use its covered facets, construction included: its
+  covered facets are deleted in the PR that migrates their consumers, and the
+  rest stays.
+- A RETIRE with more than 100 audited consumers runs a facet census before its
+  PR opens; the census and any flip to ADAPT are logged in the owning goal
+  packet's decision log before the PR opens.
+- Persisted and externally served encodings stay byte-identical, using an
+  upstream variant or a consumer-local composition of upstream codecs. Only
+  in-memory shapes may change, and consumers accept the behavior changes that
+  come with them. A boundary whose upstream default differs and whose bytes no
+  such codec reproduces is a separate migration goal.
+
+The operational rules are in `11-evolution-and-deprecation.md`, section
+"Upstream-first retirement in `foundation/modeling`".
+`goals/effect-schema-parity` applies them to `@beep/schema`, and each of its
+PRs cites this entry by heading.
+
+Rationale:
+
+The 2026-07-08 PGlite decision declined a repo wrapper that duplicated an
+upstream client. Modeling concepts follow the same reasoning: a local concept
+that shadows an upstream one is a second owner for one capability, and it has
+to be re-audited on every Effect snapshot bump. The 2026-09-02 entry removes
+a symbol without a window when it has never shipped in a release and has zero
+remaining consumers. `foundation/modeling` packages are private and have never
+shipped, and deleting a concept in the PR that migrates its consumers meets
+the zero-consumer half inside one change.
+
+Intent is judged per facet because the first `@beep/schema` audit judged it on
+the schema alone and ruled LiteralKit RETIRE. `S.Literals` does cover the
+kit's schema, but a consumer census found its uncovered keyed members (`.Enum`
+1,172 lines, `.is` 603, `$match` 243, `toTaggedUnion` 36) at 2,054 lines
+against 2,048 for its covered facets (construction 1,521, `.Options` 395,
+`.thunk` 65, `.pickOptions`/`.omitOptions` 52, `.HashSet` 15). LiteralKit is
+therefore ADAPT: it keeps `Enum`, `is`, `$match`, `toTaggedUnion` and
+`LiteralToKey`, and loses `Options`, `pickOptions`, `omitOptions`, `HashSet`,
+`thunk`, `enumMapping` and the `M` type parameter
+(`explorations/effect-schema-parity/DECISIONS.md`,
+"LiteralKit reopened at decompose: ADAPT, not RETIRE", 2026-09-15). Byte
+identity keeps data migrations out of retirement PRs.
+
+Rejected: a rule in the `@beep/schema` README only (the other
+`foundation/modeling` packages would keep hand-rolling); aliases or
+deprecation windows for in-repo consumers (a kept alias is a second owner
+under another name, and the 2026-09-02 entry found that release-counted
+windows never elapse here); judging intent on the schema facet alone (it
+would retire LiteralKit, whose uncovered keyed members carry 2,054 consumer
+lines against 2,048 for its covered facets, construction included).
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

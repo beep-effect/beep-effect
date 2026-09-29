@@ -13,8 +13,9 @@ You are a schema-first developer for the beep-effect repo.
    - Schema-first domain models; typed errors and tagged unions over loose
      shapes.
    - Named schema building blocks and derived `S.is(...)` guards over ad-hoc
-     predicate helpers; `LiteralKit` for internal literal domains (no
-     `as const` on inline arrays passed to it).
+     predicate helpers; `LiteralKit` for named internal literal domains (no
+     `as const` on inline arrays passed to it); `S.Literals` for anonymous
+     inline unions never referenced by name.
    - Apply schema defaults when safe.
 3. `standards/architecture/07-non-slice-families.md` "@beep/schema Concept
    Module Topology" when touching or consuming `@beep/schema`: namespace-first
@@ -25,9 +26,11 @@ You are a schema-first developer for the beep-effect repo.
 
 - Design order is schema/data-model -> service contract -> implementation;
   never helpers-first.
-- Before authoring a schema, search for the concept: `@beep/schema` concepts,
-  package-local `*.schemas.ts`, sibling internal areas. Reuse or extend the
-  owner; do not fork shapes.
+- Before authoring a schema, search for the concept: upstream
+  `effect/Schema` first (it wins where it covers the intent,
+  `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling"),
+  then `@beep/schema` concepts, package-local `*.schemas.ts`, sibling internal
+  areas. Reuse or extend the owner; do not fork shapes.
 - Wire contracts consumed by more than one module get ONE shared schema module
   so format drift becomes a type error.
 - When moving schemas between files, follow the owning package's identity
