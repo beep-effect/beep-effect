@@ -14,20 +14,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2885 |
-| publicExports | 20314 |
-| openModules | 376 |
-| openExports | 3088 |
+| publicModules | 2873 |
+| publicExports | 20262 |
+| openModules | 374 |
+| openExports | 3086 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3326 |
+| exampleImportFindings | 3324 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 434 |
+| multiple-description-paragraphs | 432 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3325 |
+| no-root-package-import | 3323 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 243 | 1392 | 24 | 159 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 231 | 1340 | 22 | 157 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -613,7 +613,6 @@ Module findings:
 - `src/Color/Color.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoTxnHash/CryptoTxnHash.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EffectSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthAmount/EthAmount.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EvmAddress/EvmAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -626,7 +625,6 @@ Module findings:
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/PromiseSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SafeObject/index.ts:1` (packageDocumentation) - 1 example import violation(s)
 - `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -683,8 +681,6 @@ Export findings:
 - `src/Duration/Duration.schema.ts:50` `Schema` (type) - 1 example import violation(s)
 - `src/Duration/Duration.schema.ts:69` `Duration` (const) - 1 example import violation(s)
 - `src/Duration/Duration.schema.ts:88` `Duration` (type) - 1 example import violation(s)
-- `src/EffectSchema.ts:60` `isEffect` (const) - 1 example import violation(s)
-- `src/EffectSchema.ts:85` `EffectSchema` (const) - 1 example import violation(s)
 - `src/Email.ts:33` `EmailString` (const) - 1 example import violation(s)
 - `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
 - `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
@@ -791,9 +787,9 @@ Export findings:
 - `src/Unknown.ts:75` `UnknownFromJsonString` (const) - 2 example import violation(s)
 - `src/Xml.ts:86` `XmlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:240` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:335` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:380` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:262` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:362` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:407` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 
@@ -1486,30 +1482,30 @@ Export findings:
 - `src/CauseRedaction.ts:670` `tapRedactedCause` (const) - 2 example import violation(s)
 - `src/CoreConfig.ts:45` `ObservabilityCoreConfig` (const) - 1 example import violation(s)
 - `src/CoreConfig.ts:75` `ObservabilityCoreConfig` (type) - 1 example import violation(s)
-- `src/HttpError.ts:168` `ClientHttpError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:204` `ServerHttpError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:235` `BadRequestError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:262` `UnauthorizedError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:289` `ForbiddenError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:316` `NotFoundError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:343` `ConflictError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:370` `UnprocessableEntityError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:397` `TooManyRequestsError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:424` `InternalServerErrorError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:451` `BadGatewayError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:478` `ServiceUnavailableError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:505` `GatewayTimeoutError` (class) - 2 example import violation(s)
-- `src/HttpError.ts:531` `makeBadRequestError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:551` `makeUnauthorizedError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:571` `makeForbiddenError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:591` `makeNotFoundError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:611` `makeConflictError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:631` `makeUnprocessableEntityError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:651` `makeTooManyRequestsError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:671` `makeInternalServerError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:691` `makeBadGatewayError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:711` `makeServiceUnavailableError` (const) - 1 example import violation(s)
-- `src/HttpError.ts:731` `makeGatewayTimeoutError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:93` `ClientHttpError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:129` `ServerHttpError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:160` `BadRequestError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:187` `UnauthorizedError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:214` `ForbiddenError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:241` `NotFoundError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:268` `ConflictError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:295` `UnprocessableEntityError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:322` `TooManyRequestsError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:349` `InternalServerErrorError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:376` `BadGatewayError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:403` `ServiceUnavailableError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:430` `GatewayTimeoutError` (class) - 2 example import violation(s)
+- `src/HttpError.ts:456` `makeBadRequestError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:476` `makeUnauthorizedError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:496` `makeForbiddenError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:516` `makeNotFoundError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:536` `makeConflictError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:556` `makeUnprocessableEntityError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:576` `makeTooManyRequestsError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:596` `makeInternalServerError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:616` `makeBadGatewayError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:636` `makeServiceUnavailableError` (const) - 1 example import violation(s)
+- `src/HttpError.ts:656` `makeGatewayTimeoutError` (const) - 1 example import violation(s)
 - `src/Logging.ts:54` `LogFormat` (const) - 1 example import violation(s)
 - `src/Logging.ts:75` `LogFormat` (type) - 1 example import violation(s)
 - `src/Logging.ts:92` `PrettyLogTheme` (const) - 1 example import violation(s)
@@ -1558,10 +1554,10 @@ Export findings:
 - `src/server/DevTools.ts:34` `DevToolsSpanFilter` (const) - 1 example import violation(s)
 - `src/server/DevTools.ts:60` `DevToolsSpanFilter` (type) - 1 example import violation(s)
 - `src/server/ErrorReporting.ts:138` `layerErrorReporter` (const) - 1 example import violation(s)
-- `src/server/HttpApiTelemetry.ts:107` `HttpApiTelemetryDescriptor` (class) - 1 example import violation(s)
-- `src/server/HttpApiTelemetry.ts:532` `observeHttpApiEffect` (const) - 2 example import violation(s)
-- `src/server/HttpApiTelemetry.ts:597` `HttpApiTelemetryMiddleware` (class) - 1 example import violation(s)
-- `src/server/HttpApiTelemetry.ts:746` `observeHttpApiHandler` (const) - 2 example import violation(s)
+- `src/server/HttpApiTelemetry.ts:68` `HttpApiTelemetryDescriptor` (class) - 1 example import violation(s)
+- `src/server/HttpApiTelemetry.ts:494` `observeHttpApiEffect` (const) - 2 example import violation(s)
+- `src/server/HttpApiTelemetry.ts:559` `HttpApiTelemetryMiddleware` (class) - 1 example import violation(s)
+- `src/server/HttpApiTelemetry.ts:708` `observeHttpApiHandler` (const) - 2 example import violation(s)
 - `src/server/TraceContext.ts:54` `injectTraceContextHeaders` (const) - 1 example import violation(s)
 - `src/server/TraceContext.ts:115` `withIncomingTraceContext` (const) - 1 example import violation(s)
 
@@ -3151,10 +3147,10 @@ Export findings:
 Path: `packages/drivers/venice-ai`
 
 Export findings:
-- `src/VeniceAI.service.ts:486` `VeniceAIConfigInput` (class) - 1 example import violation(s)
-- `src/VeniceAI.service.ts:1452` `VENICE_AI_OPERATION_DESCRIPTORS` (const) - 2 example import violation(s)
-- `src/VeniceAI.service.ts:2108` `VeniceAI` (class) - 1 example import violation(s)
-- `src/VeniceAI.service.ts:2181` `VeniceAiChat` (class) - 1 example import violation(s)
+- `src/VeniceAI.service.ts:406` `VeniceAIConfigInput` (class) - 1 example import violation(s)
+- `src/VeniceAI.service.ts:1373` `VENICE_AI_OPERATION_DESCRIPTORS` (const) - 2 example import violation(s)
+- `src/VeniceAI.service.ts:2029` `VeniceAI` (class) - 1 example import violation(s)
+- `src/VeniceAI.service.ts:2102` `VeniceAiChat` (class) - 1 example import violation(s)
 
 ### @beep/m365
 
@@ -3782,7 +3778,7 @@ Export findings:
 - `src/commands/Lint/Lint.schemas.ts:551` `encodeSchemaFirstInventoryDocument` (const) - 1 example import violation(s)
 - `src/commands/Lint/PackageTestTypecheck.ts:388` `collectTestTypecheckBlindSpots` (const) - 1 example import violation(s)
 - `src/commands/Lint/PackageTestTypecheck.ts:500` `runPackageTestTypecheckLint` (const) - 1 example import violation(s)
-- `src/commands/Lint/ReflectionArtifact.ts:208` `reflectionFrontmatterIsValid` (const) - 1 example import violation(s)
+- `src/commands/Lint/ReflectionArtifact.ts:207` `reflectionFrontmatterIsValid` (const) - 1 example import violation(s)
 - `src/commands/Lint/RoadmapRefs.ts:293` `runRoadmapRefsLint` (const) - 1 example import violation(s)
 - `src/commands/Lint/SchemaCatalog.ts:620` `generateSchemaCatalogDocument` (const) - 1 example import violation(s)
 - `src/commands/Lint/SchemaCatalog.ts:676` `renderSchemaCatalogDocument` (const) - 1 example import violation(s)
@@ -3960,13 +3956,13 @@ Export findings:
 - `src/index.ts:46` `export * from "./drift.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:137` `export * from "./validation.ts";` (re-export) - 1 example import violation(s)
 - `src/schemas.ts:89` `NormalizedAgentInstructionDocument` (const) - 1 example import violation(s)
-- `src/validation.ts:428` `validateRepoConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:471` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
-- `src/validation.ts:512` `validateDogfoodConfig` (const) - 1 example import violation(s)
-- `src/validation.ts:540` `validateDogfoodConfigs` (const) - 1 example import violation(s)
-- `src/validation.ts:566` `defaultRepoRoot` (const) - 1 example import violation(s)
-- `src/validation.ts:594` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
-- `src/validation.ts:623` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:410` `validateRepoConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:453` `validateRepoSafetyPolicy` (const) - 1 example import violation(s)
+- `src/validation.ts:494` `validateDogfoodConfig` (const) - 1 example import violation(s)
+- `src/validation.ts:522` `validateDogfoodConfigs` (const) - 1 example import violation(s)
+- `src/validation.ts:548` `defaultRepoRoot` (const) - 1 example import violation(s)
+- `src/validation.ts:576` `validateCurrentCheckoutDogfood` (const) - 1 example import violation(s)
+- `src/validation.ts:605` `validateCurrentCheckoutDogfoodConfigs` (const) - 1 example import violation(s)
 
 ### @beep/nlp-mcp
 

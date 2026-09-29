@@ -14,8 +14,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { EffectSchema, Fn, LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { Tuple } from "effect";
+import { Fn, LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CorpusProvenanceRecord } from "./Salvage.schemas.ts";
@@ -633,7 +633,7 @@ export class ArchiveWriterLiveOptions extends S.Class<ArchiveWriterLiveOptions>(
   {
     afterPayloadSync: Fn({
       input: ArchiveWriterPayloadSyncHookInput,
-      output: EffectSchema<void, never, never>(),
+      output: S.declare((u): u is Effect.Effect<void> => Effect.isEffect(u)),
     }).pipe(S.optionalKey),
   },
   $I.annote("ArchiveWriterLiveOptions", {
