@@ -2404,3 +2404,18 @@ private harness binds the retained receipt's target hash and checks archive
 bytes before use. A versioned observation receipt containing its cache-relative
 root would avoid repeating this path inference across control suites. No
 runtime or portability credit is assigned to the failed setup.
+
+### Publish watcher reports tolerated deployment limits as proof failure
+
+The long-running dependency-remediation publish completed local pre-push proof
+and merged-preview CI parity with exit zero, then exited one in
+`monitor:pr-checks:watch`. Its terminal check table identified a Vercel
+deployment rate limit. The final generic message said the early-publish proof
+failed, despite the structured verdict marking both proof lanes passed.
+
+The retained verdict and terminal output distinguish the passed proof from
+the failed watcher. Its recorded head is historical and is not promoted to
+current-head proof. Keeping the publish watcher's classification aligned with
+the readiness monitor's documented Vercel rate-limit exception would avoid
+misdirected source repairs and duplicate expensive proof attempts. This packet
+records the friction; Yeet proof ownership and gates remain unchanged.

@@ -2742,3 +2742,12 @@ Read payloads are suppressed and shared Git metadata is not a frozen host
 snapshot. Five successful ring submissions remain undecoded. Dependency bytes
 match before and after; this renews bounded I/O evidence without claiming
 complete semantic closure, signed replay or tuple qualification.
+
+### Patched dependency profile: I/O and portability attachment
+
+The [updated attachment](research/current-patched-io-attachment.json) accepts
+the two Git-exclusion reviews, two shared-dependency cross-root reviews and
+native-I/O review. It binds 1,025 sources, 112 reviews and six artifacts, with
+25 unresolved obligations. All prior bindings remain unchanged; the census
+still contains 144 workspaces and 1,970 executable nodes. Attachment acceptance
+does not close the outstanding semantic, signed-remote or shadow requirements.
