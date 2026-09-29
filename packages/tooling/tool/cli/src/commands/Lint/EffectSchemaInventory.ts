@@ -55,30 +55,6 @@ const effectSchemaInventoryCommandDefinition = Command.make(
 );
 
 /**
- * Build the command over a chosen input source, so tests can drive the real flag parsing and
- * handler with a fake source instead of `.repos/effect`.
- *
- * **Example** (Build the command over the live source)
- *
- * ```ts
- * import { EffectSchemaInventorySource, makeLintEffectSchemaInventoryCommand } from "@beep/repo-cli/commands/Lint"
- * import * as Effect from "effect/Effect"
- * import { Command } from "effect/cli"
- *
- * const command = makeLintEffectSchemaInventoryCommand(EffectSchemaInventorySource.live)
- * console.log(Effect.isEffect(Command.run(command, { version: "0.0.0" }))) // true
- * ```
- *
- * @param sourceLayer - Layer providing {@link EffectSchemaInventorySource}.
- * @returns The `effect-schema-inventory` command with that source provided.
- * @category cli-commands
- * @since 0.0.0
- */
-export const makeLintEffectSchemaInventoryCommand = <E, R>(
-  sourceLayer: Layer.Layer<EffectSchemaInventorySource, E, R>
-) => effectSchemaInventoryCommandDefinition.pipe(Command.provide(sourceLayer));
-
-/**
  * Regenerate (`--write`), verify (`--check`, the default), or write a lane prompt (`--prompt`)
  * for the pinned Effect schema inventory.
  *
@@ -105,7 +81,38 @@ export const makeLintEffectSchemaInventoryCommand = <E, R>(
  * @category cli-commands
  * @since 0.0.0
  */
-export const lintEffectSchemaInventoryCommand = makeLintEffectSchemaInventoryCommand(EffectSchemaInventorySource.live);
+export const lintEffectSchemaInventoryCommand = effectSchemaInventoryCommandDefinition.pipe(
+  Command.provide(EffectSchemaInventorySource.live)
+);
+
+/**
+ * Build the real command tree over an explicit input source for tests, so they drive the flag
+ * parser and handler with a fake source instead of `.repos/effect`.
+ *
+ * **Details**
+ *
+ * The registered subcommand is {@link lintEffectSchemaInventoryCommand}, a direct
+ * `Command.make("effect-schema-inventory", ...)` pipe the static command-surface deriver can
+ * read; this factory is never registered.
+ *
+ * **Example** (Provide the live source)
+ *
+ * ```ts
+ * import { EffectSchemaInventorySource, makeEffectSchemaInventoryCommandForTesting } from "@beep/repo-cli/commands/Lint"
+ *
+ * const command = makeEffectSchemaInventoryCommandForTesting(EffectSchemaInventorySource.live)
+ * console.log(command.name) // "effect-schema-inventory"
+ * ```
+ *
+ * @internal
+ * @param sourceLayer - Layer providing {@link EffectSchemaInventorySource}.
+ * @returns The `effect-schema-inventory` command with that source provided.
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeEffectSchemaInventoryCommandForTesting = <E, R>(
+  sourceLayer: Layer.Layer<EffectSchemaInventorySource, E, R>
+) => effectSchemaInventoryCommandDefinition.pipe(Command.provide(sourceLayer));
 
 /**
  * Syntax-only row extraction.

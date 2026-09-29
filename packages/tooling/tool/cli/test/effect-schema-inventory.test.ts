@@ -24,7 +24,7 @@ import {
   findEffectSchemaInventoryModule,
   generateEffectSchemaInventory,
   generateEffectSchemaInventoryPrompt,
-  makeLintEffectSchemaInventoryCommand,
+  makeEffectSchemaInventoryCommandForTesting,
   parseEffectSchemaInventoryPin,
   readEffectSchemaInventoryFixture,
   readEffectSchemaInventoryIndexHeader,
@@ -823,7 +823,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const path = yield* Path.Path;
       const reads = yield* Ref.make(0);
       const run = Command.runWith(
-        makeLintEffectSchemaInventoryCommand(Layer.succeed(EffectSchemaInventorySource, fakeSource({}, reads))),
+        makeEffectSchemaInventoryCommandForTesting(Layer.succeed(EffectSchemaInventorySource, fakeSource({}, reads))),
         { version: "0.0.0" }
       );
       // The fake sources cannot reproduce the committed fixture, so --check reports drift without writing.
