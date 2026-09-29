@@ -5521,3 +5521,20 @@ public fixture callback. Its narrow environment-restoration lifetime remains
 in the source and its judgment must remain open. The preview's finding-count
 drop therefore exceeds the actual resolved scope by one. Extend nested helper
 discovery in the tooling follow-up; do not close the row based on silence.
+
+The applied lifecycle constructors pass the same five Node/Bun cleanup
+controls as the private drafts, including the reproduced chdir/mkdir defects.
+All 62 uninstrumented cases pass with zero temporary residue, all 321 assertion
+trees are retained, and type diagnostics are empty. The root ratchet introduces
+no findings; withBunShim's unchanged judgment stays open.
+
+### Measure lifecycle fixture performance under matched load
+
+The first lifecycle samples are slower after migration: Node 12.084 -> 16.849
+seconds and Bun 6.224 -> 8.583 seconds for the same 62 registrations. Baseline
+and after runs had different concurrent proof/typecheck/ratchet activity;
+load and pressure receipts are retained, so these are observations rather
+than evidence of a causal regression. A controlled repeated comparison could
+separate service-fixture retention, per-test console cost and workstation
+contention before any performance change is justified. Do not claim a speedup
+from this batch or weaken resource isolation to improve one timing sample.
