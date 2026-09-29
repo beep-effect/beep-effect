@@ -1,0 +1,294 @@
+{
+  "kind": "boolean-creep-execution-summary/v1",
+  "lanes": [
+    {
+      "lane": "r43-foundation-primitive",
+      "startedAt": 1790627743.0458155,
+      "endedAt": 1790627811.9772017,
+      "status": "failed",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": false,
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "reason": "Refusal: profile-tree-drift",
+      "guardAfterError": "Refusal: profile-tree-drift",
+      "transcriptSha256": "a5165293fcf96a0800091a1e5934ab8b400116d30b45d1e5ea08f1bf246ca3d4",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 11
+      }
+    },
+    {
+      "lane": "r43-foundation-capability",
+      "startedAt": null,
+      "endedAt": 1790627811.9776018,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-foundation-modeling-rest",
+      "startedAt": null,
+      "endedAt": 1790627811.9776676,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-foundation-schema-a-m",
+      "startedAt": null,
+      "endedAt": 1790627811.977721,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-foundation-schema-n-z",
+      "startedAt": null,
+      "endedAt": 1790627811.9778001,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-foundation-ui",
+      "startedAt": null,
+      "endedAt": 1790627811.9778495,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-drivers-a-f",
+      "startedAt": null,
+      "endedAt": 1790627811.9778974,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-drivers-g-m",
+      "startedAt": null,
+      "endedAt": 1790627811.9779444,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-drivers-n-r",
+      "startedAt": null,
+      "endedAt": 1790627811.9779928,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-drivers-s-z",
+      "startedAt": null,
+      "endedAt": 1790627811.9780402,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-architecture-ecosystem-internal",
+      "startedAt": null,
+      "endedAt": 1790627811.9780903,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-agents-workspace",
+      "startedAt": null,
+      "endedAt": 1790627811.9781375,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-epistemic-ontology",
+      "startedAt": null,
+      "endedAt": 1790627811.978184,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-shared-documents",
+      "startedAt": null,
+      "endedAt": 1790627811.9782298,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-law-practice-domain",
+      "startedAt": null,
+      "endedAt": 1790627811.9782789,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-law-practice-runtime",
+      "startedAt": null,
+      "endedAt": 1790627811.978326,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-apps",
+      "startedAt": null,
+      "endedAt": 1790627811.9783754,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-tooling-library-observability",
+      "startedAt": null,
+      "endedAt": 1790627811.9784236,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-tooling-library-support",
+      "startedAt": null,
+      "endedAt": 1790627811.9784703,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-tooling-policy",
+      "startedAt": null,
+      "endedAt": 1790627811.9785185,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-tool-docgen",
+      "startedAt": null,
+      "endedAt": 1790627811.9785643,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-internal-root",
+      "startedAt": null,
+      "endedAt": 1790627811.9786115,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-commands-a-c",
+      "startedAt": null,
+      "endedAt": 1790627811.9786577,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-commands-d-k",
+      "startedAt": null,
+      "endedAt": 1790627811.9787045,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-commands-l-q",
+      "startedAt": null,
+      "endedAt": 1790627811.9787483,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-commands-r-z",
+      "startedAt": null,
+      "endedAt": 1790627811.9787955,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    },
+    {
+      "lane": "r43-cli-yeet",
+      "startedAt": null,
+      "endedAt": 1790627811.978845,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: profile-tree-drift"
+    }
+  ],
+  "stopReason": "final-guard: profile-tree-drift",
+  "executionComplete": false,
+  "coverageAccepted": false,
+  "dryCredit": false,
+  "P3": false,
+  "privateOriginalSha256": "b00d4294c513938d9a5ad01cf6979a58bb66624e64dfa7c994db43678388aa84"
+}

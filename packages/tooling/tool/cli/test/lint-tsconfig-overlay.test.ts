@@ -1,14 +1,15 @@
 import { lintCommand } from "@beep/repo-cli";
 import { collectTsconfigOverlayViolations } from "@beep/repo-cli/commands/Lint/TsconfigOverlay";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });

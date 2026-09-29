@@ -110,6 +110,10 @@ new status in the live inventory.
 
 ## Landing
 
+The 2026-09-28 DECISIONS amendment supersedes the separate-PR landing and
+Benjamin-only merge rules below. Consolidate the remainder in PR #1328; keep
+the substantive evidence gates and read-only post-merge exact-main audit.
+
 - **Tier 1** — internal/derived view state (no encoded exposure): batched by
   package/app into five ordered subsystem PRs; lands first.
 - **Tier 2** — persisted or wire-adjacent shapes (e.g. Yeet `Verdict.ts`,

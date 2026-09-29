@@ -7,8 +7,9 @@
  */
 import { CurrentMcpDispatchAnchor, McpCallerIdentity, McpDispatchAnchor } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
-import { assert, describe, it, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { it } from "@beep/test-runner";
+import { assert, describe } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
 import * as O from "effect/Option";
@@ -26,9 +27,11 @@ const decodeAnchor = S.decodeUnknownEffect(McpDispatchAnchor);
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, FixtureRegistrationsLive, StubMcpClientLayer);
 
 describe("dispatch anchor", () => {
-  it("is absent by default", () => {
-    assert.isTrue(O.isNone(Effect.runSync(CurrentMcpDispatchAnchor)));
-  });
+  it.effect("is absent by default", () =>
+    Effect.gen(function* () {
+      assertNone(yield* CurrentMcpDispatchAnchor);
+    })
+  );
 
   it.effect("brands a non-empty string and rejects an empty one", () =>
     Effect.gen(function* () {
@@ -37,7 +40,7 @@ describe("dispatch anchor", () => {
     })
   );
 
-  layer(fullLayer)("through sanitized dispatch", (it) => {
+  it.layer(fullLayer, { timeout: "5 seconds" })("through sanitized dispatch", (it) => {
     it.effect("dispatch anchor is absent unless provided", () =>
       Effect.gen(function* () {
         const server = yield* McpServer.McpServer;
@@ -57,10 +60,11 @@ describe("dispatch anchor", () => {
     );
   });
 
-  layer(
+  it.layer(
     Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer, FixtureRegistrationsLive).pipe(
       Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("captured-at-build"))))
-    )
+    ),
+    { timeout: "5 seconds" }
   )("with an anchor in the layer-build context", (it) => {
     it.effect("does not leak a build-time anchor into a dispatch", () =>
       Effect.gen(function* () {
@@ -75,6 +79,6 @@ describe("dispatch anchor", () => {
 describe("McpCallerIdentity", () => {
   it("defaults sessionId to None", () => {
     const identity = McpCallerIdentity.make({ clientId: NonNegativeInt.make(3) });
-    assert.isTrue(O.isNone(identity.sessionId));
+    assertNone(identity.sessionId);
   });
 });

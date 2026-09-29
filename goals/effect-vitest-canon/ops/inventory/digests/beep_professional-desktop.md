@@ -1,5 +1,26 @@
 # @beep/professional-desktop — four-lens source audit
 
+## Current remediation state
+
+The original 59-file, 236-pair lens cohort and one additional permission-restoration
+finding have been reconciled against commit `ed7b494e14`. All 26 substantive proposals are fixed; all 211 no-findings judgments
+have been re-reviewed. The detector ledger has 153 fixed rows, 49 reviewed
+exceptions and zero open detector rows, preserving all 200 original identities
+plus two root-inventory native-boundary exceptions.
+
+The configured unit cohort passes on Node and Bun with 241 tests, preserving
+every one of the 239 prior file/title registrations and adding two regressions.
+Native integration, interruption controls and package verification have separate
+receipts. These results do not prove final goal acceptance or an empty baseline.
+
+See [ledger reconciliation](../../../research/desktop-ledger-reconciliation-progress.md)
+for validation and provenance. The historical P1 report below records the findings
+as originally proposed; its open counts and authorization language are historical,
+and are superseded by the current state above and the subsequent user approvals.
+
+## Historical P1 source audit
+# @beep/professional-desktop — four-lens source audit
+
 All 59 census files are reviewed: 57 tests and two support files. Three disjoint batches cover all 236 file/lens pairs. The inventory contains 25 open review proposals (4 major, 21 minor) and 211 file-specific no-findings rows. Existing 178 detector candidates remain open and separate from human judgments. No P2 remediation is authorized.
 
 ## Topology and native boundaries
@@ -101,3 +122,13 @@ After Benjamin acknowledges the complete P1 inventory and Grok review: scope, as
 Root fully reviewed all three reports and digests, verified their artifact/source hashes and complete read receipts, and validated the exact whole-package union through the public strict decoder. All 59 files have all four lenses and no package pairs are missing. This accepts the P1 source inventory only. Full campaign completeness, independent Grok review and Benjamin's acknowledgement remain required before P2.
 
 Evidence: [resource rows](../resource/beep_professional-desktop.jsonl), [flake rows](../flake/beep_professional-desktop.jsonl), [property rows](../property/beep_professional-desktop.jsonl), [observability rows](../observability/beep_professional-desktop.jsonl), [timing index](../timings/baseline-index.json), [configured subsets](../timings/configured-subsets.json), and [hosted history](../hosted-history-summary.json).
+
+## PR 1323 interruption regression
+
+The PGlite permission fixture now has a shared bracket and an interruption
+regression: ten integration tests pass on Node and Bun, and dropping the
+restoration finalizer fails the mode-before-cleanup observation. Two new,
+reasoned lifetime exceptions are appended without changing historical row IDs.
+The detector ledger contains 204 rows: 153 fixed and 51 exceptions. This update
+supplements the earlier source audit; final package and hosted proof remain open.
+See [the repair proof](../../../research/pr1323-readiness-and-interruption-proof.md).

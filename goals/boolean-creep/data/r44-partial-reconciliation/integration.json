@@ -1,0 +1,81 @@
+{
+  "kind": "boolean-creep-partial-integration/v1",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "reconciledSuccessfulLanes": 5,
+  "kindCorrections": [
+    {
+      "id": "taxonomy-loader-manifest-presence",
+      "field": "kind",
+      "from": "sibling-state",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "line": 527
+    },
+    {
+      "id": "r3-foundation-auto-button-command-presence",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/html/src/Html.form-control.ts",
+      "line": 264
+    },
+    {
+      "id": "struct-from-entries-property-descriptor-flags",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "line": 698
+    },
+    {
+      "id": "xml-parser-sdk-flags",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/schema/src/Xml.ts",
+      "line": 26
+    },
+    {
+      "id": "with-codec-statics-install-on-owned-schema",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "line": 349
+    },
+    {
+      "id": "with-statics-attach-statics",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts",
+      "line": 47
+    },
+    {
+      "id": "r2-foundation-static-descriptors-mode",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/internal/staticDescriptors.ts",
+      "line": 77
+    }
+  ],
+  "newDisqualifiedIds": [
+    "r44-foundation-schema-a-m-csv-normalize-parser-options-args"
+  ],
+  "newQualifiedIds": [],
+  "inventoryCounts": {
+    "total": 726,
+    "qualified": 108,
+    "disqualified": 618,
+    "applied": 0
+  },
+  "originalInventory": "goals/boolean-creep/history/inventory/2026-09-28-r44-before-partial-integration.jsonl",
+  "originalInventorySha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91",
+  "parserOptionsDisposition": "Retain D1: independently derived getters already use existing typed source fields, with no independently stored flag or production guard to eliminate. No new contract restriction or campaign-wide getter exemption.",
+  "complete": false,
+  "dryCredit": false,
+  "P3Credit": false,
+  "implementationCredit": false
+}

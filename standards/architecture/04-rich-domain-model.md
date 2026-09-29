@@ -76,10 +76,16 @@ internal tagged model before branching on case-specific behavior.
 Tagged schema values should also own their derived helper surface. Use
 `S.TaggedUnion` / `S.toTaggedUnion` `.cases`, `.guards`, `.isAnyOf`, and
 `.match` helpers instead of duplicating discriminator switches and guard maps.
-For internal literal domains, use `LiteralKit` helpers such as `.Enum`,
-`.Options`, `.is`, subset helpers, `.$match`, and `.toTaggedUnion`; use
+For named internal literal domains, use `LiteralKit` helpers such as `.Enum`,
+`.is`, `.$match`, and `.toTaggedUnion`, with the inherited `S.Literals` members
+`.literals` and `.pick(...)` for the member tuple and subsets; use
 `MappedLiteralKit` when a protocol/code map needs helpers on both the encoded
-and decoded sides.
+and decoded sides. Anonymous inline unions never referenced by name use
+`S.Literals`. Where upstream covers a `foundation/modeling` concept's intent,
+its covered facets retire in the same PR that migrates their consumers, with no
+alias; the whole concept retires unless the lines reading its uncovered members
+outnumber the lines using its covered facets (ADAPT, per the facet census in
+`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Hybrid Style
 

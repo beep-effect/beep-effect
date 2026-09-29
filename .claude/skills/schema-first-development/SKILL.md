@@ -49,7 +49,13 @@ Keep `Schema` as the source of truth for pure data models.
 - Model pure data with `Schema` first.
 - Prefer `S.Class` for object models unless a boundary exception makes
   `S.Struct` the better fit.
-- Reuse `@beep/schema` and existing local schemas before inventing new checks.
+- Check upstream `effect/Schema` first, then reuse `@beep/schema` and existing
+  local schemas before inventing new checks. Where upstream covers a
+  `foundation/modeling` concept's intent, its covered facets retire in the
+  same PR that migrates their consumers, with no alias; the whole concept
+  retires unless the lines reading its uncovered members outnumber the lines
+  using its covered facets (ADAPT, per the facet census in
+  `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Move normalization, defaults, nullable handling, and JSON parsing into the
   schema.
 - Annotate reusable schemas with `$I.annote(...)`.
@@ -73,9 +79,10 @@ Keep `Schema` as the source of truth for pure data models.
 - Create file-local identity composers with `@beep/identity/packages`.
 - Prefer `S.Class` for object models and named intermediate schemas for reused
   concepts.
-- Prefer `LiteralKit` when a literal domain needs `.is`, `.Enum`, `.thunk`,
-  `$match`, `.Options`, `.pickOptions(...)`, `.omitOptions(...)`,
-  `.mapMembers(...)`, or `.toTaggedUnion(...)`.
+- Prefer `LiteralKit` for named literal domains: its keyed API (`.Enum`,
+  `.is`, `$match`, `.toTaggedUnion(...)`) plus the `S.Literals` members it
+  inherits (`.literals`, `.pick(...)`, `.mapMembers(...)`). Use `S.Literals`
+  for anonymous inline unions never referenced by name.
 - Prefer `MappedLiteralKit` when a protocol/code mapping needs both encoded and
   decoded literal helper surfaces.
 - Do not add `as const` to inline array literals passed directly to

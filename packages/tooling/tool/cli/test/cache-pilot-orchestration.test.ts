@@ -36,10 +36,11 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { afterEach, expect, it, vi } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { afterEach, expect, vi } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -643,7 +644,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       `rejects ${closureFault} dependencies before creating an experiment`,
       Effect.fnUntraced(function* () {
         const { root, fs, path, run } = yield* fixture("none", linker, false, true, closureFault);
-        expect(Result.isFailure(yield* run().pipe(Effect.result))).toBe(true);
+        (yield* run().pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
       })
     );

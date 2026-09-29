@@ -15,6 +15,7 @@ import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Result, Schedule } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
@@ -22,6 +23,7 @@ import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const provideScopedLayer =
@@ -66,7 +68,7 @@ const expectAiMetricsCommandFailure = Effect.fn("AIMetricsCommandTest.expectAiMe
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runAiMetricsCommand(args));
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -269,7 +271,9 @@ const waitForCapturedOtlpTraceRequest = (
   findCapturedOtlpTraceRequest(requests).pipe(
     // Schedule.max continues while ANY sub-schedule continues, so pairing an infinite
     // `spaced` with `recurs` never terminates; the delay must ride on `recurs` itself.
-    Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(25)))))
+    Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(25))))),
+    // Requests arrive through the native HTTP server rather than the virtual test clock.
+    TestClock.withLive
   );
 
 describe("ai-metrics command", () => {
@@ -721,7 +725,7 @@ describe("ai-metrics command", () => {
         );
 
         const doctor = yield* decodeInstallDoctor(yield* lastLoggedLine());
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         expect(doctor.status).toBe("failed");
         expect(doctor.availableSourceCount).toBe(0);
       })

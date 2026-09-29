@@ -27,11 +27,12 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 16. Do not finish work with failing `check`, `lint`, `test`, or `docgen`.
 17. Named or reused domain constraints are modeled as schemas first; prefer built-in schema constructors/checks before `S.makeFilter`, and derive guards with `S.is(...)`.
 18. Reusable `S.makeFilter`, `S.makeFilterGroup`, and reusable built-in check blocks must include `identifier`, `title`, and `description`; `message` stays user-facing.
-19. Use `LiteralKit` for internal literal domains when `.is`, `.thunk`, `$match`, or annotation-bearing schema values are part of the design.
+19. Use `LiteralKit` for named internal literal domains, especially when `.Enum`, `.is`, `$match`, `.toTaggedUnion`, or annotation-bearing schema values are part of the design; use `S.Literals` for anonymous inline unions never referenced by name.
 20. Model finite variants, lifecycle states, status/result cases, and case-specific payloads as discriminated unions; keep optional/nullish bags at external boundaries only when compatibility requires them.
 21. Prefer the tersest equivalent Effect helper form when behavior is unchanged: direct helper refs over trivial wrapper lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
 22. Reusable functions that directly return `Effect.gen(function*)` must use `Effect.fn` or `Effect.fnUntraced`; zero-arg one-off effect values may stay as `Effect.gen`.
 23. Functions stay within the fallow complexity ceilings pinned in `.fallowrc.jsonc` `health` (the integers live in config, not prose). Every `fallow-ignore-*` suppression carries a `-- <reason>` (enforced by the `require-suppression-reason` rule); an honestly-complex function gets a `thresholdOverrides` entry with `reason` and a review date, never a bare suppression. Prefer real seams (match helpers, schema/data-table dispatch, named concept extraction) over threshold-appeasement fragmentation.
+24. Where upstream covers a `foundation/modeling` concept's intent, its covered facets retire in the same PR that migrates their consumers, with no alias; the whole concept retires unless the lines reading its uncovered members outnumber the lines using its covered facets (ADAPT, per the facet census). Do not add a concept upstream already covers (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Allowlist Contract
 
