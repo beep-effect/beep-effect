@@ -5889,7 +5889,9 @@ During the shared-internals Effect callback migration, `bun run
 package-test-typecheck` returned exit zero while its package result artifact
 contained exitCode 1 and two preferSchemaOverJson diagnostics. The fixtures
 were repaired and the subsequent artifact reports exitCode 0 with empty output.
-The wrapper should propagate the compiler result, or a caller should validate
-both fields before declaring a pass. This migration used the artifact rather
-than the shell exit as its acceptance evidence. Production wrapper repair
-remains a follow-up; this receipt does not mark that issue fixed.
+Source inspection confirms this is an aggregate-task contract: the package
+command writes the artifact, and reportTestTsgoResults makes the aggregate lane
+fail for nonzero results or Effect diagnostics. Changing the child exit alone
+would bypass that diagnostic collection path. A clearer standalone command or
+completion message would prevent misuse. This migration checked both artifact
+fields before declaring a pass; no aggregate failure gate was weakened.
