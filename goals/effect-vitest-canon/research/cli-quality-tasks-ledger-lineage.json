@@ -1,0 +1,1632 @@
+{
+  "sourceFixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1",
+  "historicalSource": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+  "renames": [
+    {
+      "commit": "e08b24b004",
+      "oldTitle": "runs repo-wide root lint policy with hosted-stable concurrency",
+      "currentTitle": "runs repo-wide root lint policy in D10 sequence",
+      "note": "PR #1102 changed the policy assertions; this batch preserves the current policy."
+    },
+    {
+      "commit": "a97b397dc6",
+      "oldTitle": "rejects replace-all without baseline writing or with scoped baseline writing",
+      "currentTitle": "rejects replace-all without baseline writing and accepts it on a scoped write",
+      "note": "PR #1104 changed scoped-write policy; provider removal is credited to this batch."
+    }
+  ],
+  "closedHistorical": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1106:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1128:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1153:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1177:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1194:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1213:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1252:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1300:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1347:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1398:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1448:runSync@6#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1528:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1580:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1615:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1641:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2199:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2229:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2285:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2326:runPromise@11#1",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2357:runPromise@11#1",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2390:runPromise@11#1",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2479:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2514:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2550:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2829:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:3166:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4231:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4467:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4526:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4591:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4613:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4640:runPromise@6#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4832:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5642:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5665:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5703:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5725:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5747:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5789:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5826:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5885:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5937:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:6035:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:6085:runPromise@4#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1693:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1729:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1757:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1786:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1834:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1864:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1902:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1939:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1971:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1999:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2043:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2086:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2109:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2138:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2165:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2195:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2825:provideScopedLayer@12#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3108:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3418:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3434:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3449:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3503:provideScopedLayer@13#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3526:provideScopedLayer@13#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3558:provideScopedLayer@19#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3584:provideScopedLayer@19#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3609:provideScopedLayer@15#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3645:provideScopedLayer@19#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3778:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:4003:provideScopedLayer@13#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:621:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:636:provideScopedLayer@7#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/quality-tasks.test.ts:276:scoped@2#1",
+      "fixSha": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1"
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/quality-tasks.test.ts:1449:checkEffect@8#1",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c"
+    }
+  ],
+  "addedFixed": [
+    "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1350:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1395:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1421:runPromise@4#1",
+    "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2203:provideScopedLayer@7#1",
+    "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:3698:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5897:runPromise@8#1"
+  ],
+  "priorFixes": [
+    {
+      "title": "property: the wave report schema round-trips arbitrary reports",
+      "fixSha": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+      "before": {
+        "ref": "99dd28b0698e0d2c7b9bbfb53040eb6fe39131cd",
+        "form": "it",
+        "boundaries": ["Effect.runSync"]
+      },
+      "after": {
+        "ref": "b1aa7e320cde926e7e80a98073ba8b0d517d7c8c",
+        "form": "it.effect.prop",
+        "boundaries": []
+      }
+    },
+    {
+      "title": "runs every cheap gate through the collected runner when all lanes pass",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+      "before": {
+        "ref": "ed016ba972b115cb8e5345c1e3a6b1cdd3a86cde",
+        "form": "it",
+        "boundaries": ["Effect.runPromise"]
+      },
+      "after": {
+        "ref": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+        "form": "it.effect",
+        "boundaries": []
+      }
+    },
+    {
+      "title": "skips changeset status on a main push while running every cheap gate",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+      "before": {
+        "ref": "ed016ba972b115cb8e5345c1e3a6b1cdd3a86cde",
+        "form": "it",
+        "boundaries": ["Effect.runPromise"]
+      },
+      "after": {
+        "ref": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+        "form": "it.effect",
+        "boundaries": []
+      }
+    },
+    {
+      "title": "collects multiple failures through the cheap-gates runner without stopping later lanes",
+      "fixSha": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+      "before": {
+        "ref": "ed016ba972b115cb8e5345c1e3a6b1cdd3a86cde",
+        "form": "it",
+        "boundaries": ["Effect.runPromise"]
+      },
+      "after": {
+        "ref": "678cf4198280d2f1effde89c1ac094f4f7abd90d",
+        "form": "it.effect",
+        "boundaries": []
+      }
+    }
+  ],
+  "retainedJudgments": [
+    "EV004:packages/tooling/tool/cli/test/quality-tasks.test.ts:3897:scoped@13#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1106:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes the failure policy and wave report schemas",
+      "currentTitle": "decodes the failure policy and wave report schemas",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1222,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { expect(yield* decodeGithubCheckFailurePolicy(\"fail-fast\")).toBe(\"fail-fast\"); const report = yield* decodeGithubCheckRunReport({ failurePolicy: \"collect-al"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1128:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes legacy lane rows and encodes unknown input digests as null",
+      "currentTitle": "decodes legacy lane rows and encodes unknown input digests as null",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1244,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const legacy = yield* decodeQualityTaskLaneRun({ id: \"check\", label: \"ci:check\", status: \"passed\", }); assertNone(legacy.startedAt); assertNone(legacy.ende"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1153:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "records timings, exits, and only executor-provided lane digests",
+      "currentTitle": "records timings, exits, and only executor-provided lane digests",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1278,
+          "evidence": "Effect.runPromise( collectQualityTaskLaneRunsForTesting( \"ci:local\", [ [\"check\", bunScriptStep(\"ci:check\", \"process.exit(0)\"), O.some(\"turbo-task-hash\")], [\"nix\", bunScriptStep(\"ci:nix\", \"process.exit"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1177:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "tolerates an outcome whose mutable lane source disappears while the step runs",
+      "currentTitle": "tolerates an outcome whose mutable lane source disappears while the step runs",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1314,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const lanes = [[\"check\", bunScriptStep(\"ci:check\", \"await Bun.sleep(100)\"), O.none()]] as Array< Parameters<typeof collectQualityTaskLaneRunsForTesting>[1]"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1194:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "emits machine-readable lane reports from both wrapper writers",
+      "currentTitle": "emits machine-readable lane reports from both wrapper writers",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1331,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runQualityTaskGithubCheckLaneWaves(\"pre-push\", [], \"fail-fast\"); yield* runQualityTaskStreamingLaneGroup(\"ci:local\", []); const reportLines = pipe("
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1213:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "appends schema-versioned lane rows and ignores malformed side-channel rows",
+      "currentTitle": "appends schema-versioned lane rows and ignores malformed side-channel rows",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1599,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1252:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rebuilds an unscoped lane report from an unscoped artifact",
+      "currentTitle": "rebuilds an unscoped lane report from an unscoped artifact",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1638,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1300:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "falls back when a lane artifact is missing or belongs to another parent",
+      "currentTitle": "falls back when a lane artifact is missing or belongs to another parent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1686,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const missingPath = path.join(tempDi"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1347:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "retains each completed inner lane when its wrapper is interrupted",
+      "currentTitle": "retains each completed inner lane when its wrapper is interrupted",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1737,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1398:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "retains completed streaming lanes before the group returns",
+      "currentTitle": "retains completed streaming lanes before the group returns",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1788,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1448:runSync@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: the wave report schema round-trips arbitrary reports",
+      "currentTitle": "property: the wave report schema round-trips arbitrary reports",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1528:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "stops after a precise red and marks the unlaunched tail",
+      "currentTitle": "stops after a precise red and marks the unlaunched tail",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1913,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:a\", \"preflight\", \"process.exit(2)\", O"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1580:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "continues after an imprecise red under fail-fast",
+      "currentTitle": "continues after an imprecise red under fail-fast",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 1978,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane( \"preflight:imprecise\", \"preflight\", \"process.exi"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1615:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "stops later quality-mode waves after an estimate-less red",
+      "currentTitle": "stops later quality-mode waves after an estimate-less red",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2018,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"quality\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [githubCheckTestLane(\"preflight:unclassified\", \"preflight\", \"process.exi"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:1641:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs later waves under collect-all",
+      "currentTitle": "runs later waves under collect-all",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2049,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [githubCheckTestLane(\"preflight:failed\", \"preflight\", \"process.exit(1)\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2199:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "collects multiple cheap-gate findings in one schema-valid run",
+      "currentTitle": "collects multiple cheap-gate findings in one schema-valid run",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2645,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"cheap-gates\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane(\"repo-sanity:tsconfig-sync\", \"preflight\", \"pro"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2229:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps wave-order attribution and journaling when cheap gates run concurrently",
+      "currentTitle": "keeps wave-order attribution and journaling when cheap gates run concurrently",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2675,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tempDir = yield* fs.makeTempDirectory(); const artifactPath = path.join(tempD"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2285:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "stops fail-fast scheduling at the next chunk boundary when lanes run abreast",
+      "currentTitle": "stops fail-fast scheduling at the next chunk boundary when lanes run abreast",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2731,
+          "evidence": "Effect.runPromise( collectGithubCheckLaneWavesForTesting( \"pre-push\", [ GithubCheckLaneWaveSpec.make({ wave: \"preflight\", lanes: [ githubCheckTestLane(\"quality:secrets\", \"preflight\", \"process.exit(1)\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2326:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs every cheap gate through the collected runner when all lanes pass",
+      "currentTitle": "runs every cheap gate through the collected runner when all lanes pass",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2357:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "skips changeset status on a main push while running every cheap gate",
+      "currentTitle": "skips changeset status on a main push while running every cheap gate",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2390:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "collects multiple failures through the cheap-gates runner without stopping later lanes",
+      "currentTitle": "collects multiple failures through the cheap-gates runner without stopping later lanes",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2479:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "includes untracked files in the diff-scoped audit input",
+      "currentTitle": "includes untracked files in the diff-scoped audit input",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2972,
+          "evidence": "Effect.runPromise( Effect.scoped( Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* fs.makeTempDirecto"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2514:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes",
+      "currentTitle": "keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3007,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const matrixText = yield* fs.readFileString"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2550:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps CI Fallow blocking failures deferred until advisory envelopes are written",
+      "currentTitle": "keeps CI Fallow blocking failures deferred until advisory envelopes are written",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3043,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const workflowText = yield* fs.readFileStri"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:2829:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "normalizes Knip findings with stable ordering and without position fields",
+      "currentTitle": "normalizes Knip findings with stable ordering and without position fields",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3318,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const findings = yield* normalizeKnipReportForTesting( yield* encodeJson({ issues: [ { file: \"b.ts\", exports: [{ name: \"Beta\", line: 5, col: 14, pos: 100 }"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:3166:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs repo-wide root lint policy with hosted-stable concurrency",
+      "currentTitle": "runs repo-wide root lint policy in D10 sequence",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3658,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const binDir = path.join(tmpDir, \"bin\")"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4231:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reads workspace edges from the live inventory and never lists the repository root as an owner",
+      "currentTitle": "reads workspace edges from the live inventory and never lists the repository root as an owner",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4885,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const writePackage = Effect.fnUntrace"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4467:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "diffs the committed base against the working copy through git",
+      "currentTitle": "diffs the committed base against the working copy through git",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 5235,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4526:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "pins comparison reads to TURBO_SCM_BASE instead of the branch baseline",
+      "currentTitle": "pins comparison reads to TURBO_SCM_BASE instead of the branch baseline",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 5299,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4591:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reads the workspace baseline when TURBO_SCM_BASE is absent",
+      "currentTitle": "reads the workspace baseline when TURBO_SCM_BASE is absent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 5374,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4613:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails clearly when the configured comparison baseline cannot be read",
+      "currentTitle": "fails clearly when the configured comparison baseline cannot be read",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 5403,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4640:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "resolves an affected run from a dirty row-only baseline edit against the workspace",
+      "currentTitle": "resolves an affected run from a dirty row-only baseline edit against the workspace",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 6002,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const baselinePath = path.join(repoRo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:4832:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "collects both sides of a committed cross-package rename",
+      "currentTitle": "collects both sides of a committed cross-package rename",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 6208,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = process.cwd(); const sourcePath = path.join(repoRoot"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5642:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "forwards shared SQL env vars to the integration child process",
+      "currentTitle": "forwards shared SQL env vars to the integration child process",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7297,
+          "evidence": "Effect.runPromise( withTempRepo( runSqlIntegrationTestLaneForTesting({ acquireResource: Effect.acquireRelease( Effect.succeed({ connectionUri: \"postgres://postgres:postgres@127.0.0.1:5432/postgres\", }"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5665:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails nonzero integration children and releases the shared SQL resource",
+      "currentTitle": "fails nonzero integration children and releases the shared SQL resource",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7320,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { let released = false; const exit = yield* Effect.exit( runSqlIntegrationTestLaneForTesting({ acquireResource: Effect.acquireRelease( Effect.s"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5703:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs grouped quality steps with bounded concurrency and deterministic output",
+      "currentTitle": "runs grouped quality steps with bounded concurrency and deterministic output",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7358,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { yield* runQualityTaskStepGroupForTesting( \"test:group\", [ bunScriptStep(\"test:slow\", \"await Bun.sleep(20); console.log('slow')\"), bunScriptSt"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5725:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "truncates retained grouped quality step output",
+      "currentTitle": "truncates retained grouped quality step output",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7380,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { yield* runQualityTaskStepGroupForTesting( \"test:group\", [ bunScriptStep( \"test:large-output\", \"process.stdout.write('x'.repeat(9 * 1024 * 102"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5747:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "aggregates grouped quality step failures in configured step order",
+      "currentTitle": "aggregates grouped quality step failures in configured step order",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7402,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const exit = yield* Effect.exit( runQualityTaskStepGroupForTesting( \"test:group\", [ bunScriptStep(\"test:first\", \"console.log('first failed');"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5789:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "streams grouped quality step failures and keeps running sibling steps",
+      "currentTitle": "streams grouped quality step failures and keeps running sibling steps",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7444,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const markerPath = path.join(process.cwd(), \"second-ran.txt\"); const"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5826:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "quarantines distinct TS2589 tasks exposed by resumed lane runs",
+      "currentTitle": "quarantines distinct TS2589 tasks exposed by resumed lane runs",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7481,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const statePath = path.join(process.cwd(), \"quarantine-wave.txt\"); co"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5885:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps a repeated TS2589 task hard after standalone recovery",
+      "currentTitle": "keeps a repeated TS2589 task hard after standalone recovery",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7540,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const statePath = path.join(process.cwd(), \"quarantine-repeat.txt\");"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:5937:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps running repo-wide root lint policy checks after aggregate lint fails",
+      "currentTitle": "keeps running repo-wide root lint policy checks after aggregate lint fails",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7592,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const binDir = path.join(tmpDir, \"bin\")"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:6035:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "limits root integration test filters to script-owning workspaces",
+      "currentTitle": "limits root integration test filters to script-owning workspaces",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7693,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const plainPackageDir = path.join(tmpDi"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-tasks.test.ts:6085:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "treats unsupported package tasks as explicit no-ops",
+      "currentTitle": "treats unsupported package tasks as explicit no-ops",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 7743,
+          "evidence": "Effect.runPromise( withTempRepo( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = process.cwd(); const packageDir = path.join(tmpDir, \"p"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1693:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reuses only exact lane proofs and invalidates them when the virtual tree changes",
+      "currentTitle": "reuses only exact lane proofs and invalidates them when the virtual tree changes",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2101,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1729:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "isolates lane-proof defaults and persistence guards from the parent process environment",
+      "currentTitle": "isolates lane-proof defaults and persistence guards from the parent process environment",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2137,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1757:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "disables lane-proof reuse when the virtual tree cannot be created",
+      "currentTitle": "disables lane-proof reuse when the virtual tree cannot be created",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2165,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1786:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "invalidates a lane proof when the property-test run floor increases",
+      "currentTitle": "invalidates a lane proof when the property-test run floor increases",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2232,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1834:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "invalidates ordinary lane proofs when inherited execution settings change",
+      "currentTitle": "invalidates ordinary lane proofs when inherited execution settings change",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2280,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1864:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "invalidates a lane proof when an inherited ambient input changes",
+      "currentTitle": "invalidates a lane proof when an inherited ambient input changes",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2310,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1902:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "includes the complete ambient environment for local-env lanes with an isolated spawn",
+      "currentTitle": "includes the complete ambient environment for local-env lanes with an isolated spawn",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2348,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1939:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "omits ambient inputs from proof identity when the lane spawn is isolated",
+      "currentTitle": "omits ambient inputs from proof identity when the lane spawn is isolated",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2385,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1971:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs the lane when the configured proof base cannot be resolved",
+      "currentTitle": "runs the lane when the configured proof base cannot be resolved",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2417,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:1999:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "merges successful lane proofs across waves",
+      "currentTitle": "merges successful lane proofs across waves",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2445,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2043:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "invalidates history-sensitive proofs after a same-tree history rewrite",
+      "currentTitle": "invalidates history-sensitive proofs after a same-tree history rewrite",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2489,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2086:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rechecks a later-wave proof after an earlier wave changes the tree",
+      "currentTitle": "rechecks a later-wave proof after an earlier wave changes the tree",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2532,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2109:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "never reuses volatile OSV security proofs",
+      "currentTitle": "never reuses volatile OSV security proofs",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2555,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2138:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses to persist a proof when the lane changes the virtual tree",
+      "currentTitle": "refuses to persist a proof when the lane changes the virtual tree",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2584,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2165:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "uses a temporary proof index from a linked worktree git path",
+      "currentTitle": "uses a temporary proof index from a linked worktree git path",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2611,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2195:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not persist a proof for an injected lane failure",
+      "currentTitle": "does not persist a proof for an injected lane failure",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 2641,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:2825:provideScopedLayer@12#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "places package-owned tsgo results in the package Turbo directory",
+      "currentTitle": "places package-owned tsgo results in the package Turbo directory",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3314,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3108:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes sweep JSONC and rejects missing or malformed sweep files",
+      "currentTitle": "decodes sweep JSONC and rejects missing or malformed sweep files",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 3639,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3418:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects replace-all without baseline writing or with scoped baseline writing",
+      "currentTitle": "rejects replace-all without baseline writing and accepts it on a scoped write",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4070,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3434:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "resolves exact explicit baseline filters into verifier-equivalent shard owners",
+      "currentTitle": "resolves exact explicit baseline filters into verifier-equivalent shard owners",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4086,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3449:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects scoped baseline selectors that are not exact coverage owners",
+      "currentTitle": "rejects scoped baseline selectors that are not exact coverage owners",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4101,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3503:provideScopedLayer@13#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes per-file summary entries into stable repo-relative baseline paths",
+      "currentTitle": "decodes per-file summary entries into stable repo-relative baseline paths",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4155,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3526:provideScopedLayer@13#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "derives Istanbul-compatible percentages from trusted counts instead of the reported pct field",
+      "currentTitle": "derives Istanbul-compatible percentages from trusted counts instead of the reported pct field",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4178,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3558:provideScopedLayer@19#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects absolute and relative summary entries that normalize to the same repository path in either order",
+      "currentTitle": "rejects absolute and relative summary entries that normalize to the same repository path in either order",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4210,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3584:provideScopedLayer@19#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects control characters in raw summary paths without reflecting them into diagnostics",
+      "currentTitle": "rejects control characters in raw summary paths without reflecting them into diagnostics",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4236,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3609:provideScopedLayer@15#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "bounds coverage-summary decode diagnostics while retaining the typed parse cause",
+      "currentTitle": "bounds coverage-summary decode diagnostics while retaining the typed parse cause",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4261,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3645:provideScopedLayer@19#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects internally inconsistent Vitest coverage summary counts",
+      "currentTitle": "rejects internally inconsistent Vitest coverage summary counts",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4297,
+          "evidence": "provideScopedLayer(NodePath.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:3778:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps every committed coverage package on schema v2 with file provenance",
+      "currentTitle": "keeps every committed coverage package on schema v2 with file provenance",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4430,
+          "evidence": "provideScopedLayer(FileSystemLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:4003:provideScopedLayer@13#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "holds an unchanged package without a comparison base and replaces it after a dirty package change",
+      "currentTitle": "holds an unchanged package without a comparison base and replaces it after a dirty package change",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4657,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:621:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs Bun audit with active OSV ignores and reports dropped entries",
+      "currentTitle": "runs Bun audit with active OSV ignores and reports dropped entries",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 713,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/quality-tasks.test.ts:636:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "runs the review-fix command sequence with its default range",
+      "currentTitle": "runs the review-fix command sequence with its default range",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 728,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/quality-tasks.test.ts:276:scoped@2#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "beforeRegistrations": [],
+      "afterRegistrations": [],
+      "beforeMatches": [
+        {
+          "line": 307,
+          "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const originalCwd = process.cwd; const repositoryPath = yield* fs.makeTempDirectory();"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/quality-tasks.test.ts:3897:scoped@13#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "holds an unchanged package without a comparison base and replaces it after a dirty package change",
+      "currentTitle": "holds an unchanged package without a comparison base and replaces it after a dirty package change",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 4550,
+          "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* fs.makeTempDirectory(); yield* Effect.addFinalizer(() => fs.rem"
+        }
+      ],
+      "afterMatches": [
+        {
+          "line": 4852,
+          "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* fs.makeTempDirectory(); yield* Effect.addFinalizer(() => fs.rem"
+        }
+      ]
+    },
+    {
+      "id": "EV007:packages/tooling/tool/cli/test/quality-tasks.test.ts:1449:checkEffect@8#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "property: the wave report schema round-trips arbitrary reports",
+      "currentTitle": "property: the wave report schema round-trips arbitrary reports",
+      "beforeRegistrations": ["it.effect.prop"],
+      "afterRegistrations": ["it.effect.prop"],
+      "beforeMatches": [],
+      "afterMatches": []
+    }
+  ],
+  "collisions": [],
+  "ledgerCounts": {
+    "open": 1859,
+    "fixed": 1624,
+    "exception": 12
+  },
+  "fullPackageProof": "pending"
+}

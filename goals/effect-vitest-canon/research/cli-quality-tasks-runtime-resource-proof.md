@@ -47,7 +47,19 @@ The net reduction of 79 findings is not a claim of 79 completed inventory rows:
 an unchanged shorter scope is no longer recognized behind a composed callback.
 Its historical judgment remains open, and the detector gap is recorded in
 OPPORTUNITIES.md. Environment-wrapper, native-filesystem and retry judgments
-also remain open. Historical runtime/provider lineage reconciliation is pending.
+also remain open.
+
+Historical reconciliation closes 77 existing rows and adds six current fixed
+occurrences (five runtime boundaries and one provider). Forty runtime rows,
+31 provider rows and the shared-helper scope are attributed to 01ff5bc02c.
+Three runtime rows were already migrated by 678cf4198280d2f1effde89c1ac094f4f7abd90d;
+the property runtime and direct arbitrary-check rows were already migrated by
+b1aa7e320cde926e7e80a98073ba8b0d517d7c8c. Two renamed policy cases follow the
+explicit changes in PRs #1102 and #1104; this batch preserves their current
+assertions. The public cli-quality-tasks-ledger-lineage.json receipt retains
+the exact source evidence, current mappings and earlier fix attribution.
+There are no identity collisions. Strict schema validation passes for all
+3,495 unique CLI rows: 1,624 fixed, 12 exceptions and 1,859 open.
 
 The refreshed actual-suite console probe passes 255 tests on both runtimes,
 including its distinct-identity witness across 164 constructor sites and at
