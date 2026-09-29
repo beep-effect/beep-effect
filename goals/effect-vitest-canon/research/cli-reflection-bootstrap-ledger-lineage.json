@@ -318,7 +318,7 @@
     "fixed": 1917,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof",
+  "fullPackageProof": "passed: audit 664.5s, docgen 20.7s; package source unchanged",
   "preservedOpen": "native-platform findings and remaining bootstrap direct checkEffect finding",
   "retainedHistorical": [
     {

@@ -22,4 +22,28 @@ synchronous tar construction over a scoped native directory, so native bridge
 requirements and clock behavior need explicit review before fixture selection.
 
 No source changes, draft application or ledger closure are claimed here. The
-reflection/bootstrap full package proof is running with package source frozen.
+reflection/bootstrap full package proof passed before any sync-data application.
+
+
+## Prepared draft and controls
+
+The unchanged baseline passes all 30 tests on Node and Bun with zero temporary
+residue and stable source hashes (3.719 and 1.767 seconds, respectively).
+A private draft preserves all 93 assertion trees and identifies all sixteen
+historical runtime/provider rows uniquely, including helper identities where
+no test title exists. It removes all nineteen current runtime/provider/wrapper
+findings without introducing a fingerprint; native-platform review remains.
+
+The two web-handler callers contain synchronous Response construction only.
+The draft makes that contract synchronous and maps request/response construction
+failures through Effect.try to HttpClientError/TransportError. It removes the
+three unnecessary nested runtimes. Tests of method, headers, status, body and
+typed transport failures are prepared for applied-source verification.
+
+A source-extracted constructor probe on both Node and Bun uses simulated cwd
+and filesystem services. Ordinary execution restores resources for both old and
+new forms. A .git setup failure leaves the old cwd changed with zero removals;
+the incremental scoped draft restores cwd and removes its directory. This is a
+controlled mechanism reproduction; actual-suite native-filesystem fault probes
+remain required after application. Repository, registry, archive and console
+controls are separately prepared. No ledger rows are closed by this draft.

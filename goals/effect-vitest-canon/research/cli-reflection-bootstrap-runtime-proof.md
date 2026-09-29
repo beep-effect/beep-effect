@@ -60,7 +60,9 @@ open. The bootstrap helper row includes its eleven caller migrations,
 and the renamed index case maps to its current refresh-stale behavior. Three
 other bootstrap property rows were already reconciled to their merged-main fix
 in cli-bootstrap-property-backfill.json. Full grouped package proof for these
-new source edits is pending; no goal-wide acceptance is claimed.
+source edits passed: `bun run beep quality package-verify @beep/repo-cli` exited
+zero, audit 664.5 seconds and docgen 20.7 seconds. No goal-wide acceptance is
+claimed.
 
 
 Source commit: `d3677d2270cccc173ba2fc4b9e94441be7a7c1a3`.
@@ -69,4 +71,4 @@ the retained property row and all unrelated rows unchanged. An initial script
 count included the retained row; its afterMatches guard refused the write.
 The corrected reconciliation explicitly retains that row. Strict validation
 passes for all 3,495 CLI and 687 schema rows. CLI totals are 1,917 fixed,
-12 exceptions and 1,566 open. The grouped package proof is running.
+12 exceptions and 1,566 open. The grouped package proof passed with unchanged package source.
