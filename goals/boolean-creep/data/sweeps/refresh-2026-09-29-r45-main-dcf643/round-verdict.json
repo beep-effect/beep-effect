@@ -68,7 +68,7 @@
     },
     {
       "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/lane-map.json",
-      "sha256": "b6629a49ef3c67a37325ea50e3a3958986816babd43698b019824f66567047d6"
+      "sha256": "ed0d87d941051937831bee8e33895938fa085c42331c3fdfa5cc24fdabbe8846"
     },
     {
       "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/source-sha.txt",
@@ -116,11 +116,11 @@
     },
     {
       "file": "goals/boolean-creep/data/r45-partial-reconciliation/artifact-index.json",
-      "sha256": "a4505180402dd2ad11c32fd41fe85a5fec6a4b3c4d9fecde9ccb7f7d861663f4"
+      "sha256": "9621658d2fd3c4173776166ab1b483c5cc1311dbfec741ec7c32ea97bab7ce2b"
     },
     {
       "file": "goals/boolean-creep/data/r45-partial-reconciliation/integration.json",
-      "sha256": "feda804e635a844db5920e88cdde95250b70e160f1440110fb00986ea7d22c66"
+      "sha256": "d183909d585937991adc177ac0b17384c592dff949f9633654608761777071a9"
     }
   ],
   "limitation": "Seven successful execution lanes were independently reconciled at the historical R45 source. drivers-g-m stays failed and 19 lanes were not executed. Reviewed remediation candidates are not installed. No partial coverage is inherited by the current-source round."
