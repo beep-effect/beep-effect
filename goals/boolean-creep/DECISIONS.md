@@ -272,3 +272,16 @@ full-proof prerequisite for publishing. Use hosted checks and review closure
 to establish exact-head merge readiness. Keep the census, compatibility,
 independent review, implementation and exact-main acceptance requirements.
 Continue using PR #1328 for all remaining work.
+
+## 2026-09-29: continuation after PR #1328 merged
+
+Hosted state confirms PR #1328 merged at `3bfb7d0f33` on 2026-09-29 before
+campaign completion. Under the existing delegated judgment and one-remaining-PR
+mandate, use one successor PR for all remaining work. This is an execution
+reconciliation, not a new user ruling or acceptance claim. Preserve the dated
+instructions above as history. Keep every substantive census, compatibility,
+independent review, implementation and exact-main completion requirement.
+
+The R46 runtime probe remains rejected after a scripted payload mismatch.
+Prepare a new independently reviewed fixture and source binding; do not retry
+the failed attempt in place or grant it retrospective acceptance.

@@ -1925,3 +1925,21 @@ candidate's exact-source binding. Checking header provenance against each
 design's latest evidence section during install review would have prevented
 this extra refresh. Preserve the prior bytes and refresh the binding; no
 semantic or acceptance credit follows from this metadata repair.
+
+## 2026-09-29: R46 scripted probe changed a repeated-character payload
+
+The single admitted `probe_runner.py execute` attempt exited 3 in run A with
+`Refusal: script-sequence-mismatch`. All 30 tool calls occurred in the expected
+order. The first sequence discrepancy was P07 `write.content`: the expected
+2,692-character synthetic JSON payload became 4,452 characters. The runner
+rejected the run before per-case evaluation; five remaining runs were not
+executed. No census or probe acceptance credit follows.
+
+Evidence remains under
+`~/.cache/beep/boolean-creep/refresh-2026-09-28/r46-safe-probe-controller/results/`,
+including `receipt.json`, `A/verdict.json` and the original stream. Independent
+diagnosis is checking the remaining evidence and a successor design. A payload
+fixture that tests the required byte boundary without asking a model to copy
+thousands of repeated characters exactly would have prevented this particular
+failure. Preserve exact tool ordering, payload and escaping coverage, confinement
+checks, and the failed attempt when reviewing a correction.

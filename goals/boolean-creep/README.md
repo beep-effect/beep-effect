@@ -1,3 +1,22 @@
+## Current execution after PR #1328 merged: 2026-09-29
+
+PR #1328 merged at `3bfb7d0f33d300b30b99f80792c7e61c2ce6bbff` before the
+remaining campaign work was complete. Continue all remaining work in one
+successor PR. The earlier references to open PR #1328 are historical; the
+census, independent review, implementation and exact-main acceptance gates
+remain unchanged.
+
+R46's first runtime probe stopped with `script-sequence-mismatch`: P07's
+synthetic payload differed from the exact scripted bytes. All 30 calls were
+in order, but no probe acceptance or census execution followed. Preserve the
+failed attempt and refresh the fixture through independent review before a
+new admission. The diagnostic replay is not acceptance evidence.
+
+The branch now includes main `4203a309f11930eb60e971931718b73b54efc653`.
+Five CLI source files changed since R46's source. Successor inputs must bind
+the updated source; the R46 review cannot establish current-source coverage.
+Inventory remains 726 rows, 108 qualified, 618 disqualified and zero applied.
+
 ## Current execution amendment — 2026-09-28
 
 The [2026-09-28 decision](./DECISIONS.md) delegates remaining decisions and
