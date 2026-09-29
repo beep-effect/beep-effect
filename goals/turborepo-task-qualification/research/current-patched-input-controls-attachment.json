@@ -1,0 +1,54 @@
+{
+  "authority": "Canonical census attachment acceptance; bounded reviews retain their explicit limits",
+  "revision": "f80ee336721c0ca47ac08350f70f7077f860a100",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 107,
+    "artifacts": 6,
+    "unresolved": 24
+  },
+  "changedSourceBindings": [],
+  "changedReviewBindings": [],
+  "addedReviews": [
+    "goals/turborepo-task-qualification/research/current-patched-canary-config-controls.json",
+    "goals/turborepo-task-qualification/research/current-patched-canary-fresh-pairs.json",
+    "goals/turborepo-task-qualification/research/current-patched-canary-invalidation.json",
+    "goals/turborepo-task-qualification/research/current-patched-capture-canary.json",
+    "goals/turborepo-task-qualification/research/current-patched-capture-stable.json",
+    "goals/turborepo-task-qualification/research/current-patched-concurrency-canary.json",
+    "goals/turborepo-task-qualification/research/current-patched-concurrency-stable.json",
+    "goals/turborepo-task-qualification/research/current-patched-packet-verification.json",
+    "goals/turborepo-task-qualification/research/current-patched-stable-config-controls.json",
+    "goals/turborepo-task-qualification/research/current-patched-stable-fresh-pairs.json",
+    "goals/turborepo-task-qualification/research/current-patched-stable-invalidation.json"
+  ],
+  "retention": {
+    "reference": "patched-controls-attachment-f80ee33672",
+    "artifacts": [
+      {
+        "path": "patched-reviewed-request.json",
+        "sha256": "268a9fe60367c919a8dec3567c6655e986d9969679ca40753ac45948508abbe6"
+      },
+      {
+        "path": "patched-reviewed-census.json",
+        "sha256": "6196c0539a735c6f55b0be315cabd8d763b1bbed0a5ecce767fe4e56ab48c93b"
+      },
+      {
+        "path": "patched-census.log",
+        "sha256": "b2f64981b73df8493f9e4293965a13e9585e546e22f4af9ec73e17f3d4cd135c"
+      }
+    ]
+  },
+  "limits": [
+    "Historical source and review obligations remain explicit; attaching receipts does not prove semantic closure.",
+    "Patched runtime observations retain source b410da2b6d and their exact dependency/client pins.",
+    "Stable actual task overlap, cross-root renewal, native-I/O closure, signed remote and representative shadow remain unproven.",
+    "No tuple promotion or completion credit."
+  ]
+}

@@ -225,6 +225,18 @@ describe("staticDescriptorInstaller", () => {
     expect(target.is).toBe(is);
   });
 
+  it("replaces a different configurable static in legacy mode", () => {
+    const target = { value: 1 };
+
+    expect(staticDescriptorInstaller.install(target, { value: 2 })).toBe(target);
+    expect(target.value).toBe(2);
+    expect(Reflect.getOwnPropertyDescriptor(target, "value")).toMatchObject({
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+  });
+
   it("hardens accessor descriptors and reports definition failures", () => {
     const statics = {} as { readonly value: number };
     Reflect.defineProperty(statics, "value", {

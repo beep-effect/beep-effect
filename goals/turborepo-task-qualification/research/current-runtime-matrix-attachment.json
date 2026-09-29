@@ -1,0 +1,40 @@
+{
+  "authority": "Canonical census attachment acceptance; byte identity only",
+  "revision": "992c629f00cb162dc66bfef78210da88a12895b7",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 82,
+    "artifacts": 6,
+    "unresolved": 21
+  },
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/evidence/runtime-matrix-attachment-992c629f00",
+  "privateArtifacts": [
+    {
+      "path": ".beep/qualification-runtime-repairs/runtime-matrix-reviewed-request.json",
+      "sha256": "5434d6d37338e716e00323f40a89ff3e0d4a8d0e1eca9152ed59e8d08b9d1b12"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/runtime-matrix-reviewed-census.json",
+      "sha256": "ad0d2e3ee1565af2340e501b2576a8e80d3f04039b6f8be8284b0c72c86dc9be"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/runtime-matrix-census.log",
+      "sha256": "bcd4430705cc51c5ccde45f8d9ed42c86550c7a2e8aee4417b226ff49fa087e8"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/runtime-matrix-binding-changes.json",
+      "sha256": "f0f8636afdbcf3f8f930661d007ccf0afcb09ef2af37457e0dabd363f5bf8a22"
+    }
+  ],
+  "limits": [
+    "Attachment acceptance binds reviewed bytes; it does not establish semantic closure or qualification.",
+    "Local comparison evidence remains bound to frozen revision 7f53b4a840, not renewed by attachment to the current head.",
+    "Cross-root portability, signed-remote and shadow acceptance remain incomplete."
+  ]
+}

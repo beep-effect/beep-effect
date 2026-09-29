@@ -1,0 +1,125 @@
+{
+  "authority": "Independent retained-summary and output-tree comparison of three fresh/fresh pairs",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "observations": [
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-t00lvrne",
+      "receiptSha256": "23fa36f90d814f99707b276cb709c590d3089dfe885f8bf681395291be37f9bc",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-z122hrez",
+      "receiptSha256": "7060bbf58a6a25814ce908e58930f05eba401b7c2e38e1294f7e4d59285745f7",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-d75kf33l",
+      "receiptSha256": "67c519ae888b74598b7da8c088cd8ac831bd3f6662418cd9d3e2defea1521551",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-pom3d5xo",
+      "receiptSha256": "5b68455c6996e4f6109bbc14399d4549f5c6d2a8295568dcee6f731e819c3349",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-uwi86n_g",
+      "receiptSha256": "46195e2b0fd4ddf167d1ad18474d5f14722e47f82f1d0322e906f5d4ec11075c",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-nk0753vr",
+      "receiptSha256": "f66deb31cc832112e73acef65767c686b9e0e4a348b0bdfc7cb398c3dbf97b9d",
+      "taskHash": "1cde1c1e6cfeab67",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 2,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 3,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    }
+  ],
+  "limits": [
+    "Stable client only; each isolated execution also performs two local replay controls.",
+    "Identity overlay file-tree and task-log equality are checked; unrelated dependency logs and whole CLI streams are not asserted equal.",
+    "No signed remote comparison, complete semantic closure, cross-root equivalence, canary or shadow acceptance is established.",
+    "No tuple is promoted and normal checkout caching remains disabled."
+  ],
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/evidence/fresh-pairs-2.11.4-7f53b4a840",
+  "observationManifestSha256": "9e9079199eafe4566b1bd958b9b3aad69f5aff699eb02cdd8b5f07ba8c2ee5e1",
+  "retainedFiles": 9282,
+  "freshExecutions": 6,
+  "localReplayControls": 12,
+  "exitCode": 0,
+  "runnerSha256": "3f6d3b4381aa5d8d08aaf36524c70fb08bc59eae379cd0e5a1242b21d2ab7090",
+  "matrixRunnerSha256": "188483c39af79870ed28297b04f07a2421baebc168af8ebf71b0bb4dd635fd78",
+  "matrixReviewerSha256": "cc85dee85012c73bc2b64aeef678013751814a423ad9b65f0d2d1aa8ab45201f"
+}

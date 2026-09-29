@@ -1,0 +1,61 @@
+{
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "authority": "Cross-root preflight rejection; imported replay was not attempted",
+  "freshExitCode": 0,
+  "sourceTaskHash": "1cde1c1e6cfeab67",
+  "destinationTaskHash": "f8d05ff6635364a1",
+  "inputMapsEqual": true,
+  "taskDefinitionsEqual": true,
+  "globalCacheInputsEqual": true,
+  "executablePinsEqual": true,
+  "configuredEnvironmentEqual": false,
+  "passThroughEnvironmentEqual": false,
+  "receiptSha256": "c21e56cd4c9fa22700d7c240ccb707930cff3772ad2f516b07bdc55353705496",
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/observations/cross-root-local-replay-5ezu0ugo",
+  "limits": [
+    "The complete snapshots differ only in installed-dependency bytes and digest. Two native-addon build configs contain different local_prefix paths.",
+    "File-size comparison does not exclude additional equal-length byte differences; an identical-dependency overlay control remains required.",
+    "No cross-root cache import, replay, portability or qualification credit is claimed."
+  ],
+  "snapshotDigestHashesMatchNativeMetadata": [
+    "9ea1f559577cba32c198c4ea673784959be673f4abd3b1a30a5a56147717b15a",
+    "f874d3076c98b9b5af4f0018f0b1f0cf9bf9e1e220a69039337badc55e60b7f4"
+  ],
+  "snapshotDifferingFields": [
+    "installedDependencies.bytes",
+    "installedDependencies.sha256"
+  ],
+  "dependencySizeDifferences": [
+    {
+      "path": "ssh2/lib/protocol/crypto/build/config.gypi",
+      "oldBytes": 20813,
+      "newBytes": 20809
+    },
+    {
+      "path": "cpu-features/build/config.gypi",
+      "oldBytes": 20756,
+      "newBytes": 20752
+    }
+  ],
+  "dependencyConfigDifferences": [
+    {
+      "path": "ssh2/lib/protocol/crypto/build/config.gypi",
+      "changedLines": [
+        "-    \"local_prefix\": \"~/YeeBois/projects/beep-effect2-worktrees/qualification-runtime-repairs\"",
+        "+    \"local_prefix\": \"~/YeeBois/projects/beep-effect2-worktrees/qualification-fresh-pairs\""
+      ]
+    },
+    {
+      "path": "cpu-features/build/config.gypi",
+      "changedLines": [
+        "-    \"local_prefix\": \"~/YeeBois/projects/beep-effect2-worktrees/qualification-runtime-repairs\"",
+        "+    \"local_prefix\": \"~/YeeBois/projects/beep-effect2-worktrees/qualification-fresh-pairs\""
+      ]
+    }
+  ],
+  "attributionEvidence": "~/.cache/beep/turbo-qualification/evidence/cross-root-preflight-7f53b4a840",
+  "snapshotSha256": [
+    "907530773cef8373c383b217187794eb8bc964a62180154ea5e28a9d001b7990",
+    "6357708fbec99fa764d6ccdf59c9693f2013898f0598dcafb183e020503f9277"
+  ]
+}

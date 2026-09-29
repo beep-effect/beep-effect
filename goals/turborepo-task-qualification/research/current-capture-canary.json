@@ -1,0 +1,42 @@
+{
+  "profile": "canary",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "taskLogBytes": 53,
+  "archiveOnlyContainsTaskLog": true,
+  "syntheticCredentialAbsent": true,
+  "homeAndCheckoutPathsAbsentFromArchive": true,
+  "limits": [
+    "Synthetic TURBO_TOKEN only; no real credential was used.",
+    "Local network-isolated replay; does not prove remote telemetry or remote authentication behavior.",
+    "Private CLI streams retain diagnostic checkout paths; safe capture claim covers the cache archive, not publication of raw streams.",
+    "No exhaustive secret-pattern proof or qualification promotion."
+  ],
+  "scannedFiles": 1547,
+  "nativeSyntheticTokenPresenceVerified": true,
+  "retention": {
+    "reference": "capture-canary-7f53b4a840",
+    "files": 1549,
+    "manifestSha256": "69e4a5232793f99b6be14115ea652bd26b26b55cb66c2fb5a260bb439cb9b6c1",
+    "reviewSha256": "11774c6c8fca2d1cc21607a2186fafa73483a3426057cb5b933d9e081f6db5d2",
+    "presenceReviewSha256": "178238a0f766df8444b1fccc480ff584f01f49b4e648818ce4baaaa3d23a7888"
+  }
+}
