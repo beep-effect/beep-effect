@@ -118,7 +118,7 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
  * @since 0.0.0
  */
 export const DocumentIndex = NonNegativeInt.pipe(
-  S.fromBrand("DocumentIndex", documentIndex),
+  S.brand("DocumentIndex"),
   $I.annoteSchema("DocumentIndex", {
     description: "Non-negative ordered index for an NLP document.",
   })

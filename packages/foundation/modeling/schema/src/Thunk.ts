@@ -29,7 +29,7 @@ const $I = $SchemaId.create("Thunk");
  * @category type-ids
  * @since 0.0.0
  */
-export const TypeId = $I`ThunkUnknown`;
+export const TypeId: "@beep/schema/Thunk/ThunkUnknown" = $I.make("ThunkUnknown");
 
 /**
  * Type for {@link TypeId}.
