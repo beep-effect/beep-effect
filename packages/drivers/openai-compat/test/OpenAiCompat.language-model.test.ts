@@ -40,7 +40,7 @@ import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ClientOptionsArbitrary = Arbitrary.schema(OpenAiCompatClientOptions);
 const LanguageModelConfigArbitrary = Arbitrary.schema(OpenAiCompatLanguageModelConfig);

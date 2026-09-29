@@ -37,7 +37,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const digest = (n: number) => Sha256Hex.make(Str.padStart(64, "0")(`${n}`));
 const key = CacheQualificationKey.make({

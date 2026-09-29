@@ -9,7 +9,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const claimText = "A sensor (optical) comprising a detector.";
 const evidenceQuote = "A sensor (optical)\ncomprising a detector.";

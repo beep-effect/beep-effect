@@ -23,7 +23,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
 const isBudgetDuration = S.is(BudgetDuration);

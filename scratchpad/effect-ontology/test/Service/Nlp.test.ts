@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
 import { EmbeddingService } from "../../Service/Embedding.ts";
 import { NlpIndexError, NlpService } from "../../Service/Nlp.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeUnknownFinite = S.decodeUnknownEffect(S.Finite);
 const isNlpIndexError = S.is(NlpIndexError);
 

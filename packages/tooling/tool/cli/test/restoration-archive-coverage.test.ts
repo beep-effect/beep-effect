@@ -15,7 +15,7 @@ import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
 const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));

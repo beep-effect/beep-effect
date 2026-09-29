@@ -9,7 +9,10 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { Config, Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSync.config");
 

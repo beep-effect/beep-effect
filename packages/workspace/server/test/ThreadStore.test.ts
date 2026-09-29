@@ -20,7 +20,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const FailingCuidTestLayer = Layer.suspend(() => {
   let digestCalls = 0;

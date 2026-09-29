@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ACTION_SPAN = "epistemic.contradiction.list_candidates";
 const PORT_SPAN = "epistemic.contradiction.list";

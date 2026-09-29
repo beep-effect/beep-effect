@@ -59,7 +59,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { PlatformError } from "effect";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
 const decodeUnknownCollectorManifestRecordResult = S.decodeUnknownResult(CollectorManifestRecord);

@@ -42,7 +42,10 @@ import { PandocCompatibilityReport, PandocMappingIssue } from "./Pandoc.report.t
 import type { PandocBlock, PandocInline } from "./Pandoc.model.ts";
 import type { JsonPath, PandocMappingDirection, PandocMappingSeverity } from "./Pandoc.report.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const encodeMdDocument = S.encodeEffect(Md.Document);
 const encodePandocDocument = S.encodeEffect(PandocDocument);

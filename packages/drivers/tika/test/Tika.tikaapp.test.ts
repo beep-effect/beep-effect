@@ -13,7 +13,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 const decodeTikaAppEngineConfigResult = S.decodeResult(TikaAppEngineConfig);

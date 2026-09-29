@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import type { ChildProcess } from "effect/process";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const isCaptureCommandTimedOutError = S.is(CaptureCommandTimedOutError);
 

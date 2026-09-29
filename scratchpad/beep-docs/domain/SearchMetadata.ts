@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { NonNegativeInt } from "@beep/schema/Number";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
 

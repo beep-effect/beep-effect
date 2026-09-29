@@ -34,7 +34,7 @@ import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 import type * as HttpClientError from "effect/http/HttpClientError";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeCollectionContainer = S.decodeUnknownEffect(CollectionContainer);
 const decodeCollectionSummary = S.decodeUnknownEffect(CollectionSummary);

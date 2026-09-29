@@ -38,7 +38,10 @@ import {
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const decodeM365ConfigInput = S.decodeEffect(M365ConfigInput);
 

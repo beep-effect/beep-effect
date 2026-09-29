@@ -51,7 +51,7 @@ import {
 import { migrateOnBoot } from "@/runtime/Migrations";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);

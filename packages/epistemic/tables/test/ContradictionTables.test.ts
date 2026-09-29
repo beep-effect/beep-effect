@@ -49,7 +49,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeUnknownCanonicalContradictionBeliefPairResult = S.decodeUnknownResult(CanonicalContradictionBeliefPair);
 const encodeCanonicalContradictionBeliefPairResult = S.encodeResult(CanonicalContradictionBeliefPair);

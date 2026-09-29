@@ -64,7 +64,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const externalUrl = pipe(
   Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),

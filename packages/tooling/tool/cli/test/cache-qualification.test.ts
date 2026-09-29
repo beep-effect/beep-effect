@@ -26,7 +26,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const platform = Layer.mergeAll(
   NodeServices.layer,

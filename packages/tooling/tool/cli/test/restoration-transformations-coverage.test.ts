@@ -31,7 +31,7 @@ import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Pa
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const encodeCollectorManifestRecordJson = S.encodeEffect(S.fromJsonString(CollectorManifestRecord));
 

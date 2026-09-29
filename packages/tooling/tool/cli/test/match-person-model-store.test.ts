@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 type PosInt = typeof PosInt.Type;
 
 type TestResponder = (

@@ -27,7 +27,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);

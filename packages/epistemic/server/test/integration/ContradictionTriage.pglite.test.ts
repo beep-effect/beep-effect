@@ -78,7 +78,7 @@ import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const encodeUnknownEvidenceVerificationResult = S.encodeUnknownResult(EvidenceVerification);
 

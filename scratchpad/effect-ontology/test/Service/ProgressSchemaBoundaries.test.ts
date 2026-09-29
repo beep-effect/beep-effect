@@ -8,7 +8,7 @@ import { ExtractionRunId } from "../../Domain/Identity.ts";
 import { makeBackpressureHandler, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 import { EntityResolutionConfig } from "../../Workflow/EntityResolution.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeUnknownBackpressureConfigResult = S.decodeUnknownResult(BackpressureConfig);
 const decodeUnknownEntityResolutionConfigResult = S.decodeUnknownResult(EntityResolutionConfig);
 

@@ -11,7 +11,7 @@ import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePosIntResult = S.decodeResult(PosInt);
 const isISOStr = S.is(ISOStr);

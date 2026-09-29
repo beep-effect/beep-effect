@@ -58,7 +58,7 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

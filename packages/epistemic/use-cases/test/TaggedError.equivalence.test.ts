@@ -24,7 +24,7 @@ import { pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
   schema: Schema,

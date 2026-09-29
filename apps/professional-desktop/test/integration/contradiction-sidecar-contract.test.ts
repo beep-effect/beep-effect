@@ -23,7 +23,7 @@ import { RuntimeTest } from "@/runtime/Layer";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));

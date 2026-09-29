@@ -13,7 +13,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const EmbeddingModelOptionsArbitrary = Arbitrary.schema(OpenAiEmbeddingModelOptions);
 const LanguageModelOptionsArbitrary = Arbitrary.schema(OpenAiLanguageModelOptions);

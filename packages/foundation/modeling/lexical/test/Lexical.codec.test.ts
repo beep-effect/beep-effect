@@ -28,7 +28,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { TableCellHeaderState } from "@beep/lexical-schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
 const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);

@@ -16,7 +16,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const corpusRoot = Flag.Directory("corpus-root", { mustExist: true });
 const bundleOut = Flag.Directory("bundle-out").pipe(Flag.optional);

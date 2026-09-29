@@ -13,7 +13,10 @@ import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $RepoDocgenId.create("Domain");
 const StringArray = S.Array(S.String);

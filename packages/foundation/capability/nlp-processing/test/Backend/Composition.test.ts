@@ -11,7 +11,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,

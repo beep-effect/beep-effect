@@ -52,7 +52,7 @@ import { assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import type { ProviderCacheEntry } from "@/schema/ProviderCache";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 type PosInt = typeof PosInt.Type;
 
 const sha = (digit: string): Sha256Hex => Sha256Hex.make(Str.repeat(64)(digit));

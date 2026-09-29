@@ -32,7 +32,7 @@ import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
 
-const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+const PositiveInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).pipe(
   $I.annoteSchema("PositiveInt", {
     description: "Positive integer used for example-retrieval limits.",
   })

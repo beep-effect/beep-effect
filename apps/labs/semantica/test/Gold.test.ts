@@ -44,7 +44,7 @@ import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/
 import { pipe } from "effect";
 import { ProviderCache } from "@/services/ProviderCache";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const CorpusManifestJson = S.fromJsonString(CorpusManifest);
 const decodeCorpusManifestJson = S.decodeEffect(CorpusManifestJson);

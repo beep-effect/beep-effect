@@ -12,7 +12,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import {SemverFromString} from "@beep/schema/Semver";
 import { FilePath } from "@beep/schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 
 const $I = $ScratchpadId.create("ontoskills/registry/Registry.models");

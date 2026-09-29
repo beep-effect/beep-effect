@@ -45,7 +45,7 @@ import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import type * as HttpClientError from "effect/http/HttpClientError";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeGraphDriveResult = S.decodeResult(GraphDrive);
 const decodeGraphDriveItemResult = S.decodeResult(GraphDriveItem);

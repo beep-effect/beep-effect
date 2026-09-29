@@ -35,7 +35,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { GoldSource } from "@/services/GoldSource";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ManifestJson = S.fromJsonString(CorpusManifest);
 const decodeManifestJson = S.decodeEffect(ManifestJson);

@@ -25,7 +25,10 @@ import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
 import type { BM25VectorizerInstance } from "./internal/bm25.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const decodeUnknownWinkStringArrayOption = S.decodeUnknownOption(WinkStringArray);
 

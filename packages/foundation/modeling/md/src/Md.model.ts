@@ -18,7 +18,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { HtmlChildNode } from "@beep/html";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
+  title: "PosInt",
+  description: "An integer greater than zero.",
+});
 
 const $I = $MdId.create("Md.model");
 

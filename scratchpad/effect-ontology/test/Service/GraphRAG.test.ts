@@ -15,7 +15,7 @@ import { RetryPolicy } from "../../Service/Retry.ts";
 import { SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const alice = Entity.make({
   id: EntityId.make("alice"),

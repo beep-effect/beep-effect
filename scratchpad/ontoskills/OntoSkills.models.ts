@@ -19,7 +19,7 @@ import { Duration, Effect, SchemaTransformation, Tuple } from "effect";
 import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 type PosInt = typeof PosInt.Type;
 
 const $I = $ScratchpadId.create("ontoskills/OntoSkills.models");

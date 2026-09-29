@@ -19,7 +19,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
 const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);

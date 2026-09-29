@@ -44,7 +44,7 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const encodeUnknownJson = S.encodeEffect(UnknownFromJsonString);
 const decodeDocumentsProjectionOutput = S.decodeEffect(DocumentsProjectionOutput);

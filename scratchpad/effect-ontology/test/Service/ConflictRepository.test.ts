@@ -24,7 +24,7 @@ import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } fro
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeTimelineEntityResponseJson = S.decodeEffect(S.fromJsonString(TimelineEntityResponse));
 const decodeUnknownConflictsQuery = S.decodeUnknownEffect(ConflictsQuery);

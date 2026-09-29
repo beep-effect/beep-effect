@@ -42,7 +42,7 @@ import { emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =

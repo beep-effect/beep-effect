@@ -39,7 +39,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { GraftDeepRunnerStep } from "@beep/repo-cli/commands/Graft";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const artifacts = [
   ".cache/summaries.json",

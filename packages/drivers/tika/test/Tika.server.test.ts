@@ -24,7 +24,7 @@ import { fixtureText, makeExtractOperationFixture, tikaRmetaResponse, tikaVersio
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 import type { TikaFixtureFormat } from "./fixtures.ts";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeTikaServerEngineConfigResult = S.decodeResult(TikaServerEngineConfig);
 

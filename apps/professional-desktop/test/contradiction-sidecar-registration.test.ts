@@ -50,7 +50,7 @@ import * as Str from "effect/String";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 import type * as DateTime from "effect/DateTime";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const leftLogicalKey = Str.repeat(64)("a");
 const rightLogicalKey = Str.repeat(64)("b");

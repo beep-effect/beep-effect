@@ -3,7 +3,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const sameEmbeddingModelOptions = S.toEquivalence(OpenAiEmbeddingModelOptions);
 const sameLanguageModelOptions = S.toEquivalence(OpenAiLanguageModelOptions);

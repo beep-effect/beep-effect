@@ -198,7 +198,7 @@ import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
-const PosInt = S.Int.check(S.isGreaterThan(0));
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
 const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
