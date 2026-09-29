@@ -14,7 +14,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { NonNegativeInt } from "../Int.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
-import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";
 import type * as Ordering from "effect/Ordering";
 
@@ -47,7 +46,8 @@ const normalizeIsoString = (input: string | number): string =>
  * @category constructors
  * @since 0.0.0
  */
-export const ISOStr = NonEmptyTrimmedStr.check(
+export const ISOStr = S.Trim.check(
+  S.isNonEmpty({ message: "String must not be empty" }),
   S.makeFilter((i) => O.isSome(DateTime.make(i)), {
     identifier: $I`IsoDateTimeStringCheck`,
     title: "ISO DateTime String",
@@ -287,10 +287,8 @@ export class Timestamp extends S.Class<Timestamp>("Timestamp")(
    * @since 0.0.0
    * @category utilities
    */
-  readonly toISOStr: () => Brand.Branded<Brand.Branded<string, "NonEmptyTrimmedStr">, "ISOStr"> = (): Brand.Branded<
-    Brand.Branded<string, "NonEmptyTrimmedStr">,
-    "ISOStr"
-  > => ISOStr.make(normalizeIsoString(this.epochMillis));
+  readonly toISOStr: () => Brand.Branded<string, "ISOStr"> = (): Brand.Branded<string, "ISOStr"> =>
+    ISOStr.make(normalizeIsoString(this.epochMillis));
 
   /**
    * Convert to string representation

@@ -11,7 +11,6 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { Cause, Effect, Exit, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -19,6 +18,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetRunMode } from "./Planner.ts";
 import { YeetOutcome } from "./Verdict.ts";
 
@@ -604,7 +604,7 @@ export type ProofJobCancelOutcome = typeof ProofJobCancelOutcome.Type;
  *
  * ```ts
  * import { proofJobUnitName } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -928,7 +928,7 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
  *
  * ```ts
  * import { ProofJobRecord, ProofJobRequest, ProofJobSubmitter, ProofJobUnit } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
@@ -1063,7 +1063,7 @@ export const proofJobRowSeverityFor: {
  *
  * ```ts
  * import { YeetProofJobCapsule } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *

@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas";
 import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -51,7 +50,8 @@ const DerivedThreadTitleCanonical = S.NonEmptyString.pipe(
  * @category projections
  * @since 0.0.0
  */
-export const DerivedThreadTitle = TrimmedNonEmptyText.pipe(
+export const DerivedThreadTitle = S.String.pipe(
+  S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()),
   S.decodeTo(
     DerivedThreadTitleCanonical,
     SchemaTransformation.transform({

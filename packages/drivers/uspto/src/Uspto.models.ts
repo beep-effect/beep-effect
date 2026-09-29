@@ -6,7 +6,7 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, flow, pipe, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
@@ -293,7 +293,7 @@ export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = fl
   O.map((value): string => value)
 );
 
-const UsptoMetadataText = NonEmptyTrimmedStr.pipe(
+const UsptoMetadataText = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
   $I.annoteSchema("UsptoMetadataText", {
     description: "Trimmed non-empty text carried by USPTO metadata fields.",
   })

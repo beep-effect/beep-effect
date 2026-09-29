@@ -65,20 +65,20 @@
     "cleanPackages": 18,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
-    "publicModules": 2905,
-    "publicExports": 20526,
-    "openModules": 377,
-    "openExports": 3097,
+    "publicModules": 2894,
+    "publicExports": 20465,
+    "openModules": 375,
+    "openExports": 3084,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3335,
+    "exampleImportFindings": 3319,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
-    "undescribed-see": 12,
-    "multiple-description-paragraphs": 434,
+    "undescribed-see": 11,
+    "multiple-description-paragraphs": 433,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3334,
+    "no-root-package-import": 3318,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -18078,9 +18078,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 263,
-        "publicModuleCount": 263,
-        "publicExportCount": 1606
+        "sourceFileCount": 252,
+        "publicModuleCount": 252,
+        "publicExportCount": 1545
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -18089,20 +18089,20 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 25,
-        "openExports": 168,
+        "openModules": 23,
+        "openExports": 155,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 190,
+        "exampleImportFindings": 174,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
-          "undescribed-see": 1,
-          "multiple-description-paragraphs": 22,
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 21,
           "leading-blank": 0,
           "trailing-blank": 1,
           "invalid-heading": 0,
@@ -18115,7 +18115,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 190
+          "no-root-package-import": 174
         }
       },
       "modules": [
@@ -18250,34 +18250,6 @@
           "documentationShapeViolations": [],
           "exportCount": 3,
           "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/BigDecimal.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/BigDecimal.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-bigdecimal-ts-1-module",
-          "currentTags": [
-            "@see",
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "undescribed-see",
-              "detail": "{@link https://github.com/Effect-TS/effect-smol/blob/main/packages/effect/src/BigDecimal.ts | effect/BigDecimal}"
-            }
-          ],
-          "exportCount": 1,
-          "remediationStatus": "open"
         },
         {
           "docKind": "packageDocumentation",
@@ -18589,28 +18561,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -20146,28 +20096,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 15,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/FileInfo.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/FileInfo.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-fileinfo-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -21864,28 +21792,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/KebabStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/KebabStr.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-kebabstr-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 2,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
           "line": 1,
@@ -21978,28 +21884,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Logs.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-logs-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -22356,28 +22240,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/PascalStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/PascalStr.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-pascalstr-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -22792,28 +22654,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 10,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
           "line": 1,
@@ -22831,7 +22671,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 12,
           "remediationStatus": "resolved"
         },
         {
@@ -22950,32 +22790,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/SchemaUtils/split.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/split.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-split-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "exportCount": 1,
-          "remediationStatus": "open"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/SchemaUtils/toEquivalence.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts",
           "line": 1,
@@ -23015,7 +22829,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -23514,72 +23328,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/SnakeStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SnakeStr.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-snakestr-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 2,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 5,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-1-module",
-          "currentTags": [
-            "@since",
-            "@packageDocumentation"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 12,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/TerritoryCode.ts",
           "repoPath": "packages/foundation/modeling/schema/src/TerritoryCode.ts",
           "line": 1,
@@ -23998,7 +23746,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 90,
+          "exportCount": 81,
           "remediationStatus": "resolved"
         }
       ],
@@ -24695,28 +24443,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "remediationStatus": "open"
-        },
-        {
-          "symbolName": "BigDecimalFromNumber",
-          "exportKind": "const",
-          "filePath": "src/BigDecimal.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/BigDecimal.ts",
-          "line": 37,
-          "anchor": "packages-foundation-modeling-schema-src-bigdecimal-ts-37-bigdecimalfromnumber",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
         },
         {
           "symbolName": "hasBinaryExtension",
@@ -26863,138 +26589,6 @@
           "currentTags": [
             "@since",
             "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TrimmedNonEmptyText",
-          "exportKind": "const",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 37,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-37-trimmednonemptytext",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TrimmedNonEmptyText",
-          "exportKind": "type",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 66,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-66-trimmednonemptytext",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CommaSeparatedList",
-          "exportKind": "const",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 84,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-84-commaseparatedlist",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CommaSeparatedList",
-          "exportKind": "type",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 113,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-113-commaseparatedlist",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NormalizedBooleanString",
-          "exportKind": "const",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 131,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-131-normalizedbooleanstring",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NormalizedBooleanString",
-          "exportKind": "type",
-          "filePath": "src/CommonTextSchemas.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-          "line": 160,
-          "anchor": "packages-foundation-modeling-schema-src-commontextschemas-ts-160-normalizedbooleanstring",
-          "currentTags": [
-            "@category",
-            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -35392,94 +34986,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/FileExtension.ts",
           "line": 389,
           "anchor": "packages-foundation-modeling-schema-src-fileextension-ts-389-fileextension",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "FileInfoType",
-          "exportKind": "const",
-          "filePath": "src/FileInfo.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/FileInfo.ts",
-          "line": 68,
-          "anchor": "packages-foundation-modeling-schema-src-fileinfo-ts-68-fileinfotype",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "FileInfoType",
-          "exportKind": "type",
-          "filePath": "src/FileInfo.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/FileInfo.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-schema-src-fileinfo-ts-121-fileinfotype",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "FileInfo",
-          "exportKind": "const",
-          "filePath": "src/FileInfo.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/FileInfo.ts",
-          "line": 145,
-          "anchor": "packages-foundation-modeling-schema-src-fileinfo-ts-145-fileinfo",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "FileInfo",
-          "exportKind": "type",
-          "filePath": "src/FileInfo.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/FileInfo.ts",
-          "line": 182,
-          "anchor": "packages-foundation-modeling-schema-src-fileinfo-ts-182-fileinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -47644,67 +47150,6 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "KebabCaseStr",
-          "exportKind": "const",
-          "filePath": "src/KebabStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/KebabStr.ts",
-          "line": 29,
-          "anchor": "packages-foundation-modeling-schema-src-kebabstr-ts-29-kebabcasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "KebabCaseStr",
-          "exportKind": "type",
-          "filePath": "src/KebabStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/KebabStr.ts",
-          "line": 58,
-          "anchor": "packages-foundation-modeling-schema-src-kebabstr-ts-58-kebabcasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
           "symbolName": "LiteralKit",
           "exportKind": "function",
           "filePath": "src/LiteralKit/LiteralKit.schema.ts",
@@ -48529,94 +47974,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/LocalDate/index.ts",
           "line": 12,
           "anchor": "packages-foundation-modeling-schema-src-localdate-index-ts-12-export-from-localdate-schema-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LogLevel",
-          "exportKind": "const",
-          "filePath": "src/Logs.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
-          "line": 32,
-          "anchor": "packages-foundation-modeling-schema-src-logs-ts-32-loglevel",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LogLevel",
-          "exportKind": "type",
-          "filePath": "src/Logs.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
-          "line": 53,
-          "anchor": "packages-foundation-modeling-schema-src-logs-ts-53-loglevel",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LogSeverity",
-          "exportKind": "const",
-          "filePath": "src/Logs.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
-          "line": 73,
-          "anchor": "packages-foundation-modeling-schema-src-logs-ts-73-logseverity",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LogSeverity",
-          "exportKind": "type",
-          "filePath": "src/Logs.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Logs.ts",
-          "line": 94,
-          "anchor": "packages-foundation-modeling-schema-src-logs-ts-94-logseverity",
           "currentTags": [
             "@category",
             "@since"
@@ -50799,67 +50156,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "PascalCaseStr",
-          "exportKind": "const",
-          "filePath": "src/PascalStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/PascalStr.ts",
-          "line": 29,
-          "anchor": "packages-foundation-modeling-schema-src-pascalstr-ts-29-pascalcasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "PascalCaseStr",
-          "exportKind": "type",
-          "filePath": "src/PascalStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/PascalStr.ts",
-          "line": 58,
-          "anchor": "packages-foundation-modeling-schema-src-pascalstr-ts-58-pascalcasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
         },
         {
           "symbolName": "Percentage",
@@ -53246,276 +52542,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "encodeEffect",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 59,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-59-encodeeffect",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "encodeUnknownEffect",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 116,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-116-encodeunknowneffect",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "encodeUnknownExit",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 175,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-175-encodeunknownexit",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeExit",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 235,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-235-encodeexit",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeUnknownOption",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 292,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-292-encodeunknownoption",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeOption",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 349,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-349-encodeoption",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeUnknownResult",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 406,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-406-encodeunknownresult",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeResult",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 464,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-464-encoderesult",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeUnknownPromise",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 518,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-518-encodeunknownpromise",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodePromise",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/encoders.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts",
-          "line": 573,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-encoders-ts-573-encodepromise",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./collectAnnotationsAt.ts\";",
           "exportKind": "re-export",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
           "line": 12,
           "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-12-export-from-collectannotationsat-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./encoders.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/SchemaUtils/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 17,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-17-export-from-encoders-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -53604,28 +52636,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
           "line": 37,
           "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-37-export-from-pluck-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./split.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/SchemaUtils/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 42,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-42-export-from-split-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -53922,30 +52932,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "split",
-          "exportKind": "function",
-          "filePath": "src/SchemaUtils/split.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/split.ts",
-          "line": 51,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-split-ts-51-split",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "DualEquivalence",
           "exportKind": "type",
           "filePath": "src/SchemaUtils/toEquivalence.ts",
@@ -54161,28 +53147,6 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "remediationStatus": "open"
-        },
-        {
-          "symbolName": "classStatics",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/withCodecStatics.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
-          "line": 484,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withcodecstatics-ts-484-classstatics",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
         },
         {
           "symbolName": "withNoneDefault",
@@ -55977,471 +54941,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/Slug.ts",
           "line": 128,
           "anchor": "packages-foundation-modeling-schema-src-slug-ts-128-slugfromstr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SnakeCaseStr",
-          "exportKind": "const",
-          "filePath": "src/SnakeStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SnakeStr.ts",
-          "line": 29,
-          "anchor": "packages-foundation-modeling-schema-src-snakestr-ts-29-snakecasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "SnakeCaseStr",
-          "exportKind": "type",
-          "filePath": "src/SnakeStr.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SnakeStr.ts",
-          "line": 58,
-          "anchor": "packages-foundation-modeling-schema-src-snakestr-ts-58-snakecasestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/schema package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "StatusCauseFields",
-          "exportKind": "const",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 48,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-48-statuscausefields",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "StatusCauseInputOptions",
-          "exportKind": "class",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 74,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-74-statuscauseinputoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StatusCauseInput",
-          "exportKind": "class",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 100,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-100-statuscauseinput",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "statusCauseInput",
-          "exportKind": "const",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 127,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-127-statuscauseinput",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "makeStatusCauseError",
-          "exportKind": "const",
-          "filePath": "src/StatusCauseError.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-          "line": 228,
-          "anchor": "packages-foundation-modeling-schema-src-statuscauseerror-ts-228-makestatuscauseerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "NonEmptyTrimmedStr",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 64,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-64-nonemptytrimmedstr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NonEmptyTrimmedStr",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 88,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-88-nonemptytrimmedstr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "UUID",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 106,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-106-uuid",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "UUID",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 131,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-131-uuid",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NullableStr",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 149,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-149-nullablestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NullableStr",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 172,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-172-nullablestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "OptionFromNullableStr",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 190,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-190-optionfromnullablestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "OptionFromNullableStr",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 214,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-214-optionfromnullablestr",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StrFromUnknown",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 241,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-241-strfromunknown",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "StrFromUnknown",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 271,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-271-strfromunknown",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "OptionFromOptionalStrWithNoneDefault",
-          "exportKind": "const",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 290,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-290-optionfromoptionalstrwithnonedefault",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "OptionFromOptionalStrWithNoneDefault",
-          "exportKind": "type",
-          "filePath": "src/String.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/String.ts",
-          "line": 304,
-          "anchor": "packages-foundation-modeling-schema-src-string-ts-304-optionfromoptionalstrwithnonedefault",
           "currentTags": [
             "@category",
             "@since"
@@ -58781,28 +57280,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./BigDecimal.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 33,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-33-export-from-bigdecimal-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./BufferEncoding.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
@@ -58853,28 +57330,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
           "line": 48,
           "anchor": "packages-foundation-modeling-schema-src-index-ts-48-export-from-color-index-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./CommonTextSchemas.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 53,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-53-export-from-commontextschemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -59183,28 +57638,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
           "line": 141,
           "anchor": "packages-foundation-modeling-schema-src-index-ts-141-export-from-fileextension-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./FileInfo.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 146,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-146-export-from-fileinfo-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -59695,28 +58128,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./KebabStr.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 282,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-282-export-from-kebabstr-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./LiteralKit/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
@@ -59745,28 +58156,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
           "line": 292,
           "anchor": "packages-foundation-modeling-schema-src-index-ts-292-export-from-localdate-index-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./Logs.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 297,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-297-export-from-logs-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -59943,28 +58332,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
           "line": 339,
           "anchor": "packages-foundation-modeling-schema-src-index-ts-339-export-from-options-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./PascalStr.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 344,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-344-export-from-pascalstr-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -60383,72 +58750,6 @@
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
           "line": 462,
           "anchor": "packages-foundation-modeling-schema-src-index-ts-462-export-from-slug-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./SnakeStr.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 467,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-467-export-from-snakestr-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./StatusCauseError.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 472,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-472-export-from-statuscauseerror-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./String.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 477,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-477-export-from-string-ts",
           "currentTags": [
             "@since",
             "@category"

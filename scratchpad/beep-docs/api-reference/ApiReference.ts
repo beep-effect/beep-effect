@@ -33,12 +33,12 @@ import { unified } from "unified";
 import { TypeDocProjectReflection } from "../domain/ApiReference.ts";
 import * as CodeSnippet from "./CodeSnippet.ts";
 import { CodeSnippetLanguage } from "./CodeSnippet.ts";
-import { OptionFromOptionalStrWithNoneDefault } from "@beep/schema";
 
 const $I = $ScratchpadId.create("beep-docs/api-reference/ApiReference");
 
 const OptionalSemver = SemverFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 const OptionalUrl = S.URLFromString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
 
 /**
  * Declaration kinds the module view renders with a dedicated name.
@@ -300,13 +300,13 @@ export class ApiDeclaration extends S.Class<ApiDeclaration>($I`ApiDeclaration`)(
   {
     anchor: DeclarationAnchor,
     category: S.NonEmptyString,
-    commentHtml: OptionFromOptionalStrWithNoneDefault,
-    commentMarkdown: OptionFromOptionalStrWithNoneDefault,
+    commentHtml: OptionalString,
+    commentMarkdown: OptionalString,
     examples: S.Array(ApiCodeExample),
     id: S.Int,
     kind: DeclarationKindName,
     name: S.String,
-    signature: OptionFromOptionalStrWithNoneDefault,
+    signature: OptionalString,
     since: OptionalSemver,
     sourceUrl: OptionalUrl,
     typeKind: TypeKind.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -359,8 +359,8 @@ export class ApiDeclarationGroup extends S.Class<ApiDeclarationGroup>($I`ApiDecl
  */
 export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
   {
-    commentHtml: OptionFromOptionalStrWithNoneDefault,
-    commentMarkdown: OptionFromOptionalStrWithNoneDefault,
+    commentHtml: OptionalString,
+    commentMarkdown: OptionalString,
     declarationCount: S.Int,
     groups: S.Array(ApiDeclarationGroup),
     since: OptionalSemver,
@@ -391,7 +391,7 @@ export class ApiModule extends S.Class<ApiModule>($I`ApiModule`)(
 export class ModuleReference extends S.Class<ModuleReference>($I`ModuleReference`)(
   {
     modulePath: S.String,
-    declaration: OptionFromOptionalStrWithNoneDefault,
+    declaration: OptionalString,
   },
   $I.annote("ModuleReference", {
     description: "A `module:` cross-reference split into its module path and optional declaration name.",

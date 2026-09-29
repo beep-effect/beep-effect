@@ -18,12 +18,11 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Duration, pipe } from "effect";
 import * as S from "effect/Schema";
-import { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
 

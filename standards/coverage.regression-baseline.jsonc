@@ -30483,18 +30483,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/BigDecimal.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/BinaryFileExtension.ts": {
           "lines": 100,
           "statements": 100,
@@ -30661,18 +30649,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CommonTextSchemas.ts": {
-          "lines": 66.66,
-          "statements": 66.66,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 0,
-            "functions": 3
           }
         },
         "packages/foundation/modeling/schema/src/Conformance/Conformance.annotations.ts": {
@@ -31492,18 +31468,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/FileExtension.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/FileInfo.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -32427,18 +32391,6 @@
             "functions": 4
           }
         },
-        "packages/foundation/modeling/schema/src/KebabStr.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts": {
           "lines": 97.11,
           "statements": 97.19,
@@ -32476,18 +32428,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/LocalDate/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Logs.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -32680,18 +32620,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/ParserOptions/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/PascalStr.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -32919,18 +32847,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/SchemaUtils/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -32992,18 +32908,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/pluck.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/split.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -33299,42 +33203,6 @@
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SnakeStr.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/StatusCauseError.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 87.5,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/String.ts": {
-          "lines": 86.36,
-          "statements": 86.36,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
             "branches": 0,
             "functions": 0
           }

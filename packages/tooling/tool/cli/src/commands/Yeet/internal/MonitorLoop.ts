@@ -52,7 +52,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -69,6 +68,7 @@ import {
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";

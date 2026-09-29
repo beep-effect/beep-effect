@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkEmptyStr } from "@beep/utils";
 import { flow, HashMap, HashSet, Order, Result } from "effect";
 import { dual } from "effect/Function";
@@ -34,6 +34,7 @@ import {
 const decodeURLFromStringResult = S.decodeResult(S.URLFromString);
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["is"]));
 const NonEmptyString = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
@@ -584,14 +585,14 @@ const isBinaryMediaType = (document: Document, mediaType: string, value: unknown
 };
 
 class JsonContent extends S.Class<JsonContent>($I`JsonContent`)(
-  { mediaType: NonEmptyTrimmedStr, schema: S.Unknown },
+  { mediaType: TrimmedNonEmptyString, schema: S.Unknown },
   $I.annote("JsonContent", {
     description: "Selected JSON media type and its schema.",
   })
 ) {
   static readonly new = (mediaType: string, schema: unknown): JsonContent =>
     JsonContent.make({
-      mediaType: NonEmptyTrimmedStr.make(mediaType),
+      mediaType,
       schema,
     });
 }
@@ -622,7 +623,7 @@ const isFlattenableObjectBody = (
 
 class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
@@ -642,7 +643,7 @@ class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
     explode: O.Option<boolean>
   ): PlannedField =>
     PlannedField.make({
-      name: NonEmptyTrimmedStr.make(name),
+      name,
       location,
       required,
       schema,
@@ -653,8 +654,8 @@ class PlannedField extends S.Class<PlannedField>($I`PlannedField`)(
 
 class DeclaredParameter extends S.Class<DeclaredParameter>($I`DeclaredParameter`)(
   {
-    name: NonEmptyTrimmedStr,
-    location: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
+    location: TrimmedNonEmptyString,
     parameter: UnknownRecord,
   },
   $I.annote("DeclaredParameter", {
@@ -667,8 +668,8 @@ class DeclaredParameter extends S.Class<DeclaredParameter>($I`DeclaredParameter`
     parameter: Readonly<Record<string, unknown>>
   ): DeclaredParameter =>
     DeclaredParameter.make({
-      name: NonEmptyTrimmedStr.make(name),
-      location: NonEmptyTrimmedStr.make(location),
+      name,
+      location,
       parameter,
     });
 }

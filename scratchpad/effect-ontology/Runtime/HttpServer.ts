@@ -9,7 +9,6 @@ import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
-import { UUID } from "@beep/schema/String";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   Cause,
@@ -30,7 +29,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
-import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
+import { BatchId, DocumentId, GcsUri, UUID } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
@@ -619,7 +618,7 @@ export const TimelineRouter = HttpRouter.addAll([
       }
 
       const params = yield* HttpRouter.params;
-      const id = yield* UUID.decodeUnknownEffect(params.id);
+      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
       const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
       const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
       const conflictRepo = yield* ConflictRepository;

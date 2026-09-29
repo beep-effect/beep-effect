@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, NonEmptyTrimmedStr, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Order, pipe, SchemaTransformation } from "effect";
@@ -19,12 +19,13 @@ import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSou
 import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
-const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(NonEmptyTrimmedStr);
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty());
+const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(TrimmedNonEmptyString);
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);
-const OptionalNonEmptyTrimmed = S.optionalKey(S.Union([S.String, S.Option(NonEmptyTrimmedStr)])).pipe(
+const OptionalNonEmptyTrimmed = S.optionalKey(S.Union([S.String, S.Option(TrimmedNonEmptyString)])).pipe(
   S.decodeTo(
     S.Option(S.String),
-    SchemaTransformation.transformOptional<O.Option<string>, string | O.Option<NonEmptyTrimmedStr>>({
+    SchemaTransformation.transformOptional<O.Option<string>, string | O.Option<string>>({
       decode: (value): O.Option<O.Option<string>> =>
         O.some(
           pipe(

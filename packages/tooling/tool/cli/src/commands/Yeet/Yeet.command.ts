@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -20,6 +19,7 @@ import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags
 import { readContainedFileStringNoFollow } from "../../internal/cli/FsGuards.ts";
 import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
+import { UUID } from "../../internal/schema/Uuid.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";

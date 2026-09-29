@@ -9,15 +9,15 @@ import { O } from "@beep/utils";
 import { Brand } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
-import { NonEmptyTrimmedStr } from "./String.ts";
 
 const decodeURLFromStringOption = S.decodeOption(S.URLFromString);
 const decodeUnknownURLFromStringOption = S.decodeUnknownOption(S.URLFromString);
-const isNonEmptyTrimmedStr = S.is(NonEmptyTrimmedStr);
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
+const isTrimmedNonEmptyString = S.is(TrimmedNonEmptyString);
 
 const $I = $SchemaId.create("URL");
 
-const isURLStr = (u: unknown): u is URLStr => isNonEmptyTrimmedStr(u) && O.isSome(decodeURLFromStringOption(u));
+const isURLStr = (u: unknown): u is URLStr => isTrimmedNonEmptyString(u) && O.isSome(decodeURLFromStringOption(u));
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",
@@ -42,7 +42,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  * @category validation
  * @since 0.0.0
  */
-export const URLStr = NonEmptyTrimmedStr.pipe(
+export const URLStr = TrimmedNonEmptyString.pipe(
   S.check(filterURLStr),
   S.brand("URLStr"),
   SchemaUtils.withCodecStatics(["decodeEffect"]),
@@ -72,7 +72,7 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
  * @category models
  * @since 0.0.0
  */
-export type URLStr = Brand.Branded<NonEmptyTrimmedStr, "URLStr">;
+export type URLStr = Brand.Branded<string, "URLStr">;
 
 const filterHttpsUrl = S.makeFilter(
   (input: unknown): input is `https://${string}` => {

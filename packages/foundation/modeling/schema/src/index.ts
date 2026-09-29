@@ -30,11 +30,6 @@ export * from "./AtURI.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./BigDecimal.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./BufferEncoding.ts";
 /**
  * @since 0.0.0
@@ -46,11 +41,6 @@ export * from "./Bytes.ts";
  * @category validation
  */
 export * from "./Color/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./CommonTextSchemas.ts";
 /**
  * Specification-grounded conformance models and annotation helpers.
  *
@@ -139,11 +129,6 @@ export * as FileDiff from "./FileDiff.schema.ts";
  * @category validation
  */
 export * from "./FileExtension.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./FileInfo.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -279,22 +264,12 @@ export * from "./Jsonl.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./KebabStr.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./LiteralKit/index.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./LocalDate/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Logs.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -337,11 +312,6 @@ export * from "./Opaque.ts";
  * @category validation
  */
 export * from "./Options.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./PascalStr.ts";
 /**
  * Transport-layer port number schemas and codecs.
  *
@@ -460,21 +430,6 @@ export * from "./Sint64.ts";
  * @category validation
  */
 export * from "./Slug.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./SnakeStr.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./StatusCauseError.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./String.ts";
 /**
  * @since 0.0.0
  * @category validation

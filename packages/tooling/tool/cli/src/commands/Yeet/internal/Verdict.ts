@@ -10,7 +10,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
@@ -18,6 +17,7 @@ import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { UUID } from "../../../internal/schema/Uuid.ts";
 import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
   GithubCheckFailurePolicy,

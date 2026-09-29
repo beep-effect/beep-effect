@@ -45,8 +45,7 @@ type ServiceFreeEncodeKey =
   | "encodeUnknownSync";
 
 /**
- * Exact helper registry available to {@link withCodecStatics} and
- * {@link classStatics}.
+ * Exact helper registry available to {@link withCodecStatics}.
  *
  * **Details**
  *
@@ -426,67 +425,3 @@ export const withCodecStatics: {
     keys: ValidCodecStaticKeys<Keys>
   ): SchemaWithSelectedCodecStatics<Sch, Keys>;
 } = dual(2, attachSelectedCodecStatics);
-
-function makeClassStatics<const Keys extends CodecStaticKeys, Sch extends SchemaForCodecStaticKeys<Keys>>(
-  schema: Sch,
-  keys: ValidCodecStaticKeys<Keys>
-): Readonly<SelectedCodecStatics<Sch, Keys>>;
-function makeClassStatics(schema: CodecSchema, keys: ReadonlyArray<CodecStaticKey>): Readonly<Record<string, unknown>> {
-  validateKeys(keys);
-  const statics: Record<string, unknown> = {};
-
-  for (const key of keys) {
-    staticDescriptorInstaller.install(
-      statics,
-      { [key]: codecStaticFactories[key](schema) },
-      "strict",
-      /* v8 ignore next 7 -- validated unique keys are installed into a new empty utility bag. */
-      (conflictingKey) => {
-        throw CodecStaticSelectionError.make({
-          reason: "property-conflict",
-          key: conflictingKey,
-          message: `Class codec static '${conflictingKey}' already exists in the utility bag.`,
-        });
-      }
-    );
-  }
-
-  return Object.freeze(statics);
-}
-
-/**
- * Build an exact frozen codec-helper bag for an Effect Schema class.
- *
- * **When to use**
- *
- * Use when declaring an `S.Class` or `S.TaggedClass` static initializer to keep the
- * constructor intact while providing a concise destructurable utility bag.
- *
- * **Example** (Destructure class codec helpers)
- *
- * ```ts import.meta.vitest name="Destructure class codec helpers"
- * import { $SchemaId } from "@beep/identity/packages"
- * import { classStatics } from "@beep/schema/SchemaUtils/withCodecStatics"
- * import * as S from "effect/Schema"
- *
- * const $I = $SchemaId.create("Docs")
- * class User extends S.Class<User>($I`User`)({ name: S.String }) {
- *   static readonly utils = classStatics(this, ["decodeEffect", "is"])
- * }
- *
- * const { is } = User.utils
- * is(User.make({ name: "Ada" })) // => true
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const classStatics: {
-  <const Keys extends CodecStaticKeys>(
-    keys: ValidCodecStaticKeys<Keys>
-  ): <Sch extends SchemaForCodecStaticKeys<Keys>>(schema: Sch) => Readonly<SelectedCodecStatics<Sch, Keys>>;
-  <const Keys extends CodecStaticKeys, Sch extends SchemaForCodecStaticKeys<Keys>>(
-    schema: Sch,
-    keys: ValidCodecStaticKeys<Keys>
-  ): Readonly<SelectedCodecStatics<Sch, Keys>>;
-} = dual(2, makeClassStatics);

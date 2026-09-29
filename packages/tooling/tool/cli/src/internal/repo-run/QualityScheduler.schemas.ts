@@ -11,12 +11,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
 import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { UUID } from "../schema/Uuid.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");

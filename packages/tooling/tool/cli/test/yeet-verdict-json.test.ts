@@ -1,3 +1,4 @@
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -6,7 +7,6 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";

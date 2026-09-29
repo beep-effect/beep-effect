@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   appendYeetInboxRow,
   GreptileSummary,
@@ -49,7 +50,6 @@ import {
   yeetRedSetKeyGained,
   yeetWaveRedSetKey,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";

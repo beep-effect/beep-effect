@@ -337,7 +337,7 @@ export class ProofShadowAttemptFacts extends S.Class<ProofShadowAttemptFacts>($I
  *
  * ```ts
  * import { proofShadowAttemptFacts, YeetAttemptStarted } from "@beep/repo-cli/test/Yeet"
- * import { UUID } from "@beep/schema/String"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
