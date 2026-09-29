@@ -5603,3 +5603,23 @@ migration even though the typecheck wrapper exited zero. The release effect
 now uses orDie so cleanup failure remains a visible test failure at the public
 scope boundary. Record this explicit typed-failure-to-defect transition and
 verify both ordinary cleanup and injected cleanup failure; do not ignore it.
+
+
+### Register tsconfig fixture cleanup before fallible setup
+
+The tsconfig-sync withTempRepo acquisition allocates a directory, creates its
+.git directory and changes cwd before acquireUseRelease installs cleanup.
+Either setup failure can therefore leave the allocated directory behind.
+Replace that acquisition with the existing cleanup-safe cwd constructor and
+create .git only after cleanup is registered. Verify mkdir/chdir failures as
+well as normal success, failure and interruption. This receipt records the
+source finding before a draft is applied; no reproduction is claimed yet.
+
+
+The original tsconfig helper leak is reproduced on Node and Bun: both injected
+mkdir and chdir failures leave the allocated directory present; cwd remains
+unchanged in these two original failure paths. Each control cleans up its own
+resource afterward. The extracted private replacement passes success, body
+failure, interruption, mkdir failure and chdir failure on both runtimes, with
+cwd restored and no directory left behind. Application and actual-suite
+controls remain pending while the preceding package proof runs.
