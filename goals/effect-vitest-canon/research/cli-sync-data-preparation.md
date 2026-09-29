@@ -1,5 +1,8 @@
 # Sync-data test migration preparation
 
+Status: applied; current evidence is in `cli-sync-data-runtime-proof.md`.
+The notes below preserve the preparation checkpoint.
+
 The next existing inventory target, sync-data-to-ts.test.ts, mixes eight direct
 runtime registrations with three runtimes inside HTTP fixture helpers. It also
 contains sixteen existing Effect tests, a local provideScopedLayer definition,

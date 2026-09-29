@@ -5754,5 +5754,6 @@ been registered. The migration should register directory and cwd finalizers
 incrementally and inject a .git creation failure to verify restoration. A source-extracted
 Node/Bun probe with simulated cwd/filesystem now reproduces the missing release:
 the old helper leaves cwd changed with zero removals, while incremental scoped
-acquisition restores both. Actual-suite native fault controls remain required
-after application. Receipt: cli-sync-data-preparation.md.
+acquisition restores both. After application, native-file .git setup-failure probes pass on Node and Bun
+for all eight repository cases, with cwd restored and no temporary residue.
+Receipt: cli-sync-data-runtime-proof.md.
