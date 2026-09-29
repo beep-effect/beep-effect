@@ -7,7 +7,7 @@
 
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
-import { Effect, HashMap, Path, pipe } from "effect";
+import { Effect, HashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -306,12 +306,14 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const project = yield* makeSchemaFirstProject();
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
+  const scannedFiles = A.empty<string>();
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath()));
     const owner = ownerResolver(sourceFile.getFilePath());
     appendArbitraryAndTaggedErrorEntries(entries, sourceFile, filePath, owner);
     if (isSchemaFirstExcludedFile(filePath)) continue;
+    A.appendInPlace(scannedFiles, filePath);
     appendInterfaceEntries(entries, sourceFile, filePath, owner);
     appendTypeAliasEntries(entries, sourceFile, filePath, owner);
     appendCallEntries(entries, sourceFile, filePath, owner);
@@ -322,14 +324,17 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     appendEquivalenceEntries(entries, sourceFile, filePath, owner);
   }
 
-  return SchemaFirstInventoryDocument.make({
-    version: 1,
-    generatedOn: todayYmd(),
-    scope: A.fromIterable(SchemaFirstIncludedGlobs),
-    entries: sortSchemaFirstEntries(
-      A.dedupeWith(entries, (left, right) => makeSchemaFirstEntryKey(left) === makeSchemaFirstEntryKey(right))
-    ),
-  });
+  return {
+    document: SchemaFirstInventoryDocument.make({
+      version: 1,
+      generatedOn: todayYmd(),
+      scope: A.fromIterable(SchemaFirstIncludedGlobs),
+      entries: sortSchemaFirstEntries(
+        A.dedupeWith(entries, (left, right) => makeSchemaFirstEntryKey(left) === makeSchemaFirstEntryKey(right))
+      ),
+    }),
+    scannedFiles: A.sort(scannedFiles, Order.String),
+  } as const;
 });
 
 const mergeInventory = (
@@ -478,7 +483,7 @@ const schemaFirstLintHasFailures = (
  * @since 0.0.0
  */
 export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (options: SchemaFirstLintOptions) {
-  const liveDocument = yield* scanSchemaFirstInventory();
+  const { document: liveDocument, scannedFiles } = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
   const mergedDocument = mergeInventory(liveDocument, existingDocument);
@@ -497,6 +502,9 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   }
 
   yield* SchemaFirstRender.logSchemaFirstSummary(summary);
+  if (options.reportScannedFiles) {
+    yield* SchemaFirstRender.logScannedFiles(scannedFiles);
+  }
   yield* SchemaFirstRender.logMissingEntries(findings.missingEntries);
   yield* SchemaFirstRender.logStaleEntries(findings.staleEntries);
   yield* SchemaFirstRender.logEnforcedCandidates(findings.enforcedCandidates);

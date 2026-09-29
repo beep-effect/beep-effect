@@ -345,6 +345,30 @@ describe("schema-first lint command", { concurrent: false }, () => {
       ).pipe(provideScopedLayer(testLayer))
     ));
 
+  it("reports the scanned files, leaving out excluded paths, only when asked", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeSchemaFirstSourceFixture(["export const example = 1;", ""]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/generated/Hidden.ts", [
+            "export const hidden = 1;",
+            "",
+          ]);
+          yield* writeSchemaFirstFileFixture("packages/example/src/Types.d.ts", ["export type X = 1;", ""]);
+
+          yield* runLintCommand(["schema-first"]);
+          const scannedLine = (lines: ReadonlyArray<unknown>) =>
+            A.filter(lines, (line) => P.isString(line) && Str.startsWith("[schema-first:scanned] ")(line));
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([]);
+
+          yield* runLintCommand(["schema-first", "--report-scanned-files"]);
+          expect(scannedLine(yield* TestConsole.logLines)).toEqual([
+            '[schema-first:scanned] ["packages/example/src/Example.ts"]',
+          ]);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
   it("reports untracked SFV4 numeric-domain advisories", () =>
     Effect.runPromise(
       withTempWorkingDirectory(

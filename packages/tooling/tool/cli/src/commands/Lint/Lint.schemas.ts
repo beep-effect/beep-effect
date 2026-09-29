@@ -346,6 +346,10 @@ export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`S
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
+    reportScannedFiles: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
   },
   $I.annote("SchemaFirstLintOptions", {
     description: "CLI options for schema-first inventory verification.",

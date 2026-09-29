@@ -113,6 +113,9 @@ type LaneResponses = {
 const biomeReportJson = (changed: number, unchanged: number, diagnostics: ReadonlyArray<unknown> = []) =>
   JSON.stringify({ summary: { changed, unchanged }, diagnostics });
 
+const scannedFilesLine = (files: ReadonlyArray<string>) =>
+  `[schema-first:scanned] ${JSON.stringify(A.map(files, (file) => `packages/fixture/${file}`))}`;
+
 const commandName = (command: string): string => pipe(command, Str.split("/"), A.lastNonEmpty);
 
 const readConfigArgument = (args: ReadonlyArray<string>): O.Option<string> =>
@@ -152,7 +155,7 @@ const fakeLawLayer = (
         const response: LaneResponse = Match.value(name).pipe(
           Match.when("biome", () => responses.biome ?? { stdout: biomeReportJson(0, 1) }),
           Match.when("tsgo", () => responses.tsgo ?? {}),
-          Match.orElse(() => responses.bun ?? {})
+          Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
         );
         const snapshotConfig = pipe(
           readConfigArgument(command.args),
@@ -189,7 +192,8 @@ const runFakeLaw = (
   responses: LaneResponses,
   prepareRepo: (
     repoRoot: string
-  ) => Effect.Effect<void, unknown, FileSystem.FileSystem | Path.Path> = writeRepoBiomeConfig
+  ) => Effect.Effect<void, unknown, FileSystem.FileSystem | Path.Path> = writeRepoBiomeConfig,
+  sourceFiles: ReadonlyArray<string> = ["src/Contact.ts"]
 ) =>
   Effect.gen(function* () {
     const spawned = yield* Ref.make<ReadonlyArray<string>>([]);
@@ -201,8 +205,10 @@ const runFakeLaw = (
         const fixtureDir = yield* fs.makeTempDirectoryScoped();
         const repoRoot = yield* fs.makeTempDirectoryScoped();
         yield* prepareRepo(repoRoot);
-        yield* writeText(path.join(fixtureDir, "src", "Contact.ts"), "export const contact = 1;\n");
-        return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, ["src/Contact.ts"]) };
+        yield* Effect.forEach(sourceFiles, (file) =>
+          writeText(path.join(fixtureDir, file), "export const contact = 1;\n")
+        );
+        return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles) };
       })
     ).pipe(provideLayer(fakeLawLayer(spawned, configs, responses)));
     return { ...law, commands: yield* Ref.get(spawned), configs: yield* Ref.get(configs) };
@@ -415,6 +421,69 @@ describe("agent-effectiveness eval scorer", () => {
     }).pipe(provideTestLayer)
   );
 
+  it.effect("counts every staged file a lane did not measure as an unmeasured-file violation", () =>
+    Effect.gen(function* () {
+      const sourceFiles = ["src/Contact.ts", "src/generated/impl.ts", "src/impl.d.ts", "src/impl.js"];
+      const { configs, law } = yield* runFakeLaw(
+        {
+          bun: { stdout: scannedFilesLine(["src/Contact.ts"]) },
+          biome: { stdout: biomeReportJson(0, 3) },
+        },
+        writeRepoBiomeConfig,
+        sourceFiles
+      );
+
+      expectMeasured(law);
+      expect(A.map(law.lanes, (report) => [report.lane, report.filesProcessed])).toEqual([
+        ["schema-first", 1],
+        ["tsgo", 2],
+        ["biome", 3],
+      ]);
+      const unmeasured = (violations: ReadonlyArray<{ readonly ruleId: string; readonly file: string }>) =>
+        A.map(
+          A.filter(violations, (violation) => violation.ruleId === "unmeasured-file"),
+          (violation) => violation.file
+        );
+      expect(unmeasured(law.schemaFirst)).toEqual(["src/generated/impl.ts", "src/impl.d.ts", "src/impl.js"]);
+      expect(unmeasured(law.tsgo)).toEqual(["src/impl.d.ts", "src/impl.js"]);
+      expect(unmeasured(law.biome)).toEqual(["."]);
+      expect(A.map(law.biome, (violation) => violation.message)).toEqual([
+        "biome did not measure a staged source file: it processed 3 of 4.",
+      ]);
+
+      const [biomeConfig, tsgoConfig] = yield* Effect.all(
+        A.map(configs, (text) => S.decodeUnknownEffect(S.UnknownFromJsonString)(text))
+      );
+      expect(biomeConfig).toMatchObject({ files: { maxSize: 1024 * 1024 * 1024 } });
+      expect(tsgoConfig).toMatchObject({
+        files: ["packages/fixture/src/Contact.ts", "packages/fixture/src/generated/impl.ts"],
+      });
+    }).pipe(provideTestLayer)
+  );
+
+  it.effect("reports a schema-first run that did not list its scanned files as an environment failure", () =>
+    Effect.gen(function* () {
+      const { law } = yield* runFakeLaw({ bun: { stdout: "[schema-first] live_entries=0" } });
+
+      expect(
+        pipe(
+          laneReport(law, "schema-first"),
+          O.map((report) => [report.status, report.filesProcessed, report.environmentDiagnostics])
+        )
+      ).toEqual(
+        O.some([
+          "environment-failure",
+          0,
+          [
+            "schema-first lint exited 0 without reporting scanned files: [schema-first] live_entries=0",
+            "schema-first processed no files.",
+          ],
+        ])
+      );
+      expect(law.schemaFirst).toEqual([]);
+    }).pipe(provideTestLayer)
+  );
+
   it.effect("reports lanes that could not measure the fixture as environment failures", () =>
     Effect.gen(function* () {
       const { law } = yield* runFakeLaw({
@@ -604,6 +673,42 @@ describe("agent-effectiveness eval scorer", () => {
             JSON.stringify({ root: true, formatter: { enabled: false }, linter: { enabled: false } })
           );
           expect(yield* score).toEqual(baseline);
+        })
+      ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "measures code moved into JavaScript, declaration files, or excluded paths with the real lanes",
+    () =>
+      withTempFixture(
+        Effect.fnUntraced(function* (fixtureDir) {
+          const path = yield* Path.Path;
+          const repoRoot = yield* findRepoRoot();
+          yield* writeText(
+            path.join(fixtureDir, "src", "Contact.ts"),
+            'export * from "./impl.js";\nexport * from "./generated/hidden.js";\n'
+          );
+          yield* writeText(path.join(fixtureDir, "src", "impl.js"), "export var contact = 1;\n");
+          yield* writeText(path.join(fixtureDir, "src", "impl.d.ts"), "export declare const contact: Missing;\n");
+          yield* writeText(path.join(fixtureDir, "src", "generated", "hidden.ts"), "export const hidden = 1;\n");
+          const sourceFiles = ["src/Contact.ts", "src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"];
+
+          const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+
+          expectMeasured(law);
+          expect(A.map(law.lanes, (report) => report.filesProcessed)).toEqual([1, 2, 4]);
+          const unmeasured = (violations: ReadonlyArray<{ readonly ruleId: string; readonly file: string }>) =>
+            A.map(
+              A.filter(violations, (violation) => violation.ruleId === "unmeasured-file"),
+              (violation) => violation.file
+            );
+          expect(unmeasured(law.schemaFirst)).toEqual(["src/generated/hidden.ts", "src/impl.d.ts", "src/impl.js"]);
+          expect(unmeasured(law.tsgo)).toEqual(["src/impl.d.ts", "src/impl.js"]);
+          expect(A.map(law.biome, (violation) => [violation.file, violation.ruleId])).toContainEqual([
+            "src/impl.js",
+            "lint/suspicious/noVar",
+          ]);
         })
       ),
     { timeout: 120_000 }

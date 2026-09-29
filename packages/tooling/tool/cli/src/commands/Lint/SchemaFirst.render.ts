@@ -10,6 +10,7 @@ import * as O from "effect/Option";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
+  renderSchemaFirstScannedFilesLine,
   SchemaFirstPolicyFinding,
 } from "../../internal/quality/SchemaFirstPolicyFinding.ts";
 import { missingEntryRemediation } from "./internal/SchemaFirstPolicy.ts";
@@ -222,6 +223,10 @@ const logActiveAdvisories = Effect.fn("logActiveAdvisories")(function* (
   }
 });
 
+const logScannedFiles = Effect.fn("logScannedFiles")(function* (files: ReadonlyArray<string>) {
+  yield* Console.log(yield* renderSchemaFirstScannedFilesLine(files));
+});
+
 /**
  * Internal rendering adapter for schema-first lint output.
  *
@@ -239,6 +244,7 @@ export const SchemaFirstRender = {
   logEnforcedCandidates,
   logLiteralKitConstAssertionViolations,
   logMissingEntries,
+  logScannedFiles,
   logSchemaFirstSummary,
   logStaleEntries,
   makeSchemaFirstLintSummary,

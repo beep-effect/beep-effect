@@ -18,7 +18,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { formatCommandLine, runCapturedStreams } from "../../../internal/process/index.ts";
-import { decodeSchemaFirstPolicyFindingLine } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
+import {
+  decodeSchemaFirstPolicyFindingLine,
+  decodeSchemaFirstScannedFilesLine,
+} from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import { AgentEffectivenessEvalLaneReport, AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
 import { LawEvaluation, sortViolations } from "./EvalScoring.ts";
@@ -36,6 +39,9 @@ const BIOME_CONFIG_FILE = "biome.json";
 const REPO_TSCONFIG_BASE_FILE = "tsconfig.base.json";
 const REPO_BIOME_CONFIG_FILE = "biome.jsonc";
 const ENVIRONMENT_EXCERPT_LENGTH = 2000;
+const BIOME_MAX_FILE_SIZE = 1024 * 1024 * 1024;
+const UNMEASURED_FILE_RULE_ID = "unmeasured-file";
+const BIOME_SHORTFALL_FILE = ".";
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeJsonObjectOption = S.decodeUnknownOption(S.JsonObject);
@@ -44,6 +50,9 @@ const decodeRepoBiomeConfig = decodeJsoncTextAs(S.JsonObject);
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
 const excerpt: (value: string) => string = Str.slice(0, ENVIRONMENT_EXCERPT_LENGTH);
+const isDeclarationFile = (file: string): boolean => /\.d\.(?:[cm]?ts|[^./]+\.ts)$/u.test(file);
+const isTypeScriptFile = (file: string): boolean => /\.(?:[cm]?ts|tsx)$/u.test(file);
+const isTypeCheckedFile = (file: string): boolean => isTypeScriptFile(file) && !isDeclarationFile(file);
 
 class SubprocessResult extends S.Class<SubprocessResult>($I`SubprocessResult`)(
   {
@@ -124,6 +133,33 @@ const laneOutcome = (
 
 const unrunnableLane = (lane: AgentEffectivenessEvalLawLane, reason: string): LawLaneOutcome =>
   laneOutcome(lane, 0, A.empty(), [reason]);
+
+const unmeasuredFileViolation = (
+  lane: AgentEffectivenessEvalLawLane,
+  file: string,
+  message: string
+): AgentEffectivenessEvalViolation =>
+  AgentEffectivenessEvalViolation.make({ source: lane, ruleId: UNMEASURED_FILE_RULE_ID, file, line: 1, message });
+
+/**
+ * One violation per staged source file a lane did not measure, so moving code
+ * where a lane cannot see it never reads as a clean pass.
+ *
+ * @param lane - Lane that skipped the files.
+ * @param sourceFiles - Every staged fixture source file.
+ * @param measuredFiles - Staged files the lane actually measured.
+ * @param reason - Why the lane skipped them.
+ * @returns Violations for the staged files missing from `measuredFiles`.
+ */
+const unmeasuredFileViolations = (
+  lane: AgentEffectivenessEvalLawLane,
+  sourceFiles: ReadonlyArray<string>,
+  measuredFiles: ReadonlyArray<string>,
+  reason: string
+): ReadonlyArray<AgentEffectivenessEvalViolation> =>
+  A.map(A.difference(sourceFiles, measuredFiles), (file) =>
+    unmeasuredFileViolation(lane, file, `${lane} did not measure this staged source file: ${reason}`)
+  );
 
 const runSubprocess = Effect.fn("AgentEffectivenessEvalScorer.runSubprocess")(function* (
   command: string,
@@ -221,6 +257,8 @@ const tsgoCompilerConfig = (repoRoot: string, sourceFiles: ReadonlyArray<string>
     declaration: false,
     declarationMap: false,
     sourceMap: false,
+    // Covers node_modules only in effect: every staged declaration file is an
+    // unmeasured tsgo file (see measureTsgo), never a silent pass.
     skipLibCheck: true,
     rootDir: `./${LAW_SANDBOX_FIXTURE_DIR}`,
     target: "ES2025",
@@ -229,15 +267,19 @@ const tsgoCompilerConfig = (repoRoot: string, sourceFiles: ReadonlyArray<string>
     lib: ["ESNext", "ESNext.Disposable"],
     types: ["node"],
   },
-  files: A.map(sourceFiles, (file) => `${LAW_SANDBOX_FIXTURE_PREFIX}${file}`),
+  files: pipe(
+    sourceFiles,
+    A.filter(isTypeCheckedFile),
+    A.map((file) => `${LAW_SANDBOX_FIXTURE_PREFIX}${file}`)
+  ),
 });
 
 /**
  * Stage a fixture's source files in a scorer-owned sandbox.
  *
- * Only the `.ts`/`.tsx` source files are copied, so fixture-local tool
- * configuration (`tsconfig.json`, `biome.json`, `package.json`) never reaches a
- * lane. The sandbox links the repository's `node_modules` so package imports
+ * Only the fixture's source files (TypeScript, JavaScript, and declaration
+ * files) are copied, so fixture-local tool configuration (`tsconfig.json`,
+ * `biome.json`, `package.json`) never reaches a lane. The sandbox links the repository's `node_modules` so package imports
  * resolve wherever the fixture copy lives, and carries the schema-first
  * wrapper `tsconfig.json` plus the scorer's own tsgo configuration.
  */
@@ -309,19 +351,42 @@ const parseSchemaFirstViolations: (output: string) => ReadonlyArray<AgentEffecti
   A.map(schemaFirstIssueToViolation)
 );
 
+const parseSchemaFirstScannedFiles: (output: string) => O.Option<ReadonlyArray<string>> = flow(
+  Str.split("\n"),
+  A.findFirst(flow(Str.trim, decodeSchemaFirstScannedFilesLine)),
+  O.map(A.map(fixtureRelativeFile))
+);
+
 const measureSchemaFirst =
   (sourceFiles: ReadonlyArray<string>) =>
   (result: SubprocessResult): LawLaneOutcome => {
     const violations = parseSchemaFirstViolations(result.output);
-    const unstructuredFailure = result.exitCode !== 0 && A.isReadonlyArrayEmpty(violations);
-    return laneOutcome(
-      "schema-first",
-      A.length(sourceFiles),
-      violations,
-      unstructuredFailure
-        ? [`schema-first lint exited ${result.exitCode} without structured findings: ${excerpt(result.output)}`]
-        : A.empty()
-    );
+    return O.match(parseSchemaFirstScannedFiles(result.output), {
+      onNone: () =>
+        laneOutcome("schema-first", 0, violations, [
+          `schema-first lint exited ${result.exitCode} without reporting scanned files: ${excerpt(result.output)}`,
+        ]),
+      onSome: (scannedFiles) => {
+        const measuredFiles = A.intersection(sourceFiles, scannedFiles);
+        const unstructuredFailure = result.exitCode !== 0 && A.isReadonlyArrayEmpty(violations);
+        return laneOutcome(
+          "schema-first",
+          A.length(measuredFiles),
+          A.appendAll(
+            violations,
+            unmeasuredFileViolations(
+              "schema-first",
+              sourceFiles,
+              measuredFiles,
+              "schema-first scans only TypeScript sources outside excluded paths (generated, test, docs, build, .d.ts, ...)."
+            )
+          ),
+          unstructuredFailure
+            ? [`schema-first lint exited ${result.exitCode} without structured findings: ${excerpt(result.output)}`]
+            : A.empty()
+        );
+      },
+    });
   };
 
 const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSchemaFirst")(function* (
@@ -334,7 +399,7 @@ const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSche
   return yield* runLaneSubprocess(
     "schema-first",
     "bun",
-    ["run", cliEntrypoint, "lint", "schema-first"],
+    ["run", cliEntrypoint, "lint", "schema-first", "--report-scanned-files"],
     sandbox.root,
     measureSchemaFirst(sourceFiles)
   );
@@ -404,10 +469,19 @@ const measureTsgo =
       )
     );
     const silentFailure = result.exitCode !== 0 && A.isReadonlyArrayEmpty(diagnosticLines);
+    const checkedFiles = A.filter(sourceFiles, isTypeCheckedFile);
     return laneOutcome(
       "tsgo",
-      A.length(sourceFiles),
-      violations,
+      A.length(checkedFiles),
+      A.appendAll(
+        violations,
+        unmeasuredFileViolations(
+          "tsgo",
+          sourceFiles,
+          checkedFiles,
+          "tsgo type-checks only TypeScript implementation files; JavaScript and declaration files are not checked."
+        )
+      ),
       silentFailure
         ? A.append(
             environmentDiagnostics,
@@ -505,10 +579,21 @@ const measureBiome =
           biomeDiagnosticOutcome(sourceFiles)
         );
         const filesProcessed = report.summary.changed + report.summary.unchanged;
+        const shortfall = pipe(
+          sourceFiles,
+          A.drop(filesProcessed),
+          A.map(() =>
+            unmeasuredFileViolation(
+              "biome",
+              BIOME_SHORTFALL_FILE,
+              `biome did not measure a staged source file: it processed ${filesProcessed} of ${A.length(sourceFiles)}.`
+            )
+          )
+        );
         return laneOutcome(
           "biome",
           filesProcessed,
-          violations,
+          A.appendAll(violations, shortfall),
           filesProcessed === 0 && Str.isNonEmpty(result.stderr)
             ? A.append(environmentDiagnostics, excerpt(result.stderr))
             : environmentDiagnostics
@@ -557,8 +642,9 @@ const withAbsoluteOverridePlugins =
  *
  * The repository rules, formatter, and assists carry over unchanged. Plugin
  * paths become absolute (Biome resolves them against the config directory),
- * VCS integration is off (the sandbox is not a checkout), and `files.includes`
- * names only the staged fixture directory.
+ * VCS integration is off (the sandbox is not a checkout), `files.includes`
+ * names only the staged fixture directory, and `files.maxSize` is raised so no
+ * staged file is skipped for its size.
  *
  * @param repoConfig - Parsed repository Biome configuration.
  * @param resolvePlugin - Resolves a repository-relative plugin path to an absolute path.
@@ -568,7 +654,7 @@ const sandboxBiomeConfig = (repoConfig: S.JsonObject, resolvePlugin: (plugin: st
   ...pipe(repoConfig, withAbsolutePlugins(resolvePlugin), withAbsoluteOverridePlugins(resolvePlugin)),
   root: true,
   vcs: { enabled: false },
-  files: { includes: [`${LAW_SANDBOX_FIXTURE_PREFIX}**`] },
+  files: { includes: [`${LAW_SANDBOX_FIXTURE_PREFIX}**`], maxSize: BIOME_MAX_FILE_SIZE },
 });
 
 const writeSandboxBiomeConfig = Effect.fn("AgentEffectivenessEvalScorer.writeSandboxBiomeConfig")(function* (
@@ -639,6 +725,12 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * else (a tool that did not start, a config that did not load, zero files
  * processed, a diagnostic outside the staged sources) is recorded as an
  * environment failure in that lane's report instead.
+ *
+ * Every staged file a lane did not measure is one `unmeasured-file` violation
+ * in that lane: JavaScript and declaration files for tsgo, files outside the
+ * schema-first scan (excluded paths, `.d.ts`, JavaScript) for schema-first,
+ * and any shortfall between Biome's processed count and the staged count.
+ * `filesProcessed` counts only what the lane measured.
  *
  * Schema-first and Biome run concurrently, followed by tsgo.
  *

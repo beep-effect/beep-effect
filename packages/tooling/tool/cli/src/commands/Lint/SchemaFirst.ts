@@ -384,8 +384,12 @@ export const lintSchemaFirstCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")
     ),
+    reportScannedFiles: Flag.Boolean("report-scanned-files").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the files the scan ran its detectors over as one [schema-first:scanned] JSON line")
+    ),
   },
-  Effect.fn(function* ({ write }) {
-    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write }));
+  Effect.fn(function* ({ write, reportScannedFiles }) {
+    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, reportScannedFiles }));
   })
 ).pipe(Command.withDescription("Verify the repo-wide schema-first inventory baseline"));
