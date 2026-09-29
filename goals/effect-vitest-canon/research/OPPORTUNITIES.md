@@ -5477,3 +5477,9 @@ both Node and Bun despite all 28 tests passing. Each run used a dedicated
 `TMPDIR` under the private task cache; the harness counted the residue and
 removed its own temporary root afterward. Source hashes stayed stable. The
 four success-only cleanup sites still need failure/interruption controls.
+
+The packet-core repair now passes all 28 actual tests without temporary residue
+on either runtime. Actual-suite failure and self-interruption probes verify
+cleanup in all four resource-owning cases on both runtimes; all six allocation
+sites are covered by the success runs. Probe changes are removed. The root
+ratchet passes without baseline changes; full package proof remains pending.
