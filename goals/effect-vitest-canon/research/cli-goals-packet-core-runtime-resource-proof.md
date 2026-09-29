@@ -39,5 +39,6 @@ reconciliation closes 25 existing rows: 23 runtime rows credited to bbf8459571
 and two property/checkEffect rows credited to their earlier b1aa7e320c migration.
 No additional current occurrences are needed. The native-platform judgment
 remains open. The public ledger-lineage receipt records these mappings.
-Full CLI package proof will cover this batch together with the next focused
-CLI batch; it remains pending.
+Full grouped CLI package verification passed for source 05440996f6: audit
+778.0 seconds and docgen 29.9 seconds. This covers both packet-core and
+effect-import migrations. Package source stayed unchanged throughout the proof.

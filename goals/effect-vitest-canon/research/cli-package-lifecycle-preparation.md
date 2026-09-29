@@ -42,3 +42,8 @@ execution still must verify native subprocess and transitive service behavior.
 At this preparation checkpoint, none of the three source files has changed.
 Draft typechecks, actual execution, repair controls, final ratchet and grouped
 package proof remain pending until the previous package proof is terminal.
+
+The two private create constructors now pass Node/Bun controls for success,
+body failure, interruption, chdir failure and mkdir failure, always restoring
+cwd and removing the directory. These are draft-only controls; after applying
+the guarded source changes, re-extract the actual constructors and repeat them.

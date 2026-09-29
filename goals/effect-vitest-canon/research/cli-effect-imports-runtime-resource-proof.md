@@ -36,8 +36,8 @@ current test titles. The two removed helpers also retain exact occurrence
 fingerprints and evidence from the older census. The native-platform judgment
 remains open. All 24 historical runtime/helper rows are now attributed to
 05440996f6; there are no additional current rows. The public ledger-lineage
-receipt records runtime mappings and exact helper evidence/fingerprints. Full CLI package
-verification will cover this batch and the packet-core migration together;
-that grouped proof remains pending at source 05440996f6. The commit hook
-only sorted the named Effect import list after focused checks; the grouped
-proof runs the committed source.
+receipt records runtime mappings and exact helper evidence/fingerprints. Full grouped CLI package verification passed for source 05440996f6: audit
+778.0 seconds and docgen 29.9 seconds. This covers both packet-core and
+effect-import migrations. Package source stayed unchanged throughout the proof.
+The commit hook only sorted the named Effect import list after focused
+checks; the grouped proof ran the committed source.

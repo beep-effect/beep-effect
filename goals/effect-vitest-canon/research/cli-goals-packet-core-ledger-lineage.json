@@ -433,7 +433,7 @@
       "afterMatches": []
     }
   ],
-  "fullPackageProof": "pending grouped CLI proof",
+  "fullPackageProof": "Passed grouped CLI proof for source 05440996f6: audit 778.0 seconds, docgen 29.9 seconds; package source unchanged.",
   "counts": {
     "open": 1834,
     "fixed": 1649,
