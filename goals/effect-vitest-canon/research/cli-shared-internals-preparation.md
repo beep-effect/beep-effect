@@ -49,3 +49,9 @@ runSync expressions inside assertions until that intended boundary change was
 explicitly normalized. Private receipts: cli-shared-internals-proposal.json
 and cli-shared-internals-draft-assertions.json. Runtime proof, resource probes,
 types and inventory lineage reconciliation remain required before closure.
+
+The draft preserves all 44 static test names and registration options. A
+syntax-only detector comparison finds ten runtime, eight provider, one wrapper
+and one hook-timeout finding before the draft, and no findings after it. The
+shared layer now has an explicit ten-second hook timeout. This is draft
+evidence only: it closes no inventory row and does not replace runtime proof.

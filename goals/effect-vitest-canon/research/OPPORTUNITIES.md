@@ -5767,3 +5767,13 @@ trailing CommaToken within a SyntaxList; all assertions remain compared. A share
 parity checker should encode this normalization, retain negative controls for
 changed arguments/operators, and avoid hand-copying check scripts between waves.
 Receipt: cli-portfolio-guard-runtime-proof.md.
+
+## PR closeout suggests unavailable reviewer score requirements
+
+While repairing PR 1323, Yeet suggested closeout with a required Greptile 5/5
+score and zero issues. The PR has no Greptile review, so that command generated
+two blocking unknown-value reports despite zero actionable review threads.
+Closeout with the actual review-comment requirement succeeds while CI remains
+pending. Derive score-specific suggestions from the configured reviewer or
+observed review evidence, rather than suggesting an unavailable integration.
+No CI or unresolved-thread gate was relaxed.
