@@ -1849,7 +1849,7 @@ layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check")
     it.effect("does not compare a stale inventory after the Turbo inventory task fails", () =>
       Effect.gen(function* () {
         const result = yield* runCiLane("jsdoc-ratchet", baseOptions).pipe(Effect.exit);
-        assertTrue(Exit.isFailure(result));
+        result.pipe(Exit.isFailure, assertTrue);
         expect(failedInventoryCommands).toHaveLength(1);
         expect(failedInventoryCommands[0]).toContain("cache execute -- run jsdoc:inventory:check");
       })

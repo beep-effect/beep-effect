@@ -5061,3 +5061,13 @@ original whole-cohort timeout or final package acceptance.
   expansion. Targeted Fallow audit/health and regression tests pass. Running the
   affected Fallow gates before publishing this production repair would have
   shortened the feedback loop. Receipts: `pr1323-fallow-fix-*`.
+
+## PR 1323: keep CI-only console repairs available at the checkpoint
+
+The frozen PR retained three CI console failures and 35 Effect diagnostic
+failures while their verified repairs lived on the follow-up branch. Coverage
+repeated the same console failures. The repair now ports only the required
+changes into the checkpoint. Future checkpoint freezes should distinguish
+new migration work from fixes required to keep that checkpoint mergeable.
+Receipt: `research/pr1323-ci-repair.md`; hosted jobs 109092814626,
+109092814817 and 109092814735.

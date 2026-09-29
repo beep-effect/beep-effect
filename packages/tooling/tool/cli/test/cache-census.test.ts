@@ -149,7 +149,7 @@ describe("reviewed cache activation projection", () => {
           const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
             Effect.result
           );
-          assertTrue(Result.isFailure(result));
+          result.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(result))
             expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
           return true;
@@ -198,7 +198,7 @@ describe("reviewed cache activation projection", () => {
         const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
           Effect.result
         );
-        assertTrue(Result.isFailure(result));
+        result.pipe(Result.isFailure, assertTrue);
         if (Result.isFailure(result))
           expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
       }

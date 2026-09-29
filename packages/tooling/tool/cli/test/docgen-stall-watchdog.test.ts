@@ -47,7 +47,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         })
       );
 
-      assertTrue(Result.isFailure(outcome));
+      outcome.pipe(Result.isFailure, assertTrue);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -65,7 +65,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         })
       );
 
-      assertTrue(Result.isFailure(outcome));
+      outcome.pipe(Result.isFailure, assertTrue);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -95,7 +95,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         )
       );
 
-      assertTrue(Result.isFailure(outcome));
+      outcome.pipe(Result.isFailure, assertTrue);
       const diagnostics = A.join(
         A.filter(
           A.filter(yield* TestConsole.logLines, P.isString),

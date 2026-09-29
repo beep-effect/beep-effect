@@ -44,18 +44,17 @@ const environmentVariable = (name: string, value: string | undefined) =>
         else Bun.env[name] = previous;
       })
   );
-const warmEnvironment = (
+const warmEnvironment = Effect.fn("warmEnvironment")(function* (
   values: Readonly<{
     readonly TURBO_API: string | undefined;
     readonly TURBO_TOKEN: string | undefined;
     readonly TURBO_TEAM: string | undefined;
   }>
-) =>
-  Effect.gen(function* () {
-    yield* environmentVariable("TURBO_API", values.TURBO_API);
-    yield* environmentVariable("TURBO_TOKEN", values.TURBO_TOKEN);
-    yield* environmentVariable("TURBO_TEAM", values.TURBO_TEAM);
-  });
+) {
+  yield* environmentVariable("TURBO_API", values.TURBO_API);
+  yield* environmentVariable("TURBO_TOKEN", values.TURBO_TOKEN);
+  yield* environmentVariable("TURBO_TEAM", values.TURBO_TEAM);
+});
 const validWarmEnvironment = {
   TURBO_API: "https://cache.example.test",
   TURBO_TOKEN: "fixture-write-token",
