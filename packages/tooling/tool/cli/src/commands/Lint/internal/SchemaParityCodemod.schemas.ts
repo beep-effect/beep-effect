@@ -22,8 +22,9 @@ const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemod.schemas
  * **Details**
  *
  * Each identifier names one entry in the engine's rule registry. P2 of
- * `goals/effect-schema-parity` ships `literal-kit-facets`; later retirement
- * groups add identifiers here and register a rule under the same id.
+ * `goals/effect-schema-parity` ships `literal-kit-facets` and P3 group C adds
+ * `unknown-json-retirement` and `opaque-record-retirement`; later retirement groups add identifiers here and
+ * register a rule under the same id.
  *
  * **Example** (Check a rule id)
  *
@@ -36,7 +37,11 @@ const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemod.schemas
  * @category models
  * @since 0.0.0
  */
-export const SchemaParityCodemodRuleId = LiteralKit(["literal-kit-facets"]).pipe(
+export const SchemaParityCodemodRuleId = LiteralKit([
+  "literal-kit-facets",
+  "unknown-json-retirement",
+  "opaque-record-retirement",
+]).pipe(
   $I.annoteSchema("SchemaParityCodemodRuleId", {
     description: "Identifier of a registered schema-parity codemod rule.",
   })
