@@ -18,12 +18,12 @@ Never fabricate a URL; cite the on-disk section when none exists.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `inv-role-a` | Role A schema surfaces (14 `.ts` modules) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `unstable/schema/*`, `unstable/arbitrary/*` (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
+| `inv-role-a` | Role A schema surfaces (24 modules (12 root + 9 schema/** + 3 internal/schema provenance-only)) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `schema/*` (was `unstable/schema/*`), root `Arbitrary.ts` (was `unstable/arbitrary/*`) (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
 | `role-b` | Role B idiom exemplars (39 modules) | Effect-TS/effect | `explorations/effect-schema-parity/CAPTURE.md` module list; `research/idiom-role-b.json` | idiom rubric; six may replace local concepts (group G) | reference |
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `explorations/effect-schema-parity/research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
 | `perf` | `packages/effect/typeperf/suites/schema`, `runtimeperf/suites/schema` | Effect-TS/effect | `explorations/effect-schema-parity/research/performance-baseline.md` | measurement | port-with-attribution (harness shape only, P5) |
-| `inventory` | `schema-inventory/v1` rows, 2,105 over 14 modules | this repo (prototype) | `explorations/effect-schema-parity/research/inventory/*.jsonl`, contract in `inventory/README.md` | knowledge layer | MOVE to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/` (P1) |
+| `inventory` | `schema-inventory/v1` rows, 2,105 over 14 modules | this repo (prototype) | `explorations/effect-schema-parity/research/inventory/*.jsonl`, contract in `inventory/README.md` | knowledge layer | MOVE to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/` (P1) |
 | `tools` | inventory generator and verifier | this repo (prototype) | `explorations/effect-schema-parity/research/tools/schema-inventory.ts`, `verify-schema-inventory.ts` | knowledge layer | MOVE into repo-cli (P1) |
 
 **How these inform implementation:** Role A rows are the adoption oracle for
@@ -36,7 +36,7 @@ become the P1 fixture and command.
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| Effect-TS/effect (`main` @ `51d4a2f08a`, local `.repos/effect` -> `$HOME/YeeBois/dev/effect`) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; direction is reverse (delete repo code, consume upstream), so nothing is vendored except the typeperf harness shape | Schema surfaces (Role A) as adoption targets; six Role B modules as group-G targets; `SCHEMA.md` and `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
+| Effect-TS/effect (`inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, main snapshot, rc.118 line, from the root `package.json` catalog; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; direction is reverse (delete repo code, consume upstream), so nothing is vendored except the typeperf harness shape | Schema surfaces (Role A) as adoption targets; six Role B modules as group-G targets; `SCHEMA.md` and `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
 
 ## 3. External research sources
 
@@ -52,7 +52,7 @@ Verified by fetch on 2026-09-12 (each appears in the exploration's
 
 Dead or superseded (do not cite): https://effect-ts-effect-smol.mintlify.app/migration/schema (404 on 2026-09-12).
 
-Local-only (cite the path): the graft index at `$HOME/YeeBois/dev/effect/graft/`; the hint list in `explorations/effect-schema-parity/CAPTURE.md`.
+Local-only (cite the path): the nightly graft graph of the reference workspace `.repos/effect-workspace` -> `$HOME/YeeBois/references/effect`; the hint list in `explorations/effect-schema-parity/CAPTURE.md`.
 
 ## 4. In-repo capability references
 
@@ -63,7 +63,7 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
 |-------|------|-------------|
 | Schema-first lint (detectors, policy, project, scan, store, render) | `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirst*.ts`, `commands/Lint/SchemaFirst.render.ts` | extend (`SFV4-*` rules for F03, F13, F24; delete F26 rule) |
 | Lint schemas (rule domain `:104`, line-keyed key `:582`, effect-vitest line-free identity `:1292`) | `packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts` | extend |
-| Effect-vitest lint, store, pin check, fixture layout | `commands/Lint/internal/EffectVitest*.ts`, `test/fixtures/effect-vitest-rc115/` | reuse pattern (P1); extend `verifyEffectVitestPin` to sha + digest |
+| Effect-vitest lint, store, pin check, fixture layout | `commands/Lint/internal/EffectVitest*.ts`, `test/fixtures/effect-vitest-rc118/` | reuse pattern (P1); extend `verifyEffectVitestPin` to sha + digest |
 | Shared ratchet | `packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts:71`, `RatchetLifecycle.ts:67` | reuse |
 | Artifact IO adapters | `packages/tooling/tool/cli/src/internal/artifacts/index.ts` | reuse |
 | ts-morph project and rewrite pipeline | `commands/Lint/internal/SchemaFirstProject.ts:42`, `commands/Quality/internal/JSDocMigrateApply.ts:578`, `ts-morph` dependency | reuse (codemod engine); rewrite rules NET-NEW |
@@ -73,9 +73,9 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
 | Deprecation doctrine, PGlite precedent | `standards/architecture/11-evolution-and-deprecation.md`, `standards/architecture/DECISIONS.md:580` | extend (P0 entry) |
 | `@beep/schema` concept modules (137) | `packages/foundation/modeling/schema/src` | retire 50 / Role B retire 6 / adapt 4 (LiteralKit, MappedLiteralKit, SchemaUtils, Float) / keep 77 |
 | LiteralKit, MappedLiteralKit | `.../schema/src/LiteralKit/LiteralKit.schema.ts`, `.../MappedLiteralKit/MappedLiteralKit.schema.ts` | ADAPT: trim four facets, drop `enumMapping`, override `rebuild` (P2) |
-| SchemaUtils | `.../schema/src/SchemaUtils/withCodecStatics.ts:420`, `collectAnnotationsAt.ts:149` | ADAPT after `goals/schema-utils-selective-codec-statics` merges (P5) |
+| SchemaUtils | `.../schema/src/SchemaUtils/withCodecStatics.ts:420`, `collectAnnotationsAt.ts:149` | ADAPT after `goals/schema-utils-selective-codec-statics` merges (P5; met by PR #927, 2026-08-31) |
 | Tracked generated baselines | `standards/schema-first.inventory.jsonc`, `standards/schema-catalog.generated.jsonc`, `standards/coverage.regression-baseline.jsonc`, `standards/jsdoc-documentation.inventory.md` | regenerate per PR |
-| Inventory generator command and fixture | proposed under `commands/Lint/`, `test/fixtures/effect-schema-rc115/` | NET-NEW command from the prototype (P1) |
+| Inventory generator command and fixture | proposed under `commands/Lint/`, `test/fixtures/effect-schema-rc118/` | NET-NEW command from the prototype (P1) |
 | Boundary table, facet census gate, lane prompt templates | `SPEC.md`, `ops/prompts/` | NET-NEW (procedure and prose) |
 
 ## 5. Cross-links & provenance
@@ -87,8 +87,8 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
   `upstream-verification-supplement.md`, `performance-baseline.md`,
   `performance-verification-supplement.md`, `gate-and-knowledge-plumbing.md`,
   `inventory/`, `tools/`.
-- Adjacent goals: `goals/schema-utils-selective-codec-statics` (active; P5
-  precondition), `goals/schema-first-v4-capabilities` and
+- Adjacent goals: `goals/schema-utils-selective-codec-statics` (P5
+  precondition, met by its Yeet PR #927 merged 2026-08-31), `goals/schema-first-v4-capabilities` and
   `goals/schema-first-zero-actionables` (gate-then-zero precedent),
   `goals/beep-schema-topology` (concept module layout), `goals/effect-vitest-canon`
   (fixture pin procedure).

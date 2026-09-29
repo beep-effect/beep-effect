@@ -1,0 +1,214 @@
+{
+  "authority": "Source-delta review and eight isolated configuration-module evaluations; no Vitest suites or transform-cache reuse executed",
+  "revision": "c1a3e98c596f6a08feb3ec99f346918e0bad7cf2",
+  "environment": "bun --no-env-file; environment cleared except PATH and HOME plus one explicit profile flag",
+  "sources": [
+    {
+      "path": "vitest.shared.ts",
+      "sha256": "effbdbfbaa906adc5729f4776b0b583a343c93f5b92702efdb62ce218a809cef"
+    },
+    {
+      "path": "apps/oip-web/vitest.config.ts",
+      "sha256": "4581bfa6854225343282728ff60e91dc4e2c659cdce66f687b56c83d38a8f23e"
+    },
+    {
+      "path": "packages/epistemic/server/vitest.config.ts",
+      "sha256": "70c5cebc9da2dfc31f33989c4c56e772e9bd0e456f7e08b8fcc0cdbf68cdc6ef"
+    }
+  ],
+  "packageProfileObservations": [
+    {
+      "package": "apps/oip-web",
+      "profile": "unit",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts",
+          "apps/oip-web/test/setup.dom.ts"
+        ],
+        "environment": "jsdom",
+        "envKeys": [
+          "CRM_HUBSPOT_ACCOUNT_ID",
+          "CRM_HUBSPOT_FORM_GUID",
+          "CRM_HUBSPOT_SERVICE_KEY",
+          "HUBSPOT_ACCOUNT_ID",
+          "HUBSPOT_FORM_GUID",
+          "HUBSPOT_SERVICE_KEY",
+          "SANITY_API_HOST",
+          "SANITY_API_TOKEN",
+          "SANITY_API_VERSION",
+          "SANITY_DATASET",
+          "SANITY_PROJECT_ID"
+        ],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 30000,
+        "hookTimeout": 10000
+      }
+    },
+    {
+      "package": "apps/oip-web",
+      "profile": "coverage",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts",
+          "apps/oip-web/test/setup.dom.ts"
+        ],
+        "environment": "jsdom",
+        "envKeys": [
+          "CRM_HUBSPOT_ACCOUNT_ID",
+          "CRM_HUBSPOT_FORM_GUID",
+          "CRM_HUBSPOT_SERVICE_KEY",
+          "HUBSPOT_ACCOUNT_ID",
+          "HUBSPOT_FORM_GUID",
+          "HUBSPOT_SERVICE_KEY",
+          "SANITY_API_HOST",
+          "SANITY_API_TOKEN",
+          "SANITY_API_VERSION",
+          "SANITY_DATASET",
+          "SANITY_PROJECT_ID"
+        ],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 300000,
+        "hookTimeout": 300000
+      }
+    },
+    {
+      "package": "apps/oip-web",
+      "profile": "doctest",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts",
+          "apps/oip-web/test/setup.dom.ts"
+        ],
+        "environment": "jsdom",
+        "envKeys": [
+          "CRM_HUBSPOT_ACCOUNT_ID",
+          "CRM_HUBSPOT_FORM_GUID",
+          "CRM_HUBSPOT_SERVICE_KEY",
+          "HUBSPOT_ACCOUNT_ID",
+          "HUBSPOT_FORM_GUID",
+          "HUBSPOT_SERVICE_KEY",
+          "SANITY_API_HOST",
+          "SANITY_API_TOKEN",
+          "SANITY_API_VERSION",
+          "SANITY_DATASET",
+          "SANITY_PROJECT_ID"
+        ],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 120000,
+        "hookTimeout": 10000
+      }
+    },
+    {
+      "package": "packages/epistemic/server",
+      "profile": "unit",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts"
+        ],
+        "envKeys": [],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 30000,
+        "hookTimeout": 10000
+      }
+    },
+    {
+      "package": "packages/epistemic/server",
+      "profile": "coverage",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts"
+        ],
+        "envKeys": [],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 300000,
+        "hookTimeout": 300000
+      }
+    },
+    {
+      "package": "packages/epistemic/server",
+      "profile": "doctest",
+      "observation": {
+        "isolate": true,
+        "fsModuleCache": true,
+        "cachePath": "node_modules/.vitest-cache",
+        "setupFiles": [
+          "vitest.setup.ts"
+        ],
+        "envKeys": [],
+        "allConfiguredEnvValuesEmpty": true,
+        "testTimeout": 120000,
+        "hookTimeout": 10000
+      }
+    }
+  ],
+  "rootWorkingDirectoryControl": [
+    {
+      "package": "apps/oip-web",
+      "workingDirectory": "repository root",
+      "observation": {
+        "cachePath": "node_modules/.vitest-cache"
+      }
+    },
+    {
+      "package": "packages/epistemic/server",
+      "workingDirectory": "repository root",
+      "observation": {
+        "cachePath": "node_modules/.vitest-cache"
+      }
+    }
+  ],
+  "interpretation": [
+    "Both package overrides preserve isolate=true in unit, coverage and doctest configurations.",
+    "oip-web config has eleven provider-related env keys, all empty. This observes config values, not worker environment application or network isolation.",
+    "Merged oip-web setup lists shared and DOM setup; Epistemic lists shared setup. These modules were not executed by this probe.",
+    "fsModuleCachePath follows process.cwd(). Package-directory invocations resolve different package-local cache paths; both root-directory controls resolve the root node_modules/.vitest-cache path.",
+    "Working directory is therefore a material input to transform-cache placement. Package-local configuration alone does not guarantee isolation when launch cwd differs."
+  ],
+  "limits": [
+    "No cache-hit, cross-process invalidation, lockfile-clear race, output comparison or worker isolation execution was tested.",
+    "Actual invocation cwd, setup effects and transitive implementation semantics still require review.",
+    "No signed remote evidence renewal or task qualification."
+  ],
+  "optimizerSourceReview": {
+    "authority": "Source diff only; no development server or production bundle executed",
+    "sources": [
+      {
+        "path": "apps/labs/lejeune-bolt-workbench/vite.config.ts",
+        "sha256": "4ba01d664bddc3bd5d60356aee62f4f79527187228a1a1e58ea05d31433b2c03"
+      },
+      {
+        "path": "apps/labs/semantica/vite.config.ts",
+        "sha256": "31368426b1e61d2ad50818c60a2ad949305c1928bfb774e8247419b0c53da2c7"
+      },
+      {
+        "path": "apps/professional-desktop/vite.config.ts",
+        "sha256": "497aa3c0660a9cd3b0ea80e1c77a735255eeef368c89f3554311d95875554aae"
+      },
+      {
+        "path": "apps/storybook/.storybook/main.ts",
+        "sha256": "6c3d3459632e481d6230c6b8db92397c61e8d65542465c2d0eb09fb68caffce2"
+      }
+    ],
+    "change": "Adds effect/schema to optimizeDeps.exclude directly in three Vite configs and in Storybook viteFinal defaults. Existing professional-desktop exclusions remain.",
+    "effect": "Changes the dependency prebundling configuration for the lowercase Effect schema barrel. Optimizer config and imported module identity remain semantic inputs.",
+    "limits": [
+      "Does not prove the reported case-collision workaround at runtime.",
+      "Does not establish final merged Storybook options for every caller or equivalence of build, development and test pipelines."
+    ]
+  }
+}

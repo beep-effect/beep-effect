@@ -115,6 +115,7 @@ import {
   renderCoverageLoweredFloors,
   renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
+  resolveLaneInputDigestForTesting,
   reviewFixDocgenLocalArgsForTesting,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
@@ -176,6 +177,7 @@ import {
   Inspectable,
   identity,
   Layer,
+  Match,
   Order,
   Path,
   PlatformError,
@@ -1467,6 +1469,116 @@ describe("quality task adapter", () => {
         assertSome(lane.inputDigest, expected.digest);
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
+
+  // TTC ruling 72, review follow-up on #1321: the fixtures elsewhere close a lane ledger by hand, so
+  // this case drives the production attempt counter itself. A red direct Turbo step run by the
+  // streaming collector under a named ledger must still declare its digest and count as an attempt.
+  it.layer(PlatformLayer, { timeout: "30 seconds" })("red direct Turbo step under a named ledger", (it) => {
+    it.effect(
+      "declares the red step's digest, counts it in the close record, and resolves it for the failed lane",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-red-counter-" });
+        const bin = path.join(tempDir, "bin");
+        yield* fs.makeDirectory(bin, { recursive: true });
+        // The summary starts far enough in the future to count as this attempt's own, and its task failed.
+        const summary = TurboRunSummary.make({
+          id: "red",
+          execution: { startTime: 4_102_444_800_000, endTime: 4_102_444_800_010, exitCode: 1 },
+          tasks: [
+            {
+              taskId: "@beep/x#check",
+              task: "check",
+              hash: "hx1",
+              cache: { status: "MISS" },
+              execution: { exitCode: 1 },
+            },
+          ],
+        });
+        yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
+        // A stand-in Cache launcher leaves the summary its governed Turbo child would write, then fails.
+        const fakeBun = path.join(bin, "bun");
+        yield* fs.writeFileString(
+          fakeBun,
+          A.join(
+            ["#!/bin/sh", "mkdir -p .turbo/runs", 'cp "$(dirname "$0")/summary.json" .turbo/runs/red.json', "exit 1"],
+            "\n"
+          )
+        );
+        yield* fs.chmod(fakeBun, 0o755);
+        const ambientPath = O.getOrElse(O.fromUndefinedOr(Bun.env.PATH), () => "");
+        const direct = QualityTaskStep.make({
+          label: "ci:check",
+          command: "bunx",
+          args: ["turbo", "run", "check", "--summarize"],
+          cwd: tempDir,
+          // The stand-in is a POSIX shell script, so the PATH separator is fixed.
+          env: { PATH: `${bin}:${ambientPath}` },
+        });
+        const ledger = path.join(tempDir, "lane", "ledger.jsonl");
+        // The collector stamps each step's start from the live clock, as the fresh-summary filter expects.
+        const failure = yield* withEnvVarEffect(
+          TURBO_LANE_LEDGER_ENV,
+          ledger,
+          runQualityTaskStreamingLaneGroup("ci:local", [["check", direct, O.none()]])
+        ).pipe(Effect.flip, TestClock.withLive);
+        expect(failure._tag).toBe("QualityTaskGroupFailed");
+        const expected = yield* Effect.fromOption(yield* turboLaneDigestFromSummary(summary, ["check"]));
+
+        // The child wrote the red step's declared row, then closed the ledger with that attempt counted.
+        const rows = yield* pipe(
+          yield* fs.readFileString(ledger),
+          Str.split("\n"),
+          A.filter(Str.isNonEmpty),
+          Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
+        );
+        expect(
+          A.map(
+            rows,
+            Match.valueTags({
+              declared: (row) => `declared=${row.digest.digest}`,
+              closed: (row) => `closed=${row.attempted}`,
+            })
+          )
+        ).toEqual([`declared=${expected.digest}`, "closed=1"]);
+
+        const report = yield* pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
+          O.getOrThrow,
+          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
+          decodeQualityTaskLaneRunReportJson
+        );
+        const lane = yield* Effect.fromOption(A.head(report.lanes));
+        expect(lane.status).toBe("failed");
+
+        // The parent resolves the failed wrapper lane to the key the child declared.
+        const wrapper = QualityTaskStep.make({
+          label: "quality:check",
+          command: "bun",
+          args: ["run", "beep", "ci", "lane", "check"],
+          cwd: tempDir,
+          env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+        });
+        const resolved = yield* resolveLaneInputDigestForTesting(
+          {
+            durationMs: 1,
+            startedAt: "2026-09-28T04:00:00.000Z",
+            endedAt: "2026-09-28T04:00:05.000Z",
+            failure: O.some(
+              QualityTaskFailed.make({ label: "quality:check", command: "bun run beep ci lane check", exitCode: 1 })
+            ),
+            step: wrapper,
+          },
+          O.none()
+        );
+        assertSome(resolved.inputDigest, expected.digest);
+        expect(resolved.inputPackages).toStrictEqual(["@beep/x"]);
+      })
+    );
+  });
 
   it("appends schema-versioned lane rows and ignores malformed side-channel rows", () =>
     Effect.runPromise(

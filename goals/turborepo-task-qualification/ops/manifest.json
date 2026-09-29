@@ -382,7 +382,25 @@
     "research/proof-7877-attribution.json",
     "research/refs-entrypoint-semantics.json",
     "research/refs-transitive-semantics.json",
-    "research/main-1270-source-refresh.json"
+    "research/main-1270-source-refresh.json",
+    "research/main-1270-planner-review.json",
+    "research/current-main-census-delta.json",
+    "research/current-main-planner-review.json",
+    "research/current-convergence-semantics.json",
+    "research/current-attachment-restoration.json",
+    "research/current-tsconfig-reference-review.json",
+    "research/current-package-turbo-review.json",
+    "research/current-source-migration-review.json",
+    "research/current-vitest-config-review.json",
+    "research/current-failed-lane-digest-review.json",
+    "research/current-proof-shadow-review.json",
+    "research/current-proof-ledger-storage-review.json",
+    "research/current-monitor-escalation-review.json",
+    "research/current-sweep-ordering-review.json",
+    "research/current-reference-refresh-review.json",
+    "research/current-review-attachment.json",
+    "research/current-pilot-orchestration-inputs.json",
+    "research/current-pilot-orchestration-repair.json"
   ],
   "agentLaunchers": [
     {
@@ -446,5 +464,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "PRs #1233 and #1250 merged. Frozen v23 local matrices and bounded capture/IO evidence retained. Current source census attachment accepted; ordinary CLI synthetic local replay and runtime declaration invalidation observed. Full semantic coverage and signed sibling evidence remain pending. No tuple is qualified."
+  "statusNote": "PR #1268 merged; PR #1324 carries current census evidence. Source attachment restored with 1020 sources, 6 artifacts, 56 reviews and 18 unresolved obligations. Historical evidence recovery does not renew runtime qualification. Signed sibling receipts and complete semantic review remain pending; no tuple is qualified."
 }

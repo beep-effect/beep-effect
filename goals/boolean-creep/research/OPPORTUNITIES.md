@@ -3,6 +3,39 @@
 Receipts recorded at the moment of friction (repo law: friction is a
 first-class output). Public repo: paths relative, no secrets, no session ids.
 
+## 2026-09-28 — current-main census preparation exposed stale inputs
+
+- **Doing:** resuming the full census after the operator confirmed restored
+  provider credits and updating to main `980b4cd44c`.
+- **Evidence:** inventory validation rejected the curation cleanup citation at
+  line 1598 of a now-1596-line file. The same cleanup object is at line 1588;
+  the original inventory is preserved in `history/inventory/pre-r43-2026-09-28.jsonl`.
+  The old controller's read-only plan also rejected an unassigned Refs source
+  file. Complete partition inspection found 15 unassigned files in Refs and
+  HarnessLedger.
+- **Recovery:** verified the complete file diff and corrected all four affected
+  citations, retaining their D2 classifications.
+  Private R43 preparation assigns Refs to commands R–Z and HarnessLedger to
+  commands D–K, covering 3,208 files exactly once across 27 lanes. This is
+  preparation evidence, with no census, independent-review, or dry credit.
+- **Prevention:** rebuild current-source partitions and validate the seed before
+  freezing admission inputs; retain old rounds and their source bindings.
+
+## 2026-09-28 — workstation update invalidated provider bindings
+
+- **Doing:** checking the installed census runner before fresh admission.
+- **Evidence:** both the Grok executable hash and configuration hash differ
+  from R42. The current configured default is `grok-4.7` with `xhigh` effort;
+  the historical launcher invokes `grok-4.7` with explicit `low` effort and
+  also requires a matching `low` configuration default. Current CLI help
+  confirms that the per-call `--reasoning-effort` option remains available.
+- **Next action:** preserve the operator's global configuration, bind the new
+  executable and configuration, and independently review per-call routing and
+  terminal-stream validation before launch. Restored credits do not establish
+  compatibility of a changed runner.
+- **Prevention:** verify tool and configuration bindings after workstation
+  updates, separately from provider-credit availability.
+
 ## 2026-09-24 — transient remote check stopped census dispatch
 
 - **Doing:** dispatching R32 after successful exact-input capture.

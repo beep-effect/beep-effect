@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `graduate`
-Status: `graduated`
+Stage: `decompose`
+Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,11 +19,13 @@ covers, and leave a standing gate so parity holds on every effect bump.
 
 ## Next Open Question
 
-Graduated 2026-09-15 into [`goals/effect-schema-parity`](../../goals/effect-schema-parity/README.md).
-This packet stays as provenance. Re-entry gates live in `MAP.md` §Later
-Candidates: an F05 / F06 / F04 probe clearing confidence 0.70, or a
-boundary-table row that is not byte-identical, reopens the packet at
-decompose.
+Reopened 2026-09-28 at decompose: the MAP gate "upstream ships a schema
+compiler surface" fired (effect PR #7908). The open question is the compiler
+verdict (adopt / defer / reject), to be grilled with the operator at align
+once the two D6 spikes report interpreter, selective JIT and AOT numbers.
+The refreshed inventory at `inventoryPin` `e5f7d12af9` and the full
+SchemaUtils census feed the parity goal amendment. The rest of the frontier
+lives in `ops/manifest.json` `openQuestions`.
 
 ## Read This First
 
@@ -84,3 +86,12 @@ decompose.
   table, facet census gate and back-linked decision log, PLAN with the P3 PR
   order, GOAL launcher, carried SOURCES, OPPORTUNITIES ledger). Manifests
   cross-linked; status `graduated`.
+- 2026-09-28: reopened at decompose (loop to research and align). The new
+  MAP gate "upstream ships a schema compiler surface" fired: effect PR #7908
+  (`c19c63fb71`, first release rc.116) shipped `SchemaCompiler`,
+  `SchemaJITCompiler` and `SchemaAOTCompiler`, and the repo moved to the
+  main snapshot `e5f7d12af9` (rc.118 line) where `unstable/` is gone. Ten
+  decisions (D1–D10) recorded in `DECISIONS.md`; research lanes refresh the
+  inventory at the catalog pin, census every `SchemaUtils` export, and spike
+  the compilers; the verdict waits for the operator at align. The parity
+  goal is amended in place for pin, fixture name, lanes and P5 evidence.

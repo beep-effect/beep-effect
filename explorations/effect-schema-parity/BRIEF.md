@@ -55,7 +55,7 @@ shapes the solution three ways:
 ```mermaid
 flowchart LR
     D["P0 Doctrine PR<br/>standards §11 entry (intent per facet) +<br/>AGENTS.md line narrowed +<br/>@beep/schema README rule"]
-    K["P1 Knowledge layer<br/>inventory → repo-cli fixture<br/>effect-schema-rc115/ + generator --check"]
+    K["P1 Knowledge layer<br/>inventory → repo-cli fixture<br/>effect-schema-rc118/ + generator --check"]
     L["P2 LiteralKit trim (ADAPT)<br/>retire Options/pick/omit/HashSet/thunk,<br/>drop enumMapping, override rebuild;<br/>keep Enum/is/$match/toTaggedUnion"]
     R["P3 Retirement train<br/>facet census before each >100 PR,<br/>wire-shape table per boundary,<br/>case brands, Number/Int/Unknown/Opaque…"]
     G["P4 Gate cut<br/>SFV4-* for F03 F13 F24,<br/>retire SFV4-tagged-error-equivalence,<br/>ratchet at zero"]
@@ -79,8 +79,9 @@ every later PR read a rule that already exists.
 
 **P1 Knowledge layer.** Move `research/tools/schema-inventory.ts` and its
 verifier into repo-cli; the rows land at
-`packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/inventory/*.jsonl`,
-one directory per RC like `effect-vitest-rc115`. Identity stays
+`packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`,
+one directory per RC like `effect-vitest-rc118` (renamed from rc115 on
+2026-09-28, D4). Identity stays
 `(module, symbol, kind)`; `@internal` rows are kept and flagged, never
 adoption targets. Hosted CI verifies shape and sha; `--check` against
 `.repos/effect` is local. Agent prompts for the later phases are templated

@@ -46,7 +46,10 @@ def clean_git_environment() -> contextlib.AbstractContextManager[Any]:
 
 
 class EmbeddedInputValidationTest(unittest.TestCase):
+    """Default-run replay checks its embedded evidence against HEAD and fails closed on drift."""
+
     def setUp(self) -> None:
+        """Copy the script, inputs and reports into a committed fixture repository and point the module at it."""
         self.temporary = tempfile.TemporaryDirectory()
         self.repo = Path(self.temporary.name) / "repo"
         self.output_root = self.repo / "goals" / "time-to-certainty" / "research"
@@ -190,6 +193,7 @@ class CloseInputValidationTest(unittest.TestCase):
     """
 
     def setUp(self) -> None:
+        """Copy the script, close inputs, close reports and ratified baseline into a committed fixture repository."""
         self.temporary = tempfile.TemporaryDirectory()
         self.repo = Path(self.temporary.name) / "repo"
         self.output_root = self.repo / "goals" / "time-to-certainty" / "research"
@@ -245,13 +249,16 @@ class CloseInputValidationTest(unittest.TestCase):
         )
 
     def tearDown(self) -> None:
+        """Undo the module patches and remove the fixture repository."""
         self.patches.close()
         self.temporary.cleanup()
 
     def git(self, *args: str) -> None:
+        """Run one git command in the fixture repository."""
         subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True, text=True)
 
     def replay(self, *args: str) -> tuple[str, str]:
+        """Run `main` as a close-run `--from-inputs` replay; return its stdout and stderr."""
         stdout = io.StringIO()
         stderr = io.StringIO()
         argv = [str(self.script), "--run", economics.CLOSE_RUN, "--from-inputs", *args]
@@ -261,14 +268,17 @@ class CloseInputValidationTest(unittest.TestCase):
         return stdout.getvalue(), stderr.getvalue()
 
     def outputs(self) -> tuple[bytes, bytes]:
+        """The close report's JSON and markdown bytes."""
         return self.close_json.read_bytes(), self.close_md.read_bytes()
 
     def test_pristine_close_inputs_pass(self) -> None:
+        """An untouched fixture replays to byte-identical close outputs."""
         outputs_before = self.outputs()
         self.replay()
         self.assertEqual(self.outputs(), outputs_before)
 
     def test_modified_baseline_fails_closed_and_names_path(self) -> None:
+        """A changed ratified baseline fails the close replay closed, names its path and writes nothing."""
         report = json.loads(self.baseline_json.read_text(encoding="utf-8"))
         report["unratifiedMutation"] = True
         economics.write_json(self.baseline_json, report)
@@ -279,6 +289,7 @@ class CloseInputValidationTest(unittest.TestCase):
         self.assertEqual(self.outputs(), outputs_before)
 
     def test_modified_close_input_fails_closed_and_names_path(self) -> None:
+        """A changed close input fails the replay closed, names its path and writes nothing."""
         live = self.close_inputs / "live-journals.json.gz"
         data = bytearray(live.read_bytes())
         data[9] = (data[9] + 1) % 256
@@ -538,6 +549,7 @@ class CorpusValidationTest(unittest.TestCase):
 
 
 def lane(lane_id: str, duration: float | None, *, status: str = "passed", parent: str | None = None) -> dict[str, object]:
+    """Build one verdict lane row; a None `duration` omits `durationMs` and `parent` sets `parentLaneId`."""
     row: dict[str, object] = {"id": lane_id, "label": lane_id, "phase": "full", "status": status}
     if duration is not None:
         row["durationMs"] = duration
@@ -555,6 +567,7 @@ def attempt(
     elapsed: float = 100.0,
     fingerprint: str | None = None,
 ) -> dict[str, object]:
+    """Build one loaded attempt row on the fixture checkout and branch, ended at its start."""
     started_at = economics.parse_ts(started)
     return {
         "attemptId": attempt_id,
@@ -577,7 +590,10 @@ def attempt(
 
 
 class LanePopulationSplitTest(unittest.TestCase):
+    """Wrapper and inner lanes are separate populations (ruling 74)."""
+
     def test_legacy_verdict_splits_by_wrapper_prefix(self) -> None:
+        """A verdict without `parentLaneId` splits by the wrapper id prefixes."""
         lanes = [
             lane("full:01-pre-push", 50),
             lane("advisory:01-fallow-feedback", 5),
@@ -593,6 +609,7 @@ class LanePopulationSplitTest(unittest.TestCase):
         self.assertEqual([row["id"] for row in inner], ["quality:lint", "repo-sanity:versions"])
 
     def test_parent_marked_verdict_splits_by_parent_lane_id(self) -> None:
+        """A verdict that marks parents splits by `parentLaneId` alone, whatever the ids say."""
         lanes = [
             lane("full:01-pre-push", 50),
             lane("quality:lint", 20, parent="full:01-pre-push"),
@@ -605,6 +622,7 @@ class LanePopulationSplitTest(unittest.TestCase):
         self.assertEqual([row["id"] for row in inner], ["quality:lint"])
 
     def test_wrapper_metrics_no_longer_count_inner_time_twice(self) -> None:
+        """Wrapper totals exclude inner time; inner totals divide by the contributing attempts only."""
         attempts = [
             attempt(
                 "a",
@@ -633,6 +651,7 @@ class LanePopulationSplitTest(unittest.TestCase):
         self.assertEqual(inner_rows[0]["shareOfMeasuredLocalLaneTimePct"], 66.67)
 
     def test_episode_lane_minutes_split_wrapper_and_inner(self) -> None:
+        """Episode lane minutes are summed per population, and inner minutes appear only on request."""
         red = attempt(
             "red",
             [
@@ -657,6 +676,7 @@ class LanePopulationSplitTest(unittest.TestCase):
         self.assertNotIn("measuredInnerLaneMachineMinutes", economics.red_to_green([red, green])["uncut"])
 
     def test_first_failure_walk_still_stops_at_the_failed_wrapper(self) -> None:
+        """The M2 offset walk stops at the failed wrapper; the actionable lane is the failed inner lane."""
         red = attempt(
             "red",
             [
@@ -673,16 +693,21 @@ class LanePopulationSplitTest(unittest.TestCase):
         self.assertEqual(result["actionableLaneMix"], [{"attempts": 1, "lane": "quality:check"}])
 
     def test_compaction_keeps_parent_lane_id(self) -> None:
+        """Verdict compaction keeps `parentLaneId`."""
         compact = economics.compact_verdict({"lanes": [lane("quality:lint", 1, parent="full:01-pre-push")]})
         self.assertEqual(compact["lanes"][0]["parentLaneId"], "full:01-pre-push")
 
 
 class LiveDiscoveryTest(unittest.TestCase):
+    """Live journal discovery over a fixture projects root (rulings 71 and 73)."""
+
     def setUp(self) -> None:
+        """Create an empty projects root."""
         self.temporary = tempfile.TemporaryDirectory()
         self.projects = Path(self.temporary.name).resolve()
 
     def tearDown(self) -> None:
+        """Remove the projects root."""
         self.temporary.cleanup()
 
     def checkout(
@@ -710,6 +735,7 @@ class LiveDiscoveryTest(unittest.TestCase):
 
     @staticmethod
     def write_config(common: Path, *, origin: str, bare: bool = False) -> None:
+        """Write a Git config into `common` whose origin url is `origin`."""
         common.mkdir(parents=True, exist_ok=True)
         (common / "config").write_text(
             f'[core]\n\tbare = {"true" if bare else "false"}\n[remote "origin"]\n\turl = {origin}\n'
@@ -736,6 +762,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         return path
 
     def test_projects_root_is_derived_from_a_clone_or_a_lane(self) -> None:
+        """The projects root is derived from a clone and from each lane layout."""
         clone = self.projects / "beep-effect3"
         self.assertEqual(economics.derive_projects_root(clone), self.projects)
         self.assertEqual(
@@ -752,6 +779,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         )
 
     def test_discovers_numbered_worktree_lanes_and_skips_symlinks(self) -> None:
+        """Discovery finds clones and every lane layout that holds journals, and skips symlinked candidates."""
         self.checkout("beep-effect")
         self.checkout("beep-effect3")
         self.checkout("beep-effect12")
@@ -785,6 +813,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         )
 
     def test_other_repositories_matching_the_name_glob_are_excluded(self) -> None:
+        """Checkouts whose origin is another repository are excluded even when their names match the glob."""
         private_origin = "git@github.com:beep-effect/beep-effect-private.git"
         self.checkout("beep-effect3")
         self.checkout("beep-effect-private", origin=private_origin)
@@ -820,6 +849,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         self.assertIsNone(economics.origin_repository(self.projects / "beep-effect4-no-git"))
 
     def test_bare_or_separated_common_dirs_are_judged_by_their_own_config(self) -> None:
+        """A bare or separated common dir is the owning clone and supplies the origin config (ruling 71)."""
         elsewhere = self.projects / "elsewhere"
         fleet_common = elsewhere / "beep-effect.git"
         separated = self.separated_checkout("beep-effect11", fleet_common, origin=FLEET_ORIGIN)
@@ -848,7 +878,44 @@ class LiveDiscoveryTest(unittest.TestCase):
 
         self.assertEqual(labels, ["beep-effect11", "beep-effect11-worktrees/bare-lane"])
 
+    def test_symlinked_git_directory_names_the_checkout_as_its_clone(self) -> None:
+        """A `.git` symlink to a directory with another name still names the checkout as its clone.
+
+        The common dir is `<checkout>/.git`, never the symlink target, and the
+        origin config is read through the symlink from the target's real path.
+        """
+        elsewhere = self.projects / "elsewhere"
+        clone = self.projects / "beep-effect8"
+        (clone / ".beep" / "yeet" / "runs").mkdir(parents=True)
+        self.write_config(elsewhere / "beep-effect8-gitdir", origin=FLEET_ORIGIN)
+        (clone / ".git").symlink_to(elsewhere / "beep-effect8-gitdir", target_is_directory=True)
+        other = self.projects / "beep-effect9"
+        (other / ".beep" / "yeet" / "runs").mkdir(parents=True)
+        self.write_config(elsewhere / "private-gitdir", origin="git@github.com:beep-effect/beep-effect-private.git")
+        (other / ".git").symlink_to(elsewhere / "private-gitdir", target_is_directory=True)
+        # A half-removed lane falls back to its layout's clone through the same symlink.
+        half_removed = self.projects / "beep-effect8-worktrees" / "half-removed"
+        (half_removed / ".beep" / "yeet" / "runs").mkdir(parents=True)
+        lane_root = self.checkout("beep-effect3-worktrees/ttc-close", runs=False, clone="beep-effect3")
+        self.checkout("beep-effect3", runs=False)
+
+        self.assertEqual(economics.git_common_dir(clone), clone / ".git")
+        self.assertEqual(economics.owning_clone(clone), clone)
+        self.assertEqual(economics.owning_clone(half_removed), clone)
+        self.assertEqual(economics.owning_clone(other), other)
+        self.assertEqual(economics.origin_repository(clone), "beep-effect/beep-effect")
+        self.assertEqual(economics.origin_repository(half_removed), "beep-effect/beep-effect")
+        self.assertEqual(economics.origin_repository(other), "beep-effect/beep-effect-private")
+
+        with mock.patch.object(economics, "REPO_ROOT", lane_root), mock.patch.object(
+            economics, "PROJECTS_ROOT", self.projects
+        ):
+            labels = [economics.checkout_label(root) for root in economics.discover_live_roots()]
+
+        self.assertEqual(labels, ["beep-effect8", "beep-effect8-worktrees/half-removed"])
+
     def test_repository_root_of_another_repository_is_skipped_with_a_notice(self) -> None:
+        """A repository root from another repository is skipped with exactly one stderr notice."""
         private_origin = "git@github.com:beep-effect/beep-effect-private.git"
         self.checkout("beep-effect3")
         self.checkout("beep-effect-private", runs=False, origin=private_origin)
@@ -867,6 +934,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         self.assertIn("beep-effect/beep-effect-private", notices[0])
 
     def test_repository_root_of_the_fleet_is_kept_without_a_notice(self) -> None:
+        """A fleet repository root is kept and prints nothing."""
         lane_root = self.checkout("beep-effect3-worktrees/ttc-close", clone="beep-effect3")
         self.checkout("beep-effect3", runs=False)
         stderr = io.StringIO()
@@ -878,6 +946,7 @@ class LiveDiscoveryTest(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
 
     def test_projects_root_flag_overrides_the_derived_root(self) -> None:
+        """An explicit projects root replaces the derived one."""
         self.checkout("beep-effect7")
         with mock.patch.object(economics, "REPO_ROOT", self.projects / "elsewhere" / "repo"):
             roots = economics.discover_live_roots(self.projects)
@@ -885,8 +954,12 @@ class LiveDiscoveryTest(unittest.TestCase):
 
 
 class ReconcilerTerminationTest(unittest.TestCase):
+    """Terminations the reconciler stamps versus terminations an attempt writes itself."""
+
     def test_sweep_stamped_termination_ends_no_duration(self) -> None:
+        """A sweep-stamped termination has no end or elapsed time; an attempt-written one keeps its fallback."""
         def rows(attempt_id: str, reason: str) -> list[dict[str, object]]:
+            """A started row and a terminated row for one attempt."""
             return [
                 {
                     "schemaVersion": economics.ATTEMPT_SCHEMA,
@@ -920,7 +993,10 @@ class ReconcilerTerminationTest(unittest.TestCase):
 
 
 class CloseRunTest(unittest.TestCase):
+    """The close run's file routing and its ruling-8 measures."""
+
     def test_close_run_reads_and_writes_its_own_files(self) -> None:
+        """`configure_run` routes the close run to its own files and leaves the baseline path fixed."""
         names = ("RUN", "INPUT_ROOT", "LIVE_SNAPSHOT", "HOSTED_SNAPSHOT", "INPUT_RECEIPTS", "ECONOMICS_JSON", "ECONOMICS_MD")
         with contextlib.ExitStack() as stack:
             for name in names:
@@ -938,6 +1014,7 @@ class CloseRunTest(unittest.TestCase):
         self.assertEqual(economics.baseline_json_path(), economics.ECONOMICS_JSON)
 
     def test_ratified_baseline_projects_the_ruling_8_rows(self) -> None:
+        """The ratified baseline projects to the known ruling-8 values."""
         baseline = json.loads(economics.ECONOMICS_JSON.read_text(encoding="utf-8"))
         values = economics.comparison_values(baseline, full_report=True)
         self.assertEqual(values["M1 closed episodes (<=24h)"], 328)
@@ -956,6 +1033,7 @@ class CloseRunTest(unittest.TestCase):
         self.assertIsNone(values["M5 journaled terminations"])
 
     def test_fingerprint_repeat_counts_verdict_red_then_green_on_the_same_tree(self) -> None:
+        """The M4 proxy counts a verdict-bearing red followed by green on the same fingerprint (ruling 75)."""
         attempts = [
             attempt("r1", [lane("quality:lint", 1, status="failed")], outcome="failure", started="2026-09-20T00:00:00+00:00", fingerprint="t1"),
             attempt("g1", [], started="2026-09-20T00:01:00+00:00", fingerprint="t1"),
@@ -977,6 +1055,7 @@ class CloseRunTest(unittest.TestCase):
         )
 
     def test_termination_metrics_count_unfinished_starts_and_reasons(self) -> None:
+        """M5 counts unfinished starts, journaled reasons and the P0-comparable total."""
         finished = attempt("done", [])
         terminated = {**attempt("dead", []), "outcome": None, "terminationReason": "owner-dead"}
         starts = {

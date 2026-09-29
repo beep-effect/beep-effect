@@ -31,4 +31,33 @@ describe("Worker server", () => {
       })
     );
   });
+
+  it.layer(ArchitectureLabServerTest, { timeout: "10 seconds" })(
+    "Worker lifecycle against a fresh repository store",
+    (it) => {
+      it.effect(
+        "lists workers and reports a missing id and a duplicate create",
+        Effect.fnUntraced(function* () {
+          const server = yield* WorkerServer;
+          const id = yield* decodeWorkerId(1);
+          const missingId = yield* decodeWorkerId(2);
+          const organizationId = yield* decodeOrganizationId(1);
+          const command = WorkerUseCases.CreateWorkerCommand.make({
+            id,
+            organizationId,
+            displayName: "Ada Lovelace",
+          });
+          const created = yield* server.create(command);
+          const listed = yield* server.list(WorkerUseCases.ListWorkersQuery.make({}));
+          const missing = yield* server.get(WorkerUseCases.GetWorkerQuery.make({ id: missingId })).pipe(Effect.flip);
+          const conflict = yield* server.create(command).pipe(Effect.flip);
+
+          expect(created.status).toBe("active");
+          expect(listed).toHaveLength(1);
+          expect(missing._tag).toBe("WorkerNotFound");
+          expect(conflict._tag).toBe("WorkerConflict");
+        })
+      );
+    }
+  );
 });

@@ -1,0 +1,52 @@
+{
+  "authority": "Bounded source review, real-worktree path probe and retained hash-matched focused test evidence",
+  "revision": "66a750800da0dd0bf5a5347e18cf1c2e0f24c3a9",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts",
+      "sha256": "701275211b70396632847a02984d500d4e4468b87164f985b8702d7becdba000"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
+      "sha256": "20015a85d30e86b1d28b72f242fa4fe56481375ee89ccfc1349531d348f27dd3"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "sha256": "535387a2fda8ae6fe252144fc8f7930605416ea4a5ff4a4331f4480807034c39"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "sha256": "bd9c31eab82f7d666c963cb3be4f2edfd8d7ec198d869b24f7ba206a1739aad3"
+    }
+  ],
+  "pathProbe": {
+    "resolverMatchesGitCommonDirectory": true,
+    "ledgerPathMatchesOwningClone": true,
+    "readOnly": true,
+    "ledgerContentsRead": false
+  },
+  "reviewedBehavior": [
+    "Linked worktree gitdir and commondir metadata determine the owning ledger root. A common directory named .git selects its parent; other common-directory names retain the ledger within that directory.",
+    "Missing ledgers read as empty. Unreadable existing non-regular targets fail. Malformed terminated nonempty rows are counted; an unterminated final row is ignored.",
+    "Before appending, an observed incomplete tail causes a recovery newline prefix. The encoded batch then passes through the contained append helper.",
+    "Missing-file creation uses exclusive append mode ax. Existing-file append uses a checked private hard-link alias and append mode a.",
+    "No cross-process ledger lock is acquired. Lookup and append are separate operations."
+  ],
+  "semanticInputs": [
+    "Git metadata paths and contents",
+    "Owning-clone filesystem entries, ledger bytes and permission boundaries",
+    "Fact/observation rows, timestamps and parser schema version",
+    "Concurrent writers and platform filesystem append behavior"
+  ],
+  "retainedVerification": {
+    "receipt": "research/current-failed-lane-digest-review.json",
+    "testSourceHashStillMatches": true,
+    "scope": "The prior two-file run passed 27 tests; the ledger suite includes malformed/incomplete rows and linked-worktree/bare-repository path cases. No new concurrency stress test was run."
+  },
+  "limits": [
+    "Hard-link containment checks do not prove safety against a principal able to concurrently rename parent entries; the existing OS permission boundary remains required.",
+    "One high-level append call does not establish a single indivisible syscall for every platform and batch size. No crash-durability or concurrent-writer guarantee is added by this review.",
+    "An observed incomplete-tail recovery decision can race with another writer; tolerant parsing is not transactional persistence.",
+    "No signed remote task qualification or hosted proof replacement."
+  ]
+}

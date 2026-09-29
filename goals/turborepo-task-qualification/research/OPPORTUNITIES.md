@@ -2193,3 +2193,39 @@ termination would prevent unnecessary retries.
   ticket-count assertions remain intact. The full scheduler file passed all
   133 tests; repo-cli quick package verification passed lint and type checks.
   Hosted verification and full-proof completion remain outstanding.
+
+## 2026-09-28: publication fallback and private planner recovery
+
+Detached Yeet publication reported “requires an active systemd user manager”.
+The attached early-publication command also requires `--monitor`; adding it
+published PR #1324 and retained a live proof process. Report this prerequisite
+before selecting a detached lane and keep the attached handle across turns.
+
+Lane retirement preserved the explicit evidence archive, but three historical
+private planner scripts were unavailable in the restored lane. The tracked
+CI/Quality and Yeet scripts reproduced all four historical projections, so
+missing private copies did not require inventing source provenance. Future
+retention manifests should include ignored evidence producers and verify their
+hashes before retiring the lane. The scripts place output paths beneath the
+packet research directory; their argument is not relative to the repository
+root. Generated files were moved into the private evidence directory.
+
+## 2026-09-28: fast publication still waits for admission
+
+`yeet publish --fast --monitor` committed the packet update but queued for a
+full-proof slot before pushing. `runStandardPublishPhases` still enters the
+full-proof coordinator even when the fast planner omits proof steps. The
+queued attempt was deliberately interrupted; `--start-pr-early --monitor --pr`
+reused the clean local commit and pushed before admission. Use that route for
+the operator's requested early publication, and retain exact-head proof as a
+separate requirement. The original running proof was preserved.
+
+### 2026-09-28 — Generated sibling logs contaminate pilot inputs
+
+During current census attachment verification, `bunx turbo run lint
+--filter=@beep/identity --dry=json` included two Git-ignored
+`../utils/.turbo/` logs (doctest and lint:laws). The broad sibling input glob
+excludes other orchestration directories but not `.turbo`. Evidence:
+`research/current-pilot-orchestration-inputs.json`. A pilot-scoped generated-log
+exclusion plus a perturbation regression would prevent this digest drift.
+Task caching is disabled; this finding does not establish unsafe reuse.

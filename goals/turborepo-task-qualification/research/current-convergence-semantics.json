@@ -1,0 +1,57 @@
+{
+  "revision": "40055f7c0495fb59aebc3cca6a20ff22de1401b1",
+  "source": {
+    "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Converge.ts",
+    "sha256": "02a4d6eb6cb15707c62f6dcd9f94d6c6f75f39871fb03f99d1bdbe6b43887b2f"
+  },
+  "reviewedLineSpans": [
+    "129-241",
+    "290-380",
+    "412-505"
+  ],
+  "authority": "Direct source review of inbox convergence and comment capsule selection; no monitor or hosted operations executed",
+  "semanticInputs": [
+    "Repository root and configured base",
+    "Observed PR number, head, check outcomes, review-thread state and merge status",
+    "Caller-supplied observation timestamp",
+    "Existing thread inbox row IDs and acknowledgement state",
+    "Comment kind, identity, author, bot classification, body, URL and creation/submission timestamp",
+    "Comment window start and acting login",
+    "Consumer-specific persisted comment cursors and in-memory watermark",
+    "Current clock when opening a comment stream",
+    "Three paginated GitHub comment/review API responses and gh exit status"
+  ],
+  "effects": [
+    "Dispatches each failing check to the existing remediation writer",
+    "Reads persisted thread acknowledgements and appends outstanding-thread rows",
+    "Appends base-drift rows when the observed merge status is BEHIND",
+    "Writes error messages for caught thread/base row append failures",
+    "Capsule selection itself transforms supplied data without executing a child process",
+    "Appends qualifying comment rows before acknowledging the collected batch",
+    "Advances the in-memory cursor, then attempts best-effort persistence",
+    "Logs a warning when cursor persistence fails; persistence failure is not a successful durable acknowledgement"
+  ],
+  "cacheDisposition": "Fresh external observation and mutable inbox operations cannot be replaced by task-result replay. Any separately qualified pure capsule transformation must include the complete comment and window values.",
+  "limits": [
+    "Remediation, Inbox, Ack, WatchStream, comment normalization, clipped-response salvage and state-write atomicity remain outside this bounded review.",
+    "Source review does not prove runtime capture safety, caller head pinning, signed transport or complete comment delivery."
+  ],
+  "selectiveHelperReview": {
+    "source": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+    "sha256": "7f884166c4b17ddc3aa6fa81173b5a96a2635c16f2edf23366d16b77da7a978f",
+    "lineSpans": [
+      "1090-1124",
+      "1167-1202",
+      "1220-1260",
+      "1283-1326",
+      "1356-1376",
+      "1550-1573"
+    ],
+    "observations": [
+      "Collects issue comments, inline review comments and review bodies concurrently with concurrency 3; review bodies are filtered locally because the endpoint receives no since parameter.",
+      "Unreadable, invalid or wrong-PR persisted state produces no usable watermark.",
+      "Ref.set precedes best-effort state persistence; warn-only failure can leave memory ahead of durable state.",
+      "Transport output truncation has its own handling outside the reviewed fetch span."
+    ]
+  }
+}
