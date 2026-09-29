@@ -5435,3 +5435,27 @@ replacing that behavior with process.chdir would change how subprocesses see
 cwd. Prove success, failure, interruption and setup-defect cleanup, and audit
 call-site scope boundaries before flattening the wrapper. Private receipts:
 cli-quality-tasks-setup-leak-{node,bun}.log.
+
+
+### Quality-task scope review exposed a second setup-cleanup gap
+
+While validating the quality-task migration, `bun run beep lint effect-vitest`
+reported one introduced scope judgment despite a net decrease of 78 findings.
+The whole-body scope around the diff-audit integration case became visible
+after its runtime boundary migrated. The nested acquisition allocated a
+temporary directory and ran Git setup before registering cleanup, leaving
+the directory unreleased if setup failed. The follow-up moves acquisition
+and its existing ignore-on-remove cleanup into `Effect.acquireRelease` before
+setup and lets the public test scope own it. Focused failure-path evidence
+and refreshed suite proof are required before recording the repair as verified.
+
+The same review found that the detector no longer sees an unchanged shorter
+scope behind a `flow(Effect.fnUntraced(...), ...)` test callback. Its historical
+judgment remains open; detector silence is not evidence of resolution. Extend
+callback recognition with explicit regression coverage in a tooling batch.
+
+The diff-audit repair now has passing Node/Bun controls for the reproduced
+setup leak, success, setup failure, body failure, interruption and retained
+ignore-on-remove behavior. All 254 actual suite cases pass on each runtime,
+894 assertion trees are preserved, and the root ratchet introduces no findings.
+Full package verification remains the next gate.

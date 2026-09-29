@@ -44,5 +44,6 @@ fingerprints remain intact. The public cli-lint-ledger-collision-receipt.json
 records the raw detector ID and mapping. No baseline identity was changed.
 
 The CLI ledger contains 3,489 unique schema-valid rows: 1,541 fixed,
-12 exceptions and 1,936 open. Full CLI package verification is running for
-source f5e6ab0018; its terminal result is not yet available.
+12 exceptions and 1,936 open. Full CLI package verification passed for source f5e6ab0018: audit 691.2
+seconds and docgen 22.3 seconds. Package source stayed unchanged throughout
+the proof; intervening commits changed only goal records.
