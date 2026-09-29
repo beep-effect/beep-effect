@@ -10,11 +10,12 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
-import { Defect, EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Defect, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CandorFilingScope } from "../CandorPolicy/CandorPolicy.values.ts";
+import { EffectOutput } from "../internal/effectOutput.ts";
 import type { CandorRecordSnapshot } from "../CandorPolicy/CandorPolicy.ports.ts";
 
 const $I = $LawPracticeUseCasesId.create("CandorRecord/CandorRecord.ports");
@@ -198,43 +199,43 @@ export class CandorRecordRepositoryShape extends S.Class<CandorRecordRepositoryS
   {
     listDispositions: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<ReadonlyArray<CandorDisposition>, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<ReadonlyArray<CandorDisposition>, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Read every recorded attorney disposition for one exact tenant-scoped filing.",
     }),
     listEvents: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<ReadonlyArray<PatentCitationEvent>, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<ReadonlyArray<PatentCitationEvent>, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Read every recorded patent citation event for one exact tenant-scoped filing.",
     }),
     listSubmissionFacts: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<ReadonlyArray<IdsSubmissionFact>, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<ReadonlyArray<IdsSubmissionFact>, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Read every recorded information-disclosure submission fact for one exact filing.",
     }),
     recordDisposition: Fn({
       input: CandorDisposition,
-      output: EffectSchema<CandorDisposition, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<CandorDisposition, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Append one attorney disposition; revision and withdrawal append superseding records.",
     }),
     recordEvent: Fn({
       input: PatentCitationEvent,
-      output: EffectSchema<PatentCitationEvent, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<PatentCitationEvent, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Append one observed patent citation event.",
     }),
     recordSubmissionFact: Fn({
       input: IdsSubmissionFact,
-      output: EffectSchema<IdsSubmissionFact, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<IdsSubmissionFact, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Append one information-disclosure submission act with its own operative date.",
     }),
     readSnapshot: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<CandorRecordSnapshot, CandorRecordRepositoryUnavailable, never>(),
+      output: EffectOutput<CandorRecordSnapshot, CandorRecordRepositoryUnavailable>(),
     }).annotateKey({
       description: "Read a filing's citation events and dispositions from one protected snapshot.",
     }),
