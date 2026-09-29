@@ -5088,3 +5088,13 @@ Stable occurrence hashes survived, but changed evidence excerpts caused two
 ratchet failures. Refresh reviewed evidence after formatting and before the
 final ratchet; separate display evidence from occurrence matching to prevent
 formatting-only failures. The corrected entries preserve statuses and hashes.
+
+## Preserve branch coverage when adding readiness short circuits
+
+PR 1323's hosted coverage found WatchMode branches at 99.1% against 100%
+and WatchStream lines at 99% against 100%. The new merge-blocking predicate
+short-circuited existing failing-check fixtures before they exercised the
+required-check skip path. A timestamp-ordering fallback also had no invalid
+instant case. Added behavioral regressions restore full focused coverage
+without lowering either baseline. Include skipped required checks and malformed
+timestamps in watch conformance tests when changing readiness or ordering.

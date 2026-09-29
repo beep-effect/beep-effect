@@ -277,6 +277,29 @@ describe("collectYeetWatchSnapshot", () => {
     scriptedSpawnerLayer([
       {
         view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+        checks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "skipping", state: "SKIPPED" }]) },
+        requiredChecks: { exitCode: 0, output: checksJson([{ name: "Lint", bucket: "skipping", state: "SKIPPED" }]) },
+        threads: { exitCode: 0, output: threadsJson([]) },
+      },
+    ]),
+    { timeout: "10 seconds" }
+  )("accepts a skipped required check", (it) => {
+    it.effect("keeps readiness green while preserving the skip outcome", () =>
+      Effect.gen(function* () {
+        const snapshot = yield* collectYeetWatchSnapshot(context);
+        strictEqual(snapshot.criteria.requiredChecksGreen, true);
+        const check = snapshot.checks[0];
+        assertDefined(check);
+        strictEqual(check.required, true);
+        strictEqual(check.outcome, "skip");
+      })
+    );
+  });
+
+  it.layer(
+    scriptedSpawnerLayer([
+      {
+        view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
         checks: {
           exitCode: 0,
           output: checksJson([

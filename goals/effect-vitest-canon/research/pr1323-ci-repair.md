@@ -42,3 +42,17 @@ values and all assertions remain unchanged. Four affected provider/scope
 findings are reconciled by file, rule, symbol and occurrence, preserving their
 statuses and multiplicities. No baseline waiver is added. The focused suite
 passes all 64 tests under CI logging on Node.
+
+## Watch coverage regression repair
+
+Hosted coverage on `1d01a323d6` passed tests but found one uncovered branch in
+WatchMode and one uncovered line/function in WatchStream. Focused coverage
+reproduced the missing required-check skip branch. The timestamp ordering
+fallback also lacked a regression for invalid instants.
+
+Added behavior checks for a skipped required check retaining its skip outcome
+while allowing readiness, and for an invalid completion sorting after a known
+failing instant in either input order. No production code or baseline changed.
+CI-enabled Node coverage passes 98 tests across three files. Both WatchMode and
+WatchStream now have every statement, function, and branch covered in that
+cohort. Package proof, full verification, and hosted checks remain required.

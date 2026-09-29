@@ -198,6 +198,14 @@ describe("check record normalization", () => {
     })
   );
 
+  it("orders an invalid completion after a known failing instant", () => {
+    const unknown = YeetWatchCheck.make({ name: "Unknown", outcome: "fail", completedAt: O.some("not-an-instant") });
+    const known = YeetWatchCheck.make({ name: "Check", outcome: "fail", completedAt: O.some("2026-09-25T12:01:00Z") });
+    const expected = YeetHeadRed.make({ at: "2026-09-25T12:01:00Z", lane: "Check" });
+    assertSome(yeetFirstRed([unknown, known]), expected);
+    assertSome(yeetFirstRed([known, unknown]), expected);
+  });
+
   it("names the earliest required failing completion as the head's first red", () => {
     const record = (name: string, outcome: "fail" | "pass", completedAt: O.Option<string>, required = true) =>
       YeetWatchCheck.make({ name, outcome, required, completedAt });
