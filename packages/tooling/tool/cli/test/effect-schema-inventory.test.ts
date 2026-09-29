@@ -4,6 +4,7 @@ import {
   compactEffectSchemaInventoryPreview,
   diffEffectSchemaInventoryFiles,
   digestEffectSchemaInventoryJsonl,
+  EffectSchemaInventoryDrift,
   EffectSchemaInventoryFile,
   EffectSchemaInventoryFixturePath,
   EffectSchemaInventoryGraftContext,
@@ -22,6 +23,7 @@ import {
   encodeEffectSchemaInventoryRowJson,
   extractEffectSchemaInventory,
   findEffectSchemaInventoryModule,
+  formatEffectSchemaInventoryDrift,
   generateEffectSchemaInventory,
   generateEffectSchemaInventoryPrompt,
   makeEffectSchemaInventoryCommandForTesting,
@@ -36,11 +38,14 @@ import {
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { it } from "@effect/vitest";
+import { it, vi } from "@effect/vitest";
 import { assertFalse, assertInclude, assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Order, Path, Ref } from "effect";
+import { Clock, Config, Effect, Fiber, FileSystem, HashMap, Layer, Order, Path, PlatformError, Ref } from "effect";
+import * as Bool from "effect/Boolean";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as TestClock from "effect/testing/TestClock";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";
 
 const repositoryRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
@@ -649,6 +654,41 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
   );
 
   it.effect(
+    "restores the previous fixture when the staged one cannot take its place",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-swap-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      const parent = path.dirname(directory);
+      // Only the staged directory's move into place fails; moving the previous copy back succeeds.
+      const refused = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "rename",
+        pathOrDescriptor: directory,
+      });
+      const write = Effect.flip(writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# new\n"]]))).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: (from, to) =>
+            to === directory && !Str.endsWith("-previous")(from) ? Effect.fail(refused) : fs.rename(from, to),
+        })
+      );
+
+      assertInclude((yield* write).message, "Unable to move the staged fixture into");
+      deepStrictEqual(yield* fs.readDirectory(parent), []);
+
+      yield* fs.makeDirectory(directory);
+      yield* fs.writeFileString(path.join(directory, "INDEX.md"), "# old\n");
+      assertInclude((yield* write).message, "Unable to move the staged fixture into");
+      deepStrictEqual(yield* fs.readDirectory(parent), [path.basename(directory)]);
+      deepStrictEqual(yield* fs.readDirectory(directory), ["INDEX.md"]);
+      strictEqual(yield* fs.readFileString(path.join(directory, "INDEX.md")), "# old\n");
+    })
+  );
+
+  it.effect(
     "fails instead of reading an unlistable fixture directory as empty",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -875,6 +915,198 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       assertInclude(prompt, "/** Value of X. */\nconst X = { n: 1 }");
       assertInclude(prompt, "/** Exported formatter. */");
       strictEqual(A.length(Str.split(prompt, "function f(x: string): string")) - 1, 1);
+    })
+  );
+  it.effect(
+    "writes a fixture, checks it clean, and writes a prompt through the run orchestration",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-run-" });
+      const reads = yield* Ref.make(0);
+      const driftingGraft = EffectSchemaInventoryGraftContext.make({ ...demoGraft, workingTreeMatchesPin: false });
+      const run = (request: EffectSchemaInventoryRequest) =>
+        runEffectSchemaInventory(root, request).pipe(
+          Effect.provideService(
+            EffectSchemaInventorySource,
+            fakeSource(
+              {
+                graftContext: Effect.fn("EffectSchemaInventoryTest.driftingGraft")(() => Effect.succeed(driftingGraft)),
+              },
+              reads
+            )
+          )
+        );
+      yield* run(EffectSchemaInventoryRequest.cases.write.make({}));
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      strictEqual((yield* fs.readDirectory(directory)).length, EffectSchemaInventoryModules.length + 1);
+      yield* run(EffectSchemaInventoryRequest.cases.check.make({}));
+      yield* run(
+        EffectSchemaInventoryRequest.cases.prompt.make({
+          module: "effect/schema/SchemaJITCompiler/enable",
+          out: O.some("prompts/enable.md"),
+        })
+      );
+      assertInclude(yield* fs.readFileString(path.join(root, "prompts/enable.md")), "may drift");
+    })
+  );
+
+  it("reports a stale line by its first differing column and past the end of a shorter file", () => {
+    const [prefix] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "abc\n" })],
+      HashMap.make(["a.jsonl", "abcd\n"])
+    );
+    assertTrue(prefix?._tag === "stale");
+    strictEqual(prefix.column, 4);
+    const [longer] = diffEffectSchemaInventoryFiles(
+      [EffectSchemaInventoryFile.make({ name: "a.jsonl", content: "a" })],
+      HashMap.make(["a.jsonl", "a\nb"])
+    );
+    assertTrue(longer?._tag === "stale");
+    strictEqual(longer.line, 2);
+    strictEqual(longer.expected, "<end of file>");
+    strictEqual(longer.actual, "b");
+    strictEqual(
+      formatEffectSchemaInventoryDrift(longer),
+      "stale      a.jsonl:2:1\n  expected: <end of file>\n  actual:   b"
+    );
+    strictEqual(
+      formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.unexpected.make({ file: "x.jsonl" })),
+      "unexpected x.jsonl"
+    );
+    strictEqual(
+      formatEffectSchemaInventoryDrift(EffectSchemaInventoryDrift.cases.missing.make({ file: "INDEX.md" })),
+      "missing    INDEX.md"
+    );
+  });
+
+  it.effect(
+    "live source reads pinned bytes, refuses a non-git reference, and reports every graft failure",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const head = Str.trim(
+        yield* spawner.string(ChildProcess.make("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot }))
+      );
+
+      const unreadable = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unreadable-" });
+      const noManifest = yield* Effect.flip((yield* EffectSchemaInventorySource.make(unreadable)).readPin);
+      strictEqual(noManifest.specifier, "<unreadable>");
+
+      const plain = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-plain-" });
+      yield* fs.makeDirectory(path.join(plain, ".repos", "effect"), { recursive: true });
+      const notGit = yield* Effect.flip((yield* EffectSchemaInventorySource.make(plain)).verifyPin(PIN));
+      assertInclude(notGit.message, "is not a git checkout");
+
+      const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-live-" });
+      yield* fs.makeDirectory(path.join(linked, ".repos"));
+      yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
+      assertTrue(Layer.isLayer(EffectSchemaInventorySource.layer(linked)));
+      const live = yield* EffectSchemaInventorySource.make(linked);
+      yield* live.verifyPin(head);
+      assertInclude(yield* live.readPinned(head, "package.json"), '"name": "@beep/root"');
+      assertInclude(
+        (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
+        "Unable to read missing-file.txt"
+      );
+
+      // A fake `graft` first on PATH makes every graft outcome deterministic, locally and hosted.
+      const bin = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-bin-" });
+      const graft = path.join(bin, "graft");
+      const ambientPath = yield* Config.String("PATH");
+      const withPath = <A, E, R>(pathValue: string, effect: Effect.Effect<A, E, R>) =>
+        Effect.acquireUseRelease(
+          Effect.sync(() => vi.stubEnv("PATH", pathValue)),
+          () => effect,
+          () => Effect.sync(() => vi.unstubAllEnvs())
+        );
+      const withGraft = Effect.fnUntraced(function* (script: string) {
+        yield* fs.writeFileString(graft, script);
+        yield* fs.chmod(graft, 0o755);
+        return yield* withPath(`${bin}:${ambientPath}`, Effect.result(live.graftContext(head, "package.json")));
+      });
+      const decoded = yield* withGraft(
+        '#!/bin/sh\nprintf \'{"file":"%s","entries":[{"name":"x","kind":"const","span":"L1-L1"}]}\' "$4"\n'
+      );
+      assertTrue(decoded._tag === "Success");
+      strictEqual(decoded.success.entries.length, 1);
+      strictEqual(decoded.success.head, head);
+      const exited = yield* withGraft("#!/bin/sh\necho boom >&2\nexit 3\n");
+      assertTrue(exited._tag === "Failure");
+      assertInclude(exited.failure.message, "exit 3: boom");
+      const garbled = yield* withGraft("#!/bin/sh\necho nope\n");
+      assertTrue(garbled._tag === "Failure");
+      assertInclude(garbled.failure.message, "output did not decode");
+      // A private TestClock passes the graft timeout only once the fake has started, so the timeout
+      // arm ends the run (and kills the child) without moving the block's shared clock.
+      const started = path.join(bin, "started");
+      const clock = yield* TestClock.make();
+      const pending = yield* Effect.forkChild(
+        withGraft(`#!/bin/sh\n: > '${started}'\nexec sleep 30\n`).pipe(Effect.provideService(Clock.Clock, clock))
+      );
+      yield* Effect.repeat(fs.exists(started), { while: Bool.not });
+      yield* clock.adjust("60 seconds");
+      const timedOut = yield* Fiber.join(pending);
+      assertTrue(timedOut._tag === "Failure");
+      assertInclude(timedOut.failure.message, "timed out after");
+      // Only git's own directory on PATH: git answers, and no `graft` can be found.
+      const gitDirectory = path.dirname(
+        Str.trim(yield* spawner.string(ChildProcess.make("sh", ["-c", "command -v git"], { cwd: repositoryRoot })))
+      );
+      const unrunnable = yield* withPath(gitDirectory, Effect.result(live.graftContext(head, "package.json")));
+      assertTrue(unrunnable._tag === "Failure");
+      assertInclude(unrunnable.failure.message, "could not run");
+      const noGit = yield* withPath(bin, Effect.flip(live.graftContext(head, "package.json")));
+      assertInclude(noGit.message, "git rev-parse");
+    })
+  );
+
+  it.effect(
+    "live source reads an unstatable reference as missing and refuses a HEAD that is not a SHA-1 id",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-reference-" });
+      const reference = path.join(root, ".repos", "effect");
+      yield* fs.makeDirectory(reference, { recursive: true });
+
+      const denied = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "exists",
+        pathOrDescriptor: reference,
+      });
+      const unstatable = yield* EffectSchemaInventorySource.make(root).pipe(
+        Effect.provideService(FileSystem.FileSystem, { ...fs, exists: () => Effect.fail(denied) })
+      );
+      const missing = yield* Effect.flip(unstatable.verifyPin(PIN));
+      strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
+      assertInclude(missing.message, "is missing");
+
+      // A SHA-256 repository names HEAD with 64 hex digits, which the pin schema rejects.
+      const git = (args: ReadonlyArray<string>) => spawner.string(ChildProcess.make("git", args, { cwd: reference }));
+      yield* git(["init", "-q", "--object-format=sha256"]);
+      yield* git([
+        "-c",
+        "user.name=inventory",
+        "-c",
+        "user.email=inventory@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "-q",
+        "--no-verify",
+        "--allow-empty",
+        "-m",
+        "init",
+      ]);
+      const live = yield* EffectSchemaInventorySource.make(root);
+      const failure = yield* Effect.flip(live.graftContext(PIN, "package.json"));
+      assertTrue(Str.startsWith("git rev-parse HEAD: ")(failure.message));
     })
   );
 });
