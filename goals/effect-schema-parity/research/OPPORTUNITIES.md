@@ -175,3 +175,18 @@ machine ids, quote only the minimal identifying error text.
   admitted duplication, marked with the existing `fallow-ignore-file
   code-duplication` convention (11 files already use it) and a one-line reason
   naming the retirement. The P3 lane brief now says so.
+
+## 2026-09-29 — A consumer that lands on main after the merge-base is invisible to the lane
+
+- **What I was doing:** Driving the text/misc retirement PR after two unrelated
+  PRs merged on main.
+- **Evidence:** one of them added `packages/tooling/tool/cli/test/support/ProofJobWait.ts`
+  with `import type { UUID } from "@beep/schema/String"`, a subpath the PR
+  retires. Every local gate on the branch was green; the hosted fallow
+  dead-code lane, which runs on the merged preview, reported the file as an
+  unresolved import, and the envelope attributed it as not applicable while
+  still failing the job.
+- **What would have prevented it:** the retirement lane brief now says to merge
+  `origin/main` and grep for the retired subpaths before every push; a hosted
+  guard that lists new imports of a subpath the PR deletes would name the file
+  directly instead of leaving it to the dead-code envelope's exit code.
