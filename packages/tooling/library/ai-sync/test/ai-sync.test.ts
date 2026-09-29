@@ -32,7 +32,6 @@ import {
   validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
@@ -100,7 +99,7 @@ const repoSafeClaudePermissions = {
   defaultMode: "default",
   deny: requiredClaudeRepoDenyPermissions,
 };
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const expectSchemaRoundTrip = Effect.fn("expectSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,

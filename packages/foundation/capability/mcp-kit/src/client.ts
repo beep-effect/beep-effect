@@ -19,7 +19,6 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Deferred, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
@@ -681,7 +680,9 @@ export const parseServerSentEvents = (text: string): ReadonlyArray<string> =>
   );
 
 const decodeJsonRpcMessages = S.decodeUnknownEffect(S.Array(JsonRpcMessage));
-const decodeJsonText: (text: string) => Effect.Effect<unknown, S.SchemaError> = S.decodeEffect(UnknownFromJsonString);
+const decodeJsonText: (text: string) => Effect.Effect<unknown, S.SchemaError> = S.decodeEffect(
+  S.fromJsonString(S.Unknown)
+);
 const decodeMessageLine = S.decodeEffect(JsonRpcMessageFromLine);
 const encodeMessageLine = S.encodeEffect(JsonRpcMessageFromLine);
 const encodeJsonRpcError = S.encodeEffect(JsonRpcError);

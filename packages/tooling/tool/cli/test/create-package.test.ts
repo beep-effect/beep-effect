@@ -1,6 +1,5 @@
 import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -12,6 +11,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -30,8 +31,8 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
+const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const CreatePackageTestTimeoutMs = 30_000;
 const TestFileCwd = process.cwd();
 

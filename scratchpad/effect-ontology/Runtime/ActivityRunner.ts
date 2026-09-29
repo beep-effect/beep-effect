@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SchemaUtils, Unknown } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Console, Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
@@ -34,7 +34,7 @@ import {
 import { makeStreamingExtractionActivity } from "../Workflow/StreamingExtractionActivity.ts";
 import { ActivityDependenciesLayer, ConfigServiceDefault, EmbeddingBundleOpen } from "./WorkflowLayers.ts";
 
-const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { space: 2 }));
+const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 
 // -----------------------------------------------------------------------------
 // Activity Name Schema

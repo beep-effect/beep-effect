@@ -1,12 +1,11 @@
 import { LabsListRow, labsCommand } from "@beep/repo-cli/commands/Labs";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -19,7 +18,7 @@ const LabsTestLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 const runLabs = Command.runWith(labsCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const decodeLabsListRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(LabsListRow)));
 
 const withLabsRepo = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>

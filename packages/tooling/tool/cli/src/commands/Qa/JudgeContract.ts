@@ -11,7 +11,6 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   AlwaysGateApplicability,
   EvidenceDigest,
@@ -38,6 +37,8 @@ import { CitedArtifactExistsGate, CitedArtifactExistsVerdict } from "./CitedArti
 import { decodeQaInventory, QaInventory } from "./Inventory.schemas.ts";
 import { QaJudgeGateId } from "./QaJudgeGateId.ts";
 import type { GateEvaluator } from "@beep/skill-contract";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const $I = $RepoCliId.create("commands/Qa/JudgeContract");
 const remediationOwner = "@beep/repo-cli/Qa";
@@ -711,7 +712,7 @@ export const evaluateJudgeOutputInventoryDecodes: GateEvaluator<
   input: JudgeOutputInventoryDecodesInput
 ): Effect.fn.Return<JudgeOutputInventoryDecodesVerdict> {
   const occurredAt = yield* auditTimestamp;
-  const parsed = yield* Effect.result(UnknownFromJsonString.decodeEffect(input.candidate));
+  const parsed = yield* Effect.result(decodeJsonEffect(input.candidate));
 
   return yield* Result.match(parsed, {
     onFailure: (issue) => Effect.succeed(outputDecodeDenial("malformed-json", issue.message, occurredAt)),

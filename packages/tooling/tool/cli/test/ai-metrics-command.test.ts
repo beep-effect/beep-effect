@@ -10,7 +10,6 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -57,7 +56,7 @@ const LabelQueueArbitrary = Arbitrary.schema(AiMetricsLabelQueueResult);
 const MirrorBundleArbitrary = Arbitrary.schema(AiMetricsMirrorBundleResult);
 const OtlpExportResultArbitrary = Arbitrary.schema(AiMetricsOtlpExportResult);
 const WeeklyReportArbitrary = Arbitrary.schema(AiMetricsWeeklyReportResult);
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const decodeUnknownJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
 const isCoverageRatchetRun = Bun.env.VITEST_COVERAGE_RATCHET === "1";

@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
 import { Defect, LiteralKit } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -66,7 +65,7 @@ class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGene
 
 const isHtmlGenerationError = S.is(HtmlGenerationError);
 
-const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeJson = (value: unknown): string =>
   pipe(
     encodeJsonResult(value),

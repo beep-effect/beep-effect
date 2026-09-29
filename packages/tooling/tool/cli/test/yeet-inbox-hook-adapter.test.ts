@@ -7,7 +7,6 @@ import {
   YeetInboxObservedRowKind,
   YeetInboxWaveExemptRowKind,
 } from "@beep/repo-cli/test/Yeet";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
@@ -26,7 +25,7 @@ const wontfixAckForm = '--wontfix --reason "<text>"';
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeObject = S.decodeUnknownEffect(JsonObject);
-const encodeUnknown = UnknownFromJsonString.encodeUnknownEffect;
+const encodeUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>, timeout?: number): void =>
   it(name, () => Effect.runPromise(program()), timeout);
 

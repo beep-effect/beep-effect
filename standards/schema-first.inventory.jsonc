@@ -480,16 +480,6 @@
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
     },
     {
-      "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 14,
-      "owner": "@beep/schema",
-      "reason": "Explicit JSON-boundary policy regression over fixed compact and pretty fixtures; S.Unknown admits non-JSON values for which a JSON-string round-trip is undefined, so schema-derived arbitrary coverage would not express the boundary's law."
-    },
-    {
       "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
       "symbol": "ChatComposerMountConfig",
       "kind": "exported-interface",
@@ -906,6 +896,56 @@
       "line": 370,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 44,
+      "owner": "@beep/repo-cli",
+      "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 53,
+      "owner": "@beep/repo-cli",
+      "reason": "Corpus-preservation regression serializes fixed JSON fixtures through the compact S.fromJsonString(S.Unknown) codec; the codec calls build inputs and assert no schema law, so schema-derived arbitrary coverage does not apply."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 12,
+      "owner": "@beep/repo-cli",
+      "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 12,
+      "owner": "@beep/repo-cli",
+      "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 27,
+      "owner": "@beep/repo-cli",
+      "reason": "Hook adapter regression encodes and decodes fixed hook payload JSON through S.fromJsonString codecs to prove adapter wiring; the payloads are fixed fixtures, not a schema law."
     }
   ]
 }

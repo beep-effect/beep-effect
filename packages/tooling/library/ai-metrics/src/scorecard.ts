@@ -8,7 +8,6 @@
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Defect, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -579,7 +578,7 @@ class CoverageCountsRow extends S.Class<CoverageCountsRow>($I`CoverageCountsRow`
   static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(CoverageCountsRow));
 }
 
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const scorecardFailure = (message: string, cause: unknown): AiMetricsScorecardError =>
   AiMetricsScorecardError.make({ cause, message });

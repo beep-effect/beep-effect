@@ -21,7 +21,6 @@ import {
   Types,
   UriReferenceString,
 } from "@beep/schema/JSONSchema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -31,6 +30,9 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJsonEffect = S.decodeEffect(UnknownJson);
 
 const decodeExtensionKeyOption = S.decodeOption(ExtensionKey);
 
@@ -44,8 +46,8 @@ const decodeDocumentResult = S.decodeUnknownResult(Document);
 const encodeDocumentResult = S.encodeResult(Document);
 const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
 const encodeSubSchemaResult = S.encodeResult(SubSchema);
-const decodeJsonResult = UnknownFromJsonString.decodeUnknownResult;
-const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
+const decodeJsonResult = S.decodeUnknownResult(UnknownJson);
+const encodeJsonResult = S.encodeUnknownResult(UnknownJson);
 const isAbsoluteUriString = S.is(AbsoluteUriString);
 const isIdUriReferenceString = S.is(IdUriReferenceString);
 const isUriReferenceString = S.is(UriReferenceString);
@@ -230,7 +232,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
     it.effect(
       "preserves a hostile __proto__ wire key without prototype pollution",
       Effect.fnUntraced(function* () {
-        const wire: unknown = yield* UnknownFromJsonString.decodeEffect('{"__proto__": {"polluted": 1}, "x-a": 2}');
+        const wire: unknown = yield* decodeJsonEffect('{"__proto__": {"polluted": 1}, "x-a": 2}');
         const node = yield* decodeNode(wire);
         expect(Object.getOwnPropertyDescriptor(node.extensions, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();

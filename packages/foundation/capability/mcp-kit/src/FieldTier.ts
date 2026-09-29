@@ -20,7 +20,6 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual, identity } from "effect/Function";
@@ -204,7 +203,7 @@ export const projectFieldTier: {
   ): Record<string, unknown> => stripNulls(pickFields(value, fieldNamesOf(tiers[tier])))
 );
 
-const encodeJsonSizeInput = S.encodeResult(UnknownFromJsonString);
+const encodeJsonSizeInput = S.encodeResult(S.fromJsonString(S.Unknown));
 const jsonSizeEncoder = new TextEncoder();
 
 /**

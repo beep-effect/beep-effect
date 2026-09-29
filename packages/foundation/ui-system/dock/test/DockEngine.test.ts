@@ -28,7 +28,6 @@ import {
 } from "@beep/dock";
 import { fcRuns } from "@beep/fc-runs";
 import { NonNegativeInt } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -58,6 +57,8 @@ import {
   splitTwo,
 } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
+
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeDockSnapshotJson = S.decodeEffect(S.fromJsonString(DockSnapshot));
 const decodeUnknownDockSnapshotJsonOption = S.decodeUnknownOption(S.fromJsonString(DockSnapshot));
@@ -155,7 +156,7 @@ describe("DockEngine", () => {
       "rejects snapshots with an unsupported version",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const wrongVersion = yield* UnknownFromJsonString.encodeEffect({
+        const wrongVersion = yield* encodeJsonEffect({
           version: 2,
           workspace: DockWorkspace.empty,
         });

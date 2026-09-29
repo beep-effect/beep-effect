@@ -43,7 +43,6 @@ import { Process } from "@beep/repo-docgen/Domain";
 import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -80,6 +79,8 @@ import type {
   DocgenQualityWorkerEvalRunner,
 } from "@beep/repo-cli/test/Docgen";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const encodeDocgenQualityWorkerEvalReportJsonEffect = S.encodeEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));
 
 const provideScopedLayer =
@@ -103,8 +104,8 @@ const CommandTestLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const runDocgenCommand = Command.runWith(docgenCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
+const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const encodeDocgenConfigDocument = S.encodeEffect(DocgenConfigDocument);
 const decodeDocgenConfigDocument = S.decodeUnknownEffect(DocgenConfigDocument);
 const decodeWorkerEvalReportJson = S.decodeUnknownEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));

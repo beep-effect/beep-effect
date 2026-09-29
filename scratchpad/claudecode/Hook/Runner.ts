@@ -15,7 +15,6 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { runMain as platformRunMain } from "@effect/platform-node-shared/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node-shared/NodeStdio";
 import { Cause, Effect, Exit, Stdio, Stream } from "effect";
@@ -37,6 +36,8 @@ import {
 } from "../Errors.ts";
 import * as HookContext from "./Context.ts";
 import { HookEnvelope } from "./Envelope.ts";
+
+const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 const decodeUnknownHookEnvelope = S.decodeUnknownEffect(HookEnvelope);
 const isHookControlledExit = S.is(HookControlledExit);
 const isHookInputDecodeError = S.is(HookInputDecodeError);
@@ -385,7 +386,7 @@ export const runHookProgram = Effect.fn("Hook.runHookProgram")(function* <In ext
 ): Effect.fn.Return<void, RunnerError, Stdio.Stdio | HandlerRequirements<R>> {
   yield* Effect.logDebug("starting single hook runner").pipe(Effect.annotateLogs({ hookEventName: hook.event }));
   const raw = yield* readStdin;
-  const parsed = yield* UnknownFromJsonString.decodeEffect(raw).pipe(
+  const parsed = yield* decodeJsonEffect(raw).pipe(
     Effect.mapError((cause) => HookInputDecodeError.make({ cause, phase: "json" }))
   );
   yield* runHookFromParsed(hook, parsed);
@@ -425,7 +426,7 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
     Effect.annotateLogs({ registeredHandlers: R.keys(hooks).length })
   );
   const raw = yield* readStdin;
-  const parsed = yield* UnknownFromJsonString.decodeEffect(raw).pipe(
+  const parsed = yield* decodeJsonEffect(raw).pipe(
     Effect.mapError((cause) => HookInputDecodeError.make({ cause, phase: "json" }))
   );
   const envelope = yield* decodeUnknownHookEnvelope(parsed).pipe(

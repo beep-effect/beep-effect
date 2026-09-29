@@ -19967,22 +19967,6 @@
       "description": "The `type` keyword value: one type name or a non-empty unique array of type names."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Json.ts",
-      "symbol": "JsonArray",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "JsonArray",
-      "description": "A Json Array"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Json.ts",
-      "symbol": "JsonObject",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "JsonObject",
-      "description": "A Json Object"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
       "symbol": "JsoncParseDiagnostic",
       "kind": "schema-class",
@@ -20922,14 +20906,6 @@
       "owner": "@beep/schema",
       "identity": "UnitInterval",
       "description": "Schema for a real number in the closed unit interval [0, 1] (inclusive).\nThe canonical shape for probabilities, confidences, ratios, and normalized scores."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Unknown.ts",
-      "symbol": "Unknown",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "Unknown",
-      "description": "An unknown-value schema with Effect, Promise, Sync, Exit, Result, Option, and JSON-string codec statics."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Xml.ts",

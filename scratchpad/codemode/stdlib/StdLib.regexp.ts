@@ -8,13 +8,14 @@
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
 import { LiteralKit, type SafeObject } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, P, pipe, R } from "@beep/utils";
 import { type RegExpMethod, type RegExpStatic, regexpMethods } from "../Codemode.method-names.ts";
 import { isBlockedMember } from "../Codemode.tool-runtime.ts";
 import { CodeModeRegExp, makeEmptySafeObject } from "../Codemode.values.ts";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts";
+import * as S from "effect/Schema";
+import { flow, Result } from "effect";
 
 export {
   regexpMethods,
@@ -78,7 +79,7 @@ export const regexpProperties = LiteralKit([
  */
 export type regexpProperties = typeof regexpProperties.Type;
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 /**
  * Strips the host `Invalid regular expression:` prefix from a thrown pattern

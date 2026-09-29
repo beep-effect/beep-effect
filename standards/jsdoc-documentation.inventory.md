@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2905 |
-| publicExports | 20526 |
+| publicModules | 2903 |
+| publicExports | 20516 |
 | openModules | 377 |
-| openExports | 3097 |
+| openExports | 3093 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3330 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3329 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1606 | 25 | 168 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 261 | 1596 | 25 | 164 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -717,8 +717,6 @@ Export findings:
 - `src/Http/Http.headers.shared.ts:275` `makeHeaderEncodeForbidden` (const) - 1 example import violation(s)
 - `src/HttpStatus/HttpStatus.shared.ts:26` `$I` (const) - 1 example import violation(s)
 - `src/Int64.ts:124` `Int64FromString` (const) - 1 example import violation(s)
-- `src/Json.ts:117` `decodeJsonString` (const) - 1 example import violation(s)
-- `src/Json.ts:139` `encodeJsonString` (const) - 1 example import violation(s)
 - `src/Jsonc.ts:94` `JsoncTextToUnknown` (const) - 1 example import violation(s)
 - `src/Jsonc.ts:140` `decodeJsoncTextAs` (const) - 1 example import violation(s)
 - `src/Jsonl.ts:107` `JsonlTextToUnknown` (const) - 1 example import violation(s)
@@ -794,8 +792,6 @@ Export findings:
 - `src/Transformations.ts:49` `destructiveTransform` (const) - 1 example import violation(s)
 - `src/Uint32.ts:68` `Uint32` (const) - 1 example import violation(s)
 - `src/Uint64.ts:58` `Uint64` (const) - 1 example import violation(s)
-- `src/Unknown.ts:43` `Unknown` (const) - 1 example import violation(s)
-- `src/Unknown.ts:75` `UnknownFromJsonString` (const) - 2 example import violation(s)
 - `src/Xml.ts:86` `XmlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)

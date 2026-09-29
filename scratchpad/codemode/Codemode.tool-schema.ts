@@ -7,7 +7,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, thunkFalse } from "@beep/utils";
 import { flow, HashSet, JsonPointer, Result } from "effect";
 import { dual } from "effect/Function";
@@ -24,7 +23,7 @@ type SubSchema = JSONSchema.SubSchema.Type;
 type Definitions = Readonly<Record<string, SubSchema>>;
 
 const decodeNode = S.decodeUnknownResult(JSONSchema.NodeCodec);
-const encodeJsonString = UnknownFromJsonString.encodeUnknownResult;
+const encodeJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const renderLiteral = (value: unknown): string =>
   pipe(

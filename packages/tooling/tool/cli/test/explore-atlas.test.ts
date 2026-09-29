@@ -11,18 +11,18 @@ import {
   packetEventFileName,
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { describe, expect, it } from "vitest";
 import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),

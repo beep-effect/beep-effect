@@ -6,11 +6,11 @@
  */
 
 import { SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
-import { Effect, flow, HashMap, HashSet } from "effect";
+import { Effect, flow, HashMap, HashSet, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 import {
   ProfessionalRuntimePromotionBlocked,
@@ -24,6 +24,8 @@ import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.ts";
 import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
 import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.ts";
 import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const ensure = (condition: boolean, message: string): Effect.Effect<void, ProfessionalRuntimeValidationError> =>
   condition ? Effect.void : ProfessionalRuntimeValidationError.failEffect(message);
@@ -48,7 +50,7 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
   left.length === right.length && A.every(left, (value, index) => value === right[index]);
 
 // TODO(effect-native-migration): model schema
-const toPlainJson = (value: unknown): string => UnknownFromJsonString.encodeUnknownSync(value);
+const toPlainJson = (value: unknown): string => encodeUnknownJsonSync(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
   ...O.toArray(evidence.spanId),

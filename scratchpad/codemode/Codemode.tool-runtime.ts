@@ -14,7 +14,6 @@ import {
   SafeObject as SafeObjectSchema,
   SchemaUtils,
 } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -34,6 +33,8 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
 } from "./Codemode.values.ts";
+
+const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
@@ -1026,7 +1027,7 @@ export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
     A.map((segment) =>
-      identifierSegment(segment) ? `.${segment}` : `[${UnknownFromJsonString.encodeUnknownSync(segment)}]`
+      identifierSegment(segment) ? `.${segment}` : `[${encodeUnknownJsonSync(segment)}]`
     ),
     A.join("")
   )}`;

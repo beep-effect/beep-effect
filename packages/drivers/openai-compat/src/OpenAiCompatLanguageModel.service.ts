@@ -8,7 +8,6 @@
 import { $OpenaiCompatId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
-import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
@@ -47,6 +46,10 @@ import type {
   OpenAiCompatToolCallDelta,
 } from "./OpenAiCompat.models.ts";
 import type { OpenAiCompatClientShape } from "./OpenAiCompatClient.service.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(UnknownJson);
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(UnknownJson);
 
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
@@ -325,14 +328,14 @@ const encodeToolParams = (
   method: string,
   params: unknown
 ): Effect.Effect<string, AiError.AiError> =>
-  pipe(encodeJsonString(params), Effect.mapError(mapSchemaError(moduleName, method)));
+  pipe(encodeUnknownJsonEffect(params), Effect.mapError(mapSchemaError(moduleName, method)));
 
 const decodeToolParams = (
   moduleName: string,
   method: string,
   source: string
 ): Effect.Effect<unknown, AiError.AiError> =>
-  pipe(decodeJsonString(source), Effect.mapError(mapSchemaError(moduleName, method)));
+  pipe(decodeUnknownJsonEffect(source), Effect.mapError(mapSchemaError(moduleName, method)));
 
 const textContentPart = (part: Prompt.TextPart): Readonly<Record<string, unknown>> => ({
   text: part.text,

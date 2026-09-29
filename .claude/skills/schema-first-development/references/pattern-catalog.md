@@ -151,7 +151,7 @@ with `Effect.mapError(...)` and return the boundary's typed error.
 
 For JSON string boundaries:
 
-- `S.UnknownFromJsonString` for unknown JSON payloads
+- `S.fromJsonString(S.Unknown)` for unknown JSON payloads
 - `S.fromJsonString(MySchema)` when the string should decode directly into a
   known domain schema
 

@@ -8,7 +8,6 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
-import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { A, O, Str } from "@beep/utils";
@@ -905,7 +904,7 @@ class ChatCompletionTextResponse extends S.Class<ChatCompletionTextResponse>($I`
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ChatCompletionTextResponse);
 }
 
-const decodeSseJson = decodeJsonString;
+const decodeSseJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const createChatCompletionOperation = VeniceAIOperationDescriptor.make({
   method: "POST",

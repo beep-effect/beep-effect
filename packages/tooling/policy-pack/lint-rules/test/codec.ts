@@ -6,7 +6,8 @@
  * The config encoder is identical across harnesses, and the report decoder differs only by the
  * report schema — both live here so neither harness re-implements the codec boilerplate.
  */
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
+
+import { flow, Result } from "effect";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -16,7 +17,10 @@ import * as Str from "effect/String";
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
 // unary by contract: `options` stays reachable through `S.encodeUnknownSync(...)`;
 // a dual is undecidable here because `input` is `unknown`.
-export const encodeConfig: (input: unknown) => string = UnknownFromJsonString.encodeUnknownSync;
+export const encodeConfig: (input: unknown) => string = flow(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+  Result.getOrThrow
+);
 
 /**
  * Reports malformed subprocess JSON without converting it into an empty lint report.

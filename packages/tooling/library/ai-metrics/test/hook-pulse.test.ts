@@ -16,7 +16,6 @@ import {
   hashPublicTextSha256,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -27,6 +26,8 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const baseRawEventFixture = {
   session_id: "ccd-session-raw-1",
@@ -360,7 +361,7 @@ describe("HookPulseV1", () => {
       // was pinned by construction; now an unpinned decode would mean the
       // developer's environment here and the empty one in CI.
       const decoded = yield* withSaltEnv({}, decodeHookPulseFromLegacy(legacy));
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded));
+      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded));
 
       expect(decoded).toBeInstanceOf(HookPulseV1);
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
@@ -436,7 +437,7 @@ describe("HookPulseV1", () => {
         )
       );
       const encoded = yield* encodeHookPulse(decoded);
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(encoded);
+      const serialized = yield* encodeUnknownJsonEffect(encoded);
 
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
       expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);
@@ -1132,7 +1133,7 @@ describe("HookPulseV1", () => {
           { concurrency: 1 }
         )
       );
-      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded.skill));
+      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded.skill));
 
       // The leading slash of a slash-command invocation is not part of the name.
       assertSome(decoded.skill.surface, yield* hashPublicTextSha256(`skill:${surfaceSkillName}`));

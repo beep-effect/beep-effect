@@ -24,7 +24,6 @@ import {
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { PosInt } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -41,6 +40,8 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { createEditor } from "lexical";
 import type { SerializedTableCellNode } from "@lexical/table";
+
+const encodeJsonEffect = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeEditorStateWireFromJson = S.decodeEffect(EditorStateWireFromJson);
 const decodeEditorStateFromJsonResult = S.decodeResult(EditorStateFromJson, { onExcessProperty: "error" });
@@ -633,7 +634,7 @@ describe("Lexical.model", { concurrent: false }, () => {
               children: [node],
             },
           };
-          const source = yield* UnknownFromJsonString.encodeEffect(state);
+          const source = yield* encodeJsonEffect(state);
           const canonicalTag = ListType.$match(listType, {
             number: ListTag.thunk.ol,
             bullet: ListTag.thunk.ul,

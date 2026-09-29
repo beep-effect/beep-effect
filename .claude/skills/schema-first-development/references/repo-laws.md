@@ -135,7 +135,7 @@ Do not use `JSON.parse` or `JSON.stringify` in schema-first code paths.
 
 Use:
 
-- `S.UnknownFromJsonString`
+- `S.fromJsonString(S.Unknown)`
 - `S.fromJsonString(...)`
 - `S.decodeUnknownEffect` / `S.decodeEffect`
 - `S.encodeUnknownEffect` / `S.encodeEffect`

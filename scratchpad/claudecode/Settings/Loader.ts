@@ -13,9 +13,8 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
-import { Config, Effect, FileSystem, Order, Path } from "effect";
+import { Config, Effect, FileSystem, Order, Path, flow, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -24,6 +23,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SettingsDecodeError, SettingsParseError, SettingsReadError } from "../Errors.ts";
 import { SettingsFile, SettingsRaw } from "./Schema.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+const decodeJsonEffect = S.decodeEffect(UnknownJson);
 const decodeSettingsFile = S.decodeEffect(SettingsFile);
 const decodeUnknownSettingsFile = S.decodeUnknownEffect(SettingsFile);
 const decodeUnknownSettingsRaw = S.decodeUnknownEffect(SettingsRaw);
@@ -148,7 +150,7 @@ const decodeSettingsSource = (
   content: string
 ): Effect.Effect<SettingsRaw, SettingsParseError | SettingsDecodeError> =>
   Effect.gen(function* () {
-    const parsed = yield* UnknownFromJsonString.decodeEffect(content).pipe(
+    const parsed = yield* decodeJsonEffect(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
     );
     const raw = yield* decodeUnknownSettingsRaw(parsed).pipe(
@@ -160,7 +162,7 @@ const decodeSettingsSource = (
     return raw;
   });
 
-const encodeUnknownJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeUnknownJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 
 const isUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   P.isObject(value) && !A.isArray(value);

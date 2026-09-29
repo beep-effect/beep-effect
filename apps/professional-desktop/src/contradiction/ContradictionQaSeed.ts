@@ -84,7 +84,6 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { JsonObject } from "@beep/schema/Json";
 import type * as Crypto from "effect/Crypto";
 
 const decodeLogicalEdgeIdentity = S.decodeEffect(LogicalEdgeIdentity);
@@ -576,7 +575,7 @@ const factMatches = (actual: Readonly<Record<string, unknown>>, expected: Contra
     O.exists((decoded) => ContradictionQaFact.equivalence(decoded, expected))
   );
 
-const factRecord = (fact: ContradictionQaFact): JsonObject => ({
+const factRecord = (fact: ContradictionQaFact): S.JsonObject => ({
   issue: fact.issue,
   statement: fact.statement,
   value: fact.value,

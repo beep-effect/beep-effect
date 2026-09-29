@@ -147,7 +147,6 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -182,7 +181,7 @@ const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated))
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const attemptUuid = S.decodeUnknownEffect(UUID);
 const DEAD_PID = 2_147_483_647;
 const liveAttemptOwner = Effect.fnUntraced(function* () {

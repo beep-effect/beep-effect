@@ -1,7 +1,6 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
-import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { parseYaml } from "@beep/schema/Yaml";
@@ -37,6 +36,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+
+const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 
@@ -717,7 +718,7 @@ describe("@beep/venice-ai", () => {
         );
         const body = yield* pipe(
           bodyTextFromCapture(jsonCapture, "expected JSON body text"),
-          Effect.flatMap(decodeJsonString),
+          Effect.flatMap(decodeUnknownJsonEffect),
           Effect.flatMap(decodePromptBody)
         );
 

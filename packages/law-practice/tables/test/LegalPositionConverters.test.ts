@@ -37,7 +37,6 @@ import {
   toLegalPositionRelatorInsert,
 } from "@beep/law-practice-tables/entities/LegalPositionRelator";
 import { fromPowerExerciseRow, toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
-import { Unknown } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
@@ -57,7 +56,7 @@ const ROW_ID = 1;
 const ACT = "enter the demised premises";
 const NORM = { designation: "cl. 4.1" };
 const systemPrincipal = { component: "Runtime", kind: "System" };
-const StoredRow = S.fromJsonString(Unknown);
+const StoredRow = S.fromJsonString(S.Unknown);
 const serializeRow = S.encodeEffect(StoredRow);
 const parseRow = S.decodeUnknownEffect(StoredRow);
 const StoredScopeAxes = S.Struct({

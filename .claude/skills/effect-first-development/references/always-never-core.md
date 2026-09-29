@@ -54,7 +54,7 @@ class JsonParseError extends S.TaggedError<JsonParseError>($I`JsonParseError`)(
 ) {}
 
 const parseJson = (raw: string) =>
-  S.decodeUnknownEffect(S.UnknownFromJsonString)(raw).pipe(
+  S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw).pipe(
     Effect.mapError((cause) => new JsonParseError({ message: cause.message, input: raw }))
   )
 ```
@@ -336,7 +336,7 @@ export const fetchProfile = Effect.fn("Profile.fetch")(function* (userId: string
 
 // Internal hot-path flow: untraced.
 const parseSmallPayload = Effect.fnUntraced(function* (raw: string) {
-  return yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(raw)
+  return yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw)
 })
 
 // Zero-arg reusable values can stay as effects instead of immediate Effect.fn() invocation.
