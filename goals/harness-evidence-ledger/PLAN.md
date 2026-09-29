@@ -2,20 +2,40 @@
 
 ## Status
 
-Status: `in-progress`. P0 is complete. P1 is next.
+Status: `complete`. All phases are complete as of 2026-09-29.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Map RRSI against repo packets and code; lock decisions. | D1 to D14 recorded in `SPEC.md`; sources in `research/SOURCES.md`. |
-| P1 Schemas + ledger CLI + hook-pulse surface + scorer fixes | pending | Build the typed row, the writer, the observation, and the scorer fixes. | P1 acceptance checks below pass. |
-| P2 Rerun | pending | Run the annealed-budget SkillOpt rerun detached overnight; record results, first ledger rows, and pruning proposals. | P2 acceptance checks below pass. |
-| P3 Yeet PR1 to mergeable | pending | Ship the packet, schemas, CLI, hook-pulse change, scorer fixes, and rerun config. | `merge-ready: yes` from `yeet monitor`; zero outstanding review threads. |
-| P4 PR2 results + reflection | pending | Ship rerun results, first rows, pruning proposal output, and the reflection. | PR2 merge-ready; `lint reflection-artifacts` passes. |
-| P5 Close | pending | Flip packet state and record the verdict. | Manifest and README status updated in the same PR as the final work. |
-- Scorer sandbox floor: no lift claim until the fixture copy is self-contained (see `research/OPPORTUNITIES.md`, 2026-09-25); the step-1 accept at 0.9583 is leakage evidence, not lift.
-- 2026-09-25 outcome: run stopped after step 2 (score saturated at 1.0 on sandbox repair + task leakage); two `proposed` ledger rows filed; verdict PARK the rerun until the scorer fixture copy is self-contained and a diff screen exists (`history/p2-rerun/FINDINGS.md`).
+| P1 Schemas + ledger CLI + hook-pulse surface + scorer fixes | complete | Build the typed row, the writer, the observation, and the scorer fixes. | P1 acceptance checks below pass. |
+| P2 Rerun | complete | Run the annealed-budget SkillOpt rerun detached; record results, first ledger rows, and pruning output. | P2 acceptance checks below pass. |
+| P3 Yeet PR1 to mergeable | complete | Ship the packet, schemas, CLI, hook-pulse change, scorer fixes, and rerun config. | `merge-ready: yes` from `yeet monitor`; zero outstanding review threads. |
+| P4 Closing PR: results + reflection | complete | Ship the regime gate, the rerun controls, the rerun results, the recorded rows, the pruning output, and the reflection. | Closing PR merge-ready; `lint reflection-artifacts` passes. |
+| P5 Close | complete | Flip packet state and record the verdict. | Manifest and README status updated in the same PR as the final work. |
+
+## Outcomes
+
+- 2026-09-25, P2 first run (`history/p2-rerun/FINDINGS.md`): stopped after step
+  2 with the score saturated on sandbox repair and task leakage. Two `proposed`
+  rows filed. Verdict then: park until the scorer fixture copy is
+  self-contained and a diff screen exists.
+- 2026-09-26, PR1 (#1253) merged: packet, schemas, CLI, hook-pulse `surface`,
+  scorer fixes, rerun config, and the stopped run's evidence.
+- 2026-09-29, closing PR: the scorer runs its lanes in its own sandbox, the
+  rerun tool screens candidates before evaluation and measures baseline noise,
+  hook-pulse stamps the harness hash on `SessionStart`, and `prune-proposals`
+  counts only sessions in the current regime and can write.
+- 2026-09-29, P4 rerun (`history/p4-rerun/FINDINGS.md`): baseline 0.9167 with a
+  measured spread of 0.0833; four of six candidates screened out before
+  evaluation; two gate accepts, both inside the noise band; stopped at
+  saturation in step 7. Eight candidate rows and two rows for this PR's own
+  harness edits recorded. Verdict: close the rerun, adopt no trained skill; the
+  corpus has no headroom at this model strength.
+- Open for a human: add hook-pulse to the `SessionStart` hooks in
+  `.claude/settings.json` (row `hl-20260929-475be43a`, entry in `README.md`),
+  and disposition the four `proposed` candidate rows.
 
 ## P0 Research (complete)
 
@@ -93,13 +113,15 @@ every review thread. Do not merge; the operator merges.
 
 Acceptance: `merge-ready: yes`; zero outstanding review threads.
 
-## P4 PR2 results + reflection
+## P4 Closing PR: results + reflection
 
-Ship the rerun results and the first rows. Include pruning proposal output only
-after the current-harness session gate described in P2 is implemented.
-Write the reflection with the `/reflect` skill.
+One PR carries the remainder (operator instruction, 2026-09-29; see the
+2026-09-29 routine calls in `SPEC.md`). It ships the current-harness session
+gate described in P2, the rerun results, the recorded rows, and the pruning
+output. Write the reflection with the `/reflect` skill.
 
-Acceptance: PR2 merge-ready; `bun run beep lint reflection-artifacts` passes.
+Acceptance: the closing PR is merge-ready; `bun run beep lint
+reflection-artifacts` passes.
 
 ## P5 Close
 

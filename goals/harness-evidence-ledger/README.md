@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -68,17 +68,59 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete (the 2026-09-25 grill). P1 is next: schemas, the
-ledger CLI, the hook-pulse surface field, and the scorer fixes.
+All phases are complete (2026-09-29). PR1 (#1253) shipped the schemas, the
+ledger CLI, the hook-pulse `surface` field, and the scorer fixes. The closing
+PR shipped the regime gate, the rerun controls, the rerun, and this close.
+
+## Verdict
+
+The ledger, fingerprint expiry, and retention pruning are built and in use.
+The rerun is closed and no trained skill is adopted: with a scorer that
+measures only the agent's edit, the baseline skill scores 0.92 on the
+validation set with a measured noise spread of 0.08, so the corpus cannot
+separate a better skill from noise at this model strength.
 
 ## Latest Evidence
 
-Locked decisions D1 to D14 in [`SPEC.md`](./SPEC.md). The stopped P2 run produced two `proposed` rows,
-`hl-20260925-873a855c` and `hl-20260925-4fc1962c`, in
-[`2026-09.jsonl`](../../harness-ledger/rows/2026-09.jsonl). The run stopped
-after step 2 saturated the score through sandbox repair and task leakage;
-these proposals are not accepted harness edits. See
-[`FINDINGS.md`](history/p2-rerun/FINDINGS.md).
+- [`history/p4-rerun/FINDINGS.md`](history/p4-rerun/FINDINGS.md): the closing
+  rerun. Four of six candidates were screened out before evaluation, two gate
+  accepts sit inside the noise band, and the scorer takes a median of 5.3 s per
+  task against roughly 2 minutes in P5.
+- [`history/p2-rerun/FINDINGS.md`](history/p2-rerun/FINDINGS.md): the stopped
+  first run that exposed the scorer sandbox floor.
+- [`2026-09.jsonl`](../../harness-ledger/rows/2026-09.jsonl): fourteen rows.
+  Four candidate rows are `proposed` and wait for a human disposition
+  (`hl-20260925-873a855c`, `hl-20260925-4fc1962c`, `hl-20260929-df3f0899`,
+  `hl-20260929-f88812b2`); four are machine `rejected` as negative evidence.
+- [`history/reflections/2026-09-29-claude.md`](history/reflections/2026-09-29-claude.md):
+  the closeout reflection.
+
+## One Step Left For A Human
+
+hook-pulse can stamp the harness hash on `SessionStart`, but
+`.claude/settings.json` does not run it on that event yet. An agent session is
+not allowed to edit its own hook wiring, and D2 reserves harness admission for
+a human, so the entry is filed as the `proposed` row `hl-20260929-475be43a`.
+To admit it, append this group to `hooks.SessionStart` in
+`.claude/settings.json`, using the same command string the `SessionEnd` group
+already uses for `hook-pulse.sh`:
+
+```json
+{
+  "hooks": [
+    {
+      "type": "command",
+      "command": "<the hook-pulse.sh command string from hooks.SessionEnd>",
+      "timeout": 5
+    }
+  ]
+}
+```
+
+Until then `prune-proposals` reports every session as unstamped and proposes
+nothing. After it, the 30-session window fills with real sessions and
+`bun run beep harness-ledger prune-proposals --window 30 --write` records the
+first pruning proposals. The stamp costs about one second at session start.
 
 ## Notes
 
@@ -87,4 +129,5 @@ these proposals are not accepted harness edits. See
 - `coding-agent-effectiveness-evidence-loop` P7 records its improvement
   dispositions as rows in this ledger.
 - `explorations/context-rent-telemetry` resumes when this packet ships
-  `prune-proposals`.
+  `prune-proposals`. It has shipped; the resume trigger is met once the
+  `SessionStart` entry above is admitted and a window fills.
