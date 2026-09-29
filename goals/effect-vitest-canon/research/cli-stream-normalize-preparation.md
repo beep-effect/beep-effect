@@ -62,3 +62,12 @@ removal defect makes the exit fail visibly, and the harness removes the
 expected residue afterward. These eight controls establish the current helper's
 behavior; actual migrated-suite scope ownership remains to be verified after
 application with the prepared 11-callback probes.
+
+## Applied follow-up
+
+The prepared drafts are now applied and verified in source commit bd22fc4a50,
+with five normalization pipe chains flattened. The synthetic scheduler's
+remaining runtime boundary was migrated in the same batch to resolve the
+schema-hoist fingerprint interaction without changing the baseline. See
+cli-stream-normalize-runtime-proof.md for actual evidence and package-proof
+status; this preparation record alone is not completion evidence.

@@ -1,0 +1,422 @@
+{
+  "sourceFixSha": "bd22fc4a501a921872cffaf650bd79694e0db9ad",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:115:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:151:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:170:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:252:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:262:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:272:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:285:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:295:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:305:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:66:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:91:runPromise@11#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:113:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:136:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:187:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:220:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:263:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:308:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:359:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:385:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:409:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:432:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:470:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:75:runPromise@6#1",
+    "EV001:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:283:runPromise@4#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:113:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "writes nothing in --preview mode",
+      "currentTitle": "writes nothing in --preview mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 115,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"preview-demo\"); const exit = yield* Effect.exit(runGoalsComman"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:136:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses the whole transition when the stream is forked",
+      "currentTitle": "refuses the whole transition when the stream is forked",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 138,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"forked-demo\"); const seeded = yield* Effect.exit(runGoalsComma"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:187:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "commits a streamless plan as a no-op (no events, no trace)",
+      "currentTitle": "commits a streamless plan as a no-op (no events, no trace)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 189,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"goals/no-stream/README.md\", \"# no-stream\\n\"); const writer = yield* PacketTransitionWriter; const plan ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:220:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "returns an explicit skipped plan and outcome for the current derived status",
+      "currentTitle": "returns an explicit skipped plan and outcome for the current derived status",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 222,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"idempotent-demo\"); const seeded = yield* Effect.exit(runGoalsC"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:263:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "regenerates a stale trace while skipping the redundant status event",
+      "currentTitle": "regenerates a stale trace while skipping the redundant status event",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 265,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-stale-trace-demo\"); const seeded = yield* Effect.exit(run"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:308:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a skipped plan whose stream moved between plan and commit",
+      "currentTitle": "refuses a skipped plan whose stream moved between plan and commit",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 310,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"skip-cas-demo\"); const seeded = yield* Effect.exit(runGoalsCommand([\"set-status\", \"skip-cas-demo\", \"pau"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:359:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "previews a skipped transition without planning an event or a trace write",
+      "currentTitle": "previews a skipped transition without planning an event or a trace write",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 361,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-preview-demo\"); const seeded = yield* Effect.exit(runGoal"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:385:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports a skipped write through the set-status command surface",
+      "currentTitle": "reports a skipped write through the set-status command surface",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 387,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"skip-write-demo\"); const seeded = yield* Effect.exit(runGoalsC"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:409:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails invalid writer actors during request decode",
+      "currentTitle": "fails invalid writer actors during request decode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 411,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const decoded = yield* Effect.exit( decodePacketTransitionRequest({ locator: { packet: \"decode-demo\", root: \"goals\", packetPath: \"goals/decode-demo\" }, sta"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:432:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "records previous from the stream's derived status when the manifest snapshot lags",
+      "currentTitle": "records previous from the stream's derived status when the manifest snapshot lags",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 434,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"retry-demo\"); const seeded = yield* Effect.exit(runGoalsCommand([\"set-status\", \"retry-demo\", \"paused\"])"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:470:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a compare-and-set append whose expected revision is stale",
+      "currentTitle": "refuses a compare-and-set append whose expected revision is stale",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 472,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeStreamPacket(\"cas-demo\"); const store = yield* PacketEventStore; const locator = PacketStreamLocator.make({ packet: \""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/goals-set-status-stream.test.ts:75:runPromise@6#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "seeds genesis plus status-set, writes the trace, and keeps appending on later transitions",
+      "currentTitle": "seeds genesis plus status-set, writes the trace, and keeps appending on later transitions",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 77,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* writeStreamPacket(\"stream-demo\"); const first = yield* Effect.exit(runGoalsComman"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:115:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps existing numbers when a more severe finding arrives later",
+      "currentTitle": "keeps existing numbers when a more severe finding arrives later",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 115,
+          "evidence": "Effect.runPromise( planWithPriors( [low, informational, arrivingHigh], [ { id: \"CSF-001\", codexId: low.codexId }, { id: \"CSF-002\", codexId: informational.codexId }, ] ).pipe( Effect.map((plan) => { co"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:151:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "never reuses a number reserved by a finding that left the export",
+      "currentTitle": "never reuses a number reserved by a finding that left the export",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 151,
+          "evidence": "Effect.runPromise( // CSF-001 and CSF-002 were assigned before; only CSF-002's finding still // appears. A newcomer must land on CSF-003, not recycle CSF-001. planWithPriors( [informational, arrivingH"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:170:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "assigns from capture order when there are no prior bindings",
+      "currentTitle": "assigns from capture order when there are no prior bindings",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 170,
+          "evidence": "Effect.runPromise( planWithPriors([low, informational, arrivingHigh], []).pipe( Effect.map((plan) => { expect(A.map(plan.records, (record) => record.id)).toEqual([\"CSF-001\", \"CSF-002\", \"CSF-003\"]); ex"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:252:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses an expired session rather than bootstrapping an empty packet",
+      "currentTitle": "refuses an expired session rather than bootstrapping an empty packet",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 252,
+          "evidence": "Effect.runPromise( planFrom(payloadOf([], { authState: \"expired\", expectedCount: 0 })).pipe( Effect.map(() => \"accepted\"), Effect.catchTag(\"CodexFindingsIngestError\", (error: CodexFindingsIngestError)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:262:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a short read against the dashboard's own reported total",
+      "currentTitle": "refuses a short read against the dashboard's own reported total",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 262,
+          "evidence": "Effect.runPromise( planFrom(payloadOf([captureFinding({ codexId: hex(\"aa\", 32) })], { expectedCount: 26 })).pipe( Effect.map(() => \"accepted\"), Effect.catchTag(\"CodexFindingsIngestError\", (error: Code"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:272:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "names neither a local path nor a captured value in a short-read message",
+      "currentTitle": "names neither a local path nor a captured value in a short-read message",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 272,
+          "evidence": "Effect.runPromise( planFrom(payloadOf([captureFinding({ codexId: hex(\"aa\", 32) })], { expectedCount: 26 })).pipe( Effect.map(() => \"\"), Effect.catchTag(\"CodexFindingsIngestError\", (error: CodexFinding"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:285:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a traversal slug supplied on the command line",
+      "currentTitle": "rejects a traversal slug supplied on the command line",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 285,
+          "evidence": "Effect.runPromise( decodeCodexFindingsIngestOptions({ slug: \"../../etc\" }).pipe( Effect.map(() => \"accepted\"), Effect.orElseSucceed(() => \"rejected\") ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:295:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects a traversal-shaped date override",
+      "currentTitle": "rejects a traversal-shaped date override",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 295,
+          "evidence": "Effect.runPromise( decodeCodexFindingsIngestOptions({ date: \"2026-08-04/../..\" }).pipe( Effect.map(() => \"accepted\"), Effect.orElseSucceed(() => \"rejected\") ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:305:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "defaults every mode flag to false",
+      "currentTitle": "defaults every mode flag to false",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 305,
+          "evidence": "Effect.runPromise(decodeCodexFindingsIngestOptions({}))"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:66:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "orders most severe first and breaks ties by Codex identity",
+      "currentTitle": "orders most severe first and breaks ties by Codex identity",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 66,
+          "evidence": "Effect.runPromise( planFrom( payloadOf([ captureFinding({ codexId: hex(\"zz\", 32), severity: \"Low\" }), captureFinding({ codexId: hex(\"bb\", 32), severity: \"High\" }), captureFinding({ codexId: hex(\"aa\","
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/codex-findings-normalize.test.ts:91:runPromise@11#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "produces an identical plan when the same payload arrives in a different row order",
+      "currentTitle": "produces an identical plan when the same payload arrives in a different row order",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 91,
+          "evidence": "Effect.runPromise( Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))]).pipe( Effect.map(([first, second]) => { expect(encode(first)).toBe(encode(second)); }) ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:283:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "journals contention, withdrawal, fixture evictions, and release with an optional synthetic export",
+      "currentTitle": "journals contention, withdrawal, fixture evictions, and release with an optional synthetic export",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 297,
+          "evidence": "Effect.runPromise( withAdmissionTempRoot( Effect.fnUntraced(function* (runtimeDir, exportTarget) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = path.join(runtim"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1626,
+    "fixed": 1857,
+    "exception": 12
+  },
+  "fullPackageProof": "pending grouped CLI proof"
+}
