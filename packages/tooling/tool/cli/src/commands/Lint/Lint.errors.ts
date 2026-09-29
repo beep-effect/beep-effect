@@ -9,6 +9,7 @@ import { Err } from "@beep/utils";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { EffectSchemaInventoryDrift } from "./EffectSchemaInventory.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/Lint.errors");
 
@@ -299,3 +300,180 @@ export class EffectVitestPrimitiveGraphError extends S.TaggedError<EffectVitestP
     EffectVitestPrimitiveGraphError.new(messageWithCause(message, cause))
   );
 }
+
+/**
+ * Reports an effect-schema-inventory failure that is not one of its fail-loud input errors.
+ *
+ * **Details**
+ *
+ * Covers fixture IO, row decoding, TypeScript extraction, and prompt resolution. Missing
+ * reference, absent pin, catalog, and drift failures have their own tags.
+ *
+ * **Example** (Describe an unreadable fixture)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryError.new("Unable to read INDEX.md.")
+ * console.log(error._tag) // "EffectSchemaInventoryError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryError extends S.TaggedError<EffectSchemaInventoryError>(
+  $I`EffectSchemaInventoryError`
+)(
+  "EffectSchemaInventoryError",
+  { message: S.String },
+  $I.annoteError<EffectSchemaInventoryError>("EffectSchemaInventoryError", {
+    description: "Raised when schema inventory IO, decoding, extraction, rendering, or prompt resolution fails.",
+  })
+) {
+  static readonly new = (message: string): EffectSchemaInventoryError => EffectSchemaInventoryError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<EffectSchemaInventoryError, [message: string]>((cause, message) =>
+    EffectSchemaInventoryError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
+ * Reports a root `package.json` whose `effect` catalog entry is not a snapshot URL ending in a full sha.
+ *
+ * **Example** (Describe a semver catalog entry)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryCatalogPinError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryCatalogPinError.new("4.0.0-rc.118", "Not a snapshot URL.")
+ * console.log(error.specifier) // "4.0.0-rc.118"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryCatalogPinError extends S.TaggedError<EffectSchemaInventoryCatalogPinError>(
+  $I`EffectSchemaInventoryCatalogPinError`
+)(
+  "EffectSchemaInventoryCatalogPinError",
+  { message: S.String, specifier: S.String },
+  $I.annoteError<EffectSchemaInventoryCatalogPinError>("EffectSchemaInventoryCatalogPinError", {
+    description: "Raised when the root package.json catalog effect entry does not end in effect@<40-character sha>.",
+  })
+) {
+  /**
+   * Construct the error from the offending specifier and a message.
+   *
+   * @param specifier - Catalog value read from package.json, or a placeholder when absent.
+   * @param message - Human-readable failure.
+   * @returns The tagged catalog pin error.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly new = (specifier: string, message: string): EffectSchemaInventoryCatalogPinError =>
+    EffectSchemaInventoryCatalogPinError.make({ message: `${message} Found: ${specifier}`, specifier });
+}
+
+/**
+ * Reports a missing Effect reference clone, so inventory regeneration can never pass empty.
+ *
+ * **Example** (Describe a missing reference)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryReferenceMissingError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryReferenceMissingError.new("/repo/.repos/effect", "Run scripts/setup-effect-ref.sh.")
+ * console.log(error.reference) // "/repo/.repos/effect"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryReferenceMissingError extends S.TaggedError<EffectSchemaInventoryReferenceMissingError>(
+  $I`EffectSchemaInventoryReferenceMissingError`
+)(
+  "EffectSchemaInventoryReferenceMissingError",
+  { message: S.String, reference: S.String },
+  $I.annoteError<EffectSchemaInventoryReferenceMissingError>("EffectSchemaInventoryReferenceMissingError", {
+    description: "Raised when .repos/effect is absent or is not a git checkout.",
+  })
+) {
+  /**
+   * Construct the error for a reference path.
+   *
+   * @param reference - Absolute path of the expected reference clone.
+   * @param message - Human-readable failure and remedy.
+   * @returns The tagged missing-reference error.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly new = (reference: string, message: string): EffectSchemaInventoryReferenceMissingError =>
+    EffectSchemaInventoryReferenceMissingError.make({ message, reference });
+}
+
+/**
+ * Reports an `inventoryPin` commit the reference clone does not contain yet.
+ *
+ * **Example** (Describe an absent pin)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryPinAbsentError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryPinAbsentError.new("0".repeat(40), "/repo/.repos/effect", "Fetch the reference.")
+ * console.log(error._tag) // "EffectSchemaInventoryPinAbsentError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryPinAbsentError extends S.TaggedError<EffectSchemaInventoryPinAbsentError>(
+  $I`EffectSchemaInventoryPinAbsentError`
+)(
+  "EffectSchemaInventoryPinAbsentError",
+  { message: S.String, pin: S.String, reference: S.String },
+  $I.annoteError<EffectSchemaInventoryPinAbsentError>("EffectSchemaInventoryPinAbsentError", {
+    description: "Raised when git cannot find the pinned Effect commit in .repos/effect.",
+  })
+) {
+  /**
+   * Construct the error for a pin and reference path.
+   *
+   * @param pin - Catalog sha that git could not resolve.
+   * @param reference - Absolute path of the reference clone.
+   * @param message - Human-readable failure and remedy.
+   * @returns The tagged absent-pin error.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly new = (pin: string, reference: string, message: string): EffectSchemaInventoryPinAbsentError =>
+    EffectSchemaInventoryPinAbsentError.make({ message, pin, reference });
+}
+
+/**
+ * Reports a committed inventory fixture that no longer matches the pinned sources.
+ *
+ * **Example** (Describe a missing index)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryDrift } from "@beep/repo-cli/commands/Lint"
+ * import { EffectSchemaInventoryDriftError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryDriftError.make({
+ *   message: "1 fixture file drifted.",
+ *   drift: [EffectSchemaInventoryDrift.cases.missing.make({ file: "INDEX.md" })]
+ * })
+ * console.log(error.drift.length) // 1
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryDriftError extends S.TaggedError<EffectSchemaInventoryDriftError>(
+  $I`EffectSchemaInventoryDriftError`
+)(
+  "EffectSchemaInventoryDriftError",
+  { message: S.String, drift: S.Array(EffectSchemaInventoryDrift) },
+  $I.annoteError<EffectSchemaInventoryDriftError>("EffectSchemaInventoryDriftError", {
+    description: "Raised when effect-schema-inventory --check finds missing, stale, or unexpected fixture files.",
+  })
+) {}

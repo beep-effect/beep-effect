@@ -33,6 +33,7 @@ import { runGoalsDoctor } from "../Goals/Doctor.ts";
 import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
 import { readLintPolicySweeps, runRootDeprecatedApisTask, runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
+import { lintEffectSchemaInventoryCommand } from "./EffectSchemaInventory.ts";
 import { lintEffectVitestCommand } from "./EffectVitest.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
@@ -1153,6 +1154,7 @@ const lintSubcommands = [
   lintJsdocCommand,
   lintLawsCommand,
   lintEcosystemPolarityCommand,
+  lintEffectSchemaInventoryCommand,
   lintEffectVitestCommand,
   lintGoalPacketsCommand,
   lintIdentityRegistryCommand,

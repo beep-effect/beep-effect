@@ -49,7 +49,7 @@ authority.
 
 | File | What it holds | Size |
 |------|---------------|------|
-| `research/inventory/` + `research/tools/` | The knowledge-layer prototype: `schema-inventory/v1` JSONL rows for the 14 Role A `.ts` modules, generator, verifier, INDEX and README | 2,105 rows / 853 KB |
+| `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` | The knowledge layer: `schema-inventory/v1` JSONL rows, INDEX and README, moved here from `research/inventory/` in goal P1 (2026-09-29); generator, verifier and prompt generator are `bun run beep lint effect-schema-inventory` | 2,232 rows / 998 KB (was 2,105 rows / 853 KB at `51d4a2f08a`) |
 | `research/2026-09-28-inventory-refresh.md` | Reopen: inventory regenerated at `inventoryPin` `e5f7d12af9` (D4), module moves out of `unstable/`, generator and verifier repairs | 19 KB |
 | `research/2026-09-28-schemautils-census.md` + `research/tools/census-schemautils.py` | Reopen: every SchemaUtils export with upstream equivalent, consumer counts per scope, DELETE / ADAPT / KEEP and phase (32 / 4 / 3); D10 finding that the per-AST parser cache predates the compilers | 28 KB |
 | `research/2026-09-28-compiler-evaluation.md` + `research/tools/spike-{harness,bulk-schemas,bulk,recursive}.ts` | Reopen: interpreter vs selective JIT vs AOT spikes (D6): about 3.7x on transformation-free wire structs, 1.2–1.4x on classes and transformed rows, no gain on Pandoc; fallback nodes, CSP and repo-fit answers; the draft that the operator ruled DEFER | 24 KB |
@@ -62,7 +62,10 @@ authority.
 
 ### Knowledge layer (DECISIONS "Knowledge layer")
 
-- **Symbol inventory.** `research/tools/schema-inventory.ts` (TypeScript 6.0.3
+- **Symbol inventory.** (Historical research state; goal P1 productized the
+  generator as `bun run beep lint effect-schema-inventory` and moved the rows
+  to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/`.)
+  `research/tools/schema-inventory.ts` (TypeScript 6.0.3
   JS API, run with `bun run` from the repo root) extracts every exported
   declaration of the 14 Role A modules into `research/inventory/<module>.jsonl`.
   Row identity is `(module, symbol, kind)`; fields: `sha`, `file`, `line`,

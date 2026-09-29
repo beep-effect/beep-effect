@@ -23,8 +23,8 @@ Never fabricate a URL; cite the on-disk section when none exists.
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `explorations/effect-schema-parity/research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
 | `perf` | `packages/effect/typeperf/suites/schema`, `runtimeperf/suites/schema` | Effect-TS/effect | `explorations/effect-schema-parity/research/performance-baseline.md` | measurement | port-with-attribution (harness shape only, P5) |
-| `inventory` | `schema-inventory/v1` rows, 2,105 over 14 modules | this repo (prototype) | `explorations/effect-schema-parity/research/inventory/*.jsonl`, contract in `inventory/README.md` | knowledge layer | MOVE to `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/` (P1) |
-| `tools` | inventory generator and verifier | this repo (prototype) | `explorations/effect-schema-parity/research/tools/schema-inventory.ts`, `verify-schema-inventory.ts` | knowledge layer | MOVE into repo-cli (P1) |
+| `inventory` | `schema-inventory/v1` rows, 2,232 over 24 modules at `inventoryPin` `df77fff939` | this repo | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`, contract in that directory's `README.md` | knowledge layer | MOVED with `git mv` from the exploration's `research/inventory/` (P1, 2026-09-29) |
+| `tools` | inventory generator, `--check` verifier, and lane prompt generator | this repo | `bun run beep lint effect-schema-inventory` (`packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`) | knowledge layer | MOVED into repo-cli (P1, 2026-09-29); the exploration's prototype scripts were deleted |
 
 **How these inform implementation:** Role A rows are the adoption oracle for
 every retirement and the source of lane prompts; Role B modules are targets
