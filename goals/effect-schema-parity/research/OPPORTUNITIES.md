@@ -84,3 +84,19 @@ machine ids, quote only the minimal identifying error text.
   text now names it the count of record with the `rg` shape as a cross-check. The retirement audit tool should
   check each upstream target against the installed `dist/*.d.ts` before it
   prints the row.
+
+## 2026-09-29 — `lint effect-vitest --write` rewrites the whole inventory for a two-file change
+
+- **What I was doing:** P4 gate cut: recording the reviewed rows for one new
+  repo-cli test file and three edited tests in `lint-command.test.ts`.
+- **Evidence:** `bun run beep lint effect-vitest --write` rewrote
+  `standards/effect-vitest.inventory.jsonc` as a 100,845-line diff (50,312
+  insertions, 50,533 deletions) across dozens of unrelated test files. The
+  committed file carries hand-merged compact one-line rows (for example near
+  line 27006) and row sets that differ from a fresh scan, so the writer's
+  canonical output never round-trips it. The lane reverted and spliced the
+  four live rows in by hand (84 insertions, 357 deletions, only the two
+  touched files); `lint effect-vitest` then read `introduced=0`.
+- **What would have prevented it:** A `--write --files <path>...` mode that
+  replaces only the named files' rows, or a canonical re-format of the
+  committed inventory on `main` so `--write` is a no-op on untouched files.

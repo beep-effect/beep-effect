@@ -185,34 +185,33 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
 
   "no-inline-schema-compile": {
     invalid: [
-      // In-function IIFE: Schema.decodeUnknownSync(M)(x).
+      // In-function IIFE over an inline schema: Schema.decodeUnknownSync(Schema.Struct(...))(x).
       {
         count: 1,
         source: lines(
           `import { Schema } from "effect";`,
-          `const Model = Schema.Struct({});`,
-          `export const f = (x: unknown) => Schema.decodeUnknownSync(Model)(x);`
+          `export const f = (x: unknown) => Schema.decodeUnknownSync(Schema.Struct({ id: Schema.String }))(x);`
         ),
       },
-      // In-function non-IIFE binding: const d = Schema.decodeSync(M).
+      // In-function non-IIFE binding over an inline schema: const d = Schema.decodeSync(Schema.Array(M)).
       {
         count: 1,
         source: lines(
           `import { Schema } from "effect";`,
           `const Model = Schema.Struct({});`,
           `export const g = () => {`,
-          `  const d = Schema.decodeSync(Model);`,
+          `  const d = Schema.decodeSync(Schema.Array(Model));`,
           `  return d;`,
           `};`
         ),
       },
-      // Aliased namespace `* as S from "effect/Schema"` -> S.decodeSync binding.
+      // Aliased namespace `* as S from "effect/Schema"` -> S.decodeSync over an inline schema.
       {
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
           `const Model = S.Struct({});`,
-          `export const h = () => S.decodeSync(Model)({});`
+          `export const h = () => S.decodeSync(S.NullOr(Model))(null);`
         ),
       },
       // Nested schema construction rooted in a static schema is also compiled inline.
@@ -224,22 +223,13 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h2 = () => S.decodeSync(S.Array(Model))([]);`
         ),
       },
-      // A static schema namespace member is a hoistable compiler dependency.
-      {
-        count: 1,
-        source: lines(
-          `import * as S from "effect/Schema";`,
-          `import * as Models from "./models";`,
-          `export const h3 = () => S.decodeSync(Models.User)({});`
-        ),
-      },
-      // Uncurried assertion adapters compile the schema on every invocation too.
+      // Uncurried assertion adapters over an inline schema build a new AST per call too.
       {
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
           `const Model = S.Struct({});`,
-          `export const h4 = (input: unknown): void => S.asserts(Model, input);`
+          `export const h4 = (input: unknown): void => S.asserts(S.Array(Model), input);`
         ),
       },
       // Static schema fields nested in an object literal remain hoistable.
@@ -270,6 +260,45 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
       },
     ],
     valid: [
+      // A plain schema reference inside a function hits the per-AST parser cache.
+      {
+        count: 0,
+        source: lines(
+          `import { Schema } from "effect";`,
+          `const Model = Schema.Struct({});`,
+          `export const f = (x: unknown) => Schema.decodeUnknownSync(Model)(x);`
+        ),
+      },
+      // A non-IIFE binding over a plain schema reference compiles once per AST.
+      {
+        count: 0,
+        source: lines(
+          `import { Schema } from "effect";`,
+          `const Model = Schema.Struct({});`,
+          `export const g = () => {`,
+          `  const d = Schema.decodeSync(Model);`,
+          `  return d;`,
+          `};`
+        ),
+      },
+      // A static schema namespace member is a cached AST, not an inline construction.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `import * as Models from "./models";`,
+          `export const h3 = () => S.decodeSync(Models.User)({});`
+        ),
+      },
+      // An uncurried assertion adapter over a plain schema reference also hits the cache.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h4 = (input: unknown): void => S.asserts(Model, input);`
+        ),
+      },
       // Module-scope compiler call is allowed (the whole point of the rule).
       {
         count: 0,

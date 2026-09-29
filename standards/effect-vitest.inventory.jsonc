@@ -15197,132 +15197,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1009:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1009,
-      "endLine": 1044,
-      "symbol": "runPromise",
-      "occurrence": "v2:33c25541bc4245b4cb52a13850c40fb48a41ea16b9ee8a3512f60127c795f146",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameError = (_self: unknown, _that: unknown)",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1047:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1047,
-      "endLine": 1063,
-      "symbol": "runPromise",
-      "occurrence": "v2:dd426eef1dd5cbce2d570e468c0a23d1b82442f84cda55e21ec05c8ada330821",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"export class WorkerError extends S.TaggedError<Wor",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1066:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1066,
-      "endLine": 1079,
-      "symbol": "runPromise",
-      "occurrence": "v2:4e5d17f93c169b43c185bd896ae1feefe7ab914d7b668fb23d3d9e393b192425",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ \"const TaggedError = <Self>() => (_tag: string, _fields: unknown) => class {};\", 'class Lo",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1082:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1082,
-      "endLine": 1105,
-      "symbol": "runPromise",
-      "occurrence": "v2:a6fce17976272c95ba819bfc9a8561ae5ed8c451ca616038897170fe1e36bb2e",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameTaskError = (_self: TaskError, _that: Ta",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1108:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1108,
-      "endLine": 1124,
-      "symbol": "runPromise",
-      "occurrence": "v2:68b2f029978077388a0ec4cdd59f4ed7d1c76a60e86faa87b7765d1f7b78b69a",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"export class WorkerError extends S.TaggedError<Wor",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1127:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1127,
-      "endLine": 1181,
-      "symbol": "runPromise",
-      "occurrence": "v2:b5e351b44541f1d7975f9c241e0b20cb30f2751518a6b947ccf25d05ac5ef4b9",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameError = (_self: unknown, _that: unknown)",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1184:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -15355,27 +15229,6 @@
       "occurrence": "v2:3e0231bb2034ad37566cb4383d00ebbcd514199e3bf1e93d1fc6c26386ba4d87",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const UnknownFromJsonString = S.fromJsonString(S.U",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:1230:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 1230,
-      "endLine": 1259,
-      "symbol": "runPromise",
-      "occurrence": "v2:d230bbb0159c613f0bd50d1daaa8b3892071b0c6cff851ac8824387923e5daa6",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', 'export class WorkerOptions extends S.Class<WorkerO",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -16079,27 +15932,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:381:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 381,
-      "endLine": 416,
-      "symbol": "runPromise",
-      "occurrence": "v2:d00d0b96be0ded2ac3b1434dfc3abc065fcf3072e6c5c13c40ac41c28d1e3431",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const JobEvent = S.TaggedUnion({});\", 'export cons",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:419:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -16352,27 +16184,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:747:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 747,
-      "endLine": 777,
-      "symbol": "runPromise",
-      "occurrence": "v2:97486c31c90a63c2560d1dc4a18c944b3050f0f8a6f28f985a4d5b3e66fb377c",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', 'export class Worker extends S.Class<Worker>(\"Worke",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:780:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -16384,174 +16195,6 @@
       "occurrence": "v2:0f66a1e63aa14f26c55aa5f7bdfe293b39c36a786b73f2e0309894845613ec24",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', 'export class Worker extends S.Class<Worker>(\"Worke",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:799:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 799,
-      "endLine": 815,
-      "symbol": "runPromise",
-      "occurrence": "v2:f74495d8d2a71c26d82385155c8eac2befb34c456f38ea7ebbf2ffb27503745e",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"export class WorkerError extends S.TaggedError<Wor",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:818:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 818,
-      "endLine": 851,
-      "symbol": "runPromise",
-      "occurrence": "v2:17224086ce45ae6163ae436b9b4ab15e1a6157299c2a5b715d0fed3c1872ebbd",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameWorkerError = (_self: WorkerError, _that",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:854:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 854,
-      "endLine": 879,
-      "symbol": "runPromise",
-      "occurrence": "v2:e819707a2f7f988591eed7ee38bf9fb68d99f3c80df617a539c876c78f6b26bc",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstFileFixture(\"packages/ecosystem/effect-drizzle/src/Example.ts\", [ 'import { String as StringSchema, Tagged",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:882:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 882,
-      "endLine": 902,
-      "symbol": "runPromise",
-      "occurrence": "v2:1205607cb60f278ab1c701fdc49b751e4ee9c6610cefc21056d35ca3a64ec27d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import { Class, String as StringSchema } from \"effect/Schema\";', \"const sameWidget = (_se",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:905:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 905,
-      "endLine": 929,
-      "symbol": "runPromise",
-      "occurrence": "v2:93aa799977f000ac0b31ea0852307966c3b521a497fb891251033c494a6324aa",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameWidget = (_self: Widget, _that: Widget):",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:932:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 932,
-      "endLine": 956,
-      "symbol": "runPromise",
-      "occurrence": "v2:918e1230abfd0326aee8d9d7fb44c00b4ccb5ac5dc5b3a030600539e127c85a2",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameWorkerError = (_self: WorkerError, _that",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:959:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 959,
-      "endLine": 984,
-      "symbol": "runPromise",
-      "occurrence": "v2:3b59376601cdb1d69621ca18c60a2aa2dd3aa46dd75db45e7b314015b1e5e5e6",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const sameWidget = (_self: Widget, _that: Widget):",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:987:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 987,
-      "endLine": 1006,
-      "symbol": "runPromise",
-      "occurrence": "v2:f39480fb5a913da2e0a4de8d9b767a2fe146bf2a3e4ad259fa124a440340384f",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const makeBase = (_name: string) => class {};\", \"e",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -92680,24 +92323,108 @@
       "status": "open"
     },
     {
-      "id": "EV011:packages/tooling/tool/cli/test/lint-command.test.ts:14:vitest-import@0#1",
+      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:381:runPromise@4#1",
       "lens": "detector",
-      "ruleId": "EV011",
+      "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "vitest-import",
-      "occurrence": "v2:b49800ccbc7ef0c9d5608ff7458a4b7316c0e842381a99a0128aa2d06540b7e6",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { describe, expect, it } from \"vitest\";",
+      "line": 381,
+      "endLine": 416,
+      "symbol": "runPromise",
+      "occurrence": "v2:f7005cfddc635b5bc897a80330b1bd43081bedaf5d79cafc00d4e1d197ec278b",
+      "class": "runtime-boundary-in-test",
+      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', \"const JobEvent = S.TaggedUnion({});\", 'export cons",
       "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
       },
-      "severity": "minor",
+      "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:747:runPromise@4#1",
+      "lens": "detector",
+      "ruleId": "EV001",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "line": 747,
+      "endLine": 777,
+      "symbol": "runPromise",
+      "occurrence": "v2:8fec16f161a81a035b8e9969a6d7dce1b5f52b75d69fd3b577311de6505be782",
+      "class": "runtime-boundary-in-test",
+      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', 'export class Worker extends S.Class<Worker>(\"Worke",
+      "replacement": {
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/lint-command.test.ts:845:runPromise@4#1",
+      "lens": "detector",
+      "ruleId": "EV001",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "line": 845,
+      "endLine": 874,
+      "symbol": "runPromise",
+      "occurrence": "v2:2ed6557ad29c176aa8159327d63968e22c04f987f2b2a10a9824afde6f3964ff",
+      "class": "runtime-boundary-in-test",
+      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeSchemaFirstSourceFixture([ 'import * as S from \"effect/Schema\";', 'export class WorkerOptions extends S.Class<WorkerO",
+      "replacement": {
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/schema-parity-codemod.test.ts:15:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/schema-parity-codemod.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/schema-first-parity.test.ts:13:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/schema-first-parity.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
       "status": "open"
     },
     {

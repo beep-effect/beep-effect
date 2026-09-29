@@ -1,6 +1,6 @@
 /**
- * Oxlint rule reporting Effect Schema decoder/encoder compiler calls created
- * inside function bodies instead of hoisted module constants.
+ * Oxlint rule reporting Effect Schema decoder/encoder calls whose schema is
+ * constructed inline inside a function body.
  *
  * @packageDocumentation
  * @since 0.1.0
@@ -23,8 +23,9 @@ import {
 import type { ESTree } from "@oxlint/plugins";
 import type { AstNode, MaybeNode } from "./utils.ts";
 
-// Effect Schema decoder/encoder APIs allocate compiled functions. Keep them
-// outside function bodies so hot paths do not rebuild compilers per call.
+// Effect caches each schema's parser per AST, so a decoder/encoder over a hoisted schema
+// compiles once however often it is called. A schema constructed inline in a function body
+// is a new AST on every call, misses that cache, and recompiles.
 const COMPILER_METHODS = HashSet.fromIterable([
   "is",
   "asserts",
@@ -72,15 +73,19 @@ const isStaticSchemaReference = (node: MaybeNode): boolean => {
   return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
 };
 
-const messageHigh = (method: string) =>
-  `Hoist Schema.${method}(...) to module scope: both the inline schema literal and the compiled function are rebuilt on every call. Move the compiled function to a module-level const.`;
-
-const messageMedium = (method: string) =>
-  `Hoist Schema.${method}(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const.`;
+const inlineSchemaMessage = (method: string) =>
+  `Hoist the schema passed to Schema.${method}(...) to module scope: inline schema construction defeats the per-AST parser cache, so every call builds and compiles a new schema.`;
 
 /**
- * Oxlint rule that reports Effect Schema decoder and encoder compiler calls
- * created inside function bodies instead of hoisted module constants.
+ * Oxlint rule that reports Effect Schema decoder and encoder calls whose
+ * schema is constructed inline inside a function body.
+ *
+ * **Details**
+ *
+ * A plain schema reference is not reported: Effect caches each schema's
+ * parser per AST, so `Schema.decodeUnknownSync(Model)` inside a function
+ * compiles `Model` once. Only inline construction such as
+ * `Schema.decodeSync(Schema.Array(Model))` builds a new AST per call.
  *
  * **Example** (Schema compile rule description)
  *
@@ -90,7 +95,7 @@ const messageMedium = (method: string) =>
  *
  * const description = plugin.rules["no-inline-schema-compile"]?.meta.docs.description
  *
- * strictEqual(description?.includes("hoist them to module scope"), true)
+ * strictEqual(description?.includes("per-AST parser cache"), true)
  * ```
  *
  * @category tools
@@ -100,7 +105,8 @@ export default defineRule({
   meta: {
     type: "problem",
     docs: {
-      description: "Disallow Schema decoder/encoder compiler calls inside function bodies; hoist them to module scope.",
+      description:
+        "Disallow Schema decoder/encoder calls over a schema constructed inline in a function body; hoist the schema to module scope so the per-AST parser cache applies.",
     },
   },
   createOnce(context) {
@@ -190,13 +196,10 @@ export default defineRule({
         onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
       });
 
-    // High when the first argument is itself a nested static schema call (literal + compiler both
-    // rebuilt); medium when it is a plain static schema reference (only the compiler rebuilt).
-    const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> => {
-      const high = firstArg !== undefined && isNestedStaticSchemaCall(firstArg);
-      if (high) return O.some(messageHigh(method));
-      return isStaticSchemaReference(firstArg) ? O.some(messageMedium(method)) : O.none();
-    };
+    // Report only when the first argument constructs a static schema inline; a plain schema
+    // reference hits the per-AST parser cache and is fine inside a function body.
+    const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> =>
+      isNestedStaticSchemaCall(firstArg) ? O.some(inlineSchemaMessage(method)) : O.none();
 
     const tracksSchema = (source: string, binding: ImportBinding): boolean =>
       ImportBinding.match(binding, {
