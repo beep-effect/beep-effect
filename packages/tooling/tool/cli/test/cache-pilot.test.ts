@@ -1,6 +1,8 @@
 import { CachePilotLogInput } from "@beep/repo-cli/commands/Cache";
 import { extractCachePilotLog } from "@beep/repo-cli/test/Cache";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
@@ -40,7 +42,7 @@ describe("real pilot capture boundary", () => {
         CachePilotLogInput.make({ ...input, stdout: `${prefix}task output\n` }),
         CachePilotLogInput.make({ ...input, stderr: `${prefix}unexpected\n` }),
       ])
-        expect(Result.isFailure(yield* extractCachePilotLog(changed).pipe(Effect.result))).toBe(true);
+        (yield* extractCachePilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -52,7 +54,7 @@ describe("real pilot capture boundary", () => {
         CachePilotLogInput.make({ ...input, stderr: "\u001b[0m" }),
         CachePilotLogInput.make({ ...input, stdout: `${prefix}${progress}${prefix}${Str.repeat(65537)("x")}` }),
       ])
-        expect(Result.isFailure(yield* extractCachePilotLog(changed).pipe(Effect.result))).toBe(true);
+        (yield* extractCachePilotLog(changed).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 

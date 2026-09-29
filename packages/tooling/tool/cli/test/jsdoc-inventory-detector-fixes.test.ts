@@ -4,14 +4,15 @@ import {
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as jsonc from "jsonc-parser";
-import { describe, expect, it } from "vitest";
 
 /**
  * Regression fixtures for verified JSDoc inventory detector bugs

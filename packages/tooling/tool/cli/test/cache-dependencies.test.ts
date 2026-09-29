@@ -3,6 +3,7 @@ import { inspectCacheDependencyTree } from "@beep/repo-cli/test/Cache";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Result from "effect/Result";
@@ -75,7 +76,7 @@ describe("installed cache dependency integrity", () => {
         { _tag: "Workspace", path: "@beep/example", target: "../../packages/example", workspace: "packages/example" },
         { _tag: "Internal", path: "entry", target: "example/index.js" },
       ]);
-      expect(Result.isFailure(yield* inspectCacheDependencyTree(root, []).pipe(Effect.result))).toBe(true);
+      (yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 
@@ -85,12 +86,12 @@ describe("installed cache dependency integrity", () => {
       const link = path.join(modules, "outside");
       for (const target of ["/etc/passwd", "../../outside"]) {
         yield* fs.symlink(target, link);
-        expect(Result.isFailure(yield* inspectCacheDependencyTree(root, []).pipe(Effect.result))).toBe(true);
+        (yield* inspectCacheDependencyTree(root, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.remove(link);
       }
       const alternate = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-link-test-" });
       yield* fs.symlink(modules, path.join(alternate, "node_modules"));
-      expect(Result.isFailure(yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result))).toBe(true);
+      (yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
 });

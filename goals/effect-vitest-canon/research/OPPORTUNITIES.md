@@ -4810,6 +4810,150 @@ The original excerpts remain available in the parent commit. A future refs
 classifier should distinguish quoted test data in generated inventories from
 actual external references without suppressing real workstation-path leaks.
 
+
+- Desktop test-name drift: while reviewing `apps/professional-desktop/test/dock-shell.test.tsx`, the case named "registers contradiction triage as the thirteenth direct shell panel" asserts `DESKTOP_PANELS` length14. The exact count remains deliberate evidence; the title is stale. Align the title with the current panel inventory in a later test-maintenance change. A title/count consistency review would have prevented this minor diagnostic mismatch.
+
+- Potential interruption cleanup gap to investigate: `integration/PgliteDataDirCompatibility.test.ts`, unreadable-data-dir case, sets chmod0 and restores permissions after yielding the inspected operation. The restoration is not a finalizer. A cancellation at that boundary may skip chmod restoration and obstruct scoped directory removal. This is source-level suspicion, not a reproduced leak; validate with an interruption control before choosing a repair.
+
+- Follow-up on the unreadable-directory cleanup concern: a test-owned native filesystem control reproduced `EACCES` when recursively removing a populated mode000 directory; restoring mode700 allowed cleanup. Receipt: `desktop-permission-cleanup-mechanism.json`. This verifies the filesystem mechanism only, not interruption of the actual Effect case or a production leak.
+
+## CLI directive policy test title drift
+
+The quality-tsgo-directives test says it declares exactly two exemptions while
+its expected path array correctly contains three: the Bun shim, shared Vitest
+configuration and filesystem conformance entrypoint. Preserve the expected
+array; a future wording-only cleanup should make the title match the subject.
+Observed during the existing detector backlog review; no policy behavior change
+is needed for this wording issue.
+
+## Controlled interruption reproduces unreadable-directory test residue
+
+The saved permission-cleanup concern now has an Effect lifecycle control. With
+the inspected operation held at an interruption barrier, the current chmod-zero
+then tail-restore pattern leaves its native temporary subtree behind after
+Fiber.interrupt completes. Replacing that lifetime with acquireUseRelease
+restores permissions before scoped directory cleanup, leaving no residue.
+The control cleaned its own old-pattern residue and confirmed both roots absent.
+This reproduces the test cleanup pattern, not a production database leak.
+The pending patch preserves both modes, the operation Exit and all assertions.
+
+## Early publication of an existing merge commit
+
+After resolving the main merge for PR #1312, Yeet refused publication while
+the merge was still staged because its base check reads committed HEAD. Once
+the merge was committed, `publish --start-pr-early --amend --no-edit` was also
+refused: early publication cannot combine with amend or no-edit. The operator
+had authorized pushing ready fixes before local proof; a normal push followed
+by detached full Yeet verification restored progress without bypassing hooks.
+A supported early-push path for an existing unproven commit, or a preflight
+that recognizes a resolved pending merge, would avoid this workflow dead end.
+The conflict resolution passed the Effect Vitest ratchet with zero introduced
+findings; full verification remains a separate requirement.
+
+## Timing harness must validate every requested test path
+
+The continuation's runner-import comparison exited successfully with 1,000
+tests instead of its 1,004-test baseline. Comparing exact registrations found
+that script preparation had accidentally replaced `baseline` inside the
+`coverage-baseline-subtraction.test.ts` filename while updating prose. Vitest
+accepted the unmatched filter alongside valid filters, silently omitting that
+file. The full package audit independently passed all 4,847 tests, including
+those four cases; the partial timing run is not a valid full-cohort comparison.
+The script path is corrected. Future comparison scripts should assert every
+requested path exists and compare normalized command selections before launch,
+as well as checking registration multiplicity after execution.
+
+## Resource migration must remove the inner wrapper as well as the runtime wrapper
+
+The first migration of `codex-findings-write.test.ts` replaced its custom
+`runPromise` helper with public `it.effect`, but retained the per-case
+`withTempWorkingDirectory` wrapper. The ratchet then exposed 17 EV003 rows.
+SPEC section 6.1 requires replacing that wrapper with scoped resources inside
+the test body, not recording it as an exception. A prepared follow-up yields
+a reusable scoped cwd acquisition from each test while retaining native
+filesystem staging, rename, symlink behavior, and every assertion operand.
+
+The existing helper also creates its directory and changes cwd before adding
+its cleanup finalizer. This is a source-level interruption gap; it has not yet
+been reproduced in a runtime control. Registering directory removal with
+`acquireRelease` and then cwd restoration with another acquisition would close
+that gap and preserve restore-before-remove finalizer order. Validate success,
+failure, interruption, and the legacy helper's shorter scope before adoption.
+
+The cwd acquisition gap now has a runtime reproduction. A control runs copies
+of the original and proposed helpers against the real NodeServices filesystem,
+with a barrier after allocation. Interruption leaves a directory with the old
+helper and none with the proposed scoped acquisition. Success, failure, ordinary
+interruption, and legacy-wrapper controls also restore cwd and remove the owned
+tree. The control removes its own old-pattern residue. Receipt:
+`cli-cwd-resource-control.json`. This proves the helper lifetime under controlled
+interruption; it is not yet proof of the installed package change.
+
+## Cache dashboard fixture cleanup is bypassed on failure and interruption
+
+The existing resource finding `L-RES-02` for `cache-command.test.ts` identifies
+an unscoped temporary directory removed only after dashboard assertions. A
+controlled copy of that ownership pattern now reproduces leftover directories
+on both failure and interruption under Node and Bun. The proposed scoped
+allocation leaves no residue in success, failure or interruption controls.
+The control removes its own old-pattern residue after recording the result.
+
+The proposed environment acquisition also restores both absent and present
+values after success, failure and interruption under Bun. This control uses a
+dedicated non-secret variable and emits only restoration booleans. Original
+short environment scopes must remain around each warm operation, including the
+two successive dirty/stale checks. Receipts: `cli-cache-resource-control-node.json`
+and `cli-cache-resource-control-bun.json`. These are resource-pattern controls;
+the draft still requires installed-suite and package verification before adoption.
+
+## Hosted runner loss delays an otherwise actionable same-head retry
+
+PR #1312 Heavy / Lint Policy job `109011487482` failed while its verification
+step remained in progress. The check annotation reports that the self-hosted
+runner lost communication with GitHub; no lint violation or failing-step log
+was available. A targeted rerun returned HTTP 403 because the containing
+workflow was still running its coverage job. Preserve the running sibling
+check and retry the failed job after the workflow settles. Runner-health
+telemetry and clearer job retry admission would shorten this recovery without
+misattributing infrastructure loss to repository code.
+
+The cache-command draft is now applied. All seven installed tests pass under
+Node and Bun with identical file/title registrations and stable source hashes.
+The migration exposes six EV004 shorter-scope review rows. Each is explicitly
+retained with a reason: restoration must happen after its individual warm
+operation, before assertions or the next dirty/stale operation. These are
+reviewed lifetime boundaries, not redundant whole-test scopes. The full package
+proof for this additional migration passed: CLI audit 657.8 seconds and docgen
+19.4 seconds. See `cli-allowlist-cache-resource-proof.md`.
+
+Coverage Regression in the same workflow also lost its runner: original job
+`109011487389` carries the same explicit annotation. The carried-forward check
+in attempt 2 has no annotation, so attribution must inspect the original attempt.
+Do not infer a coverage regression from the job label or the truncated test log.
+
+## Readiness receipt can precede complete optional-heavy settlement
+
+For PR #1312 at head `1459fae5a672b41d408099fb925db7df6eb414b2`, the detached
+`yeet monitor --until-ready` finished successfully with `merge-ready: yes`,
+while a fresh `gh pr checks` still showed Heavy / Lint Policy pending and Heavy /
+Coverage Regression failed. Both original failures have runner-loss annotations,
+but the repository merge rule still requires their successful retry; only
+Vercel rate limiting is exempt. The receipt alone is insufficient for merge.
+
+Review the monitor's settled/optional-check decision and add a regression for
+pending or failing heavy checks across a same-head rerun. Preserve required-check
+and review gates. Until repaired, corroborate the canonical receipt with all
+current checks and never merge from this premature readiness result.
+
+Source tracing locates the policy gap in
+`packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts`:
+`requiredChecksAreGreen` examines only required counts, and
+`deriveYeetMergeReady` uses that predicate as its check gate.
+`MonitorLoop.ts`'s `bindRequiredCensus` likewise only blocks failed required
+names. A repair must cover optional heavy pending/failing results while retaining
+an evidence-backed Vercel rate-limit exception; broadly ignoring Vercel failures
+or merely renaming the required-check criterion would not satisfy the rule.
+
 ## Hosted scheduler property failure exposed active-recovery deletion
 
 PR #1312 Property Laws failed the scheduler replacement-restoration case with
@@ -4826,3 +4970,131 @@ hosted missing-lock error. The independent control also reproduces a lost
 replacement before repair. Full scheduler tests and package proof are required
 before claiming the repair green. This production repair is covered by the
 operator's standing authorization to fix discovered defects and record them.
+
+A control now calls the actual production `deriveYeetMergeReady` with synthetic
+current-head closeout and complete check snapshots. With required checks green,
+it returns ready for each optional-heavy outcome: pass, pending and fail. Only
+pass is compatible with the repository merge rule. Receipt:
+`optional-heavy-readiness-control.json`. This is an actual-function reproduction,
+not merely a source inference; the snapshots are synthetic and do not claim a
+new hosted failure. The production repair and its regression are still pending.
+
+## Package proof granularity dominated small migration throughput
+
+The allowlist-only CLI audit took 790.8 seconds plus 20.1 seconds for docgen;
+the subsequent combined allowlist/cache audit took 657.8 plus 19.4 seconds.
+Those full proofs validate package handoff but are too costly to schedule after
+each tiny syntax-only edit. The next prepared batch groups 190 exact-preserving
+predicate replacements across 49 existing inventory files, with focused
+before/after execution and one full package proof at the batch boundary.
+This changes batching, not acceptance: preserve source during each run, require
+all selected files in reporter output, compare file/title multiplicity on both
+runtimes and retain the full package gate before handoff. The timing figures are
+observations under host load, not an estimated speedup.
+
+## Before-change cohort exposes a forwarder timeout
+
+The 49-file predicate-migration before cohort passed 1,508 tests and timed out
+one AI metrics forwarder case after its existing 30-second bound. Source hashes
+were stable and no batch edit had been applied. The failing case is
+`runs forwarder with derived OTLP export status without exposing raw transcript text`
+in `ai-metrics-command.test.ts`. Preserve the failed timing receipt and isolate
+the cause before attributing it to host load or changing any timeout. This is a
+before-state failure, not evidence that the proposed assertion migration caused it.
+
+A delayed-arrival control now reproduces a separate clock defect in the native
+OTLP polling pattern. Under TestClock, the first failed lookup waits on a
+25-millisecond virtual retry delay even after a native callback supplies the
+trace. Wrapping only that retry program in `TestClock.withLive` completes on
+both Node and Bun, preserving the 200-retry and 25-millisecond limits. The
+control uses a first-attempt Deferred barrier and does not advance virtual time.
+Receipts: `cli-otlp-clock-control-node.json` and
+`cli-otlp-clock-control-bun.json`. This proves the helper's delayed-arrival gap;
+it does not by itself identify which stage caused the full forwarder timeout.
+Keep the original 30-second test budget and qualify any repair accordingly.
+
+The polling helper now applies `TestClock.withLive` only to its existing retry
+program. All 45 AI metrics tests pass under Node and Bun with unchanged retry
+limits and test budgets. The full 49-file comparison is being re-established
+under receipt prefix `cli-predicate-batch-before-clock-repaired`; the original
+failed `cli-predicate-batch-before-node` evidence remains intact. Passing the
+focused file supports the narrow clock repair, not a causal claim about the
+original whole-cohort timeout or final package acceptance.
+
+- Assertion migration identity churn: the 49-file, 190-assertion CLI batch reduced
+  detector findings by 180, but the first `beep lint effect-vitest` run reported
+  100 introduced findings because enclosing statement hashes include assertion
+  bodies. A before/after run of the actual detector matched all 100 to existing
+  rows, preserving every non-EV006 file/rule/class/symbol traversal count.
+  Only those baseline occurrence hashes and four evidence excerpts containing
+  the migrated assertions were updated; all statuses were retained. A reviewed identity-migration receipt would prevent
+  this manual reconciliation without admitting new debt. Private evidence:
+  `cli-predicate-batch-anchor-review.json` and the original failed ratchet log.
+
+- PR #1323 early publication passed 14 cheap gates but failed
+  `quality:changeset-status`: the continuation lacked in-branch changesets for
+  `@beep/mcp-kit` and `@beep/professional-desktop`. Added the required patch
+  metadata without changing production behavior. Running this short gate before
+  publication would have caught the omission before hosted checks began.
+- Detached publication initially could not reach the healthy systemd user
+  manager because the tool shell lacked its runtime-directory and bus address.
+  An explicit user-bus environment made the same launch succeed. Preserving that
+  environment across Desktop continuations would avoid this repeat friction.
+
+- The PR #1312 readiness defect is being repaired in #1323: status and watch
+  now share a check policy that blocks failed and pending optional checks.
+  Both collectors preserve check descriptions; only an optional Vercel
+  deployment with an explicit deployment-rate-limit retry message is exempt.
+  Count-only failures without matching evidence remain blocking. Regression
+  tests cover heavy failures/pending checks, absent or unrelated descriptions,
+  required-check failures, and old serialized records. Verification is pending.
+- PR #1323 review identified missing interruption proof for the PGlite
+  permission bracket. The shared test helper now has a regression that interrupts
+  a populated mode-0 directory, observes restored mode 0700 before root cleanup,
+  then checks that the root is gone. A mutation that drops restoration must fail
+  that observation; this supplements the existing ordinary-failure assertions.
+
+- PR #1323's full publisher caught a complex readiness condition and a
+  duplication finding around the existing timestamp-ordering helper. Grouping
+  equivalent count checks with `Array.every` and directly composing the existing
+  DateTime/Option helpers removed both findings without suppression or baseline
+  expansion. Targeted Fallow audit/health and regression tests pass. Running the
+  affected Fallow gates before publishing this production repair would have
+  shortened the feedback loop. Receipts: `pr1323-fallow-fix-*`.
+
+## PR 1323: keep CI-only console repairs available at the checkpoint
+
+The frozen PR retained three CI console failures and 35 Effect diagnostic
+failures while their verified repairs lived on the follow-up branch. Coverage
+repeated the same console failures. The repair now ports only the required
+changes into the checkpoint. Future checkpoint freezes should distinguish
+new migration work from fixes required to keep that checkpoint mergeable.
+Receipt: `research/pr1323-ci-repair.md`; hosted jobs 109092814626,
+109092814817 and 109092814735.
+
+## Synthetic home paths copied into inventory evidence
+
+Full checkpoint verification failed knowledge-reference policy on six path
+observations in two copies of inventory evidence. The excerpts came from
+knowledge-semantic-delta redaction tests. Evidence-only redaction failed the
+ratchet because evidence participates in finding identity. Extracting the
+three unchanged diagnostic strings into named fixtures keeps the redaction
+tests intact and produces portable source excerpts. Four finding identities
+were reconciled without changing status. Future inventory generation should
+model sanitized display evidence separately from stable source identity.
+
+The commit formatter then collapsed the two fixture calls onto single lines.
+Stable occurrence hashes survived, but changed evidence excerpts caused two
+ratchet failures. Refresh reviewed evidence after formatting and before the
+final ratchet; separate display evidence from occurrence matching to prevent
+formatting-only failures. The corrected entries preserve statuses and hashes.
+
+## Preserve branch coverage when adding readiness short circuits
+
+PR 1323's hosted coverage found WatchMode branches at 99.1% against 100%
+and WatchStream lines at 99% against 100%. The new merge-blocking predicate
+short-circuited existing failing-check fixtures before they exercised the
+required-check skip path. A timestamp-ordering fallback also had no invalid
+instant case. Added behavioral regressions restore full focused coverage
+without lowering either baseline. Include skipped required checks and malformed
+timestamps in watch conformance tests when changing readiness or ordering.

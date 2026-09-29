@@ -1,9 +1,10 @@
 import { EffectFnRulesOptions, runEffectFnRules } from "@beep/repo-cli/test/Laws";
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
-import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

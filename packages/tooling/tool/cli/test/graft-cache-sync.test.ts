@@ -11,6 +11,7 @@ import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -546,14 +547,14 @@ layer(testLayer)("Graft cache sync", (it) => {
         "--dry-run",
         "--json",
       ]);
-      expect(Result.isSuccess(preview.result)).toBe(true);
+      preview.result.pipe(Result.isSuccess, assertTrue);
       expect(preview.output).toHaveLength(1);
       const plan = yield* decodePlanJson(preview.output[0]);
       expect(plan.entries).toHaveLength(12);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
       expect(yield* fs.exists(path.join(other, "graft"))).toBe(false);
       const applied = yield* runCommand(["cache", "sync", "--from", source, "--siblings", "--json"]);
-      expect(Result.isSuccess(applied.result)).toBe(true);
+      applied.result.pipe(Result.isSuccess, assertTrue);
       const report = yield* decodeReportJson(applied.output[0]);
       expect(report.copied).toBe(12);
       expect(A.filter(report.plan.entries, (entry) => GraftCacheArtifact.is.manifest(entry.artifact))).toHaveLength(2);
@@ -565,7 +566,7 @@ layer(testLayer)("Graft cache sync", (it) => {
     Effect.fn(function* () {
       const { source, target, path } = yield* fixture();
       const applied = yield* runCommand(["cache", "sync", "--from", source, "--to", target]);
-      expect(Result.isSuccess(applied.result)).toBe(true);
+      applied.result.pipe(Result.isSuccess, assertTrue);
       expect(applied.output).toHaveLength(1);
       expect(applied.output[0]).toEqual(
         expect.stringContaining(`copy manifest ${path.join(target, "graft", "manifest.json")}`)
@@ -582,11 +583,11 @@ layer(testLayer)("Graft cache sync", (it) => {
       const { fs, source, target, path } = yield* fixture();
       const both = yield* runCommand(["cache", "sync", "--from", source, "--to", target, "--siblings"]);
       const neither = yield* runCommand(["cache", "sync", "--from", source]);
-      expect(Result.isFailure(both.result)).toBe(true);
-      expect(Result.isFailure(neither.result)).toBe(true);
+      both.result.pipe(Result.isFailure, assertTrue);
+      neither.result.pipe(Result.isFailure, assertTrue);
       yield* fs.remove(path.join(target, ".git"));
       const refused = yield* runCommand(["cache", "sync", "--from", source, "--to", target, "--json"]);
-      expect(Result.isFailure(refused.result)).toBe(true);
+      refused.result.pipe(Result.isFailure, assertTrue);
       const refusedPlan = yield* decodePlanJson(refused.output[0]);
       expect(A.length(A.filter(refusedPlan.entries, (entry) => entry.action === "refuse"))).toBe(6);
       expect(yield* fs.exists(path.join(target, "graft"))).toBe(false);
@@ -628,8 +629,8 @@ layer(testLayer)("Graft cache sync", (it) => {
     Effect.fn(function* () {
       const root = yield* runCommand([]);
       const cache = yield* runCommand(["cache"]);
-      expect(Result.isSuccess(root.result)).toBe(true);
-      expect(Result.isSuccess(cache.result)).toBe(true);
+      root.result.pipe(Result.isSuccess, assertTrue);
+      cache.result.pipe(Result.isSuccess, assertTrue);
       expect(A.some(root.output, (line) => Str.includes("cache sync")(String(line)))).toBe(true);
       expect(A.some(cache.output, (line) => Str.includes("--siblings")(String(line)))).toBe(true);
     })

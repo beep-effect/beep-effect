@@ -46,6 +46,7 @@ import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
@@ -116,7 +117,7 @@ describe("corpus evidence schemas", () => {
   });
 
   it("decodes inherited collector failures and secret exclusions without destination fields", () => {
-    expect(
+    assertTrue(
       Result.isSuccess(
         decodeUnknownCollectorManifestRecordResult({
           reason: "source unreadable",
@@ -124,15 +125,15 @@ describe("corpus evidence schemas", () => {
           status: "error",
         })
       )
-    ).toBe(true);
-    expect(
+    );
+    assertTrue(
       Result.isSuccess(
         decodeUnknownCollectorManifestRecordResult({
           src: "C:\\source\\excluded.bin",
           status: "excluded-secret",
         })
       )
-    ).toBe(true);
+    );
   });
 });
 
@@ -1767,7 +1768,7 @@ describe("corpus restoration preservation", () => {
           claimedOutput: O.some("CLAIMED\n"),
           staleClaimExists: true,
         });
-        expect(Result.isFailure(childExit)).toBe(true);
+        assertTrue(Result.isFailure(childExit));
 
         yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);
 
