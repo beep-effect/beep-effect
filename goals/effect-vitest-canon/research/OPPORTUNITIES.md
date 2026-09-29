@@ -5937,4 +5937,5 @@ these remain under investigation, not waived.
 The detector complexity repair separates membership provenance and piped
 absence recognition, and flattens the membership guard. Node/Bun each pass
 260 tests; all 2,861 detection rows are preserved. Fallow audit and health now
-pass without suppressions or threshold changes. Full package proof is pending.
+pass without suppressions or threshold changes. Full package audit (770.6 seconds)
+and docgen (24.8 seconds) subsequently passed, as did all fifteen cheap gates.

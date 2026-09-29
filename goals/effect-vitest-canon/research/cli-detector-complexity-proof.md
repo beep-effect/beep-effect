@@ -16,5 +16,7 @@ removed. No threshold or suppression changes were made.
   repair; every detection field remains identical.
 - Fallow audit and health pass. The audit has zero introduced findings; two
   inherited adjacent findings remain nonblocking under the existing policy.
-- Full CLI package audit and docgen are pending. This is not a claim of hosted
-  readiness or completion of the broader goal.
+- Actual test-type result: exit code zero with empty diagnostics.
+- All fifteen combined cheap gates pass on the committed repair.
+- Full CLI package audit passes in 770.6 seconds and docgen in 24.8 seconds.
+  This is local package proof, not hosted readiness or broader goal completion.
