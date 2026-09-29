@@ -47,9 +47,15 @@ goal `effect-schema-parity`, P3 PR 3-i). `@beep/schema/Unknown` and
 `UnknownFromJsonString`, `JsonObject`, `JsonArray`, `decodeJsonString`,
 `encodeJsonString`), and no alias is left behind. Upstream covers each one:
 `S.fromJsonString(S.Unknown)`, `S.Unknown`, `S.JsonObject` and `S.Array(S.Json)`.
-Every consumer migrates in the same change, through the new repo-cli
-`unknown-json-retirement` codemod rule (`opaque-record-retirement` is registered
-and tested for the follow-up PR).
+Every consumer migrates in the same change.
+
+Codemod evidence: commit ce83cf6929 adds the transient repo-cli codemod rules
+`unknown-json-retirement` and `opaque-record-retirement` (one shared planner,
+fixture tests on Bun and Node). This PR applies `unknown-json-retirement` to
+packages, apps, scratchpad and infra (186 files, 0 residue, 0 quarantined, plus
+24 test files re-run after merging main) and removes both rules in its last
+commit, since a rule whose target concept is gone can never run again. The
+follow-up PR cherry-picks ce83cf6929 for `opaque-record-retirement`.
 
 - Bound codec statics (`UnknownFromJsonString.decodeUnknownEffect` and the rest)
   and `decodeJsonString` / `encodeJsonString` become codecs compiled at module
@@ -58,7 +64,7 @@ and tested for the follow-up PR).
   compiled inside a function. A file that needs the composition more than once
   shares one `UnknownJson` const.
 - Behavior change: the Sync statics (`encodeUnknownSync`, `decodeUnknownSync`;
-  57 sites) become `flow(S.<codec>Result(schema), Result.getOrThrow)`, because
+  51 codec declarations) become `flow(S.<codec>Result(schema), Result.getOrThrow)`, because
   `effect(schemaSync)` rejects `S.*Sync` calls. On failure they now throw the
   `SchemaError` value instead of the `Error` the Sync runner threw. No caller
   catches, inspects or asserts on that thrown value: every site encodes a
@@ -69,29 +75,26 @@ and tested for the follow-up PR).
   `Unknown`, `UnknownFromJsonString` or `JsonObject` as a value lose those
   members' `@beep/schema` identifier annotations.
 
-Type-check cost, tsgo 7.0.2, fresh build-info, before (the codemod engine
-branch at 3ceb39e76c) → after. The gate is the `--singleThreaded` instantiation
-count:
+Type-check cost, tsgo 7.0.2, fresh build-info, before (`origin/main` at 7cc0aa9b33) → after.
+The gate is the `--singleThreaded` instantiation count:
 
 | Package (`--singleThreaded`, gate) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 710,979 → 709,201 | 202,571 → 202,247 | 1.057 → 1.125 s |
-| `@beep/repo-cli` | 4,152,142 → 4,157,895 | 1,066,767 → 1,068,623 | 10.849 → 10.092 s |
-| `@beep/law-practice-domain` | 874,541 → 874,290 | 259,729 → 259,707 | 1.157 → 1.214 s |
+| `@beep/schema` | 710,979 → 709,201 | 202,571 → 202,247 | 1.190 → 1.282 s |
+| `@beep/repo-cli` | 4,152,690 → 4,152,422 | 1,067,045 → 1,067,031 | 11.846 → 11.982 s |
+| `@beep/law-practice-domain` | 874,541 → 874,290 | 259,729 → 259,707 | 1.208 → 1.352 s |
 
-Flagged: `@beep/repo-cli` rises by 5,753 instantiations. The retirement itself
-lowers it: with the new rule module removed and the rule-id kit and registry
-back at the engine branch, repo-cli measures 4,151,882 (−260). The increase is
-the new codemod rules: registering the two rule ids with do-nothing bodies costs
-+1,099, and the rule bodies the rest. Check time is advisory within a 5% band;
-`@beep/schema` single-threaded check time rose 6.4% on a shared, loaded
-workstation while its instantiations fell.
+Check time is advisory within a 5% band. Flagged: `@beep/schema` (+7.7%) and
+`@beep/law-practice-domain` (+11.9%) single-threaded check times rose with lower
+instantiations and types, on a shared, loaded workstation; two immediate repeats
+read 1.022 s and 1.091 s for `@beep/schema` and 1.195 s and 1.273 s for
+`@beep/law-practice-domain`, inside the band.
 
 The default four-checker run is advisory; its totals depend on how files split
 across checkers:
 
 | Package (default, 4 checkers, advisory) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 1,115,008 → 1,109,966 | 367,663 → 366,181 | 0.515 → 0.476 s |
-| `@beep/repo-cli` | 8,428,407 → 8,496,231 | 2,149,058 → 2,164,854 | 4.226 → 4.008 s |
-| `@beep/law-practice-domain` | 1,290,676 → 1,289,799 | 376,265 → 376,131 | 0.692 → 0.703 s |
+| `@beep/schema` | 1,115,008 → 1,109,966 | 367,663 → 366,181 | 0.540 → 0.522 s |
+| `@beep/repo-cli` | 8,429,151 → 8,427,502 | 2,149,366 → 2,149,094 | 4.677 → 5.064 s |
+| `@beep/law-practice-domain` | 1,290,676 → 1,289,799 | 376,265 → 376,131 | 0.716 → 0.697 s |

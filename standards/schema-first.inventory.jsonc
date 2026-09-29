@@ -943,7 +943,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 27,
+      "line": 28,
       "owner": "@beep/repo-cli",
       "reason": "Hook adapter regression encodes and decodes fixed hook payload JSON through S.fromJsonString codecs to prove adapter wiring; the payloads are fixed fixtures, not a schema law."
     }

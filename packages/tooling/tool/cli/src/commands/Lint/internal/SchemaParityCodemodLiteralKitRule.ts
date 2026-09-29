@@ -13,7 +13,7 @@ import { pipe, Result } from "effect";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
 import {
   SchemaParityCodemodEdit,
   SchemaParityCodemodImport,
@@ -23,11 +23,7 @@ import {
   SchemaParityCodemodSite,
 } from "./SchemaParityCodemod.schemas.ts";
 import { renderSchemaParityCodemodEdits } from "./SchemaParityCodemodEdits.ts";
-import {
-  resolveSchemaParityCodemodName,
-  schemaParityCodemodResolvesTo,
-  schemaParityCodemodValueImports,
-} from "./SchemaParityCodemodImports.ts";
+import { schemaParityCodemodValueImports } from "./SchemaParityCodemodImports.ts";
 import type {
   ElementAccessExpression,
   Expression,
@@ -170,9 +166,23 @@ const isMappedDirectionFacet = (access: PropertyAccessExpression): boolean =>
     O.exists((symbol) => A.every(symbol.getDeclarations(), isDeclaredIn(MAPPED_LITERAL_KIT_MODULE)))
   );
 
-const isFreeAt = (site: Node, name: string): boolean => O.isNone(resolveSchemaParityCodemodName(site, name));
+/**
+ * The symbol `name` resolves to at `site`, across every enclosing scope
+ * (parameters, catch bindings, nested declarations, the module, globals) and
+ * every meaning (value, type, namespace).
+ */
+const resolveAt = (site: Node, name: string): O.Option<ts.Symbol> =>
+  O.fromNullishOr(
+    site.getProject().getTypeChecker().compilerObject.resolveName(name, site.compilerNode, ts.SymbolFlags.All, false)
+  );
 
-const resolvesTo = schemaParityCodemodResolvesTo;
+const isFreeAt = (site: Node, name: string): boolean => O.isNone(resolveAt(site, name));
+
+const resolvesTo = (site: Node, name: string, declaration: Node): boolean =>
+  pipe(
+    resolveAt(site, name),
+    O.exists((symbol) => A.some(symbol.declarations ?? A.empty(), (node) => node === declaration.compilerNode))
+  );
 
 type ImportBinding = {
   readonly local: string;
