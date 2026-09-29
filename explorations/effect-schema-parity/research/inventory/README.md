@@ -1,8 +1,10 @@
 # schema-inventory/v1 — research prototype
 
-Pinned to `inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`
-(`effect@4.0.0-rc.118-1-ge5f7d12af9`), refreshed 2026-09-28 from the
-`51d4a2f08a` snapshot. Delta: [../2026-09-28-inventory-refresh.md](../2026-09-28-inventory-refresh.md).
+Pinned to `inventoryPin` `df77fff9396fe31de72d1947ecb5b74f8cee89e1`
+(`effect@4.0.0-rc.118-9-gdf77fff939`), regenerated 2026-09-29 after the
+snapshot bump in PR #1330; refreshed 2026-09-28 from the `51d4a2f08a`
+snapshot. Deltas: [../2026-09-28-inventory-refresh.md](../2026-09-28-inventory-refresh.md)
+and the History entry for 2026-09-29 below.
 
 ## Inputs
 
@@ -22,7 +24,7 @@ pin leaves regeneration and verification byte-identical.
 
 | Field | Meaning |
 | --- | --- |
-| `sha` | The full 40-character `inventoryPin` (`e5f7d12af9abef188f7dc39b0207af1801b03ffd`), identical on every row and on the `INDEX.md` pin line (D4). The `51d4a2f08a` snapshot used a 10-character prefix. |
+| `sha` | The full 40-character `inventoryPin` (`df77fff9396fe31de72d1947ecb5b74f8cee89e1`), identical on every row and on the `INDEX.md` pin line (D4). The `51d4a2f08a` snapshot used a 10-character prefix. |
 | `module` | Effect import path: `effect/` plus the source path without `packages/effect/src/`, `.ts` and a trailing `/index` (`schema/index.ts` is `effect/schema`). For provenance-only rows this is a path, not an importable specifier. |
 | `file`, `line` | Upstream-relative path and one-based declaration/export-specifier line at the pin; read with `git -C .repos/effect show <pin>:<file>`, never the working tree. |
 | `symbol` | Exported name; direct members use `Parent.member`. Computed/quoted names preserve source spelling; anonymous calls/indexes/constructors use `<call>`, `<index>`, `<new>`. |
@@ -49,7 +51,7 @@ This replaces the `51d4a2f08a` behaviour, which expanded each namespace one leve
 
 ## Extraction boundary and gaps
 
-Evidence lines are at the pin, relative to `.repos/effect/`, read with `git show e5f7d12af9:<path>`.
+Evidence lines are at the pin, relative to `.repos/effect/`, read with `git show df77fff939:<path>`.
 
 | Surface | Implemented behavior / limitation | Evidence |
 | --- | --- | --- |
@@ -103,11 +105,11 @@ bun run explorations/effect-schema-parity/research/tools/schema-inventory.ts
 bun run explorations/effect-schema-parity/research/tools/verify-schema-inventory.ts
 ```
 
-Verifier output (2026-09-28, run twice with identical output):
+Verifier output (2026-09-29):
 
 ```text
-PASS: inventoryPin e5f7d12af9abef188f7dc39b0207af1801b03ffd read from root package.json catalog; sources read via git show <pin>:<file>
-PASS: 24 modules; 2232 rows; Schema.ts 1109 rows; JSONL 998009 bytes; INDEX and ripgrep counts agree
+PASS: inventoryPin df77fff9396fe31de72d1947ecb5b74f8cee89e1 read from root package.json catalog; sources read via git show <pin>:<file>
+PASS: 24 modules; 2232 rows; Schema.ts 1109 rows; JSONL 998102 bytes; INDEX and ripgrep counts agree
 PASS: (module, symbol, kind) identities unique; all fields/types, preview bounds and defining-file line bounds valid
 PASS: regenerated JSONL and INDEX.md byte-identical from research cwd; temporary directory deleted
 ```
@@ -118,6 +120,7 @@ The verifier re-reads the pin from the catalog, bounds every row's `line` by the
 
 ## History
 
+- 2026-09-29 regeneration (`e5f7d12af9` → `df77fff939`, PR #1330's snapshot bump, which did not regenerate the inventory itself): of the 24 modules only `packages/effect/src/Schema.ts` changed upstream (effect #8580, single brand key typing). Rows stay at 2,232 with no identity added or removed; six `effect/Schema` rows changed signature (`brand` function and interface, `brand."Type"`, `brand."Iso"`, `brand."~type.make"`, `fromBrand`), line numbers after the change shifted, and every row's `sha` moved to the new pin. JSONL bytes 998,009 → 998,102.
 - 2026-09-28 refresh (`51d4a2f08a` → `e5f7d12af9`): the pin moved from a hard-coded constant to the catalog; both tools dropped their `.repos/effect` HEAD-equals-pin and working-tree-bytes asserts (they passed only while `referenceHead` happened to equal the pin); the module list moved from `CAPTURE.md` Role A rows (14 `.ts` files) to `modules.ts` (24 files); `effect-unstable-*.jsonl` were deleted and replaced by paths that follow effect's move of unstable modules to top-level paths (#8354, #8382); barrels stopped expanding; `importable` joined the row contract. 2,105 rows became 2,232.
 - The `51d4a2f08a` snapshot's verifier output read: 14 modules; 2105 rows; Schema.ts 1026 rows; JSONL 853360 bytes.
 - Concurrent inventory writers replaced an earlier unique-symbol extractor after its verifier passed; the former verifier and receipt did not validate the surviving declaration-facet implementation.
