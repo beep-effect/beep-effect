@@ -5471,3 +5471,9 @@ the test. A failed assertion or interrupted native operation can skip cleanup.
 Use the public Effect test scope and scoped filesystem acquisition in the next
 batch, retaining assertions, native fixture reads and setup semantics. This is
 source-review evidence; runtime cleanup controls are still pending.
+
+The unchanged packet-core baseline now reproduces two leaked directories on
+both Node and Bun despite all 28 tests passing. Each run used a dedicated
+`TMPDIR` under the private task cache; the harness counted the residue and
+removed its own temporary root afterward. Source hashes stayed stable. The
+four success-only cleanup sites still need failure/interruption controls.

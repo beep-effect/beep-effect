@@ -65,5 +65,7 @@ The refreshed actual-suite console probe passes 255 tests on both runtimes,
 including its distinct-identity witness across 164 constructor sites and at
 least 95 constructed services. The uninstrumented source is restored and
 byte-checked against its pre-probe backup.
-Full CLI package verification for this batch remains pending. This receipt
-records focused evidence and does not claim package or goal completion.
+Full CLI package verification passed for source 01ff5bc02c: audit 661.3 seconds
+and docgen 21.1 seconds. Package source stayed fixed during the proof;
+intervening commits changed only goal records. This completes the package
+proof for this batch, not the remaining inventory or goal acceptance gates.

@@ -1628,5 +1628,5 @@
     "fixed": 1624,
     "exception": 12
   },
-  "fullPackageProof": "pending"
+  "fullPackageProof": "Passed for source 01ff5bc02c: audit 661.3 seconds, docgen 21.1 seconds; package source unchanged during proof."
 }
