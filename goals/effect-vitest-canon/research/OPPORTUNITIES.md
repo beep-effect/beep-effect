@@ -5677,3 +5677,13 @@ live clocks for the 11 native stream callbacks, leaving pure decode on the
 test clock. Include this adapter in the ongoing transitive clock audit of
 previously migrated packet tests; passing uncontended-lock cases alone is
 insufficient evidence. See cli-stream-normalize-preparation.md.
+
+### Package proof does not cover root inline-schema policy
+
+The JSDoc/model-store CLI package audit and docgen passed, while root
+`bun run lint:oxlint` still rejected 12 scheduler codec declarations nested
+inside the suite callback and three synthetic-scenario guards compiled inside
+assertions. The follow-up hoists the same compilers and guards to module scope;
+root Oxlint now passes. Run this root policy gate alongside migration checks
+before interpreting package proof as publication readiness. No assertions or
+schema contracts were weakened.

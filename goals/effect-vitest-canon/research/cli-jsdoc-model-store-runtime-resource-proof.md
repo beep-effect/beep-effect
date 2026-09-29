@@ -54,5 +54,7 @@ evidence matches close 28 historical rows with no additions. Strict validation
 passes for 3,495 CLI rows and 687 schema rows; CLI totals are 1,833 fixed,
 12 exceptions and 1,650 open.
 
-Full grouped CLI package verification is running against source 37e76036e5.
+Full grouped CLI package verification passed against source 37e76036e5:
+`bun run beep quality package-verify @beep/repo-cli` exited zero, with audit
+683.8 seconds and docgen 21.0 seconds.
 This focused evidence does not replace that proof or goal-wide acceptance.

@@ -150,6 +150,19 @@ const reapAdopterPath = (
 ): string =>
   `${claimPath}.adopt-${generation.pid}.${Base64Url.encode(generation.procStart)}.${Base64Url.encode(generation.ownerToken)}.${claimedAtMillis}`;
 
+const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
+const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
+const encodeJournalLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeJournalLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeAdmissionReapClaim = S.decodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const encodeAdmissionReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
+const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
+const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
+const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
+const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
+
 it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: false, timeout: "5 seconds" })((it) => {
   describe("admission escalation", () => {
     it("maps each wait threshold to its escalation level", () => {
@@ -243,19 +256,6 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
     publishAgingSeconds: 0.25,
     suspectAfterSeconds: 0.5,
   });
-
-  const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
-  const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
-  const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
-  const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
-  const encodeJournalLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
-  const decodeJournalLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
-  const decodeAdmissionReapClaim = S.decodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
-  const encodeAdmissionReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClaim));
-  const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
-  const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
-  const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
-  const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
 
   const writeExecutable = Effect.fn("QualitySchedulerTest.writeExecutable")(function* (
     filePath: string,

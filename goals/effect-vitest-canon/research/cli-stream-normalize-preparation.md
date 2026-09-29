@@ -37,3 +37,28 @@ and exercise actual-suite failure/interruption cleanup, console isolation and
 11 live-clock controls. The six Promise continuations must still fail their
 cases if their assertions throw. Commit only after applied verification, then
 run one grouped full package proof and reconcile historical lineage.
+
+## Verification harness preparation
+
+While scheduler package verification runs, private probe builders now produce
+failure and interruption injections after all 11 cwd acquisitions, 12 distinct
+console identity checks, and live-clock advancement probes for the 11 native
+callbacks. A normalization assertion probe selects the six original Promise
+continuations by their original test titles, avoiding five pre-existing Effect
+assertion callbacks. All builder cardinality checks pass against the drafts.
+The execution harness requires applied source and restores source bytes in a
+finally block; each runtime gets an isolated temporary root checked for residue.
+Applied-source assertion, detector and timing scripts are prepared as well.
+These are harness preparation receipts, not executed migration proof.
+
+## Current cwd constructor controls
+
+The current `temporaryWorkingDirectory` initializer was extracted directly
+from CommandTest.ts into a private control harness, without changing package
+source. Node and Bun each pass success, body failure, interruption, and
+injected cleanup failure. Every exit restores the original process cwd;
+ordinary success/failure/interruption remove the temporary tree. Injecting a
+removal defect makes the exit fail visibly, and the harness removes the
+expected residue afterward. These eight controls establish the current helper's
+behavior; actual migrated-suite scope ownership remains to be verified after
+application with the prepared 11-callback probes.

@@ -58,6 +58,9 @@ import * as Struct from "effect/Struct";
 
 // Ruling 10's synthetic producer: admission rows come from the real scheduler.
 const producerPath = "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts";
+const isAdmissionJournalLeaseEvictedV3 = S.is(AdmissionJournalLeaseEvictedV3);
+const isAdmissionJournalTicketEvictedV3 = S.is(AdmissionJournalTicketEvictedV3);
+const isAdmissionJournalReleasedV3 = S.is(AdmissionJournalReleasedV3);
 const decodeUUID = S.decodeEffect(UUID);
 const encodeLease = S.encodeEffect(S.fromJsonString(YeetAdmissionLease));
 const encodeTicket = S.encodeEffect(S.fromJsonString(YeetAdmissionTicket));
@@ -473,7 +476,7 @@ describe("synthetic admission scenario", () => {
               attemptId: O.some(attemptLease),
             };
             assertDefined(actualProjection);
-            const expectedVariant = S.is(AdmissionJournalLeaseEvictedV3)(actualProjection);
+            const expectedVariant = isAdmissionJournalLeaseEvictedV3(actualProjection);
             assertTrue(expectedVariant);
             deepStrictEqual<typeof expectedProjection>(
               Struct.pick(actualProjection, ["checkoutRoot", "branch", "lastHeartbeatAtMillis", "reason", "attemptId"]),
@@ -491,7 +494,7 @@ describe("synthetic admission scenario", () => {
               attemptId: O.some(attemptTicket),
             };
             assertDefined(actualProjection);
-            const expectedVariant = S.is(AdmissionJournalTicketEvictedV3)(actualProjection);
+            const expectedVariant = isAdmissionJournalTicketEvictedV3(actualProjection);
             assertTrue(expectedVariant);
             deepStrictEqual<typeof expectedProjection>(
               Struct.pick(actualProjection, ["checkoutRoot", "branch", "reason", "attemptId"]),
@@ -508,7 +511,7 @@ describe("synthetic admission scenario", () => {
               attemptId: O.some(attemptA),
             };
             assertDefined(actualProjection);
-            const expectedVariant = S.is(AdmissionJournalReleasedV3)(actualProjection);
+            const expectedVariant = isAdmissionJournalReleasedV3(actualProjection);
             assertTrue(expectedVariant);
             deepStrictEqual<typeof expectedProjection>(
               Struct.pick(actualProjection, ["checkoutRoot", "branch", "attemptId"]),
