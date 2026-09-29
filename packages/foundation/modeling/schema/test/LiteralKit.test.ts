@@ -11,6 +11,11 @@ const Status = LiteralKit([1, 20n, true, false, "hello"]);
 const decodeUnknownStatusEffect = S.decodeUnknownEffect(Status);
 const encodeStatusEffect = S.encodeEffect(Status);
 const Direction = LiteralKit(["up", "down", "left", "right"]);
+const notDown = S.makeFilter((direction: "up" | "down" | "left" | "right") => direction !== "down" || "down is closed");
+const CheckedDirection = Direction.check(notDown);
+const PipedDirection = Direction.pipe(S.check(notDown), S.annotate({ title: "Open direction" }));
+const isCheckedDirection = S.is(CheckedDirection);
+const isPipedDirection = S.is(PipedDirection);
 const EventKind = LiteralKit(["created", "deleted"]);
 const Event = EventKind.toTaggedUnion("kind")({
   created: { value: S.Literal(1) },
@@ -179,10 +184,6 @@ describe("LiteralKit (string-only)", () => {
 });
 
 describe("LiteralKit statics across derivations", () => {
-  const notDown = S.makeFilter(
-    (direction: "up" | "down" | "left" | "right") => direction !== "down" || "down is closed"
-  );
-
   const expectKitStatics = (derived: typeof Direction): void => {
     expect(derived).not.toBe(Direction);
     expect(derived.Enum).toBe(Direction.Enum);
@@ -193,10 +194,9 @@ describe("LiteralKit statics across derivations", () => {
   };
 
   it("keeps statics through the check method", () => {
-    const Checked = Direction.check(notDown);
-    expectKitStatics(Checked);
-    expect(S.is(Checked)("up")).toBe(true);
-    expect(S.is(Checked)("down")).toBe(false);
+    expectKitStatics(CheckedDirection);
+    expect(isCheckedDirection("up")).toBe(true);
+    expect(isCheckedDirection("down")).toBe(false);
   });
 
   it("keeps statics through annotate and annotateKey", () => {
@@ -208,10 +208,9 @@ describe("LiteralKit statics across derivations", () => {
   });
 
   it("keeps statics through pipe(S.check(...)) and pipe(S.annotate(...))", () => {
-    const Piped = Direction.pipe(S.check(notDown), S.annotate({ title: "Open direction" }));
-    expectKitStatics(Piped);
-    expect(S.is(Piped)("down")).toBe(false);
-    expect(Piped.Enum.left).toBe("left");
+    expectKitStatics(PipedDirection);
+    expect(isPipedDirection("down")).toBe(false);
+    expect(PipedDirection.Enum.left).toBe("left");
   });
 
   it("keeps statics through chained derivations", () => {

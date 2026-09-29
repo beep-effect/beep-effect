@@ -16,6 +16,15 @@ const decodeSqlStateToEffect = S.decodeEffect(SqlState.To);
 const decodeUnknownSqlStateEffect = S.decodeUnknownEffect(SqlState);
 const encodeSqlStateEffect = S.encodeEffect(SqlState);
 const encodeSqlStateToEffect = S.encodeEffect(SqlState.To);
+const notWarningCode = S.makeFilter((code: "00000" | "01000") => code !== "01000" || "warnings are rejected");
+const CheckedSqlState = SqlState.check(notWarningCode);
+const KeyAnnotatedSqlState = SqlState.annotateKey({ description: "SQL state key" });
+const PipedSqlState = SqlState.pipe(S.check(notWarningCode), S.annotate({ title: "Successful SQL state" }));
+const decodeCheckedSqlStateEffect = S.decodeEffect(CheckedSqlState);
+const isPipedSqlState = S.is(PipedSqlState);
+const CheckedSqlStateName = SqlState.To.check(S.makeFilter((name) => name !== "WARNING" || "warnings are rejected"));
+const AnnotatedSqlStateName = SqlState.To.annotate({ title: "SQL state name" });
+const isCheckedSqlStateName = S.is(CheckedSqlStateName);
 
 describe("MappedLiteralKit", () => {
   it.effect(
@@ -149,16 +158,10 @@ describe("MappedLiteralKit", () => {
 });
 
 describe("MappedLiteralKit statics across derivations", () => {
-  const notWarning = S.makeFilter((code: "00000" | "01000") => code !== "01000" || "warnings are rejected");
-
   it.effect(
     "keeps top-level and From statics through check, annotateKey and pipe(S.check(...))",
     Effect.fnUntraced(function* () {
-      const Checked = SqlState.check(notWarning);
-      const KeyAnnotated = SqlState.annotateKey({ description: "SQL state key" });
-      const Piped = SqlState.pipe(S.check(notWarning), S.annotate({ title: "Successful SQL state" }));
-
-      for (const derived of [Checked, KeyAnnotated, Piped]) {
+      for (const derived of [CheckedSqlState, KeyAnnotatedSqlState, PipedSqlState]) {
         expect(derived).not.toBe(SqlState);
         expect(derived.From).toBe(derived);
         expect(derived.To).toBe(SqlState.To);
@@ -167,23 +170,20 @@ describe("MappedLiteralKit statics across derivations", () => {
         expect(derived.is).toBe(SqlState.is);
         expect(derived.$match).toBe(SqlState.$match);
       }
-      expect(yield* S.decodeEffect(Checked)("SUCCESSFUL_COMPLETION")).toBe("00000");
-      expect(S.is(Piped)("01000")).toBe(false);
-      expect(Piped.Enum.WARNING).toBe("01000");
+      expect(yield* decodeCheckedSqlStateEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+      expect(isPipedSqlState("01000")).toBe(false);
+      expect(PipedSqlState.Enum.WARNING).toBe("01000");
     })
   );
 
   it("keeps To statics through check and annotate", () => {
-    const Checked = SqlState.To.check(S.makeFilter((name) => name !== "WARNING" || "warnings are rejected"));
-    const Annotated = SqlState.To.annotate({ title: "SQL state name" });
-
-    for (const derived of [Checked, Annotated]) {
+    for (const derived of [CheckedSqlStateName, AnnotatedSqlStateName]) {
       expect(derived).not.toBe(SqlState.To);
       expect(derived.Enum).toBe(SqlState.To.Enum);
       expect(derived.is).toBe(SqlState.To.is);
       expect(derived.$match).toBe(SqlState.To.$match);
     }
-    expect(Checked.Enum["00000"]).toBe("SUCCESSFUL_COMPLETION");
-    expect(S.is(Checked)("WARNING")).toBe(false);
+    expect(CheckedSqlStateName.Enum["00000"]).toBe("SUCCESSFUL_COMPLETION");
+    expect(isCheckedSqlStateName("WARNING")).toBe(false);
   });
 });
