@@ -54,13 +54,6 @@ export * from "./internal/SchemaParityCodemodImports.ts";
  */
 export * from "./internal/SchemaParityCodemodLiteralKitRule.ts";
 /**
- * The `int-members` and `number-members` codemod rules.
- *
- * @category policies
- * @since 0.0.0
- */
-export * from "./internal/SchemaParityCodemodMemberRules.ts";
-/**
  * Judge-rubric lens drift lint utilities.
  *
  * @category cli-commands
