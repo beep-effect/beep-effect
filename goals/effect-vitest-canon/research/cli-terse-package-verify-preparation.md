@@ -38,6 +38,23 @@ verification. It introduces none and retains the native-filesystem judgment.
 
 Applied Node/Bun suites, actual-suite cleanup and console probes, typechecking,
 root ratchet, historical-row reconciliation and grouped full package proof
-remain required after application. Inspect transitive command timing needs
-before choosing any live-clock override. Do not treat this preparation as a
-completed migration or a full package proof.
+remain required after application. Do not treat this preparation as a completed
+migration or a full package proof.
+
+The transitive timing audit finds native drain/reap sleeps in runCaptured's
+capturePipeDeadline, including calls without an explicit timeout. The draft now
+retains TestClock.withLive in the nine package-verification cases reaching that
+boundary. Three of those also produce native elapsed-duration reports. Other
+callbacks keep the test clock. Both drafts still preserve all 148 assertion
+trees, introduce no detector findings, and map all 32 historical runtime rows
+by original line/evidence and registration title. Row status remains unchanged.
+
+The same audit identifies one correction in the previously migrated QA helper
+suite: its native Git provenance case reaches runCaptured. A separate private
+draft adds live-clock protection only there. Include this correction in the
+next grouped proof after the current QA-helper proof is terminal. The expanded
+baseline is 75 cases across all three files; every case passes on both runtimes
+with stable source and zero residue. Whole-command observations are Node
+11.985 seconds and Bun 6.025 seconds under concurrent package-proof load.
+Retain the earlier 35-case baseline separately; compare the applied three-file
+cohort with the matching 75-case baseline.

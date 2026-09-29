@@ -5570,3 +5570,27 @@ The QA helper timing samples are also slightly slower after migration (Node
 3.520 -> 3.770 seconds; Bun 1.667 -> 1.967 seconds). Retain the load/pressure
 receipts and include this file in a matched-load comparison before attributing
 a performance change to fixture structure or console construction.
+
+
+### Audit native capture deadlines when choosing test-clock ownership
+
+The grouped package-verification draft audit followed runCaptured into
+StepExec.capturePipeDeadline. Even without an explicit command timeout, the
+capture races pipe EOF against post-exit drain and reap sleeps. A subprocess
+can exit while an inherited writer remains open; a frozen test clock would
+prevent that cleanup deadline from advancing. Passing ordinary subprocess
+cases alone does not prove the deadline stays live.
+
+The draft retains TestClock.withLive for the nine cases that reach captured
+subprocesses, including Git discovery and elapsed-duration reports. Pure
+selection and filesystem-only cases keep the test clock. Check earlier native
+migration cohorts for the same transitive boundary before final closure; do
+not infer clock safety merely from the absence of direct sleep calls in tests.
+
+
+The QA helper audit confirms one immediate follow-up: readCommitProvenance
+calls capturedText, which delegates to runCaptured. Its migrated native Git
+case therefore needs the same live-clock protection. A one-case draft is
+prepared without altering the running proof's source. Include that correction
+with the next grouped package proof and retain the earlier proof as evidence
+of its actual source revision, not proof of this newly identified timer path.
