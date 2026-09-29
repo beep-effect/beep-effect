@@ -5939,3 +5939,13 @@ absence recognition, and flattens the membership guard. Node/Bun each pass
 260 tests; all 2,861 detection rows are preserved. Fallow audit and health now
 pass without suppressions or threshold changes. Full package audit (770.6 seconds)
 and docgen (24.8 seconds) subsequently passed, as did all fifteen cheap gates.
+
+## Runtime and fixture ownership must migrate together
+
+Runtime-only conversions of goals-doctor and quality-command-dispatch passed
+Node/Bun tests but exposed thirteen layer/wrapper/scope findings once their
+callbacks became instrumented. Migrate runtime and fixture ownership together;
+preserve fresh consoles and test-local process mock arrays. The baseline was
+not refreshed. The dispatch source was restored before completing the doctor
+fixture repair. A migration preflight that detects newly visible wrapper
+findings would have prevented this incomplete first pass.
