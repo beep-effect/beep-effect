@@ -51,3 +51,17 @@ The two Vercel failures explicitly report deployment rate limits and were
 acknowledged as environment-only. Full branch verification and the remaining
 hosted jobs are still pending; neither package proof nor review closeout
 establishes merge readiness by itself.
+
+## Full-proof progress and Storybook recheck
+
+The full proof on `1d01a323d6` passed lint policy, repository type checks,
+integration tests, and unit tests. The CLI unit cohort passed 4,880 tests in
+246 files. It then stopped at a Storybook setup-module fetch failure before
+collecting one suite; coverage was not run because of fail-fast scheduling.
+This run is failed, not a complete green proof.
+
+The isolated Storybook lane recheck passed all four chunks and 489 tests at
+the same head without source or configuration changes. Its test step took
+258.47 seconds. The failure was acknowledged as transient environment behavior
+with both outcomes preserved. A new full proof has been submitted to complete
+the remaining evidence; its final result is still pending.

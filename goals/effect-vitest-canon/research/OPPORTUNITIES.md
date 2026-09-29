@@ -5787,8 +5787,10 @@ imported module` for Storybook's `setup-file-with-project-annotations.js`.
 Three chunks passed; the final chunk had 16 passing files and one failed suite.
 Neither Storybook nor the UI package differs from main in this PR, and the
 hosted Storybook check passed. These facts suggest a local loading issue but
-do not establish its cause. A single isolated lane recheck is underway; no
-retry policy, gate, or test has been weakened.
+do not establish its cause. The isolated same-head lane recheck passed all four chunks and 489 tests
+without source or configuration changes. This supports transient attribution,
+although the underlying fetch failure remains unexplained. No retry policy,
+gate, or test has been weakened.
 
 Improve browser-runner failure artifacts with setup-module HTTP status and
 server-side transform errors, so fetch failures can be attributed without a
