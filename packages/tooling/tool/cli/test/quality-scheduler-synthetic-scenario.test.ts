@@ -27,9 +27,10 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { decodeYeetAttemptJournalEvent } from "@beep/repo-cli/test/Yeet";
 import { UUID } from "@beep/schema/String";
+import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import {
   Clock,
@@ -55,6 +56,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as TestClock from "effect/testing/TestClock";
 
 // Ruling 10's synthetic producer: admission rows come from the real scheduler.
 const producerPath = "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts";
@@ -293,266 +295,261 @@ const expectExportCheck = Effect.fnUntraced(function* (
 });
 
 describe("synthetic admission scenario", () => {
-  it("journals contention, withdrawal, fixture evictions, and release with an optional synthetic export", () =>
-    Effect.runPromise(
-      withAdmissionTempRoot(
-        Effect.fnUntraced(function* (runtimeDir, exportTarget) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = path.join(runtimeDir, "beep", "admit");
-          const checkoutA = path.join(runtimeDir, "checkouts", "contender-a");
-          const checkoutB = path.join(runtimeDir, "checkouts", "contender-b");
-          const checkoutLease = path.join(runtimeDir, "checkouts", "dead-lease");
-          const checkoutTicket = path.join(runtimeDir, "checkouts", "dead-ticket");
-          const branchA = "feat/synthetic-contender-a";
-          const branchB = "feat/synthetic-contender-b";
-          const branchLease = "feat/synthetic-dead-lease";
-          const branchTicket = "feat/synthetic-dead-ticket";
-          const attemptA = yield* randomAttemptId();
-          const attemptB = yield* randomAttemptId();
-          const attemptLease = yield* randomAttemptId();
-          const attemptTicket = yield* randomAttemptId();
-          // Admission alone does not write normal attempt rows. Keep A's empty run directory as a receipt.
-          for (const checkout of [checkoutA, checkoutB, checkoutLease, checkoutTicket]) {
-            yield* fs.makeDirectory(path.join(checkout, ".beep", "yeet", "runs"), { recursive: true });
-          }
-          expect(yield* setAdmissionEvictionProtocol("on")).toMatchObject({
-            schemaVersion: "yeet-admission-protocol/v2",
-            eviction: "on",
-          });
-          expect(admissionCapacityTokensFor(25, fastConfig)).toBe(3);
-          const admittedA = yield* Deferred.make<void>();
-          const finishA = yield* Deferred.make<void>();
-          const holder = yield* Effect.forkChild(
-            withQualityAdmission(
-              request(checkoutA, branchA, attemptA),
-              noAdmissionOriginGate,
-              Deferred.succeed(admittedA, undefined).pipe(Effect.andThen(Deferred.await(finishA))),
-              fastConfig
-            )
-          );
-          yield* Deferred.await(admittedA).pipe(Effect.timeout("5 seconds"));
-          expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
-          const ranB = yield* Ref.make(false);
-          const waiter = yield* Effect.forkChild(
-            withQualityAdmission(
-              request(checkoutB, branchB, attemptB),
-              noAdmissionOriginGate,
-              Ref.set(ranB, true),
-              fastConfig
-            )
-          );
-          yield* readJournalEvents(root).pipe(
-            Effect.repeat({
-              until: (events) =>
-                A.some(
-                  events,
-                  (event) =>
-                    AdmissionJournalEvent.guards["admission-enqueued"](event) && event.checkoutRoot === checkoutB
-                ),
-              schedule: Schedule.spaced("10 millis"),
-            }),
-            Effect.timeout("5 seconds")
-          );
-          expect(yield* listDirectory(path.join(root, "queue"))).toHaveLength(1);
-          yield* Fiber.interrupt(waiter);
-          expect(yield* Ref.get(ranB)).toBe(false);
-          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
+  it.effect("journals contention, withdrawal, fixture evictions, and release with an optional synthetic export", () =>
+    withAdmissionTempRoot(
+      Effect.fnUntraced(function* (runtimeDir, exportTarget) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = path.join(runtimeDir, "beep", "admit");
+        const checkoutA = path.join(runtimeDir, "checkouts", "contender-a");
+        const checkoutB = path.join(runtimeDir, "checkouts", "contender-b");
+        const checkoutLease = path.join(runtimeDir, "checkouts", "dead-lease");
+        const checkoutTicket = path.join(runtimeDir, "checkouts", "dead-ticket");
+        const branchA = "feat/synthetic-contender-a";
+        const branchB = "feat/synthetic-contender-b";
+        const branchLease = "feat/synthetic-dead-lease";
+        const branchTicket = "feat/synthetic-dead-ticket";
+        const attemptA = yield* randomAttemptId();
+        const attemptB = yield* randomAttemptId();
+        const attemptLease = yield* randomAttemptId();
+        const attemptTicket = yield* randomAttemptId();
+        // Admission alone does not write normal attempt rows. Keep A's empty run directory as a receipt.
+        for (const checkout of [checkoutA, checkoutB, checkoutLease, checkoutTicket]) {
+          yield* fs.makeDirectory(path.join(checkout, ".beep", "yeet", "runs"), { recursive: true });
+        }
+        expect(yield* setAdmissionEvictionProtocol("on")).toMatchObject({
+          schemaVersion: "yeet-admission-protocol/v2",
+          eviction: "on",
+        });
+        expect(admissionCapacityTokensFor(25, fastConfig)).toBe(3);
+        const admittedA = yield* Deferred.make<void>();
+        const finishA = yield* Deferred.make<void>();
+        const holder = yield* Effect.forkChild(
+          withQualityAdmission(
+            request(checkoutA, branchA, attemptA),
+            noAdmissionOriginGate,
+            Deferred.succeed(admittedA, undefined).pipe(Effect.andThen(Deferred.await(finishA))),
+            fastConfig
+          )
+        );
+        yield* Deferred.await(admittedA).pipe(Effect.timeout("5 seconds"));
+        expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
+        const ranB = yield* Ref.make(false);
+        const waiter = yield* Effect.forkChild(
+          withQualityAdmission(
+            request(checkoutB, branchB, attemptB),
+            noAdmissionOriginGate,
+            Ref.set(ranB, true),
+            fastConfig
+          )
+        );
+        yield* readJournalEvents(root).pipe(
+          Effect.repeat({
+            until: (events) =>
+              A.some(
+                events,
+                (event) => AdmissionJournalEvent.guards["admission-enqueued"](event) && event.checkoutRoot === checkoutB
+              ),
+            schedule: Schedule.spaced("10 millis"),
+          }),
+          Effect.timeout("5 seconds")
+        );
+        expect(yield* listDirectory(path.join(root, "queue"))).toHaveLength(1);
+        yield* Fiber.interrupt(waiter);
+        expect(yield* Ref.get(ranB)).toBe(false);
+        expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
 
-          const binDirectory = path.join(runtimeDir, "bin");
-          yield* fs.makeDirectory(binDirectory);
-          const systemctl = path.join(binDirectory, "systemctl");
-          yield* fs.writeFileString(systemctl, "#!/bin/sh\nexit 0\n");
-          yield* fs.chmod(systemctl, 0o755);
-          // A same-source start mismatch is definitive dead/reused-owner evidence, without a host PID literal.
-          const liveStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
-          const owner = { pid: process.pid, procStart: `${liveStart}-synthetic-dead-owner` };
-          expect(yield* processIdentityStatus(owner)).toBe("dead");
-          const fixtureInstant = yield* Clock.currentTimeMillis;
-          const fixture = {
-            ...owner,
-            weightTokens: 3,
-            originKey: "synthetic-dead-owner",
-            enqueuedAtMillis: fixtureInstant,
-            heartbeatAtMillis: fixtureInstant,
-          };
-          const lease = YeetAdmissionLease.make({
-            ...fixture,
-            schemaVersion: "yeet-admission-lease/v1",
-            kind: "full-proof",
-            priority: "verify",
+        const binDirectory = path.join(runtimeDir, "bin");
+        yield* fs.makeDirectory(binDirectory);
+        const systemctl = path.join(binDirectory, "systemctl");
+        yield* fs.writeFileString(systemctl, "#!/bin/sh\nexit 0\n");
+        yield* fs.chmod(systemctl, 0o755);
+        // A same-source start mismatch is definitive dead/reused-owner evidence, without a host PID literal.
+        const liveStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
+        const owner = { pid: process.pid, procStart: `${liveStart}-synthetic-dead-owner` };
+        expect(yield* processIdentityStatus(owner)).toBe("dead");
+        const fixtureInstant = yield* Clock.currentTimeMillis;
+        const fixture = {
+          ...owner,
+          weightTokens: 3,
+          originKey: "synthetic-dead-owner",
+          enqueuedAtMillis: fixtureInstant,
+          heartbeatAtMillis: fixtureInstant,
+        };
+        const lease = YeetAdmissionLease.make({
+          ...fixture,
+          schemaVersion: "yeet-admission-lease/v1",
+          kind: "full-proof",
+          priority: "verify",
+          checkoutRoot: checkoutLease,
+          branch: branchLease,
+          command: "synthetic dead lease",
+          nonce: "synthetic-dead-lease",
+          attemptId: O.some(attemptLease),
+          admittedAtMillis: fixtureInstant,
+          startedAt: DateTime.formatIso(yield* DateTime.now),
+        });
+        const ticket = YeetAdmissionTicket.make({
+          ...fixture,
+          schemaVersion: "yeet-admission-ticket/v1",
+          kind: "full-proof",
+          priority: "verify",
+          checkoutRoot: checkoutTicket,
+          branch: branchTicket,
+          nonce: "synthetic-dead-ticket",
+          attemptId: O.some(attemptTicket),
+        });
+        yield* fs.writeFileString(path.join(root, "leases", `${lease.nonce}.lease.json`), yield* encodeLease(lease));
+        yield* fs.writeFileString(path.join(root, "queue", `${ticket.nonce}.ticket.json`), yield* encodeTicket(ticket));
+        const reap = withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
+          Effect.provideService(
+            AdmissionEvictionJournal,
+            AdmissionEvictionJournal.of({ appendOnce: appendAdmissionEvictionJournalEvent })
+          )
+        );
+        yield* reap;
+        expect(yield* listDirectory(path.join(root, "claims"))).toStrictEqual([]);
+        expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
+        expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
+        const leaseAttempts = yield* readAttemptJournalEvents(checkoutLease, branchLease);
+        const ticketAttempts = yield* readAttemptJournalEvents(checkoutTicket, branchTicket);
+        expect(leaseAttempts).toMatchObject([
+          { _tag: "attempt-terminated", attemptId: attemptLease, reason: "lease-eviction" },
+        ]);
+        expect(ticketAttempts).toMatchObject([
+          { _tag: "attempt-terminated", attemptId: attemptTicket, reason: "queued-submitter-death" },
+        ]);
+        expect(leaseAttempts).toHaveLength(1);
+        expect(ticketAttempts).toHaveLength(1);
+        yield* Deferred.succeed(finishA, undefined);
+        yield* Fiber.join(holder);
+
+        const events = yield* readJournalEvents(root);
+        expect(events).toHaveLength(7);
+        expect(
+          R.map(expectedTags, (_count, tag) => A.countBy(events, AdmissionJournalEvent.guards[tag]))
+        ).toStrictEqual(expectedTags);
+        expectV3ExceptAdmitted(events);
+        const enqueues = A.filter(events, AdmissionJournalEvent.guards["admission-enqueued"]);
+        const enqueuedA = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutA));
+        const enqueuedB = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutB));
+        {
+          const actualProjection = enqueuedA;
+          const expectedProjection = { branch: branchA, attemptId: O.some(attemptA), weightTokens: 3 };
+          assertDefined(actualProjection);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
+            expectedProjection
+          );
+        }
+        {
+          const actualProjection = enqueuedB;
+          const expectedProjection = { branch: branchB, attemptId: O.some(attemptB), weightTokens: 3 };
+          assertDefined(actualProjection);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
+            expectedProjection
+          );
+        }
+        const withdrawn = O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-withdrawn"]));
+        expect(withdrawn).toMatchObject(Struct.omit(enqueuedB, ["_tag", "weightTokens"]));
+        expect(withdrawn.withdrawnAtMillis).toBeGreaterThanOrEqual(enqueuedB.enqueuedAtMillis);
+        const wire = yield* Effect.forEach(
+          journalLines(yield* fs.readFileString(yield* admissionJournalPath(root))),
+          (line) => decodeJsonObject(line)
+        );
+        const withdrawnWire = O.getOrThrow(A.findFirst(wire, (row) => row._tag === "admission-withdrawn"));
+        expect(withdrawnWire).not.toHaveProperty("weightTokens");
+        expect(withdrawnWire).not.toHaveProperty("reason");
+        {
+          const actualProjection = O.getOrThrow(
+            A.findFirst(events, AdmissionJournalEvent.guards["admission-lease-evicted"])
+          );
+          const expectedProjection = {
             checkoutRoot: checkoutLease,
             branch: branchLease,
-            command: "synthetic dead lease",
-            nonce: "synthetic-dead-lease",
+            lastHeartbeatAtMillis: fixtureInstant,
+            reason: "owner-dead-or-reused",
             attemptId: O.some(attemptLease),
-            admittedAtMillis: fixtureInstant,
-            startedAt: DateTime.formatIso(yield* DateTime.now),
-          });
-          const ticket = YeetAdmissionTicket.make({
-            ...fixture,
-            schemaVersion: "yeet-admission-ticket/v1",
-            kind: "full-proof",
-            priority: "verify",
+          };
+          assertDefined(actualProjection);
+          const expectedVariant = isAdmissionJournalLeaseEvictedV3(actualProjection);
+          assertTrue(expectedVariant);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["checkoutRoot", "branch", "lastHeartbeatAtMillis", "reason", "attemptId"]),
+            expectedProjection
+          );
+        }
+        {
+          const actualProjection = O.getOrThrow(
+            A.findFirst(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])
+          );
+          const expectedProjection = {
             checkoutRoot: checkoutTicket,
             branch: branchTicket,
-            nonce: "synthetic-dead-ticket",
+            reason: "queued-submitter-death",
             attemptId: O.some(attemptTicket),
-          });
-          yield* fs.writeFileString(path.join(root, "leases", `${lease.nonce}.lease.json`), yield* encodeLease(lease));
-          yield* fs.writeFileString(
-            path.join(root, "queue", `${ticket.nonce}.ticket.json`),
-            yield* encodeTicket(ticket)
+          };
+          assertDefined(actualProjection);
+          const expectedVariant = isAdmissionJournalTicketEvictedV3(actualProjection);
+          assertTrue(expectedVariant);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["checkoutRoot", "branch", "reason", "attemptId"]),
+            expectedProjection
           );
-          const reap = withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
-            Effect.provideService(
-              AdmissionEvictionJournal,
-              AdmissionEvictionJournal.of({ appendOnce: appendAdmissionEvictionJournalEvent })
-            )
+        }
+        {
+          const actualProjection = O.getOrThrow(
+            A.findFirst(events, AdmissionJournalEvent.guards["admission-released"])
           );
-          yield* reap;
-          expect(yield* listDirectory(path.join(root, "claims"))).toStrictEqual([]);
-          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
-          expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
-          const leaseAttempts = yield* readAttemptJournalEvents(checkoutLease, branchLease);
-          const ticketAttempts = yield* readAttemptJournalEvents(checkoutTicket, branchTicket);
-          expect(leaseAttempts).toMatchObject([
-            { _tag: "attempt-terminated", attemptId: attemptLease, reason: "lease-eviction" },
-          ]);
-          expect(ticketAttempts).toMatchObject([
-            { _tag: "attempt-terminated", attemptId: attemptTicket, reason: "queued-submitter-death" },
-          ]);
-          expect(leaseAttempts).toHaveLength(1);
-          expect(ticketAttempts).toHaveLength(1);
-          yield* Deferred.succeed(finishA, undefined);
-          yield* Fiber.join(holder);
-
-          const events = yield* readJournalEvents(root);
-          expect(events).toHaveLength(7);
+          const expectedProjection = {
+            checkoutRoot: checkoutA,
+            branch: branchA,
+            attemptId: O.some(attemptA),
+          };
+          assertDefined(actualProjection);
+          const expectedVariant = isAdmissionJournalReleasedV3(actualProjection);
+          assertTrue(expectedVariant);
+          deepStrictEqual<typeof expectedProjection>(
+            Struct.pick(actualProjection, ["checkoutRoot", "branch", "attemptId"]),
+            expectedProjection
+          );
+        }
+        const chains = [
+          {
+            label: "contender-a",
+            nonce: enqueuedA.nonce,
+            tags: ["admission-enqueued", "admission-admitted", "admission-released"],
+          },
+          { label: "contender-b", nonce: enqueuedB.nonce, tags: ["admission-enqueued", "admission-withdrawn"] },
+          { label: "dead-lease", nonce: lease.nonce, tags: ["admission-lease-evicted"] },
+          { label: "dead-ticket", nonce: ticket.nonce, tags: ["admission-ticket-evicted"] },
+        ];
+        for (const chain of chains) {
           expect(
-            R.map(expectedTags, (_count, tag) => A.countBy(events, AdmissionJournalEvent.guards[tag]))
-          ).toStrictEqual(expectedTags);
-          expectV3ExceptAdmitted(events);
-          const enqueues = A.filter(events, AdmissionJournalEvent.guards["admission-enqueued"]);
-          const enqueuedA = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutA));
-          const enqueuedB = O.getOrThrow(A.findFirst(enqueues, (event) => event.checkoutRoot === checkoutB));
-          {
-            const actualProjection = enqueuedA;
-            const expectedProjection = { branch: branchA, attemptId: O.some(attemptA), weightTokens: 3 };
-            assertDefined(actualProjection);
-            deepStrictEqual<typeof expectedProjection>(
-              Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
-              expectedProjection
-            );
-          }
-          {
-            const actualProjection = enqueuedB;
-            const expectedProjection = { branch: branchB, attemptId: O.some(attemptB), weightTokens: 3 };
-            assertDefined(actualProjection);
-            deepStrictEqual<typeof expectedProjection>(
-              Struct.pick(actualProjection, ["branch", "attemptId", "weightTokens"]),
-              expectedProjection
-            );
-          }
-          const withdrawn = O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-withdrawn"]));
-          expect(withdrawn).toMatchObject(Struct.omit(enqueuedB, ["_tag", "weightTokens"]));
-          expect(withdrawn.withdrawnAtMillis).toBeGreaterThanOrEqual(enqueuedB.enqueuedAtMillis);
-          const wire = yield* Effect.forEach(
-            journalLines(yield* fs.readFileString(yield* admissionJournalPath(root))),
-            (line) => decodeJsonObject(line)
-          );
-          const withdrawnWire = O.getOrThrow(A.findFirst(wire, (row) => row._tag === "admission-withdrawn"));
-          expect(withdrawnWire).not.toHaveProperty("weightTokens");
-          expect(withdrawnWire).not.toHaveProperty("reason");
-          {
-            const actualProjection = O.getOrThrow(
-              A.findFirst(events, AdmissionJournalEvent.guards["admission-lease-evicted"])
-            );
-            const expectedProjection = {
-              checkoutRoot: checkoutLease,
-              branch: branchLease,
-              lastHeartbeatAtMillis: fixtureInstant,
-              reason: "owner-dead-or-reused",
-              attemptId: O.some(attemptLease),
-            };
-            assertDefined(actualProjection);
-            const expectedVariant = isAdmissionJournalLeaseEvictedV3(actualProjection);
-            assertTrue(expectedVariant);
-            deepStrictEqual<typeof expectedProjection>(
-              Struct.pick(actualProjection, ["checkoutRoot", "branch", "lastHeartbeatAtMillis", "reason", "attemptId"]),
-              expectedProjection
-            );
-          }
-          {
-            const actualProjection = O.getOrThrow(
-              A.findFirst(events, AdmissionJournalEvent.guards["admission-ticket-evicted"])
-            );
-            const expectedProjection = {
-              checkoutRoot: checkoutTicket,
-              branch: branchTicket,
-              reason: "queued-submitter-death",
-              attemptId: O.some(attemptTicket),
-            };
-            assertDefined(actualProjection);
-            const expectedVariant = isAdmissionJournalTicketEvictedV3(actualProjection);
-            assertTrue(expectedVariant);
-            deepStrictEqual<typeof expectedProjection>(
-              Struct.pick(actualProjection, ["checkoutRoot", "branch", "reason", "attemptId"]),
-              expectedProjection
-            );
-          }
-          {
-            const actualProjection = O.getOrThrow(
-              A.findFirst(events, AdmissionJournalEvent.guards["admission-released"])
-            );
-            const expectedProjection = {
-              checkoutRoot: checkoutA,
-              branch: branchA,
-              attemptId: O.some(attemptA),
-            };
-            assertDefined(actualProjection);
-            const expectedVariant = isAdmissionJournalReleasedV3(actualProjection);
-            assertTrue(expectedVariant);
-            deepStrictEqual<typeof expectedProjection>(
-              Struct.pick(actualProjection, ["checkoutRoot", "branch", "attemptId"]),
-              expectedProjection
-            );
-          }
-          const chains = [
-            {
-              label: "contender-a",
-              nonce: enqueuedA.nonce,
-              tags: ["admission-enqueued", "admission-admitted", "admission-released"],
-            },
-            { label: "contender-b", nonce: enqueuedB.nonce, tags: ["admission-enqueued", "admission-withdrawn"] },
-            { label: "dead-lease", nonce: lease.nonce, tags: ["admission-lease-evicted"] },
-            { label: "dead-ticket", nonce: ticket.nonce, tags: ["admission-ticket-evicted"] },
-          ];
-          for (const chain of chains) {
-            expect(
-              A.map(
-                A.filter(events, (event) => event.nonce === chain.nonce),
-                eventTag
-              )
-            ).toStrictEqual(chain.tags);
-          }
-          yield* reap;
-          expect(yield* readJournalEvents(root)).toStrictEqual(events);
-          expect(yield* readAttemptJournalEvents(checkoutLease, branchLease)).toStrictEqual(leaseAttempts);
-          expect(yield* readAttemptJournalEvents(checkoutTicket, branchTicket)).toStrictEqual(ticketAttempts);
-          for (const directory of ["leases", "queue", "claims", "quarantine", "promotions"]) {
-            expect(yield* listDirectory(path.join(root, directory))).toStrictEqual([]);
-          }
-          expect(A.filter(yield* fs.readDirectory(runtimeDir, { recursive: true }), isLockPath)).toStrictEqual([]);
+            A.map(
+              A.filter(events, (event) => event.nonce === chain.nonce),
+              eventTag
+            )
+          ).toStrictEqual(chain.tags);
+        }
+        yield* reap;
+        expect(yield* readJournalEvents(root)).toStrictEqual(events);
+        expect(yield* readAttemptJournalEvents(checkoutLease, branchLease)).toStrictEqual(leaseAttempts);
+        expect(yield* readAttemptJournalEvents(checkoutTicket, branchTicket)).toStrictEqual(ticketAttempts);
+        for (const directory of ["leases", "queue", "claims", "quarantine", "promotions"]) {
+          expect(yield* listDirectory(path.join(root, directory))).toStrictEqual([]);
+        }
+        expect(A.filter(yield* fs.readDirectory(runtimeDir, { recursive: true }), isLockPath)).toStrictEqual([]);
 
-          yield* expectExportCheck(runtimeDir, root, chains);
+        yield* expectExportCheck(runtimeDir, root, chains);
 
-          if (O.isSome(exportTarget)) {
-            yield* exportScenario(runtimeDir, exportTarget.value, chains);
-          }
-        })
-      )
-    ));
+        if (O.isSome(exportTarget)) {
+          yield* exportScenario(runtimeDir, exportTarget.value, chains);
+        }
+      })
+    ).pipe(TestClock.withLive)
+  );
   it.effect.prop(
     "property: dead-owner lease and ticket fixtures round-trip through the JSON codecs the scenario writes",
     [Arbitrary.schema(YeetAdmissionLease), Arbitrary.schema(YeetAdmissionTicket)],

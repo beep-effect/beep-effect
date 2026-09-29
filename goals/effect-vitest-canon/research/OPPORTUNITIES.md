@@ -5687,3 +5687,14 @@ assertions. The follow-up hoists the same compilers and guards to module scope;
 root Oxlint now passes. Run this root policy gate alongside migration checks
 before interpreting package proof as publication readiness. No assertions or
 schema contracts were weakened.
+
+### Schema guard hoisting changes a remaining runtime finding fingerprint
+
+After hoisting three synthetic-scenario schema guards to satisfy root Oxlint,
+`beep lint effect-vitest` reports one new finding in that same file. A focused
+before/after detector comparison confirms identical EV001/EV003/EV010 counts;
+the remaining runPromise body's occurrence fingerprint changed when its guard
+calls changed. The outstanding runtime boundary still requires migration.
+Preserve that obligation and its historical lineage when resolving the ratchet;
+a broad baseline refresh would obscure the distinction between an identity
+change and newly introduced debt. Receipt: cli-scheduler-schema-hoist-proof.md.

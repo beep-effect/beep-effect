@@ -7,8 +7,9 @@ import {
   severityCountsOf,
 } from "@beep/repo-cli/test/Codex";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
 import type { CodexFindingsIngestError } from "@beep/repo-cli/test/Codex";
 
@@ -62,38 +63,35 @@ describe("codex findings identity assignment", () => {
     expect(recordIdForOrdinal(1000)).toBe("CSF-1000");
   });
 
-  it("orders most severe first and breaks ties by Codex identity", () =>
-    Effect.runPromise(
-      planFrom(
-        payloadOf([
-          captureFinding({ codexId: hex("zz", 32), severity: "Low" }),
-          captureFinding({ codexId: hex("bb", 32), severity: "High" }),
-          captureFinding({ codexId: hex("aa", 32), severity: "Low" }),
-          captureFinding({ codexId: hex("cc", 32), severity: "Informational" }),
-        ])
-      ).pipe(
-        Effect.map((plan) => {
-          expect(A.map(plan.records, (record) => record.severity)).toEqual(["High", "Low", "Low", "Informational"]);
-          expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001", "CSF-002", "CSF-003", "CSF-004"]);
-          // Ties broken by identity: the "aa" row sorts ahead of the "zz" row.
-          expect(plan.records[1]?.codexId).toBe(hex("aa", 32));
-          expect(plan.records[2]?.codexId).toBe(hex("zz", 32));
-        })
-      )
-    ));
+  it.effect("orders most severe first and breaks ties by Codex identity", () =>
+    planFrom(
+      payloadOf([
+        captureFinding({ codexId: hex("zz", 32), severity: "Low" }),
+        captureFinding({ codexId: hex("bb", 32), severity: "High" }),
+        captureFinding({ codexId: hex("aa", 32), severity: "Low" }),
+        captureFinding({ codexId: hex("cc", 32), severity: "Informational" }),
+      ])
+    ).pipe(
+      Effect.map((plan) => {
+        expect(A.map(plan.records, (record) => record.severity)).toEqual(["High", "Low", "Low", "Informational"]);
+        expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001", "CSF-002", "CSF-003", "CSF-004"]);
+        // Ties broken by identity: the "aa" row sorts ahead of the "zz" row.
+        expect(plan.records[1]?.codexId).toBe(hex("aa", 32));
+        expect(plan.records[2]?.codexId).toBe(hex("zz", 32));
+      })
+    )
+  );
 
-  it("produces an identical plan when the same payload arrives in a different row order", () => {
+  it.effect("produces an identical plan when the same payload arrives in a different row order", () => {
     const a = captureFinding({ codexId: hex("aa", 32), severity: "Low" });
     const b = captureFinding({ codexId: hex("bb", 32), severity: "High" });
     const c = captureFinding({ codexId: hex("cc", 32), severity: "Medium" });
     const encode = UnknownFromJsonString.encodeUnknownSync;
 
-    return Effect.runPromise(
-      Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))]).pipe(
-        Effect.map(([first, second]) => {
-          expect(encode(first)).toBe(encode(second));
-        })
-      )
+    return Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))]).pipe(
+      Effect.map(([first, second]) => {
+        expect(encode(first)).toBe(encode(second));
+      })
     );
   });
 });
@@ -111,70 +109,65 @@ describe("codex findings identity is sticky across re-ingest", () => {
       Effect.flatMap((payload) => planPacket(payload, { priorIds: priorIdsOfEntries(priors) }))
     );
 
-  it("keeps existing numbers when a more severe finding arrives later", () =>
-    Effect.runPromise(
-      planWithPriors(
-        [low, informational, arrivingHigh],
-        [
-          { id: "CSF-001", codexId: low.codexId },
-          { id: "CSF-002", codexId: informational.codexId },
-        ]
-      ).pipe(
-        Effect.map((plan) => {
-          const byCodexId = (codexId: string) => A.findFirst(plan.records, (record) => record.codexId === codexId);
+  it.effect("keeps existing numbers when a more severe finding arrives later", () =>
+    planWithPriors(
+      [low, informational, arrivingHigh],
+      [
+        { id: "CSF-001", codexId: low.codexId },
+        { id: "CSF-002", codexId: informational.codexId },
+      ]
+    ).pipe(
+      Effect.map((plan) => {
+        const byCodexId = (codexId: string) => A.findFirst(plan.records, (record) => record.codexId === codexId);
 
-          // The High finding sorts first, but must NOT take CSF-001.
-          expect(plan.records[0]?.severity).toBe("High");
-          expect(
-            O.getOrElse(
-              O.map(byCodexId(low.codexId), (r) => r.id),
-              () => ""
-            )
-          ).toBe("CSF-001");
-          expect(
-            O.getOrElse(
-              O.map(byCodexId(informational.codexId), (r) => r.id),
-              () => ""
-            )
-          ).toBe("CSF-002");
-          expect(
-            O.getOrElse(
-              O.map(byCodexId(arrivingHigh.codexId), (r) => r.id),
-              () => ""
-            )
-          ).toBe("CSF-003");
-        })
-      )
-    ));
+        // The High finding sorts first, but must NOT take CSF-001.
+        expect(plan.records[0]?.severity).toBe("High");
+        expect(
+          O.getOrElse(
+            O.map(byCodexId(low.codexId), (r) => r.id),
+            () => ""
+          )
+        ).toBe("CSF-001");
+        expect(
+          O.getOrElse(
+            O.map(byCodexId(informational.codexId), (r) => r.id),
+            () => ""
+          )
+        ).toBe("CSF-002");
+        expect(
+          O.getOrElse(
+            O.map(byCodexId(arrivingHigh.codexId), (r) => r.id),
+            () => ""
+          )
+        ).toBe("CSF-003");
+      })
+    )
+  );
 
-  it("never reuses a number reserved by a finding that left the export", () =>
-    Effect.runPromise(
-      // CSF-001 and CSF-002 were assigned before; only CSF-002's finding still
-      // appears. A newcomer must land on CSF-003, not recycle CSF-001.
-      planWithPriors(
-        [informational, arrivingHigh],
-        [
-          { id: "CSF-001", codexId: low.codexId },
-          { id: "CSF-002", codexId: informational.codexId },
-        ]
-      ).pipe(
-        Effect.map((plan) => {
-          expect(A.map(plan.records, (record) => record.id)).toContain("CSF-002");
-          expect(A.map(plan.records, (record) => record.id)).toContain("CSF-003");
-          expect(A.map(plan.records, (record) => record.id)).not.toContain("CSF-001");
-        })
-      )
-    ));
+  it.effect("never reuses a number reserved by a finding that left the export", () =>
+    planWithPriors(
+      [informational, arrivingHigh],
+      [
+        { id: "CSF-001", codexId: low.codexId },
+        { id: "CSF-002", codexId: informational.codexId },
+      ]
+    ).pipe(
+      Effect.map((plan) => {
+        expect(A.map(plan.records, (record) => record.id)).toContain("CSF-002");
+        expect(A.map(plan.records, (record) => record.id)).toContain("CSF-003");
+        expect(A.map(plan.records, (record) => record.id)).not.toContain("CSF-001");
+      })
+    )
+  );
 
-  it("assigns from capture order when there are no prior bindings", () =>
-    Effect.runPromise(
-      planWithPriors([low, informational, arrivingHigh], []).pipe(
-        Effect.map((plan) => {
-          expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001", "CSF-002", "CSF-003"]);
-          expect(plan.records[0]?.severity).toBe("High");
-        })
-      )
-    ));
+  it.effect("assigns from capture order when there are no prior bindings", () =>
+    planWithPriors([low, informational, arrivingHigh], []).pipe(
+      Effect.map((plan) => {
+        expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001", "CSF-002", "CSF-003"]);
+        expect(plan.records[0]?.severity).toBe("High");
+      })
+    )
+  );
 });
 
 describe("codex findings severity tallies", () => {
@@ -248,66 +241,69 @@ describe("codex findings payload rejection", () => {
 });
 
 describe("codex findings reconciliation", () => {
-  it("refuses an expired session rather than bootstrapping an empty packet", () =>
-    Effect.runPromise(
-      planFrom(payloadOf([], { authState: "expired", expectedCount: 0 })).pipe(
-        Effect.map(() => "accepted"),
-        Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason))
-      )
-    ).then((reason) => {
-      expect(reason).toBe("auth-expired");
-    }));
+  it.effect("refuses an expired session rather than bootstrapping an empty packet", () =>
+    planFrom(payloadOf([], { authState: "expired", expectedCount: 0 })).pipe(
+      Effect.map(() => "accepted"),
+      Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason)),
+      Effect.map((reason) => {
+        expect(reason).toBe("auth-expired");
+      })
+    )
+  );
 
-  it("refuses a short read against the dashboard's own reported total", () =>
-    Effect.runPromise(
-      planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
-        Effect.map(() => "accepted"),
-        Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason))
-      )
-    ).then((reason) => {
-      expect(reason).toBe("short-read");
-    }));
+  it.effect("refuses a short read against the dashboard's own reported total", () =>
+    planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
+      Effect.map(() => "accepted"),
+      Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason)),
+      Effect.map((reason) => {
+        expect(reason).toBe("short-read");
+      })
+    )
+  );
 
-  it("names neither a local path nor a captured value in a short-read message", () =>
-    Effect.runPromise(
-      planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
-        Effect.map(() => ""),
-        Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.message))
-      )
-    ).then((message) => {
-      expect(message).not.toMatch(/\/home\//);
-      expect(message).not.toContain(hex("aa", 32));
-    }));
+  it.effect("names neither a local path nor a captured value in a short-read message", () =>
+    planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
+      Effect.map(() => ""),
+      Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.message)),
+      Effect.map((message) => {
+        expect(message).not.toMatch(/\/home\//);
+        expect(message).not.toContain(hex("aa", 32));
+      })
+    )
+  );
 });
 
 describe("codex findings ingest options", () => {
-  it("rejects a traversal slug supplied on the command line", () =>
-    Effect.runPromise(
-      decodeCodexFindingsIngestOptions({ slug: "../../etc" }).pipe(
-        Effect.map(() => "accepted"),
-        Effect.orElseSucceed(() => "rejected")
-      )
-    ).then((outcome) => {
-      expect(outcome).toBe("rejected");
-    }));
+  it.effect("rejects a traversal slug supplied on the command line", () =>
+    decodeCodexFindingsIngestOptions({ slug: "../../etc" }).pipe(
+      Effect.map(() => "accepted"),
+      Effect.orElseSucceed(() => "rejected"),
+      Effect.map((outcome) => {
+        expect(outcome).toBe("rejected");
+      })
+    )
+  );
 
-  it("rejects a traversal-shaped date override", () =>
-    Effect.runPromise(
-      decodeCodexFindingsIngestOptions({ date: "2026-08-04/../.." }).pipe(
-        Effect.map(() => "accepted"),
-        Effect.orElseSucceed(() => "rejected")
-      )
-    ).then((outcome) => {
-      expect(outcome).toBe("rejected");
-    }));
+  it.effect("rejects a traversal-shaped date override", () =>
+    decodeCodexFindingsIngestOptions({ date: "2026-08-04/../.." }).pipe(
+      Effect.map(() => "accepted"),
+      Effect.orElseSucceed(() => "rejected"),
+      Effect.map((outcome) => {
+        expect(outcome).toBe("rejected");
+      })
+    )
+  );
 
-  it("defaults every mode flag to false", () =>
-    Effect.runPromise(decodeCodexFindingsIngestOptions({})).then((options) => {
-      expect(options.dryRun).toBe(false);
-      expect(options.force).toBe(false);
-      expect(options.refresh).toBe(false);
-      expect(options.json).toBe(false);
-    }));
+  it.effect("defaults every mode flag to false", () =>
+    decodeCodexFindingsIngestOptions({}).pipe(
+      Effect.map((options) => {
+        expect(options.dryRun).toBe(false);
+        expect(options.force).toBe(false);
+        expect(options.refresh).toBe(false);
+        expect(options.json).toBe(false);
+      })
+    )
+  );
 });
 
 describe("codex findings source identity consistency", () => {

@@ -11,17 +11,18 @@ import {
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
+import { Cause, Console, Effect, Exit, FileSystem, Layer, Runtime } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
 
@@ -70,12 +71,13 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
   }
 };
 
-describe("set-status guarded stream writer", () => {
-  it(
-    "seeds genesis plus status-set, writes the trace, and keeps appending on later transitions",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("set-status guarded stream writer", () => {
+    it.effect(
+      "seeds genesis plus status-set, writes the trace, and keeps appending on later transitions",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("stream-demo");
@@ -104,16 +106,15 @@ describe("set-status guarded stream writer", () => {
             expect(traceAfter).toContain('"revision": 3');
             expect(traceAfter).toContain('"status": "active"');
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "writes nothing in --preview mode",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "writes nothing in --preview mode",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("preview-demo");
@@ -127,16 +128,15 @@ describe("set-status guarded stream writer", () => {
             const manifest = yield* fs.readFileString("goals/preview-demo/ops/manifest.json");
             expect(manifest).not.toContain("paused");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "refuses the whole transition when the stream is forked",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "refuses the whole transition when the stream is forked",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("forked-demo");
@@ -178,16 +178,15 @@ describe("set-status guarded stream writer", () => {
             const manifest = yield* fs.readFileString("goals/forked-demo/ops/manifest.json");
             expect(manifest).toContain('"status": "paused"');
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "commits a streamless plan as a no-op (no events, no trace)",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "commits a streamless plan as a no-op (no events, no trace)",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeProjectFile("goals/no-stream/README.md", "# no-stream\n");
             const writer = yield* PacketTransitionWriter;
@@ -211,16 +210,15 @@ describe("set-status guarded stream writer", () => {
             expect(outcome.appended).toBe(0);
             expect(outcome.traceWritten).toBe(false);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "returns an explicit skipped plan and outcome for the current derived status",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "returns an explicit skipped plan and outcome for the current derived status",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("idempotent-demo");
@@ -254,16 +252,15 @@ describe("set-status guarded stream writer", () => {
             expect(yield* listEventFiles("idempotent-demo")).toStrictEqual(beforeFiles);
             expect(yield* fs.readFileString("goals/idempotent-demo/ops/trace.json")).toBe(beforeTrace);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "regenerates a stale trace while skipping the redundant status event",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "regenerates a stale trace while skipping the redundant status event",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-stale-trace-demo");
@@ -299,16 +296,15 @@ describe("set-status guarded stream writer", () => {
             expect(yield* fs.readFileString(tracePath)).toBe(freshTrace);
             expect(yield* listEventFiles("skip-stale-trace-demo")).toStrictEqual(beforeFiles);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "refuses a skipped plan whose stream moved between plan and commit",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "refuses a skipped plan whose stream moved between plan and commit",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeStreamPacket("skip-cas-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-cas-demo", "paused"]));
@@ -350,16 +346,15 @@ describe("set-status guarded stream writer", () => {
               expect(String(Cause.squash(refused.cause))).toContain("stream moved between plan and commit");
             }
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "previews a skipped transition without planning an event or a trace write",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "previews a skipped transition without planning an event or a trace write",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-preview-demo");
@@ -376,16 +371,15 @@ describe("set-status guarded stream writer", () => {
             expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
             expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "reports a skipped write through the set-status command surface",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "reports a skipped write through the set-status command surface",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-write-demo");
@@ -400,15 +394,13 @@ describe("set-status guarded stream writer", () => {
             const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
             expect(manifest).toContain("paused");
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "fails invalid writer actors during request decode",
-    () =>
-      Effect.runPromise(
+    it.effect(
+      "fails invalid writer actors during request decode",
+      () =>
         Effect.gen(function* () {
           const decoded = yield* Effect.exit(
             decodePacketTransitionRequest({
@@ -423,16 +415,15 @@ describe("set-status guarded stream writer", () => {
           if (Exit.isFailure(decoded)) {
             expect(String(Cause.squash(decoded.cause))).toContain("Expected a non-empty actor");
           }
-        })
-      ),
-    30_000
-  );
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
 
-  it(
-    "records previous from the stream's derived status when the manifest snapshot lags",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "records previous from the stream's derived status when the manifest snapshot lags",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeStreamPacket("retry-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "retry-demo", "paused"]));
@@ -461,16 +452,15 @@ describe("set-status guarded stream writer", () => {
               expect(last.body.previous).toBe("paused");
             }
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
 
-  it(
-    "refuses a compare-and-set append whose expected revision is stale",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "refuses a compare-and-set append whose expected revision is stale",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeStreamPacket("cas-demo");
             const store = yield* PacketEventStore;
@@ -509,8 +499,8 @@ describe("set-status guarded stream writer", () => {
               expect(String(error)).toContain("revision");
             }
           })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive),
+      30_000
+    );
+  });
 });
