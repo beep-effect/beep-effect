@@ -1009,5 +1009,5 @@
     "fixed": 1724,
     "exception": 12
   },
-  "fullPackageProof": "pending full CLI cohort proof"
+  "fullPackageProof": "Passed CLI cohort proof at source e5eda0f280: audit 884.2 seconds, docgen 24.8 seconds; package source unchanged."
 }

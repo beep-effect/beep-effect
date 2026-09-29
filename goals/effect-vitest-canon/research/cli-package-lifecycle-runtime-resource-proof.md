@@ -61,7 +61,8 @@ now contains 3,495 unique rows: 1,724 fixed, 12 exceptions and 1,759 open.
 Strict schema validation passes for every CLI row and all 687 schema rows.
 The retained withBunShim and native-platform judgments remain open.
 
-Full CLI package proof for this three-file cohort is running against source
-e5eda0f280 and remains pending. The earlier grouped packet-core and
-import-rule proof passed separately at source 05440996f6, with audit taking
-778.0 seconds and docgen 29.9 seconds.
+Full CLI package proof passed for this three-file cohort at source e5eda0f280:
+audit 884.2 seconds and docgen 24.8 seconds, with package source unchanged
+throughout the run. The earlier grouped packet-core and import-rule proof
+passed separately at source 05440996f6, with audit taking 778.0 seconds and
+docgen 29.9 seconds. These are local package proofs, not hosted PR closeout.
