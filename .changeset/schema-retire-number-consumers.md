@@ -72,8 +72,14 @@ becomes `S.Finite.check(S.isGreaterThanOrEqualTo(0))`, the sign checks become
 `@beep/govinfo` bounds its GovInfo counts with `S.BigInt.check(S.isBetweenBigInt(...))`. Packages
 that export schemas or functions built on these members take a minor bump because their decoded
 types lose the `Int`, `NonNegativeInt`, and `Int64` brands; accepted values and encoded bytes are
-unchanged. The non-negative checks now report the upstream message ("Expected a value greater than
-or equal to 0"); the int64 range keeps "Expected a signed 64-bit integer".
+unchanged. The int64 range keeps "Expected a signed 64-bit integer". Lost, and accepted as the
+upstream wording (no code or test asserts the old strings): a negative value now reports the upstream "Expected a value greater than
+or equal to 0" instead of "Expected a non-negative integer", and generated JSON Schema for former
+`NonNegativeInt` and `NonNegNum` fields (for example flight-record, hook-pulse and sequence-break
+durations, `ImageConfig.width`, the `PrefetchInliningConfig` sizes and the `MatchPerson`
+coordinates) drops the shared `NonNegativeInt` definition with its "A non-negative integer"
+description and the "A non-negative number (zero or greater)" description; the numeric bounds
+stay.
 
 The brand was compile-time proof that a caller had validated the value, so each exported function
 that took a `NonNegativeInt` checks it at its boundary: `pageSourceText` and
