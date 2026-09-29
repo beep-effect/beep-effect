@@ -47,9 +47,9 @@ const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
  * **Details**
  *
  * `readPin` never consults the reference HEAD; `readPinned` is the only source-byte path and
- * reads `git show <pin>:<file>`, never the working tree. `graftContext` never fails: graft is
- * local-only and never a hosted-CI input, but when a prompt asks for it and it cannot be read,
- * `graftContext` fails with {@link EffectSchemaInventoryGraftUnavailableError}.
+ * reads `git show <pin>:<file>`, never the working tree. Graft is local-only and never a
+ * hosted-CI input; when a prompt asks for it and it cannot be read, `graftContext` fails with
+ * {@link EffectSchemaInventoryGraftUnavailableError}.
  *
  * **Example** (Describe a fake source)
  *

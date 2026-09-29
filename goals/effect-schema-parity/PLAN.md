@@ -48,8 +48,8 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
 
 ## P1 — Knowledge layer
 
-- Move the exploration's research generator `research/tools/schema-inventory.ts`
-  and `verify-schema-inventory.ts` into `packages/tooling/tool/cli/src/commands/Lint/`
+- Move the exploration's research generator (research/tools/schema-inventory.ts)
+  and verifier (verify-schema-inventory.ts) into `packages/tooling/tool/cli/src/commands/Lint/`
   beside `EffectVitest.ts` as `beep lint effect-schema-inventory` (a new `lint`
   subcommand P1 adds, invoked through the beep CLI)
   with `--write` and `--check`; keep the `schema-inventory/v1` contract from

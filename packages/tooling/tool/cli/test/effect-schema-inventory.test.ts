@@ -242,6 +242,24 @@ export {
 
 const enableModule = O.getOrThrow(findEffectSchemaInventoryModule("effect/schema/SchemaJITCompiler/enable"));
 
+const localGroupsSource = `/** Formats a value. */
+function f(x: string): string
+function f(x: number): string
+function f(x: unknown): string {
+  return \`\${x}\`
+}
+/** Shape of X. */
+type X = { readonly n: number }
+/** Value of X. */
+const X = { n: 1 }
+export {
+  /** Exported formatter. */
+  f,
+  /** Exported X. */
+  X
+}
+`;
+
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory", (it) => {
   it.effect(
     "reads the pin from a snapshot catalog and rejects anything else",
@@ -835,6 +853,28 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       assertInclude(yield* fs.readFileString(out), "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`");
       const conflict = yield* Effect.flip(run(["--write", "--check"]));
       assertTrue(conflict._tag === "EffectSchemaInventoryError");
+    })
+  );
+  it.effect(
+    "inlines every declaration an export list names: all overloads and both sides of a type/value pair",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[demoModule, localGroupsSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: localGroupsSource,
+        graft: demoGraft,
+      });
+      assertInclude(
+        prompt,
+        "/** Formats a value. */\nfunction f(x: string): string\nfunction f(x: number): string\nfunction f(x: unknown): string {"
+      );
+      assertInclude(prompt, "/** Shape of X. */\ntype X = { readonly n: number }");
+      assertInclude(prompt, "/** Value of X. */\nconst X = { n: 1 }");
+      assertInclude(prompt, "/** Exported formatter. */");
+      strictEqual(A.length(Str.split(prompt, "function f(x: string): string")) - 1, 1);
     })
   );
 });

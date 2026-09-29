@@ -23,7 +23,7 @@ Never fabricate a URL; cite the on-disk section when none exists.
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `explorations/effect-schema-parity/research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
 | `perf` | `packages/effect/typeperf/suites/schema`, `runtimeperf/suites/schema` | Effect-TS/effect | `explorations/effect-schema-parity/research/performance-baseline.md` | measurement | port-with-attribution (harness shape only, P5) |
-| `inventory` | `schema-inventory/v1` rows, 2,232 over 24 modules at `inventoryPin` `df77fff939` | this repo | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`, contract in that directory's `README.md` | knowledge layer | MOVED with `git mv` from the exploration's `research/inventory/` (P1, 2026-09-29) |
+| `inventory` | `schema-inventory/v1` rows, 2,232 over 24 modules at `inventoryPin` `df77fff939` | this repo | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`, contract in that directory's `README.md` | knowledge layer | MOVED with `git mv` from the exploration's research inventory directory (P1, 2026-09-29) |
 | `tools` | inventory generator, `--check` verifier, and lane prompt generator | this repo | `bun run beep lint effect-schema-inventory` (`packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`) | knowledge layer | MOVED into repo-cli (P1, 2026-09-29); the exploration's prototype scripts were deleted |
 
 **How these inform implementation:** Role A rows are the adoption oracle for
@@ -75,8 +75,9 @@ Dispositions as graduated in `explorations/effect-schema-parity/MAP.md`
 | LiteralKit, MappedLiteralKit | `.../schema/src/LiteralKit/LiteralKit.schema.ts`, `.../MappedLiteralKit/MappedLiteralKit.schema.ts` | ADAPT: trim four facets, drop `enumMapping`, override `rebuild` (P2) |
 | SchemaUtils | `.../schema/src/SchemaUtils/withCodecStatics.ts:420`, `collectAnnotationsAt.ts:149` | ADAPT after `goals/schema-utils-selective-codec-statics` merges (P5; met by PR #927, 2026-08-31) |
 | Tracked generated baselines | `standards/schema-first.inventory.jsonc`, `standards/schema-catalog.generated.jsonc`, `standards/coverage.regression-baseline.jsonc`, `standards/jsdoc-documentation.inventory.md` | regenerate per PR |
-| Inventory generator command and fixture | proposed under `commands/Lint/`, `test/fixtures/effect-schema-rc118/` | NET-NEW command from the prototype (P1) |
-| Boundary table, facet census gate, lane prompt templates | `SPEC.md`, `ops/prompts/` | NET-NEW (procedure and prose) |
+| Inventory generator command and fixture | `bun run beep lint effect-schema-inventory` (`packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts`); fixture `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` | LANDED in P1 (2026-09-29), productized from the research prototype |
+| Lane prompts | `bun run beep lint effect-schema-inventory --prompt <module>`, writing `ops/prompts/` | LANDED in P1 (2026-09-29); first slice `ops/prompts/effect-SchemaIssue.md` |
+| Boundary table, facet census gate | `SPEC.md` | NET-NEW (procedure and prose) |
 
 ## 5. Cross-links & provenance
 

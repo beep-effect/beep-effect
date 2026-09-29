@@ -13,8 +13,9 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
+import { Effect, FileSystem, HashMap, HashSet, Inspectable, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import { ts } from "ts-morph";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
 import {
@@ -48,7 +49,7 @@ type DeclarationBlock = {
   readonly startLine: number;
   readonly endLine: number;
   readonly rows: ReadonlyArray<EffectSchemaInventoryRow>;
-  readonly locals: ReadonlyArray<ts.Statement>;
+  readonly locals: ReadonlyArray<A.NonEmptyReadonlyArray<ts.Statement>>;
 };
 
 const EXAMPLE_MARKER = /@example\b|\*\*Example\*\*/u;
@@ -101,26 +102,37 @@ const declarationGroups = (
     )
   );
 
-// Local declarations named by a specifier-only `export { … }` statement, which the rows point at.
-const exportedLocals = (
+// Every declaration group that declares each name, in source order: overloads with their
+// implementation, and both sides of a type/value pair that share a name.
+const groupIndexesByName = (
+  groups: ReadonlyArray<{ readonly statements: A.NonEmptyReadonlyArray<ts.Statement> }>
+): R.ReadonlyRecord<string, ReadonlyArray<number>> =>
+  R.map(
+    A.groupBy(
+      A.flatMap(groups, (group, index) =>
+        A.map(A.flatMap(group.statements, statementNames), (name) => [name, index] as const)
+      ),
+      ([name]) => name
+    ),
+    A.map(([, index]) => index)
+  );
+
+// Declaration groups named by a specifier-only `export { … }` statement, which the rows point at.
+const exportedLocalGroups = (
   statement: ts.Statement,
-  byName: MutableHashMap.MutableHashMap<string, ts.Statement>
-): ReadonlyArray<ts.Statement> =>
+  byName: R.ReadonlyRecord<string, ReadonlyArray<number>>
+): ReadonlyArray<number> =>
   pipe(
     O.liftPredicate(statement, ts.isExportDeclaration),
     O.filter((declaration) => declaration.moduleSpecifier === undefined),
     O.flatMap((declaration) => O.fromUndefinedOr(declaration.exportClause)),
     O.filter(ts.isNamedExports),
     O.map((clause) =>
-      // AST nodes compare by reference: Effect's structural equality would walk the whole tree.
-      A.dedupeWith(
-        A.getSomes(
-          A.map(clause.elements, (element) => MutableHashMap.get(byName, (element.propertyName ?? element.name).text))
-        ),
-        (self, that) => self === that
+      A.flatMap(clause.elements, (element) =>
+        O.getOrElse(R.get(byName, (element.propertyName ?? element.name).text), A.empty<number>)
       )
     ),
-    O.getOrElse(A.empty<ts.Statement>)
+    O.getOrElse(A.empty<number>)
   );
 
 const fenceFor = (content: string): string => {
@@ -156,13 +168,7 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
     );
     return Str.slice(start, A.lastNonEmpty(group).getEnd())(text);
   };
-  const code = A.join(
-    A.append(
-      A.map(block.locals, (local) => sliceWithDoc(A.of(local))),
-      sliceWithDoc(block.statements)
-    ),
-    "\n\n"
-  );
+  const code = A.join(A.append(A.map(block.locals, sliceWithDoc), sliceWithDoc(block.statements)), "\n\n");
   const fence = fenceFor(code);
   const names = A.join(
     A.map(A.dedupe(A.map(block.rows, topLevelSymbol)), (name) => `\`${name}\``),
@@ -288,9 +294,7 @@ const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, sourc
     startLine: lineOf(source, A.headNonEmpty(statements).getStart(source)),
     endLine: lineOf(source, A.lastNonEmpty(statements).getEnd()),
   }));
-  const byName = MutableHashMap.fromIterable(
-    A.flatMap(source.statements, (statement) => A.map(statementNames(statement), (name) => [name, statement] as const))
-  );
+  const byName = groupIndexesByName(groups);
   const resolved = A.map(input.rows, (row) => ({
     row,
     at: A.findFirstIndex(groups, (entry) => entry.startLine <= row.line && row.line <= entry.endLine),
@@ -303,15 +307,9 @@ const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, sourc
     )
   );
   const blockIndexes = A.sort(A.dedupe(A.getSomes(A.map(resolved, ({ at }) => at))), Order.Number);
-  // Statements are keyed by source position; AST nodes must not enter structural hashing.
-  const blockStatementStarts = HashSet.fromIterable(
-    A.flatMap(blockIndexes, (index) =>
-      O.getOrElse(
-        O.map(A.get(groups, index), (entry) => A.map(entry.statements, (statement) => statement.pos)),
-        A.empty<number>
-      )
-    )
-  );
+  const inBlocks = HashSet.fromIterable(blockIndexes);
+  const statementsAt = (index: number): ReadonlyArray<A.NonEmptyReadonlyArray<ts.Statement>> =>
+    O.match(A.get(groups, index), { onNone: A.empty, onSome: (entry) => [entry.statements] });
   return A.getSomes(
     A.map(blockIndexes, (index) =>
       O.map(
@@ -322,9 +320,18 @@ const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, sourc
             A.filter(resolved, ({ at }) => O.exists(at, (value) => value === index)),
             ({ row }) => row
           ),
-          locals: A.filter(
-            exportedLocals(A.headNonEmpty(entry.statements), byName),
-            (local) => !HashSet.has(blockStatementStarts, local.pos)
+          // Locals already rendered as their own block are not repeated.
+          locals: A.flatMap(
+            A.sort(
+              A.dedupe(
+                A.filter(
+                  exportedLocalGroups(A.headNonEmpty(entry.statements), byName),
+                  (local) => !HashSet.has(inBlocks, local)
+                )
+              ),
+              Order.Number
+            ),
+            statementsAt
           ),
         })
       )
