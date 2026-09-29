@@ -31,3 +31,7 @@ The draft is not applied and no ledger rows are closed. Application remains
 behind the running sync-data package proof. Applied validation must include
 Node/Bun runs, type diagnostics, root policy checks, resource failure/interruption,
 fresh consoles, live-clock advancement and the symlink sentinel assertions.
+
+Application follow-up: the sync-data proof passed, this draft was applied, and
+ten historical rows were reconciled. Applied evidence and the remaining full
+package gate are recorded in cli-portfolio-guard-runtime-proof.md.

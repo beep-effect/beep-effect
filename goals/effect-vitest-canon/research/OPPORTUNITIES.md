@@ -5757,3 +5757,13 @@ the old helper leaves cwd changed with zero removals, while incremental scoped
 acquisition restores both. After application, native-file .git setup-failure probes pass on Node and Bun
 for all eight repository cases, with cwd restored and no temporary residue.
 Receipt: cli-sync-data-runtime-proof.md.
+
+### Assertion parity must distinguish formatting from semantic changes
+
+The portfolio guard migration preserved 32 assertion trees before formatting,
+but its token-inclusive parity script rejected a formatter-added trailing comma
+after wrapping the suite in it.layer. The applied check now normalizes only a
+trailing CommaToken within a SyntaxList; all assertions remain compared. A shared
+parity checker should encode this normalization, retain negative controls for
+changed arguments/operators, and avoid hand-copying check scripts between waves.
+Receipt: cli-portfolio-guard-runtime-proof.md.
