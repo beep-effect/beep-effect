@@ -120,7 +120,7 @@ this repository, so nobody waits on a window. The rules:
    exported symbol, possibly outside `effect/Schema`, or an inline composition of exported symbols
    at the consumer. Check coverage in the installed `effect` package's `dist/*.d.ts`
    declarations. A symbol marked `@internal` never counts, and a matching name is not evidence.
-2. **An uncovered dominant facet makes the concept ADAPT.** Count consumer lines outside the
+2. **Uncovered facets that outweigh the covered ones make the concept ADAPT.** Count consumer lines outside the
    concept's own sources and compare two sums: the lines that read its uncovered members, and the
    lines that use its covered facets, construction sites included (construction is the schema
    facet). Record both sums with the per-facet table in the owning goal packet's decision log

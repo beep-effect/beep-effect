@@ -2038,7 +2038,10 @@ or compat module).
   upstream variant or a consumer-local composition of upstream codecs. Only
   in-memory shapes may change, and consumers accept the behavior changes that
   come with them. A boundary whose upstream default differs and whose bytes no
-  such codec reproduces is a separate migration goal.
+  such codec reproduces is a separate migration goal. A field of a promoted
+  `shared/use-cases` contract is the exception: its name, decoded type
+  (brands included), accepted values, bytes and meaning all stay unchanged,
+  and any change to them is a `V2` migration outside the retirement PR.
 
 The operational rules are in `11-evolution-and-deprecation.md`, section
 "Upstream-first retirement in `foundation/modeling`".
