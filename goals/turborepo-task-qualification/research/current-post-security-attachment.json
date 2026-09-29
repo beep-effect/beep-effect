@@ -1,0 +1,47 @@
+{
+  "authority": "Canonical census attachment acceptance; byte identity only",
+  "revision": "1d5ffd0fdfe068765fc37071a52db0eb99bcafce",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 90,
+    "artifacts": 6,
+    "unresolved": 22
+  },
+  "changedSourceBindings": [
+    "package.json",
+    "bun.lock"
+  ],
+  "changeAttribution": "Published fast-uri override and undici resolution fixes, including generated ws deduplication; no other attached source changed.",
+  "retention": {
+    "reference": "post-security-attachment-1d5ffd0fdf",
+    "artifacts": [
+      {
+        "path": "post-security-reviewed-request.json",
+        "sha256": "533a4bf4b4dae5df1d85938de240a0c6283bad828cca15d09c6e888b0bb5714e"
+      },
+      {
+        "path": "post-security-reviewed-census.json",
+        "sha256": "49252b8ab4c59339c4ce05b1f2cee5c5e2189d53dacf1f0c11cd7ecbe764c388"
+      },
+      {
+        "path": "post-security-census.log",
+        "sha256": "38384042dfb62df50a27534020a27b7e5308f6b140ceeabe6b6687d276e6e9ee"
+      },
+      {
+        "path": "post-security-binding-diff.json",
+        "sha256": "f8faabc7203da002543909544262dfc795e6bee1da6a6e2783a3db0e0291cb42"
+      }
+    ]
+  },
+  "limits": [
+    "Review attachment acceptance does not establish semantic closure or qualification.",
+    "Frozen pilot observations remain at 7f53b4a840 and their original installed dependency profile. Security updates require their own runtime evidence before promotion.",
+    "Configuration experiments, independent-installation portability, shared-writer safety, signed remote and shadow acceptance remain incomplete."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "profile": "stable 2.11.4",
+  "authority": "Native summaries and independently reviewed isolated cache artifacts",
+  "checks": {
+    "distinctCaches": true,
+    "sameRevision": true,
+    "samePins": true,
+    "sameTaskHash": true,
+    "sameInputs": true,
+    "sameHashedEnvironment": true,
+    "sameFreshTree": true,
+    "sameLog": true
+  },
+  "cliOverlapMs": 10496,
+  "targetOverlapMs": 659,
+  "freshTaskHash": "1cde1c1e6cfeab67",
+  "executionCount": 2,
+  "casePatternPerExecution": [
+    "fresh MISS",
+    "replay HIT",
+    "repeat HIT"
+  ],
+  "retention": {
+    "reference": "concurrency-stable-7f53b4a840",
+    "files": 3094,
+    "manifestSha256": "628e25f5056c124ea3afdb0b3aa0536e47c1f7deb0462706604e6408451b76e9",
+    "receiptSha256": "0a5e5091e68dc9c36daa77b65a306233cf4092fed09cc415e3454adab0aa5de4"
+  },
+  "limits": [
+    "Two simultaneous executions with separate writable package overlays and local cache directories; not shared-cache writer or shared-output collision proof.",
+    "Identical frozen source and installed dependencies; later security lock changes do not inherit this evidence.",
+    "Task input maps, hashed environment, fresh identity trees and task logs agree. Whole CLI streams are not asserted equal.",
+    "No signed remote, semantic closure, shadow completion or qualification promotion."
+  ]
+}

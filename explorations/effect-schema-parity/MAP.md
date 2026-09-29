@@ -16,7 +16,7 @@ has drifted after merging main.
 | `effect-schema-parity` | Retire every `@beep/schema` concept whose consumed surface upstream main snapshot `e5f7d12af9` (rc.118 line) covers, trim the ones it covers only in part, migrate consumers by codemod, and leave a schema-first gate plus an rc-pinned inventory that hold parity on every effect bump. | `goals/schema-utils-selective-codec-statics` (P5 only; its P4 Yeet PR must merge first) | `schema-first` lint lane, `internal/ratchet`, `quality check-census`, ts-morph rewrite precedent, `effect-vitest-rc118` fixture layout, packet `research/tools/*` generator; NET-NEW: `SFV4-*` rules for three families, inventory generator command, boundary table |
 | GATED: `schema-idiom-probes` | Raise F05 / F06 / F04 confidence with focused probes; graduate them into detectors if any clears 0.70. | `effect-schema-parity` P4 merged | Reopens this packet at decompose when a probe clears the bar; not a goal now. |
 | GATED: persisted-encoding migrations | Change a stored or served encoding the boundary table shows differs from the upstream default. | boundary table in the goal SPEC | One migration goal per boundary; out of the parity goal by decision "Wire shape". Not a goal now. |
-| LATER: runtime hot-path schema perf | Decode/encode cost on hot paths (Result/sync codec APIs), second priority per decision "Performance". | `effect-schema-parity` closed | Unsequenced. The gate "upstream ships a schema compiler surface" fired 2026-09-28; the compilers are evaluated by the reopen and, if adopted, land as a separate paused goal (§Later Candidates, D8). |
+| LATER: runtime hot-path schema perf | Decode/encode cost on hot paths (Result/sync codec APIs), second priority per decision "Performance". | `effect-schema-parity` closed | Unsequenced. The gate "upstream ships a schema compiler surface" fired 2026-09-28 and was evaluated the same day: DEFER, re-entry triggers in §Later Candidates (D8). |
 
 One goal, six phases, one release train (decision "PR batching revised",
 2026-09-14). The gated rows are re-entry points, not promises.
@@ -78,17 +78,17 @@ the P0 entry. Counts are the audit's direct importers (`research/retirement-A-F.
 | --- | --- | --- | --- |
 | A instance and declare wrappers | AbortSignal, DomDragEvent, DomEvent, DomHtmlElement, DomMouseEvent, EffectSchema (5), PromiseSchema, Thunk | `S.instanceOf`, `S.declare`, `Predicate.*`, `Effect.isEffect` | Smallest; a good second PR to prove the train shape. |
 | B numeric family | Number (361), Int (143), Int64, Uint32, Uint64, Fixed32, Sfixed32, Sfixed64, Sint32, Sint64, Double, Float (ADAPT) | `S.Number`, `S.Int`, `S.isInt32` / `isUint32` / `isBetween`, `S.BigInt` bounds + string codec | Codemod-class; Number and Int pass the facet census gate first. Sign and serial bounds survive as checks; Float keeps its binary32 check. |
-| C unknown, opaque, record, json | Unknown (128), Opaque (103), Record (32), Json (17), Primitive, SafeObject, Options, Transformations | `S.Unknown`, `S.UnknownFromJsonString`, `S.Defect`, `S.Record`, `S.JsonObject`, `S.OptionFromOptionalNullOr`, `S.decodeTo` | Codemod-class; Unknown and Opaque pass the facet census gate first. Equality exclusion moves to the owning field. |
+| C unknown, opaque, record, json | Unknown (128), Opaque (103), Record (32), Json (17), Primitive, SafeObject, Options, Transformations; SchemaUtils: `optional`, `optionalKeyWithDefault`, `pluck`, `withEncodeDefault`, `boolWithDefault`, `BoolDefault*`, `boolKeyWithDefault` (all zero outside consumers), `BoolKeyDefault*` (ADAPT), and the PR 3b defaults codemod `withNoneDefault` (281), `withKeyDefaults` (110), `withConstantDefault` (26), `withEmptyArrayDefaults` (20) | `S.Unknown`, `S.UnknownFromJsonString`, `S.Defect`, `S.Record`, `S.JsonObject`, `S.OptionFromOptionalNullOr`, `S.decodeTo`, `S.withConstructorDefault`, `S.withDecodingDefaultTypeKey` / `S.withDecodingDefaultType`, `S.optionalKey`, `Struct.pick` + `mapFields` | Codemod-class; Unknown and Opaque pass the facet census gate first. Equality exclusion moves to the owning field. `optional` has one in-package consumer (`packages/foundation/modeling/schema/src/FileDiff.schema.ts:17-18`) migrated in the same PR. The defaults codemod is its own PR (3b) and the largest rewrite in the train; `withEmptyArrayDefaults` maps to the `Type` variant, not `TypeKey`. Rows: `research/2026-09-28-schemautils-census.md`. |
 | D time and duration | Timestamp (16), DateTimeUtcFromValid (2), Duration (2), Timezone | `S.DateTimeUtcFromString` / `FromMillis`, `DateTime.*`, `S.Duration*`, `S.TimeZone` named | Boundary table required before the PR opens. |
 | E binary and collections | ArrayBuffer, Bytes, ArrayOf (6), HashSet (4), MutableHashMap, MutableHashSet, Graph, RegExp | `S.Uint8Array(FromBase64)`, `S.Array`, `S.HashSet`, `S.Graph` + `S.toCodecJson`, `S.RegExp` | Boundary table required (array wire fields, base64). |
-| F text and misc | String (21), CommonTextSchemas (3), KebabStr / PascalStr / SnakeStr, URL (38), BigDecimal, Logs (6), StatusCauseError, FileInfo, JSONSchema | `S.Trim`, `S.NonEmptyString`, `String.kebabCase` / `pascalCase` / `snakeCase` (verified `effect/dist/String.d.ts:1442-1532`) with `S.decodeTo`, `S.String.check(S.isPattern(...))` for rejection, `S.URL`, `S.BigDecimal`, `LogLevel`, `S.TaggedError`, `FileSystem.File.Info`, `effect/JsonSchema` | HTTPS-only stays as a check on the consumer field. |
+| F text and misc | String (21), CommonTextSchemas (3), KebabStr / PascalStr / SnakeStr, URL (38), BigDecimal, Logs (6), StatusCauseError, FileInfo, JSONSchema; SchemaUtils: `encode*` (10), `split`, `classStatics` (all zero consumers) | `S.Trim`, `S.NonEmptyString`, `String.kebabCase` / `pascalCase` / `snakeCase` (verified `effect/dist/String.d.ts:1442-1532`) with `S.decodeTo`, `S.String.check(S.isPattern(...))` for rejection, `S.URL`, `S.BigDecimal`, `LogLevel`, `S.TaggedError`, `FileSystem.File.Info`, `effect/JsonSchema`, `S.encode*`, `SchemaGetter.split` with `S.decodeTo` | HTTPS-only stays as a check on the consumer field. `split`: upstream decodes `""` to `[]`, beep to `[""]`. `classStatics` takes its allowlist entry (`standards/effect-laws.allowlist.jsonc:45-52`) with it. |
 | G Role B | HttpMethod (2), HttpStatus (11), MimeType (4), Jsonl (0), Toml (2), Yaml (4) | `effect/unstable/http/{HttpMethod,HttpStatus,Mime}`, `effect/unstable/encoding/{Ndjson,Toml,Yaml}` | Losses recorded per decision "Role B modules may be retirement targets". HttpStatus retires here per the Role B ruling: its named codes become `effect/unstable/http/HttpStatus` value-module lookups, so its MappedLiteralKit use is transient between P2 and this PR. |
 
 | Component | Disposition | Capability cited |
 | --- | --- | --- |
 | Facet census gate | NET-NEW (procedure) | Before any RETIRE over 100 consumers opens its PR (Number, Int, Unknown, Opaque): count kit-only usage per exported facet the way the LiteralKit census did (`rg` per member, kit sources excluded). An uncovered dominant facet flips the row to ADAPT in the goal's DECISIONS. Command shape lives in the goal PLAN. |
 | Boundary to codec table | NET-NEW (SPEC prose) | Columns: boundary (persisted column, HTTP payload, in-memory, log line), concept, upstream codec, byte-identical yes/no. Persisted and served encodings must be byte-identical or the row is a migration goal, not a retirement. |
-| Consumer codemods for B and C | REUSE P2 engine | Same ts-morph pipeline, new rewrite rules per concept. |
+| Consumer codemods for B, C and 3b | REUSE P2 engine | Same ts-morph pipeline, new rewrite rules per concept. |
 | Closure sizing | REUSE | `graft callers <symbol> --depth all` plus `bun run beep quality package-verify` on touched packages. |
 | KEEP set | UNTOUCHED | 77 concepts; no-go. |
 
@@ -218,14 +218,19 @@ green; `bun run beep yeet monitor` reports merge-ready on both PRs.
   close.
 - **Ranks 10–21 idiom families**: dropped from the gate; revisit only with a
   new census.
-- **Upstream ships a schema compiler surface**: FIRED 2026-09-28. Effect PR
-  #7908 (`c19c63fb71`, first release rc.116) shipped `SchemaCompiler`,
-  `SchemaJITCompiler` and `SchemaAOTCompiler`; the reopen evaluates them
-  with two server-side spikes and a dated adopt / defer / reject ruling
-  (`DECISIONS.md` 2026-09-28, D1, D6). Sequencing per D8: the runtime
-  hot-path row above stays LATER; if the verdict is adopt, the work becomes a
-  separate goal `effect-schema-compilers`, created `paused` with
-  `blockedBy: ["goals/effect-schema-parity"]` (D2).
+- **Upstream ships a schema compiler surface**: fired 2026-09-28 (effect PR
+  #7908, `c19c63fb71`, first release rc.116: `SchemaCompiler`,
+  `SchemaJITCompiler`, `SchemaAOTCompiler`) and evaluated 2026-09-28:
+  DEFER (`DECISIONS.md` "Schema compilers: defer"; evidence
+  `research/2026-09-28-compiler-evaluation.md`). Still a live gate. It
+  reopens this packet at decompose when any of these holds: a measured bulk
+  hot path decodes transformation-free wire shapes; upstream lifts the
+  `Declaration` exclusion or ships `Suspend`-following AOT; the compiler API
+  leaves `@stability unstable`. First experiment at re-entry: the global
+  `effect/schema/SchemaJITCompiler/enable` import on one server entry point,
+  behind a flag. Per D8 an adopt verdict then becomes a separate goal
+  `effect-schema-compilers`, created `paused` with
+  `blockedBy: ["goals/effect-schema-parity"]` (D2); none exists today.
 
 ## Definition-Of-Ready Check (2026-09-15, after the reopen)
 

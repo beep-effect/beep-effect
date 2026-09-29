@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-4.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "build": {

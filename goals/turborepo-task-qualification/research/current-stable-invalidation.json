@@ -1,0 +1,103 @@
+{
+  "authority": "current-stable-invalidation-review",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "cases": [
+    {
+      "case": "fresh",
+      "exitCode": 0,
+      "taskHash": "1cde1c1e6cfeab67",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "replay",
+      "exitCode": 0,
+      "taskHash": "1cde1c1e6cfeab67",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    },
+    {
+      "case": "source-change",
+      "exitCode": 0,
+      "taskHash": "36ac8cca65914e20",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "changed-replay",
+      "exitCode": 0,
+      "taskHash": "36ac8cca65914e20",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    },
+    {
+      "case": "invalid-task-source",
+      "exitCode": 1,
+      "taskHash": "b6c1cc68c762278a",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "invalid-task-repeat",
+      "exitCode": 1,
+      "taskHash": "b6c1cc68c762278a",
+      "cacheStatus": "MISS",
+      "local": false,
+      "remote": false
+    },
+    {
+      "case": "restored",
+      "exitCode": 0,
+      "taskHash": "1cde1c1e6cfeab67",
+      "cacheStatus": "HIT",
+      "local": true,
+      "remote": false
+    }
+  ],
+  "inputMapDifferences": {
+    "validMutation": [
+      "src/index.ts"
+    ],
+    "invalidTaskMutation": [
+      "src/qualification-probe.ts"
+    ]
+  },
+  "failedTaskArchiveAbsent": true,
+  "successfulArchiveLogsEqual": true,
+  "successfulTaskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "originalReceiptSha256": "6d0e14158baa3e7a0b27a3ae65b0f82786bc5082bb8801cfcfb6f4bf19b1b066",
+  "limits": [
+    "Stable installed executable, unchanged launcher and package declarations, local cache, frozen source only. No full matrix or signed-remote acceptance.",
+    "Native summary turboVersion was checked for every case; executable version was checked outside the repo to avoid delegation to the installed stable client.",
+    "No latest-head runtime renewal, complete semantic input closure, or qualification promotion."
+  ],
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/evidence/current-stable-invalidation-hi6nwo2m",
+  "observationDirectory": "~/.cache/beep/turbo-qualification/observations/current-stable-invalidation-hi6nwo2m",
+  "observationManifestSha256": "dad1a77e126e5a437554986c73fc92a5172aa5e1602a2f68f5d1e1aa09abc88b",
+  "retainedFiles": 1562,
+  "runnerSha256": "1a5788feed3b2eec4612f26404e9a304c3babea5ebf225db6f2799b2762ffdbe",
+  "reviewerSha256": "b2ab3d919452cebf2f7a23246820cdf987585bff04c713673bf69bc6e930103f"
+}

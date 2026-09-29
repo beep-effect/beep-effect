@@ -1,0 +1,65 @@
+{
+  "revision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "comparisonBase": "cafc1f8eb9f07e19b25f6be6a4146cd11fc21c27",
+  "sources": [
+    {
+      "path": "eslint.config.mjs",
+      "sha256": "1220f32f78d6dfb7b96b3bfc64fc1d7219c98ccc898fae7c156e48ed2f72ff26"
+    },
+    {
+      "path": "vitest.aliases.generated.json",
+      "sha256": "8d9e532f43e74676f91e92b8fec8b221e23595148d009aca3baf5bf18aae121c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/bin-main.ts",
+      "sha256": "55efc06a9a599388d535d3291c412801187d1132ce8c09716edd1cf478f7db2a"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "sha256": "632f01e0eebb7e8ede30aa2b9e9970d9be592e8dd373a6e4f5b009b559f63d8c"
+    }
+  ],
+  "changes": [
+    "Bootstrap dynamic CLI imports move from effect/unstable/cli to effect/cli; no other bootstrap body changes in this comparison.",
+    "Lint command imports the moved CLI API and changes the native-fetch diagnostic to name effect/http. The diagnostic bytes change even though violation selection does not change here.",
+    "Root ESLint global ignores add the disposable Vitest instrumentation .runtime-* path.",
+    "The alias projection adds @beep/repo-cli/commands/HarnessLedger and changes no existing alias."
+  ],
+  "defaultProfileControl": [
+    {
+      "path": "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-qualification-probe/example.ts",
+      "ignored": true
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/example.ts",
+      "ignored": true
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/test/fixtures/other/.runtime-qualification-probe/example.ts",
+      "ignored": true
+    }
+  ],
+  "isolatedGlobalIgnoreControl": {
+    "mode": "root global ignores with all TypeScript paths selected; shared profile omitted",
+    "rows": [
+      {
+        "path": "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-qualification-probe/example.ts",
+        "ignored": true
+      },
+      {
+        "path": "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/example.ts",
+        "ignored": false
+      },
+      {
+        "path": "packages/tooling/test-kit/test-utils/test/fixtures/other/.runtime-qualification-probe/example.ts",
+        "ignored": false
+      }
+    ]
+  },
+  "limits": [
+    "The default docs profile ignores all three fixture probes; that control does not isolate the new global-ignore effect.",
+    "The isolated test omits shared profile rules and selects all TypeScript paths; it proves this glob boundary only.",
+    "Changed Effect imports and diagnostic text do not establish full runtime equivalence.",
+    "No cache qualification, whole-population closure or signed runtime evidence is claimed."
+  ]
+}

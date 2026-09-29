@@ -1,0 +1,48 @@
+{
+  "authority": "Canonical census attachment acceptance only; bounded evidence retains explicit limits",
+  "revision": "1a9914e0cf1733b4d4468ece6f1b0f8124bd5e12",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 112,
+    "artifacts": 6,
+    "unresolved": 25
+  },
+  "changedSourceBindings": [],
+  "changedReviewBindings": [],
+  "addedReviews": [
+    "goals/turborepo-task-qualification/research/current-patched-git-exclusion-stable.json",
+    "goals/turborepo-task-qualification/research/current-patched-git-exclusion-canary.json",
+    "goals/turborepo-task-qualification/research/current-patched-cross-root-shared-view-stable.json",
+    "goals/turborepo-task-qualification/research/current-patched-cross-root-shared-view-canary.json",
+    "goals/turborepo-task-qualification/research/current-patched-native-io-review.json"
+  ],
+  "retention": {
+    "reference": "patched-io-attachment-1a9914e0cf",
+    "artifacts": [
+      {
+        "path": "patched-io-reviewed-request.json",
+        "sha256": "5292d1217e42f7e9cdc0df6adaa5a47a3e4c037c09d15a58166bdaf5a7733a16"
+      },
+      {
+        "path": "patched-io-reviewed-census.json",
+        "sha256": "cfdd575e1ecf3e1306ba1ff95ddfb8d3a67349f49848fcebca757447dfbe5201"
+      },
+      {
+        "path": "patched-io-census.log",
+        "sha256": "651377b5445efbd1cebc31334bd4e23645280f646cff51920baae11db481426e"
+      }
+    ]
+  },
+  "limits": [
+    "No prior source/review/artifact binding changed.",
+    "Runtime controls remain bound to frozen source b410da2b6d and its patched dependency profile.",
+    "Stable task overlap, independent-installation portability, shared-metadata races, alternate Git layouts and undecoded ring operations remain open.",
+    "No complete semantic closure, signed remote, representative shadow acceptance or tuple promotion."
+  ]
+}

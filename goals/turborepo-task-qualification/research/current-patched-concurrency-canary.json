@@ -1,0 +1,88 @@
+{
+  "authority": "Independent isolated ordinary-CLI concurrency comparison with separately measured task overlap",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "profile": "canary",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "checks": {
+        "distinctCaches": true,
+        "sameRevision": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputs": true,
+        "sameHashedEnvironment": true,
+        "sameFreshTree": true,
+        "sameLog": true
+      },
+      "cliOverlapMs": 7524,
+      "targetOverlapMs": 441,
+      "observations": [
+        {
+          "receiptSha256": "618ac9164fc91d22b328e4843c3816eb313fad1138bb64fe4083c54d473b023e",
+          "taskHash": "18fbb1ef6ee4bd88",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        },
+        {
+          "receiptSha256": "33e4c89ad91648ea47be2da6612ed5cb5029023ff9ea9728475db49253f0d138",
+          "taskHash": "18fbb1ef6ee4bd88",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        }
+      ],
+      "dependencyParity": {
+        "before": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "after": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "equal": true,
+        "command": [
+          "tar",
+          "--sort=name",
+          "--mtime=@0",
+          "--owner=0",
+          "--group=0",
+          "--numeric-owner",
+          "--hard-dereference",
+          "--pax-option=delete=atime,delete=ctime",
+          "-cf",
+          "-",
+          "node_modules"
+        ]
+      }
+    }
+  ],
+  "cliOverlapEstablished": true,
+  "targetTaskOverlapEstablished": true,
+  "retention": {
+    "reference": "patched-concurrency-canary-b410da2b6d",
+    "files": 3117,
+    "manifestSha256": "cc4dcb073b8088d40c7ee7216b448c7ac1b64e56f04c8d6b0522e444ae639777"
+  },
+  "limits": [
+    "Separate writable package overlays and caches only; shared-writer and shared-output safety are unproven.",
+    "Stable target-task overlap was absent in both bounded attempts; wrapper overlap must not be presented as simultaneous lint execution.",
+    "No signed remote, complete semantic closure, shadow acceptance or tuple promotion."
+  ]
+}

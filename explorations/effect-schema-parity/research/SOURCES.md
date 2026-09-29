@@ -11,6 +11,9 @@
 | `role-b` | Role B idiom exemplars (39 modules) | Effect-TS/effect | see `CAPTURE.md` module list; `research/idiom-role-b.json` | idiom rubric | reference |
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
+| `reopen-inventory` | 2026-09-28 inventory refresh `51d4a2f08a` → `e5f7d12af9` | Effect-TS/effect | `research/2026-09-28-inventory-refresh.md` | inventory pin (D4) | reference |
+| `schemautils-census` | 2026-09-28 SchemaUtils census (39 exports, D7, D9, D10) | Effect-TS/effect + this repo | `research/2026-09-28-schemautils-census.md`; tool `research/tools/census-schemautils.py` | retirement rows, per-AST cache finding | reference |
+| `compiler-evaluation` | 2026-09-28 schema compiler spikes (D1, D6, D8, D10) | Effect-TS/effect + this repo | `research/2026-09-28-compiler-evaluation.md`; spikes `research/tools/spike-harness.ts`, `spike-bulk-schemas.ts`, `spike-bulk.ts`, `spike-recursive.ts` | compiler verdict evidence (DEFER, 2026-09-28) | reference |
 | `perf` | `packages/effect/typeperf/suites/schema/fixtures` (22), `runtimeperf/suites/schema` | Effect-TS/effect | see `research/performance-baseline.md` | measurement | port-with-attribution (harness shape only) |
 
 **How these inform this packet:** Role A rows are the adoption/retirement oracle; Role B shows how upstream authors consume Schema (rubric only, not targets unless align lifts the exclusion); the hint list bounds the rc window; perf suites give the measurement shape.
@@ -54,6 +57,6 @@ Local-only sources (no URL; cite the on-disk path): the graft graph of the refer
 ## 5. Cross-links & provenance
 
 - Packet: `README.md`, `CAPTURE.md`, `DECISIONS.md`, `RESEARCH.md`, this ledger.
-- Lane reports: `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/inventory/`, `research/tools/`.
+- Lane reports: `research/2026-09-28-inventory-refresh.md`, `research/2026-09-28-schemautils-census.md`, `research/2026-09-28-compiler-evaluation.md`, `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/inventory/`, `research/tools/`.
 - Adjacent packets: `goals/schema-utils-selective-codec-statics` (overlaps the SchemaUtils ADAPT; its Yeet PR #927 merged 2026-08-31 as `2731847346`, manifest not yet closed), `goals/schema-first-v4-capabilities`, `goals/beep-schema-topology`, `goals/effect-vitest-canon` (fixture pin procedure), `explorations/effect-jsdoc-quality`.
 - Doctrine: `standards/architecture/11-evolution-and-deprecation.md`, `standards/architecture/DECISIONS.md` (2026-07-08 PGlite precedent), `standards/architecture/07-non-slice-families.md`.

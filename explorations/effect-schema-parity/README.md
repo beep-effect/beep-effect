@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,13 +19,15 @@ covers, and leave a standing gate so parity holds on every effect bump.
 
 ## Next Open Question
 
-Reopened 2026-09-28 at decompose: the MAP gate "upstream ships a schema
-compiler surface" fired (effect PR #7908). The open question is the compiler
-verdict (adopt / defer / reject), to be grilled with the operator at align
-once the two D6 spikes report interpreter, selective JIT and AOT numbers.
-The refreshed inventory at `inventoryPin` `e5f7d12af9` and the full
-SchemaUtils census feed the parity goal amendment. The rest of the frontier
-lives in `ops/manifest.json` `openQuestions`.
+Graduated again 2026-09-28 into the amended
+[`goals/effect-schema-parity`](../../goals/effect-schema-parity/README.md);
+no compilers goal was created. The schema compilers were ruled DEFER, so the
+MAP gate "upstream ships a schema compiler surface" stays live. It reopens
+this packet at decompose on a measured bulk wire-shape hot path, on upstream
+lifting the `Declaration` exclusion or shipping `Suspend`-following AOT, or
+on the compiler API leaving `unstable`. The other gates in `MAP.md` §Later
+Candidates still apply. Deferred questions with owners are in
+`ops/manifest.json` `openQuestions`.
 
 ## Read This First
 
@@ -95,3 +97,12 @@ lives in `ops/manifest.json` `openQuestions`.
   inventory at the catalog pin, census every `SchemaUtils` export, and spike
   the compilers; the verdict waits for the operator at align. The parity
   goal is amended in place for pin, fixture name, lanes and P5 evidence.
+- 2026-09-28: align loop and graduate. Three Opus 5.5 lanes reported: the
+  inventory refreshed at `e5f7d12af9`, the full SchemaUtils census (written
+  back into the parity goal), and the compiler spikes
+  (`research/2026-09-28-compiler-evaluation.md`: about 3.7x on
+  transformation-free wire structs, 1.2–1.4x on classes and transformed
+  rows, no gain on Pandoc). The operator grill ruled the compilers DEFER
+  with three re-entry triggers and kept `isCodecDataFirst`, superseding the
+  2026-09-14 SchemaUtils entry for that symbol. No compilers goal (D8); the
+  gate stays in `MAP.md`. Status back to `graduated`.

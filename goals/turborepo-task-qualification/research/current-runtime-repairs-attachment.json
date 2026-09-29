@@ -1,0 +1,39 @@
+{
+  "authority": "Canonical census attachment acceptance; byte identity only",
+  "revision": "424618d987ae41de145fb3d3c4573fe3a1e14162",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 77,
+    "artifacts": 6,
+    "unresolved": 20
+  },
+  "privateArtifacts": [
+    {
+      "path": ".beep/qualification-runtime-repairs/current-reviewed-request.json",
+      "sha256": "23504e66df1d4b61069e998103da785e560dd7898a26a890f73647e8b797addc"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/current-reviewed-census.json",
+      "sha256": "cddaf259c825107e2b24759b4d1d261420ff332b124371b320dfa1ae4913dbf6"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/current-reviewed-census.log",
+      "sha256": "e1a6a4ab7d37b0e3852e986115815274d665caf4ff351ea7717c134a03cab1ae"
+    },
+    {
+      "path": ".beep/qualification-runtime-repairs/attachment-migration-check.json",
+      "sha256": "df7cf74f214cf4f0b4b4428f976ee9801edd2b0a9e10bf581e6c4e005457ab4f"
+    }
+  ],
+  "limits": [
+    "Acceptance binds the current reviewed bytes; it does not prove semantic completeness or signed runtime qualification.",
+    "Input maps may include changing generated files while independent quality processes execute. No historical attribution is inferred.",
+    "No tuple is promoted; full fresh/fresh, signed remote, canary and shadow acceptance remain incomplete."
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "authority": "Independent isolated ordinary-CLI concurrency comparison with separately measured task overlap",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "profile": "stable",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "checks": {
+        "distinctCaches": true,
+        "sameRevision": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputs": true,
+        "sameHashedEnvironment": true,
+        "sameFreshTree": true,
+        "sameLog": true
+      },
+      "cliOverlapMs": 6785,
+      "targetOverlapMs": 0,
+      "observations": [
+        {
+          "receiptSha256": "c35067d466d3f2431be4d31d6044777dfd72ab5d0494e59bdbbf4b9876547d97",
+          "taskHash": "7d536d47d5b63a1a",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        },
+        {
+          "receiptSha256": "8d90f822995c6ce7e33602e3aa42ce5777a2f19d00f02ece04c085be1acb084a",
+          "taskHash": "7d536d47d5b63a1a",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        }
+      ],
+      "dependencyParity": {
+        "before": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "after": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "equal": true,
+        "command": [
+          "tar",
+          "--sort=name",
+          "--mtime=@0",
+          "--owner=0",
+          "--group=0",
+          "--numeric-owner",
+          "--hard-dereference",
+          "--pax-option=delete=atime,delete=ctime",
+          "-cf",
+          "-",
+          "node_modules"
+        ]
+      }
+    },
+    {
+      "attempt": 2,
+      "checks": {
+        "distinctCaches": true,
+        "sameRevision": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputs": true,
+        "sameHashedEnvironment": true,
+        "sameFreshTree": true,
+        "sameLog": true
+      },
+      "cliOverlapMs": 6693,
+      "targetOverlapMs": 0,
+      "observations": [
+        {
+          "receiptSha256": "71909b34cad3816ed7e5b0a22a4846ceba52a73544f97db3c1e9f4d836a68a57",
+          "taskHash": "7d536d47d5b63a1a",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        },
+        {
+          "receiptSha256": "cd156d719e158540c8f27196dd2596137158b53a6a5f6de8d9ffb870bb085c89",
+          "taskHash": "7d536d47d5b63a1a",
+          "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+        }
+      ],
+      "dependencyParity": {
+        "before": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "after": {
+          "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+          "archiveBytes": 5619353600
+        },
+        "equal": true,
+        "command": [
+          "tar",
+          "--sort=name",
+          "--mtime=@0",
+          "--owner=0",
+          "--group=0",
+          "--numeric-owner",
+          "--hard-dereference",
+          "--pax-option=delete=atime,delete=ctime",
+          "-cf",
+          "-",
+          "node_modules"
+        ]
+      }
+    }
+  ],
+  "cliOverlapEstablished": true,
+  "targetTaskOverlapEstablished": false,
+  "retention": {
+    "reference": "patched-concurrency-stable-b410da2b6d",
+    "files": 6226,
+    "manifestSha256": "2c533538ac27696e0651e3e1f1582606fba6f9c6c13bcf73fa93cd9bb9469e11"
+  },
+  "limits": [
+    "Separate writable package overlays and caches only; shared-writer and shared-output safety are unproven.",
+    "Stable target-task overlap was absent in both bounded attempts; wrapper overlap must not be presented as simultaneous lint execution.",
+    "No signed remote, complete semantic closure, shadow acceptance or tuple promotion."
+  ]
+}

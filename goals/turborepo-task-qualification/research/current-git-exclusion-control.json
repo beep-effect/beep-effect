@@ -1,0 +1,102 @@
+{
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "clientVersion": "2.11.4",
+  "receiptSha256": "a2c68f1c7df4f45479f44f469929056afcf1e48d1098931ab718e52594df3b14",
+  "cases": [
+    {
+      "case": "fresh",
+      "exitCode": 0,
+      "hash": "1cde1c1e6cfeab67",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "replay",
+      "exitCode": 0,
+      "hash": "1cde1c1e6cfeab67",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "git-comment",
+      "exitCode": 0,
+      "hash": "cecae8d1ebd44e83",
+      "cache": "MISS",
+      "exclusionSha256": "099916d464f46bc757d0672c9f16d92d1bdc11995c5f9021f43176cdb3004d5d"
+    },
+    {
+      "case": "git-restored",
+      "exitCode": 0,
+      "hash": "1cde1c1e6cfeab67",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "invalid-source",
+      "exitCode": 1,
+      "hash": "54a3c3389096f762",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "git-excluded",
+      "exitCode": 0,
+      "hash": "7a4124fca7fde306",
+      "cache": "MISS",
+      "exclusionSha256": "1709970cd2062a910bb26a86b4ac4053927a13d0d7f7c851534222e53f97600a"
+    },
+    {
+      "case": "excluded-replay",
+      "exitCode": 0,
+      "hash": "7a4124fca7fde306",
+      "cache": "HIT",
+      "exclusionSha256": "1709970cd2062a910bb26a86b4ac4053927a13d0d7f7c851534222e53f97600a"
+    },
+    {
+      "case": "exclusion-restored",
+      "exitCode": 1,
+      "hash": "54a3c3389096f762",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "source-restored",
+      "exitCode": 0,
+      "hash": "1cde1c1e6cfeab67",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    }
+  ],
+  "commentOnlyNativeInputsEqual": true,
+  "commentOnlyRuntimeBindingChanged": true,
+  "failedTaskArchiveAbsent": true,
+  "successfulArchiveLogsEqual": true,
+  "taskLogBytes": 53,
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "archives": [
+    {
+      "taskHash": "1cde1c1e6cfeab67",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "7a4124fca7fde306",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "cecae8d1ebd44e83",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    }
+  ],
+  "hostGitExclusionsUnchanged": true,
+  "limits": [
+    "Stable local control at frozen source and dependencies; no current security-profile renewal.",
+    "Static exclusion overlay does not prove concurrent-mutation safety or alternate Git layouts.",
+    "No signed remote, full shadow matrix or qualification credit."
+  ],
+  "authority": "Bounded stable ordinary CLI Git exclusion invalidation and behavior controls; not qualification.",
+  "retention": {
+    "reference": "git-exclusion-stable-7f53-reviewed",
+    "files": 1580,
+    "manifestSha256": "dc1bd3c47e93bcbc411845cd7d9ad4b54fcdf50a448abb0b326fb8364aac8887"
+  }
+}
