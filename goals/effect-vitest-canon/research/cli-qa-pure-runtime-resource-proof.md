@@ -41,5 +41,9 @@ The root ratchet passes across 1,217 files with 3,099 findings, zero introduced
 and 1,923 resolved against the unchanged baseline. The final file detector
 retains its native-filesystem judgment. Historical source matching identifies
 15 runtime rows and three provider rows by exact original line/evidence and
-registration title. The deleted wrapper requires its own occurrence match.
-Ledger reconciliation and full CLI package proof follow the source commit.
+registration title. The deleted wrapper also matches its exact occurrence
+and evidence. All 19 historical rows are fixed by source commit 812b73e0c5;
+no new rows were needed. The native-filesystem judgment remains open.
+The CLI ledger has 3,495 unique rows: 1,743 fixed, 12 exceptions and 1,740 open.
+Strict validation passes for all CLI rows and all 687 schema rows.
+Full CLI package proof is running against source 812b73e0c5 and is pending.

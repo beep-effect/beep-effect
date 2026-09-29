@@ -1,0 +1,330 @@
+{
+  "sourceFixSha": "812b73e0c5d17f10f80f55b1794eff7b75e8b89a",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:138:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:154:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:167:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:182:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:200:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:248:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:259:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:274:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:286:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:300:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:318:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:329:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:338:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:358:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:806:runPromise@4#1",
+    "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:219:provideScopedLayer@12#1",
+    "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:228:provideScopedLayer@12#1",
+    "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:242:provideScopedLayer@12#1",
+    "EV003:packages/tooling/tool/cli/test/qa-pure.test.ts:95:withTempDir@20#1"
+  ],
+  "runtimeAndProviderLineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:138:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "prefers --url over --app and derives loopback origins",
+      "currentTitle": "prefers --url over --app and derives loopback origins",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 140,
+          "evidence": "Effect.runPromise( Effect.map( resolveCaptureTarget( \"/repo\", CaptureTargetRequest.make({ app: O.some(\"storybook\"), url: O.some(\"http://example.test:4321/page\") }) ), (target) => { expect(target.url)."
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:154:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "falls back to the apps host for names that are not lab workspaces",
+      "currentTitle": "falls back to the apps host for names that are not lab workspaces",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 156,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const target = yield* resolveCaptureTarget( dir, CaptureTargetRequest.make({ app: O.some(\"storybook\"), url: O.none() }) ); expect(ta"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:167:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps the apps host for names that resolve under apps/",
+      "currentTitle": "keeps the apps host for names that resolve under apps/",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 169,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; yield* fs.makeDirectory(`${dir}/apps/my-lab`, { recursive: true }); const target = yield* r"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:182:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "expands --app to the labs host when the workspace lives under apps/labs",
+      "currentTitle": "expands --app to the labs host when the workspace lives under apps/labs",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 184,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; yield* fs.makeDirectory(`${dir}/apps/labs/my-lab`, { recursive: true }); const target = yie"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:200:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "resolves apps over labs when both directories exist",
+      "currentTitle": "resolves apps over labs when both directories exist",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 202,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; yield* fs.makeDirectory(`${dir}/apps/shared-name`, { recursive: true }); yield* fs.makeDire"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:248:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "returns an empty log when the events file is absent",
+      "currentTitle": "returns an empty log when the events file is absent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 250,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const log = yield* readEventLog(`${dir}/missing.ndjson`); expect(log.events).toEqual([]); expect(log.rejectedCount).toBe(0); }) ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:259:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes valid witness lines and counts the rejected ones",
+      "currentTitle": "decodes valid witness lines and counts the rejected ones",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 261,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const eventsPath = `${dir}/events.ndjson`; const good = yield* encodeActionEventJson(marker"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:274:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips the record-start hint and reports none when absent",
+      "currentTitle": "round-trips the record-start hint and reports none when absent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 276,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const hintPath = `${dir}/record-hint.json`; assertNone(yield* readRecordStartHint(hintPath)); yield* writeRecordStartHint(hintPath,"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:286:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips the artifact budget and reports none for an absent plan",
+      "currentTitle": "round-trips the artifact budget and reports none for an absent plan",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 288,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const budgetPath = `${dir}/artifact-budget.json`; assertNone(yield* readArtifactBudget(budgetPath)); yield* writeArtifactBudget(budg"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:300:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "discovers a recorded container and reports none for an empty video directory",
+      "currentTitle": "discovers a recorded container and reports none for an empty video directory",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 302,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const videoDir = `${dir}/video`; assertNone(yield* discoverRecordedVideo(videoDir)); yield*"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:318:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "degrades commit provenance to unknown outside a git checkout",
+      "currentTitle": "degrades commit provenance to unknown outside a git checkout",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 320,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const provenance = yield* readCommitProvenance(dir).pipe(provideScopedLayer(SpawnerLayer)); expect(provenance.sha).toBe(\"unknown\");"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:329:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports no legacy manifest when the file is absent",
+      "currentTitle": "reports no legacy manifest when the file is absent",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 331,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { assertNone(yield* readLegacyManifest(`${dir}/manifest.json`)); }) ) )"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:338:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "decodes a legacy screenshot manifest",
+      "currentTitle": "decodes a legacy screenshot manifest",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 340,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const manifestPath = `${dir}/manifest.json`; yield* fs.writeFileString( manifestPath, yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:358:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "folds decoded legacy notes and failed assertions into the matching timeline section",
+      "currentTitle": "folds decoded legacy notes and failed assertions into the matching timeline section",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 360,
+          "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const fs = yield* FileSystem.FileSystem; const manifestPath = `${dir}/manifest.json`; yield* fs.writeFileString( manifestPath, yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/qa-pure.test.ts:806:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "persists the plan and returns before video discovery, probing, or correlation",
+      "currentTitle": "persists the plan and returns before video discovery, probing, or correlation",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 808,
+          "evidence": "Effect.runPromise( Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-dry-run-\" })), Effect.fnUntraced(function* (cwd) { const fs = yield*"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:219:provideScopedLayer@12#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails when neither --url nor --app is supplied",
+      "currentTitle": "fails when neither --url nor --app is supplied",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 221,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:228:provideScopedLayer@12#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails when the supplied --url is not absolute",
+      "currentTitle": "fails when the supplied --url is not absolute",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 230,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/qa-pure.test.ts:242:provideScopedLayer@12#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "derives every round-relative artifact path from one layout",
+      "currentTitle": "derives every round-relative artifact path from one layout",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 244,
+          "evidence": "provideScopedLayer(PlatformLayer)"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "helperLineage": [
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/qa-pure.test.ts:95:withTempDir@20#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/qa-pure.test.ts:97:withTempDir@20#1",
+      "occurrence": "v2:a7a62fbdf765e00de3147bf21f4a8a45a645631592b518fca139369a105561d5",
+      "evidence": "<A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: \"beep-qa-pure-\" })), use, (dir) => Eff",
+      "judgment": "All 13 wrapper uses are terminal in their test callbacks; shared platform services move to a public fixture and per-test acquireRelease owns cleanup with the same failure behavior."
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1740,
+    "fixed": 1743,
+    "exception": 12
+  },
+  "fullPackageProof": "pending CLI package proof"
+}
