@@ -46,7 +46,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | API | Kills | Live site |
 |--------|-----|-------|-----------|
-| `LiteralKit([...])` | `.Options`, `.Enum`, `.is`, `.pickOptions`, `.omitOptions`, `.$match`, `.thunk`, `.toTaggedUnion` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Md.model.ts:830` (`HeadingLevel`), `Lexical.model.ts:508` (`HeadingTag`) |
+| `LiteralKit([...])` | `.Enum`, `.is`, `.$match`, `.toTaggedUnion`; inherited `S.Literals` `.literals`, `.pick(...)`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts:755` (`HeadingTag`) |
 | `MappedLiteralKit([[from,to]])` | `.From.Enum` (from→to), `.To.Enum` (to→from), `.Pairs`, `.is` | a hand-written bidirectional lookup table + its inverse | code/protocol maps (e.g. `level↔"h1".."h6"`, SQLSTATE) |
 
 > **Key-stringification gotcha.** Non-string literals become string helper keys:
