@@ -285,6 +285,33 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const h7 = () => S.decodeSync(S.Literal(-1))(-1);`
         ),
       },
+      // A module-level schema refined through `.pipe(...)` in the call is a new AST per call.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Number;`,
+          `export const h11 = () => S.decodeSync(Model.pipe(S.check(S.isGreaterThan(0))))(1);`
+        ),
+      },
+      // `.annotate(...)` on a module-level schema derives a new AST per call too.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Struct({});`,
+          `export const h12 = (x: unknown) => S.decodeUnknownSync(Model.annotate({ title: "Model" }))(x);`
+        ),
+      },
+      // A derived schema nested inside another inline construction is still hoistable.
+      {
+        count: 1,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Number;`,
+          `export const h13 = () => S.decodeSync(S.Array(Model.check(S.isGreaterThan(0))))([]);`
+        ),
+      },
     ],
     valid: [
       // A schema built from a function parameter cannot be hoisted, whatever its name.
@@ -304,6 +331,43 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `  const Local = S.Literal(n);`,
           `  return S.decodeSync(S.Array(Local))([]);`,
           `};`
+        ),
+      },
+      // `.pipe(...)` over a function parameter cannot be hoisted.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const p3 = (rowSchema: S.Schema<number>) => S.decodeSync(rowSchema.pipe(S.check(S.isGreaterThan(0))))(1);`
+        ),
+      },
+      // `.pipe(...)` over a body-local schema is local state, not a module binding.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `export const p4 = (n: number) => {`,
+          `  const Local = S.Literal(n);`,
+          `  return S.decodeSync(Local.pipe(S.annotate({ title: "Local" })))(n);`,
+          `};`
+        ),
+      },
+      // A module-level pipe taking a body-local argument cannot be hoisted either.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Number;`,
+          `export const p5 = (min: number) => S.decodeSync(Model.pipe(S.check(S.isGreaterThan(min))))(min);`
+        ),
+      },
+      // An argument-free `.pipe()` returns its receiver, so it still hits the parser cache.
+      {
+        count: 0,
+        source: lines(
+          `import * as S from "effect/Schema";`,
+          `const Model = S.Number;`,
+          `export const p6 = () => S.decodeSync(Model.pipe())(1);`
         ),
       },
       // A plain schema reference inside a function hits the per-AST parser cache.

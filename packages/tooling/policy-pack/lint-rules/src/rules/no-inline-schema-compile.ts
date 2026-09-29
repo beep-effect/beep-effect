@@ -61,6 +61,9 @@ const COMPILER_METHODS = HashSet.fromIterable([
 const SCHEMA_NAMED_SOURCES = HashSet.fromIterable(["effect", "effect/Schema"]);
 const SCHEMA_MODULE_SOURCES = HashSet.fromIterable(["effect/Schema"]);
 
+// Schema instance methods that derive a new schema, and so a new AST, from their receiver.
+const SCHEMA_BUILDER_METHODS = HashSet.fromIterable(["annotate", "annotateKey", "check", "pipe"]);
+
 type ModuleStatement = ESTree.Program["body"][number];
 type BindingTarget = { readonly type: string; readonly name?: string } | null | undefined;
 
@@ -76,13 +79,18 @@ const inlineSchemaMessage = (method: string) =>
  * A plain schema reference is not reported: Effect caches each schema's
  * parser per AST, so `Schema.decodeUnknownSync(Model)` inside a function
  * compiles `Model` once. Only inline construction such as
- * `Schema.decodeSync(Schema.Array(Model))` builds a new AST per call.
+ * `Schema.decodeSync(Schema.Array(Model))` builds a new AST per call, and so
+ * does a schema derived from a module-level one through `.pipe(...)`,
+ * `.check(...)`, `.annotate(...)` or `.annotateKey(...)`, such as
+ * `Schema.decodeSync(Model.pipe(Schema.check(...)))`.
  *
  * An inline construction is reported only when it is hoistable: every leaf
  * identifier resolves to a module-scope binding (an import local or a
- * top-level `const`, `class` or `function`), whatever its spelling. A schema
- * built from a function parameter or a body-local binding cannot move to
- * module scope and is left alone.
+ * top-level `const`, `class` or `function`), whatever its spelling. For a
+ * derived schema that covers the receiver and every argument. A schema built
+ * from a function parameter or a body-local binding (including
+ * `rowSchema.pipe(...)` over one) cannot move to module scope and is left
+ * alone, as is any construction taking a function literal argument.
  *
  * **Example** (Schema compile rule description)
  *
@@ -180,6 +188,24 @@ export default defineRule({
         )
       );
 
+    // Narrow `node` to a `<receiver>.<builder>(...)` call that derives a new schema, yielding the
+    // receiver + arguments. A bare `Model.pipe()` returns its receiver unchanged, so it needs arguments.
+    const asSchemaBuilderCall = (
+      node: MaybeNode
+    ): O.Option<{ readonly receiver: O.Option<AstNode>; readonly args: ReadonlyArray<ESTree.Argument> }> =>
+      unwrapExpression(node).pipe(
+        O.filter((expression) => expression.type === "CallExpression"),
+        O.filter((call) => A.isReadonlyArrayNonEmpty(call.arguments)),
+        O.flatMap((call) =>
+          unwrapMemberExpression(call.callee).pipe(
+            O.filter((access) =>
+              O.exists(getPropertyName(access.property), (method) => HashSet.has(SCHEMA_BUILDER_METHODS, method))
+            ),
+            O.map((access) => ({ receiver: access.object, args: call.arguments }))
+          )
+        )
+      );
+
     const isStaticSchemaExpression = (node: MaybeNode): boolean => {
       const expression = unwrapExpression(node);
       if (O.isNone(expression)) return false;
@@ -209,26 +235,26 @@ export default defineRule({
           ({ argument, operator }) =>
             (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument)
         ),
-        Match.discriminator("type")("CallExpression", (call) =>
-          O.match(asSchemaMethodCall(call), {
-            onNone: thunkFalse,
-            onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-          })
-        ),
+        Match.discriminator("type")("CallExpression", isStaticInlineConstruction),
         Match.orElse(thunkFalse)
       );
     };
 
-    const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
-      O.match(asSchemaMethodCall(node), {
-        onNone: thunkFalse,
-        onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-      });
+    // The nodes an inline construction is built from: the arguments of a `<schemaBinding>.<method>(...)`
+    // call, or the receiver plus arguments of a builder such as `Model.pipe(Schema.check(...))`.
+    const inlineConstructionParts = (node: MaybeNode): O.Option<ReadonlyArray<MaybeNode>> =>
+      O.orElse(
+        O.map(asSchemaMethodCall(node), ({ args }) => args),
+        () => O.map(asSchemaBuilderCall(node), ({ receiver, args }) => A.prepend(args, O.getOrUndefined(receiver)))
+      );
+
+    const isStaticInlineConstruction = (node: MaybeNode): boolean =>
+      O.exists(inlineConstructionParts(node), A.every(isStaticSchemaExpression));
 
     // Report only when the first argument constructs a static schema inline; a plain schema
     // reference hits the per-AST parser cache and is fine inside a function body.
     const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> =>
-      isNestedStaticSchemaCall(firstArg) ? O.some(inlineSchemaMessage(method)) : O.none();
+      isStaticInlineConstruction(firstArg) ? O.some(inlineSchemaMessage(method)) : O.none();
 
     const tracksSchema = (source: string, binding: ImportBinding): boolean =>
       ImportBinding.match(binding, {

@@ -10,3 +10,10 @@ resolve to a module-scope binding (an import local or a top-level `const`, `clas
 capitalization, so a lowercase module-level schema such as `model` in
 `Schema.decodeSync(Schema.Array(model))` is reported, and a capitalized body-local or parameter
 schema is not.
+
+A schema derived from a module-level one inside the call is inline construction too:
+`Schema.decodeSync(Model.pipe(Schema.check(...)))`, `Model.check(...)`, `Model.annotate(...)`
+and `Model.annotateKey(...)` each build a new AST per call and are reported when the receiver
+and every argument are module-scope bindings. The same builders over a parameter or a
+body-local schema, or with a function-literal argument, are left alone, and an argument-free
+`Model.pipe()` returns its receiver and still hits the cache.
