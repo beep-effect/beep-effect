@@ -1,0 +1,164 @@
+{
+  "authority": "Bounded isolated native scalar-read and explicit-write observation; not complete semantic closure",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "exitCode": 0,
+  "directCommand": "bun --no-env-file run lint",
+  "namespace": {
+    "source": "git archive mounted read-only",
+    "dependencies": "read-only",
+    "network": "isolated",
+    "temporaryState": "private tmpfs"
+  },
+  "dependencyParity": {
+    "before": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "after": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "equal": true,
+    "command": [
+      "tar",
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--hard-dereference",
+      "--pax-option=delete=atime,delete=ctime",
+      "-cf",
+      "-",
+      "node_modules"
+    ]
+  },
+  "trace": {
+    "compressedTraceBytes": 5881769,
+    "compressedTraceSha256": "6ef2b481fbd5b9ffb67cd64eca79b19b755f3372ebfeba52f0511fe4873ed659",
+    "expandedTraceBytes": 142335739,
+    "expandedTraceSha256": "dfca95b0517e70f1b231b5c82c3d14a99b2b4ff2a5d24650510185c4b9a4a553"
+  },
+  "reads": {
+    "positiveScalarReadCalls": 22941,
+    "unannotatedPositiveReads": {},
+    "nonemptyReadBuffers": 0,
+    "groups": {
+      "outside-repository": {
+        "uniquePaths": 20,
+        "readCalls": 495,
+        "returnedBytes": 179266
+      },
+      "other-repository-paths": {
+        "uniquePaths": 412,
+        "readCalls": 425,
+        "returnedBytes": 1412876
+      },
+      "identity-subtree": {
+        "uniquePaths": 27,
+        "readCalls": 31,
+        "returnedBytes": 284389
+      },
+      "installed-dependencies": {
+        "uniquePaths": 5508,
+        "readCalls": 21979,
+        "returnedBytes": 53213193
+      },
+      "non-filesystem-descriptor": {
+        "uniquePaths": 5,
+        "readCalls": 11,
+        "returnedBytes": 313
+      }
+    },
+    "repositoryUniquePathCount": 439,
+    "unmappedRepositoryReads": [
+      ".git"
+    ],
+    "unmappedRepositoryMappedFiles": []
+  },
+  "writes": {
+    "calls": 21,
+    "categories": {
+      "capture-stderr": {
+        "calls": 2,
+        "returnedBytes": 53
+      },
+      "pipe": {
+        "calls": 11,
+        "returnedBytes": 41
+      },
+      "unix-socket": {
+        "calls": 5,
+        "returnedBytes": 267
+      },
+      "null-device": {
+        "calls": 2,
+        "returnedBytes": 42
+      },
+      "eventfd": {
+        "calls": 1,
+        "returnedBytes": 8
+      }
+    },
+    "vectorOperations": {}
+  },
+  "ioUringOperations": [
+    {
+      "operation": "io_uring_enter",
+      "outcome": "succeeded",
+      "count": 5
+    },
+    {
+      "operation": "io_uring_setup",
+      "outcome": "succeeded",
+      "count": 5
+    }
+  ],
+  "retention": {
+    "reference": "io-patched-b410-reviewed",
+    "files": 20,
+    "manifestSha256": "11b2019b9b44ede9118eb9faa20407464e2ce6fcdf6e41ef2c3494198119a8a5",
+    "readReviewSha256": "62cb4e347ecc4461113f9445133c101921868cf03e27a36ece6718d69d0cfd3d",
+    "writeReviewSha256": "c810f0fe7c7c189edb2c3965c667895984f6404b5116796b768448f314b174b1"
+  },
+  "limits": [
+    "Vectored I/O and io_uring remain uninterpreted",
+    "Memory mapping records do not prove which pages were read",
+    "Raw write arguments suppress payloads and do not establish complete write destinations",
+    "Read paths do not establish semantic relevance",
+    "Single execution cannot establish all possible inputs",
+    "Membership comparison uses the retained patched-profile ordinary fresh summary at the same frozen revision; the traced archive source has disabled caching and is not asserted byte-identical to every runtime overlay",
+    "Native plan membership and read observations do not prove complete semantic inputs",
+    "Current ring contents were not decoded. Earlier epoll-control observations do not retroactively decode this trace.",
+    "This invokes the real task directly; no Turbo cache-hit or signed-remote observation is claimed.",
+    "Raw traces and source paths remain private. No policy tuple is promoted."
+  ],
+  "gitRoutingReview": {
+    "process": "installed Biome platform binary",
+    "events": [
+      {
+        "resource": "fixture Git pointer",
+        "returnedBytes": 53
+      },
+      {
+        "resource": "worktree common-directory pointer",
+        "returnedBytes": 6
+      },
+      {
+        "resource": "common Git exclusion file",
+        "returnedBytes": 727
+      }
+    ],
+    "traceSha256": "6ef2b481fbd5b9ffb67cd64eca79b19b755f3372ebfeba52f0511fe4873ed659",
+    "fixturePointerSha256": "e55ef43c0342f3250f76ed356408a6cc9eee239398eea5d29c61ed4ac4192b84",
+    "retentionReference": "io-patched-b410-reviewed",
+    "reviewSha256": "1070524299644dad60067076fc211674d15ec45c49f235323296dba6360c9df0",
+    "manifestSha256": "11b2019b9b44ede9118eb9faa20407464e2ce6fcdf6e41ef2c3494198119a8a5",
+    "interpretation": "The current trace attributes all three Git metadata reads to Biome. The fixture pointer routes through the worktree common-directory pointer to the common exclusion file.",
+    "limits": [
+      "Read buffers were suppressed; returned contents are not independently hashed.",
+      "The retained fixture pointer was checked after observation. Common Git metadata was a read-only mount of shared host state, not a frozen copy.",
+      "This attribution does not prove routing metadata semantically irrelevant, complete input closure, or coverage of alternate Git layouts."
+    ]
+  }
+}

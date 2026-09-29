@@ -1,0 +1,98 @@
+{
+  "revision": "40055f7c0495fb59aebc3cca6a20ff22de1401b1",
+  "baseRevision": "980b4cd44c485a68d436465caa72b8201a958f98",
+  "dependencyReview": {
+    "changedWorkspaceManifests": 122,
+    "testRunnerDevDependencyAdditions": 122,
+    "changedGraphNodeDependencyMembership": 2074,
+    "authority": "Git manifest comparison and installed Turbo census; no executions"
+  },
+  "plannerReview": [
+    {
+      "planner": "entrypoint",
+      "hosted": false,
+      "beforeSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "afterSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "changedPaths": []
+    },
+    {
+      "planner": "entrypoint",
+      "hosted": true,
+      "beforeSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "afterSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "changedPaths": []
+    },
+    {
+      "planner": "yeet",
+      "hosted": false,
+      "beforeSha256": "bda11adecebc7903ff6579edaf0148a3042a63b9292a6edbfa286077217ff790",
+      "afterSha256": "bda11adecebc7903ff6579edaf0148a3042a63b9292a6edbfa286077217ff790",
+      "changedPaths": []
+    },
+    {
+      "planner": "yeet",
+      "hosted": true,
+      "beforeSha256": "170abcabcbcfc2765773f3386c4c8f1150c4c1ffb391299daa2411b1e7dab247",
+      "afterSha256": "170abcabcbcfc2765773f3386c4c8f1150c4c1ffb391299daa2411b1e7dab247",
+      "changedPaths": []
+    }
+  ],
+  "limits": [
+    "Finite pure planner comparison only. No runtime evidence renewal.",
+    "Historical private scripts were not recovered; current tracked scripts successfully reproduced all four prior projections.",
+    "490 changed source bindings still require review; no tuple qualified."
+  ],
+  "processImportReview": {
+    "authority": "Exact byte comparison after replacing effect/unstable/process with effect/process; prior bytes checked against archived source hashes",
+    "paths": [
+      "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MergedPreview.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GhCollect.ts",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/GitWorktree.ts",
+      "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.service.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Converge.ts"
+    ],
+    "limit": "Classifies source edits only; does not establish equivalence between Effect package versions."
+  },
+  "recoveryFollowup": {
+    "matchedHistoricalReviews": 53,
+    "totalHistoricalReviews": 55,
+    "matchedHistoricalPrivateScripts": 3,
+    "missingReviews": [
+      "quality-entrypoint-review.json",
+      "refs-entrypoint-review.json"
+    ],
+    "method": "Exact SHA-256 match against archived request; recovered files retained privately with a hash manifest.",
+    "limit": "Recovery restores historical bytes, not current semantic acceptance."
+  }
+}

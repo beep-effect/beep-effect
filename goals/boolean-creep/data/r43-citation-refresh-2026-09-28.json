@@ -1,0 +1,134 @@
+{
+  "kind": "boolean-creep-source-citation-refresh/v1",
+  "sourceSha": "980b4cd44c485a68d436465caa72b8201a958f98",
+  "inventoryBeforeSha256": "4b7e97420b6c67b9eb09f60a85578b492997041161d22a0014453c64312f2f07",
+  "inventoryAfterSha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91",
+  "sourceFileSha256": "1035895093596b2d2bb47f7217216244eccaec7ccec2944d57968562be422504",
+  "classificationChanged": false,
+  "dryCredit": false,
+  "P3Credit": false,
+  "implementationCredit": false,
+  "changes": [
+    {
+      "before": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-image-curation-json-tempdir-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 783,
+        "symbol": "writeJsonAtomically.tempDirRemoveOptions",
+        "kind": "object-literal",
+        "members": ["force", "recursive"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options in writeJsonAtomically's release path at 783; force and recursive are independent platform-fs SDK knobs, both true."
+        }
+      },
+      "after": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-image-curation-json-tempdir-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 773,
+        "symbol": "writeJsonAtomically.tempDirRemoveOptions",
+        "kind": "object-literal",
+        "members": ["force", "recursive"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options in writeJsonAtomically's release path at 773; force and recursive are independent platform-fs SDK knobs, both true."
+        }
+      }
+    },
+    {
+      "before": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-curate-images-manifest-temp-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1595,
+        "symbol": "curateImagesImpl.manifestTempRemoveOptions",
+        "kind": "object-literal",
+        "members": ["recursive", "force"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options for the nested manifest staging directory at 1595; recursive and force are independent platform-fs SDK knobs, both true."
+        }
+      },
+      "after": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-curate-images-manifest-temp-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1585,
+        "symbol": "curateImagesImpl.manifestTempRemoveOptions",
+        "kind": "object-literal",
+        "members": ["recursive", "force"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options for the nested manifest staging directory at 1585; recursive and force are independent platform-fs SDK knobs, both true."
+        }
+      }
+    },
+    {
+      "before": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-curate-images-tempdir-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1598,
+        "symbol": "curateImagesImpl.tempDirRemoveOptions",
+        "kind": "object-literal",
+        "members": ["recursive", "force"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options for the outer curation temp directory at 1598; recursive and force are independent platform-fs SDK knobs, both true."
+        }
+      },
+      "after": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-curate-images-tempdir-remove-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1588,
+        "symbol": "curateImagesImpl.tempDirRemoveOptions",
+        "kind": "object-literal",
+        "members": ["recursive", "force"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Inline Effect FileSystem.remove options for the outer curation temp directory at 1588; recursive and force are independent platform-fs SDK knobs, both true."
+        }
+      }
+    },
+    {
+      "before": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-materialize-canonical-png-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1314,
+        "symbol": "materializeCanonicalPng.png",
+        "kind": "object-literal",
+        "members": ["adaptiveFiltering", "force", "palette"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Instantiated sharp .png() encoder options at 1313-1318; adaptiveFiltering, force, and palette are independent sharp SDK knobs. This call sets adaptiveFiltering and force true and palette false."
+        }
+      },
+      "after": {
+        "schemaVersion": "boolean-creep-inventory/v1",
+        "id": "r30-cli-commands-d-k-materialize-canonical-png-options",
+        "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts",
+        "line": 1304,
+        "symbol": "materializeCanonicalPng.png",
+        "kind": "object-literal",
+        "members": ["adaptiveFiltering", "force", "palette"],
+        "status": "disqualified",
+        "disqualifier": {
+          "class": "D2",
+          "note": "Instantiated sharp .png() encoder options at 1303-1308; adaptiveFiltering, force, and palette are independent sharp SDK knobs. This call sets adaptiveFiltering and force true and palette false."
+        }
+      }
+    }
+  ],
+  "basis": "Compared complete ImageCuration.ts Git diff from R42 source: ten-line import contraction; verified each of the four affected D2 source objects in current source."
+}

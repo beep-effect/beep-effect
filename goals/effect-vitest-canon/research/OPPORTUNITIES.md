@@ -5814,3 +5814,57 @@ identities from deleted findings, and reject ambiguous matches. Add a focused
 regression for colliding identities when improving the reconciliation tooling.
 The analysis keeps multi-row groups intact; no baseline or ledger was
 rewritten and no finding was closed by this analysis.
+
+## PR 1323: keep CI-only console repairs available at the checkpoint
+
+The frozen PR retained three CI console failures and 35 Effect diagnostic
+failures while their verified repairs lived on the follow-up branch. Coverage
+repeated the same console failures. The repair now ports only the required
+changes into the checkpoint. Future checkpoint freezes should distinguish
+new migration work from fixes required to keep that checkpoint mergeable.
+Receipt: `research/pr1323-ci-repair.md`; hosted jobs 109092814626,
+109092814817 and 109092814735.
+
+## Synthetic home paths copied into inventory evidence
+
+Full checkpoint verification failed knowledge-reference policy on six path
+observations in two copies of inventory evidence. The excerpts came from
+knowledge-semantic-delta redaction tests. Evidence-only redaction failed the
+ratchet because evidence participates in finding identity. Extracting the
+three unchanged diagnostic strings into named fixtures keeps the redaction
+tests intact and produces portable source excerpts. Four finding identities
+were reconciled without changing status. Future inventory generation should
+model sanitized display evidence separately from stable source identity.
+
+The commit formatter then collapsed the two fixture calls onto single lines.
+Stable occurrence hashes survived, but changed evidence excerpts caused two
+ratchet failures. Refresh reviewed evidence after formatting and before the
+final ratchet; separate display evidence from occurrence matching to prevent
+formatting-only failures. The corrected entries preserve statuses and hashes.
+
+## Preserve branch coverage when adding readiness short circuits
+
+PR 1323's hosted coverage found WatchMode branches at 99.1% against 100%
+and WatchStream lines at 99% against 100%. The new merge-blocking predicate
+short-circuited existing failing-check fixtures before they exercised the
+required-check skip path. A timestamp-ordering fallback also had no invalid
+instant case. Added behavioral regressions restore full focused coverage
+without lowering either baseline. Include skipped required checks and malformed
+timestamps in watch conformance tests when changing readiness or ordering.
+
+## Squash ancestry changes checkpoint integration conflicts
+
+The branch-to-branch preview for PR 1323 had seven conflicts. After its squash
+merge, integrating main into the saved follow-up branch produced 51 because
+the merge base no longer included the checkpoint branch history. The exact
+checkpoint head and merged main differed only in 106 documentation paths in
+other goal packets. A fresh semantic merge preview against the checkpoint
+head therefore resolved 44 ancestry-only conflicts without dropping upstream
+changes; the four previously reviewed source resolutions still matched after
+normalizing conflict-marker branch labels.
+
+Preserve the exact checkpoint head and preview tree before retiring its lane.
+When integrating a squash merge into a continuation branch, compare main with
+that exact head before trusting a branch-to-branch conflict count. Verify the
+content delta and preserve unrelated main changes; do not resolve these cases
+with a blanket choice of either branch.

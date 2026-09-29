@@ -7,7 +7,48 @@ The earlier audit table is the historical checkpoint at
 subsequent source and runtime evidence; none promotes the pilot.
 
 
-## Latest local checkpoint: 2026-09-25
+## Current acceptance review: patched profile, 2026-09-28
+
+PR #1327 carries the work. The [latest canonical attachment](./current-patched-io-attachment.json)
+is bound to `1a9914e0cf`; its publication is `43b735a1c3`. Runtime controls
+are bound to frozen source `b410da2b6d`, stable Turbo 2.11.4 and exact canary
+2.11.5-canary.2. The later [ring review](./current-patched-ring-review.json)
+was published in `e889324073` and postdates that attachment. Attaching a
+receipt never renews its execution at another source or dependency identity.
+
+| SPEC criterion | Current evidence | Remaining acceptance boundary |
+| --- | --- | --- |
+| Executable census | Canonical census: 144 workspaces, 3,473 graph nodes, 1,970 executable nodes, 1,025 source bindings, 112 reviews and six artifacts. Prior bindings remain unchanged. | Twenty-five explicit obligations remain; source identity does not prove complete dynamic-entrypoint or semantic coverage. |
+| Policy and transitions | Existing tuple/lifecycle policy, projection and drift enforcement are retained; the historical full proof passed its cheap gates. | Accepted signed sibling imports and valid/adversarial operational transition integration remain unproven. No tuple is promoted. |
+| Synthetic fixture | Historical synthetic success and mandatory-negative receipts retain their own source/client bindings. Patched real-task capture controls confirm supplied synthetic-token absence from the retained archives. | Real-pilot observations do not renew every synthetic fixture or authoritative remote fault/signature case. |
+| Real pilot | Patched stable and canary each pass three fresh/fresh pairs, twelve local replay controls, seven source-invalidation cases, nine configuration cases, nine Git-exclusion cases, capture controls and shared-dependency cross-root replay. Bounded scalar I/O and a separate decoded ring observation are reviewed. | Complete semantic-input closure, supported concurrency boundaries, three verified signed remote pairs and representative current-profile shadow decisions remain incomplete. Historical shadow matrices are not renewed by these runs. |
+| Legacy posture | Caching is enabled only in disposable identity overlays. Ordinary checkout policy remains disabled; no family activation accompanies these receipts. | Preserve attributed exclusions and honest unassessed states through final audit. Experimental success does not authorize promotion. |
+| Adoption handoff | Population, policy vocabulary, decomposition reviews and bounded invalidation references are available. | A validated real pilot and accepted transition/invalidation evidence remain missing from the final handoff. |
+| Package/protocol checks | Repaired package verification is retained. The [historical publish verdict](./current-proof-monitor-attribution.json) passed local pre-push proof and merged-preview CI parity, including coverage, before the watcher failed on a Vercel rate limit. | The verdict records an older head; it is not latest-head proof. Current required checks, local closeout and signed-protocol acceptance remain required. |
+| Final PR readiness | PR #1327 is non-draft and labeled `ready-for-heavy`; its canonical readiness monitor remains active. | Current-head checks and closeout have no final merge-ready verdict. Structural mergeability is insufficient. |
+| Same-PR closeout | Packet remains active and records its evidence limits. | Final accepted evidence, reflection and completed-retained lifecycle must accompany the final implementation in the same PR. |
+
+Cross-root replay passes with the identical installed dependency tree mounted
+read-only at the second root. Independent-installation portability remains
+unproven. Canary actual lint-task overlap was observed; stable's two patched
+attempts recorded CLI overlap but no target-task overlap. Shared-writer and
+shared-output collision safety are not established.
+
+The native-I/O review records 439 repository read paths and 21 explicit writes.
+Biome reads the Git routing metadata, whose host state was not frozen. A separate
+debugger observation decoded twelve entries across five submissions as
+`EPOLL_CTL`, with matching task streams and unchanged dependency bytes. It
+does not retroactively decode prior scalar traces or establish every possible
+input. Completion queue entries and referenced buffers were not decoded.
+
+The conformance and trust packets remain authored but not started in this
+checkout. The bounded Codex search covered all five pinned tasks, the latest
+50 unarchived tasks and both archived listing pages (89 tasks); no runtime
+owner was identified by title/summary. Differently named work and unsearched
+transcript contents remain outside that result. No signed sibling receipt is
+accepted. None of the nine criteria is promoted to complete by this audit.
+
+## Previous local checkpoint: 2026-09-25
 
 The [v23 local matrix receipt](./local-matrix-v23.md) records frozen source
 `ed2742ff4ff0c837e01df0cc38b452762c9a4d89`, stable Turbo 2.11.3 and canary
@@ -514,3 +555,39 @@ tests passed. The earlier filtered run passed 23 tests and skipped 239.
 serialization from Crypto service/error propagation, temporary index/staging
 writes, and metadata-only package scope. It is accepted as review 28, with all
 13 broader obligations retained. No tuple is qualified by these results.
+
+Current isolated concurrency controls pass separately for [stable](./current-concurrency-stable.json)
+and [canary](./current-concurrency-canary.json). Native target tasks overlap for
+659 ms and 692 ms respectively, with equal inputs, fresh trees and task logs.
+These observations cover independent writable overlays and cache directories;
+shared-cache writers and shared-output collisions remain unproven.
+
+The current [stable](./current-capture-stable.json) and
+[canary](./current-capture-canary.json) capture controls confirm native
+synthetic-token presence and absence from retained artifacts. Cache archives
+contain only the task log, without home or checkout paths. Private diagnostic
+streams remain private; remote telemetry and exhaustive capture closure remain
+unproven. Hosted Security passes on `47ea862597`; infra docgen passes all
+101 examples after restoring its normal postinstall prerequisite. Full proof
+and final merge readiness remain pending.
+
+The [post-security census attachment](./current-post-security-attachment.json)
+now accepts 1,025 sources, 90 reviews and six artifacts, with 22 unresolved
+obligations. Its population is unchanged. It attributes the two changed
+source bindings to dependency remediation and does not renew runtime
+observations across that dependency change.
+
+The [stable](./current-config-controls-stable.json) and
+[exact canary](./current-config-controls-canary.json) configuration matrices
+now each pass nine reviewed outcomes: accepted child/root mutations invalidate,
+restoration recovers hits, stale generated-profile drift rejects before Turbo,
+and orchestration metadata preserves the hash. Profile rejection leaves the
+cache unchanged. These selected controls do not exhaust semantic input classes
+or renew the frozen profile after security dependency changes.
+
+The [current native I/O review](./current-native-io-review.json) verifies
+retained trace bytes, dependency parity, scalar read annotations and explicit
+write attribution for one isolated task execution. Its 439 repository read
+paths and 21 attributed writes provide bounded coverage. The `.git` mapping
+and undecoded ring contents remain explicit; no complete semantic-input
+closure or tuple promotion follows from the trace.

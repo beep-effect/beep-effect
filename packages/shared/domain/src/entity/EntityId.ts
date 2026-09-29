@@ -651,7 +651,10 @@ export const factory: Factory = dual(
       EntityIdCodecStatics<ResolvedBrand<Slice, Name, Overrides>> => {
       const definition = buildDefinition(slice, name, overrides);
       const schema = EntityIdValue.pipe(
-        S.brand(definition.brand),
+        // S.brand cannot prove a generic brand key is a single literal; each resolved brand is one.
+        S.brand<ResolvedBrand<Slice, Name, Overrides>>(
+          definition.brand as Parameters<typeof S.brand<ResolvedBrand<Slice, Name, Overrides>>>[0]
+        ),
         identity.annoteSchema(definition.brand, {
           description: definition.description,
         })

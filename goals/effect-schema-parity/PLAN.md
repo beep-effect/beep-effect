@@ -15,7 +15,7 @@ P0 plus P1 are the first vertical slice.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Doctrine PR | pending | Land the dated "Upstream-First Foundation/Modeling" entry in `standards/architecture/DECISIONS.md` and its rule text in §11, narrow the AGENTS.md line, add the `@beep/schema` README rule and the same clause in standards and skill prose. | Merged; citable by heading. |
-| P1 Knowledge layer | pending | Move the inventory generator, verifier and rows into repo-cli; commit `fixtures/effect-schema-rc115/inventory/` with a pin manifest; build the prompt generator that inlines docs from `file:line`. | `--check` byte-identical locally; hosted shape and sha verification green; Node and Bun tests green; one Role A module prompt generated with inlined docs under `ops/prompts/`. |
+| P1 Knowledge layer | pending | Move the inventory generator, verifier and rows into repo-cli; commit `fixtures/effect-schema-rc118/inventory/` with the full `inventoryPin` sha in its pin line and rows; build the prompt generator that inlines docs from `file:line`. | `--check` byte-identical locally; hosted shape and sha verification green; Node and Bun tests green; one Role A module prompt generated with inlined docs under `ops/prompts/`. |
 | P2 LiteralKit trim | pending | Delete the four covered facets and `enumMapping`, override `rebuild`, codemod about 250 consumer files, trim MappedLiteralKit alike. | Type check green; zero hits for retired names; statics survive every derivation; before/after number attached with no instantiation increase. |
 | P3 Retirement train | pending | Retire groups A–G with consumers, behind the facet census (B, C) and the boundary table (D, E). | Every group merged or flipped to ADAPT with a logged ruling; each PR carries before/after numbers with no instantiation increase; KEEP untouched. |
 | P4 Gate cut | pending | Add `SFV4-*` rules for F03, F13, F24 with occurrence anchors and membership baselines; delete the F26 rule; rewrite remediation strings. | Baselines committed; no parallel lane; Yeet routing shows the groups. |
@@ -43,8 +43,8 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
   `standards/architecture/04-rich-domain-model.md`, the schema-first,
   effect-first and crispen skills, the three agents and their `.codex` twins.
   Code examples that show retired facets move with P2.
-- Lane: one Codex exec lane (`gpt-6-astra`, `medium`) drafts; Fable reviews
-  wording against the 25 rulings before publish.
+- Lane: one Opus 5.5 child (`claude-opus-5-5`, D5 2026-09-28) drafts; Fable
+  reviews wording against the 25 rulings before publish.
 
 ## P1 — Knowledge layer
 
@@ -53,17 +53,27 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
   beside `EffectVitest.ts` as `beep lint effect-schema-inventory` (a new `lint`
   subcommand P1 adds, invoked through the beep CLI)
   with `--write` and `--check`; keep the `schema-inventory/v1` contract from
-  `research/inventory/README.md`.
-- Fixture root `packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/**`
-  following the `effect-vitest-rc115` layout (LICENSE carried) plus a pin
-  manifest (upstream sha, row digest). Extend the `verifyEffectVitestPin`
+  `research/inventory/README.md`. The repaired prototype
+  (`research/tools/schema-inventory.ts`, `verify-schema-inventory.ts` and the
+  shared tool-owned `modules.ts`, 2026-09-28) is what the planned
+  `lint effect-schema-inventory --write|--check` productizes: it reads the
+  pin from the root `package.json` catalog and every source byte through
+  `git -C .repos/effect show <inventoryPin>:<path>`, with no assert on the
+  reference HEAD or working tree.
+- Fixture root `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/**`
+  following the `effect-vitest-rc118` layout (LICENSE carried). That sibling
+  has no pin file (its rc.118 tag sha lives in
+  `standards/effect-vitest.primitives.jsonc:9`), so this fixture records the
+  full `inventoryPin` sha itself, in the `INDEX.md` pin line and every row's
+  `sha`, plus a row digest (D4). Extend the `verifyEffectVitestPin`
   pattern (`EffectVitestScan.ts:65`) from version-only to sha plus digest.
 - Persistence through `internal/artifacts` adapters as in
   `EffectVitestStore.ts`; tests modelled on
   `test/effect-vitest-primitives.test.ts`, run on Node and Bun; paths
   home-relative for the knowledge-refs gate.
-- `--check` requires `.repos/effect` (`scripts/setup-effect-ref.sh`); absent
-  or wrong sha fails loud.
+- `--check` requires `.repos/effect` (`scripts/setup-effect-ref.sh`); a
+  missing reference or a pin commit absent from it fails loud. The reference
+  HEAD moving past the pin is expected and must not fail.
 - Move `research/inventory/` with `git mv` (decision "Evidence retention":
   the rows are the knowledge layer, kept once, in the fixture); leave the
   exploration's `research/SOURCES.md` pointing at the fixture path.
@@ -85,6 +95,11 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
   `LiteralKitEnumMappingDuplicateLiteralError`,
   `LiteralKitEnumMappingCoverageError`; replace `attachHelperDescriptors`'s
   `annotate` wrap with a `rebuild(ast)` override.
+- `SchemaUtils.withLiteralKitStatics` (88 files / 183 occurrences) copies five
+  of the deleted facets (`Options`, `HashSet`, `pickOptions`, `omitOptions`,
+  `thunk`); trim its `Pick` to `is`, `Enum`, `$match`, `toTaggedUnion` in the
+  same PR (ADAPT; its final fate rides with `withStatics` in P5; census
+  `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md`).
 - Codemod on the ts-morph project from `SchemaFirstProject.ts:42`, apply
   pipeline modelled on `JSDocMigrateApply.ts:578` (dry run, quarantine, biome
   format). Rewrite `packages/tooling` first, boot `bun run beep`, then the
@@ -112,10 +127,11 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
 | --- | --- | --- |
 | 1 | A instance and declare wrappers (AbortSignal, Dom*, EffectSchema, PromiseSchema, Thunk) | none; proves the PR shape |
 | 2 | B numeric family (Number 361, Int 143, fixed-width families, Float ADAPT) | facet census for Number and Int |
-| 3 | C unknown, opaque, record, json (Unknown 128, Opaque 103, Record, Json, Primitive, SafeObject, Options, Transformations) | facet census for Unknown and Opaque |
+| 3 | C unknown, opaque, record, json (Unknown 128, Opaque 103, Record, Json, Primitive, SafeObject, Options, Transformations; SchemaUtils zero-consumer DELETEs `optional`, `optionalKeyWithDefault`, `pluck`, `withEncodeDefault`, `boolWithDefault`, `BoolDefaultFalse`, `BoolDefaultTrue`, `boolKeyWithDefault`; `optional` has one in-package consumer, `packages/foundation/modeling/schema/src/FileDiff.schema.ts:17-18`, migrated in the same PR; `BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` ADAPT, rebuilt directly on `S.withConstructorDefault` + `S.withDecodingDefaultTypeKey`) | facet census for Unknown and Opaque |
+| 3b | C SchemaUtils defaults codemod (`withNoneDefault` 281 files / 1,897 occurrences, `withKeyDefaults` 110 / 427, `withConstantDefault` 26 / 85, `withEmptyArrayDefaults` 20 / 38) to `S.withConstructorDefault` plus `S.withDecodingDefaultTypeKey`, or `S.withDecodingDefaultType` for `withEmptyArrayDefaults` | P2 codemod engine landed; one-facet census for `withNoneDefault` and `withKeyDefaults` (over 100 consumers) |
 | 4 | D time and duration (Timestamp, DateTimeUtcFromValid, Duration, Timezone) | boundary table rows filled for every concept in the group |
 | 5 | E binary and collections (ArrayBuffer, Bytes, ArrayOf, HashSet, MutableHashMap, MutableHashSet, Graph, RegExp) | boundary table rows filled for every concept in the group |
-| 6 | F text and misc (String, CommonTextSchemas, case brands, URL, BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema) | none |
+| 6 | F text and misc (String, CommonTextSchemas, case brands, URL, BigDecimal, Logs, StatusCauseError, FileInfo, JSONSchema; SchemaUtils zero-consumer DELETEs: the ten `encode*` facades, `split`, `classStatics` with its allowlist entry `standards/effect-laws.allowlist.jsonc:45-52` and generated snapshot) | none |
 | 7 | G Role B (HttpMethod, HttpStatus, MimeType, Jsonl, Toml, Yaml) | none; losses recorded in the PR |
 
 - Each PR: closure-sized with `graft callers --depth all` plus a type check;
@@ -125,9 +141,12 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
   P2) and is bounced on any instantiation increase; check time is reported
   against a 5% band and a breach is a review flag. The SPEC may merge
   groups; it may not split a concept from its consumers.
-- Codemod-class PRs (2, 3) reuse the P2 engine with new rewrite rules.
-- Lanes: one Codex exec lane per PR, prompted from the inventory rows and the
-  audit row; Fable judges the PR against the SPEC bounce conditions.
+- Codemod-class PRs (2, 3, 3b) reuse the P2 engine with new rewrite rules.
+  PR 3b is the largest rewrite in the train; the SchemaUtils rows and
+  counts come from the census `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md`.
+- Lanes: one Opus 5.5 child (`claude-opus-5-5`) per PR, prompted from the
+  inventory rows and the audit row; Fable judges the PR against the SPEC
+  bounce conditions.
 
 ## P4 — Gate cut
 
@@ -141,18 +160,65 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
   `RatchetLifecycle.ts:67`; baseline in `standards/schema-first.inventory.jsonc`.
 - Delete `SFV4-tagged-error-equivalence` (`SchemaFirstDetectors.ts:1169`,
   `SchemaFirstPolicy.ts:32`, `SchemaFirstScan.ts:395`, `Lint.schemas.ts:112`).
+- Narrow `beep/no-inline-schema-compile` (`.oxlintrc.json:45`,
+  `packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts`).
+  Its Medium-tier message (`:78-79`, chosen at `:198`) and header comment
+  (`:26-27`) claim a plain schema reference rebuilds its compiled function on
+  every call; that is false at `inventoryPin` and was already false when the
+  rule landed (per-AST parser cache, see P5 evidence). Keep the High tier
+  (inline schema construction, `:75-76`, `:195-197`), reword it to "inline
+  schema construction defeats the per-AST parser cache", and drop or demote
+  the Medium tier.
+- The F03 rule matches the export names, not file names: the idiom-census
+  regex (`research/idiom-census.mjs:18`) lists `withConstructorDefaults(`,
+  a file, and misses `withNoneDefault` and `withConstantDefault` (1,982
+  production occurrences).
 - Precedent for gate-then-zero: `goals/schema-first-v4-capabilities`,
   `goals/schema-first-zero-actionables`.
 
 ## P5 — Statics and performance close
 
-- Precondition: `goals/schema-utils-selective-codec-statics` Yeet PR merged;
-  cite its PR number here before opening.
+- Precondition: `goals/schema-utils-selective-codec-statics` Yeet PR merged.
+  Met: PR #927 merged 2026-08-31 as `2731847346` (D7). That packet's manifest
+  still reads P4 in progress; it is not edited from here.
+- Evidence (D10, 2026-09-28): Effect v4 has cached parsers per AST since
+  before the compilers. At `7e1f455fab` (2026-06-20, the day before
+  `beep/no-inline-schema-compile` landed) `SchemaParser.ts:1007` already read
+  `const recur = memoize(...)`; `17f0b91a24` (#7020, 2026-08-05) moved it to a
+  memoized `normalCompiler`. At `inventoryPin` the per-AST registry
+  (`WeakMap<SchemaAST.AST, Entry>`, `internal/schema/compilerRegistry.ts:33`,
+  `resolve` `:180-188`) extends that cache and also holds JIT or AOT entries.
+  Calling a parser factory inside a function body therefore allocates a few
+  closures and never recompiles a hoisted schema; only inline schema
+  construction misses the cache. The hoisting rationale behind
+  `withCodecStatics` (`goals/schema-utils-selective-codec-statics/SPEC.md:12-13`,
+  exploration `MAP.md` P5 statics row, lint `beep/no-inline-schema-compile` at
+  `.oxlintrc.json:45`) never needed statics in v4. The compilers attach no
+  statics; judge the retirement against Effect Schema's own members and
+  `SchemaParser` free functions. Call path and measurements: census
+  `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md` §D10.
 - F15 rule; retire `SchemaUtils/withCodecStatics.ts` with consumers; keep
-  `collectAnnotationsAt.ts`.
+  `collectAnnotationsAt.ts` and `isCodecDataFirst.ts` (KEEP ruled by the
+  operator on 2026-09-28, superseding the 2026-09-14 ruling for this symbol
+  only: exploration `DECISIONS.md` "isCodecDataFirst: keep"; SPEC goal-time
+  row 2026-09-28). The same PR
+  deletes `CodecStaticRegistry`, `CodecStaticKey`, `CodecStaticKeys`,
+  `SelectedCodecStatics`, `CodecStaticSelectionError`, `toEquivalence` and
+  `DualEquivalence` (10 + 1 consumers move to `S.toEquivalence`), and
+  retires codegen-kit's `GenerateConfig.schemaCodecStatics`
+  (`packages/tooling/library/codegen-kit/src/CodegenKit.models.ts:369-371`,
+  import `:10`, default `:318`), its emitter `renderCodecStatics`
+  (`internal/postProcess.ts:418-426`, emitted string `:423`) and the usage
+  probe at `:589`, and the empty override maps in
+  `packages/drivers/box/scripts/generate.ts:254` and
+  `packages/drivers/runpod/scripts/operations.renderer.ts:535` (zero
+  `_generated/` files use the emitter today).
+- `withStatics` (94 files / 148 occurrences) runs a facet census: codec-facade
+  keys go to free functions; the mechanism and
+  `SchemaUtils/internal/staticDescriptors.ts` retire with their last user.
 - Extend `commands/Quality/CheckCensus.ts` rows with `instantiations` and
-  `checkTimeMs`; commit the rc.115 baseline from the verification
-  supplement's sample (`@beep/schema` 1,307,910 / 0.529 s; repo-cli
+  `checkTimeMs`; commit the baseline from the verification supplement's
+  2026-09-12 sample, measured at `51d4a2f08a` and kept at that sha (`@beep/schema` 1,307,910 / 0.529 s; repo-cli
   7,786,120 / 3.717 s; law-practice-domain 1,289,820 / 0.659 s;
   `performance-verification-supplement.md:34-38`, same compiler, fresh
   build-info) and compare on every run: instantiations are the hard gate,
@@ -176,8 +242,10 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
 
 ## Standing behaviour after close
 
-Every effect bump: regenerate the inventory directory for the new RC, run the
-parity lane, work its findings to zero in the bump PR.
+Every effect pin change, including snapshot bumps and any bump before P1:
+the bump PR regenerates the inventory directory for the new `inventoryPin`,
+runs the parity lane, and works its findings to zero (SPEC goal-time row
+2026-09-28).
 
 ## Execution Notes
 

@@ -19,11 +19,15 @@ covers, and leave a standing gate so parity holds on every effect bump.
 
 ## Next Open Question
 
-Graduated 2026-09-15 into [`goals/effect-schema-parity`](../../goals/effect-schema-parity/README.md).
-This packet stays as provenance. Re-entry gates live in `MAP.md` §Later
-Candidates: an F05 / F06 / F04 probe clearing confidence 0.70, or a
-boundary-table row that is not byte-identical, reopens the packet at
-decompose.
+Graduated again 2026-09-28 into the amended
+[`goals/effect-schema-parity`](../../goals/effect-schema-parity/README.md);
+no compilers goal was created. The schema compilers were ruled DEFER, so the
+MAP gate "upstream ships a schema compiler surface" stays live. It reopens
+this packet at decompose on a measured bulk wire-shape hot path, on upstream
+lifting the `Declaration` exclusion or shipping `Suspend`-following AOT, or
+on the compiler API leaving `unstable`. The other gates in `MAP.md` §Later
+Candidates still apply. Deferred questions with owners are in
+`ops/manifest.json` `openQuestions`.
 
 ## Read This First
 
@@ -84,3 +88,21 @@ decompose.
   table, facet census gate and back-linked decision log, PLAN with the P3 PR
   order, GOAL launcher, carried SOURCES, OPPORTUNITIES ledger). Manifests
   cross-linked; status `graduated`.
+- 2026-09-28: reopened at decompose (loop to research and align). The new
+  MAP gate "upstream ships a schema compiler surface" fired: effect PR #7908
+  (`c19c63fb71`, first release rc.116) shipped `SchemaCompiler`,
+  `SchemaJITCompiler` and `SchemaAOTCompiler`, and the repo moved to the
+  main snapshot `e5f7d12af9` (rc.118 line) where `unstable/` is gone. Ten
+  decisions (D1–D10) recorded in `DECISIONS.md`; research lanes refresh the
+  inventory at the catalog pin, census every `SchemaUtils` export, and spike
+  the compilers; the verdict waits for the operator at align. The parity
+  goal is amended in place for pin, fixture name, lanes and P5 evidence.
+- 2026-09-28: align loop and graduate. Three Opus 5.5 lanes reported: the
+  inventory refreshed at `e5f7d12af9`, the full SchemaUtils census (written
+  back into the parity goal), and the compiler spikes
+  (`research/2026-09-28-compiler-evaluation.md`: about 3.7x on
+  transformation-free wire structs, 1.2–1.4x on classes and transformed
+  rows, no gain on Pandoc). The operator grill ruled the compilers DEFER
+  with three re-entry triggers and kept `isCodecDataFirst`, superseding the
+  2026-09-14 SchemaUtils entry for that symbol. No compilers goal (D8); the
+  gate stays in `MAP.md`. Status back to `graduated`.

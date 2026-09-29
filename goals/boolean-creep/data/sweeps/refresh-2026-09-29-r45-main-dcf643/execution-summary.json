@@ -1,0 +1,443 @@
+{
+  "lanes": [
+    {
+      "lane": "r45-foundation-primitive",
+      "startedAt": 1790645577.2311893,
+      "endedAt": 1790645654.6281314,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 15
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "09b7332e49f44f2385f6307a9643956fad36d0b572a76d18a7d7da5813ebe45e",
+      "stderrSha256": "62e77887ec05ee36c8459b7e3a71843e74f0d83086197bf0b64272b3d1086ca8",
+      "diagnosticReceiptSha256": "87dcf252234e3d2e613d6bbdcad9812f4f4d265fea5a384ea0a22d373c7c9207",
+      "evidenceReceiptSha256": "9ac8893f8ac981a56703c5388b60f50cac318e6b6398ba5817830db9a6caccb0",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-foundation-capability",
+      "startedAt": 1790645654.6285102,
+      "endedAt": 1790645854.908103,
+      "status": "provisional-awaiting-independent-runtime-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "provisionalOrdinal": 1,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 24
+      },
+      "runtime": {
+        "warningCount": 26,
+        "runtimeTeardownWarning": true,
+        "parentRuntimeReviewRequired": true,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "43cbffdb93bf64d2725e75ad492eabf89a831d61e6b7462d90f97649dacf2f8b",
+        "reportSha256": "26cc4b25e2c6872a2b3205425e19701bd4b924673dce43364a6a50477d120f70"
+      },
+      "transcriptSha256": "cc3c4b2f92f8255e0130b86c27882327378af3dcd3f0fff9462ebfeaea2c7afc",
+      "stderrSha256": "851866e2b32f9f13b7259f30194593c353fd32301bb8870464e5ad8bd458143c",
+      "diagnosticReceiptSha256": "026def1cde0fe9c55ebd189e508d5ce4af15767d27fdab6965b07d5bfc97d7fb",
+      "evidenceReceiptSha256": "722b84ad0f86d1f57104d3e33ee71a85be076b49433536c6c69da7151a00975b",
+      "reportSha256": "26cc4b25e2c6872a2b3205425e19701bd4b924673dce43364a6a50477d120f70"
+    },
+    {
+      "lane": "r45-foundation-modeling-rest",
+      "startedAt": 1790645854.9088316,
+      "endedAt": 1790645994.5779104,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 28
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "cce29db7bdc9d2afe3498d2d195580f0fa940c29847f0072b64ff46020fb5159",
+      "stderrSha256": "2e83f49e4066105ed376fa54c5b8efb7116e586b2888d65f6828106c4660c314",
+      "diagnosticReceiptSha256": "3faff03a56a0345554ba648f5ad35ab648c522565c3879d3bfc4b53e3ad95b46",
+      "evidenceReceiptSha256": "4cdfa95ad549faf2460fa204be8b0cf7abf460e29637ea083d8090dc80036ada",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-foundation-schema-a-m",
+      "startedAt": 1790645994.5787551,
+      "endedAt": 1790646119.8801093,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 20
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "af7aa7734fa8c7f0fa3782172bd2faab81ad37d2c92d286d5d1a1a216bf7de7e",
+      "stderrSha256": "44975cd46494eeaaf35c2e9311725517ba0f6429c0501d576acfe65c95ef23f2",
+      "diagnosticReceiptSha256": "94f180f2c9b88a962039335aa39db7f23300160c4c405e0282008ff8afb44880",
+      "evidenceReceiptSha256": "1d134d68ac157d978ca7ceb3b04ccffa35cb3e11d7ab560f2cca329affe81d7e",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-foundation-schema-n-z",
+      "startedAt": 1790646119.8807373,
+      "endedAt": 1790646258.2831225,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 18
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "962da7ee73458a9f62327506758ddd1201f1a92823ff15c5105e00889f004496",
+      "stderrSha256": "9c436e6e0058120cfeefd75febc972393f071b2cf1ee47052b80a6ffbdab617e",
+      "diagnosticReceiptSha256": "1a2a37011ef4769e12283e432f61b25bdd0b7266c3c45f8c770c1850d690856c",
+      "evidenceReceiptSha256": "7ee63d9dc0e3f1a8d3d22ffd9485fe708a8daceac368c9bdd75608cb32b49cbe",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-foundation-ui",
+      "startedAt": 1790646258.2836497,
+      "endedAt": 1790646571.8640656,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 50
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "67665003cbd1d32b383940ee9ba30800bb8a6784aedf9b7b17e393c095805b8a",
+      "stderrSha256": "df5cc400e261035512b5ad4765b3e1bedb15dc7d2edac66806c816ed95db918f",
+      "diagnosticReceiptSha256": "863141888fd8c752ff9c067d01912ced6d74c377477103a2720461ad8a9ea51e",
+      "evidenceReceiptSha256": "a5d8d82ec937df2bb9977393025af9f6b1e96349ea48374ab69ed147388508c6",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-drivers-a-f",
+      "startedAt": 1790646571.8651779,
+      "endedAt": 1790646756.4348104,
+      "status": "completed-awaiting-independent-coverage-review",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 33
+      },
+      "runtime": {
+        "warningCount": 25,
+        "runtimeTeardownWarning": false,
+        "parentRuntimeReviewRequired": false,
+        "readOnlyHousekeepingDenials": 1
+      },
+      "validation": {
+        "exitCode": 0,
+        "logSha256": "6813e9e90499856f955d2475db9f1f63dead5aaa3940c93ebff0599d8ac43ea0",
+        "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transcriptSha256": "7c38d702f8cca63424470aed3d71e38a3204941ab49d51ab7840cd7d78876863",
+      "stderrSha256": "ad6587d0b0c0c2d835bc3c1f56015743e1ac8b6b5e849999d0d7e46090fb6ef3",
+      "diagnosticReceiptSha256": "1b563fd333a3376530fb9a4c4930253a58eb50aeafc4c1cfe3b421265a18fa0d",
+      "evidenceReceiptSha256": "58af7f320569f1f02d4563e695681477240597f3934baca86428684480b19476",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-drivers-g-m",
+      "startedAt": 1790646756.4355564,
+      "endedAt": 1790646889.9333143,
+      "status": "failed",
+      "exitCode": 0,
+      "guardBefore": true,
+      "guardAfter": true,
+      "terminal": {
+        "type": "end",
+        "stopReason": "end_turn",
+        "num_turns": 17
+      },
+      "transcriptSha256": "0b56b9fac82a0ffa25a52de202f505c7189615a0432bcb14846cb0b9fa78958f",
+      "stderrSha256": "d997974edac2e1d929211b18487b15bab204a22ca200f971b28ae1c7662705b0",
+      "diagnosticReceiptSha256": "0dc454d17d1f75063af12a1d0a534d07de4914748378ea43cd34c44dd4043544",
+      "evidenceReceiptSha256": "da79edcc98a34a7d7a94e5f6ba1b00a1289059e012408474cd9c22de3b7a945d",
+      "reason": "Refusal: unexpected-diagnostic-level",
+      "reportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "lane": "r45-drivers-n-r",
+      "startedAt": null,
+      "endedAt": 1790646889.9338973,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-drivers-s-z",
+      "startedAt": null,
+      "endedAt": 1790646889.9339907,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-architecture-ecosystem-internal",
+      "startedAt": null,
+      "endedAt": 1790646889.934069,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-agents-workspace",
+      "startedAt": null,
+      "endedAt": 1790646889.9341412,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-epistemic-ontology",
+      "startedAt": null,
+      "endedAt": 1790646889.934198,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-shared-documents",
+      "startedAt": null,
+      "endedAt": 1790646889.9342504,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-law-practice-domain",
+      "startedAt": null,
+      "endedAt": 1790646889.9343028,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-law-practice-runtime",
+      "startedAt": null,
+      "endedAt": 1790646889.9343662,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-apps",
+      "startedAt": null,
+      "endedAt": 1790646889.934421,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-tooling-library-observability",
+      "startedAt": null,
+      "endedAt": 1790646889.9344769,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-tooling-library-support",
+      "startedAt": null,
+      "endedAt": 1790646889.9345317,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-tooling-policy",
+      "startedAt": null,
+      "endedAt": 1790646889.9345844,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-tool-docgen",
+      "startedAt": null,
+      "endedAt": 1790646889.9346368,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-internal-root",
+      "startedAt": null,
+      "endedAt": 1790646889.9346888,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-commands-a-c",
+      "startedAt": null,
+      "endedAt": 1790646889.93474,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-commands-d-k",
+      "startedAt": null,
+      "endedAt": 1790646889.9347925,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-commands-l-q",
+      "startedAt": null,
+      "endedAt": 1790646889.9348433,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-commands-r-z",
+      "startedAt": null,
+      "endedAt": 1790646889.934894,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    },
+    {
+      "lane": "r45-cli-yeet",
+      "startedAt": null,
+      "endedAt": 1790646889.934946,
+      "status": "skipped",
+      "exitCode": null,
+      "guardBefore": false,
+      "guardAfter": false,
+      "reason": "Refusal: unexpected-diagnostic-level"
+    }
+  ],
+  "stopReason": "Refusal: unexpected-diagnostic-level",
+  "dispatchComplete": false,
+  "executionComplete": false,
+  "provisionalPolicy": {
+    "kind": "bounded-provisional/v1",
+    "expectedLaneCount": 27,
+    "maxTotal": 13,
+    "maxConsecutive": 3
+  },
+  "provisionalLaneCount": 1,
+  "provisionalRefusedCount": 0,
+  "parentRuntimeReviewRequired": true,
+  "coverageAccepted": false,
+  "dryCredit": false,
+  "P3": false,
+  "dispatchExitCode": 3,
+  "privateOriginalSha256": "5ff8408e43205913adb65dbe523bf1bffe3c8a45c5d511d42809fccca2f04679",
+  "sanitization": "Removed session/request identifiers, usage and cost accounting, provider telemetry bindings, log-window hashes and housekeeping timestamps; stdout hash renamed transcriptSha256. Lane outcomes and receipt hashes unchanged."
+}

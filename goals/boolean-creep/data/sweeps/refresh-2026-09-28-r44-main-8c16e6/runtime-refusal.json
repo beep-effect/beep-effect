@@ -1,0 +1,20 @@
+{
+  "kind": "boolean-creep-runtime-terminal-refusal/v1",
+  "reason": "trailing-invalid-stream",
+  "failedLane": "r44-foundation-ui",
+  "processExitCode": 0,
+  "terminalEvent": "end/end_turn",
+  "guardBefore": true,
+  "guardAfter": true,
+  "trailingDiagnostic": "Resident session actor exited unexpectedly; reaping as DeadFailed",
+  "channelAttribution": "Unavailable: stdout and stderr were merged by the admitted runner.",
+  "transcriptSha256": "9234b7a30b99e10d57530bdf0dee2352595d54ae0fa091472c3f87756a968e8f",
+  "successfulExecutionLanes": 5,
+  "failedLanes": 1,
+  "notExecutedLanes": 21,
+  "uiCoverageAccepted": false,
+  "complete": false,
+  "dryCredit": false,
+  "P3Credit": false,
+  "recovery": "Independent runtime diagnosis pending. Preserve the failure; do not suppress diagnostics or retroactively accept the UI lane."
+}

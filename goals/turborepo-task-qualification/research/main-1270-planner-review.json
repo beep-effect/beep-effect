@@ -1,0 +1,86 @@
+{
+  "authority": "Explicit-environment pure planner reproduction; no plan steps executed",
+  "revision": "f806118ec2bd7bc1da635855a6334921f8dc05e3",
+  "baseRevision": "cafc1f8eb9f07e19b25f6be6a4146cd11fc21c27",
+  "runner": "bun --no-env-file; environment cleared except PATH, HOME, CI and GITHUB_ACTIONS",
+  "environments": [
+    {
+      "CI": "false",
+      "GITHUB_ACTIONS": "false"
+    },
+    {
+      "CI": "true",
+      "GITHUB_ACTIONS": "true"
+    }
+  ],
+  "perEnvironmentCounts": {
+    "ciPlans": 72,
+    "qualityModes": 9,
+    "partitionPlans": 18,
+    "localDispatchShapes": 4,
+    "yeetPlans": 30,
+    "hardwareExamples": 3
+  },
+  "artifacts": [
+    {
+      "artifact": "entrypoint-plans.json",
+      "beforeSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "afterSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "changes": []
+    },
+    {
+      "artifact": "entrypoint-plans-hosted.json",
+      "beforeSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "afterSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "changes": []
+    },
+    {
+      "artifact": "yeet-plans.json",
+      "beforeSha256": "89c9b08ab9160b5bc4dcd547386323e9372b606059e58c79af461aa49f3e889e",
+      "afterSha256": "bda11adecebc7903ff6579edaf0148a3042a63b9292a6edbfa286077217ff790",
+      "changes": [
+        {
+          "branch": "main",
+          "mode": "status-remote",
+          "step": "status:03-remote-checks",
+          "beforeFields": "name,state,bucket",
+          "afterFields": "name,state,bucket,link,workflow,completedAt,startedAt"
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "status-remote",
+          "step": "status:03-remote-checks",
+          "beforeFields": "name,state,bucket",
+          "afterFields": "name,state,bucket,link,workflow,completedAt,startedAt"
+        }
+      ]
+    },
+    {
+      "artifact": "yeet-plans-hosted.json",
+      "beforeSha256": "89ec7a3770d98462bc411112d16ea4d29d79c78e33fffeb452db990610bebb94",
+      "afterSha256": "170abcabcbcfc2765773f3386c4c8f1150c4c1ffb391299daa2411b1e7dab247",
+      "changes": [
+        {
+          "branch": "main",
+          "mode": "status-remote",
+          "step": "status:03-remote-checks",
+          "beforeFields": "name,state,bucket",
+          "afterFields": "name,state,bucket,link,workflow,completedAt,startedAt"
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "status-remote",
+          "step": "status:03-remote-checks",
+          "beforeFields": "name,state,bucket",
+          "afterFields": "name,state,bucket,link,workflow,completedAt,startedAt"
+        }
+      ]
+    }
+  ],
+  "result": "CI/Quality projections unchanged. Two Yeet status-remote scenarios per environment request additional hosted check metadata. All other projected values are equal.",
+  "limits": [
+    "Finite illustrative scenarios do not prove exhaustive planner or interpreter behavior.",
+    "Event convergence, wave handling and monitor state still require semantic review.",
+    "No runtime evidence renewal, signed remote acceptance or qualification promotion."
+  ]
+}

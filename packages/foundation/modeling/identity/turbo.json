@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-4.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-5.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "lint": {
@@ -26,6 +26,7 @@
         "$TURBO_ROOT$/vitest*.json",
         "!$TURBO_ROOT$/.beep/**",
         "!$TURBO_ROOT$/.fallow/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/node_modules/**"
       ],
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],

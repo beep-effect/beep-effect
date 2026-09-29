@@ -96,3 +96,44 @@ The exact-head full local proof remains live in unit tests after passing
 JSDoc, integration, lint policy, and type checking. Keep that run intact and
 require its terminal result before merging. The saved follow-up migrations
 and remaining inventory still require integration and their own proofs.
+
+## Completed checkpoint and main integration
+
+The full local proof on `90cd89d70c` completed successfully. All 32 pre-push
+lanes passed with none skipped. Unit tests included 4,882 CLI tests across
+246 files; Storybook passed all four chunks and 489 tests. All ten coverage
+shards passed, and the coverage ratchet compared 135 packages successfully.
+The coverage lane took 699.3 seconds under shared workstation load.
+
+The final review closeout again reported zero issues, zero actionable threads,
+and zero unresolved threads. PR 1323 was squash-merged as
+`4203a309f11930eb60e971931718b73b54efc653`, verified on `origin/main`. The
+checkpoint lane was retired through Yeet with its residue archived.
+
+Integrating main into the follow-up required handling the squash ancestry.
+Main differed from the exact checkpoint head only in documentation for other
+goal packets. The verified semantic preview resolved 44 ancestry-only
+conflicts, and the four source resolutions matched their prepared evidence.
+Both sets of opportunity receipts were retained. Inventory reconciliation
+preserved multi-row identities and matched overlapping locations to source.
+The CLI ledger has 3,495 unique schema-valid rows: 1,946 fixed, 12 exceptions,
+and 1,537 open. The baseline retains 28 multi-row identity groups and the CLI
+ledger retains 15. No finding was marked fixed merely to resolve a conflict.
+
+A historical-ID audit refined the initial mechanical merge: two provider
+records would have lost their original IDs, while two scope aliases would
+have duplicated existing findings. The current detector matched all four
+physical occurrences. Their original follow-up IDs are retained with current
+occurrence metadata, and the checkpoint aliases are mapped in the private
+lineage receipt. Every historical follow-up ID survives; no open status was
+changed to fixed during this reconciliation.
+
+The integrated ratchet reports 2,899 findings, zero introduced, and 2,132
+resolved baseline findings. The focused integration cohort passed all 461
+tests across ten files under Node (56.15 seconds) and Bun (36.40 seconds),
+both with CI enabled. It covers the four source-conflict suites, watch
+readiness and ordering, detector behavior, and console regressions. The CLI
+test-type artifact has exit code zero and empty diagnostic output. Full
+package verification remains a separate pending gate at this receipt.
+These shared-workstation timings are observations, not a performance claim.
+The broader goal is not complete.
