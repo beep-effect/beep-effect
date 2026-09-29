@@ -5777,3 +5777,20 @@ Closeout with the actual review-comment requirement succeeds while CI remains
 pending. Derive score-specific suggestions from the configured reviewer or
 observed review evidence, rather than suggesting an unavailable integration.
 No CI or unresolved-thread gate was relaxed.
+
+## Browser setup import failure obscures an otherwise passing proof
+
+PR 1323 full verification at `1d01a323d6` passed lint policy, type checks,
+and unit tests, then failed the fourth Storybook chunk before collecting the
+`todo-item.stories.tsx` tests. The minimal error was `Failed to fetch dynamically
+imported module` for Storybook's `setup-file-with-project-annotations.js`.
+Three chunks passed; the final chunk had 16 passing files and one failed suite.
+Neither Storybook nor the UI package differs from main in this PR, and the
+hosted Storybook check passed. These facts suggest a local loading issue but
+do not establish its cause. A single isolated lane recheck is underway; no
+retry policy, gate, or test has been weakened.
+
+Improve browser-runner failure artifacts with setup-module HTTP status and
+server-side transform errors, so fetch failures can be attributed without a
+whole-suite rerun. Preserve the failed chunk identity and distinguish setup
+collection failures from failed story assertions.
