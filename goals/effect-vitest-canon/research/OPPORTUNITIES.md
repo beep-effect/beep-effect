@@ -5895,3 +5895,14 @@ fail for nonzero results or Effect diagnostics. Changing the child exit alone
 would bypass that diagnostic collection path. A clearer standalone command or
 completion message would prevent misuse. This migration checked both artifact
 fields before declaring a pass; no aggregate failure gate was weakened.
+
+
+### Git signing availability is separate from agent secret health
+
+Committing the verified CI fixture hook budgets failed twice after all commit
+hooks passed: `1Password: Could not connect to socket`, followed by `failed to
+write commit object`. The configured SSH signer was unavailable while the
+required op-doctor service-account checks passed. A metadata-only signing
+preflight would distinguish these paths before an expensive publish cycle.
+The staged work and proof were preserved; no signing or authentication setting
+was changed, and no raw secrets were read for this diagnosis.

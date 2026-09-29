@@ -45,6 +45,6 @@ post-migration observations were shared-internals 3.59 and 1.61 seconds, and
 labs 4.74 and 2.53 seconds. Shared workstation load and overlapping verification
 make these observations unsuitable for causal performance claims.
 
-Full CLI package verification is running on the committed source. Its terminal
-result is required before this batch is handed off or published. This receipt
-does not claim package-wide or hosted acceptance, or completion of the goal.
+Full CLI package verification passed on the committed source: audit 688.8
+seconds and docgen 21.6 seconds. The run exited zero. These timings are shared
+workstation observations. Hosted acceptance and goal completion remain open.

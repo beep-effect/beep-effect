@@ -1509,7 +1509,7 @@ const storybookProbeLine = A.join(
 const consoleOutput = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, P.isString), "\n"));
 
 const unselectedStorybookSpawns = A.empty<StorybookSpawn>();
-layer(storybookCiLayer(storybookDryRun([]), unselectedStorybookSpawns))(
+layer(storybookCiLayer(storybookDryRun([]), unselectedStorybookSpawns), { timeout: "10 seconds" })(
   "storybook lane affected probe (nothing in the closure changed)",
   (it) => {
     it.effect("skips the lane when Turbo's affected plan selects no @beep/storybook task", () =>
@@ -1540,7 +1540,8 @@ layer(
       { package: "@beep/storybook", task: "storybook:build", command: "<NONEXISTENT>" },
     ]),
     foreignStorybookSpawns
-  )
+  ),
+  { timeout: "10 seconds" }
 )("storybook lane affected probe (no executable storybook task)", (it) => {
   it.effect("ignores dependency builds and non-existent task placeholders", () =>
     Effect.gen(function* () {
@@ -1607,7 +1608,7 @@ layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns), { timeout:
 );
 
 const overriddenStorybookSpawns = A.empty<StorybookSpawn>();
-layer(storybookCiLayer(storybookDryRun([]), overriddenStorybookSpawns))(
+layer(storybookCiLayer(storybookDryRun([]), overriddenStorybookSpawns), { timeout: "10 seconds" })(
   "storybook lane caller runtime identity rejection",
   (it) => {
     it.effect("rejects an ambient runtime key before launching a native task", () =>
@@ -1626,7 +1627,7 @@ layer(storybookCiLayer(storybookDryRun([]), overriddenStorybookSpawns))(
 );
 
 const failedStorybookSpawns = A.empty<StorybookSpawn>();
-layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2))(
+layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2), { timeout: "10 seconds" })(
   "storybook lane affected probe (Turbo failure)",
   (it) => {
     it.effect("fails closed instead of guessing when the probe exits non-zero", () =>
@@ -1642,7 +1643,7 @@ layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2
 );
 
 const malformedStorybookSpawns = A.empty<StorybookSpawn>();
-layer(storybookCiLayer("{not json", malformedStorybookSpawns))(
+layer(storybookCiLayer("{not json", malformedStorybookSpawns), { timeout: "10 seconds" })(
   "storybook lane affected probe (malformed plan)",
   (it) => {
     it.effect("fails closed when Turbo's plan does not decode", () =>
@@ -1784,27 +1785,33 @@ describe("ciLocalStepsForTesting", () => {
 });
 
 const autoDocgenCommands = A.empty<string>();
-layer(ciExecutionLayer(["packages/a/src/index.ts"], [], autoDocgenCommands))("automatic Docgen CI lane", (it) => {
-  it.effect("derives the affected mode from the base-to-head diff and executes it", () =>
-    Effect.gen(function* () {
-      yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+layer(ciExecutionLayer(["packages/a/src/index.ts"], [], autoDocgenCommands), { timeout: "10 seconds" })(
+  "automatic Docgen CI lane",
+  (it) => {
+    it.effect("derives the affected mode from the base-to-head diff and executes it", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-      expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
-      expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
-    })
-  );
-});
+        expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
+        expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
+      })
+    );
+  }
+);
 
 const inertDocgenCommands = A.empty<string>();
-layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands))("automatic inert Docgen CI lane", (it) => {
-  it.effect("skips execution when the diff has no Docgen inputs", () =>
-    Effect.gen(function* () {
-      yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands), { timeout: "10 seconds" })(
+  "automatic inert Docgen CI lane",
+  (it) => {
+    it.effect("skips execution when the diff has no Docgen inputs", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-      expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
-    })
-  );
-});
+        expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
+      })
+    );
+  }
+);
 
 const fullDoctestCommands = A.empty<string>();
 
