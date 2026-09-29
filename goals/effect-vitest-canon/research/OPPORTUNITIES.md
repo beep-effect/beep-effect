@@ -5666,3 +5666,14 @@ Default to a quarantine count and bounded recent examples, with an explicit
 verbose listing for diagnosis. This would keep routine proof-state inspection
 readable without discarding the quarantine evidence. No scheduler state was
 changed during this observation.
+
+### Native packet locks are a transitive test-clock boundary
+
+Preparing goals-set-status-stream.test.ts found no direct timer in the test,
+but PacketEventStore.withLock reaches AdmissionJournal's acquisition and
+ownership-loss retries, both implemented with Effect.sleep. A frozen test
+clock can prevent a native lock retry from advancing. The draft preserves
+live clocks for the 11 native stream callbacks, leaving pure decode on the
+test clock. Include this adapter in the ongoing transitive clock audit of
+previously migrated packet tests; passing uncontended-lock cases alone is
+insufficient evidence. See cli-stream-normalize-preparation.md.
