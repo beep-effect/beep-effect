@@ -5635,3 +5635,24 @@ primitive graph so future migrations can distinguish native cleanup bounds
 from Effect-clock deadlines without repeating manual transitive inspection.
 Evidence: cli-identity-tsconfig-runtime-resource-proof.md and
 repo-utils/src/schemas/BiomeJson.ts.
+
+### Fixture construction can leak before release registration
+
+Preparing jsdoc-inventory-detector-fixes.test.ts exposed fallible fixture writes
+inside acquireFixtureRepo before withFixtureRepo registers its release. An
+extracted original helper with an injected first-write failure leaves its
+allocated directory behind on Node and Bun. The draft registers removal at
+allocation, before writes; matching controls then remove the directory on
+setup failure. Audit other resource-wrapper acquisitions for this shape,
+not only successful-body cleanup. Evidence: jsdoc/model-store preparation
+receipt and private original/draft resource controls.
+
+### Model-store fixture cleanup errors were invisible
+
+person-match-model-store.test.ts used Effect.ignore on its directory removal.
+An extracted original-helper control with an injected removal failure returns
+a successful Exit and leaves residue on both runtimes. The scoped draft uses
+a visible finalizer defect, returning a failed Exit for that same control;
+the harness removes intentional residue afterward. Consider a targeted
+fixture-cleanup-error check in future resource reviews. This is a test-helper
+repair, not a change to model-store production behavior.
