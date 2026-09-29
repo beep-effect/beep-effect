@@ -1,7 +1,8 @@
 # JSDoc inventory and model-store migration preparation
 
-Two existing-inventory files have unapplied private drafts while the preceding
-identity/tsconfig full CLI proof runs. No package source has changed.
+The preparation below was applied as source 37e76036e5 after the preceding
+identity/tsconfig full CLI proof passed. See
+cli-jsdoc-model-store-runtime-resource-proof.md for applied evidence.
 
 Each file has 13 whole-callback runPromise boundaries and 13 terminal resource
 wrapper uses. The drafts preserve the instrumented tester, use serial public
