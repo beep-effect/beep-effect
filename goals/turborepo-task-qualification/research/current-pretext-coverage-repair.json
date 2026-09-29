@@ -1,0 +1,42 @@
+{
+  "authority": "Direct package coverage reproduction and host-independent browser-profile controls",
+  "sourceRevision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "workingTreeChange": "packages/drivers/pretext/test/browser.test.ts",
+  "productionSourceChanged": false,
+  "baselineChanged": false,
+  "before": {
+    "lines": 58.33,
+    "statements": 53.84,
+    "branches": 36.84,
+    "functions": 38.88
+  },
+  "after": {
+    "lines": 66.66,
+    "functions": 50,
+    "statements": 64.1,
+    "branches": 68.42
+  },
+  "requiredFloors": {
+    "lines": 63.88,
+    "statements": 61.53,
+    "branches": 47.36,
+    "functions": 50
+  },
+  "controls": [
+    "Safari profile",
+    "Chromium on iOS must not be classified as Safari",
+    "Firefox profile"
+  ],
+  "verification": {
+    "directCoverageExit": 0,
+    "packageVerifyExit": 0,
+    "packageAudit": "passed",
+    "packageDocgen": "passed"
+  },
+  "testSha256": "35fd6c6532246699f3ffbd6d94018ea6f4c3954ed43d2412fe21bb68426505ba",
+  "limits": [
+    "Direct unchanged-package reproduction establishes the gap without Turbo task selection; it does not reproduce the historical baseline environment.",
+    "Coverage for Professional Desktop, repo-cli and Schema remains unresolved.",
+    "This repair does not grant cache qualification or replace full proof."
+  ]
+}

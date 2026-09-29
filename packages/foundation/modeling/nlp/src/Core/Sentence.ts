@@ -71,7 +71,7 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
  * @since 0.0.0
  */
 export const SentenceIndex = NonNegativeInt.pipe(
-  S.fromBrand("SentenceIndex", sentenceIndex),
+  S.brand("SentenceIndex"),
   $I.annoteSchema("SentenceIndex", {
     description: "Non-negative ordered index for an NLP sentence.",
   })

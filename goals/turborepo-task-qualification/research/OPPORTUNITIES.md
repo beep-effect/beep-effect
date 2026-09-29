@@ -2193,3 +2193,276 @@ termination would prevent unnecessary retries.
   ticket-count assertions remain intact. The full scheduler file passed all
   133 tests; repo-cli quick package verification passed lint and type checks.
   Hosted verification and full-proof completion remain outstanding.
+
+## 2026-09-28: publication fallback and private planner recovery
+
+Detached Yeet publication reported “requires an active systemd user manager”.
+The attached early-publication command also requires `--monitor`; adding it
+published PR #1324 and retained a live proof process. Report this prerequisite
+before selecting a detached lane and keep the attached handle across turns.
+
+Lane retirement preserved the explicit evidence archive, but three historical
+private planner scripts were unavailable in the restored lane. The tracked
+CI/Quality and Yeet scripts reproduced all four historical projections, so
+missing private copies did not require inventing source provenance. Future
+retention manifests should include ignored evidence producers and verify their
+hashes before retiring the lane. The scripts place output paths beneath the
+packet research directory; their argument is not relative to the repository
+root. Generated files were moved into the private evidence directory.
+
+## 2026-09-28: fast publication still waits for admission
+
+`yeet publish --fast --monitor` committed the packet update but queued for a
+full-proof slot before pushing. `runStandardPublishPhases` still enters the
+full-proof coordinator even when the fast planner omits proof steps. The
+queued attempt was deliberately interrupted; `--start-pr-early --monitor --pr`
+reused the clean local commit and pushed before admission. Use that route for
+the operator's requested early publication, and retain exact-head proof as a
+separate requirement. The original running proof was preserved.
+
+### 2026-09-28 — Generated sibling logs contaminate pilot inputs
+
+During current census attachment verification, `bunx turbo run lint
+--filter=@beep/identity --dry=json` included two Git-ignored
+`../utils/.turbo/` logs (doctest and lint:laws). The broad sibling input glob
+excludes other orchestration directories but not `.turbo`. Evidence:
+`research/current-pilot-orchestration-inputs.json`. A pilot-scoped generated-log
+exclusion plus a perturbation regression would prevent this digest drift.
+Task caching is disabled; this finding does not establish unsafe reuse.
+
+### 2026-09-28 — Runner loss and local coverage attribution
+
+PR #1324 Heavy Lint Policy and Coverage Regression failed with the GitHub
+annotation “The self-hosted runner lost communication with the server.” Lint
+Policy's job log returned HTTP 404. One targeted Lint Policy retry was requested;
+Coverage's retry remains deferred while that workflow is active. A runner-health
+receipt and durable job logs would prevent treating this as a code diagnostic.
+
+The local early-publish proof separately exited 1 at `quality:coverage`, with
+11 file-level regressions across Pretext, Professional Desktop, repo-cli and
+Schema. At that early-publish proof checkpoint, none of those package surfaces
+or the baseline had changed directly. The subsequent test repairs are recorded
+separately. Base/runtime reproduction was required to distinguish inherited
+coverage from environmental variation; no baseline was lowered. Preserve the
+runtime profile and exact uncovered branches with future baseline receipts.
+
+### 2026-09-28 — Test-only coverage repairs still require release metadata
+
+PR #1327's early-publish proof and Repo Sanity stopped at
+`quality:changeset-status`: Pretext, Professional Desktop and Schema lacked an
+in-range changeset. The gate counts these changed product workspaces even when
+only tests change. Added the required patch entries; a pre-publication
+changeset-status check would have caught the omission before hosted CI.
+
+### Fresh-pair sandbox mount preflight
+
+The frozen current-source fresh-pair runner stopped before executing the task:
+`bwrap: Can't create file .../.turbo: Read-only file system`. The newly created
+worktree did not yet contain the bind-mount destination. The failed observation
+is retained under `~/.cache/beep/turbo-qualification/observations/fresh-pair-local-replay-8dy7deik`;
+it supplies no comparison credit. The private runner now creates the empty
+`.turbo` and `.beep` mount destinations before constructing the read-only
+namespace. A mount-destination preflight would have prevented this failure.
+The retry uses the same scheduler admission and isolated writable overlays.
+
+### Cross-root runtime identity preflight
+
+A second frozen checkout at `7f53b4a840` produced a different identity-lint
+task hash despite matching input maps, task definitions and executable pins.
+The native summaries differ in the configured toolchain digest and profile-path
+metadata. The experiment stopped before importing cache data. The
+`current-cross-root-preflight.json` receipt preserves the comparison; inspect
+the complete toolchain snapshots before attributing this to path sensitivity
+or changing the identity rules. Capturing those snapshots with each ordinary
+runtime experiment would have made this difference directly attributable.
+
+The first standalone toolchain capture omitted `FsUtilsLive` and failed with
+`Service not found: @beep/repo-utils/FsUtils/FsUtils` before yielding a snapshot.
+The private collector now reuses the existing `FsUtilsLive` plus platform
+layer composition; checking the required service environment before launching
+would have prevented the failed diagnostic attempt. The failure is retained
+with the private cross-root evidence.
+
+### Superseded queued proofs and Storybook setup failure
+
+Early publication left four queued full-proof requests for superseded commits.
+After verifying their live queued tickets, process identities and absence of
+active leases, the four requests were gracefully interrupted. Their published
+commits and logs remain intact; the running proof and latest request were
+preserved. Coalescing superseded queued publication requests would prevent
+redundant heavy work without changing proof ownership.
+
+The older running proof subsequently stopped at Storybook: one Chromium shard
+reported `Failed to fetch dynamically imported module` for Storybook setup.
+Three other shards passed. No Storybook or UI source file differs from the
+base in this branch. The failure occurred during module loading, not a story
+assertion; its cause is not yet established. Coverage was skipped after the
+red. The already-running newer proof will supply the next observation; no
+production repair or baseline change is justified from this failure alone.
+
+### Newly reported fast-uri vulnerability
+
+Hosted Security failed on inherited `fast-uri@3.1.6` with
+`GHSA-58mr-gqgx-xq4g`. The existing override floor is raised to `^3.1.7`;
+Bun resolves patched `3.1.8`. A direct OSV package query reports no findings.
+The generated lockfile also deduplicates `ws` to its already-present `8.22.0`
+version. Before installing the changed dependency view, this task gracefully
+interrupted its own running and queued older proofs; other checkouts and
+frozen experiments were preserved. Full and hosted checks must run again.
+
+### 2026-09-28 — Suppressed postinstall left infra SDK declarations absent
+
+The Security repair installed the changed lock with `bun install --frozen-lockfile
+--ignore-scripts` in the working lane. The subsequent local full proof stopped
+at infra docgen: generated `@pulumi/gharunners` TypeScript source produced
+TS1205, TS1294 and TS4114 errors. Its installed `bin/index.d.ts` was absent.
+The root postinstall normally runs `infra:prepare-gha-runners`; Yeet's clean-HEAD
+install check ran it only in its temporary checkout. The working lane's infra
+source and configuration have no diff against `origin/main`. Running the
+existing preparation command restored the installed declaration file. A direct
+docgen verification is running; no compiler rules were weakened.
+
+Prevention: after an intentionally script-suppressed dependency install, restore
+reviewed repository-owned preparation prerequisites before starting full proof.
+A successful temporary-checkout install is not evidence that the working lane's
+installed generated artifacts exist. Preserve the failed proof; downstream
+lanes skipped after docgen remain unproven.
+
+### 2026-09-28 — New undici advisory invalidates the queued proof target
+
+Hosted Security at `f26ad5145a` reported GHSA-3wwx-pv8p-q78v against
+undici 6.28.0, 7.29.0 and 8.10.0. The advisory was published while this
+PR was being verified. A targeted Bun update in an isolated repair checkout
+selected patched releases within the existing ranges. Frozen installation
+passed with repository postinstall enabled. The owned old-lock proof and
+queued docgen diagnostic were gracefully stopped before installing the
+changed lockfile; logs and cancellation receipts are retained. The new full
+proof and hosted Security remain required. Package-specific clean OSV queries
+do not replace those gates.
+
+Prevention: attribute each security red to its exact advisory and head before
+reusing a prior green scan; preserve the intended postinstall prerequisites.
+
+### 2026-09-28 — Configuration fixture serialization changed lint semantics
+
+The first ordinary configuration-control run missed cache on the child Turbo
+configuration mutation, then failed identity lint. A direct Biome check of the
+retained overlay reported only formatting: Python JSON serialization expanded
+short arrays. The mutation unintentionally introduced a formatting violation
+in a file the task itself checks. The failed runner, native summary and streams
+are retained. No successful configuration-control credit is assigned.
+
+The replacement changes only the environment declaration bytes while preserving
+reviewed formatting. Prevention: format or preserve the mutated task input
+before asserting that a semantic configuration control should still succeed.
+
+### 2026-09-28 — Profile drift is rejected before Turbo, not a cache miss
+
+The corrected child/root configuration experiment passed those invalidation
+controls but stopped at the generated Biome profile mutation. The ordinary CLI
+reported `Identity lint profile is stale` before producing a native summary.
+The experiment had incorrectly expected every configuration change to execute
+a fresh task. Preserve this as fail-closed profile enforcement, not as an
+unexplained semantic divergence or successful lint run. The revised control
+requires that rejection, no native execution and unchanged cache bytes, then
+a baseline hit after restoring the reviewed profile.
+
+Prevention: distinguish configuration changes accepted by the command contract
+from changes rejected by its profile-integrity gate when defining expected
+experiment outcomes. Do not bypass that gate to manufacture a miss.
+
+### Advisory chronology needs endpoint provenance
+
+PR #1327 review of `current-undici-remediation.json` exposed ambiguous
+publication metadata: the maintainer advisory API reports
+`2026-09-04T14:20:33Z`, while the global GitHub advisory API reports
+`2026-09-28T21:42:37Z` for the same GHSA. Both live endpoints were checked.
+The receipt now distinguishes the two timestamps and links each endpoint.
+Recording endpoint provenance with the original observation would have
+prevented the ambiguous chronology; the affected versions and remediation
+are unchanged.
+
+### Concurrent wrappers can miss task overlap
+
+The patched-profile stable concurrency control passed equality checks and
+recorded 6,785 ms of CLI overlap, but native lint intervals had no overlap
+and were separated by 80 ms. Canary recorded 441 ms of lint overlap. The
+existing control reports both measurements but requires only CLI overlap,
+so its success must not be presented as proof of simultaneous lint execution.
+The original result is retained and one additional stable pair is admitted.
+An explicit requested-overlap criterion and bounded retry budget would make
+this evidence distinction visible before reporting acceptance. No production
+configuration or task command is changed for the retry.
+
+### Retained replay harnesses need explicit cache-root bindings
+
+While renewing patched-profile cross-root replay, setup failed before execution
+because the older canary harness expected `ordinary-canary-cache`, while the
+retained patched fresh-pair runner used `ordinary-replay-cache`. The archive
+lookup assertion prevented importing an unrelated artifact. The corrected
+private harness binds the retained receipt's target hash and checks archive
+bytes before use. A versioned observation receipt containing its cache-relative
+root would avoid repeating this path inference across control suites. No
+runtime or portability credit is assigned to the failed setup.
+
+### Publish watcher reports tolerated deployment limits as proof failure
+
+The long-running dependency-remediation publish completed local pre-push proof
+and merged-preview CI parity with exit zero, then exited one in
+`monitor:pr-checks:watch`. Its terminal check table identified a Vercel
+deployment rate limit. The final generic message said the early-publish proof
+failed, despite the structured verdict marking both proof lanes passed.
+
+The retained verdict and terminal output distinguish the passed proof from
+the failed watcher. Its recorded head is historical and is not promoted to
+current-head proof. Keeping the publish watcher's classification aligned with
+the readiness monitor's documented Vercel rate-limit exception would avoid
+misdirected source repairs and duplicate expensive proof attempts. This packet
+records the friction; Yeet proof ownership and gates remain unchanged.
+
+### Multiprocess debugger must wait for the whole task
+
+The first bounded ring-submission observer returned from GDB `run` when a
+short-lived child exited, then stopped the remaining task processes before
+lint completed. The task-output comparison rejected the observation; no queue
+entries or semantic-closure credit were accepted. Dependency hashes matched
+before and after. The retry explicitly continues surviving inferiors under
+a bounded deadline. A multiprocess completion condition, rather than the
+debugger command's exit status, would have prevented the failed attempt.
+
+The second attempt completed all six observed inferiors with exit zero and
+matched the uninstrumented task streams, but recorded zero setup/submission
+catch events. It was also rejected: absent events do not establish absent ring
+operations when debugger coverage across child inferiors is unverified. Both
+attempts and dependency-parity results are retained privately. The next step
+is a bounded catchpoint-coverage diagnostic before another task observation.
+
+Follow-up diagnostics confirmed that the original catchpoints covered the
+parent only. A per-inferior thread hook captured all eight expected entry/exit
+stops in both fork and fork/exec probes. Subsequent calibrated attempts rejected
+a wrong debug-variable name and an incorrect SQ index-array assumption. The
+accepted observation uses the installed `ctl` debug variable and observed
+`NO_SQARRAY` layout; independent review verifies twelve `EPOLL_CTL` entries
+across five submissions. These failed attempts remain retained and do not gain
+credit from the later successful observation.
+
+### Preserve command-owned admission during matrix preparation
+
+A private preparation wrapper held review-fix admission while invoking
+`cache dependencies`, which owns its own admission. The child queued behind
+existing proof work while its parent retained a redundant token. Metadata and
+the queue log confirmed that the child had no subprocesses and copying had
+not begun. The queued child was interrupted, the wrapper exited and released
+its token, and preparation resumed without an outer admission wrapper.
+Checking the command's admission ownership before wrapping it would prevent
+this queue pressure. Existing running proof work was left intact.
+
+### Stable shadow receipt: derived digest tripped secret scanning
+
+Publishing the stable matrix receipt stopped in the commit hook: gitleaks
+reported `generic-api-key` for the public `runtimeKeyDigest` field. The value
+is a computed toolchain fingerprint, not a credential. Removed this redundant
+public field; the private full report retains it and the public report hash
+binds the evidence. No scanner rule or baseline was weakened. A minimal public
+receipt projection that omits redundant runtime-key fields would prevent this
+false-positive publication failure.

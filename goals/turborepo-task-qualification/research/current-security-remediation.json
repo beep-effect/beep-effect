@@ -1,0 +1,25 @@
+{
+  "authority": "Hosted Security failure remediation; full proof pending",
+  "advisory": "https://github.com/advisories/GHSA-58mr-gqgx-xq4g",
+  "inheritedBaseVersion": "3.1.6",
+  "firstPatched3xVersion": "3.1.7",
+  "overrideFloor": "^3.1.7",
+  "resolvedVersion": "3.1.8",
+  "osvQuery": {
+    "ecosystem": "npm",
+    "name": "fast-uri",
+    "version": "3.1.8",
+    "reportedVulnerabilities": 0
+  },
+  "lockfileAdjustment": "Bun also deduplicated ws to 8.22.0, already present in the prior lockfile.",
+  "validation": [
+    "Frozen lockfile install completed with lifecycle scripts disabled.",
+    "Installed fast-uri version is 3.1.8.",
+    "Whitespace validation passed."
+  ],
+  "limits": [
+    "OSV package query is not a completed hosted Security check.",
+    "Full local proof and hosted rerun remain required.",
+    "Frozen qualification experiment checkouts retain their original dependency views; the new lockfile does not renew their runtime evidence."
+  ]
+}

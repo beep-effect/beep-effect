@@ -1,0 +1,42 @@
+{
+  "revision": "b99394122c156d5e2f87cdebefcd1b873eef33b5",
+  "commands": [
+    {
+      "command": "bun run beep goals doctor",
+      "exitCode": 0,
+      "result": "No new blocking findings; inherited fleet stale-active notices remain."
+    },
+    {
+      "command": "bun run beep explore --check",
+      "exitCode": 0,
+      "result": "No stream-integrity or fleet-graph findings."
+    },
+    {
+      "command": "bun run beep lint reflection-artifacts",
+      "exitCode": 0,
+      "blockingFindings": 0,
+      "advisoryFindings": 0
+    }
+  ],
+  "launcherCharacters": 2755,
+  "retention": {
+    "reference": "packet-verification-b99394122c",
+    "artifacts": [
+      {
+        "path": "patched-goals-doctor.log",
+        "sha256": "af82b3ea02cbd808e1ccb36883968f1e9ae0a55945a4183f4d15472a88f6349e"
+      },
+      {
+        "path": "patched-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      {
+        "path": "patched-reflection-artifacts.log",
+        "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+      }
+    ]
+  },
+  "limits": [
+    "Packet consistency only; no completed reflection, qualification or merge-readiness credit."
+  ]
+}

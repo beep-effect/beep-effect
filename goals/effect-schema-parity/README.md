@@ -8,7 +8,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Retire or trim every `@beep/schema` concept upstream rc.115 covers, migrate
+Retire or trim every `@beep/schema` concept upstream Effect covers at the
+main snapshot `e5f7d12af9` (rc.118 line), migrate
 consumers by codemod, and leave an rc-pinned inventory plus a schema-first
 gate that hold parity on every effect bump. Six phases, one PR train.
 
@@ -42,7 +43,16 @@ rule text in `standards/architecture/11-evolution-and-deprecation.md` per
 
 ## Latest Evidence
 
-Not started. Exploration definition-of-ready passed on 2026-09-15
+2026-09-28: the source exploration reopened at decompose because upstream
+shipped schema compilers (effect #7908); see its `DECISIONS.md` 2026-09-28
+entry. This packet was amended in place by the `SPEC.md` goal-time row of the
+same date: pin `inventoryPin` `e5f7d12af9`, fixture `effect-schema-rc118`,
+bump rule for any pin change, Opus 5.5 lanes, and the P5 precondition met by
+PR #927. The SchemaUtils census landed in P2, P3 and P5. The operator ruled
+the schema compilers DEFER (no compilers goal) and kept `isCodecDataFirst`;
+the exploration graduated again the same day. No phase has started.
+
+Earlier: exploration definition-of-ready passed on 2026-09-15
 (`explorations/effect-schema-parity/MAP.md`, final section). Packet
 fidelity reviewed twice by Codex on 2026-09-15:
 `history/2026-09-15-codex-packet-review.md` (eleven findings, all fixed) and
@@ -57,6 +67,6 @@ fidelity reviewed twice by Codex on 2026-09-15:
 - repo-cli is the largest LiteralKit consumer (230 files) and its lint rule
   domain is itself a kit: in P2, codemod `packages/tooling` first and boot
   `bun run beep` before rewriting the rest.
-- Token-heavy lanes run on Codex (`gpt-6-astra`, `medium`) per `AGENTS.md`;
-  lane prompts state the phase's done-signal and bounce condition from
+- Token-heavy lanes run on Opus 5.5 children pinned `claude-opus-5-5` per
+  `AGENTS.md` (D5, 2026-09-28); lane prompts state the phase's done-signal and bounce condition from
   `SPEC.md` as acceptance criteria.

@@ -48,7 +48,9 @@ describe("TSConfig schema", () => {
 
           return true;
         }),
-      { arbitrary: fcRuns(20) }
+      // The compiler-options arbitrary filters heavily; a larger discard budget keeps a
+      // random seed from exhausting before 20 accepted samples.
+      { arbitrary: { ...fcRuns(20), maxDiscards: fcRuns(20).runs * 100 } }
     );
 
     it("decodes references and collapses nullable fields to Option.none", () => {

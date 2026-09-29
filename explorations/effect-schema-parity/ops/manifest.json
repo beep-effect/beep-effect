@@ -5,7 +5,11 @@
     "title": "Effect Schema Parity",
     "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [],
+    "openQuestions": [
+      "Browser/desktop AOT for oip-web and the Tauri shells (prod CSP blocks JIT): deferred, owner: compilers re-entry gate (MAP §Later Candidates).",
+      "SchemaCompiler.set with hand-written decoders for @beep/schema kits (LiteralKit is fast path): deferred as premature, no kit measured; owner: compilers re-entry gate (MAP §Later Candidates).",
+      "Declaration fallback: answered 2026-09-28 (class models gain about 1.2-1.4x, never the 3.7x wire-struct win); re-measure on a quiet machine, including the AOT recursive-model 0.69-0.78x reading, deferred, owner: compilers re-entry gate (MAP §Later Candidates)."
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/effect-schema-parity"],
@@ -13,6 +17,6 @@
       "supersededBy": null
     },
     "created": "2026-09-12",
-    "updated": "2026-09-15"
+    "updated": "2026-09-28"
   }
 }

@@ -1,0 +1,42 @@
+{
+  "authority": "Canonical cache census attachment verification; source identity only",
+  "revision": "40055f7c0495fb59aebc3cca6a20ff22de1401b1",
+  "turboVersion": "2.11.4",
+  "counts": {
+    "workspaces": 144,
+    "nodes": 3473,
+    "executable": 1970,
+    "sources": 1020,
+    "artifacts": 6,
+    "reviews": 56,
+    "unresolved": 18
+  },
+  "requestSha256": "754818345cbbeb5cb2957342c8a067820f1a7de2faed5aad5c810c1c99318d7c",
+  "censusSha256": "5c677739717fbf444ec3cbc20e7bc368e92729a75fa30100d2eccae9fabfcdd3",
+  "recovery": {
+    "historicalReviewsRecovered": 53,
+    "historicalReviewsUnavailable": 2,
+    "privateProducerScriptsRecovered": 3,
+    "historicalArtifactsRecovered": 6
+  },
+  "limits": [
+    "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+    "Classify nested workspace and root command semantics.",
+    "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+    "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+    "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
+    "Root Quality parser observations do not exhaust downstream argument interpretation or runtime execution.",
+    "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes.",
+    "Current source binding does not renew historical semantic reviews for the 133 changed sources; review their changed behavior before closure.",
+    "Current binding includes 18 changed tracked source references and two new dependency configs; source equality and planner parity do not establish semantic closure for the changed toolchain, Vitest cache/isolation, or expanded pilot.",
+    "Latest main source delta has a bounded review; planner parity cannot prove semantics or renew historical runtime evidence. Four new sources were added; full discovery and signed evidence remain pending.",
+    "Vitest workspace config and exact relative import bindings are attached; semantic review is partial and lexical extraction does not establish complete module resolution or runtime input coverage.",
+    "Shared setup and three workspace DOM setup bodies reviewed; indirect implementations and actual runtime/merged setup behavior remain unqualified.",
+    "Current attachment refresh binds reviewed source deltas and seven newly identified helpers; planner reproduction does not establish transitive semantic closure, runtime behavior, ordinary cached replay or signed remote qualification. Local planner documents require their explicit environment inputs; historical actual environment is not reconstructed.",
+    "Four Refs entrypoint sources newly bound after main integration were absent from the prior source attachment. Their semantic inputs, effects and transitive closure require review; source hashes alone do not establish qualification.",
+    "PR #1270 changes 18 attached Yeet sources and adds Converge.ts. Source identity and finite local/hosted planner reproduction are refreshed. Event convergence, wave handling, monitor state and exhaustive planner/interpreter semantics remain unreviewed; historical runtime receipts are not renewed.",
+    "Current source refresh changes 490 historical source bindings. Hash refresh is identity only; current semantics and runtime evidence remain incomplete.",
+    "Historical quality-entrypoint-review.json and refs-entrypoint-review.json were not recovered. They are omitted from this attachment and their semantic coverage remains unproven.",
+    "Historical workflow/command snapshots retain their original contents and are not represented as current runtime or exhaustive entrypoint projections."
+  ]
+}

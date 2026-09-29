@@ -5,7 +5,45 @@ the [successful-warning canary failure](./unsafe-lint-review.md).
 This source inspection identifies the experiment obligations; it does not
 prove purity, portability, log safety or a cache qualification.
 
-## Current source boundary and retained runtime evidence — 2026-09-25
+## Current evidence boundary — 2026-09-28
+
+The [post-security census attachment](./current-post-security-attachment.json)
+binds current source at `1d5ffd0fdf`. Earlier ordinary-runtime experiments remain
+frozen at `7f53b4a840`; patched dependency content does not inherit those
+results. The [patched stable fresh-pair matrix](./current-patched-stable-fresh-pairs.json)
+now separately passes three pairs and twelve local replays at `b410da2b6d`,
+with installed dependency identity equal before and after. The [patched canary matrix](./current-patched-canary-fresh-pairs.json)
+separately passes the same three-pair/local-replay scope with native exact-version
+verification. Other control classes, signed replay and shadow acceptance remain
+outstanding. Stable `2.11.4` and exact canary `2.11.5-canary.2` have separately
+reviewed fresh pairs, invalidation, shared-dependency cross-root replay,
+isolated concurrency, synthetic-token capture and selected configuration
+controls. These are bounded observations, not a qualified tuple.
+
+The [current native I/O review](./current-native-io-review.json) invokes the
+real quiet identity lint task directly in a read-only archived-source namespace.
+Its installed dependency archive hashes identically before and after. The
+trace records 439 repository read paths; only `.git` is outside the retained
+native input map. All positive scalar reads have descriptor annotations, with
+read-buffer contents suppressed. All 21 explicit writes are attributed to
+captured stderr, pipes, Unix sockets, the null device or an event descriptor.
+No vectored I/O appears in this execution. Five successful ring setup/entry
+pairs remain undecoded; earlier ring observations do not decode this trace.
+A separate retained trace review attributes the fixture Git pointer, worktree
+common-directory pointer and common exclusion-file reads to Biome. Read
+payloads remain suppressed and the shared Git metadata was not frozen; this
+establishes process attribution only.
+Input-map membership is not byte identity or semantic closure. The source
+archive keeps caching disabled; its configuration bytes are not asserted
+identical to the disposable cache-enabled runtime overlay.
+
+Remaining work includes closure of the supported input/resource contract,
+current-dependency runtime evidence, accepted signed sibling receipts and
+remote pairs, representative shadow decisions, and final proof and handoff.
+Normal checkout caching remains disabled and no promotion is authorized by
+these receipts. The older sections below retain their original source and pins.
+
+## Historical source boundary — 2026-09-25
 
 The latest source snapshot is the census at `3df15e7a3e`; see
 [current-census-handoff-review.json](./current-census-handoff-review.json).

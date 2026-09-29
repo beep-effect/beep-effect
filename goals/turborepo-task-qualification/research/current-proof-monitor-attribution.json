@@ -1,0 +1,41 @@
+{
+  "authority": "Historical publish verdict and terminal-check attribution; not current-head proof",
+  "recordedHead": "f26ad5145a2541cf561e29b813055bd88a302c81",
+  "outcome": "failure",
+  "passedProofLanes": [
+    {
+      "id": "full:00-cheap-gates",
+      "exitCode": 0,
+      "durationMs": 127296.011137
+    },
+    {
+      "id": "full:01-pre-push",
+      "exitCode": 0,
+      "durationMs": 3853614.820442
+    },
+    {
+      "id": "full:02-ci-parity",
+      "exitCode": 0,
+      "durationMs": 4340467.680413
+    }
+  ],
+  "failedStep": "monitor:02-pr-checks-watch",
+  "failureAttribution": "Terminal check watcher failed on a Vercel deployment rate limit after local proof and CI parity passed.",
+  "retention": {
+    "reference": "publish-proof-monitor-20260929",
+    "artifacts": [
+      {
+        "path": "verdict.json",
+        "sha256": "f0f6f014d0e7a6a63105fd6b3d56fc523fae26b0ffeb4204ed5cd6046c249fbe"
+      },
+      {
+        "path": "terminal-tail.log",
+        "sha256": "d917f2b5eb110da1b7eeb748e5627d2c93570d3d56325cb5e97177f1ad5ffa0e"
+      }
+    ]
+  },
+  "limits": [
+    "Publication advanced while this long-running attempt was active; the recorded head is historical and does not establish proof for the latest head.",
+    "No current hosted green, closeout or merge-ready claim."
+  ]
+}

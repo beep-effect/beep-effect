@@ -1,16 +1,19 @@
 # Effect Schema Parity — Sources & Provenance
 
-- **Cluster / origin:** research stage 2026-09-12: six Codex lanes over `.repos/effect` main `51d4a2f08a` plus verified upstream URLs.
+- **Cluster / origin:** research stage 2026-09-12: six Codex lanes over `.repos/effect` main `51d4a2f08a` plus verified upstream URLs. Reopened 2026-09-28: Opus 5.5 lanes over `inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd` (`effect@4.0.0-rc.118-1-ge5f7d12af9`, the root `package.json` catalog snapshot); earlier reports keep their original sha.
 - **Provenance:** `RESEARCH.md` (map), lane reports under `research/` (evidence), `CAPTURE.md` (brief + hint list), `DECISIONS.md` (pre-research grill).
 
 ## 1. Mined source corpus
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `inv-role-a` | Role A schema surfaces (14 `.ts` modules) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `unstable/schema/*`, `unstable/arbitrary/*` (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
+| `inv-role-a` | Role A schema surfaces (24 modules (12 root + 9 schema/** + 3 internal/schema provenance-only)) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `schema/*` (was `unstable/schema/*`), root `Arbitrary.ts` (was `unstable/arbitrary/*`) (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
 | `role-b` | Role B idiom exemplars (39 modules) | Effect-TS/effect | see `CAPTURE.md` module list; `research/idiom-role-b.json` | idiom rubric | reference |
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |
+| `reopen-inventory` | 2026-09-28 inventory refresh `51d4a2f08a` → `e5f7d12af9` | Effect-TS/effect | `research/2026-09-28-inventory-refresh.md` | inventory pin (D4) | reference |
+| `schemautils-census` | 2026-09-28 SchemaUtils census (39 exports, D7, D9, D10) | Effect-TS/effect + this repo | `research/2026-09-28-schemautils-census.md`; tool `research/tools/census-schemautils.py` | retirement rows, per-AST cache finding | reference |
+| `compiler-evaluation` | 2026-09-28 schema compiler spikes (D1, D6, D8, D10) | Effect-TS/effect + this repo | `research/2026-09-28-compiler-evaluation.md`; spikes `research/tools/spike-harness.ts`, `spike-bulk-schemas.ts`, `spike-bulk.ts`, `spike-recursive.ts` | compiler verdict evidence (DEFER, 2026-09-28) | reference |
 | `perf` | `packages/effect/typeperf/suites/schema/fixtures` (22), `runtimeperf/suites/schema` | Effect-TS/effect | see `research/performance-baseline.md` | measurement | port-with-attribution (harness shape only) |
 
 **How these inform this packet:** Role A rows are the adoption/retirement oracle; Role B shows how upstream authors consume Schema (rubric only, not targets unless align lifts the exclusion); the hint list bounds the rc window; perf suites give the measurement shape.
@@ -19,7 +22,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| Effect-TS/effect (`main` @ `51d4a2f08a`, local `.repos/effect` -> `$HOME/YeeBois/dev/effect`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
+| Effect-TS/effect (`inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, main snapshot, rc.118 line; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, pinned bytes read with `git -C .repos/effect show <inventoryPin>:<path>`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
 
 ## 3. External research sources
 
@@ -33,14 +36,14 @@ Verified by fetch on 2026-09-12 (each appears in `RESEARCH.md` "External Landsca
 
 Dead or superseded (do not cite): https://effect-ts-effect-smol.mintlify.app/migration/schema (404 on 2026-09-12); `Effect-TS/effect-smol` GitHub paths surfaced by web search are the pre-rename home of the same documents and were not fetched.
 
-Local-only sources (no URL; cite the on-disk path): the graft index built at `$HOME/YeeBois/dev/effect/graft/` (structural, `graft build -e .ts`, 1,571 files, 30 s, 117 MB, 2026-09-12); the rc.112..main hint list in `CAPTURE.md` (from `git -C .repos/effect log`).
+Local-only sources (no URL; cite the on-disk path): the graft graph of the reference workspace (`.repos/effect-workspace` -> `$HOME/YeeBois/references/effect`, members `.repos/effect` and `.repos/effect-tsgo`, refreshed nightly by `beep-refs-refresh.timer`; the 2026-09-12 structural index at the retired `dev/effect` checkout is gone); the rc.112..main hint list in `CAPTURE.md` (from `git -C .repos/effect log`).
 
 ## 4. In-repo capability references
 
 | Brick | Path | Disposition |
 |-------|------|-------------|
 | Schema-first lint (detectors/policy/project/scan/store/arbitrary coverage) | `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirst*.ts` | extend (`SFV4-*` rules for F03, F13, F24 on the schema-first ratchet; the `UpstreamParity*` family proposed at research was superseded by decision "First gate cut", 2026-09-14) |
-| Effect-vitest lint + sha-pinned fixture pattern | `.../Lint/internal/EffectVitest*.ts`, `packages/tooling/tool/cli/test/fixtures/effect-vitest-rc115/`, `standards/effect-vitest.primitives.jsonc` | reuse pattern |
+| Effect-vitest lint + sha-pinned fixture pattern | `.../Lint/internal/EffectVitest*.ts`, `packages/tooling/tool/cli/test/fixtures/effect-vitest-rc118/`, `standards/effect-vitest.primitives.jsonc` | reuse pattern |
 | Lint schemas (rule domain, finding, inventory, identity key) | `.../Lint/Lint.schemas.ts` | extend |
 | Shared ratchet | `packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts`, `RatchetLifecycle.ts` | reuse |
 | Hosted lint-policy route | `.github/workflows/heavy.yml`, `.../commands/Ci/CiLane.ts`, `.../commands/Quality/Tasks.ts`, `.../Quality/internal/GithubChecks.ts` | reuse |
@@ -54,6 +57,6 @@ Local-only sources (no URL; cite the on-disk path): the graft index built at `$H
 ## 5. Cross-links & provenance
 
 - Packet: `README.md`, `CAPTURE.md`, `DECISIONS.md`, `RESEARCH.md`, this ledger.
-- Lane reports: `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/inventory/`, `research/tools/`.
-- Adjacent packets: `goals/schema-utils-selective-codec-statics` (active; overlaps the SchemaUtils ADAPT), `goals/schema-first-v4-capabilities`, `goals/beep-schema-topology`, `goals/effect-vitest-canon` (fixture pin procedure), `explorations/effect-jsdoc-quality`.
+- Lane reports: `research/2026-09-28-inventory-refresh.md`, `research/2026-09-28-schemautils-census.md`, `research/2026-09-28-compiler-evaluation.md`, `research/retirement-A-F.md`, `research/retirement-G-Z.md`, `research/idiom-families.md`, `research/upstream-delta.md`, `research/upstream-verification-supplement.md`, `research/performance-baseline.md`, `research/performance-verification-supplement.md`, `research/gate-and-knowledge-plumbing.md`, `research/inventory/`, `research/tools/`.
+- Adjacent packets: `goals/schema-utils-selective-codec-statics` (overlaps the SchemaUtils ADAPT; its Yeet PR #927 merged 2026-08-31 as `2731847346`, manifest not yet closed), `goals/schema-first-v4-capabilities`, `goals/beep-schema-topology`, `goals/effect-vitest-canon` (fixture pin procedure), `explorations/effect-jsdoc-quality`.
 - Doctrine: `standards/architecture/11-evolution-and-deprecation.md`, `standards/architecture/DECISIONS.md` (2026-07-08 PGlite precedent), `standards/architecture/07-non-slice-families.md`.

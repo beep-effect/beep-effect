@@ -1,0 +1,67 @@
+{
+  "authority": "Reviewed submission-queue metadata in a separate debugger-instrumented real lint execution",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "exitCode": 0,
+  "setupEvents": 5,
+  "enterEvents": 5,
+  "submissionEntries": 12,
+  "opcodeCounts": {
+    "EPOLL_CTL": 12
+  },
+  "epollCtlOpcode": 29,
+  "ringLayout": "NO_SQARRAY; direct head/mask indexing verified against setup flags and installed debug constant",
+  "allSubmittedEntriesAcceptedByEnter": true,
+  "taskStreamsMatchUninstrumented": true,
+  "observedInferiorsExitedZero": 6,
+  "dependencyParity": {
+    "before": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "after": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "equal": true,
+    "command": [
+      "tar",
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--hard-dereference",
+      "--pax-option=delete=atime,delete=ctime",
+      "-cf",
+      "-",
+      "node_modules"
+    ]
+  },
+  "nodeSha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+  "debuggerSha256": "1b7f49533d306088d662a4da0c2857cedaba93add3fcf3e1c5d91668262a8561",
+  "eventsSha256": "281802cbd365b5eb19eeb977db8456db62ff02e6bde78c2bb47e2ab267dee649",
+  "catchpointDiagnostic": {
+    "parentOnlyStops": 4,
+    "perInferiorStops": 8,
+    "forkExecStops": 8,
+    "expectedStops": 8
+  },
+  "rejectedAttempts": [
+    "Debugger stopped on a short-lived child before task completion.",
+    "Task completed but child syscall catchpoints were not installed; zero events rejected.",
+    "Per-inferior catchpoints reached a submission; wrong debug-variable name rejected.",
+    "Decoder assumed SQ index indirection despite NO_SQARRAY; apparent zero entries rejected."
+  ],
+  "retention": {
+    "reference": "ring-patched-b410-reviewed",
+    "files": 97,
+    "bytes": 172110,
+    "manifestSha256": "11cf350f8996acb083b56002df8176cb12797a4c89996133fb0777ff7ecd075e"
+  },
+  "limits": [
+    "Separate instrumented execution; earlier scalar traces are not retroactively decoded.",
+    "Only queue metadata read; referenced buffers and completion queue entries were not decoded.",
+    "Observed submissions were epoll control operations; this is not proof of every possible task input or future submission.",
+    "No signed remote, representative shadow acceptance or tuple promotion."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "authority": "Bounded monitor-escalation source review and existing tests with subprocess test doubles",
+  "revision": "25bbf1d59d9692fd9a2569439422a7fc75339632",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "sha256": "dba108fa8f43850b2b792588bc590d941a3359fa5b4b9eccebb925d40b85f262"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveNotifier.ts",
+      "sha256": "1880eca1e2597760184c5878cc97bf673bad1619beb8189e1b53d06fdb1f9401"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/yeet-pr-wave-notifier.test.ts",
+      "sha256": "3f4bea6c93a282665349f52473bf2cf032f08a7af434a163c7c6da91181a0e33"
+    }
+  ],
+  "reviewedBehavior": [
+    "Escalation is configured for detached converging monitor policy; without an injected seam, it also requires detached-job attribution.",
+    "The monitor loads a new PR wave after inbox convergence, excluding row IDs and red-set keys it has already settled.",
+    "Only spawned or already-escalated outcomes update the loop settlement state; owner-live and spawn-failed outcomes remain eligible for a later poll.",
+    "Notifier ownership resolution reads the PR-session registry and configured owner-process/session probes. Unresolved repository or unreadable registry returns a non-live verdict.",
+    "A non-live-owner wave claims its descriptor exclusively before launching the worker. A failed launch removes the claim so a later attempt can retry."
+  ],
+  "semanticInputs": [
+    "Attachment mode, monitor policy and detached-job environment attribution",
+    "PR number, observed head, URL, wave rows and red-set identity",
+    "Persisted claims, worker-file existence and current clock",
+    "Session registry, HOME-derived session directory and process-probe state",
+    "Per-loop sets of previously escalated row IDs and red-set keys"
+  ],
+  "effects": [
+    "Reads owner and process/session state",
+    "Writes claim/descriptor files and removes claims after failed launch",
+    "Can launch a detached worker through setsid and emit console messages in production; the tests replace subprocess execution"
+  ],
+  "verification": {
+    "command": "bun --no-env-file run --cwd packages/tooling/tool/cli beep:test test/yeet-pr-wave-notifier.test.ts --maxWorkers=1",
+    "filesPassed": 1,
+    "testsPassed": 17,
+    "exitCode": 0,
+    "vitestVersion": "5.0.1",
+    "subprocesses": "recording test doubles",
+    "logSha256": "52084c376414b700f3d7d5cc936c26eb410d805824426c0c55f4b0a18cbdc003"
+  },
+  "limits": [
+    "No real notifier worker, desktop notification or owner-session action was launched for this review.",
+    "Launch success and existing claims do not prove worker completion, notification delivery or human acknowledgement.",
+    "Complete registry/probe internals, crash recovery and concurrent-claim semantics remain outside this review.",
+    "The operation depends on fresh external and mutable local state; it is not qualified for task-result replay."
+  ]
+}
