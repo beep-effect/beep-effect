@@ -24681,6 +24681,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/SchemaParityCodemod.ts": {
+          "lines": 20,
+          "statements": 20,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 2,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts": {
           "lines": 90.44,
           "statements": 89.36,
@@ -24859,6 +24871,66 @@
             "statements": 6,
             "branches": 1,
             "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemod.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodEdits.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodEngine.ts": {
+          "lines": 86.36,
+          "statements": 86.95,
+          "branches": 73.8,
+          "functions": 82.19,
+          "uncovered": {
+            "lines": 21,
+            "statements": 21,
+            "branches": 11,
+            "functions": 13
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodImports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodLiteralKitRule.ts": {
+          "lines": 94.29,
+          "statements": 94.67,
+          "branches": 87.05,
+          "functions": 94.32,
+          "uncovered": {
+            "lines": 13,
+            "statements": 13,
+            "branches": 11,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/internal/WorkspaceWalk.ts": {
