@@ -44,6 +44,7 @@ import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
 import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
+import { lintSchemaParityCodemodCommand } from "./SchemaParityCodemod.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
 import { lintTsconfigOverlayCommand } from "./TsconfigOverlay.ts";
 
@@ -1166,6 +1167,7 @@ const lintSubcommands = [
   lintRoadmapRefsCommand,
   lintSchemaCatalogCommand,
   lintSchemaFirstCommand,
+  lintSchemaParityCodemodCommand,
   lintSchemaTopologyCommand,
   lintToolingSchemaFirstCommand,
   lintTsconfigOverlayCommand,

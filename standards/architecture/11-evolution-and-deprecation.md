@@ -104,6 +104,62 @@ change that discovers it, together with its dependents, rather than letting the 
 window that never elapses. `@deprecated` stays reserved for surfaces with consumers that need a
 migration path; the tag is the start of a removal, not a home.
 
+## Upstream-first retirement in `foundation/modeling`
+
+Decision: `DECISIONS.md` "Upstream-First Foundation/Modeling" (2026-09-29).
+
+The section above removes an unreleased in-repo symbol at once only when no consumer remains. A
+`foundation/modeling` concept that retires under rule 2, or a covered facet trimmed from an ADAPT
+concept, reaches that state inside one change: the PR that deletes it also migrates every consumer
+of it, so nothing it removes has a consumer when it goes. What an ADAPT concept keeps is not
+deprecated. These packages are `private: true` and no version of them has reached a consumer outside
+this repository, so nobody waits on a window. The rules:
+
+1. **Intent is judged per facet, on the consumed surface.** A facet is the schema value itself or
+   one exported member or static that consumers read (`Kit.Enum`, `Kit.is`, `Kit.$match`).
+   Upstream covers a facet when public upstream API covers what consumers use that facet for: an
+   exported symbol, possibly outside `effect/Schema`, or an inline composition of exported symbols
+   at the consumer. Check coverage in the installed `effect` package's `dist/*.d.ts`
+   declarations. A symbol marked `@internal` never counts, and a matching name is not evidence.
+2. **Uncovered facets that outweigh the covered ones make the concept ADAPT.** Count consumer lines outside the
+   concept's own sources and compare two sums: the lines that read its uncovered members, and the
+   lines that use its covered facets, construction sites included (construction is the schema
+   facet). Record both sums with the per-facet table in the owning goal packet's decision log
+   before the PR opens. When the uncovered sum is the larger, the concept is ADAPT: it stays, its
+   covered facets are deleted, and their consumers move to the upstream equivalents. Otherwise the
+   concept retires, and consumers of its uncovered minor facets adapt to what upstream offers. A
+   disposition stands on the census it was ruled from; a later count reopens it only through a new
+   entry in that decision log. LiteralKit is the precedent (census 2026-09-15): the uncovered keyed
+   members `.Enum` 1,172, `.is` 603, `$match` 243 and `toTaggedUnion` 36 sum to 2,054 lines
+   against 2,048 covered (construction 1,521, `.Options` 395, `.thunk` 65,
+   `.pickOptions`/`.omitOptions` 52, `.HashSet` 15); `enumMapping` (12 lines) was dropped as a
+   minor facet with no upstream equivalent. Helpers in a utility namespace that are each a public
+   concept (the `SchemaUtils` leaves) are judged one by one.
+3. **Same PR, no alias.** A retirement deletes the concept's implementation, its exports (the
+   concept subpath and any root facade entry), and its tests, and changes every consumer, all in
+   the same PR. Trimming a facet from an ADAPT concept follows the same rule. Leave no
+   deprecation shim, re-export alias, or compat module; a PR that keeps the old module in place
+   opens a deprecation window and is rejected.
+4. **Census before a large RETIRE.** Before a RETIRE with more than 100 audited consumers opens its
+   PR, count the usage of each facet outside the concept's own sources (construction sites for the
+   schema facet, reads of each exported member), and record lines and files per facet next to the
+   upstream symbol that covers it, plus both sums from rule 2. The census goes in the owning goal
+   packet's decision log. If the uncovered sum is the larger (rule 2), log the flip to ADAPT there
+   before the PR opens.
+5. **Persisted and served bytes do not change.** Persisted columns and externally served payloads
+   keep byte-identical encodings, using an upstream variant or a consumer-local composition of
+   upstream codecs that reproduces the bytes. Only in-memory shapes may change. A persisted or
+   served boundary whose upstream default differs and that no such codec reproduces is a separate
+   migration goal; it leaves the retirement PR.
+
+The windows above still govern slices, promoted `shared/use-cases` contracts, and ports. A
+retirement may replace the implementation behind a field of a promoted contract only when the
+field's name, decoded type (brands included), accepted values, encoded bytes, and semantic meaning
+all stay unchanged, for example through a consumer-local composition of upstream schemas that keeps
+the same brand key. A change to any of them is a breaking change under the list in "Breaking
+changes require a new tagged variant" above, and the contract migrates under the `V2` rule, never
+in the retirement PR.
+
 ## Coordinating retirements across slices
 
 Slice retirements affecting future `shared/use-cases` exports require notice to the owners of every consuming slice. One PR per consumer migration is the minimum coordination — the retirement does not land until the migrations land.

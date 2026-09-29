@@ -1,10 +1,11 @@
 import { EcosystemPolarityOptions, runEcosystemPolarityCheck } from "@beep/repo-cli/commands/Lint/EcosystemPolarity";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as R from "effect/Record";
-import { describe, expect, it } from "vitest";
 import { NodeTestLayer, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;

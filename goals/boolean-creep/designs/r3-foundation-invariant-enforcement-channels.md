@@ -10,8 +10,10 @@
   locals are exact Boolean functions of the first five channel-presence
   observations.
 
-Audited at checkout `7440cb8c4302ce64b87860069a464bafbf65f576`
-against main corpus `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`.
+Audited against source `224222d1389c30170d0518f00a0d58ee87014843`
+and main corpus `dcf64397ec9835e989e7ea94e9c708582a035f22`.
+The R45 review verified unchanged qualification, source spans, cardinality,
+and target shape; this refresh corrects the test-impact anchors.
 Replacement P3 review remains pending.
 
 # Current shape and cardinality
@@ -151,11 +153,11 @@ message remain exact.
 
 # Test impact
 
-Retain `Conformance.test.ts:172-295` invalid and valid descriptor examples,
+Retain `Conformance.test.ts:188-327` invalid and valid descriptor examples,
 including local-runtime test-only rejection, external/undecidable mechanical
 rejection, type-level requirements, explicit-gap acceptance, duplicate
 enforcement rejection, and multiple distinct runtime records. Retain the
-standalone six-case enforcement encode/decode arbitrary at lines 391-399.
+standalone six-case enforcement encode/decode arbitrary at lines 412-427.
 
 Add a characterization table over all 32 channel-presence vectors and all five
 decidability values. Use one `test` record to realize the all-false vector and

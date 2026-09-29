@@ -174,7 +174,7 @@ describe("@beep/documents-server DocumentIntake", () => {
         expect(yield* fs.readFileString(outsideVictimPath)).toBe("unchanged");
         expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
         expect(yield* fs.readLink(legacyTemporaryPath)).toBe(outsideVictimPath);
-        pipe(yield* Effect.result(fs.readLink(targetPath)), Result.isFailure, assertTrue);
+        yield* Effect.flip(fs.readLink(targetPath));
       })
     );
   });

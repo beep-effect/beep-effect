@@ -1761,3 +1761,167 @@ explicit operator path inputs; its frozen census, layout rulings, manifest
 default, and move preconditions remain intact. Run the whole-tree reference
 check before merging new goal packets to avoid spreading this failure to
 unrelated branches.
+
+### 2026-09-28 — Native sandbox startup cannot resolve protected socket paths
+
+After approval to enforce census file-write confinement, the custom Grok
+sandbox refused startup while resolving the root-owned Podman socket path.
+Hiding that path exposed a second mount preparation failure for containerd;
+an isolated runtime directory still ended in a sandbox application refusal.
+These attempts launched no census and supplied no coverage evidence.
+
+The replacement uses an explicit Bubblewrap read-only host mount with narrow
+runtime and report-directory write grants. A real file-tool probe read a graft
+card and wrote its allowed output, while direct outside writes, a symlink to
+an outside fixture, and a repository fixture all failed with a read-only
+filesystem error. Both outside fixtures retained their original bytes. The
+runner still requires complete input binding and independent approval before
+launch. A provider-free mount probe before any model call would expose this
+host compatibility failure earlier.
+
+### 2026-09-28 — Search-tool bootstrap changes a frozen runtime profile
+
+R43 stopped after its first lane when the post-lane guard detected a new
+vendored search binary and a memory-trace log. The lane process exited zero
+and its empty report validated, but neither result proves coverage under the
+admitted runtime. The other 26 lanes were not executed. The terminal receipt
+is `data/sweeps/refresh-2026-09-28-r43-main-8c16e6/round-verdict.json`.
+
+A no-tools runtime probe and a read/write capability probe did not exercise
+search-tool initialization. Bootstrap every allowed tool family before freezing
+the runtime profile, bind executable artifacts, and distinguish runtime logs
+from routing inputs. Preserve the failed attempt and require a fresh full-round
+admission instead of relaxing its frozen guard after execution.
+
+## 2026-09-28 — R44 mixed protocol and diagnostic streams
+
+The UI census process exited zero with `end_turn`, then emitted
+`Resident session actor exited unexpectedly; reaping as DeadFailed`.
+The admitted runner merged stderr into stdout, so `trailing-invalid-stream`
+correctly refused the lane and skipped 21 remaining lanes. Five completed lanes
+remain partial evidence. Receipt: `data/sweeps/refresh-2026-09-28-r44-main-8c16e6/runtime-refusal.json`.
+
+Separate protocol stdout and diagnostic stderr from the start, hash-bind both,
+and require explicit review of evidence-backed teardown warnings. Preserve
+unknown-warning, error, panic, exhaustion, terminal-order and source guards.
+The candidate remains unadmitted; do not retroactively accept R44 UI or claim
+dry credit. This would have made channel attribution possible without rerunning
+the entire census merely to distinguish diagnostic output from protocol output.
+
+## 2026-09-28 — hash-map keys triggered credential detection
+
+R44 publication stopped at the pre-commit `generic-api-key` check on two
+verified source hashes keyed by `optionalKeyWithDefaults.ts` and
+`withKeyDefaults.ts`. Those values are SHA-256 source bindings, not credentials.
+The public review receipt now uses explicit `file`/`sha256` rows while retaining
+all paths and values. Its artifact index is rebound; the private original is
+preserved. Use this structured binding shape for future receipts rather than
+weakening secret detection or adding hash-specific suppressions.
+
+## 2026-09-28 — inherited dependency advisory blocks checkpoint proof
+
+PR #1328 and `bun run beep yeet publish --start-pr-early --monitor --pr`
+failed Security on `fast-uri@3.1.6`, advisory `GHSA-58mr-gqgx-xq4g`;
+OSV reports the fix in `3.1.7`. The branch and main have identical `bun.lock`
+blobs. All other 31 pre-push lanes passed. The goal's dependency boundary and
+SPEC's inherited-failure stop condition require a separate scope decision.
+The narrow repair question is pending; acknowledging the inbox rows does not
+waive Security or establish merge readiness. A dependency-owner repair on main,
+or explicit authorization for the bounded lockfile repair, would unblock it.
+
+## 2026-09-28 — preparation and review environment drift
+
+R45 preparation refused `config changed`: the global Grok default effort moved
+from `xhigh` to `medium`. The effective isolated profile and command remain
+`low`. Preserve the failed preparation, refresh the observed global binding,
+and validate external provider inputs before materializing prepared artifacts.
+No global configuration was changed and no provider call was made.
+
+The independent review's first `systemd-run --user --scope` failed before
+starting because `DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` were absent.
+The existing user bus and ownership were verified; setting those two variables
+for the retry preserved the required scope and slice. A launcher that resolves
+and validates the user bus explicitly would prevent this shell-environment
+failure without moving heavy work outside the admitted slice.
+
+## 2026-09-28 — split-stream capability probe refused new housekeeping warnings
+
+The independently reviewed R45 runtime passed 74 tests, including kernel
+confinement and historical telemetry replay. Its single bounded capability
+probe exited zero and completed all five tools, but correctly refused two
+unknown diagnostics: `pin GC: grove data dir sweep failed` and
+`proactive bundle sync failed`. The attempted paths were under the read-only
+private HOME and the read-only bundled skills tree. A separate kernel check
+proved `EROFS` for both paths; all static profile hashes matched afterward,
+private HOME remained empty, and session counters were zero.
+
+Preserve the failed probe, both streams and matching diagnostic/success
+snapshots. Review the exact messages and path bindings before admitting a
+successor policy or another probe. Do not suppress arbitrary warnings or make
+those trees writable. Identifying background maintenance attempts during the
+initial confinement design would have avoided this capability-test refusal.
+
+A separate preflight also caught the global default effort changing back from
+`medium` to `xhigh`. The effective isolated profile and command remain `low`.
+The global configuration was observed and rebound for the probe, never edited;
+formal census preparation still needs a fresh configuration/source binding.
+
+The 2026-09-28 delegation resolves the dependency scope hold. Bun's targeted
+update selected fast-uri 3.1.8 within the existing range; the only lockfile
+change is that package's version and integrity. No manifest or other dependency
+resolution changed. The full campaign now uses the existing PR #1328 to avoid
+repeated hosted CI for incremental checkpoints.
+
+A fresh Security scan then reported `GHSA-3wwx-pv8p-q78v` in existing undici
+6.28.0, 7.29.0 and 8.10.0 resolutions. The targeted Bun update retained the
+existing major ranges, selecting 6.29.0 and 7.30.0 and deduplicating 8.x to the
+already locked 8.11.2. `bun install --frozen-lockfile` and the complete
+`bun run beep ci lane security` both passed; OSV reported no issues.
+The owner delegated judgment, so no additional scope interview was needed.
+
+## 2026-09-29 — probe command metadata rejected before acceptance
+
+The second bounded isolation probe completed 30 tool calls and emitted its
+terminal event, but the verifier rejected `unexpected-command-surface`. The
+provider advertised five hook-management commands absent from the frozen
+allowlist. The receipt is rejected with no accepted runs; later runs were not
+launched. Preserve both attempts and review the command metadata and completed
+run before changing policy or spending on another attempt. A startup comparison
+of advertised commands against the verifier would have exposed the mismatch
+before the expensive payload cases. No runtime or census credit is claimed.
+
+Main also advanced to `f590617f15`, changing seven corpus files and the Effect
+snapshot. The old R45 recovery inputs cannot prove current-source coverage.
+Keep historical evidence intact and bind subsequent census work to the merged
+source. Security's earlier fast-uri failure was remediated in the local branch
+but remained red remotely until publication; the new immediate-push directive
+prevents local proof waits from delaying available remediations.
+
+## 2026-09-29 — recursive grep bypassed the native .git read deny
+
+Offline analysis of the rejected second probe found that recursive `grep`
+with `glob: **/*` returned the synthetic `.git` canary. The read-deny rule
+did not filter recursive search results. This was synthetic probe data, but
+the same profile cannot be admitted for census use with repository metadata
+visible. The successor must mask `.git` at the kernel boundary and prove
+that both ordinary and failed-open-hook probes keep it hidden.
+
+The review also identified two verifier corrections. Hook-enabled profiles
+advertise five UI slash commands without adding model-callable tools, and
+the runner validates against the old core's command set. A missing-file
+response also uses wording absent from the bound grammar. Correct the exact
+command relation, candidate-core selection and observed missing-file grammar;
+retain exact tool restrictions and rejection of unknown diagnostic text.
+The rejected attempt gains no retrospective acceptance. A recursive-search
+canary test at the first confinement review would have exposed the metadata
+leak before the payload probes.
+
+## 2026-09-29 — stale header provenance after reviewed design correction
+
+PR #1328 thread `PRRT_kwDOPbO_N86m_2DD` found that the minimal-fold search
+design's R45 evidence correction left the old source SHAs in its header.
+Correcting the two fields after the R46 input refresh invalidates that
+candidate's exact-source binding. Checking header provenance against each
+design's latest evidence section during install review would have prevented
+this extra refresh. Preserve the prior bytes and refresh the binding; no
+semantic or acceptance credit follows from this metadata repair.

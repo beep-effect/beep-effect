@@ -2,15 +2,16 @@ import { LabsListRow, labsCommand } from "@beep/repo-cli/commands/Labs";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const LabsTestLayer = Layer.mergeAll(
