@@ -453,3 +453,14 @@ Effect diagnostics and the ratchet pass with zero introduced findings. The CLI
 ledger has 3,454 unique rows: 985 fixed, seven exceptions and 2,462 open.
 Full package proof status remains explicit in
 [the proof](../../../research/cli-predicate-cause-proof.md).
+
+
+## Shared internals and labs ceremony
+
+Commit `ffeeb3a2d0e324be719230f6d37857057b989a2d` migrates two suites while
+retaining 50 tests and 117 assertions. Node/Bun runs and actual type diagnostics
+pass; 24 Effect callbacks have distinct console services. Twenty historical
+rows close and one captured timeout finding is added as fixed, preserving all
+existing IDs. The detector ledger now has 3,496 rows: 1,967 fixed, twelve
+exceptions and 1,517 open. Package-proof status and timing limits are explicit
+in [the proof](../../../research/cli-shared-labs-runtime-proof.md).

@@ -134,6 +134,7 @@ tests across ten files under Node (56.15 seconds) and Bun (36.40 seconds),
 both with CI enabled. It covers the four source-conflict suites, watch
 readiness and ordering, detector behavior, and console regressions. The CLI
 test-type artifact has exit code zero and empty diagnostic output. Full
-package verification remains a separate pending gate at this receipt.
+package verification subsequently passed: audit 753.9 seconds and docgen
+23.6 seconds. This proof preceded the next shared-internals migration.
 These shared-workstation timings are observations, not a performance claim.
 The broader goal is not complete.

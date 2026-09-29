@@ -5868,3 +5868,28 @@ When integrating a squash merge into a continuation branch, compare main with
 that exact head before trusting a branch-to-branch conflict count. Verify the
 content delta and preserve unrelated main changes; do not resolve these cases
 with a blanket choice of either branch.
+
+## Assertion parity does not prove an Effect callback contract
+
+The labs-scoping migration draft preserved all six registrations and twelve
+assertions but supplied a bare generator to `it.effect`. Its first Node run
+failed one test with `Not a valid effect`. The reference harness uses
+Effect-returning callbacks, so the repair wraps the generator in `Effect.gen`.
+The assertion tree was unchanged by that repair.
+
+Draft validation should include callback type checking before treating
+structural parity as ready for runtime proof. Preserve a failing execution
+receipt and rerun the actual Node/Bun cohort; assertion-count equality alone
+cannot establish the runner contract. No test or gate was weakened.
+
+
+### Test-type wrapper status still requires the result artifact
+
+During the shared-internals Effect callback migration, `bun run
+package-test-typecheck` returned exit zero while its package result artifact
+contained exitCode 1 and two preferSchemaOverJson diagnostics. The fixtures
+were repaired and the subsequent artifact reports exitCode 0 with empty output.
+The wrapper should propagate the compiler result, or a caller should validate
+both fields before declaring a pass. This migration used the artifact rather
+than the shell exit as its acceptance evidence. Production wrapper repair
+remains a follow-up; this receipt does not mark that issue fixed.
