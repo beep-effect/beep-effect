@@ -13,7 +13,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { ObjectRef } from "@beep/rdf/Prov";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";

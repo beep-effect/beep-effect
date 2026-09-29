@@ -27,7 +27,6 @@ import {
 } from "@beep/epistemic-domain/values/Contradiction";
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity";
-import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
@@ -39,6 +38,8 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeCanonicalContradictionBeliefPairResult = S.decodeResult(CanonicalContradictionBeliefPair);
 const decodeContradictionBeliefPairResult = S.decodeResult(ContradictionBeliefPair);

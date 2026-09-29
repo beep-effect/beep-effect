@@ -8,7 +8,7 @@
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
-import { Defect, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -24,6 +24,8 @@ import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
 import type { BM25VectorizerInstance } from "./internal/bm25.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeUnknownWinkStringArrayOption = S.decodeUnknownOption(WinkStringArray);
 

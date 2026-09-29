@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2905 |
-| publicExports | 20526 |
+| publicModules | 2904 |
+| publicExports | 20513 |
 | openModules | 377 |
-| openExports | 3097 |
+| openExports | 3080 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3314 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3313 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 263 | 1606 | 25 | 168 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 262 | 1593 | 25 | 168 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -86,7 +86,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 28 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 25 | 164 | 8 | 112 |
 | 29 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 31 | 136 | 11 | 22 |
 | 30 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 5 |
-| 31 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 214 | 648 | 9 | 67 |
+| 31 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 214 | 648 | 9 | 63 |
 | 32 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 126 | 0 | 31 |
 | 33 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 4 | 11 | 2 | 7 |
 | 34 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 7 |
@@ -115,8 +115,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 57 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 18 |
 | 58 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 7 | 44 | 3 | 5 |
 | 59 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 16 | 0 | 0 |
-| 60 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 10 |
-| 61 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 7 | 126 | 4 | 62 |
+| 60 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 5 |
+| 61 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 7 | 126 | 4 | 61 |
 | 62 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
 | 63 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 19 | 1 | 7 |
 | 64 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
@@ -146,9 +146,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 88 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 34 |
 | 89 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 13 |
 | 90 | `@beep/venice-ai` | `packages/drivers/venice-ai` | needs-remediation | 3 | 35 | 0 | 4 |
-| 91 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 5 |
+| 91 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 3 |
 | 92 | `@beep/xai` | `packages/drivers/xai` | needs-remediation | 7 | 70 | 0 | 6 |
-| 93 | `@beep/openai` | `packages/drivers/openai` | needs-remediation | 4 | 17 | 0 | 5 |
+| 93 | `@beep/openai` | `packages/drivers/openai` | needs-remediation | 4 | 17 | 0 | 3 |
 | 94 | `@beep/hubspot` | `packages/drivers/hubspot` | needs-remediation | 4 | 23 | 0 | 1 |
 | 95 | `@beep/sanity` | `packages/drivers/sanity` | needs-remediation | 4 | 16 | 0 | 2 |
 | 96 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 15 | 0 | 0 |
@@ -163,7 +163,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 105 | `@beep/ontology-server` | `packages/ontology/server` | needs-remediation | 8 | 24 | 0 | 2 |
 | 106 | `@beep/workspace-server` | `packages/workspace/server` | needs-remediation | 12 | 32 | 0 | 4 |
 | 107 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
-| 108 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 8 |
+| 108 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 7 |
 | 109 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 22 |
 | 110 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 7 | 0 | 0 |
 | 111 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 17 |
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 290 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 289 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 11 | 110 | 0 | 10 |
 | 132 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 12 |
 | 133 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 2 |
-| 134 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 32 | 7 | 6 |
+| 134 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 32 | 7 | 5 |
 | 135 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 136 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 137 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 7 | 204 | 0 | 18 |
@@ -1690,10 +1690,6 @@ Export findings:
 - `src/values/LocalOrdinanceCitation/LocalOrdinanceCitation.model.ts:52` `LocalOrdinanceCitation` (class) - 1 example import violation(s)
 - `src/values/NeutralCitation/NeutralCitation.model.ts:56` `NeutralCitation` (class) - 1 example import violation(s)
 - `src/values/OfficeCode/OfficeCode.model.ts:38` `OfficeCode` (const) - 1 documentation section/link violation(s)
-- `src/values/PatentDocument/PatentDocument.model.ts:165` `PatentClaim` (const) - 1 example import violation(s)
-- `src/values/PatentDocument/PatentDocument.model.ts:217` `PatentClaimDependencyIssue` (const) - 1 example import violation(s)
-- `src/values/PatentDocument/PatentDocument.model.ts:334` `inspectPatentClaimDependencies` (const) - 1 example import violation(s)
-- `src/values/PatentDocument/PatentDocument.model.ts:428` `PatentClaims` (const) - 1 example import violation(s)
 - `src/values/PatentDocument/PatentDocument.model.ts:467` `PatentApplicationSection` (class) - 1 example import violation(s)
 - `src/values/PatentDocument/PatentDocument.model.ts:572` `PatentApplicationSections` (const) - 1 example import violation(s)
 - `src/values/PatentDocument/PatentDocument.model.ts:660` `PatentApplicationDocument` (class) - 1 example import violation(s)
@@ -2041,8 +2037,8 @@ Module findings:
 
 Export findings:
 - `src/Backend/Composition.ts:127` `withFallback` (const) - 1 example import violation(s)
-- `src/Backend/Composition.ts:217` `CachingOptions` (class) - 2 example import violation(s)
-- `src/Backend/Composition.ts:277` `withCaching` (const) - 2 example import violation(s)
+- `src/Backend/Composition.ts:217` `CachingOptions` (class) - 1 example import violation(s)
+- `src/Backend/Composition.ts:277` `withCaching` (const) - 1 example import violation(s)
 - `src/Backend/Composition.ts:389` `selectByCapability` (const) - 1 example import violation(s)
 - `src/Backend/NLPBackend.ts:334` `NLPBackendShape` (interface) - 1 example import violation(s)
 - `src/Backend/NLPBackend.ts:410` `supportsCapability` (const) - 1 example import violation(s)
@@ -2507,15 +2503,10 @@ Export findings:
 Path: `packages/drivers/anthropic`
 
 Export findings:
-- `src/Anthropic.config.ts:115` `ANTHROPIC_DEFAULT_MAX_TOKENS` (const) - 1 example import violation(s)
-- `src/Anthropic.config.ts:250` `AnthropicLanguageModelOptions` (class) - 1 example import violation(s)
-- `src/Anthropic.repair.ts:66` `ANTHROPIC_REPAIR_MAX_TOKENS` (const) - 1 example import violation(s)
-- `src/Anthropic.repair.ts:143` `makeAnthropicRepairPlan` (const) - 1 example import violation(s)
 - `src/Anthropic.repair.ts:189` `collectToolParamsJson` (const) - 1 example import violation(s)
 - `src/Anthropic.repair.ts:269` `collectToolParamsJsonWithUsage` (const) - 1 example import violation(s)
 - `src/Anthropic.repair.ts:335` `generateAnthropicToolJson` (const) - 1 example import violation(s)
 - `src/Anthropic.service.ts:44` `AnthropicLive` (const) - 1 example import violation(s)
-- `src/Anthropic.service.ts:78` `makeAnthropicLanguageModelLayer` (const) - 1 example import violation(s)
 - `src/Anthropic.service.ts:113` `AnthropicLanguageModelLive` (const) - 1 example import violation(s)
 
 ### @beep/lexical-schema
@@ -2562,7 +2553,6 @@ Export findings:
 - `src/Lexical.model.ts:1675` `HeadingNode` (namespace) - 1 example import violation(s)
 - `src/Lexical.model.ts:1747` `QuoteNode` (namespace) - 1 example import violation(s)
 - `src/Lexical.model.ts:1845` `ListNode` (namespace) - 1 example import violation(s)
-- `src/Lexical.model.ts:1903` `ListNodeValue` (const) - 1 example import violation(s)
 - `src/Lexical.model.ts:1987` `ListItemNode` (namespace) - 1 example import violation(s)
 - `src/Lexical.model.ts:2066` `LinkNode` (namespace) - 1 example import violation(s)
 - `src/Lexical.model.ts:2146` `CodeNode` (namespace) - 1 example import violation(s)
@@ -3178,8 +3168,6 @@ Export findings:
 - `src/M365.auth.ts:181` `M365InteractiveAuthorizer` (type) - 1 example import violation(s)
 - `src/M365.auth.ts:316` `M365AuthShape` (type) - 1 example import violation(s)
 - `src/M365.auth.ts:336` `M365Auth` (class) - 1 example import violation(s)
-- `src/M365.service.ts:571` `M365ListMessagesRequest` (class) - 1 example import violation(s)
-- `src/M365.service.ts:632` `M365ListEventsRequest` (class) - 1 example import violation(s)
 
 ### @beep/xai
 
@@ -3198,11 +3186,9 @@ Export findings:
 Path: `packages/drivers/openai`
 
 Export findings:
-- `src/OpenAi.config.ts:173` `OpenAiEmbeddingModelOptions` (class) - 1 example import violation(s)
 - `src/OpenAi.service.ts:45` `OpenAiLive` (const) - 1 example import violation(s)
-- `src/OpenAi.service.ts:104` `makeOpenAiEmbeddingModelLayer` (const) - 1 example import violation(s)
 - `src/OpenAi.service.ts:133` `OpenAiLanguageModelLive` (const) - 1 example import violation(s)
-- `src/OpenAi.service.ts:173` `makeOpenAiEmbeddingModelLive` (const) - 2 example import violation(s)
+- `src/OpenAi.service.ts:173` `makeOpenAiEmbeddingModelLive` (const) - 1 example import violation(s)
 
 ### @beep/hubspot
 
@@ -3499,7 +3485,6 @@ Export findings:
 - `src/aggregates/Document/FilingTextExtraction.ts:70` `FilingTextExtractionShape` (interface) - 1 example import violation(s)
 - `src/aggregates/Sync/DmsMirrorFixture.ts:213` `DmsMirrorFixtureHandleShape` (interface) - 1 example import violation(s)
 - `src/aggregates/Sync/DmsMirrorFixture.ts:316` `makeDmsMirrorFixture` (const) - 1 example import violation(s)
-- `src/aggregates/Sync/VaultSync.config.ts:98` `VaultSyncConfigValue` (class) - 1 example import violation(s)
 - `src/aggregates/Sync/VaultSyncEngine.service.ts:420` `makeVaultSyncEngine` (const) - 1 example import violation(s)
 - `src/entities/internal/RepoSupport.ts:110` `makeEntityStore` (const) - 1 example import violation(s)
 
@@ -3942,12 +3927,11 @@ Export findings:
 - `src/commands/Worktree/Worktree.command.ts:722` `linkReferences` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.command.ts:876` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.command.ts:1066` `worktreeCommand` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.schemas.ts:204` `WorktreeUpstreamVerdict` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:312` `WorktreeResidueManifest` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:393` `WorktreeSessionMarker` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:433` `WorktreeInvokerExemption` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:489` `WorktreeRemovalRequest` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:146` `WorktreeMergedPullRequestProbe` (class) - 2 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:146` `WorktreeMergedPullRequestProbe` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:346` `worktreeArchivePlan` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:472` `WorktreeRemovalService` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:533` `runWorktreeGitCapture` (const) - 1 example import violation(s)
@@ -4536,7 +4520,6 @@ Export findings:
 - `src/UsptoDocumentTiers.ts:248` `ProjectDocumentsWithinBudgetOptions` (class) - 2 example import violation(s)
 - `src/UsptoDocumentTiers.ts:300` `projectDocumentsWithinBudget` (const) - 2 example import violation(s)
 - `src/UsptoHandlers.ts:102` `UsptoToolkitHandlersLive` (const) - 1 example import violation(s)
-- `src/UsptoTools.ts:245` `UsptoGetDocumentsParams` (class) - 1 example import violation(s)
 
 ### @beep/pandoc-ast
 

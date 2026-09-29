@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
 
@@ -22,8 +23,11 @@ const $I = $LawPracticeDomainId.create("values/Segment/Segment.model");
  * **Example** (Create position segment)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Segment } from "@beep/law-practice-domain"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const segment = Segment.make({
  *   cleanPos: NonNegativeInt.make(0),

@@ -12,7 +12,7 @@ import {
   EvidenceSourcePagePayload,
   GetContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { DateTime, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/reactivity";

@@ -9,13 +9,14 @@ import {
   makeAnthropicLanguageModelLayer,
   RepairError,
 } from "@beep/anthropic";
-import { PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const ApproximatePriceArbitrary = Arbitrary.schema(AnthropicApproximatePrice);
 const LanguageModelOptionsArbitrary = Arbitrary.schema(AnthropicLanguageModelOptions);

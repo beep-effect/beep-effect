@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BuffEncoding } from "../BufferEncoding.ts";
-import { NonNegativeInt } from "../Int.ts";
+import { NonNegativeInt } from "../Number.ts";
 import { Defect } from "../Opaque.ts";
 import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";

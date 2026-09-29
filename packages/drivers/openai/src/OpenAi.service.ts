@@ -17,7 +17,6 @@ import {
   OpenAiEmbeddingModelOptions,
   OpenAiLanguageModelOptions,
 } from "./OpenAi.config.ts";
-import type { PosInt } from "@beep/schema";
 
 /**
  * Live OpenAI client Layer backed by a redacted Effect Config value and Fetch.
@@ -87,9 +86,11 @@ export const makeOpenAiLanguageModelLayer = (
  * **Example** (Build an embedding-model Layer)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { makeOpenAiEmbeddingModelLayer, OpenAiEmbeddingModelOptions } from "@beep/openai"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const layer = makeOpenAiEmbeddingModelLayer(
  *   OpenAiEmbeddingModelOptions.make({ dimensions: PosInt.make(1536) })
@@ -151,11 +152,13 @@ export const OpenAiLanguageModelLive = Layer.unwrap(
  * **Example** (Provide the live embedding-model Layer)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { makeOpenAiEmbeddingModelLive } from "@beep/openai"
- * import { PosInt } from "@beep/schema"
  * import { Effect } from "effect"
  * import * as EmbeddingModel from "effect/ai/EmbeddingModel"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const layer = makeOpenAiEmbeddingModelLive(PosInt.make(1536))
  * const program = Effect.all({
@@ -170,7 +173,7 @@ export const OpenAiLanguageModelLive = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-export const makeOpenAiEmbeddingModelLive = (dimensions: PosInt) =>
+export const makeOpenAiEmbeddingModelLive = (dimensions: number) =>
   Layer.unwrap(
     Config.NonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
       Config.withDefault(OPENAI_DEFAULT_EMBEDDING_MODEL),

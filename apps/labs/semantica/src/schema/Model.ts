@@ -1,8 +1,9 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $SemanticaId.create("schema/Model");
 

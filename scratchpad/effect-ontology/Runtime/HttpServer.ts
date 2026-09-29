@@ -8,7 +8,7 @@
 import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { UUID } from "@beep/schema/String";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
@@ -89,6 +89,7 @@ import {
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
 

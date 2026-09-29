@@ -8,13 +8,14 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { UUID } from "@beep/schema/String";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
 import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));

@@ -27,7 +27,6 @@ import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/So
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
@@ -50,6 +49,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 import type * as DateTime from "effect/DateTime";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const leftLogicalKey = Str.repeat(64)("a");
 const rightLogicalKey = Str.repeat(64)("b");

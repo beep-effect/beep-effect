@@ -7,8 +7,9 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $AnthropicId.create("Anthropic.config");
 const AnthropicTokenPriceUsd = S.Finite.check(S.isGreaterThanOrEqualTo(0));
@@ -98,9 +99,11 @@ export const ANTHROPIC_DEFAULT_MODEL = "claude-opus-4-6" as const;
  * **Example** (Default max tokens option)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = AnthropicLanguageModelOptions.make({
  *   maxTokens: PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS),
@@ -231,9 +234,11 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
  * **Example** (Make language model options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions } from "@beep/anthropic"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = AnthropicLanguageModelOptions.make({
  *   maxTokens: PosInt.make(1024),

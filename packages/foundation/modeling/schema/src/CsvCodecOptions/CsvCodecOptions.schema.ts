@@ -10,7 +10,7 @@ import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "../Int.ts";
+import { NonNegativeInt } from "../Number.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as AST from "effect/SchemaAST";
 

@@ -1,10 +1,11 @@
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
 import { OPENAI_DEFAULT_EMBEDDING_MODEL, OPENAI_EMBEDDING_MODEL_ENV } from "@beep/openai";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Config, Context, Duration, Layer } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
+import { PosInt } from "../schema/PosInt.ts";
 
 const $I = $SemanticaId.create("runtime/Config");
 

@@ -10,7 +10,7 @@ import type * as Crypto from "effect/Crypto";
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import type { PlatformError } from "effect";
 import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
 import * as A from "effect/Array";

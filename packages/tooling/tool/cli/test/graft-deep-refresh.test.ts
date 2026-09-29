@@ -22,7 +22,6 @@ import {
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { CapturedStep, formatCommandLine } from "@beep/repo-cli/test/Process";
 import { resolveSystemdBunPath, SystemdUnitPath } from "@beep/repo-cli/test/Systemd";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -39,6 +38,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { GraftDeepRunnerStep } from "@beep/repo-cli/commands/Graft";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const artifacts = [
   ".cache/summaries.json",

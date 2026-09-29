@@ -19,7 +19,7 @@ import {
   SummaryItem,
 } from "@beep/govinfo";
 import { $GovinfoId } from "@beep/identity";
-import { PosInt, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -33,6 +33,8 @@ import * as O from "effect/Option";
 import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as S from "effect/Schema";
 import type * as HttpClientError from "effect/http/HttpClientError";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeCollectionContainer = S.decodeUnknownEffect(CollectionContainer);
 const decodeCollectionSummary = S.decodeUnknownEffect(CollectionSummary);

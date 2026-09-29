@@ -19847,46 +19847,6 @@
       "description": "520 “Web Server Returned an Unknown Error” – This is a code used by\nCloudflare. It specifies that the origin server returned an unexpected or\nunknown response to Cloudflare."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "Int",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Int",
-      "description": "A an integer value"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "NegInt",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NegInt",
-      "description": "A negative integer"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "NonPositiveInt",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NonPositiveInt",
-      "description": "A non-positive integer"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "PosInt",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "PosInt",
-      "description": "A positive integer"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "PostgresSerialInt",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "PostgresSerialInt",
-      "description": "A positive integer in the PostgreSQL serial int4 range."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Int64.ts",
       "symbol": "Int64",
       "kind": "brand",

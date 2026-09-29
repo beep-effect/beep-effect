@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";

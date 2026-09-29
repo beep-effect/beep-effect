@@ -36,7 +36,7 @@ import {
 } from "@beep/file-processing/SourceText";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Cause, Crypto, Effect, Layer, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";

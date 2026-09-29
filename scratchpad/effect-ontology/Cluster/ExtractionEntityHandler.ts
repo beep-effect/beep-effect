@@ -13,7 +13,7 @@ import * as Crypto from "effect/Crypto";
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
@@ -57,6 +57,7 @@ import type {
   KnowledgeGraphResult,
 } from "./ExtractionEntity.ts";
 import { ExtractionStatus, KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler");
 

@@ -7,7 +7,6 @@
 
 import { FaceDetectionConfidence, FaceDetectionPercentage } from "@beep/face-detection";
 import { $RepoCliId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt, NonNegNum } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -18,6 +17,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.schemas");

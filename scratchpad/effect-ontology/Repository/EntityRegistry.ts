@@ -14,7 +14,7 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils, UUID } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
@@ -39,6 +39,7 @@ import type {
   EntityBlockingTokenInsertRow,
 } from "./schema.ts";
 import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, entityBlockingTokens } from "./schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -166,9 +167,11 @@ export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
  * **Example** (Filter canonical entities)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { IRI } from "@beep/rdf"
- * import { PosInt } from "@beep/schema"
  * import { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const filter = CanonicalEntityFilter.make({
  *   ontologyId: "claims",

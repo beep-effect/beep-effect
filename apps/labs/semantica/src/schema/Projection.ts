@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Equal, identity, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -10,6 +10,7 @@ import { digestOmittingSync } from "@/schema/Digest";
 import { EvalReport } from "@/schema/Eval";
 import { ChunkId, RunId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $SemanticaId.create("schema/Projection");
 const ProjectionMode = LiteralKit(["live", "replay"]);

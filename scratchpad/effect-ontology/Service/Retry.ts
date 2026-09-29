@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import type { Cause } from "effect";
 import { Duration, Effect, Number as Num, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -15,6 +15,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Retry");
 

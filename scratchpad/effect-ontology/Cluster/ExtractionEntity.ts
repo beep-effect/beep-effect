@@ -13,7 +13,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -23,6 +23,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntity");
 

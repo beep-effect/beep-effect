@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -14,6 +14,7 @@ import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.model");
 
@@ -142,8 +143,10 @@ const PatentClaimFields = {
  * **Example** (Construct a dependent claim)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claim = PatentClaim.cases.dependent.make({
  *   body: "the sensor is optical",
@@ -201,8 +204,10 @@ const PatentClaimDependencyIssueKind = LiteralKit([
  * **Example** (Construct a missing-parent diagnostic)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentClaimDependencyIssue } from "@beep/law-practice-domain/values/PatentDocument"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const issue = PatentClaimDependencyIssue.cases["missing-parent"].make({
  *   claimNumber: PosInt.make(2),
@@ -314,8 +319,10 @@ const dependencyIssueMessage = (issue: PatentClaimDependencyIssue): string =>
  * **Example** (Detect a self-reference)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentClaim, inspectPatentClaimDependencies } from "@beep/law-practice-domain/values/PatentDocument"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claim = PatentClaim.cases.dependent.make({
  *   body: "a sensor",
@@ -409,8 +416,9 @@ const PatentClaimStructureCheck = S.makeFilter(
  *
  * ```ts
  * import { PatentClaim, PatentClaims } from "@beep/law-practice-domain/values/PatentDocument"
- * import { PosInt } from "@beep/schema"
  * import * as S from "effect/Schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claim = PatentClaim.cases.independent.make({
  *   body: "a sensor",
@@ -633,8 +641,11 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
  * **Example** (Construct a minimal document)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentApplicationDocument, PatentApplicationSection, PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claim = PatentClaim.cases.independent.make({
  *   body: "a sensor",

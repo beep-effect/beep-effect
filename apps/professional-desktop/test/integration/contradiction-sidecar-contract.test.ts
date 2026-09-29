@@ -8,7 +8,6 @@
  */
 
 import { ContradictionListPayload } from "@beep/epistemic-use-cases/public";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -23,6 +22,8 @@ import * as S from "effect/Schema";
 import { RuntimeTest } from "@/runtime/Layer";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));

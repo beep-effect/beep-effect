@@ -11,7 +11,7 @@
  */
 
 import { NodeIndex } from "@beep/schema/Graph";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   DateTime,

@@ -18,12 +18,13 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
+import { PosInt } from "./internal/PosInt.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
 import type * as R from "effect/Record";
@@ -1885,8 +1886,10 @@ const ListNodeValueFields = ListNode.mapFields(Struct.omit(["type", "listType", 
  * **Example** (Construct a canonical numbered list)
  *
  * ```ts import.meta.vitest name="Construct a canonical numbered list"
+ * import * as S from "effect/Schema"
  * import { ListNode, ListNodeValue } from "@beep/lexical-schema/Lexical.model"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const payload = ListNodeValue.cases.number.make({ children: [], start: PosInt.make(1) })
  * const node = ListNode.make(payload)

@@ -12,9 +12,10 @@ import {
   PracticeKgEpistemicStatus,
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type { Path } from "effect";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";

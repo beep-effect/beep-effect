@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 
 /**
  * Default similarity threshold applied when an alignment source resolves no

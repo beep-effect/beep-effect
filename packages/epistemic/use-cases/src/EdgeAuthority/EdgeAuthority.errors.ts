@@ -16,9 +16,9 @@
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 
 const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.errors");
 
@@ -133,10 +133,12 @@ const optionalDefect = (description: string) =>
  * **Example** (Build stale version conflict)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
- * import { PosInt } from "@beep/schema/Int"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
  * const error = SupersessionConflict.staleVersion(key, PosInt.make(2), PosInt.make(3))
@@ -175,9 +177,10 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct stale version conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * console.log(SupersessionConflict.staleVersion(key, PosInt.make(1), PosInt.make(4))._tag)
@@ -205,10 +208,12 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct lock loser conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
    * import * as O from "effect/Option"
+   *
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * console.log(O.isNone(SupersessionConflict.lockLoser(key, PosInt.make(1)).observedVersion))
@@ -230,10 +235,12 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
    * **Example** (Construct backstop conflict)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SupersessionConflict } from "@beep/epistemic-use-cases/EdgeAuthority"
    * import { LogicalEdgeKey } from "@beep/epistemic-domain/values"
-   * import { PosInt } from "@beep/schema/Int"
    * import * as O from "effect/Option"
+   *
+   * const PosInt = S.Int.check(S.isGreaterThan(0))
    *
    * const key = LogicalEdgeKey.make("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe")
    * const error = SupersessionConflict.backstop(key, PosInt.make(2), new Error("epistemic_edge_open_head_idx"))

@@ -27,7 +27,7 @@ import {
   M365ListSitesRequest,
   M365SkippedEncryptedItem,
 } from "@beep/m365";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -44,6 +44,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import type * as HttpClientError from "effect/http/HttpClientError";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeGraphDriveResult = S.decodeResult(GraphDrive);
 const decodeGraphDriveItemResult = S.decodeResult(GraphDriveItem);

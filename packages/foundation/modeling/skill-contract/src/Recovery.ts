@@ -6,7 +6,6 @@
  */
 
 import { $SkillContractId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -15,6 +14,8 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { EvidenceReceipt, EvidenceSubject } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType } from "./Gate.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const $I = $SkillContractId.create("Recovery");
 

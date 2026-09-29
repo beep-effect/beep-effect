@@ -13,7 +13,7 @@
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -42,6 +42,7 @@ import {
 } from "../Contract/ProgressStreaming.ts";
 import { ExtractionRunId } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
 const ProgressStreamingFailureReason = LiteralKit(["BackpressureTimeout", "QueueOverflow"]).pipe(
@@ -98,10 +99,13 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * **Example** (Start a four-chunk run)
  *
  * ```ts
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Percentage } from "@beep/schema/Percentage"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { ProgressBuilderState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const state = ProgressBuilderState.make({
  *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
@@ -137,10 +141,12 @@ export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`Progr
  * **Example** (Create a progress builder)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect, Ref } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const totalChunks = Effect.runSync(
  *   Effect.gen(function* () {
@@ -181,10 +187,12 @@ const calculateOverallProgress = (state: ProgressBuilderState, phaseProgress: nu
  * **Example** (Emit extraction started)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -249,10 +257,13 @@ export const createExtractionStarted: {
  * **Example** (Emit chunking progress)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkingProgress, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -312,10 +323,13 @@ export const createChunkingProgress: {
  * **Example** (Start processing a chunk)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -375,10 +389,13 @@ export const createChunkProcessingStarted: {
  * **Example** (Emit an entity-found event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createEntityFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -447,10 +464,13 @@ export const createEntityFound: {
  * **Example** (Emit a relation-found event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRelationFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -524,10 +544,13 @@ export const createRelationFound: {
  * **Example** (Complete a chunk)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -596,10 +619,13 @@ export const createChunkProcessingComplete: {
  * **Example** (Complete an extraction)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -685,10 +711,12 @@ type CreateExtractionFailedOptions = {
  * **Example** (Emit extraction failed)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionFailed, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -759,10 +787,13 @@ export const createExtractionFailed: {
  * **Example** (Emit a recoverable error)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRecoverableError, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const tag = Effect.runSync(
  *   Effect.gen(function* () {
@@ -831,10 +862,12 @@ export const createRecoverableError: {
  * **Example** (Increment processed chunks)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect, Ref } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder, markChunkProcessed } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const processed = Effect.runSync(
  *   Effect.gen(function* () {
@@ -861,11 +894,13 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
  * **Example** (Set phase progress)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect, Ref } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { Percentage } from "@beep/schema/Percentage"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { makeProgressBuilder, setPhaseProgress } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const progress = Effect.runSync(
  *   Effect.gen(function* () {
@@ -1036,8 +1071,8 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
  * **Example** (Enqueue a started event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import {
  *   createExtractionStarted,
@@ -1046,6 +1081,8 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
  *   makeBackpressureHandler,
  *   makeProgressBuilder
  * } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const size = Effect.runSync(
  *   Effect.gen(function* () {
@@ -1367,15 +1404,17 @@ export class ResumableExtractionState extends S.Class<ResumableExtractionState>(
  * **Example** (Extract resume state from a failure)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
- * import { PosInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import {
  *   createExtractionFailed,
  *   extractResumableState,
  *   makeProgressBuilder
  * } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const resumable = Effect.runSync(
  *   Effect.gen(function* () {

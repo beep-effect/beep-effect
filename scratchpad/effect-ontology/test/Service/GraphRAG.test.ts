@@ -1,6 +1,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, it } from "@effect/vitest";
 import { Duration, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
@@ -13,6 +13,9 @@ import { EntityIndex } from "../../Service/EntityIndex.ts";
 import { GraphRAG, GraphRAGGenerationError } from "../../Service/GraphRAG.ts";
 import { RetryPolicy } from "../../Service/Retry.ts";
 import { SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
+import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const alice = Entity.make({
   id: EntityId.make("alice"),

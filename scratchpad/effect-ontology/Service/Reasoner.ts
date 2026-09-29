@@ -18,7 +18,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, NonNegNum } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
@@ -27,6 +27,7 @@ import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { RdfStore } from "./Rdf.ts";
 import { cloneRdfStore, rdfStoreApplyRules, rdfStoreSize } from "./Rdf.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 

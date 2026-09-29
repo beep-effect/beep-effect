@@ -9,13 +9,14 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { Defect, NonNegativeInt, PosInt } from "@beep/schema";
+import { Defect, NonNegativeInt } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../internal/PosInt.ts";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
 import { OfficeActionCandidateExtraction } from "../OfficeActionReview/OfficeActionReview.ports.ts";
 
@@ -29,9 +30,12 @@ const decodeEvidence = S.decodeUnknownEffect(Evidence);
  * **Example** (Construct a mapping input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
  * import { PatentClaimCandidateInput } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claim = PatentClaim.cases.independent.make({
  *   body: "a sensor",
@@ -171,14 +175,17 @@ const claimEvidenceFrom = (
  * **Example** (Map a normalized independent claim)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
  * import {
  *   PatentClaimCandidateInput,
  *   patentClaimCandidateFrom
  * } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import * as Effect from "effect/Effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const claimText = "A system comprising a sensor."
  * const claim = PatentClaim.cases.independent.make({

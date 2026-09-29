@@ -5,12 +5,13 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import { PosInt } from "../internal/PosInt.ts";
 import { SourceTextResolverError } from "./SourceText.errors.ts";
 import { SOURCE_TEXT_PAGE_CODE_UNITS, SourceTextPage } from "./SourceText.schema.ts";
 import type { ResolvedSourceText } from "./SourceText.schema.ts";

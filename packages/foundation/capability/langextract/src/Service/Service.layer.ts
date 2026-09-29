@@ -13,7 +13,7 @@ import {
   parseModelOutput,
 } from "@beep/langextract/Extraction";
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "@beep/utils/Array";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";

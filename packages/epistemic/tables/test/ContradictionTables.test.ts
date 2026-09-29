@@ -35,7 +35,6 @@ import {
   toContradictionDispositionInsert,
   toContradictionReceiptInsert,
 } from "@beep/epistemic-tables/entities/Contradiction";
-import { PosInt } from "@beep/schema/Int";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
@@ -49,6 +48,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeUnknownCanonicalContradictionBeliefPairResult = S.decodeUnknownResult(CanonicalContradictionBeliefPair);
 const encodeCanonicalContradictionBeliefPairResult = S.encodeResult(CanonicalContradictionBeliefPair);

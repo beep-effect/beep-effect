@@ -7,12 +7,13 @@ import * as Arbitrary from "effect/Arbitrary";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { HttpUrl } from "@beep/ontology/Ontology.models";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
 import { SourceType } from "../Model/EnrichedContent.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 

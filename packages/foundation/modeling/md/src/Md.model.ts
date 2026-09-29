@@ -8,7 +8,6 @@
 import * as HtmlModel from "@beep/html/Html.model";
 import { Text as HtmlText } from "@beep/html/Html.nodes";
 import { $MdId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -18,6 +17,8 @@ import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { HtmlChildNode } from "@beep/html";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const $I = $MdId.create("Md.model");
 

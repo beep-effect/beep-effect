@@ -6,7 +6,6 @@
  */
 import { $RepoConfigsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -18,6 +17,8 @@ import {
   CacheTaskContract,
   isCacheTransitionAllowed,
 } from "./Cache.policy.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const $I = $RepoConfigsId.create("cache/Cache.governance.policy");
 

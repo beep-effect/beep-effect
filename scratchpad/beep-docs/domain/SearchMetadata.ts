@@ -10,7 +10,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
 

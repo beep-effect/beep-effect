@@ -25,7 +25,6 @@ import {
   isCacheTransitionAllowed,
 } from "@beep/repo-configs/cache";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -37,6 +36,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const digest = (n: number) => Sha256Hex.make(Str.padStart(64, "0")(`${n}`));
 const key = CacheQualificationKey.make({

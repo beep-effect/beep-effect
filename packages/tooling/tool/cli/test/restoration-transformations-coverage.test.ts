@@ -22,7 +22,7 @@ import {
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, PosixPath, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, PosixPath, Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -30,6 +30,8 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const encodeCollectorManifestRecordJson = S.encodeEffect(S.fromJsonString(CollectorManifestRecord));
 

@@ -10,7 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -23,6 +23,7 @@ import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
@@ -92,9 +93,11 @@ const evictLeastRecentlyUsed = (
  * **Example** (Configure cache lifetime and capacity)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
  * import { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = EmbeddingCacheConfig.make({
  *   ttl: Duration.minutes(30),
@@ -122,8 +125,10 @@ export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`Embed
  * **Example** (Configure an embedding cache)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import type { EmbeddingCacheConfigInput } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config: EmbeddingCacheConfigInput = { maxEntries: PosInt.make(100) }
  * console.log(config)

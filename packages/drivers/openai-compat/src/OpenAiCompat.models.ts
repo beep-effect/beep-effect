@@ -7,12 +7,12 @@
 
 import { $OpenaiCompatId } from "@beep/identity";
 import { LiteralKit, OptionFromOptionalNullishKey, SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import type * as Effect from "effect/Effect";
 import type * as SchemaAST from "effect/SchemaAST";
 

@@ -13,9 +13,9 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -34,6 +34,7 @@ import {
 import type { ImageCandidate } from "../Domain/Model/Image.ts";
 import { ImageFetchResult } from "../Domain/Model/Image.ts";
 import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 

@@ -5,11 +5,12 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { HashMap, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 import { Segment } from "../Segment/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/SegmentMap/SegmentMap.model");

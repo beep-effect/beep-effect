@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -11,6 +10,8 @@ import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodePosIntResult = S.decodeResult(PosInt);
 const isISOStr = S.is(ISOStr);

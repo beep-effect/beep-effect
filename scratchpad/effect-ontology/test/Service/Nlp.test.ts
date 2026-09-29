@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
@@ -6,6 +5,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { EmbeddingService } from "../../Service/Embedding.ts";
 import { NlpIndexError, NlpService } from "../../Service/Nlp.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 const decodeUnknownFinite = S.decodeUnknownEffect(S.Finite);
 const isNlpIndexError = S.is(NlpIndexError);
 

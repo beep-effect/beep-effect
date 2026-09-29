@@ -6,13 +6,14 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
 import { OntologyRef } from "./Ontology.ts";
 import { OutputType } from "./OutputType.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
 
@@ -437,9 +438,11 @@ class GroundingEnabled extends S.Class<GroundingEnabled>($I`GroundingEnabled`)(
  *
  * **Example** (Configure grounding)
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { PosInt } from "@beep/schema"
  * import { GroundingPolicy } from "@effect-ontology/Model/ExtractionRun"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = GroundingPolicy.cases.Enabled.make({
  *   threshold: Confidence.make(0.8),

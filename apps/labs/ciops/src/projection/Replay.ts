@@ -6,7 +6,7 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Effect, HashMap, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { projectSchedule } from "./Engine.ts";
+import { PosInt } from "./PosInt.ts";
 import {
   AdmissionJournalEvent,
   AdmissionWorkKind,
@@ -112,8 +113,11 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
  * **Example** (Record an inferred eviction)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { InferredLeaseEviction } from "@/projection/Replay"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const eviction = InferredLeaseEviction.make({
  *   eventIndex: NonNegativeInt.make(66),
@@ -319,10 +323,12 @@ const releaseFromLedger = Effect.fnUntraced(function* (
  * **Example** (Replay an empty event stream)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { replayAdmissionJournal } from "@/projection/Replay"
  * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
  *   capacityMaxTokens: PosInt.make(10),

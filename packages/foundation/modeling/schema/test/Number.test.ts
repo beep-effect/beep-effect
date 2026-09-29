@@ -2,11 +2,10 @@ import { Age } from "@beep/schema/Age";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
-import type { Int } from "@beep/schema/Int";
 
 const decodeAge = S.decodeEffect(Age);
 const decodeUnknownAge = S.decodeUnknownEffect(Age);
@@ -43,10 +42,6 @@ describe("Age", () => {
 });
 
 describe("Number schemas", () => {
-  it("preserves the base Int brand on non-negative integers", () => {
-    expectTypeOf<NonNegativeInt extends Int ? true : false>().toEqualTypeOf<true>();
-  });
-
   it.effect(
     "exports the non-negative integer schema from the Number subpath",
     Effect.fnUntraced(function* () {

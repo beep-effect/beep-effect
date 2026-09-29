@@ -839,7 +839,9 @@
       "@beep/schema/Html": [
         "./packages/foundation/modeling/schema/src/Html.ts"
       ],
-      "@beep/schema/Int": ["./packages/foundation/modeling/schema/src/Int.ts"],
+      "@beep/schema/Int64": [
+        "./packages/foundation/modeling/schema/src/Int64.ts"
+      ],
       "@beep/schema/Json": [
         "./packages/foundation/modeling/schema/src/Json.ts"
       ],

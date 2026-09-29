@@ -1,4 +1,4 @@
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -30,6 +30,7 @@ import { CanaryC1 } from "@/services/CanaryC1";
 import { CanaryC2 } from "@/services/CanaryC2";
 import { RdfProjection } from "@/services/RdfProjection";
 import { Reasoner } from "@/services/Reasoner";
+import { PosInt } from "../schema/PosInt.ts";
 
 const C2_SCHEMA_VERSION = "c2-eval-report/v1";
 const C2_STAGE = "c2";

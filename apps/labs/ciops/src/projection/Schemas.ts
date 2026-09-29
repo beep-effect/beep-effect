@@ -6,11 +6,12 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UUID } from "@beep/schema/String";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $CiopsId.create("projection/Schemas");
 
@@ -121,8 +122,10 @@ export type ScheduleScope = typeof ScheduleScope.Type;
  * **Example** (Construct ratified work weights)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const weights = AdmissionTokenWeights.make({
  *   fullProof: PosInt.make(3),
@@ -154,8 +157,10 @@ export class AdmissionTokenWeights extends S.Class<AdmissionTokenWeights>($I`Adm
  * **Example** (Construct an admission policy)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
  *   capacityMaxTokens: PosInt.make(10),
@@ -202,8 +207,11 @@ export class AdmissionPolicyParams extends S.Class<AdmissionPolicyParams>($I`Adm
  * **Example** (Construct a pending request)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PendingRequest } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = PendingRequest.make({
  *   nonce: "request-1",
@@ -278,8 +286,11 @@ export class TokenLedgerState extends S.Class<TokenLedgerState>($I`TokenLedgerSt
  * **Example** (Construct an admission step)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PendingRequest, ScheduleStep } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = PendingRequest.make({
  *   nonce: "request-1",
@@ -367,10 +378,13 @@ export class ScheduleProposal extends S.Class<ScheduleProposal>($I`SchedulePropo
  * **Example** (Construct projection input)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionPolicyParams, AdmissionTokenWeights, ProjectionInput, TokenLedgerState } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const input = ProjectionInput.make({
  *   episodeId: "verification-1",
@@ -449,8 +463,11 @@ export class TurtleDocument extends S.Class<TurtleDocument>($I`TurtleDocument`)(
  * **Example** (Describe a replay mismatch)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ProjectionMismatch } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const mismatch = ProjectionMismatch.make({
  *   eventIndex: NonNegativeInt.make(4),
@@ -593,9 +610,12 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
  * **Example** (Construct a redacted admitted event)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { AdmissionJournalAdmitted } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const event = AdmissionJournalAdmitted.make({
  *   schemaVersion: "yeet-admission-journal/v1",

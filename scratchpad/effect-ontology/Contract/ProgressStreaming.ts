@@ -14,7 +14,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils as SchemaDefaults } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -24,6 +24,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Duration, pipe } from "effect";
 import * as S from "effect/Schema";
 import { ExtractionRunId } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
 

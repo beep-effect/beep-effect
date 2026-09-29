@@ -6,7 +6,7 @@ import {
   RestorationPreserveOptions,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -14,6 +14,8 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
 const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));

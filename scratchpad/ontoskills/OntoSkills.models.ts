@@ -8,7 +8,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256 } from "@beep/shared-domain/entity/primitives";
@@ -19,6 +18,9 @@ import * as Str from "@beep/utils/Str";
 import { Duration, Effect, SchemaTransformation, Tuple } from "effect";
 import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
+type PosInt = typeof PosInt.Type;
 
 const $I = $ScratchpadId.create("ontoskills/OntoSkills.models");
 const zero = NonNegativeInt.make(0);

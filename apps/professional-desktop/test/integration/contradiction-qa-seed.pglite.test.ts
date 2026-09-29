@@ -13,7 +13,6 @@ import {
   SOURCE_TEXT_PAGE_CODE_UNITS,
 } from "@beep/file-processing/SourceText";
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -51,6 +50,8 @@ import {
 } from "@/contradiction/ContradictionQaSeed";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);

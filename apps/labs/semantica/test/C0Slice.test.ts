@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { PosInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
@@ -34,6 +34,8 @@ import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { GoldSource } from "@/services/GoldSource";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const ManifestJson = S.fromJsonString(CorpusManifest);
 const decodeManifestJson = S.decodeEffect(ManifestJson);

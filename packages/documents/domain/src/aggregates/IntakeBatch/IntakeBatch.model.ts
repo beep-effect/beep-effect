@@ -6,7 +6,7 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 

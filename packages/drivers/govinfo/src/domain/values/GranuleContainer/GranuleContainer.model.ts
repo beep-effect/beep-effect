@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../../internal/PosInt.ts";
 import { NonNegativeInt64 } from "../GovinfoNumeric.ts";
 import { GranuleMetadata } from "../GranuleMetadata/index.ts";
 

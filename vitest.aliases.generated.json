@@ -741,7 +741,7 @@
     "./packages/foundation/modeling/schema/src/Float64Array.ts"
   ],
   "@beep/schema/Html": ["./packages/foundation/modeling/schema/src/Html.ts"],
-  "@beep/schema/Int": ["./packages/foundation/modeling/schema/src/Int.ts"],
+  "@beep/schema/Int64": ["./packages/foundation/modeling/schema/src/Int64.ts"],
   "@beep/schema/Json": ["./packages/foundation/modeling/schema/src/Json.ts"],
   "@beep/schema/Jsonc": ["./packages/foundation/modeling/schema/src/Jsonc.ts"],
   "@beep/schema/Jsonl": ["./packages/foundation/modeling/schema/src/Jsonl.ts"],

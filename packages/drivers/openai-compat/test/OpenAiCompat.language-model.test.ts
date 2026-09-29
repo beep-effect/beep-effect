@@ -19,7 +19,6 @@ import {
   OpenAiCompatUsage,
   OpenAiCompatUserChatMessage,
 } from "@beep/openai-compat";
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
@@ -40,6 +39,8 @@ import * as S from "effect/Schema";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const ClientOptionsArbitrary = Arbitrary.schema(OpenAiCompatClientOptions);
 const LanguageModelConfigArbitrary = Arbitrary.schema(OpenAiCompatLanguageModelConfig);

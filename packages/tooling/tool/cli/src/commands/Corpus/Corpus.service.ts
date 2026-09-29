@@ -534,9 +534,12 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
  * **Example** (Build a preservation program)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { preserveRestorationArchive, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = preserveRestorationArchive(RestorationPreserveOptions.make({
  *   absentRecycleTreePath: "/archive/absent",
@@ -604,9 +607,12 @@ export const reconcileRestorationAcceptance = Effect.fn("Corpus.reconcileRestora
  * **Example** (Build a full mail restoration program)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreMail, RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreMail(RestorationMailOptions.make({
  *   corpusRoot: "/archive/corpus",
@@ -642,9 +648,12 @@ export const restoreMail = Effect.fn("Corpus.restoreMail")(function* (
  * **Example** (Build legacy-Word restoration)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreLegacyWord, RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreLegacyWord(RestorationLegacyWordOptions.make({
  *   converterPath: "/usr/bin/soffice",
@@ -680,9 +689,12 @@ export const restoreLegacyWord = Effect.fn("Corpus.restoreLegacyWord")(function*
  * **Example** (Build recycle restoration)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { restoreRecycle, RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const program = restoreRecycle(RestorationRecycleOptions.make({
  *   corpusRoot: "/archive/corpus",

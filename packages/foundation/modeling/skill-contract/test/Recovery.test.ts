@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -23,6 +22,8 @@ import { Duration, Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
 const isBudgetDuration = S.is(BudgetDuration);

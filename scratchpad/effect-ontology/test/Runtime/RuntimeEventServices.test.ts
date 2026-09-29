@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Context, DateTime, Effect, Exit, Fiber, Layer, PubSub, Scope } from "effect";
 import * as A from "effect/Array";

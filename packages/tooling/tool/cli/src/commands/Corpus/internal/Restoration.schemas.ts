@@ -6,12 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Restoration.schemas");
 
@@ -162,8 +163,11 @@ const PreservationCrashPoint = LiteralKit(["none", "after-payload-sync", "after-
  * **Example** (Create preservation options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationPreserveOptions.make({
  *   absentRecycleTreePath: "/media/absent-recycle-tree",
@@ -299,8 +303,11 @@ const TransformationEvidenceIdentity = S.Struct({
  * **Example** (Create mail restoration options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationMailOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationMailOptions.make({
  *   corpusRoot: "/data/corpus",
@@ -347,8 +354,11 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
  * **Example** (Create recycle reconciliation options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationRecycleOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationRecycleOptions.make({
  *   corpusRoot: "/data/corpus",
@@ -383,8 +393,11 @@ export class RestorationRecycleOptions extends S.Class<RestorationRecycleOptions
  * **Example** (Create legacy-Word conversion options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestorationLegacyWordOptions } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = RestorationLegacyWordOptions.make({
  *   converterPath: "soffice",

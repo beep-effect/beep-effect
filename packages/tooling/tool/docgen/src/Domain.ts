@@ -6,13 +6,14 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { PosInt } from "@beep/schema";
 import { A, HostProcessPlatform, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const $I = $RepoDocgenId.create("Domain");
 const StringArray = S.Array(S.String);

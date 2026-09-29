@@ -8,7 +8,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -20,6 +20,7 @@ import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import type { FindSimilarOptions } from "./EntityIndex.ts";
 import { EntityIndex } from "./EntityIndex.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 

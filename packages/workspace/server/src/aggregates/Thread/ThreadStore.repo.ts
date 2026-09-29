@@ -7,7 +7,7 @@
  */
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { OrganizationId } from "@beep/shared-domain/identity/Shared";
@@ -25,6 +25,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import { PosInt } from "../../internal/PosInt.ts";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
 import type { ToolCallItem } from "@beep/workspace-domain/entities/Turn";

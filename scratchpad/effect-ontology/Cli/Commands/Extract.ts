@@ -11,7 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Unknown } from "@beep/schema/Unknown";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
@@ -37,6 +37,7 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { space: 2 }));
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 

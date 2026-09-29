@@ -18,7 +18,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Duration, Effect, Inspectable, Layer, Match, Number as Num, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -38,6 +38,7 @@ import { ConfigService } from "./Config.ts";
 import type { EmbeddingProviderMethods, EmbeddingRequest, ProviderMetadata } from "./EmbeddingProvider.ts";
 import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
 import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/VoyageEmbeddingProvider");
 

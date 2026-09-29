@@ -38,7 +38,6 @@ import {
   RecordEdgeFact,
 } from "@beep/epistemic-use-cases/server";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
@@ -64,6 +63,8 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const externalUrl = pipe(
   Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),

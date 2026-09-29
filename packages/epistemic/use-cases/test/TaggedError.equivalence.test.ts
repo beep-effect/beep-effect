@@ -16,7 +16,6 @@ import {
   ContradictionReviewConflict,
   ContradictionSubmissionConflict,
 } from "@beep/epistemic-use-cases/server";
-import { PosInt } from "@beep/schema/Int";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
@@ -24,6 +23,8 @@ import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const expectDeclaredEquivalence = <Schema extends S.Top>(
   schema: Schema,

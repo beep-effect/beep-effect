@@ -58,7 +58,6 @@ import {
   verifyTextAnchor,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { Cuid } from "@beep/schema/Cuid";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -84,6 +83,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import type { JsonObject } from "@beep/schema/Json";
 import type * as Crypto from "effect/Crypto";
 

@@ -7,7 +7,7 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, NonNegativeInt, PosInt, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosixPath, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
 import { Effect, identity, Number as N, Order } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -30,6 +30,7 @@ import {
   SupplierOffer,
   Tool,
 } from "./Ontology";
+import { PosInt } from "./PosInt.ts";
 import { buildReferenceData } from "./ReferenceData";
 
 const $I = $LejeuneBoltWorkbenchId.create("domain/Bundle");

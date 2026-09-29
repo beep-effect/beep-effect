@@ -17,7 +17,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { Double } from "@beep/schema/Double";
-import { Int64 } from "@beep/schema/Int";
+import { Int64 } from "@beep/schema/Int64";
 import { UriReferenceString } from "@beep/schema/JSONSchema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";

@@ -24,7 +24,7 @@ const int64Maximum = BigInt("9223372036854775807");
  * **Example** (Validate max signed int64)
  *
  * ```ts import.meta.vitest name="Validate max signed int64"
- * import { isInt64 } from "@beep/schema/Int"
+ * import { isInt64 } from "@beep/schema/Int64"
  * import * as S from "effect/Schema"
  *
  * const SignedInt64 = S.BigInt.check(isInt64())
@@ -63,7 +63,7 @@ export function isInt64(annotations?: S.Annotations.Filter) {
  * **Example** (Validate minimum signed int64)
  *
  * ```ts import.meta.vitest name="Validate minimum signed int64"
- * import { Int64 } from "@beep/schema/Int"
+ * import { Int64 } from "@beep/schema/Int64"
  * import * as S from "effect/Schema"
  *
  * const isSignedInt64 = S.is(Int64)
@@ -86,8 +86,8 @@ export const Int64 = S.BigInt.check(isInt64()).pipe(
  * **Example** (Narrow unknown to Int64)
  *
  * ```ts
- * import { Int64 } from "@beep/schema/Int"
- * import type { Int64 as Int64Value } from "@beep/schema/Int"
+ * import { Int64 } from "@beep/schema/Int64"
+ * import type { Int64 as Int64Value } from "@beep/schema/Int64"
  * import * as S from "effect/Schema"
  *
  * const input: unknown = BigInt(42)
@@ -110,7 +110,7 @@ export type Int64 = typeof Int64.Type;
  *
  * ```ts
  * import { Effect } from "effect"
- * import { Int64FromString } from "@beep/schema/Int"
+ * import { Int64FromString } from "@beep/schema/Int64"
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(Int64FromString)("9223372036854775807")
@@ -134,8 +134,8 @@ export const Int64FromString = S.BigIntFromString.pipe(
  * **Example** (Type Int64FromString branded value)
  *
  * ```ts
- * import { Int64, Int64FromString } from "@beep/schema/Int"
- * import type { Int64FromString as Int64FromStringValue } from "@beep/schema/Int"
+ * import { Int64, Int64FromString } from "@beep/schema/Int64"
+ * import type { Int64FromString as Int64FromStringValue } from "@beep/schema/Int64"
  * import * as S from "effect/Schema"
  *
  * const input: unknown = BigInt(0)

@@ -17,7 +17,7 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Context, DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";

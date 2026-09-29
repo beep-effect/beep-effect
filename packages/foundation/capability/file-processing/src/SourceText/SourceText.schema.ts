@@ -7,11 +7,12 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { identity } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { PosInt } from "../internal/PosInt.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("SourceText");

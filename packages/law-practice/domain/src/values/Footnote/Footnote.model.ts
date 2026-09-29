@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { A, P, pipe, Str } from "@beep/utils";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $LawPracticeDomainId.create("values/Footnote/Footnote.model");
 
@@ -66,8 +67,11 @@ const POST_FOOTNOTE_HEADING_RE = /^[A-Z][A-Z0-9 &:'.-]{3,}$/m;
  * **Example** (Create a footnote zone)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Footnote } from "@beep/law-practice-domain";
- * import { NonNegativeInt, PosInt } from "@beep/schema";
+ * import { NonNegativeInt } from "@beep/schema";
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const footnoteZone = Footnote.Zone.make({
  *   start: NonNegativeInt.make(0),

@@ -1,5 +1,5 @@
 import { $CiopsId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -41,6 +41,8 @@ import {
 import { emitScheduleAbox } from "@/projection/Turtle";
 import type { CiOpsProjectionShape } from "@/projection/CiOpsProjection";
 import type { AdmissionPolicyParams, AdmissionWorkKind } from "@/projection/Schemas";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =

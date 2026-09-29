@@ -10,7 +10,7 @@ import {
   TextAnchor,
   TextAnchorVerificationReceipt,
 } from "@beep/provenance";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
@@ -51,6 +51,9 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
 import type { ProviderCacheEntry } from "@/schema/ProviderCache";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
+type PosInt = typeof PosInt.Type;
 
 const sha = (digit: string): Sha256Hex => Sha256Hex.make(Str.repeat(64)(digit));
 const chunkId = (digit: string): ChunkId => ChunkId.make(Str.repeat(64)(digit));

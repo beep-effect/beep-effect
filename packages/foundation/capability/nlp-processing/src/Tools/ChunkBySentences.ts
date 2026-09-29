@@ -6,9 +6,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import { AiSentenceChunk, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/ChunkBySentences");

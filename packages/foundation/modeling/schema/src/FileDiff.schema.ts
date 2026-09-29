@@ -7,7 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "./Int.ts";
+import { NonNegativeInt } from "./Number.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("FileDiff.schema");

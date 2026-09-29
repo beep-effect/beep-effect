@@ -19,7 +19,7 @@ import {
   ContradictionResolutionProposal,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -209,7 +209,7 @@ export class ContradictionCandidateView extends S.Class<ContradictionCandidateVi
  *
  * ```ts
  * import { ContradictionCandidatePage } from "@beep/epistemic-use-cases/public"
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const page = ContradictionCandidatePage.make({
  *   items: [],

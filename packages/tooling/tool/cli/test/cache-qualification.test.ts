@@ -16,7 +16,6 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -26,6 +25,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const platform = Layer.mergeAll(
   NodeServices.layer,

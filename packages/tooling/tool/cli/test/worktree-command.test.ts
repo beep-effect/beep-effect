@@ -43,7 +43,7 @@ import {
   processTableWithLineage,
   procProcessTable,
 } from "@beep/repo-cli/test/RepoRun";
-import { NonEmptyTrimmedStr, PosInt } from "@beep/schema";
+import { NonEmptyTrimmedStr } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
@@ -57,6 +57,8 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

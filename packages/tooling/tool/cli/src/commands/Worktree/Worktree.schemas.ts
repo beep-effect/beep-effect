@@ -12,13 +12,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr, PosInt } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
 
@@ -191,8 +192,10 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  * **Example** (Recognize a merged-pull-request verdict)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const verdict: WorktreeUpstreamVerdict = { _tag: "merged-pull-request", number: PosInt.make(1098) }
  * console.log(WorktreeUpstreamVerdict.guards["merged-pull-request"](verdict)) // true

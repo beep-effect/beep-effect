@@ -11,7 +11,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import { Config, Context, Duration, Effect, flow, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -37,6 +37,8 @@ import {
 } from "./M365.schemas.ts";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeM365ConfigInput = S.decodeEffect(M365ConfigInput);
 
@@ -557,9 +559,11 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
  * **Example** (List messages with top)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { M365ListMessagesRequest } from "@beep/m365"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = M365ListMessagesRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)
@@ -618,9 +622,11 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
  * **Example** (List events with top)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { M365ListEventsRequest } from "@beep/m365"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const request = M365ListEventsRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)

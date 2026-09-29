@@ -27,10 +27,11 @@ import {
   projectFieldTier,
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
-import { Fn, LiteralKit, NonNegativeInt, PosInt, SchemaUtils, URLStr } from "@beep/schema";
+import { Fn, LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import { UsptoDocumentReference } from "@beep/uspto";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $UsptoMcpId.create("UsptoDocumentTiers");
 
@@ -223,9 +224,12 @@ export type MintFetchableHandle = typeof MintFetchableHandle.Type;
  * **Example** (Make budget options object)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FetchableHandle } from "@beep/mcp-kit"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { MintFetchableHandle, ProjectDocumentsWithinBudgetOptions } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const options = ProjectDocumentsWithinBudgetOptions.make({
  *   budgetBytes: PosInt.make(10_000),
@@ -274,10 +278,13 @@ export class ProjectDocumentsWithinBudgetOptions extends S.Class<ProjectDocument
  * **Example** (Project documents within budget)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { UsptoDocumentReference } from "@beep/uspto"
  * import { FetchableHandle } from "@beep/mcp-kit"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { projectDocumentsWithinBudget } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const documents = [UsptoDocumentReference.make({ documentIdentifier: "DOC-1" })]
  * const projection = projectDocumentsWithinBudget(documents, {

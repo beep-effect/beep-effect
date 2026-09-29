@@ -22,7 +22,7 @@ import {
   GetContradictionCandidate,
   ReviewContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";

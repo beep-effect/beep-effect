@@ -12,7 +12,7 @@ import { DateTime, Effect, flow, Order as Order_, pipe, SchemaIssue, SchemaTrans
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "../Int.ts";
+import { NonNegativeInt } from "../Number.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";

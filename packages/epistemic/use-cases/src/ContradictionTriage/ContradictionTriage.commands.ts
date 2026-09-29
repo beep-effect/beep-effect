@@ -22,7 +22,7 @@ import {
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
@@ -32,6 +32,7 @@ import * as Shared from "@beep/shared-domain/identity/Shared";
 import { DateTime, Effect, identity, Order } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 
 const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.commands");
 
@@ -220,7 +221,7 @@ export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageL
  *   ContradictionCandidatePageLimit,
  *   ListContradictionCandidates,
  * } from "@beep/epistemic-use-cases/server"
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { DateTime } from "effect"
  *

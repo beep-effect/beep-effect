@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { DurationUnit } from "@beep/schema/Duration";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { pipe } from "effect";
@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
 const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
@@ -407,9 +408,11 @@ export const parseDeepCoverage = (text: string): O.Option<GraftDeepCoverage> => 
  * **Example** (Configure a nightly run)
  *
  * ```ts import.meta.vitest name="Configure a nightly run"
+ * import * as S from "effect/Schema"
  * import { GraftDeepRefreshOptions } from "@beep/repo-cli/commands/Graft"
- * import { PosInt } from "@beep/schema/Int"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  * const options = GraftDeepRefreshOptions.make({
  *   owner: "/clones/beep-effect0",
  *   jobs: PosInt.make(16),
@@ -484,8 +487,10 @@ export class GraftDeepSiblingRebuild extends S.Class<GraftDeepSiblingRebuild>($I
  * **Example** (Describe an in-flight run)
  *
  * ```ts import.meta.vitest name="Describe an in-flight run"
+ * import * as S from "effect/Schema"
  * import { GraftDeepRefreshStatus } from "@beep/repo-cli/commands/Graft"
- * import { PosInt } from "@beep/schema/Int"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  * const status = GraftDeepRefreshStatus.make({
  *   schemaVersion: "beep-graft-deep-refresh/v1",
  *   owner: "/clones/beep-effect0",

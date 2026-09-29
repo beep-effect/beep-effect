@@ -10,7 +10,9 @@ import * as S from "effect/Schema";
 import {LiteralKit} from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import {SemverFromString} from "@beep/schema/Semver";
-import {FilePath, PosInt} from "@beep/schema";
+import { FilePath } from "@beep/schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 
 const $I = $ScratchpadId.create("ontoskills/registry/Registry.models");

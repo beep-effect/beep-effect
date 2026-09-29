@@ -18,7 +18,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
 import {
   Cause,
@@ -100,7 +100,7 @@ export type BroadcastEvent = typeof BroadcastEvent.Type;
  * **Example** (Construct a ping keep-alive)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
@@ -126,7 +126,7 @@ export const PingMessage = S.Struct({
  * **Example** (Read a ping timestamp)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message: PingMessage = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
@@ -145,7 +145,7 @@ export type PingMessage = typeof PingMessage.Type;
  * **Example** (Construct a connected greeting)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message = ConnectedMessage.make({
@@ -177,7 +177,7 @@ export const ConnectedMessage = S.Struct({
  * **Example** (Read the serving instance)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const message: ConnectedMessage = ConnectedMessage.make({
@@ -200,7 +200,7 @@ export type ConnectedMessage = typeof ConnectedMessage.Type;
  * **Example** (Decode a ping envelope)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { PingMessage, ServerMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

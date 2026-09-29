@@ -14,7 +14,7 @@ import {
 } from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -24,6 +24,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
+import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import { classifyRecycleBinName, parseRecycleBinMetadata } from "../Corpus.recyclebin.ts";
 import {

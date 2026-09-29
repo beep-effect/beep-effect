@@ -26,7 +26,7 @@ import {
   selectedContradictionEvidenceSourceAtom,
 } from "@beep/epistemic-client";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { DateTime, Number as N } from "effect";
 import * as Eq from "effect/Equal";

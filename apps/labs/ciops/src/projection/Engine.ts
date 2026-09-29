@@ -21,9 +21,11 @@ const inputFailure = (message: string) => PolicyDecodeError.make({ message });
  * **Example** (Read a review-fix charge)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { admissionWeightFor } from "@/projection/Engine"
  * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@/projection/Schemas"
- * import { PosInt } from "@beep/schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
  *   capacityMaxTokens: PosInt.make(10),
@@ -171,6 +173,7 @@ const admitInto =
  * **Example** (Project an empty queue)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { projectSchedule } from "@/projection/Engine"
  * import {
  *   AdmissionPolicyParams,
@@ -178,8 +181,10 @@ const admitInto =
  *   ProjectionInput,
  *   emptyTokenLedger
  * } from "@/projection/Schemas"
- * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({
  *   capacityMaxTokens: PosInt.make(10),

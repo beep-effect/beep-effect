@@ -7,7 +7,6 @@
 
 import { $OpenaiCompatId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -24,6 +23,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { PosInt } from "./internal/PosInt.ts";
 import {
   OpenAiCompatAssistantChatMessage,
   OpenAiCompatChatCompletionChunk,
@@ -80,9 +80,11 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
  * **Example** (Set max tokens and temperature)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { PosInt } from "@beep/schema/Int"
  * import { OpenAiCompatLanguageModelConfig } from "@beep/openai-compat"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = OpenAiCompatLanguageModelConfig.make({
  *   maxTokens: O.some(PosInt.make(512)),

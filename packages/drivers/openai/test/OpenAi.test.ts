@@ -4,7 +4,6 @@ import {
   OpenAiEmbeddingModelOptions,
   OpenAiLanguageModelOptions,
 } from "@beep/openai";
-import { PosInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -13,6 +12,8 @@ import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const EmbeddingModelOptionsArbitrary = Arbitrary.schema(OpenAiEmbeddingModelOptions);
 const LanguageModelOptionsArbitrary = Arbitrary.schema(OpenAiLanguageModelOptions);

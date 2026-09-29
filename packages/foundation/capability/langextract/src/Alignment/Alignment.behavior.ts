@@ -7,7 +7,7 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as O from "@beep/utils/Option";
 import { Match, MutableHashSet, Number as Num } from "effect";
 import * as A from "effect/Array";

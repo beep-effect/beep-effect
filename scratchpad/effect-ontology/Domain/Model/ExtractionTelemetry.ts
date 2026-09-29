@@ -6,9 +6,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as S from "effect/Schema";
 import { KnowledgeGraph } from "./Entity.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetry");
 
@@ -18,7 +19,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetr
  * **Example** (Represent unavailable provider usage)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
  * const usage = ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(2) })
@@ -74,7 +75,7 @@ export type ProviderTokenUsage = typeof ProviderTokenUsage.Type;
  * **Example** (Create a zero-call telemetry value)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { ExtractionTelemetry, ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
  * const telemetry = ExtractionTelemetry.make({

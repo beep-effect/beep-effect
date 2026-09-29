@@ -16,7 +16,7 @@ import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
@@ -48,6 +48,7 @@ import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { ChunkingParams, ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
 import { enhanceTextForSearch } from "../Utils/Text.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const SimilaritySearchResultOrder = Order.mapInput(
   Order.flip(Order.Number),

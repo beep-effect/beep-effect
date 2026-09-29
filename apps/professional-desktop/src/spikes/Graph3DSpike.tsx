@@ -21,7 +21,6 @@ import {
 } from "@beep/graph-3d/browser";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
-import { PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "@beep/utils/Array";
@@ -36,6 +35,7 @@ import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import { PosInt } from "../internal/PosInt.ts";
 import { fpsSampleAtoms } from "./Fps.atoms.ts";
 import type { JSX } from "react";
 

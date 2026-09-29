@@ -13,7 +13,7 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Duration } from "effect";
@@ -30,6 +30,7 @@ import { OntologyAgentConfig, ViolationExplanation } from "../../Domain/Model/On
 import type { RdfStore } from "../Rdf.ts";
 import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
 const RdfStoreFromSelf: S.Codec<RdfStore> = S.declare(isRdfStore).annotate({

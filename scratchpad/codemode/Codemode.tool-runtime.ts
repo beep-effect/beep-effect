@@ -6,14 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import {
-  LiteralKit,
-  NonEmptyTrimmedStr,
-  NonNegativeInt,
-  PosInt,
-  SafeObject as SafeObjectSchema,
-  SchemaUtils,
-} from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, NonNegativeInt, SafeObject as SafeObjectSchema, SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
@@ -34,6 +27,7 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
 } from "./Codemode.values.ts";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 

@@ -10,7 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule } from "effect";
 import * as A from "effect/Array";

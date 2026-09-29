@@ -1,6 +1,6 @@
 import { Document, P, Text } from "@beep/md";
 import { CuidState } from "@beep/schema/Cuid";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -19,6 +19,8 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const FailingCuidTestLayer = Layer.suspend(() => {
   let digestCalls = 0;

@@ -6,11 +6,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { Context, Effect, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 export { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
 
@@ -228,7 +229,7 @@ export const recordProviderUsage = (usage: {
  * **Example** (Record two chunks)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { Effect } from "effect"
  * import { captureExtractionTelemetry, recordExtractionChunkCount } from "@effect-ontology/Telemetry/ExtractionTelemetry"
  *

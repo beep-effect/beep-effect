@@ -1,4 +1,4 @@
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect } from "effect";
 import * as A from "effect/Array";

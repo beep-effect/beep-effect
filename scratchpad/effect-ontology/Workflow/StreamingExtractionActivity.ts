@@ -21,7 +21,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
-import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
+import { NonNegativeInt, NonNegNum } from "@beep/schema";
 import { Crypto, DateTime, Duration, Effect, pipe } from "effect";
 import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
@@ -51,6 +51,7 @@ import {
 } from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
 const isActivityError = S.is(ActivityError);
@@ -197,12 +198,13 @@ const extractOntologyName = (uri: string): OntologyName => {
  *
  * ```ts
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { PosInt } from "@beep/schema/Int"
  * import { Duration } from "effect"
  * import { BatchId, ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
  * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
  * import * as S from "effect/Schema"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const input = ExtractionActivityInput.make({
  *   batchId: BatchId.make("batch-deadbeefcafe"),

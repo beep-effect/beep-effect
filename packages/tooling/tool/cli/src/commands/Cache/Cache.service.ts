@@ -23,13 +23,13 @@ import {
   isCacheTransitionAllowed,
 } from "@beep/repo-configs/cache";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import { readCacheEvidenceBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain, fingerprintCacheComputation, projectCacheActivation } from "./Cache.fingerprint.ts";

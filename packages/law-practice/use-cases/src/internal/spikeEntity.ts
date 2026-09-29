@@ -22,10 +22,11 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "./PosInt.ts";
 
 const $I = $LawPracticeUseCasesId.create("internal/spikeEntity");
 

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -14,6 +14,7 @@ import { encodeResultModel, type Result } from "./Codemode.result.ts";
 import type { Services, ToolDescription } from "./Codemode.tool-runtime.ts";
 import * as ToolRuntime from "./Codemode.tool-runtime.ts";
 import { executeWithLimits } from "./interpreter/Interpreter.execute.ts";
+import { PosInt } from "./PosInt.ts";
 
 export { DataValue } from "./Codemode.data.ts";
 export {

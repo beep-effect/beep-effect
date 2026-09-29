@@ -20,7 +20,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
@@ -46,6 +46,7 @@ import {
   scanProcessAttachments,
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
+import { PosInt } from "../../internal/schema/PosInt.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
@@ -128,10 +129,12 @@ export interface WorktreeMergedPullRequestProbeShape {
  * **Example** (Stub the probe with a fixed merged pull request)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { WorktreeMergedPullRequestProbe } from "@beep/repo-cli/commands/Worktree"
- * import { PosInt } from "@beep/schema"
  * import { Effect, Layer } from "effect"
  * import * as O from "effect/Option"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const stub = Layer.succeed(
  *   WorktreeMergedPullRequestProbe,

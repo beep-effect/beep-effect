@@ -7,12 +7,13 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
-import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Effect, flow, Match, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 import {
   PatentApplicationDocument,
   PatentApplicationSection,

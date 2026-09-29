@@ -9,7 +9,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { thunkTrue } from "@beep/utils/thunk";
 import { Number as Num } from "effect";
@@ -23,6 +23,7 @@ import { KnowledgeGraph } from "./Entity.ts";
 import { ChunkingConfig } from "./ExtractionRun.ts";
 import { ProviderTokenUsage } from "./ExtractionTelemetry.ts";
 import { OntologyRef } from "./Ontology.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyAgent");
 

@@ -7,8 +7,8 @@
 
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import * as S from "effect/Schema";
+import { PosInt } from "../../internal/PosInt.ts";
 
 const $I = $SharedDomainId.create("entities/Organization/Organization.values");
 const LicenseTierBase = LiteralKit(["solo", "team", "enterprise"]);

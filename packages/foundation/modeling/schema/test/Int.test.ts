@@ -1,5 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int";
+import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int64";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";

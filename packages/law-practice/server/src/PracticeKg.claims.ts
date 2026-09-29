@@ -23,7 +23,7 @@ import { PatentApplicationDocument } from "@beep/law-practice-domain/values/Pate
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
@@ -33,6 +33,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
+import { PosInt } from "./internal/PosInt.ts";
 import type * as SqlClient from "effect/sql/SqlClient";
 
 const isUnionInlineSchema = S.is(S.Union([IrToLawExtractionError, LangExtractError]));

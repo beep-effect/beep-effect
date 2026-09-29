@@ -16,8 +16,8 @@ import { Html } from "@beep/html";
 import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
 import { Number as N, Result, Struct } from "effect";
@@ -335,7 +335,7 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
  *
  * ```ts import.meta.vitest name="Construct a complexity violation"
  * import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
- * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const issue = DocumentComplexitySafetyViolation.make({
  *   maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),

@@ -8,7 +8,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
-import { Defect, PosInt } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { A, O, R } from "@beep/utils";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
@@ -41,6 +41,8 @@ import {
 import { PandocCompatibilityReport, PandocMappingIssue } from "./Pandoc.report.ts";
 import type { PandocBlock, PandocInline } from "./Pandoc.model.ts";
 import type { JsonPath, PandocMappingDirection, PandocMappingSeverity } from "./Pandoc.report.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const encodeMdDocument = S.encodeEffect(Md.Document);
 const encodePandocDocument = S.encodeEffect(PandocDocument);

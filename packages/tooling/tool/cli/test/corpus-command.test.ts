@@ -42,7 +42,7 @@ import {
   restorationTransformationTesting as RT,
   withRestorationWriterClaim,
 } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -58,6 +58,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { PlatformError } from "effect";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodeRestorationVerifyOptions = S.decodeEffect(RestorationVerifyOptions);
 const decodeUnknownCollectorManifestRecordResult = S.decodeUnknownResult(CollectorManifestRecord);

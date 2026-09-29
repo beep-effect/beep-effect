@@ -38,7 +38,6 @@ import {
   SupersessionConflict,
 } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { PostgresDrizzle, PostgresError } from "@beep/postgres";
-import { PosInt } from "@beep/schema/Int";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, N, O } from "@beep/utils";
@@ -46,6 +45,7 @@ import { and, eq, gt, isNull, lte, or } from "drizzle-orm";
 import { DateTime, Effect, Equal, Match, Order, pipe, Result, Semaphore } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import type { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion";
 import type {

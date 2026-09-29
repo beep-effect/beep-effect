@@ -13,7 +13,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Context, Equal, Layer } from "effect";
 import * as A from "effect/Array";
@@ -31,6 +31,7 @@ import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow, CorrectionRow } from "./schema.ts";
 import { Claims, Corrections, claims, conflicts, correctionClaims, corrections } from "./schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
   $I.annoteSchema("ClaimCountDatabaseRow", {

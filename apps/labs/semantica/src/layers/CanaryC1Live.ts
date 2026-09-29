@@ -1,4 +1,4 @@
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Console, Crypto, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -35,6 +35,7 @@ import { ActiveEmbeddingIdentity, Embedder } from "@/services/Embedder";
 import { ProviderCache } from "@/services/ProviderCache";
 import { RdfProjection } from "@/services/RdfProjection";
 import { VectorProjection } from "@/services/VectorProjection";
+import { PosInt } from "../schema/PosInt.ts";
 import type * as EmbeddingModel from "effect/ai/EmbeddingModel";
 import type { ChunkId, DocumentId } from "@/schema/Ids";
 import type { EmbeddingVector } from "@/schema/Projection";

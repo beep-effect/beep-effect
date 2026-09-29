@@ -7,14 +7,16 @@
  */
 
 import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server";
-import { PosInt } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const corpusRoot = Flag.Directory("corpus-root", { mustExist: true });
 const bundleOut = Flag.Directory("bundle-out").pipe(Flag.optional);

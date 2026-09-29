@@ -7,12 +7,12 @@
 
 import { $SharedDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { PosInt } from "@beep/schema/Int";
 import { Str } from "@beep/utils";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { PosInt } from "../internal/PosInt.ts";
 import type { IdentityComposer } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";
 

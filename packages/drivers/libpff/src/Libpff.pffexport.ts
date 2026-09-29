@@ -15,7 +15,7 @@ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
 import { Effect, FileSystem, flow, Match, Number as Num, Order, Path, Stream } from "effect";
@@ -37,6 +37,8 @@ import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { LibpffError } from "./Libpff.errors.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0));
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 

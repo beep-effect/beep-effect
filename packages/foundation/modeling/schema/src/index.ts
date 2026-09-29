@@ -235,11 +235,6 @@ export { HttpStatusCode } from "./HttpStatus/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Int.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Int64.ts";
 /**
  * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`

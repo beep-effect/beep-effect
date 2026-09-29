@@ -10,7 +10,6 @@
  */
 
 import { IRI } from "@beep/rdf/Iri";
-import { PosInt } from "@beep/schema/Int";
 import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,6 +21,7 @@ import { WikidataApiError, WikidataClient, WikidataRateLimitError } from "../../
 import { withErrorHandler } from "../ErrorHandler.ts";
 import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 import type { PlatformError } from "effect/PlatformError";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 // =============================================================================
 // Command Options
