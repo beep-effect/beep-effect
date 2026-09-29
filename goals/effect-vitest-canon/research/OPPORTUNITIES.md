@@ -5623,3 +5623,15 @@ resource afterward. The extracted private replacement passes success, body
 failure, interruption, mkdir failure and chdir failure on both runtimes, with
 cwd restored and no directory left behind. Application and actual-suite
 controls remain pending while the preceding package proof runs.
+
+### Transitive timing audit needs subprocess-specific evidence
+
+While migrating identity and tsconfig callbacks, direct command-module searches
+missed the Biome child process reached through TsconfigSync.plan's
+renderBiomeJson call. Unlike StepExec capture, that path uses the shared Node
+spawner's native Date.now/setTimeout cleanup bound and needs no TestClock
+override. Record timer ownership at each subprocess adapter in the test
+primitive graph so future migrations can distinguish native cleanup bounds
+from Effect-clock deadlines without repeating manual transitive inspection.
+Evidence: cli-identity-tsconfig-runtime-resource-proof.md and
+repo-utils/src/schemas/BiomeJson.ts.

@@ -1,7 +1,8 @@
 # Identity-registry and tsconfig migration preparation
 
-This is an unapplied draft for two existing-inventory files. Package source
-remains unchanged while the preceding grouped CLI proof runs.
+This preparation was applied as source 058e59a474 after the preceding grouped
+CLI proof passed. See cli-identity-tsconfig-runtime-resource-proof.md for the
+applied evidence; the draft observations below describe the preparation stage.
 
 The 29-case baseline passes on Node and Bun with stable source and no temporary
 residue. Whole-command observations are Node 10.831 seconds and Bun 6.275
