@@ -110,6 +110,8 @@ const generateBatchId = randomIdFragment.pipe(Effect.map((fragment) => BatchId.m
 
 const generateDocumentId = randomIdFragment.pipe(Effect.map((fragment) => DocumentId.make(`doc-${fragment}`)));
 
+const decodeUnknownUUID = S.decodeUnknownEffect(UUID);
+
 const OntologyScopeQuery = S.Struct({ ontologyId: S.NonEmptyString }).annotate({
   identifier: "OntologyScopeQuery",
   title: "Ontology Scope Query",
@@ -618,7 +620,7 @@ export const TimelineRouter = HttpRouter.addAll([
       }
 
       const params = yield* HttpRouter.params;
-      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
+      const id = yield* decodeUnknownUUID(params.id);
       const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
       const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
       const conflictRepo = yield* ConflictRepository;

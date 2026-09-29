@@ -9,7 +9,7 @@
 "@beep/repo-ai-metrics": patch
 "@beep/repo-configs": patch
 "@beep/oip-web": patch
-"@beep/professional-desktop": patch
+"@beep/professional-desktop": minor
 "@beep/ciops": patch
 ---
 
@@ -44,25 +44,25 @@ but upstream has no named string-wire URL schema, so retiring means a local sche
 consuming packages (about 175 lines; `URLStr` in 41 files, `HttpsUrl` in 13). `JSONSchema` moves
 to its own follow-up change.
 
-Type-check cost, tsgo 7.0.2, fresh build-info, before → after. The gate is the
-`--singleThreaded` instantiation count:
+Type-check cost, tsgo 7.0.2, fresh build-info, before (`origin/main` at 7cc0aa9b33) → after.
+The gate is the `--singleThreaded` instantiation count:
 
 | Package (`--singleThreaded`, gate) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 710,979 → 694,907 | 202,571 → 198,872 | 0.997 → 1.019 s |
-| `@beep/repo-cli` | 4,126,448 → 4,125,297 | 1,059,620 → 1,059,228 | 10.951 → 10.316 s |
-| `@beep/law-practice-domain` | 874,541 → 874,541 | 259,729 → 259,729 | 1.144 → 1.225 s |
+| `@beep/schema` | 710,979 → 695,062 | 202,571 → 198,941 | 1.168 → 1.122 s |
+| `@beep/repo-cli` | 4,152,690 → 4,151,579 | 1,067,045 → 1,066,662 | 12.810 → 12.612 s |
+| `@beep/law-practice-domain` | 874,541 → 874,541 | 259,729 → 259,729 | 1.275 → 1.437 s |
 
 Check time is advisory within a 5% band. Flagged: `@beep/law-practice-domain` single-threaded
-check time rose 7.1% (1.144 → 1.225 s) with identical instantiations and types, on a package
-whose sources this change does not touch, measured on a shared, loaded workstation; three
-repeat runs on the same tree read 1.137, 1.203 and 1.176 s, and its four-checker time fell
-(0.714 → 0.659 s).
+check time read 12.7% higher (1.275 → 1.437 s) with identical instantiations and types, on a
+package whose sources this change does not touch, measured on a shared, loaded workstation;
+interleaved repeat runs read 1.739 and 1.375 s on the base against 1.562 and 1.504 s on this
+change.
 
 The default four-checker run is advisory:
 
 | Package (default, 4 checkers, advisory) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 1,115,008 → 1,097,553 | 367,663 → 365,013 | 0.563 → 0.518 s |
-| `@beep/repo-cli` | 8,433,860 → 8,430,731 | 2,153,175 → 2,152,580 | 4.952 → 4.579 s |
-| `@beep/law-practice-domain` | 1,290,676 → 1,290,676 | 376,265 → 376,265 | 0.714 → 0.659 s |
+| `@beep/schema` | 1,115,008 → 1,098,167 | 367,663 → 365,290 | 0.581 → 0.496 s |
+| `@beep/repo-cli` | 8,429,151 → 8,427,182 | 2,149,366 → 2,148,624 | 4.855 → 5.093 s |
+| `@beep/law-practice-domain` | 1,290,676 → 1,290,676 | 376,265 → 376,265 | 0.735 → 0.820 s |

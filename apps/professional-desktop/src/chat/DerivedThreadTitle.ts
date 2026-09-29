@@ -63,3 +63,11 @@ export const DerivedThreadTitle = S.String.pipe(
     description: "Trimmed, non-empty, sidebar-bounded title derived from user message text.",
   })
 );
+
+/**
+ * Decoded title produced by {@link DerivedThreadTitle}.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export type DerivedThreadTitle = typeof DerivedThreadTitle.Type;

@@ -320,7 +320,7 @@ const retentionMutationResultLaw = {
   encode: S.encodeUnknownEffect(AiMetricsRetentionMutationResult),
   equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
 };
-const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty());
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 const nonEmptyTrimmedStringLaw = {
   arbitrary: Arbitrary.schema(TrimmedNonEmptyString),
   decode: S.decodeUnknownEffect(TrimmedNonEmptyString),

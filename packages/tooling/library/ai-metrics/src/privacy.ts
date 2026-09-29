@@ -19,7 +19,7 @@ import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSou
 import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
-const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty());
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(TrimmedNonEmptyString);
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);
 const OptionalNonEmptyTrimmed = S.optionalKey(S.Union([S.String, S.Option(TrimmedNonEmptyString)])).pipe(

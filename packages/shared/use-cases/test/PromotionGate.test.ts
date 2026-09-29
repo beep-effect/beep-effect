@@ -50,9 +50,9 @@ describe("PromotionGate", () => {
     >();
     expect(Result.getOrThrow(decodePromotionBlockReason(" vertical-policy-blocked "))).toBe("vertical-policy-blocked");
     expect(Result.getOrThrow(encodePromotionBlockReason("vertical-policy-blocked"))).toBe("vertical-policy-blocked");
-    expect(String(Result.merge(decodePromotionBlockReason("   ")))).toContain("String must not be empty");
-    expect(String(Result.merge(decodePromotionBlockReason("VerticalPolicyBlocked")))).toContain(
-      "Must be KebabCase format"
+    expect(String(Result.merge(decodePromotionBlockReason("   ")))).toBe("SchemaError(String must not be empty)");
+    expect(String(Result.merge(decodePromotionBlockReason("VerticalPolicyBlocked")))).toBe(
+      "SchemaError(Must be KebabCase format)"
     );
   });
 

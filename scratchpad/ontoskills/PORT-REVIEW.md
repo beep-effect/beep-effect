@@ -54,7 +54,7 @@ what this checkout compiles today. Relevant signatures were cross-checked in
 | `SemverFromString` from `@beep/schema/Semver` | Yes | Decodes a string to a structured `Semver` value. Python stores `version` as arbitrary `Optional[str]`; this narrows and changes the Type side. | `packages/foundation/modeling/schema/src/Semver.ts:650-676` |
 | `SchemaGetter` from `effect` | Yes | Root namespace export exists, but this import is unused. Getter signatures relevant to transformations are in A.6. | `node_modules/effect/src/index.ts:532`; `node_modules/effect/src/SchemaGetter.ts:521-523`, `:561-565`, `:597-599` |
 | `* as A` from `@beep/utils/Array` | Yes | Re-exports Effect Array. `A.every(RelationIdPart.is)` is valid; using it after `S.Array(PatternPart)` is redundant because element decoding already validates every element. | `packages/foundation/modeling/utils/src/Array.ts:617`; `node_modules/effect/src/Array.ts:8609-8648` |
-| `NonEmptyTrimmedStr` from `@beep/schema` | Yes | Root barrel exports it; it trims, checks non-empty, brands, and has codec statics. It is unused. | `packages/foundation/modeling/schema/src/String.ts:64-89`; root barrel `.../schema/src/index.ts:474` |
+| `NonEmptyTrimmedStr` from `@beep/schema` | Yes | Root barrel exports it; it trims, checks non-empty, brands, and has codec statics. It is unused. | the `@beep/schema` `String` concept (retired 2026-09-29); root barrel `.../schema/src/index.ts:474` |
 
 ### A.3 Every Effect schema member used by the WIP
 
@@ -154,7 +154,7 @@ instead deliberately normalizes absence to omitted encoding.
 | `S.decodeUnknownResult` | Synchronous non-throwing boundary returning `Result<Type, SchemaError>`. Suitable for deliberate inspect/drop policies. | `node_modules/effect/src/Schema.ts:1755-1777`; standard `standards/schema-first-development-prompt.md:600-605` |
 | `S.decodeUnknownEffect` | Default Effect-returning external-boundary decoder. | `node_modules/effect/src/Schema.ts:1500-1523`; standard `standards/schema-first-development-prompt.md:233-235` |
 | Array element dropping | No `S.Array` option in rc.112 drops invalid elements or emits warnings; Array is strict. Implement element-wise decode plus an owning boundary policy. `Effect.forEach`, `matchEffect`, `logWarning`, `map`, `as`, Option `some`/`none`, and `A.getSomes` all exist. | `node_modules/effect/src/Effect.ts:1088-1108`, `:3678-3688`, `:3837`, `:11055-11068`, `:22272`; `node_modules/effect/src/Option.ts:256-286`; `node_modules/effect/src/Array.ts:7692-7701` |
-| Boolean string codec | No exported `S.BooleanFromString` exists in either source tree. There is only a private internal `booleanToString` link. The repo exports `NormalizedBooleanString`, implemented with `S.decodeTo` + `SchemaTransformation.transform`, but it additionally trims and treats `"on"` as true. | private `node_modules/effect/src/Schema.ts:16294-16299`; local `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:15-19`, `:131-142` |
+| Boolean string codec | No exported `S.BooleanFromString` exists in either source tree. There is only a private internal `booleanToString` link. The repo exports `NormalizedBooleanString`, implemented with `S.decodeTo` + `SchemaTransformation.transform`, but it additionally trims and treats `"on"` as true. | private `node_modules/effect/src/Schema.ts:16294-16299`; the local `@beep/schema` `CommonTextSchemas` concept (retired 2026-09-29) |
 | Derived helpers | `S.is(schema)` derives a guard and `S.toEquivalence(schema)` derives structural equivalence. | `node_modules/effect/src/Schema.ts:1425-1442`, `:15577-15597`; real class-static use `packages/foundation/ui-system/dock/src/Dock.models-tree.ts:318` |
 | String/array helpers used in C | `Str.trim`, `toLowerCase`, `replace`, `startsWith`, `split`; `A.lastNonEmpty`, `every`, `getSomes` all exist through the `@beep/utils` re-exports. | `node_modules/effect/src/String.ts:219`, `:283`, `:319`, `:474`, `:548`; `node_modules/effect/src/Array.ts:2016`, `:7692`, `:8609`; re-exports `.../utils/src/Str.ts:830`, `.../utils/src/Array.ts:617` |
 | Additional checks used in C | `S.isNonEmpty` and `S.isMaxLength` are built-in checks; `S.encodeKeys` preserves camelCase Type fields with snake_case Encoded keys. | `node_modules/effect/src/Schema.ts:8942-8943`, `:8966-8984`, `:3651-3707` |
@@ -468,9 +468,9 @@ const UserInvocableInput = S.Union([
 
 `S.Union` is at `node_modules/effect/src/Schema.ts:4923-4927`; transform
 evidence is above. The local `NormalizedBooleanString` uses the same v4
-mechanism (`packages/foundation/modeling/schema/src/CommonTextSchemas.ts:131-142`)
-but is not exact parity: it trims and also treats `"on"` as true
-(`:15-19`). Reusing it is acceptable only as a documented redesign. Python's
+mechanism (in the `CommonTextSchemas` concept, retired 2026-09-29)
+but is not exact parity: it trims and also treats `"on"` as true.
+Reusing it is acceptable only as a documented redesign. Python's
 fallback `bool(v)` for arbitrary non-string values is broad coercion; prefer
 rejecting those values unless a real consumer proves compatibility is needed.
 
