@@ -19,6 +19,41 @@ export * from "./EcosystemPolarity.ts";
  */
 export * from "./EffectVitest.ts";
 /**
+ * Schema-parity codemod data model and rule contract.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemod.schemas.ts";
+/**
+ * Schema-parity codemod text-edit rendering.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodEdits.ts";
+/**
+ * Schema-parity codemod engine, rule registry, service and layer.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodEngine.ts";
+/**
+ * Schema-parity codemod import inspection.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodImports.ts";
+/**
+ * The `literal-kit-facets` codemod rule.
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodLiteralKitRule.ts";
+/**
  * Judge-rubric lens drift lint utilities.
  *
  * @category cli-commands
@@ -142,6 +177,13 @@ export {
   schemaCrispeningFamilyForFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
 } from "./SchemaFirst.ts";
+/**
+ * Schema-parity codemod command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./SchemaParityCodemod.ts";
 /**
  * Schema topology lint utilities.
  *
