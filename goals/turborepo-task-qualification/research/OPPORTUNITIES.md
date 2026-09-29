@@ -2445,3 +2445,14 @@ accepted observation uses the installed `ctl` debug variable and observed
 `NO_SQARRAY` layout; independent review verifies twelve `EPOLL_CTL` entries
 across five submissions. These failed attempts remain retained and do not gain
 credit from the later successful observation.
+
+### Preserve command-owned admission during matrix preparation
+
+A private preparation wrapper held review-fix admission while invoking
+`cache dependencies`, which owns its own admission. The child queued behind
+existing proof work while its parent retained a redundant token. Metadata and
+the queue log confirmed that the child had no subprocesses and copying had
+not begun. The queued child was interrupted, the wrapper exited and released
+its token, and preparation resumed without an outer admission wrapper.
+Checking the command's admission ownership before wrapping it would prevent
+this queue pressure. Existing running proof work was left intact.

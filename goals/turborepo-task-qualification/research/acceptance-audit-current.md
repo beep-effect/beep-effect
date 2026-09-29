@@ -7,42 +7,46 @@ The earlier audit table is the historical checkpoint at
 subsequent source and runtime evidence; none promotes the pilot.
 
 
-## Current acceptance review: 2026-09-28
+## Current acceptance review: patched profile, 2026-09-28
 
-The current publication is PR #1327. The accepted attachment is bound to
-`992c629f00`; its subsequent publication is `4ae45dca31`. Real local runtime
-observations remain bound to frozen revision `7f53b4a840`. Attaching their
-receipts to a newer head does not renew execution evidence at that head.
+PR #1327 carries the work. The [latest canonical attachment](./current-patched-io-attachment.json)
+is bound to `1a9914e0cf`; its publication is `43b735a1c3`. Runtime controls
+are bound to frozen source `b410da2b6d`, stable Turbo 2.11.4 and exact canary
+2.11.5-canary.2. The later [ring review](./current-patched-ring-review.json)
+was published in `e889324073` and postdates that attachment. Attaching a
+receipt never renews its execution at another source or dependency identity.
 
 | SPEC criterion | Current evidence | Remaining acceptance boundary |
 | --- | --- | --- |
-| Executable census | [Canonical attachment](./current-runtime-matrix-attachment.json): 144 workspaces, 3,473 graph nodes, 1,970 executable nodes, 1,025 source bindings, 82 reviews and six artifacts accepted. | Twenty-one explicit obligations remain; source identity is not complete dynamic-entrypoint or semantic coverage. |
-| Policy and transitions | Existing policy/transition implementation is retained; the completed portion of the local proof passed the cache-policy gate. | Accepted signed sibling imports and valid/adversarial transition integration remain unproven. No tuple is promoted. |
-| Synthetic fixture | Historical synthetic receipts and mandatory-case mapping retain their source/client bindings. | Current acceptance must include all required negatives and authoritative remote fault/signature cases; the new real-pilot observations do not substitute for those fixtures. |
-| Real pilot | [Stable pairs](./current-stable-fresh-pairs.json) and [canary pairs](./current-canary-fresh-pairs.json): three fresh/fresh pairs and twelve local replay controls per client. [Stable invalidation](./current-stable-invalidation.json) and [canary invalidation](./current-canary-invalidation.json): seven cases per client, including repeated failure without an archive and restored-source hits. | Semantic/capture closure, broader cross-root/concurrency evidence, three verified signed remote pairs and representative shadow acceptance remain incomplete. Historical shadow matrices are not renewed by these runs. |
-| Legacy posture | Experiments enable caching only in disposable identity overlays; the ordinary checkout remains disabled. No family activation accompanies the receipts. | Preserve attributed exclusions and honest unassessed states through final audit; experimental local successes do not authorize promotion. |
-| Adoption handoff | Population, policy vocabulary, decomposition reviews and bounded invalidation references are retained. | A validated real pilot and accepted transition evidence are still missing from the final handoff. |
-| Package/protocol checks | Full audit/docgen completed for the four repaired test workspaces. The older full proof passed build, lint, check, unit, integration, docgen and doctest lanes before a Storybook setup-module fetch failure. | Coverage was not run after that failure. A subsequent hosted Security failure required a dependency update and invalidated the older proof target; full exact-head and signed-protocol acceptance are not established. |
-| Final PR readiness | PR #1327 is open, non-draft and labeled for heavy checks. An attached canonical readiness monitor is running. | Required checks and local closeout are pending. Structural mergeability is not `merge-ready: yes`, and this checkpoint is not final qualification acceptance. |
-| Same-PR closeout | Packet remains active and records its limitations. | Final accepted evidence, reflection and completed-retained lifecycle must accompany the final implementation in the same PR. |
+| Executable census | Canonical census: 144 workspaces, 3,473 graph nodes, 1,970 executable nodes, 1,025 source bindings, 112 reviews and six artifacts. Prior bindings remain unchanged. | Twenty-five explicit obligations remain; source identity does not prove complete dynamic-entrypoint or semantic coverage. |
+| Policy and transitions | Existing tuple/lifecycle policy, projection and drift enforcement are retained; the historical full proof passed its cheap gates. | Accepted signed sibling imports and valid/adversarial operational transition integration remain unproven. No tuple is promoted. |
+| Synthetic fixture | Historical synthetic success and mandatory-negative receipts retain their own source/client bindings. Patched real-task capture controls confirm supplied synthetic-token absence from the retained archives. | Real-pilot observations do not renew every synthetic fixture or authoritative remote fault/signature case. |
+| Real pilot | Patched stable and canary each pass three fresh/fresh pairs, twelve local replay controls, seven source-invalidation cases, nine configuration cases, nine Git-exclusion cases, capture controls and shared-dependency cross-root replay. Bounded scalar I/O and a separate decoded ring observation are reviewed. | Complete semantic-input closure, supported concurrency boundaries, three verified signed remote pairs and representative current-profile shadow decisions remain incomplete. Historical shadow matrices are not renewed by these runs. |
+| Legacy posture | Caching is enabled only in disposable identity overlays. Ordinary checkout policy remains disabled; no family activation accompanies these receipts. | Preserve attributed exclusions and honest unassessed states through final audit. Experimental success does not authorize promotion. |
+| Adoption handoff | Population, policy vocabulary, decomposition reviews and bounded invalidation references are available. | A validated real pilot and accepted transition/invalidation evidence remain missing from the final handoff. |
+| Package/protocol checks | Repaired package verification is retained. The [historical publish verdict](./current-proof-monitor-attribution.json) passed local pre-push proof and merged-preview CI parity, including coverage, before the watcher failed on a Vercel rate limit. | The verdict records an older head; it is not latest-head proof. Current required checks, local closeout and signed-protocol acceptance remain required. |
+| Final PR readiness | PR #1327 is non-draft and labeled `ready-for-heavy`; its canonical readiness monitor remains active. | Current-head checks and closeout have no final merge-ready verdict. Structural mergeability is insufficient. |
+| Same-PR closeout | Packet remains active and records its evidence limits. | Final accepted evidence, reflection and completed-retained lifecycle must accompany the final implementation in the same PR. |
 
-The [cross-root preflight](./current-cross-root-preflight.json) found different
-installed-dependency digests despite matching source inputs and executable
-pins. Complete snapshots reproduce the native environment digests. Matching
-only two native-addon build configuration files did not recover the original
-task hash; that failed control remains private retained evidence. The [stable shared-dependency control](./current-cross-root-shared-view-stable.json)
-now passes: a fresh miss and two hits using the first root’s archive at a
-second root with the identical installed dependency tree mounted read-only.
-Inputs, hashed environment and profile bytes agree; the pass-through profile
-path differs. This proves only that bounded setup, not independent-installation
-portability. The [exact canary control](./current-cross-root-shared-view-canary.json) also passes independently. The identity rules have not been
-weakened to force a hit.
+Cross-root replay passes with the identical installed dependency tree mounted
+read-only at the second root. Independent-installation portability remains
+unproven. Canary actual lint-task overlap was observed; stable's two patched
+attempts recorded CLI overlap but no target-task overlap. Shared-writer and
+shared-output collision safety are not established.
 
-The conformance and trust packets remain paused in the current checkout.
-A current task-inventory search found no signed-evidence owner among the
-pinned and 50 recent Codex tasks returned; that bounded search does not prove
-no external receipt exists. Independent local work continues. None of the
-nine criteria is promoted to full completion by this review.
+The native-I/O review records 439 repository read paths and 21 explicit writes.
+Biome reads the Git routing metadata, whose host state was not frozen. A separate
+debugger observation decoded twelve entries across five submissions as
+`EPOLL_CTL`, with matching task streams and unchanged dependency bytes. It
+does not retroactively decode prior scalar traces or establish every possible
+input. Completion queue entries and referenced buffers were not decoded.
+
+The conformance and trust packets remain authored but not started in this
+checkout. The bounded Codex search covered all five pinned tasks, the latest
+50 unarchived tasks and both archived listing pages (89 tasks); no runtime
+owner was identified by title/summary. Differently named work and unsearched
+transcript contents remain outside that result. No signed sibling receipt is
+accepted. None of the nine criteria is promoted to complete by this audit.
 
 ## Previous local checkpoint: 2026-09-25
 

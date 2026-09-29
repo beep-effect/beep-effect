@@ -451,7 +451,8 @@
     "research/current-patched-cross-root-shared-view-canary.json",
     "research/current-patched-native-io-review.json",
     "research/current-patched-io-attachment.json",
-    "research/current-patched-ring-review.json"
+    "research/current-patched-ring-review.json",
+    "research/current-proof-monitor-attribution.json"
   ],
   "agentLaunchers": [
     {
