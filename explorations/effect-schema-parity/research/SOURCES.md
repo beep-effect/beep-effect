@@ -22,7 +22,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| Effect-TS/effect (`inventoryPin` `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, main snapshot, rc.118 line; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, pinned bytes read with `git -C .repos/effect show <inventoryPin>:<path>`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
+| Effect-TS/effect (`inventoryPin` `df77fff9396fe31de72d1947ecb5b74f8cee89e1`, main snapshot, rc.118 line, moved from `e5f7d12af9` on 2026-09-29; 2026-09-12 research ran at `51d4a2f08a`; local `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, pinned bytes read with `git -C .repos/effect show <inventoryPin>:<path>`, remotes `origin` = Effect-TS/effect, `fork` = beep-effect/effect) | MIT (`LICENSE`, Effectful Technologies Inc) | port-with-attribution allowed; this packet's direction is the reverse (delete repo code, consume upstream), so nothing is vendored | Schema surfaces (Role A) as adoption targets; Role B modules as idiom exemplars; `SCHEMA.md` + `migration/schema.md` as doctrine; rc.112..main commits as the hint list |
 
 ## 3. External research sources
 

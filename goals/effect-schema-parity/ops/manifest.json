@@ -6,12 +6,12 @@
     "title": "Effect Schema Parity",
     "status": "active",
     "created": "2026-09-15",
-    "updated": "2026-09-28",
+    "updated": "2026-09-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-schema-parity",
   "lifecycle": "active",
-  "mission": "Retire or trim every @beep/schema concept upstream Effect covers at the main snapshot e5f7d12af9 (rc.118 line), migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
+  "mission": "Retire or trim every @beep/schema concept upstream Effect covers at the main snapshot df77fff939 (rc.118 line), migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
