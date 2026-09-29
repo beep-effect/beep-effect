@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import {
+  AgentEffectivenessEvalLaneReport,
   AgentEffectivenessEvalScoreBreakdown,
+  AgentEffectivenessEvalScoreReport,
   AgentEffectivenessEvalScorerError,
   aggregateLawFraction,
   buildAgentEffectivenessEvalScoreReport,
@@ -15,6 +17,7 @@ import {
   SkillOptTaskManifest,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { findRepoRoot } from "@beep/repo-utils";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
@@ -22,16 +25,19 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Match, Path, PlatformError, pipe, Ref, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { AgentEffectivenessEvalLaneReport } from "@beep/repo-cli/test/AgentEffectiveness";
 
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 
 const TestLayer = NodeServices.layer;
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);
+const decodeScoreReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalScoreReport));
+const encodeLaneReportJson = S.encodeEffect(S.fromJsonString(AgentEffectivenessEvalLaneReport));
+const decodeLaneReportJson = S.decodeEffect(S.fromJsonString(AgentEffectivenessEvalLaneReport));
 
 const provideLayer =
   <ROut, E2>(layer: Layer.Layer<ROut, E2, never>) =>
@@ -364,6 +370,32 @@ describe("agent-effectiveness eval scorer", () => {
     expect(lawComponentScore(2)).toBe(0.333333);
     expect(aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })).toBe(0.583333);
   });
+
+  it.effect(
+    "re-encodes schema-generated score and lane reports to the same JSON",
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([
+          Arbitrary.schema(AgentEffectivenessEvalScoreReport),
+          Arbitrary.schema(AgentEffectivenessEvalLaneReport),
+        ]),
+        ([report, lane]) =>
+          Effect.gen(function* () {
+            // JSON cannot carry `-0`, so the stable property is the encoding:
+            // decoding then re-encoding reproduces the same bytes.
+            const reportJson = yield* encodeAgentEffectivenessEvalScoreReportJson(report);
+            const decodedReport = yield* decodeScoreReportJson(reportJson);
+            expect(yield* encodeAgentEffectivenessEvalScoreReportJson(decodedReport)).toBe(reportJson);
+            const laneJson = yield* encodeLaneReportJson(lane);
+            const decodedLane = yield* decodeLaneReportJson(laneJson);
+            expect(yield* encodeLaneReportJson(decodedLane)).toBe(laneJson);
+            return true;
+          }),
+        fcRuns(30)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it.effect("renders byte-identical reports for the same fixed fixture", () =>
     provideTestLayer(

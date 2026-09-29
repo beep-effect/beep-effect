@@ -598,44 +598,6 @@ export const HarnessHash = Sha256Hex.pipe(
 export type HarnessHash = typeof HarnessHash.Type;
 
 /**
- * The two config-snapshot scope hashes a {@link HarnessHash} is derived from.
- *
- * **Details**
- *
- * A structural subset, so a {@link HarnessFingerprint} or
- * {@link HarnessFingerprintParts} is passed as-is.
- *
- * **Example** (Describing the source hashes)
- *
- * ```ts
- * import { HarnessHashSource } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
- *
- * const source = { harnessSessionHash: "a".repeat(64), harnessBaselineHash: "b".repeat(64) }
- * console.log(S.is(HarnessHashSource)(source)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const HarnessHashSource = S.Struct({
-  harnessSessionHash: Sha256Hex,
-  harnessBaselineHash: Sha256Hex,
-}).pipe(
-  $I.annoteSchema("HarnessHashSource", {
-    description: "Config-snapshot session and baseline hashes that a harness hash is derived from.",
-  })
-);
-
-/**
- * Decoded harness hash source.
- *
- * @category models
- * @since 0.0.0
- */
-export type HarnessHashSource = typeof HarnessHashSource.Type;
-
-/**
  * Derive the {@link HarnessHash} of a harness regime from its two
  * config-snapshot scope hashes.
  *
@@ -644,7 +606,8 @@ export type HarnessHashSource = typeof HarnessHashSource.Type;
  * The preimage is exactly the UTF-8 text
  * `harness-hash-v1\n<harnessSessionHash>\n<harnessBaselineHash>`, hashed
  * unsalted: both inputs are digests of public repo config, the same argument
- * that keeps context surface ids unsalted.
+ * that keeps context surface ids unsalted. The input is structural, so a
+ * {@link HarnessFingerprint} or {@link HarnessFingerprintParts} is passed as-is.
  *
  * **Gotchas**
  *
@@ -676,7 +639,9 @@ export type HarnessHashSource = typeof HarnessHashSource.Type;
  * @category utilities
  * @since 0.0.0
  */
-export const deriveHarnessHash = Effect.fn("AiMetrics.deriveHarnessHash")(function* (source: HarnessHashSource) {
+export const deriveHarnessHash = Effect.fn("AiMetrics.deriveHarnessHash")(function* (
+  source: Pick<HarnessFingerprintParts, "harnessSessionHash" | "harnessBaselineHash">
+) {
   return yield* hashPublicTextSha256(
     `harness-hash-v1\n${source.harnessSessionHash}\n${source.harnessBaselineHash}`
   ).pipe(Effect.mapError(harnessLedgerError("Failed to hash the harness hash preimage.")));

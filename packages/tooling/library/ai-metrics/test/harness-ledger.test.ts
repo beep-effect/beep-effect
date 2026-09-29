@@ -14,7 +14,6 @@ import {
   HarnessFingerprintInput,
   HarnessFingerprintParts,
   HarnessHash,
-  HarnessHashSource,
   HarnessLedgerDelta,
   HarnessLedgerRow,
   HarnessLedgerRowId,
@@ -175,10 +174,10 @@ describe("harness-ledger", () => {
   describe("harness hash", () => {
     it.effect("hashes the versioned preimage the hook-pulse writer rebuilds in shell", () =>
       Effect.gen(function* () {
-        const source = HarnessHashSource.make({
+        const source = {
           harnessSessionHash: Sha256Hex.make(hashA),
           harnessBaselineHash: Sha256Hex.make(hashB),
-        });
+        };
         const hash = yield* deriveHarnessHash(source);
         // `printf 'harness-hash-v1\n%s\n%s' "$session" "$baseline" | sha256sum`
         expect(hash).toBe("f770e97d322c8b3e4cd0aabdd5d768ddf44465b676ef12faa7fe081d73755f0c");
@@ -191,12 +190,10 @@ describe("harness-ledger", () => {
       Effect.gen(function* () {
         const astra = yield* fingerprintFor("gpt-6-astra", hashA);
         const sol = yield* fingerprintFor("gpt-5.6-sol", hashA, "xhigh");
-        const swapped = yield* deriveHarnessHash(
-          HarnessHashSource.make({
-            harnessSessionHash: Sha256Hex.make(hashB),
-            harnessBaselineHash: Sha256Hex.make(hashA),
-          })
-        );
+        const swapped = yield* deriveHarnessHash({
+          harnessSessionHash: Sha256Hex.make(hashB),
+          harnessBaselineHash: Sha256Hex.make(hashA),
+        });
         const edited = yield* deriveHarnessHash(yield* fingerprintFor("gpt-6-astra", hashC));
         expect(astra.fingerprintId).not.toBe(sol.fingerprintId);
         expect(yield* deriveHarnessHash(astra)).toBe(yield* deriveHarnessHash(sol));

@@ -143,6 +143,173 @@ const regimeOf = (tally: SessionTally, harnessHash: HarnessHash): SessionRegime 
 
 const byNewestFirst = Order.flip(Order.mapInput(Order.Number, (tally: SessionTally) => tally.maxTs));
 
+const isInRegime =
+  (harnessHash: HarnessHash) =>
+  (tally: SessionTally): boolean =>
+    SessionRegime.is["in-regime"](regimeOf(tally, harnessHash));
+
+// The mutable state one observation threads through its shard reads: the
+// per-session tallies and the two counters the report carries.
+type ShardScan = {
+  readonly stateDir: string;
+  readonly tallies: MutableHashMap.MutableHashMap<string, SessionTally>;
+  undecodableLines: number;
+  shardsRead: number;
+};
+
+// Split shard names into those indexed by session and date and those read
+// eagerly because their name does not follow the naming scheme.
+const partitionShards = (names: ReadonlyArray<string>) => ({
+  indexed: A.getSomes(A.map(names, indexShard)),
+  unindexed: A.filter(names, (name) => O.isNone(indexShard(name))),
+});
+
+const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
+  const ts = DateTime.toEpochMillis(pulse.ts);
+  const tally = O.getOrElse(MutableHashMap.get(tallies, pulse.sessionId), () => ({
+    maxTs: ts,
+    surfaces: HashSet.empty<string>(),
+    stamps: HashSet.empty<string>(),
+  }));
+  MutableHashMap.set(tallies, pulse.sessionId, {
+    maxTs: Math.max(tally.maxTs, ts),
+    surfaces: O.match(pulse.surface, {
+      onNone: () => tally.surfaces,
+      onSome: (surface) => HashSet.add(tally.surfaces, surface),
+    }),
+    stamps: O.match(pulse.harnessHash, {
+      onNone: () => tally.stamps,
+      onSome: (stamp) => HashSet.add(tally.stamps, stamp),
+    }),
+  });
+};
+
+const foldShardText = (scan: ShardScan, text: string): void => {
+  scan.shardsRead += 1;
+  for (const line of pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))) {
+    Result.match(HookPulseV1.decodeJsonResult(line), {
+      onFailure: () => {
+        scan.undecodableLines += 1;
+      },
+      onSuccess: (pulse) => foldPulse(scan.tallies, pulse),
+    });
+  }
+};
+
+const readShard = Effect.fnUntraced(function* (scan: ShardScan, name: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fs
+    .readFileString(path.join(scan.stateDir, name))
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to read hook-pulse shard ${name}.`)));
+  foldShardText(scan, text);
+});
+
+// Each session's visiting key: its newest row date from the shards already
+// read, raised to its newest indexed shard date.
+const visitDates = (
+  tallies: ShardScan["tallies"],
+  indexed: ReadonlyArray<IndexedShard>
+): MutableHashMap.MutableHashMap<string, string> => {
+  const visitDate = MutableHashMap.empty<string, string>();
+  for (const [session, tally] of tallies) {
+    MutableHashMap.set(visitDate, session, DateTime.formatIsoDateUtc(DateTime.makeUnsafe(tally.maxTs)));
+  }
+  for (const shard of indexed) {
+    MutableHashMap.set(visitDate, shard.session, latestDate(MutableHashMap.get(visitDate, shard.session), shard.date));
+  }
+  return visitDate;
+};
+
+type VisitPlan = {
+  readonly indexed: ReadonlyArray<IndexedShard>;
+  readonly visitDate: MutableHashMap.MutableHashMap<string, string>;
+  readonly visited: MutableHashMap.MutableHashMap<string, SessionTally>;
+};
+
+// Read every indexed shard of the sessions keyed to `day`, then mark those
+// sessions visited.
+const visitDay = Effect.fnUntraced(function* (scan: ShardScan, plan: VisitPlan, day: string) {
+  const sessions = A.filterMap(A.fromIterable(plan.visitDate), ([session, date]) =>
+    date === day ? Result.succeed(session) : Result.failVoid
+  );
+  yield* Effect.forEach(
+    A.filter(plan.indexed, (shard) => A.contains(sessions, shard.session)),
+    (shard) => readShard(scan, shard.name),
+    { discard: true }
+  );
+  for (const session of sessions) {
+    const tally = MutableHashMap.get(scan.tallies, session);
+    if (O.isSome(tally)) {
+      MutableHashMap.set(plan.visited, session, tally.value);
+    }
+  }
+});
+
+const countInRegime = (visited: VisitPlan["visited"], harnessHash: HarnessHash): number =>
+  A.length(A.filter(A.fromIterable(MutableHashMap.values(visited)), isInRegime(harnessHash)));
+
+// Visit days newest first until `window` in-regime sessions are known and the
+// day before that point has also been read.
+const visitNewestDays = Effect.fnUntraced(function* (
+  scan: ShardScan,
+  plan: VisitPlan,
+  window: number,
+  harnessHash: HarnessHash
+) {
+  const days = pipe(A.fromIterable(MutableHashMap.values(plan.visitDate)), A.dedupe, A.sort(Order.flip(Order.String)));
+  let floor = O.none<string>();
+  for (const day of days) {
+    if (O.exists(floor, (min) => day < min)) {
+      break;
+    }
+    yield* visitDay(scan, plan, day);
+    if (O.isNone(floor) && countInRegime(plan.visited, harnessHash) >= window) {
+      floor = O.some(previousDay(day));
+    }
+  }
+});
+
+// Skipped sessions of `regime` newer than the window's oldest session; every
+// visited skipped session when the window is not full (then every session
+// was read).
+const countSkipped = (
+  ranked: ReadonlyArray<SessionTally>,
+  oldest: O.Option<SessionTally>,
+  harnessHash: HarnessHash,
+  regime: SessionRegime
+): number =>
+  A.length(
+    A.filter(
+      ranked,
+      (tally) => regimeOf(tally, harnessHash) === regime && !O.exists(oldest, (last) => tally.maxTs < last.maxTs)
+    )
+  );
+
+const windowReport = (
+  scan: ShardScan,
+  visited: VisitPlan["visited"],
+  window: number,
+  harnessHash: HarnessHash
+): ObservedSessionWindow => {
+  const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
+  const inRegime = A.take(A.filter(ranked, isInRegime(harnessHash)), window);
+  const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
+  return ObservedSessionWindow.make({
+    harnessHash,
+    sessionsObserved: A.length(inRegime),
+    sessionsSkippedOutOfRegime: countSkipped(ranked, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
+    sessionsSkippedUnstamped: countSkipped(ranked, oldest, harnessHash, SessionRegime.Enum.unstamped),
+    windowEnd: pipe(
+      A.head(inRegime),
+      O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
+    ),
+    touched: A.reduce(inRegime, HashSet.empty<string>(), (acc, tally) => HashSet.union(acc, tally.surfaces)),
+    shardsRead: scan.shardsRead,
+    undecodableLines: scan.undecodableLines,
+  });
+};
+
 /**
  * Read hook-pulse shards under `stateDir` and observe the last `window`
  * sessions that ran under `harnessHash`.
@@ -170,120 +337,13 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   window: number,
   harnessHash: HarnessHash
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
-  const indexed = A.getSomes(A.map(names, indexShard));
-  const unindexed = A.filter(names, (name) => O.isNone(indexShard(name)));
-  const tallies = MutableHashMap.empty<string, SessionTally>();
-  let undecodableLines = 0;
-  let shardsRead = 0;
-
-  const readShard = Effect.fnUntraced(function* (name: string) {
-    const text = yield* fs
-      .readFileString(path.join(stateDir, name))
-      .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to read hook-pulse shard ${name}.`)));
-    shardsRead += 1;
-    const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
-    for (const line of lines) {
-      const decoded = HookPulseV1.decodeJsonResult(line);
-      if (Result.isFailure(decoded)) {
-        undecodableLines += 1;
-        continue;
-      }
-      const pulse = decoded.success;
-      const ts = DateTime.toEpochMillis(pulse.ts);
-      const previous = MutableHashMap.get(tallies, pulse.sessionId);
-      const surfaces = O.getOrElse(
-        O.map(previous, (tally) => tally.surfaces),
-        HashSet.empty<string>
-      );
-      const stamps = O.getOrElse(
-        O.map(previous, (tally) => tally.stamps),
-        HashSet.empty<string>
-      );
-      MutableHashMap.set(tallies, pulse.sessionId, {
-        maxTs: O.match(previous, { onNone: () => ts, onSome: (tally) => Math.max(tally.maxTs, ts) }),
-        surfaces: O.match(pulse.surface, {
-          onNone: () => surfaces,
-          onSome: (surface) => HashSet.add(surfaces, surface),
-        }),
-        stamps: O.match(pulse.harnessHash, {
-          onNone: () => stamps,
-          onSome: (stamp) => HashSet.add(stamps, stamp),
-        }),
-      });
-    }
-  });
-
+  const { indexed, unindexed } = partitionShards(names);
+  const scan: ShardScan = { stateDir, tallies: MutableHashMap.empty(), undecodableLines: 0, shardsRead: 0 };
   // Unindexed shards can hold rows of any session, so they are read first and
   // their rows' dates join the session's visiting key.
-  yield* Effect.forEach(unindexed, readShard, { discard: true });
-  const visitDate = MutableHashMap.empty<string, string>();
-  for (const [session, tally] of tallies) {
-    MutableHashMap.set(visitDate, session, DateTime.formatIsoDateUtc(DateTime.makeUnsafe(tally.maxTs)));
-  }
-  for (const shard of indexed) {
-    MutableHashMap.set(visitDate, shard.session, latestDate(MutableHashMap.get(visitDate, shard.session), shard.date));
-  }
-  const days = pipe(A.fromIterable(MutableHashMap.values(visitDate)), A.dedupe, A.sort(Order.flip(Order.String)));
-  const visited = MutableHashMap.empty<string, SessionTally>();
-  const inRegimeCount = (): number =>
-    A.length(
-      A.filter(A.fromIterable(MutableHashMap.values(visited)), (tally) =>
-        SessionRegime.is["in-regime"](regimeOf(tally, harnessHash))
-      )
-    );
-  let floor = O.none<string>();
-  for (const day of days) {
-    if (O.exists(floor, (min) => day < min)) {
-      break;
-    }
-    const sessions = A.filterMap(A.fromIterable(visitDate), ([session, date]) =>
-      date === day ? Result.succeed(session) : Result.failVoid
-    );
-    yield* Effect.forEach(
-      A.filter(indexed, (shard) => A.contains(sessions, shard.session)),
-      (shard) => readShard(shard.name),
-      { discard: true }
-    );
-    for (const session of sessions) {
-      const tally = MutableHashMap.get(tallies, session);
-      if (O.isSome(tally)) {
-        MutableHashMap.set(visited, session, tally.value);
-      }
-    }
-    if (O.isNone(floor) && inRegimeCount() >= window) {
-      floor = O.some(previousDay(day));
-    }
-  }
-
-  const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
-  const inRegime = A.take(
-    A.filter(ranked, (tally) => SessionRegime.is["in-regime"](regimeOf(tally, harnessHash))),
-    window
-  );
-  // Skipped sessions newer than the window's oldest session; every visited
-  // skipped session when the window is not full (then every session was read).
-  const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
-  const skipped = (regime: SessionRegime): number =>
-    A.length(
-      A.filter(
-        ranked,
-        (tally) => regimeOf(tally, harnessHash) === regime && !O.exists(oldest, (last) => tally.maxTs < last.maxTs)
-      )
-    );
-  return ObservedSessionWindow.make({
-    harnessHash,
-    sessionsObserved: A.length(inRegime),
-    sessionsSkippedOutOfRegime: skipped(SessionRegime.Enum["out-of-regime"]),
-    sessionsSkippedUnstamped: skipped(SessionRegime.Enum.unstamped),
-    windowEnd: pipe(
-      A.head(inRegime),
-      O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
-    ),
-    touched: A.reduce(inRegime, HashSet.empty<string>(), (acc, tally) => HashSet.union(acc, tally.surfaces)),
-    shardsRead,
-    undecodableLines,
-  });
+  yield* Effect.forEach(unindexed, (name) => readShard(scan, name), { discard: true });
+  const plan: VisitPlan = { indexed, visitDate: visitDates(scan.tallies, indexed), visited: MutableHashMap.empty() };
+  yield* visitNewestDays(scan, plan, window, harnessHash);
+  return windowReport(scan, plan.visited, window, harnessHash);
 });
