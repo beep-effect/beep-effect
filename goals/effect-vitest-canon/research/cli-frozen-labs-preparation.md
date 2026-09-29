@@ -65,3 +65,9 @@ cardinality checks; the probes have not executed against applied suites.
 Chained pipes were flattened in the private draft before application, preserving
 all 87 assertion trees. Applied timing, assertion, detector and historical
 lineage scripts are ready for the next source window.
+
+## Applied status
+
+The drafts were applied and verified in source commit db2d065683. Actual suite
+and resource evidence is recorded in cli-frozen-labs-runtime-proof.md, including
+full package-proof status. No new live-clock overrides were needed.

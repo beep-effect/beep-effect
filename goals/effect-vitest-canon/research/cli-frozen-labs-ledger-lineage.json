@@ -1,0 +1,384 @@
+{
+  "sourceFixSha": "db2d0656838de0ac848a1965350a90452683ebfa",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:164:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:183:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:274:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:293:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:331:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:355:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:403:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:414:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:428:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:458:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:105:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:139:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:172:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:204:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:237:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:270:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:303:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:334:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:367:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:67:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:9:provideScopedLayer@2#1",
+    "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:15:withTempWorkingDirectory@33#1",
+    "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:31:provideNode@20#1",
+    "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:36:withTempDirectory@26#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:105:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "exempts the defining module",
+      "currentTitle": "exempts the defining module",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 106,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts\", A.join("
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:139:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags a nested copy of the canonical defining-module suffix",
+      "currentTitle": "flags a nested copy of the canonical defining-module suffix",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 140,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/evil/src/values/GrantSet/GrantSet.model.ts\", A.join( [ \"declare c"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:172:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags make calls through an import alias",
+      "currentTitle": "flags make calls through an import alias",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 173,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ 'import { FrozenGrantSet as F } fro"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:204:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags make calls through a variable alias",
+      "currentTitle": "flags make calls through a variable alias",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 205,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: { ma"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:237:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags calls of a destructured make binding",
+      "currentTitle": "flags calls of a destructured make binding",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 238,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: { ma"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:270:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags calls of an extracted make reference",
+      "currentTitle": "flags calls of an extracted make reference",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 271,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: { ma"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:303:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags direct new FrozenGrantSet expressions",
+      "currentTitle": "flags direct new FrozenGrantSet expressions",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 304,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: new"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:334:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags new expressions on a tainted alias",
+      "currentTitle": "flags new expressions on a tainted alias",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 335,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: new"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:367:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "ignores unrelated make calls",
+      "currentTitle": "ignores unrelated make calls",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 368,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const Foo: { make: (input:"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:67:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "flags FrozenGrantSet.make calls outside the defining module",
+      "currentTitle": "flags FrozenGrantSet.make calls outside the defining module",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 68,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectScaffold; yield* writeProjectFile( \"packages/demo/src/index.ts\", A.join( [ \"declare const FrozenGrantSet: { ma"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:164:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "labs-exempt prunes pending changesets without emitting a deletion note",
+      "currentTitle": "labs-exempt prunes pending changesets without emitting a deletion note",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 166,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* seedChangesets(repoRoot); yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:183:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "emit-empty-note still writes the canonical deletion note byte-identically",
+      "currentTitle": "emit-empty-note still writes the canonical deletion note byte-identically",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 185,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* seedChangesets(repoRoot); yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:274:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "accepts the consent-required lab data-resource observation with actionable DROP evidence",
+      "currentTitle": "accepts the consent-required lab data-resource observation with actionable DROP evidence",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 276,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const observations = yield* inspectTargetAtRoot(repoRoot, labTarget); const dataResource = O.getOrThrow( A.fin"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:293:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "renders an unowned manifest resource as non-actionable residue",
+      "currentTitle": "renders an unowned manifest resource as non-actionable residue",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 295,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const staleTarget = RegistrationTarget.make({ ...labTarget, lab: O.some(\"lab_other\").pipe(labFacts, O.some), }"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:331:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports labs identity residue from a generatedLabComposers fixture",
+      "currentTitle": "reports labs identity residue from a generatedLabComposers fixture",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 333,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.makeDirectory(path.join(repo"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:355:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "upgrades a labs root TS solution reference from drift to residue",
+      "currentTitle": "upgrades a labs root TS solution reference from drift to residue",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 357,
+          "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* fs.writeFileString( path.join(r"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:403:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "warns and proceeds when the lab manifest is missing (P2-D18)",
+      "currentTitle": "warns and proceeds when the lab manifest is missing (P2-D18)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 405,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* seedLabWorkspace(); yield* runDeletePackage([\"probe\", \"--dry-run\"]); expect(yield* warnedAboutManifest).toBe(true); }) ).p"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:414:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "warns and proceeds when the lab manifest is corrupt (P2-D18)",
+      "currentTitle": "warns and proceeds when the lab manifest is corrupt (P2-D18)",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 416,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* seedLabWorkspace(); yield* fs.writeFileString(path"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:428:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans the consent-gated data resource from a decoded manifest",
+      "currentTitle": "plans the consent-gated data resource from a decoded manifest",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 430,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* seedLabWorkspace(); yield* fs.writeFileString( pat"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/delete-package-labs.test.ts:458:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses an unowned manifest resource without printing a database command",
+      "currentTitle": "refuses an unowned manifest resource without printing a database command",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 460,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* seedLabWorkspace(); yield* fs.writeFileString( pat"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "wrapperMatches": [
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:9:provideScopedLayer@2#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:10:provideScopedLayer@2#1",
+      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
+      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:15:withTempWorkingDirectory@33#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:16:withTempWorkingDirectory@33#1",
+      "occurrence": "v2:5b781757c7efa9e327caecd37b8f67432cb84c516e63b64ea5c706908729f592",
+      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const tmpDir = yield* fs.makeTempDirectory(); const previousCwd ="
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:31:provideNode@20#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:33:provideNode@20#1",
+      "occurrence": "v2:2a659b061b6205126a493d6810f77a4695666385ead9af6f7883b459e83584b2",
+      "evidence": "<A2, E, R>(effect: Effect.Effect<A2, E, R>) => Effect.scoped( Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))) )"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:36:withTempDirectory@26#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/delete-package-labs.test.ts:38:withTempDirectory@26#1",
+      "occurrence": "v2:87c484e7e289792d7111c613675d1c479aa880fecb79b5b990684c210bace487",
+      "evidence": "<A2, E, R>(use: (directory: string) => Effect.Effect<A2, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); })"
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1602,
+    "fixed": 1881,
+    "exception": 12
+  },
+  "fullPackageProof": "pending grouped CLI proof"
+}

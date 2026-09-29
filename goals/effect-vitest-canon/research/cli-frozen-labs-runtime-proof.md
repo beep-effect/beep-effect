@@ -36,3 +36,10 @@ Historical line/evidence/title maps identify 20 runtime rows uniquely. Four
 wrapper rows match original occurrence fingerprints and evidence exactly.
 Reconciliation must preserve native-platform judgments and all unrelated rows.
 Full grouped package verification remains required after the source commit.
+
+Source commit: `db2d0656838de0ac848a1965350a90452683ebfa`. Reconciliation closes
+exactly 24 historical rows (20 runtime, four wrappers), adds none, and preserves
+all unrelated findings. Strict validation passes for all 3,495 CLI and 687
+schema rows. CLI counts are 1,881 fixed, 12 exceptions and 1,602 open.
+The full grouped package proof is running; source remediation does not imply
+package-proof completion or goal-wide acceptance.
