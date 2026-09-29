@@ -441,7 +441,9 @@
     "research/current-patched-canary-config-controls.json",
     "research/current-patched-packet-verification.json",
     "research/current-patched-capture-stable.json",
-    "research/current-patched-capture-canary.json"
+    "research/current-patched-capture-canary.json",
+    "research/current-patched-concurrency-stable.json",
+    "research/current-patched-concurrency-canary.json"
   ],
   "agentLaunchers": [
     {

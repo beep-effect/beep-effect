@@ -2679,3 +2679,15 @@ home/checkout path. Private CLI diagnostics still contain paths and remain
 private. Before/after dependency archive identity is equal. These controls
 do not prove remote telemetry/authentication, exhaustive secret-pattern safety,
 signed replay or qualification.
+
+### Patched dependency profile: isolated concurrency boundaries
+
+The renewed [stable](research/current-patched-concurrency-stable.json) and
+[canary](research/current-patched-concurrency-canary.json) controls pass their
+source, pin, hash, input, environment, output-tree and log comparisons with
+separate writable overlays/caches. Before/after dependency identity is equal.
+Canary records 7,524 ms of CLI overlap and 441 ms of lint-task overlap.
+Stable records 6,785 ms and 6,693 ms of CLI overlap in two bounded attempts,
+but zero lint-task overlap in both. Both attempts are retained; stable
+simultaneous lint execution remains unproven. These observations do not
+establish shared-writer safety, signed replay, shadow acceptance or promotion.

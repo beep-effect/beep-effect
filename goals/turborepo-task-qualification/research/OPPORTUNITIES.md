@@ -2381,3 +2381,15 @@ The receipt now distinguishes the two timestamps and links each endpoint.
 Recording endpoint provenance with the original observation would have
 prevented the ambiguous chronology; the affected versions and remediation
 are unchanged.
+
+### Concurrent wrappers can miss task overlap
+
+The patched-profile stable concurrency control passed equality checks and
+recorded 6,785 ms of CLI overlap, but native lint intervals had no overlap
+and were separated by 80 ms. Canary recorded 441 ms of lint overlap. The
+existing control reports both measurements but requires only CLI overlap,
+so its success must not be presented as proof of simultaneous lint execution.
+The original result is retained and one additional stable pair is admitted.
+An explicit requested-overlap criterion and bounded retry budget would make
+this evidence distinction visible before reporting acceptance. No production
+configuration or task command is changed for the retry.
