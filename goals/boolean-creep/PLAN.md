@@ -1,3 +1,16 @@
+## Current execution update — 2026-09-29
+
+Push ready fixes without waiting for local full proof, as recorded in the
+2026-09-29 decision. Hosted Security passed on `224222d138` after the dependency
+remediation reached PR #1328.
+
+Main advanced to `f590617f15` and was merged forward. Its Effect snapshot update
+changes seven corpus files as well as dependency inputs. R45's frozen source
+remains historical; the pending recovery admission cannot establish coverage
+of this new source. Preserve the seven accepted lanes and failed probe receipts.
+Refresh census inputs against the merged source before claiming current-source
+coverage or dry-round credit. No implementation or P3 credit is granted.
+
 ## Current execution amendment — 2026-09-28
 
 The [2026-09-28 decision](./DECISIONS.md) delegates remaining decisions and

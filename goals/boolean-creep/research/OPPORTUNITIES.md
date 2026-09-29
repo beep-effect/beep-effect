@@ -1878,3 +1878,21 @@ existing major ranges, selecting 6.29.0 and 7.30.0 and deduplicating 8.x to the
 already locked 8.11.2. `bun install --frozen-lockfile` and the complete
 `bun run beep ci lane security` both passed; OSV reported no issues.
 The owner delegated judgment, so no additional scope interview was needed.
+
+## 2026-09-29 — probe command metadata rejected before acceptance
+
+The second bounded isolation probe completed 30 tool calls and emitted its
+terminal event, but the verifier rejected `unexpected-command-surface`. The
+provider advertised five hook-management commands absent from the frozen
+allowlist. The receipt is rejected with no accepted runs; later runs were not
+launched. Preserve both attempts and review the command metadata and completed
+run before changing policy or spending on another attempt. A startup comparison
+of advertised commands against the verifier would have exposed the mismatch
+before the expensive payload cases. No runtime or census credit is claimed.
+
+Main also advanced to `f590617f15`, changing seven corpus files and the Effect
+snapshot. The old R45 recovery inputs cannot prove current-source coverage.
+Keep historical evidence intact and bind subsequent census work to the merged
+source. Security's earlier fast-uri failure was remediated in the local branch
+but remained red remotely until publication; the new immediate-push directive
+prevents local proof waits from delaying available remediations.

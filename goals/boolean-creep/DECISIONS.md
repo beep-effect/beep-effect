@@ -263,3 +263,12 @@ outcomes. These read-only post-merge checks do not require another PR. Completio
 is unproven until they pass; a pre-merge lifecycle change does not override a
 failed or incomplete post-merge acceptance audit. If substantive work remains,
 continue remediation rather than claiming the single-PR constraint proves success.
+
+## 2026-09-29 — push available fixes before local full proof
+
+Benjamin directs that ready fixes be pushed immediately instead of waiting for
+local proof. This supersedes the 2026-09-28 batching instruction and the local
+full-proof prerequisite for publishing. Use hosted checks and review closure
+to establish exact-head merge readiness. Keep the census, compatibility,
+independent review, implementation and exact-main acceptance requirements.
+Continue using PR #1328 for all remaining work.
