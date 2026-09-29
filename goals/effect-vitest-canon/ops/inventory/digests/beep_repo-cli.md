@@ -483,3 +483,13 @@ Full CLI audit (776.2 seconds) and docgen (21.7 seconds) pass. Four historical
 runtime rows close with source commit `f18ae4a35e`; the ledger now has 3,497
 rows: 1,982 fixed, twelve exceptions and 1,503 open. Runtime, assertion and
 cleanup evidence is in research/cli-ecosystem-runtime-proof.md.
+
+
+## Repository topology and emit law callbacks
+
+Commit `f524a74ac2` fixes three direct-runtime findings with three passing
+Node/Bun tests and eighteen preserved assertions. The emit audit's existing
+native-filesystem finding is an explicit exception because the subject is the
+actual checkout's package scripts. No new inventory IDs are added. The ledger
+has 3,497 rows: 1,985 fixed, thirteen exceptions and 1,499 open. Validation and
+timing scope are recorded in research/cli-foundation-emit-runtime-proof.md.
