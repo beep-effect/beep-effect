@@ -19,9 +19,7 @@ import {
   ConfigProvider,
   Context,
   Deferred,
-  Duration,
   Effect,
-  Fiber,
   FileSystem,
   HashSet,
   Layer,
@@ -39,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { waitTimesOut } from "./support/ProofJobWait.ts";
 
 const $I = $RepoCliId.create("test/proof-job.test");
 const stamp = "2026-09-15T00:00:00.000Z";
@@ -173,24 +172,6 @@ const commentRow = Effect.fnUntraced(function* (root: string, prNumber: number, 
   });
   yield* Job.appendYeetInboxRow(root, row);
   return row;
-});
-
-// A wait that must not return is driven to its timeout on the TestClock: the timeout
-// timer registers the moment the wait starts, so one adjust just past its own timeoutMs
-// fails the wait deterministically however long the poll ticks take on a loaded runner. A wait that
-// must return finds its row on the first poll tick and never touches the clock.
-const waitTimesOut = Effect.fnUntraced(function* (
-  launcher: Job.ProofJobLauncherShape,
-  jobId: UUID,
-  options: Job.ProofJobWaitOptions
-) {
-  const timeoutMs = yield* O.match(options.timeoutMs, {
-    onNone: () => Effect.die("waitTimesOut needs a bounded timeoutMs: an unbounded wait never times out"),
-    onSome: Effect.succeed,
-  });
-  const waiter = yield* Effect.forkChild(launcher.wait(jobId, options), { startImmediately: true });
-  yield* TestClock.adjust(Duration.millis(timeoutMs + 1));
-  expect((yield* Fiber.join(waiter).pipe(Effect.flip)).message).toContain("Timed out");
 });
 
 describe("proof job schemas", () => {
