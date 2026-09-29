@@ -2701,3 +2701,17 @@ previous source, review and artifact bindings remain byte-identical. The census
 remains 144 workspaces, 3,473 graph nodes and 1,970 executable nodes. Historical
 obligations remain explicit; this attachment does not establish semantic
 closure, signed replay, shadow acceptance or tuple promotion.
+
+### Patched dependency profile: Git exclusion controls
+
+The renewed [stable](research/current-patched-git-exclusion-stable.json) and
+[canary](research/current-patched-git-exclusion-canary.json) controls each pass
+nine cases at `b410da2b6d`. A comment-only Git exclusion change alters the
+runtime binding/hash despite unchanged native input maps. A malformed source
+fails fresh, succeeds when excluded, then fails fresh again when the exclusion
+is removed. Restoring source recovers the baseline hit. Independent review
+confirms exact client versions, no failed-task archive and equal successful
+archive log bytes. Host exclusions and installed dependency identity remain
+unchanged. Static overlays do not prove metadata race safety, alternate Git
+layouts, signed replay, semantic closure or shadow acceptance. These two
+receipts postdate the 107-review canonical attachment.
