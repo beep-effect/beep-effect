@@ -1,3 +1,17 @@
+## R45 historical partial closeout — 2026-09-29
+
+R45 is sealed as incomplete on source `224222d138`, based on `dcf64397ec98`.
+Seven lanes completed and were independently reconciled. The drivers-g-m lane
+failed on an ERROR-level report-tool diagnostic; nineteen lanes were not run.
+The historical verification covers all 4,167 frozen inputs. Inventory remains
+726 rows / 108 qualified / 618 disqualified / zero applied.
+
+The reviewed CAP-1/CAP-2, AM-3 and DAF-2 corrections remain uninstalled. See
+[data/r45-partial-reconciliation/README.md](data/r45-partial-reconciliation/README.md)
+for findings, evidence bindings and source limitations. Main `f590617f15`
+supersedes R45's source. This historical closeout grants no current-source
+coverage, dry-round, P3 or implementation credit.
+
 ## Current execution update — 2026-09-29
 
 Push ready fixes without waiting for local full proof, as recorded in the
