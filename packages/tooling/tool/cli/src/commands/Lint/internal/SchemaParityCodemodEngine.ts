@@ -30,6 +30,7 @@ import {
   SchemaParityCodemodRuleContext,
   SchemaParityCodemodRulePlan,
 } from "./SchemaParityCodemod.schemas.ts";
+import { schemaDefaultHelpersRule } from "./SchemaParityCodemodDefaultsRule.ts";
 import { findSchemaParityCodemodEditOverlap, renderSchemaParityCodemodEdits } from "./SchemaParityCodemodEdits.ts";
 import { schemaParityCodemodValueImports } from "./SchemaParityCodemodImports.ts";
 import { literalKitFacetsRule } from "./SchemaParityCodemodLiteralKitRule.ts";
@@ -68,7 +69,10 @@ const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemodEngine")
  * @since 0.0.0
  */
 export const SchemaParityCodemodRules: HashMap.HashMap<SchemaParityCodemodRuleId, SchemaParityCodemodRule> =
-  HashMap.make([literalKitFacetsRule.id, literalKitFacetsRule]);
+  HashMap.make(
+    [literalKitFacetsRule.id, literalKitFacetsRule],
+    [schemaDefaultHelpersRule.id, schemaDefaultHelpersRule]
+  );
 
 const importKey = SchemaParityCodemodImport.match({
   NamespaceImport: (requirement) => `namespace:${requirement.moduleSpecifier}:${requirement.alias}`,

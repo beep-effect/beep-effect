@@ -26,6 +26,13 @@ export * from "./EffectVitest.ts";
  */
 export * from "./internal/SchemaParityCodemod.schemas.ts";
 /**
+ * The transient `schema-default-helpers` codemod rule (P3 PR 3b).
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export * from "./internal/SchemaParityCodemodDefaultsRule.ts";
+/**
  * Schema-parity codemod text-edit rendering.
  *
  * @category utilities
