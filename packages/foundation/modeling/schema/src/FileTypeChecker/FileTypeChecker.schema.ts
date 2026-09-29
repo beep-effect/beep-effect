@@ -7,9 +7,9 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { Number as Num, Order, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ArrayBuf } from "../ArrayBuffer.ts";
 import { FileExtension } from "../FileExtension.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { MimeType } from "../MimeType.ts";
@@ -158,6 +158,45 @@ const ChunkSize = S.Int.check(
   })
 );
 
+// A detached buffer still passes `instanceof`, but it has transferred its
+// memory away: `byteLength` reads 0 and constructing any view throws.
+const NotDetached = S.makeFilter((buffer: globalThis.ArrayBuffer) => !buffer.detached, {
+  identifier: $I`NotDetachedCheck`,
+  title: "Attached ArrayBuffer",
+  description:
+    "A detached ArrayBuffer has transferred its memory elsewhere: byteLength reads 0 and constructing any view over it throws.",
+  expected: "an ArrayBuffer that has not been detached",
+  message: "Expected an ArrayBuffer that has not been detached by transfer",
+});
+
+const arrayBufferByteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuffer): boolean =>
+  self === that ||
+  (!self.detached && !that.detached && Eq.equals(new globalThis.Uint8Array(self), new globalThis.Uint8Array(that)));
+
+// The JSON form of the ArrayBuffer member is base64, linked through the
+// upstream `Uint8ArrayFromBase64` codec so it matches the `Uint8Array` member.
+const ArrayBufferContent = S.instanceOf(globalThis.ArrayBuffer, {
+  expected: "ArrayBuffer",
+  toCodecJson: () =>
+    S.link<globalThis.ArrayBuffer>()(
+      S.Uint8ArrayFromBase64,
+      SchemaTransformation.transform({
+        decode: (bytes) => bytes.slice().buffer,
+        encode: (buffer) => new globalThis.Uint8Array(buffer),
+      })
+    ),
+})
+  .check(NotDetached)
+  // toEquivalence must follow the check: equivalence resolves annotations from
+  // the last check, so a declaration-level annotation would be shadowed.
+  .annotate({ toEquivalence: () => arrayBufferByteEquivalence })
+  .pipe(
+    $I.annoteSchema("ArrayBufferContent", {
+      description:
+        "A native ArrayBuffer of file bytes that has not been detached, represented in JSON as a base64 encoded string.",
+    })
+  );
+
 /**
  * Binary input accepted by detection and validation operations.
  *
@@ -169,7 +208,7 @@ const ChunkSize = S.Int.check(
  * **Gotchas**
  *
  * Detached `ArrayBuffer` values and `SharedArrayBuffer` values are rejected by
- * the underlying `ArrayBuf` schema.
+ * the `ArrayBuffer` member.
  *
  * **Example** (Validate byte content)
  *
@@ -185,7 +224,7 @@ const ChunkSize = S.Int.check(
  * @category schemas
  * @since 0.0.0
  */
-export const FileContent = S.Union([S.Array(Byte), S.Uint8Array, ArrayBuf]).pipe(
+export const FileContent = S.Union([S.Array(Byte), S.Uint8Array, ArrayBufferContent]).pipe(
   $I.annoteSchema("FileContent", {
     description: "File bytes represented as a readonly byte array, Uint8Array, or ArrayBuffer.",
   })

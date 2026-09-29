@@ -1,5 +1,4 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Bytes } from "@beep/schema/Bytes";
 import { Double } from "@beep/schema/Double";
 import { Fixed32 } from "@beep/schema/Fixed32";
 import { Fixed64 } from "@beep/schema/Fixed64";
@@ -18,7 +17,6 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 
-const decodeUnknownBytes = S.decodeUnknownEffect(Bytes);
 const decodeUnknownDouble = S.decodeUnknownEffect(Double);
 const decodeUnknownFixed32 = S.decodeUnknownEffect(Fixed32);
 const decodeUnknownFixed64 = S.decodeUnknownEffect(Fixed64);
@@ -29,7 +27,6 @@ const decodeUnknownSint32 = S.decodeUnknownEffect(Sint32);
 const decodeUnknownSint64 = S.decodeUnknownEffect(Sint64);
 const decodeUnknownUint32 = S.decodeUnknownEffect(Uint32);
 const decodeUnknownUint64 = S.decodeUnknownEffect(Uint64);
-const isBytes2 = S.is(Bytes);
 const isDouble2 = S.is(Double);
 const isFixed322 = S.is(Fixed32);
 const isFixed642 = S.is(Fixed64);
@@ -360,39 +357,6 @@ describe("protobuf scalar schemas", { concurrent: false }, () => {
         expect(isSfixed642(value)).toBe(true);
         expect(value >= sint64Minimum).toBe(true);
         expect(value <= sint64Maximum).toBe(true);
-
-        return true;
-      }),
-      { arbitrary: fcRuns(100) }
-    );
-  });
-
-  describe("protobuf bytes scalar schema", () => {
-    it.effect(
-      "accepts Uint8Array bytes values",
-      Effect.fnUntraced(function* () {
-        const input = new Uint8Array([1, 2, 3]);
-        const decoded = yield* decodeUnknownBytes(input);
-
-        expect(decoded).toBe(input);
-        expect(decoded.byteLength).toBe(3);
-      })
-    );
-
-    it.effect(
-      "rejects non-Uint8Array bytes values",
-      Effect.fnUntraced(function* () {
-        pipe(yield* Effect.exit(decodeUnknownBytes([1, 2, 3])), Exit.isFailure, assertTrue);
-        pipe(yield* Effect.exit(decodeUnknownBytes("AQID")), Exit.isFailure, assertTrue);
-      })
-    );
-
-    it.effect.prop(
-      "derives Uint8Array arbitrary values from the schema",
-      [Arbitrary.schema(Bytes)],
-      Effect.fnUntraced(function* ([value]) {
-        expect(isBytes2(value)).toBe(true);
-        expect(value).toBeInstanceOf(Uint8Array);
 
         return true;
       }),

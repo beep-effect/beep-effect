@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
@@ -532,7 +531,7 @@ export const buildEntityResolutionGraph = dual2(
     });
 
     // Phase 5: Build Effect Graph (two-tier: MentionRecords → ResolvedEntities)
-    const entityIndex: Record<string, NodeIndex> = {};
+    const entityIndex: Record<string, Graph.NodeIndex> = {};
     const resolvedIndexes = MutableHashMap.empty<string, Graph.NodeIndex>();
 
     const graph = Graph.directed<ERNode, EREdge>((mutable) => {
@@ -545,7 +544,7 @@ export const buildEntityResolutionGraph = dual2(
       // Add MentionRecord nodes + ResolutionEdges with REAL similarity scores
       for (const mr of mentionRecords) {
         const mrIdx = Graph.addNode(mutable, mr);
-        entityIndex[mr.id] = NodeIndex.make(mrIdx);
+        entityIndex[mr.id] = mrIdx;
 
         const canonicalId = canonicalMap[mr.id];
         if (P.isTruthy(canonicalId)) {

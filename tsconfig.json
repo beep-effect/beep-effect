@@ -747,9 +747,6 @@
       "@beep/schema/Fn": [
         "./packages/foundation/modeling/schema/src/Fn/index.ts"
       ],
-      "@beep/schema/Graph": [
-        "./packages/foundation/modeling/schema/src/Graph/index.ts"
-      ],
       "@beep/schema/LiteralKit": [
         "./packages/foundation/modeling/schema/src/LiteralKit/index.ts"
       ],
@@ -790,9 +787,6 @@
       ],
       "@beep/schema/AbortSignal": [
         "./packages/foundation/modeling/schema/src/AbortSignal.ts"
-      ],
-      "@beep/schema/ArrayOf": [
-        "./packages/foundation/modeling/schema/src/ArrayOf.ts"
       ],
       "@beep/schema/BigDecimal": [
         "./packages/foundation/modeling/schema/src/BigDecimal.ts"
@@ -864,12 +858,6 @@
       "@beep/schema/MimeType": [
         "./packages/foundation/modeling/schema/src/MimeType.ts"
       ],
-      "@beep/schema/MutableHashMap": [
-        "./packages/foundation/modeling/schema/src/MutableHashMap.ts"
-      ],
-      "@beep/schema/MutableHashSet": [
-        "./packages/foundation/modeling/schema/src/MutableHashSet.ts"
-      ],
       "@beep/schema/Number": [
         "./packages/foundation/modeling/schema/src/Number.ts"
       ],
@@ -890,9 +878,6 @@
       ],
       "@beep/schema/PromiseSchema": [
         "./packages/foundation/modeling/schema/src/PromiseSchema.ts"
-      ],
-      "@beep/schema/RegExp": [
-        "./packages/foundation/modeling/schema/src/RegExp.ts"
       ],
       "@beep/schema/SchemaUtils": [
         "./packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
@@ -1359,9 +1344,6 @@
       ],
       "@beep/documents-use-cases/server": [
         "./packages/documents/use-cases/src/server.ts"
-      ],
-      "@beep/schema/Bytes": [
-        "./packages/foundation/modeling/schema/src/Bytes.ts"
       ],
       "@beep/schema/Double": [
         "./packages/foundation/modeling/schema/src/Double.ts"
@@ -1840,9 +1822,6 @@
       "@beep/law-practice-use-cases/LegalPositionRecord": [
         "./packages/law-practice/use-cases/src/LegalPositionRecord/index.ts"
       ],
-      "@beep/schema/HashSet": [
-        "./packages/foundation/modeling/schema/src/HashSet.ts"
-      ],
       "@beep/law-practice-server/LegalPositionRecord": [
         "./packages/law-practice/server/src/LegalPositionRecord/index.ts"
       ],
@@ -1981,9 +1960,6 @@
       ],
       "@beep/repo-cli/commands/Cache": [
         "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
-      ],
-      "@beep/schema/ArrayBuffer": [
-        "./packages/foundation/modeling/schema/src/ArrayBuffer.ts"
       ],
       "@beep/schema/FileTypeChecker": [
         "./packages/foundation/modeling/schema/src/FileTypeChecker/index.ts"

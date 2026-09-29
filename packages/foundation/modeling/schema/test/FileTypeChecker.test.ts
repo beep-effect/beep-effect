@@ -253,6 +253,19 @@ describe("FileTypeChecker schemas", () => {
     }
   });
 
+  it("rejects detached ArrayBuffers and compares ArrayBuffers by bytes", () => {
+    const detached = new ArrayBuffer(4);
+    detached.transfer();
+    const fileContentEquivalence = S.toEquivalence(FileContent);
+
+    pipe(decodeFileContentResult(new ArrayBuffer(4)), Result.isSuccess, assertTrue);
+    const rejected = decodeFileContentResult(detached);
+    pipe(rejected, Result.isFailure, assertTrue);
+    expect(String(Result.merge(rejected))).toContain("Expected an ArrayBuffer that has not been detached by transfer");
+    expect(fileContentEquivalence(new Uint8Array([1, 2]).buffer, new Uint8Array([1, 2]).buffer)).toBe(true);
+    expect(fileContentEquivalence(new Uint8Array([1, 2]).buffer, new Uint8Array([1, 3]).buffer)).toBe(false);
+  });
+
   it("keeps catalog keys correlated, exhaustive, and schema-valid", () => {
     const catalogKeys = R.keys(FileTypeCatalog);
     expect(catalogKeys).toHaveLength(FileType.Options.length);

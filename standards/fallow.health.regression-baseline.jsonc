@@ -160,14 +160,6 @@
         "count": 1
       }
     },
-    "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts": {
-      "complexity_high": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      }
-    },
     "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts": {
       "complexity_moderate": {
         "count": 1

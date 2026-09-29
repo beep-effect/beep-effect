@@ -6,7 +6,7 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result } from "effect";
+import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaIssue, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -14,7 +14,6 @@ import * as S from "effect/Schema";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
 import { Defect } from "../Opaque.ts";
-import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
@@ -37,7 +36,29 @@ const SingleCharacterText = S.String.check(
   })
 );
 
-const decodeRegExpResult = S.decodeResult(RegExpFromStr);
+// The encoded side stays a plain pattern string, never the `{ source, flags }`
+// object that `S.toCodecJson(S.RegExp)` writes.
+const RegExpFromPattern = S.String.pipe(
+  S.decodeTo(
+    S.RegExp,
+    SchemaTransformation.transformEffect({
+      decode: (pattern: string) =>
+        Effect.try({
+          try: () => new globalThis.RegExp(pattern),
+          catch: (cause) =>
+            new SchemaIssue.InvalidValue({
+              message: P.isError(cause) ? cause.message : "Expected a valid regular expression pattern string",
+            }),
+        }),
+      encode: (regexp: globalThis.RegExp) => Effect.succeed(regexp.source),
+    })
+  ),
+  $I.annoteSchema("RegExpFromPattern", {
+    description: "A regular expression decoded from its pattern string.",
+  })
+);
+
+const decodeRegExpResult = S.decodeResult(RegExpFromPattern);
 /**
  * A parser header configuration input.
  *

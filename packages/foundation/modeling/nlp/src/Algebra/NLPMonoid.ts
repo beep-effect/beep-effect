@@ -22,8 +22,8 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { MutableHashMapFromSelf } from "@beep/schema";
-import { HashSet, MutableHashMap } from "effect";
+import { HashSet, MutableHashMap, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -37,10 +37,23 @@ const NonNegativeCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   })
 );
 
-const TermNumberMap = MutableHashMapFromSelf({
-  key: S.String,
-  value: S.Finite,
-});
+// In-memory carrier. The codec link to an entry array is what arbitrary and
+// JSON derivation read; decoding a live map passes it through unchanged.
+const TermNumberMap = S.declare(MutableHashMap.isMutableHashMap<string, number>, {
+  expected: "MutableHashMap",
+  toCodec: () =>
+    S.link<MutableHashMap.MutableHashMap<string, number>>()(
+      S.Array(S.Tuple([S.String, S.Finite])),
+      SchemaTransformation.transform({
+        decode: MutableHashMap.fromIterable,
+        encode: A.fromIterable,
+      })
+    ),
+}).pipe(
+  $I.annoteSchema("TermNumberMap", {
+    description: "Mutable term-to-number map carried in memory by NLP aggregation monoids.",
+  })
+);
 
 type TermNumberMap = typeof TermNumberMap.Type;
 type TokenHashSet = HashSet.HashSet<string>;
