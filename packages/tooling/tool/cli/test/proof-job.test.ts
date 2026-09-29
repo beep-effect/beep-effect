@@ -966,6 +966,24 @@ describe("job wait wave return", () => {
       })
     )
   );
+  // The negative oracle must be able to fail: a wait that hands back a wave fails
+  // waitTimesOut. The fork-and-adjust form it replaced timed this wait out and passed.
+  it.effect("fails waitTimesOut when the wait hands back a wave instead of timing out", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const job = yield* launcher.submit(submission(root));
+        yield* launcher.bindPullRequest(job.jobId, 7);
+        const quick = Job.ProofJobWaitOptions.make({ timeoutMs: O.some(1_000), pollIntervalMs: 1 });
+        yield* waveRow(root, 7, "Lint");
+        const defect = yield* waitTimesOut(launcher, job.jobId, quick).pipe(
+          Effect.as("waitTimesOut passed"),
+          Effect.catchDefect(Effect.succeed)
+        );
+        expect(defect).toBe("the wait returned wave where it had to time out");
+      })
+    )
+  );
 });
 
 const runJobCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
