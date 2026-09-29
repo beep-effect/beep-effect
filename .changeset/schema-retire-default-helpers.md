@@ -112,6 +112,23 @@ upstream pair. Defaults affect construction and decoding only: persisted and ser
 byte-identical. A probe over the 354 rewritten modules found identical encoded JSON Schema and
 seeded-sample JSON bytes for all 2,862 schema exports.
 
+The rewrite is mechanical: a transient codemod rule (added, applied, and removed in this change)
+rewrote every site, with nothing left for manual follow-up.
+
+| Tree | Sites | Residue | Quarantined |
+| --- | --- | --- | --- |
+| packages + apps | 2,515 | 0 | 0 |
+| scratchpad | 1,558 | 0 | 0 |
+| infra | 87 | 0 | 0 |
+| goals scripts | 6 | 0 | 0 |
+| Total | 4,166 | 0 | 0 |
+
+By helper: `withNoneDefault` 3,049 sites in 431 files, `withKeyDefaults` 846 in 188,
+`withEmptyArrayDefaults` 177 in 56, and `withConstantDefault` 94 in 30. The upstream pair is longer
+than the helper: the rewritten files grow by 2,128 lines and 178,404 characters, about 43
+characters per site. The diff against `origin/main` is about 2.0 MB. As a mechanical rewrite, it
+was reviewed by scope: value parity, consumers and tooling, and types and laws.
+
 Type-check cost, tsgo 7.0.2, fresh build-info, before (`origin/main` at 7cc0aa9b33) → after.
 The gate is the `--singleThreaded` instantiation count:
 

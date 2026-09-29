@@ -123,15 +123,20 @@ have different fields.
 
 ### A.5 SchemaUtils defaults and statics
 
+Historical note: the four `SchemaUtils` default helpers below were retired in PR 3b of effect-schema-parity;
+the rows and the samples in this review now name the upstream `effect/Schema`
+compositions that replaced them.
+
+
 | Helper | Exists / pipe position | Contract actually affected | Verdict in WIP | Evidence |
 | --- | --- | --- | --- | --- |
 | `withStatics(factory)` | Yes; data-last pipe transform | Attaches arbitrary statics and preserves them across later `annotate`. | Factory attachment is correct. It is unnecessary once identical tagged members are removed. | `.../SchemaUtils/withStatics.ts:44-84`, `:121-124` |
 | `withCodecStatics` | Yes; unary | Adds `is`, throwing `fromUnknown`, and non-throwing `decodeOption`. | Valid on `RelationIdPart`; the schema itself is under-annotated. | `.../SchemaUtils/withCodecStatics.ts:44-64`, `:92-99` |
 | `withOptionCodecStatics` | Yes; unary, service-free codecs only | Adds Option-based direct and JSON-string decode/encode statics plus shared statics. | Line 385 is valid in isolation but `PatternParts` is unused and redundant. | `.../SchemaUtils/codecStatics.ts:217-233`, `:544-560` |
-| `withNoneDefault` | Yes; unary | **Constructor default only**: `.make({})` supplies `Option.none`. It does not make an encoded key optional and does not define decode behavior. | Valid after `OptionFromOptionalKey`, but missing decode is already None because of that codec. It still does not accept encoded `null`. | the retired `withNoneDefault` helper (removed in PR 3b of effect-schema-parity); Effect constructor-only contract `node_modules/effect/src/Schema.ts:5797-5829` |
-| `withConstantDefault(value)` | Yes; data-last | **Constructor default only**; encoded key stays required and decoding an omitted key fails. | Not used. Appropriate only where constructor convenience must not change the wire. | the retired `withConstantDefault` helper (removed in PR 3b of effect-schema-parity) |
-| `withKeyDefaults(value)` | Yes; dual/data-last | Combines constructor default with `S.withDecodingDefaultTypeKey`: encoded key becomes exact-optional, missing decode gets a Type-side default, encoding includes the value by default. | Correct for Python fields whose omitted input is valid and has the same canonical default, e.g. `optional=False`. | `.../SchemaUtils/withKeyDefaults.ts:53-72`; underlying contracts `node_modules/effect/src/Schema.ts:5844-5955` |
-| `withEmptyArrayDefaults` | Yes; unary or `()` | Same constructor + decode-side missing-key behavior as `withKeyDefaults`, specialized to a fresh empty readonly array. | Mechanically correct for actual `default_factory=list` fields; wrong when applied to required `intents`. | `.../SchemaUtils/withKeyDefaults.ts:74-87`, `:120-172` |
+| `withNoneDefault` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeedNone)` | Upstream; data-last | **Constructor default only**: `.make({})` supplies `Option.none`. It does not make an encoded key optional and does not define decode behavior. | Valid after `OptionFromOptionalKey`, but missing decode is already None because of that codec. It still does not accept encoded `null`. | the retired `withNoneDefault` helper (removed in PR 3b of effect-schema-parity); Effect constructor-only contract `node_modules/effect/src/Schema.ts:5797-5829` |
+| `withConstantDefault(value)` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(value))` | Upstream; data-last | **Constructor default only**; encoded key stays required and decoding an omitted key fails. | Not used. Appropriate only where constructor convenience must not change the wire. | the retired `withConstantDefault` helper (removed in PR 3b of effect-schema-parity) |
+| `withKeyDefaults(value)` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(value))` + `S.withDecodingDefaultTypeKey(Effect.succeed(value))` | Upstream pair; data-last; bind a constructed value to one const | Combines the constructor default with `S.withDecodingDefaultTypeKey`: encoded key becomes exact-optional, missing decode gets a Type-side default, encoding includes the value by default. | Correct for Python fields whose omitted input is valid and has the same canonical default, e.g. `optional=False`. | upstream contracts `node_modules/effect/src/Schema.ts:5726-5955` |
+| `withEmptyArrayDefaults` (retired in PR 3b of effect-schema-parity) → `S.withConstructorDefault(Effect.succeed(empty))` + `S.withDecodingDefaultType(Effect.succeed(empty))` over one `const empty = A.empty<T>()` | Upstream pair; data-last | Constructor default plus a Type-side decoding default for a missing or `undefined` value, sharing one empty readonly array. | Mechanically correct for actual `default_factory=list` fields; wrong when applied to required `intents`. | upstream contracts `node_modules/effect/src/Schema.ts:5726-5733`, `:5952-5960` |
 
 The source standard explicitly separates constructor defaults, decoding
 defaults, and encoded optionality (`standards/schema-first-development-prompt.md:207-218`).
@@ -333,19 +338,23 @@ Before the behavior-specific items, simplify the four false variant families:
 export class Requirement extends S.Class<Requirement>($I`Requirement`)({
   type: RequirementType,
   value: S.String,
-  optional: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  optional: S.Boolean.pipe(
+    S.withConstructorDefault(Effect.succeed(false)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+  ),
 }) {}
 
 export class ExecutionPayload extends S.Class<ExecutionPayload>($I`ExecutionPayload`)({
   executor: ExecutionPayloadExecutor,
   code: S.String,
   timeout: S.OptionFromNullOr(S.Int).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
 }) {}
 ```
 
-`S.Class`, LiteralKit-as-field, and `withKeyDefaults` are verified in A.3/A.5.
+`S.Class`, LiteralKit-as-field, and the constructor/decoding default pair are verified in A.3/A.5.
 The same simplification applies to `TemplateAnnotation` and `KnowledgeNode`.
 This is the smallest precise model under the standard's case-specific-payload
 rule (`standards/schema-first-development-prompt.md:250-261`).
@@ -368,8 +377,9 @@ export const StateUri = S.String.check(
 export type StateUri = typeof StateUri.Type;
 ```
 
-Then use `StateUri.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults)` for all
-three fields. `S.check`, `isPattern`, and `brand` are verified at
+Then bind `const noStateUris = A.empty<StateUri>()` and use
+`StateUri.pipe(S.Array, S.withConstructorDefault(Effect.succeed(noStateUris)), S.withDecodingDefaultType(Effect.succeed(noStateUris)))`
+for all three fields. `S.check`, `isPattern`, and `brand` are verified at
 `node_modules/effect/src/Schema.ts:5116-5140`, `:6820-6833`, and `:5198-5240`;
 `withCodecStatics` is verified at
 `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:92-99`.
@@ -438,9 +448,9 @@ non-URI path; the target check guarantees the normalized value. `decodeTo` and
 `SchemaTransformation.transform` signatures are verified at
 `node_modules/effect/src/Schema.ts:5585-5609` and
 `node_modules/effect/src/SchemaTransformation.ts:335-343`; string/array helpers
-are verified in A.6. Apply `RelationId.pipe(S.Array,
-SchemaUtils.withEmptyArrayDefaults)` to `dependsOn`, `extends`, and
-`contradicts`. This replaces—not completes—the unfinished filter at lines
+are verified in A.6. Bind `const noRelationIds = A.empty<RelationId>()` and apply
+`RelationId.pipe(S.Array, S.withConstructorDefault(Effect.succeed(noRelationIds)), S.withDecodingDefaultType(Effect.succeed(noRelationIds)))`
+to `dependsOn`, `extends`, and `contradicts`. This replaces—not completes—the unfinished filter at lines
 358-399.
 
 ### C.3 `coerce_is_user_invocable`
@@ -654,12 +664,17 @@ export declare namespace SkeletonNode {
   };
 }
 
+const noChildren = A.empty<SkeletonNode.Type>();
+
 export const SkeletonNode: S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> =
   S.Struct({
     blockId: S.String,
     children: S.Array(S.suspend(
       (): S.Codec<SkeletonNode.Type, SkeletonNode.Encoded> => SkeletonNode,
-    )).pipe(SchemaUtils.withEmptyArrayDefaults),
+    )).pipe(
+      S.withConstructorDefault(Effect.succeed(noChildren)),
+      S.withDecodingDefaultType(Effect.succeed(noChildren)),
+    ),
   }).pipe(S.encodeKeys({ blockId: "block_id" }));
 ```
 
@@ -678,17 +693,35 @@ references; `ContentBlock` is the real `block_type` tagged union that includes
 Installed rc.112 requires the child identifier:
 
 ```ts
+const noFiles = A.empty<FileInfo>();
+const noReferenceFiles = A.empty<ReferenceFile>();
+const noExamples = A.empty<Example>();
+
 export class CompiledSkill extends ExtractedSkill.extend<CompiledSkill>(
   $I`CompiledSkill`,
 )({
   frontmatter: S.OptionFromNullOr(Frontmatter).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
-  files: FileInfo.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
-  referenceFiles: ReferenceFile.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
-  examples: Example.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+  files: FileInfo.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noFiles)),
+    S.withDecodingDefaultType(Effect.succeed(noFiles)),
+  ),
+  referenceFiles: ReferenceFile.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noReferenceFiles)),
+    S.withDecodingDefaultType(Effect.succeed(noReferenceFiles)),
+  ),
+  examples: Example.pipe(
+    S.Array,
+    S.withConstructorDefault(Effect.succeed(noExamples)),
+    S.withDecodingDefaultType(Effect.succeed(noExamples)),
+  ),
   contentExtraction: S.OptionFromNullOr(ContentExtraction).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultTypeKey(Effect.succeedNone),
   ),
 }) {}
 ```
@@ -737,7 +770,7 @@ Ranks are ordered by the first repair dependency, then semantic blast radius.
 | 12 | P1 | 340-356, 443 | Source metadata fields are flattened; WIP invents optional nested `meta`, and the class is optional so defaults/required behavior change. Preserve flat shape or supply a total compatibility adapter. |
 | 13 | P1 | 403-415, 417-449 | `ExtractedSkillAnnotations` is never referenced by `ExtractedSkill`; source annotation/workflow fields are effectively missing. Add the fields or a deliberate nested adapter. |
 | 14 | P1 | 409 | `workflows` is `Array<"workflow">` defaulting to `["workflow"]`, not `list[Workflow]` defaulting `[]`; implement Workflow and use its array schema. |
-| 15 | P1 | 424 | Required Python `intents` is given an empty missing-key default; remove `withEmptyArrayDefaults` unless empty/missing is an intentional redesign. |
+| 15 | P1 | 424 | Required Python `intents` is given an empty missing-key default; remove the empty-array default pair (formerly `withEmptyArrayDefaults`) unless empty/missing is an intentional redesign. |
 | 16 | P1 | 348 | `argument_hint: Optional[str]` becomes `argumentHints: string[] = []`; restore singular optional string (and snake_case wire mapping if Type is camelCase). |
 | 17 | P1 | 437-440 | Python provenance is `Optional[str]`; `ProvO` is a structured PROV-O union. Use string or document and test a real migration adapter. |
 | 18 | P1 | 441 | Knowledge-node strings are not parsed and invalid elements are not dropped with warnings. Implement C.4's element-wise ingress policy. |
