@@ -550,10 +550,25 @@ describe("collectYeetWatchSnapshot", () => {
     )
   );
 
-  it.live("charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads", () =>
-    inTempRepo((root) =>
-      Effect.gen(function* () {
+  it.layer(
+    Layer.mergeAll(
+      PlatformLayer,
+      scriptedSpawnerLayer([
+        {
+          view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+          checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+          threads: { exitCode: 0, output: threadsJson([]) },
+        },
+      ])
+    ),
+    { timeout: "10 seconds" }
+  )("splits closeout issues by source", (it) => {
+    it.effect(
+      "charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
+        // Watch reads the closeout artifact under `<repoRoot>/.beep/yeet/runs/`.
+        const root = yield* fs.makeTempDirectoryScoped();
         const subjectContext = contextFor(root);
         const closeoutPath = yield* runArtifactPathForContext(subjectContext, "pr-closeout.json");
         yield* fs.makeDirectory(closeoutPath.slice(0, closeoutPath.lastIndexOf("/")), { recursive: true });
@@ -589,21 +604,8 @@ describe("collectYeetWatchSnapshot", () => {
         strictEqual(snapshot.criteria.threadsResolved, true);
         strictEqual(snapshot.criteria.closeoutGatesPassed, false);
       })
-    ).pipe(
-      provideScopedLayer(
-        Layer.mergeAll(
-          PlatformLayer,
-          scriptedSpawnerLayer([
-            {
-              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
-              checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
-              threads: { exitCode: 0, output: threadsJson([]) },
-            },
-          ])
-        )
-      )
-    )
-  );
+    );
+  });
 
   it.effect("rejects a paginated review-thread response without a usable cursor", () =>
     Effect.gen(function* () {

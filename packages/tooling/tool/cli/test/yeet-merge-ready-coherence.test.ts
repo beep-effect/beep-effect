@@ -5,7 +5,7 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -208,7 +208,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       );
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
-      expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
+      assertSome(mergeReady.failing, "threads-resolved");
       expect(mergeReady.criteria.closeoutGatesPassed).toBe(false);
     })
   );

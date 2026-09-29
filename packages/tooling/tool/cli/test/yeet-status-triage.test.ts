@@ -521,7 +521,10 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "threads-resolved"
+    );
   });
 
   it("blocks on closeout-run when the closeout artifact is missing without mislabeling threads", () => {

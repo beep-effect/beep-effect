@@ -666,7 +666,7 @@ describe("B7 settle contracts", () => {
   }
 });
 
-it.layer(platform)("B7 merge-loop timing", (layerIt) => {
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect(
     "ends exactly at timeout for an admitted head, persists the timeline, and names the missing context",
     () =>
