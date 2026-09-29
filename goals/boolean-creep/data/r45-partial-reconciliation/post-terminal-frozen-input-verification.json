@@ -1,0 +1,50 @@
+{
+  "kind": "boolean-creep-frozen-input-verification/v1",
+  "sourceSha": "224222d1389c30170d0518f00a0d58ee87014843",
+  "originMainSha": "dcf64397ec9835e989e7ea94e9c708582a035f22",
+  "frozenInputsSha256": "19fb02681d34bdd30dbc4d8aab0f63f35c0b9217a7c48f2da9a2f51ff9ace269",
+  "checked": 4167,
+  "postTerminalRunnerVerification": {
+    "allMatch": true,
+    "verifiedBindings": 4167,
+    "evidence": "parent terminal-failure attribution (private)",
+    "evidenceSha256": "de4654a7fe9e16a05c846ee5a87edb93aa8ae6e2fffad8a1a81bd00a7a4b1fa2"
+  },
+  "gitObjectVerificationAtSource": {
+    "mismatches": [],
+    "allMatch": true
+  },
+  "currentSource": {
+    "sourceSha": "587d11c1420e3d75be3399e72d1c8638fc4a50fc",
+    "originMainSha": "f590617f158d79782129bd8874b3ce2379fb6dab",
+    "changedFrozenInputs": [
+      "apps/labs/api-docs/turbo.json",
+      "apps/labs/ciops/turbo.json",
+      "apps/oip-web/turbo.json",
+      "apps/professional-desktop/turbo.json",
+      "apps/storybook/turbo.json",
+      "bun.lock",
+      "goals/boolean-creep/DECISIONS.md",
+      "goals/boolean-creep/PLAN.md",
+      "package.json",
+      "packages/foundation/modeling/identity/turbo.json",
+      "packages/foundation/modeling/nlp/src/Core/Document.ts",
+      "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+      "packages/foundation/modeling/nlp/src/Core/Token.ts",
+      "packages/foundation/modeling/schema/src/Thunk.ts",
+      "packages/foundation/modeling/schema/src/URL.ts",
+      "packages/foundation/primitive/types/turbo.json",
+      "packages/shared/domain/src/entity/EntityId.ts",
+      "packages/shared/domain/src/entity/PublicEntityId.ts",
+      "packages/tooling/library/ai-sync/turbo.json",
+      "packages/tooling/policy-pack/repo-configs/turbo.json",
+      "packages/tooling/tool/cli/turbo.json",
+      "standards/cache-qualification-baseline.json",
+      "turbo.json"
+    ],
+    "changedCount": 23,
+    "requiresFreshCensus": true
+  },
+  "roundComplete": false,
+  "dryCredit": false
+}

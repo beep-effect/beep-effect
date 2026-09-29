@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "boolean-creep-partial-round-verdict/v1",
+  "round": "refresh-2026-09-29-r45-main-dcf643",
+  "sourceSha": "224222d1389c30170d0518f00a0d58ee87014843",
+  "originMainSha": "dcf64397ec9835e989e7ea94e9c708582a035f22",
+  "complete": false,
+  "classification": "incomplete-runtime-diagnostic-refusal",
+  "sourceStableAtTermination": true,
+  "successfulLanes": [
+    "r45-foundation-primitive",
+    "r45-foundation-capability",
+    "r45-foundation-modeling-rest",
+    "r45-foundation-schema-a-m",
+    "r45-foundation-schema-n-z",
+    "r45-foundation-ui",
+    "r45-drivers-a-f"
+  ],
+  "failedLanes": [
+    {
+      "lane": "r45-drivers-g-m",
+      "processExitCode": 0,
+      "accepted": false,
+      "errors": ["Refusal: unexpected-diagnostic-level"],
+      "transcriptSha256": "0b56b9fac82a0ffa25a52de202f505c7189615a0432bcb14846cb0b9fa78958f"
+    }
+  ],
+  "notExecutedLanes": [
+    "r45-drivers-n-r",
+    "r45-drivers-s-z",
+    "r45-architecture-ecosystem-internal",
+    "r45-agents-workspace",
+    "r45-epistemic-ontology",
+    "r45-shared-documents",
+    "r45-law-practice-domain",
+    "r45-law-practice-runtime",
+    "r45-apps",
+    "r45-tooling-library-observability",
+    "r45-tooling-library-support",
+    "r45-tooling-policy",
+    "r45-tool-docgen",
+    "r45-cli-internal-root",
+    "r45-cli-commands-a-c",
+    "r45-cli-commands-d-k",
+    "r45-cli-commands-l-q",
+    "r45-cli-commands-r-z",
+    "r45-cli-yeet"
+  ],
+  "successfulLanesReconciled": 7,
+  "rawQualifiedCandidates": 2,
+  "acceptedNewQualified": 0,
+  "newDisqualified": [],
+  "kindCorrections": 0,
+  "inventoryCounts": {
+    "total": 726,
+    "qualified": 108,
+    "disqualified": 618,
+    "applied": 0
+  },
+  "dry": false,
+  "dryStreak": 0,
+  "P3Credit": false,
+  "implementationCredit": false,
+  "blocker": "Superseded by source change: main f590617f15 changed 23 frozen inputs (7 corpus files). Current source 587d11c142 needs an independently admitted fresh full census.",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/execution-summary.json",
+      "sha256": "263885773a33eb8a6e4e33c50abffae81c5254f87ee0f87eacfe4c26dc73d299"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/lane-map.json",
+      "sha256": "ed0d87d941051937831bee8e33895938fa085c42331c3fdfa5cc24fdabbe8846"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/source-sha.txt",
+      "sha256": "30e835ec9b75a45e481de9cf1a68370909a8df1c61036562cd5b7d2a5a2122ab"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/runtime-refusal.json",
+      "sha256": "7fc967bb4c4685ccca180a59b718fd68182ef2c8efe53508a29143d14f3066eb"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-drivers-a-f.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-drivers-g-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-capability.jsonl",
+      "sha256": "26cc4b25e2c6872a2b3205425e19701bd4b924673dce43364a6a50477d120f70"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-modeling-rest.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-primitive.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-schema-n-z.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/r45-foundation-ui.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-29-pre-r45-remediation-install.jsonl",
+      "sha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/artifact-index.json",
+      "sha256": "9621658d2fd3c4173776166ab1b483c5cc1311dbfec741ec7c32ea97bab7ce2b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r45-partial-reconciliation/integration.json",
+      "sha256": "d183909d585937991adc177ac0b17384c592dff949f9633654608761777071a9"
+    }
+  ],
+  "limitation": "Seven successful execution lanes were independently reconciled at the historical R45 source. drivers-g-m stays failed and 19 lanes were not executed. Reviewed remediation candidates are not installed. No partial coverage is inherited by the current-source round."
+}

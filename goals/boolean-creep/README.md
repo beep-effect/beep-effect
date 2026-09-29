@@ -1,3 +1,11 @@
+## Current execution amendment — 2026-09-28
+
+The [2026-09-28 decision](./DECISIONS.md) delegates remaining decisions and
+agent merge through the ChatGPT Chrome extension. Consolidate all remaining
+work into PR #1328, including implementation and reflection. Retain census,
+independent review, compatibility, quality and exact-main acceptance evidence;
+older separate-PR and Benjamin-only merge instructions below are historical.
+
 # Boolean-Creep Eradication
 
 ## Source advance during R41 preparation, 2026-09-25

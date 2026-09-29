@@ -15,6 +15,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -98,7 +99,7 @@ describe("yeet resume", () => {
   });
 
   it("rejects a pull-request URL whose host is not github.com", () => {
-    expect(Result.isFailure(decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42"))).toBe(true);
+    assertTrue(Result.isFailure(decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42")));
   });
 
   it.effect("rejects zero and negative --agent selections", () =>

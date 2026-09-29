@@ -31,6 +31,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -138,7 +139,7 @@ const preparePartialTraceRecovery = Effect.fnUntraced(function* () {
       })
     )
   );
-  expect(Exit.isFailure(interruptedExit)).toBe(true);
+  assertTrue(Exit.isFailure(interruptedExit));
   expect(yield* fs.exists(recovery.value.tracePath)).toBe(false);
   const partialTrace = Str.takeLeft(32)(recovery.value.traceText);
   yield* fs.writeFileString(recovery.value.tracePath, partialTrace);
@@ -886,7 +887,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         Effect.scoped
       );
       const exit = yield* Effect.exit(applier.apply(locator));
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("event copy failed");
     })
   );
@@ -1578,7 +1579,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         tracePath: `${packetPath}/ops/trace-parent/trace.json`,
       });
       const exit = yield* Effect.exit(applyPacketGenesisSeed(failingSeed));
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(yield* fs.exists(seed.value.eventsDirectory)).toBe(false);
       expect(yield* fs.readFileString(`${packetPath}/ops/trace-parent`)).toBe("blocks trace directory\n");
     })
@@ -1617,7 +1618,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const exit = yield* Effect.exit(
         applyPacketGenesisSeed(seed).pipe(Effect.provideService(FileSystem.FileSystem, { ...fs, rename }))
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace write failed");
       expect(yield* fs.exists(eventPath)).toBe(false);
       expect(yield* fs.readFileString(foreignPath)).toBe(foreignBytes);
@@ -1899,10 +1900,10 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals", { recursive: true });
           yield* fs.copy(FORKED_PATH, "goals/forked");
-          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"])))).toBe(true);
-          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"])))).toBe(true);
-          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"])))).toBe(true);
-          expect(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"])))).toBe(true);
+          assertTrue(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"]))));
+          assertTrue(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"]))));
+          assertTrue(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--preview"]))));
+          assertTrue(Exit.isSuccess(yield* Effect.exit(runRepair(["forked", "--apply"]))));
           yield* fs.writeFileString("goals/forked/ops/events/invalid.json", "not json\n");
           expectReportedExit(yield* Effect.exit(runRepair(["forked", "--preview"])));
         })
@@ -1925,8 +1926,8 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
               completionGate,
             })}\n`
           );
-          expect(Exit.isSuccess(yield* Effect.exit(runMigration(["--preview"])))).toBe(true);
-          expect(
+          assertTrue(Exit.isSuccess(yield* Effect.exit(runMigration(["--preview"]))));
+          assertTrue(
             Exit.isSuccess(
               yield* Effect.exit(
                 runMigration([
@@ -1938,7 +1939,7 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
                 ])
               )
             )
-          ).toBe(true);
+          );
         })
       );
       yield* withTempWorkingDirectory(
@@ -1953,9 +1954,9 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           );
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals/demo/ops/events", { recursive: true });
-          expect(
+          assertTrue(
             Exit.isSuccess(yield* Effect.exit(runMigration(["--preview", "--at", "2026-08-26T00:00:00.000Z"])))
-          ).toBe(true);
+          );
         })
       );
     })
@@ -2473,7 +2474,7 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           const applied = yield* Effect.exit(
             runMigration(["--apply", "--at", "2026-08-26T00:00:00.000Z", "--report", reportPath])
           );
-          expect(Exit.isSuccess(applied)).toBe(true);
+          assertTrue(Exit.isSuccess(applied));
           const report = yield* readProjectFile(reportPath);
           expect(report).toContain("remaining translations: 0");
           expect(report).toContain("remaining genesis seeds: 0");
@@ -2481,7 +2482,7 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           const noOp = yield* Effect.exit(
             runMigration(["--apply", "--at", "2026-08-26T00:00:00.000Z", "--report", reportPath])
           );
-          expect(Exit.isSuccess(noOp)).toBe(true);
+          assertTrue(Exit.isSuccess(noOp));
           expect(yield* readProjectFile(reportPath)).toBe(report);
         })
       );
@@ -2552,7 +2553,7 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
               `${blockedReportRoot}/migration.md`,
             ])
           );
-          expect(Exit.isSuccess(applied)).toBe(true);
+          assertTrue(Exit.isSuccess(applied));
           expect(yield* fs.readFileString(eventPath)).toBe(seed.value.eventText);
           expect(yield* fs.readFileString(seed.value.tracePath)).toBe(seed.value.traceText);
         })
@@ -2695,7 +2696,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("registered migration command bou
           const exit = yield* Effect.exit(
             runGoals(["migrate-conventions", "--preview", "--at", "2026-08-30T00:00:00.000Z"])
           );
-          expect(Exit.isSuccess(exit)).toBe(true);
+          assertTrue(Exit.isSuccess(exit));
         })
       );
     })

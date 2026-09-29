@@ -3,13 +3,15 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
 import { pipe } from "effect";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
@@ -26,6 +28,19 @@ import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.s
 const TestServices = Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer);
 
 const markerPath = (path: Path.Path, dataDir: string): string => path.join(dataDir, ChatDbCompatibilityMarker);
+
+const withUnreadableDataDir = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.withUnreadableDataDir")(function* <
+  A,
+  E,
+  R,
+>(dataDir: string, use: Effect.Effect<A, E, R>) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* Effect.acquireUseRelease(
+    fs.chmod(dataDir, 0),
+    () => use,
+    () => fs.chmod(dataDir, 0o700).pipe(Effect.ignore)
+  );
+});
 
 const createPgliteFixture = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.createPgliteFixture")(function* (
   dataDir: string
@@ -259,6 +274,45 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
       );
 
       it.effect(
+        "restores a populated unreadable directory before interrupted scope cleanup",
+        Effect.fn(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const entered = yield* Deferred.make<string>();
+          const modeBeforeCleanup = yield* Deferred.make<number>();
+          const child = yield* Effect.gen(function* () {
+            const rootDir = yield* Effect.acquireRelease(
+              fs.makeTempDirectory({ prefix: "beep-chat-db-unreadable-interrupt-" }),
+              (root) =>
+                Effect.gen(function* () {
+                  const dataDir = path.join(root, "chat-db");
+                  const mode = (yield* fs.stat(dataDir)).mode & 0o777;
+                  yield* Deferred.succeed(modeBeforeCleanup, mode);
+                  // Observe the permission bracket first, then guarantee cleanup even
+                  // when a mutation removes its restoration finalizer.
+                  yield* fs.chmod(dataDir, 0o700);
+                  yield* fs.remove(root, { recursive: true });
+                }).pipe(Effect.orDie)
+            );
+            const dataDir = path.join(rootDir, "chat-db");
+            yield* fs.makeDirectory(dataDir);
+            yield* fs.writeFileString(path.join(dataDir, "legacy.txt"), "legacy contents");
+            return yield* withUnreadableDataDir(
+              dataDir,
+              Deferred.succeed(entered, rootDir).pipe(Effect.andThen(Effect.never))
+            );
+          }).pipe(Effect.scoped, Effect.forkChild);
+
+          const rootDir = yield* Deferred.await(entered);
+          strictEqual((yield* fs.stat(path.join(rootDir, "chat-db"))).mode & 0o777, 0);
+          assertTrue(yield* fs.exists(rootDir));
+          yield* Fiber.interrupt(child);
+          strictEqual(yield* Deferred.await(modeBeforeCleanup), 0o700);
+          assertFalse(yield* fs.exists(rootDir));
+        })
+      );
+
+      it.effect(
         "fails instead of moving an unreadable data dir",
         Effect.fn(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -268,9 +322,10 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
 
           yield* fs.makeDirectory(dataDir, { recursive: true });
           yield* fs.writeFileString(path.join(dataDir, "legacy.txt"), "legacy contents");
-          yield* fs.chmod(dataDir, 0);
-          const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
-          yield* fs.chmod(dataDir, 0o700).pipe(Effect.ignore);
+          const result = yield* withUnreadableDataDir(
+            dataDir,
+            ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit)
+          );
 
           pipe(result, Exit.isFailure, assertTrue);
           expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);

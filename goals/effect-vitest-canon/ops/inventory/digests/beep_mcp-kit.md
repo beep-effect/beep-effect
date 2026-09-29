@@ -1,5 +1,23 @@
 # @beep/mcp-kit — wave006-d recovery digest
 
+## 2026-09-28 detector remainder reconciliation
+
+Commit `ed7b494e14fb5b2e5890e1f790276ba9a9d95f63` completes the eleven remaining
+canonical syntax repairs in Client and McpCaller. The twelfth candidate already
+uses `assertTrue(Exit.isFailure(...))`; it remains a reasoned exception because
+the original assertion supplies no expected Cause. All 37 historical detector
+IDs are preserved: 35 fixed and two exceptions, with no open detector rows.
+
+The full package audit and docgen pass. Node and Bun each pass all 101 tests,
+with exact before/after registration multiplicity preserved. Observed command
+times were Node 5.691 to 8.534 seconds and Bun 2.568 to 3.326 seconds under
+recorded concurrent workstation load; these are not causal performance claims.
+The repair retains native HTTP/stdio subjects and existing scoped lifetimes.
+This closes the detector remainder only; current-source lens reconciliation and
+final goal/hosted acceptance remain distinct requirements.
+
+Historical evidence follows unchanged.
+
 P1 four-lens inventory reviewed by Root; P2 remains gated. 7 complete assigned files; prior reads reused only after exact current source hash verification. Original usage-limit interruption remains recorded; no original artifact changed.
 
 28 rows: 6 actionable judgments and 22 file-specific coverage rows. Lens counts: {'resource': 7, 'flake': 7, 'property': 7, 'observability': 7}. Severity counts: {'info': 22, 'minor': 6}. All open; all passed fresh strict public decoding.

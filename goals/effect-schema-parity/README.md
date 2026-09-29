@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Retire or trim every `@beep/schema` concept upstream Effect covers at the
-main snapshot `e5f7d12af9` (rc.118 line), migrate
+main snapshot `df77fff939` (rc.118 line), migrate
 consumers by codemod, and leave an rc-pinned inventory plus a schema-first
 gate that hold parity on every effect bump. Six phases, one PR train.
 
@@ -35,13 +35,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Doctrine PR, not started; it opens after PR #1154 (this packet) merges.
+P0 Doctrine PR, not started. The pin catch-up PR (inventory regenerated at
+`df77fff939`, SPEC goal-time row 2026-09-29) goes first; P0 follows it.
 Next concrete action: from a lane branch off main, write the dated entry in `standards/architecture/DECISIONS.md` and the
 rule text in `standards/architecture/11-evolution-and-deprecation.md` per
 `SPEC.md` §Phase Contract, narrow the AGENTS.md LiteralKit line, add the
 `@beep/schema` README rule, and publish through Yeet.
 
 ## Latest Evidence
+
+2026-09-29: PR #1330 bumped the Effect snapshot to `df77fff939` without
+regenerating the inventory. The catch-up PR regenerated it with the
+prototype tools (2,232 rows, verifier PASS), moved `inventoryPin` in the
+packet, and logged the miss in `research/OPPORTUNITIES.md`.
 
 2026-09-28: the source exploration reopened at decompose because upstream
 shipped schema compilers (effect #7908); see its `DECISIONS.md` 2026-09-28

@@ -5,6 +5,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Duration, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -46,7 +47,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         })
       );
 
-      expect(Result.isFailure(outcome)).toBe(true);
+      outcome.pipe(Result.isFailure, assertTrue);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -64,7 +65,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         })
       );
 
-      expect(Result.isFailure(outcome)).toBe(true);
+      outcome.pipe(Result.isFailure, assertTrue);
     }, provideScopedLayer(NodeServices.layer))
   );
 
@@ -94,7 +95,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         )
       );
 
-      expect(Result.isFailure(outcome)).toBe(true);
+      outcome.pipe(Result.isFailure, assertTrue);
       const diagnostics = A.join(
         A.filter(
           A.filter(yield* TestConsole.logLines, P.isString),

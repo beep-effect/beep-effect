@@ -4,6 +4,7 @@ import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as R from "effect/Record";
@@ -55,7 +56,7 @@ describe("native-runtime prefix command", { concurrent: false }, () => {
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.exit
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     }, providePlatform)
   );
 
