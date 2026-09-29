@@ -1,3 +1,14 @@
+## R45 reviewed corrections installed — 2026-09-29
+
+The parent ruled that the independently reviewed R45 corrections install after
+the historical partial closeout rather than after full R45 composition, which
+can no longer occur. The ruling changes timing only. CAP-1/CAP-2 correct two
+inventory rows and designs; AM-3 and DAF-2 re-anchor two designs. Originals are
+archived and the R45 verdict now binds its inventory snapshot. See
+[data/r45-remediation-install/README.md](data/r45-remediation-install/README.md).
+Inventory remains 726 / 108 / 618 / zero applied. No census, dry-round, P3 or
+implementation credit; the current source still needs a fresh full census.
+
 ## R45 historical partial closeout — 2026-09-29
 
 R45 is sealed as incomplete on source `224222d138`, based on `dcf64397ec98`.

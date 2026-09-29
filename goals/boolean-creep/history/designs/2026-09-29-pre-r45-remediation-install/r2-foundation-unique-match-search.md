@@ -3,10 +3,9 @@
 - id: `r2-foundation-unique-match-search`
 - exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
 - corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts:114`
-- symbol: `MinimalFoldMatchSearch`
-- members: `ambiguous`, `exhausted`
-- correlated payload: inherited `match: Option<MatchedText>` (not a Boolean member)
+- file:line: `packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts:32`
+- symbol: `UniqueMatchSearch` / `MinimalFoldMatchSearch`
+- members: `ambiguous`, `match`, `exhausted`
 - evidence classes:
   - E1 at `Alignment.behavior.ts:50-55` — exact/lesser search writes none,
     unique, or ambiguous and never ambiguous-with-match.
@@ -25,11 +24,8 @@ three fields separately.
 
 # Cardinality gap
 
-The base pair has four structural combinations for three search outcomes,
-but its one Boolean member alone is below the campaign recall threshold. The
-complete `MinimalFoldMatchSearch` owner supplies the two Boolean members;
-its inherited optional match payload contributes the third cardinality axis.
-The minimal-fold extension has eight combinations for four legal outcomes: no
+The base pair has four structural combinations for three search outcomes. The
+minimal-fold extension has eight combinations for four legal outcomes: no
 match, exactly one match, ambiguity, or transition-budget exhaustion.
 `ambiguous + Some(match)` and every combination of `exhausted` with ambiguity
 or a present match are never written and have no reader meaning.
@@ -150,10 +146,3 @@ drop only their own tier, while minimal-fold ambiguity and transition-budget
 exhaustion suppress the candidate before exact/lesser/fuzzy selection. One
 budget remains shared across a batch. Run full `@beep/langextract` package
 verification.
-
-# R45 evidence correction
-
-Reconciled against source `224222d1389c30170d0518f00a0d58ee87014843`
-and main `dcf64397ec9835e989e7ea94e9c708582a035f22`. This corrects owner
-evidence without changing the migration or target shape. Replacement
-campaign-wide P3 and GATE 2 remain required before implementation.
