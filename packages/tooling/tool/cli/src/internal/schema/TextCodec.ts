@@ -46,7 +46,7 @@ const parseTomlText = parseText("TOML", Toml.parse);
  * **Example** (Decode a YAML document)
  *
  * ```ts
- * import { decodeYamlTextWith } from "@beep/repo-cli/internal/schema/TextCodec"
+ * import { decodeYamlTextWith } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
@@ -76,7 +76,7 @@ export const decodeYamlTextWith =
  * **Example** (Decode a TOML document)
  *
  * ```ts
- * import { decodeTomlTextWith } from "@beep/repo-cli/internal/schema/TextCodec"
+ * import { decodeTomlTextWith } from "@beep/repo-cli/test/SharedInternals"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *

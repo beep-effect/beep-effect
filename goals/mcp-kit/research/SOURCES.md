@@ -102,7 +102,7 @@ Load-bearing subset (full list in the exploration ledger §3):
 | `ClaimGate` total-engine pattern | `packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts:42-47` | **mirror** — refusal-as-value dispatch wrapper |
 | `UsageRecord.metadata` jsonb | `packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts:95-97` | **target shape** for the audit record schema (persistence wiring is consumer-side) |
 | `$I` identity composer | `packages/foundation/modeling/identity/src/Id.ts` | **reuse** for schema annotations |
-| Decode-and-map precedent | `packages/foundation/modeling/schema/src/Jsonl.ts:64-81` | **reuse** for `ToolValidationError` |
+| Decode-and-map precedent | the retired `@beep/schema` `Jsonl` decoder (removed in the effect-schema-parity group G PR) | **reuse** for `ToolValidationError` |
 
 ## 5. Cross-links & provenance
 

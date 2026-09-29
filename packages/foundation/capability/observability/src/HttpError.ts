@@ -28,7 +28,8 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { Defect, makeStatusCauseError, StatusCauseFields } from "@beep/schema";
-import { ErrorReporter } from "effect";
+import { Effect, ErrorReporter, HashMap, SchemaIssue, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HttpStatus from "effect/http/HttpStatus";
 import * as P from "effect/Predicate";
@@ -63,15 +64,77 @@ const makeStatusConstructor =
   (message: string, cause?: unknown): Error =>
     makeStatusCauseError(ctor)({ message, status, cause });
 
-const ClientErrorStatus = S.Int.check(S.isBetween({ minimum: 400, maximum: 499 })).pipe(
+// The retired `@beep/schema` `HttpStatus4XX` / `HttpStatus5XX` kits: the status name on the
+// encoded side and its code on the decoded side, over the same names. `effect/http/HttpStatus`
+// resolves each code, so an unnamed code in the range still fails to decode, as before.
+const statusNameCodec = <const Name extends HttpStatus.Literal>(names: A.NonEmptyReadonlyArray<Name>) => {
+  const nameByCode = HashMap.fromIterable(A.map(names, (name) => [HttpStatus.fromLiteral(name), name] as const));
+  return S.Literals(names).pipe(
+    S.decodeTo(
+      S.Literals(A.map(names, HttpStatus.fromLiteral)),
+      SchemaTransformation.transformEffect({
+        decode: (name) => Effect.succeed(HttpStatus.fromLiteral(name)),
+        encode: (code) =>
+          Effect.mapError(
+            Effect.fromOption(HashMap.get(nameByCode, code)),
+            () => new SchemaIssue.InvalidValue({ message: `Unknown HTTP status code ${code}.` }, code)
+          ),
+      })
+    )
+  );
+};
+
+const ClientErrorStatus = statusNameCodec([
+  "BadRequest",
+  "Unauthorized",
+  "PaymentRequired",
+  "Forbidden",
+  "NotFound",
+  "MethodNotAllowed",
+  "NotAcceptable",
+  "ProxyAuthenticationRequired",
+  "RequestTimeout",
+  "Conflict",
+  "Gone",
+  "LengthRequired",
+  "PreconditionFailed",
+  "PayloadTooLarge",
+  "UriTooLong",
+  "UnsupportedMediaType",
+  "RangeNotSatisfiable",
+  "ExpectationFailed",
+  "ImATeapot",
+  "MisdirectedRequest",
+  "UnprocessableEntity",
+  "Locked",
+  "FailedDependency",
+  "TooEarly",
+  "UpgradeRequired",
+  "PreconditionRequired",
+  "TooManyRequests",
+  "RequestHeaderFieldsTooLarge",
+  "UnavailableForLegalReasons",
+]).pipe(
   $I.annoteSchema("ClientErrorStatus", {
-    description: "HTTP client error status code from 400 through 499.",
+    description: "HTTP client error status: the status name when encoded, its 4xx code when decoded.",
   })
 );
 
-const ServerErrorStatus = S.Int.check(S.isBetween({ minimum: 500, maximum: 599 })).pipe(
+const ServerErrorStatus = statusNameCodec([
+  "InternalServerError",
+  "NotImplemented",
+  "BadGateway",
+  "ServiceUnavailable",
+  "GatewayTimeout",
+  "HttpVersionNotSupported",
+  "VariantAlsoNegotiates",
+  "InsufficientStorage",
+  "LoopDetected",
+  "NotExtended",
+  "NetworkAuthenticationRequired",
+]).pipe(
   $I.annoteSchema("ServerErrorStatus", {
-    description: "HTTP server error status code from 500 through 599.",
+    description: "HTTP server error status: the status name when encoded, its 5xx code when decoded.",
   })
 );
 
