@@ -4826,3 +4826,27 @@ hosted missing-lock error. The independent control also reproduces a lost
 replacement before repair. Full scheduler tests and package proof are required
 before claiming the repair green. This production repair is covered by the
 operator's standing authorization to fix discovered defects and record them.
+
+## 2026-09-29: The TestClock timeout recipe proved nothing for waits that must not return
+
+Property Laws job 109018379124 on PR #1322 (head c0f76d8ab2) failed
+`yeet-wave-rerun.test.ts` "job wait on a changed red set" with
+`Timed out waiting for proof job`; the same lane passed at 444f655971, which
+differed only in an unrelated nlp-processing test. The block ran on the live
+clock with one 60 ms timeout both for waits that must hand back a wave and
+for waits that must not. A slow runner spent the budget on the first poll's
+file reads. Slowing every file read to 80 ms reproduces it: the old block
+fails 6 of 6 with the hosted error, and the TestClock block passes 6 of 6.
+
+The first fix attempt reused the `waitTimesOut` helper from #1278, and a
+mutation probe showed it was vacuous. With a wave present, forking the wait
+and adjusting the clock past its timeout still reported `Timed out` in 5 of
+5 runs, because the timeout fired before the first poll finished reading the
+record and inbox. The four negative waits in `proof-job.test.ts` asserted
+nothing. The shared
+`packages/tooling/tool/cli/test/support/ProofJobWait.ts` helper now runs the
+waiter on a clock that reports its poll-interval sleep, reached only after a
+whole poll found no wave, and adjusts past the timeout only then; the same
+probe fails it 5 of 5. Running every must-time-out oracle once against a
+state that must wake it, before recording the flake as fixed, would have
+caught the empty assertion when #1278 landed.
