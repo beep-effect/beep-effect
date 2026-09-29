@@ -88,6 +88,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Console, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ActionEvent } from "@beep/qa-capture";
 
@@ -325,7 +326,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             expect(provenance.sha).toBe("unknown");
             expect(provenance.dirty).toBe(false);
           })
-        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
       );
     });
 

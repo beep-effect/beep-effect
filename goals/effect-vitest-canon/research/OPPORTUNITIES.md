@@ -5594,3 +5594,12 @@ case therefore needs the same live-clock protection. A one-case draft is
 prepared without altering the running proof's source. Include that correction
 with the next grouped package proof and retain the earlier proof as evidence
 of its actual source revision, not proof of this newly identified timer path.
+
+
+The applied package-verification draft exposed a finalizer-type distinction:
+acquireUseRelease accepts a typed release failure, while acquireRelease
+requires an infallible finalizer. The actual type-result artifact rejected the
+migration even though the typecheck wrapper exited zero. The release effect
+now uses orDie so cleanup failure remains a visible test failure at the public
+scope boundary. Record this explicit typed-failure-to-defect transition and
+verify both ordinary cleanup and injected cleanup failure; do not ignore it.
