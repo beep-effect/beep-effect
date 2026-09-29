@@ -7,8 +7,7 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe, Ref, Result } from "effect";
+import { Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 
@@ -31,7 +30,7 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       expect(target).toBe(path.join(root, "nested", "report.bin"));
       expect(new TextDecoder().decode(yield* fs.readFile(target))).toBe("safe payload");
       expect(yield* fs.readDirectory(path.dirname(target))).toEqual(["report.bin"]);
-      pipe(yield* Effect.result(fs.readLink(target)), Result.isFailure, assertTrue);
+      yield* Effect.flip(fs.readLink(target));
       expect((yield* fs.stat(target)).mode & 0o777).toBe(0o600);
     })
   );
@@ -48,13 +47,12 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
           Ref.update(makeDirectoryCalls, (count) => count + 1).pipe(Effect.andThen(fs.makeDirectory(target, options))),
       };
 
-      const result = yield* Effect.result(
+      yield* Effect.flip(
         writeFileWithinRootAtomically({ root, candidate: ".", bytes: payload }).pipe(
           Effect.provideService(FileSystem.FileSystem, instrumentedFileSystem)
         )
       );
 
-      pipe(result, Result.isFailure, assertTrue);
       expect(yield* Ref.get(makeDirectoryCalls)).toBe(0);
       expect(yield* fs.readDirectory(root)).toEqual([]);
     })
@@ -78,13 +76,12 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         ...fs,
         makeTempDirectory: () => Effect.succeed(compromisedTemporaryDirectory),
       };
-      const result = yield* Effect.result(
+      yield* Effect.flip(
         writeFileWithinRootAtomically({ root, candidate: "result.bin", bytes: payload }).pipe(
           Effect.provideService(FileSystem.FileSystem, compromisedFileSystem)
         )
       );
 
-      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.exists(path.join(root, "result.bin"))).toBe(false);
       expect(yield* fs.exists(compromisedTemporaryDirectory)).toBe(false);
@@ -98,11 +95,8 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       yield* fs.makeDirectory(`${root}/blocked`);
 
-      const result = yield* Effect.result(
-        writeFileWithinRootAtomically({ root, candidate: "blocked", bytes: payload })
-      );
+      yield* Effect.flip(writeFileWithinRootAtomically({ root, candidate: "blocked", bytes: payload }));
 
-      pipe(result, Result.isFailure, assertTrue);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
     })
   );
@@ -187,15 +181,11 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       yield* fs.rename(configuredRoot, movedRoot);
       yield* fs.symlink(outsideRoot, configuredRoot);
 
-      const readResult = yield* Effect.result(
-        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "victim.bin" })
-      );
-      const writeResult = yield* Effect.result(
+      yield* Effect.flip(resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "victim.bin" }));
+      yield* Effect.flip(
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
       );
 
-      pipe(readResult, Result.isFailure, assertTrue);
-      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
     })
@@ -238,15 +228,11 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       yield* fs.symlink(outsideVictim, link);
       const canonicalRoot = yield* fs.realPath(root);
 
-      const resolveResult = yield* Effect.result(
-        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "linked.bin" })
-      );
-      const writeResult = yield* Effect.result(
+      yield* Effect.flip(resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "linked.bin" }));
+      yield* Effect.flip(
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
       );
 
-      pipe(resolveResult, Result.isFailure, assertTrue);
-      pipe(writeResult, Result.isFailure, assertTrue);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(link)).toBe(outsideVictim);
     })

@@ -1,5 +1,43 @@
 # @beep/repo-cli four-lens source audit
 
+## 2026-09-28 runner import reconciliation
+
+Commit `ed7b494e14fb5b2e5890e1f790276ba9a9d95f63` fixes 56 existing EV011 rows.
+The remaining row in that 57-file batch retains only native `vi` for static mock
+hoisting and carries a reasoned exception. Every historical detector ID is
+preserved. The batch's exact 1,004-test cohort passes under Node and Bun, and
+AST comparison confirms all non-import statements remain unchanged. Evidence:
+`research/cli-runner-imports-proof.md` and its referenced receipts.
+
+Eleven additional detector rows from that commit are now fixed: scoped cwd
+acquisition, preserved Boolean/Option assertions, TestConsole ownership, two
+runner imports and the schema-topology layer timeout. The detector ledger now
+contains 260 fixed rows, seven reviewed exceptions and 3,154 open rows, with all
+3,415 historical identities preserved and six newly exposed shorter-scope
+judgments added and strict schema validation passing. The full CLI
+package audit and docgen passed after the cwd repair. Four-lens reconciliation,
+the remaining CLI inventory, final main delta, full goal proof and hosted
+acceptance remain open.
+
+Commit `77f8387edb` additionally fixes 17 detector findings in the allowlist/cache
+resource migration and the cache dashboard cleanup resource finding. Its scoped
+proof and native-boundary qualifications are recorded in
+[the resource proof](../../../research/cli-allowlist-cache-resource-proof.md).
+
+Commit `c7763ea32d` fixes 14 more detector findings in the QA command, reply
+schema and verdict JSON suites. All 48 registrations pass on Node and Bun;
+full package audit/docgen passed. See
+[the assertion proof](../../../research/cli-schema-assertions-proof.md).
+
+Commit `8140304195` fixes 162 exactly matched historical detector rows in the
+49-file predicate batch. All 1,509 registrations pass before and after on both
+runtimes, and full package audit/docgen passed. Eighteen other removed current
+findings do not have an exact historical ledger match and remain for explicit
+reconciliation; no historical row was closed by inference. See
+[the predicate proof](../../../research/cli-predicate-assertions-proof.md).
+
+Historical evidence follows unchanged.
+
 All 249 census files are reviewed: 192 tests and 57 support or declaration files.
 Thirteen disjoint chunks cover all 996 file/lens pairs. The inventory contains
 103 open review proposals (51 major and 52 minor) and 893 file-specific

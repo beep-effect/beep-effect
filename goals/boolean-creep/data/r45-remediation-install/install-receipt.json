@@ -1,0 +1,168 @@
+{
+  "kind": "boolean-creep-remediation-install/v1",
+  "round": "refresh-2026-09-29-r45-main-dcf643",
+  "historicalSource": "224222d1389c30170d0518f00a0d58ee87014843",
+  "historicalOriginMain": "dcf64397ec9835e989e7ea94e9c708582a035f22",
+  "installBase": "2f8e603b282d1393544a5ac7a484299eb6a698ac",
+  "timingRulingSha256": "52874ca6fbee1ee90b34ab41a7df8445f471477c5d6c55199a36eccdf594bb1b",
+  "corrections": [
+    {
+      "finding": "CAP-1",
+      "recordId": "color-support-level-flags",
+      "design": "goals/boolean-creep/designs/color-support-level-flags.md",
+      "designSha256Before": "57cdde407a66b52710e9d8256b9fcf48501036a4734c08ae52592d07606ad876",
+      "designSha256After": "15e246de4d97457c64ad2ce681b7b7cd9516d032fa325ff8ce08a8ddaa181121",
+      "designArchive": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/color-support-level-flags.md",
+      "candidateSha256": "15e246de4d97457c64ad2ce681b7b7cd9516d032fa325ff8ce08a8ddaa181121",
+      "reviewSha256": [
+        "a5d756db7c65b429ad4245c040d1edce04918a73f809837857853413a4898674",
+        "b9700ce7bbba18571a6122f47967ca3611e56d512d3d5fd1f6cb849a6b1c3371"
+      ],
+      "candidateManifestSha256": "e05ae8550e8c2c1308108b57df456ce868a1c550004e7b97dc47fde77d885d79",
+      "parentRemediationAcceptanceSha256": null,
+      "originatingReviewSha256": "a3c087af1f866e36b90b3e48d2d0d7d6a1ce263d2c3eb55d28833e98aa303129",
+      "laneAcceptanceSha256": "84808ca8a78ca3e35d4a5464b6dd2130566c526e3b99cd5cec01bb87f85b3a8b",
+      "patchCompanionSha256": "fe1769c78557a97853ba8c21d3a6145123b5391a1f01543e2d93430f5fd65b6c",
+      "inventoryRow": {
+        "recordId": "color-support-level-flags",
+        "lineNumber": 43,
+        "status": "reviewed",
+        "changedFields": ["cardinality", "notes"],
+        "rowSha256Before": "6b3466ff3584b1caa9361e9a02a8fa410543e350c113492185a1336f5d79a185",
+        "rowSha256After": "00bf456d5f6643f880200c9ff999cff5de42f5704306bbc112abea5c894c93a4",
+        "idUnchanged": true,
+        "statusUnchanged": true
+      },
+      "inventoryCandidatesSha256": "3cec5ccb0f4ffdcd97d0270950708344ecc233962e6de379aa263474b7231d9e"
+    },
+    {
+      "finding": "CAP-2",
+      "recordId": "r2-foundation-unique-match-search",
+      "design": "goals/boolean-creep/designs/r2-foundation-unique-match-search.md",
+      "designSha256Before": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29",
+      "designSha256After": "58e3513ccfce49ab34e46c4b80f5aa75348e201fbd828964ea72fe1c3b04abd8",
+      "designArchive": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/r2-foundation-unique-match-search.md",
+      "candidateSha256": "58e3513ccfce49ab34e46c4b80f5aa75348e201fbd828964ea72fe1c3b04abd8",
+      "reviewSha256": [
+        "a5d756db7c65b429ad4245c040d1edce04918a73f809837857853413a4898674",
+        "b9700ce7bbba18571a6122f47967ca3611e56d512d3d5fd1f6cb849a6b1c3371"
+      ],
+      "candidateManifestSha256": "e05ae8550e8c2c1308108b57df456ce868a1c550004e7b97dc47fde77d885d79",
+      "parentRemediationAcceptanceSha256": null,
+      "originatingReviewSha256": "a3c087af1f866e36b90b3e48d2d0d7d6a1ce263d2c3eb55d28833e98aa303129",
+      "laneAcceptanceSha256": "84808ca8a78ca3e35d4a5464b6dd2130566c526e3b99cd5cec01bb87f85b3a8b",
+      "patchCompanionSha256": "392e6c995a33fe156d28f40460309ecbc8437299c5568054fff5b115acd074a0",
+      "inventoryRow": {
+        "recordId": "r2-foundation-unique-match-search",
+        "lineNumber": 339,
+        "status": "designed",
+        "changedFields": ["line", "members", "notes", "symbol"],
+        "rowSha256Before": "ad5f1b3f2447f7b12a3067fd2aeb9c3fe51ead23224e3e103ace6070cff71b90",
+        "rowSha256After": "90a6313ddf35bbc39217cbd6bb4d7836440c914a63ec9aa9ff54f923db28d8ac",
+        "idUnchanged": true,
+        "statusUnchanged": true
+      },
+      "inventoryCandidatesSha256": "3cec5ccb0f4ffdcd97d0270950708344ecc233962e6de379aa263474b7231d9e"
+    },
+    {
+      "finding": "AM-3",
+      "recordId": "r3-foundation-invariant-enforcement-channels",
+      "design": "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md",
+      "designSha256Before": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7",
+      "designSha256After": "a8db521173feda609b515a09376ca0834a51d6ae609efe671595f01af3101cd7",
+      "designArchive": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/r3-foundation-invariant-enforcement-channels.md",
+      "candidateSha256": "a8db521173feda609b515a09376ca0834a51d6ae609efe671595f01af3101cd7",
+      "reviewSha256": [
+        "11a97ccb35bd1c66ff28e90c1f56c6bbd3508e06cad47ab3b141153ee5208c97",
+        "ecb7fb4d35d6e98824091b59fea5d92af5aeea3e267d7457efd94e69511fe704"
+      ],
+      "candidateManifestSha256": "c88de41653667552f192e1c153927a7fbf391356db3f371e835ca5a392f4f518",
+      "parentRemediationAcceptanceSha256": "f9ed983ebfa7b32416023d410447dc4e58ce32c486e7a2206c96576414c63d18",
+      "originatingReviewSha256": "4b188cbfe1c867a5f55165dc8eaa642c867265d1e7d931446b9881bf22034857"
+    },
+    {
+      "finding": "DAF-2",
+      "recordId": "duckdb-transaction-began-closed",
+      "design": "goals/boolean-creep/designs/duckdb-transaction-began-closed.md",
+      "designSha256Before": "8b0bab86da531e270cce38a0b2473a266208d63244a737f5b16ca7f905e8759e",
+      "designSha256After": "101e8efa4f253345c8b63477ec79783463b90d2ca3fb86dac22b029d1d6409b2",
+      "designArchive": "goals/boolean-creep/history/designs/2026-09-29-pre-r45-remediation-install/duckdb-transaction-began-closed.md",
+      "candidateSha256": "101e8efa4f253345c8b63477ec79783463b90d2ca3fb86dac22b029d1d6409b2",
+      "reviewSha256": [
+        "61a7a67fdb78224c4a25dbd9f24ef78b969c248273e65419f40ac19d84b4fa77",
+        "c0f84ee8998f0b1f3dcdae03b371da4b40c8c0fb2dbcf600b962afc05ffac867"
+      ],
+      "candidateManifestSha256": "959ffc620647e49047564f2b5bf6593552174a9b168e95bd3c492e3c53465901",
+      "parentRemediationAcceptanceSha256": "0ca60b780427e894254521649493590d5c496fb3e63b3c18e62656dcbf224724",
+      "originatingReviewSha256": "18ed5567b31f6e2e827cac5d9455ecf11baadef5729bbc9bf2fe9ebc6869ebb3"
+    }
+  ],
+  "inventory": {
+    "file": "goals/boolean-creep/data/inventory.jsonl",
+    "sha256Before": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c",
+    "sha256After": "c607c64ce9c90bf2549a9b87140bddefe8aa0f5d00a4eb324358c463154527ca",
+    "archive": "goals/boolean-creep/history/inventory/2026-09-29-pre-r45-remediation-install.jsonl",
+    "archiveSha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c",
+    "rowsReplaced": 2,
+    "otherRowsByteIdentical": true,
+    "countsBefore": {
+      "total": 726,
+      "qualified": 108,
+      "disqualified": 618,
+      "applied": 0
+    },
+    "countsAfter": {
+      "total": 726,
+      "qualified": 108,
+      "disqualified": 618,
+      "applied": 0
+    }
+  },
+  "verdictBindingRelocationSha256": "28292ecef2c358bdd1c2a75707bb32bf5393451d51891abe6682351086e6ce98",
+  "dependencyRecheck": {
+    "closeoutDependencyCheckSha256": "8e6a7a0958181f30d8e7429cd276205a02f2b403a53ebf897074de520429a412",
+    "comparedCommits": [
+      "224222d1389c30170d0518f00a0d58ee87014843",
+      "2f8e603b282d1393544a5ac7a484299eb6a698ac"
+    ],
+    "results": [
+      {
+        "candidate": "capability-cardinality-and-anchor",
+        "checkedPaths": 9,
+        "changedSinceHistoricalSource": []
+      },
+      {
+        "candidate": "schema-invariant-enforcement-reanchor",
+        "checkedPaths": 10,
+        "changedSinceHistoricalSource": []
+      },
+      {
+        "candidate": "duckdb-transaction-began-closed-reanchor",
+        "checkedPaths": 2,
+        "changedSinceHistoricalSource": []
+      },
+      {
+        "candidate": "ui-react-atoms-owner-disposition",
+        "checkedPaths": 1,
+        "changedSinceHistoricalSource": []
+      }
+    ]
+  },
+  "notApplied": [
+    "REM-2 optional cite retarget (Alignment.behavior.ts:52): the reviewed proposal keeps :52.",
+    "UI-2/UI-3 optional anchor refinements: not reviewed candidates."
+  ],
+  "postInstallValidators": [
+    "bun goals/boolean-creep/ops/validate-inventory.ts",
+    "bun goals/boolean-creep/ops/validate-designs.ts"
+  ],
+  "credit": {
+    "P3": false,
+    "dry": false,
+    "implementation": false,
+    "census": false,
+    "currentSourceCoverage": false
+  },
+  "freshCensusRequired": true,
+  "privateEvidence": "Reviews, acceptances, candidate manifests and patches stay private and are bound by sha256."
+}

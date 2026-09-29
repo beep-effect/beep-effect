@@ -26,6 +26,7 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -690,7 +691,7 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
   });
 
-  it("does not let an optional red block required-check readiness", () => {
+  it("blocks readiness for an optional failure without exemption evidence", () => {
     const remote = YeetStatusRemote.make({
       ...openRemote({ checkCount: 17, failingCheckCount: 0, pendingCheckCount: 0 }),
       checkCount: 18,
@@ -700,7 +701,48 @@ describe("yeet merge readiness", () => {
     });
     const mergeReady = deriveYeetMergeReady(closeoutArtifact(0, O.some("5/5")), remote);
 
-    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    assertSome(
+      O.map(mergeReady, (value) => value.ready),
+      false
+    );
+  });
+
+  it.each([
+    { name: "Heavy / Coverage Regression", outcome: "pending", description: O.none<string>(), blocked: true },
+    { name: "Heavy / Lint Policy", outcome: "fail", description: O.none<string>(), blocked: true },
+    { name: "Vercel – todox", outcome: "fail", description: O.none<string>(), blocked: true },
+    { name: "Vercel – todox", outcome: "fail", description: O.some("Deployment failed: build error."), blocked: true },
+    {
+      name: "Vercel – todox",
+      outcome: "fail",
+      description: O.some("Deployment rate limited — retry in 24 hours."),
+      blocked: false,
+    },
+    {
+      name: "Heavy / Coverage Regression",
+      outcome: "fail",
+      description: O.some("Deployment rate limited — retry in 24 hours."),
+      blocked: true,
+    },
+  ])("applies all-check readiness to $name ($description)", ({ name, outcome, description, blocked }) => {
+    const check = YeetWatchCheck.make({
+      name,
+      outcome: outcome === "pending" ? "pending" : "fail",
+      required: false,
+      description,
+    });
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 1, failingCheckCount: 0, pendingCheckCount: 0 }),
+      checks: [check],
+      checkCount: 2,
+      optionalCheckCount: 1,
+      failingCheckCount: outcome === "fail" ? 1 : 0,
+      failingOptionalCheckCount: outcome === "fail" ? 1 : 0,
+      pendingCheckCount: outcome === "pending" ? 1 : 0,
+      pendingOptionalCheckCount: outcome === "pending" ? 1 : 0,
+    });
+    const ready = O.getOrThrow(deriveYeetMergeReady(closeoutArtifact(0, O.some("5/5")), remote));
+    strictEqual(ready.ready, !blocked);
   });
 
   it.each([

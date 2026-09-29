@@ -1,0 +1,24 @@
+{
+  "kind": "boolean-creep-verdict-binding-relocation/v1",
+  "verdict": "goals/boolean-creep/data/sweeps/refresh-2026-09-29-r45-main-dcf643/round-verdict.json",
+  "reason": "The R45 verdict bound the live inventory path. Installing reviewed corrections changes live inventory bytes, which would falsify that historical binding. The binding now names a byte-identical archived snapshot; its sha256 is unchanged.",
+  "bindingBefore": {
+    "file": "goals/boolean-creep/data/inventory.jsonl",
+    "sha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c"
+  },
+  "bindingAfter": {
+    "file": "goals/boolean-creep/history/inventory/2026-09-29-pre-r45-remediation-install.jsonl",
+    "sha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c"
+  },
+  "archiveByteIdentical": true,
+  "verdictSha256Before": "471bd698aae8b2b9567cb9743c42db8cdaf5e30fa3d0536d5f0f6d9b3f6210c1",
+  "verdictSha256After": "631b25f2fd570fc3ed0fbd09299547f49cf63bdb1a7d727876fbc99a320f70af",
+  "changedLines": 1,
+  "otherVerdictFieldsUnchanged": true,
+  "verdictHashBoundElsewhere": false,
+  "notRewritten": {
+    "r45Integration": "data/r45-partial-reconciliation/integration.json records inventorySha256 and installed:false as closeout-time facts with no live-path hash binding; left unchanged.",
+    "r45Readme": "Its 'not installed' statement is closeout-time history; bound by artifact-index; left unchanged.",
+    "olderRounds": "R44 and earlier verdicts and receipts that bind the live inventory or design paths are historical; not rewritten. Their bytes stay recoverable by sha256 from history archives, including this install's snapshot of 503206b0... and design originals."
+  }
+}

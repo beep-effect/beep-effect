@@ -1,3 +1,65 @@
+## R45 reviewed corrections installed — 2026-09-29
+
+The parent ruled that the independently reviewed R45 corrections install after
+the historical partial closeout rather than after full R45 composition, which
+can no longer occur. The ruling changes timing only. CAP-1/CAP-2 correct two
+inventory rows and designs; AM-3 and DAF-2 re-anchor two designs. Originals are
+archived and the R45 verdict now binds its inventory snapshot. See
+[data/r45-remediation-install/README.md](data/r45-remediation-install/README.md).
+Inventory remains 726 / 108 / 618 / zero applied. No census, dry-round, P3 or
+implementation credit; the current source still needs a fresh full census.
+
+## R45 historical partial closeout — 2026-09-29
+
+R45 is sealed as incomplete on source `224222d138`, based on `dcf64397ec98`.
+Seven lanes completed and were independently reconciled. The drivers-g-m lane
+failed on an ERROR-level report-tool diagnostic; nineteen lanes were not run.
+The historical verification covers all 4,167 frozen inputs. Inventory remains
+726 rows / 108 qualified / 618 disqualified / zero applied.
+
+The reviewed CAP-1/CAP-2, AM-3 and DAF-2 corrections remain uninstalled. See
+[data/r45-partial-reconciliation/README.md](data/r45-partial-reconciliation/README.md)
+for findings, evidence bindings and source limitations. Main `f590617f15`
+supersedes R45's source. This historical closeout grants no current-source
+coverage, dry-round, P3 or implementation credit.
+
+## Current execution update — 2026-09-29
+
+Push ready fixes without waiting for local full proof, as recorded in the
+2026-09-29 decision. Hosted Security passed on `224222d138` after the dependency
+remediation reached PR #1328.
+
+Main advanced to `f590617f15` and was merged forward. Its Effect snapshot update
+changes seven corpus files as well as dependency inputs. R45's frozen source
+remains historical; the pending recovery admission cannot establish coverage
+of this new source. Preserve the seven accepted lanes and failed probe receipts.
+Refresh census inputs against the merged source before claiming current-source
+coverage or dry-round credit. No implementation or P3 credit is granted.
+
+## Current execution amendment — 2026-09-28
+
+The [2026-09-28 decision](./DECISIONS.md) delegates remaining decisions and
+agent merge through the ChatGPT Chrome extension. Consolidate all remaining
+work into PR #1328, including implementation and reflection. Retain census,
+independent review, compatibility, quality and exact-main acceptance evidence;
+older separate-PR and Benjamin-only merge instructions below are historical.
+
+## R44 partial reconciliation and runtime refusal, 2026-09-28
+
+R44 ran against source `862327c74e` and main `8c16e648527a`. Five lanes
+completed and are reconciled; UI failed stream validation and 21 lanes were
+skipped. All 4,167 frozen inputs matched after termination. The UI process
+exited zero but emitted a resident-session warning after its terminal event;
+merged stdout/stderr prevents channel attribution. Preserve the refusal.
+
+Seven declaration-kind corrections and one D1 census addition are installed,
+with the original inventory retained. Counts are **726 / 108 qualified /
+618 disqualified / zero applied**. No qualified owner or contract changed.
+See `data/r44-partial-reconciliation/README.md`. The round is incomplete,
+the dry streak remains zero, and no P3 or implementation credit is granted.
+A split-stream runtime candidate needs tests, bounded probing and independent
+admission before a fresh full round. The full campaign gates remain outstanding.
+
 # PLAN — Boolean-Creep Eradication
 
 ## Source advance during R41 preparation, 2026-09-25
@@ -1045,3 +1107,15 @@ PR merged by Benjamin. Then implement the reviewed designs, obtain Benjamin's
 implementation merges, run two final exact-main dry rounds, and merge the
 reflection and completed-retained closeout. This checkpoint claims neither
 implementation nor dry-round credit.
+
+## 2026-09-28 R43 runtime refusal
+
+PR #1325 merged, and the operator approved enforced file-write confinement.
+The replacement runner passed independent technical review and began R43 at
+source `df3b127353a95a3bf2e53b81020a3224cc209e58`, based on main `8c16e648527af9da83f5cad411f7216bd1bca777`.
+Its first lane ended with an empty validated report, but the post-lane runtime
+guard found newly created search-tool and memory-trace artifacts and stopped
+the round. All 26 remaining lanes were skipped. The [R43 terminal verdict](./data/sweeps/refresh-2026-09-28-r43-main-8c16e6/round-verdict.json)
+grants no coverage or dry-round credit. Inventory remains 725 rows, with 108
+qualified, 617 disqualified and zero applied. A separately reviewed successor
+must cover the full current corpus after tool initialization is accounted for.

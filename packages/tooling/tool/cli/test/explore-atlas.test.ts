@@ -12,14 +12,15 @@ import {
   renderPacketEventFile,
 } from "@beep/repo-cli/test/Goals";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;

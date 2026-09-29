@@ -9,6 +9,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as PlatformError from "effect/PlatformError";
@@ -76,7 +77,7 @@ describe("commands/Lint JudgeRubric lens drift", () => {
       const exit = yield* Effect.exit(
         decodeUnknownJudgeRubricDrift({ missingFromPrompt: ["made-up-lens"], unknownInPrompt: [] })
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 

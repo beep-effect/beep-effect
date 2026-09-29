@@ -76,9 +76,9 @@ none (internal)
 
 # Test impact
 
-- `packages/drivers/duckdb/test/DuckDb.service.test.ts:610-659` — preserves the interruption-after-begin proof: phase becomes `open`, ensuring emits one rollback, then cleanup completes.
-- `packages/drivers/duckdb/test/DuckDb.service.test.ts:662-701` — preserves the begin-failure proof: phase remains `idle` and no rollback occurs.
-- `packages/drivers/duckdb/test/DuckDb.service.test.ts:704-735` — preserves failure rollback behavior for nested transaction use.
+- `packages/drivers/duckdb/test/DuckDb.service.test.ts:720-772` — preserves the interruption-after-begin proof: phase becomes `open`, ensuring emits one rollback, then cleanup completes.
+- `packages/drivers/duckdb/test/DuckDb.service.test.ts:774-815` — preserves the begin-failure proof: phase remains `idle` and no rollback occurs.
+- `packages/drivers/duckdb/test/DuckDb.service.test.ts:817-852` — preserves failure rollback behavior for nested transaction use.
 - No test directly reads the latches. Existing statement-order assertions are the correct boundary proof; no schema encoding test is needed for a private local phase.
 
 # Risk & sequencing
@@ -90,3 +90,11 @@ This Tier 1 change is concurrency-sensitive despite its small scope. Preserve th
 Clarification: preserve the existing failure branch exactly. Its ROLLBACK runs through Effect.ignore, so a typed rollback failure is discarded and the following closed assignment still executes; the original use failure is then propagated. The replacement phase becomes closed at that same assignment point, even when native rollback returned a typed failure. A COMMIT failure, or an unignored defect or interruption that prevents either close assignment, leaves the phase open for ensuring cleanup. Preserve the current uninterruptible-mask boundaries and never move a phase assignment ahead of its existing yield. Here closed means the close branch reached its assignment, not proof that native ROLLBACK succeeded.
 
 Read the earlier open/closed lifecycle descriptions and after rollback completes instruction using the precise assignment semantics above; no change to SQL order, error suppression, cleanup retries, or cancellation behavior.
+
+# R45 evidence refresh
+
+Source `224222d1389c30170d0518f00a0d58ee87014843`, main
+`dcf64397ec9835e989e7ea94e9c708582a035f22`. Independent census reconciliation
+verified unchanged qualification, cardinality, source anchors, migration and
+guard deletion. The test-impact anchors above follow the reorganized current
+test suite. Replacement campaign-wide P3 remains required before implementation.

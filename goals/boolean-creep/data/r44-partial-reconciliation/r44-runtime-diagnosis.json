@@ -1,0 +1,130 @@
+{
+  "kind": "boolean-creep-runtime-refusal-diagnosis/v1",
+  "reviewedAt": "2026-09-28T21:09:11.742615+00:00",
+  "reviewer": "claude-opus-5-5 (independent, read-only)",
+  "round": "refresh-2026-09-28-r44-main-8c16e6",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "bindings": {
+    "r44-launch/admitted-run/r44-foundation-ui.ndjson": "9234b7a30b99e10d57530bdf0dee2352595d54ae0fa091472c3f87756a968e8f",
+    "r44-launch/admitted-run/r44-foundation-ui.execution.json": "df58d5114f6c0a94a08600742aa84d44ee54502894c32262a0eddeb287e4590a",
+    "r44-launch/admitted-run/execution-summary.json": "2b4e6876ae6c14d39909f59a3d105ed3ac4183742ee7e309225f96bbdb927512",
+    "r44-launch/admitted-run/r44-foundation-ui.md (prompt)": "981c4bfb5e80e949a724726d5d8d2997b4f6c49c8ad4c6a0bc205bb6d07da721",
+    "r44-launch/execution_core.py": "5f55a49d14ae9fc9960faa4b94be506ccdf97dff65c759e487e5a9053ddc2276",
+    "r44-launch/runtime-profile.json": "bbacc70cde6ab61fdf2412f567494cf5409f7922fde7b5c54087a0c0a5493b96",
+    "r44-launch/launcher.py": "d0cd74ba5dd65f226a6963d798cc821bc770a00ea24bab62bdf9119a8b1143a4",
+    "grok binary grok-1.0.43": "34444fab6c1d77ae28f01a903d453032d48f8c85af4e5bb195d487031b265901",
+    "r44-isolation-v1/grok-home/docs/user-guide/14-headless-mode.md (tree-bound)": "248d83a99ec6fbeb0443754b98cc195b3ab44168bf30a2f110e3188d4045f230",
+    "r44-isolation-v1/grok-home/logs/unified.jsonl (volatile snapshot at review)": "683502c65949f1b9ad09ec0ad1823b267b2f13d5a7be6136365052ce1608e4da",
+    "UI session signals.json (volatile snapshot)": "23acef40c499bd53b956f92ae67f94b5cabdb0915aea8115eb64a8ccc5649041",
+    "UI session events.jsonl (volatile snapshot)": "4fb1816a5fc083f4c4f02abbfb156c595ee6d1bf40a37e7810767f8508ab03a9",
+    "rawReport r44-foundation-ui.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (empty)"
+  },
+  "dispatchFacts": {
+    "completedAwaitingReview": [
+      "r44-foundation-primitive",
+      "r44-foundation-capability",
+      "r44-foundation-modeling-rest",
+      "r44-foundation-schema-a-m",
+      "r44-foundation-schema-n-z"
+    ],
+    "failed": ["r44-foundation-ui"],
+    "skipped": 21,
+    "stopReason": "Refusal: trailing-invalid-stream",
+    "uiLane": {
+      "exitCode": 0,
+      "terminal": "end/end_turn, num_turns 29, modelUsage grok-4.7-build",
+      "guardBefore": true,
+      "guardAfter": true,
+      "validatorRun": false,
+      "toolCalls": {
+        "grep": 46,
+        "read_file": 30,
+        "list_dir": 3,
+        "write": 1
+      },
+      "toolFailures": 0,
+      "finalText": "pointer to empty report, 0/0, all five roots claimed covered"
+    },
+    "otherLanesUnchanged": "All five completed transcripts share the same 24 pre-end startup WARN lines (18 untrusted-folder MCP skips, 2 locked plugin registry, 4 disallowedTools no-match) and have no content after the end event. The R43 primitive transcript has the same pattern."
+  },
+  "mechanism": {
+    "streamLayout": "The UI transcript's last JSON line is the end event (index 1398). It is followed by exactly one non-JSON line (index 1399): a tracing-format WARN 'Resident session actor exited unexpectedly; reaping as DeadFailed' with one session_id field (not reproduced), then EOF.",
+    "whyItFails": "execution_core.run_process (line 34) opens the child with stderr=subprocess.STDOUT, so Grok's stderr log lines are interleaved into the streaming-json transcript. terminal_event tolerates non-JSON lines before the end event but refuses a non-empty non-JSON line after it (lines 70-79).",
+    "whyWarningsAppear": "runtime-profile.environment sets RUST_LOG=warn (bound; added for the discovery evidence). The bound Grok headless docs (14-headless-mode.md) state 'RUST_LOG \u2026 Headless logs to stderr' and recommend `2> debug.log` for capture. The WARN therefore belongs to the diagnostic log channel, not to the streaming-json protocol on stdout.",
+    "classification": "transport ambiguity plus a CLI teardown diagnostic, not evidence of invalid controller completion"
+  },
+  "teardownEvidence": {
+    "timeline": "From Grok's own unified.jsonl, every one of the six lanes logs the same shutdown sequence: shell.turn.inference_done -> shell.handle_prompt.done -> workspace_teleport.skip -> session_end.worker_join{outcome: joined}. For UI: handle_prompt.done 21:02:37.895Z, WARN 21:02:38.978Z, worker_join joined 21:02:39.133Z (elapsed 388ms vs 205-261ms in the other lanes). The WARN falls strictly after prompt completion and before the session worker joins cleanly.",
+    "causality": "The WARN was written by Grok before it exited, so it precedes the launcher's post-exit killpg and cannot be caused by the launcher's teardown.",
+    "sessionState": "The UI session's persisted signals: turnCount 1, errorCount 0, toolFailureCount 0, cancellationCount 0, inferenceIdleTimeouts 0; events.jsonl ends with turn_ended; the same 16-file session layout as the five successful lanes.",
+    "processOutcome": "exit 0, end_turn, modelUsage grok-4.7-build, the complete final pointer text, and runtime guards before and after both pass."
+  },
+  "assessment": {
+    "harmless": "probable but not proven",
+    "reasoning": "Every observable completion signal (protocol end event, exit code, persisted session signals, clean worker_join, independent runtime guards) is consistent with a benign teardown race in Grok's session supervisor. Grok is a closed binary, the actor's semantics are undocumented, and 'DeadFailed' could in other contexts indicate a real mid-turn crash, so the text alone cannot be whitelisted.",
+    "uiLaneStatus": "remains failed; no retroactive success, coverage, dry or P3 credit",
+    "currentCheckWasCorrect": "Yes. With merged streams the controller cannot distinguish a teardown log line from stdout corruption, so failing closed was the right behavior."
+  },
+  "canSeparationResolveAmbiguity": {
+    "answer": "yes, and it strengthens detection",
+    "design": [
+      "stdout -> <lane>.ndjson (protocol). Require every non-empty line to parse as a JSON object, exactly one end event, end is the last line, and no error event. This removes the current tolerance of non-JSON lines before end.",
+      "stderr -> <lane>.stderr.log (diagnostics), opened exclusively by the launcher outside the sandbox and hash-bound in the lane receipt and summary.",
+      "Scan both files for provider exhaustion (HTTP 402 / usage balance exhausted).",
+      "Classify stderr with a fail-closed policy. Every line must parse as a tracing record (ts, LEVEL, message, k=v fields); anything unparseable (panic, backtrace, raw text) fails. Any ERROR or higher fails. WARN lines pass only when they match an exact pinned template allowlist with position constraints. Anything else fails.",
+      "Allowlist startup templates (already present in every successful lane): (a) 'folder untrusted: skipping repo-local (project-scoped) MCP server' with server in the pinned 9 .mcp.json names; (b) 'skipping local plugin refresh: registry is locked'; (c) 'disallowedTools entry matched nothing' with agent grok-build-plan and tool in the pinned 4.",
+      "Teardown template (d) 'Resident session actor exited unexpectedly; reaping as DeadFailed' is allowed at most once, only when all of these hold: its session_id equals the stdout end event's sessionId; exit 0; end.stopReason end_turn; the persisted session signals show errorCount 0 and toolFailureCount 0; and its timestamp is not earlier than the session's handle_prompt.done in unified.jsonl. Record runtimeTeardownWarning: true plus the stderr hash in the lane receipt so the parent's independent coverage review sees it. Coverage acceptance stays a separate review.",
+      "Any change to templates or pinned sets requires a new bundle hash and review."
+    ],
+    "whyNotWateredDown": "Unknown warnings, any error, unparseable stderr and any stdout deviation still fail, and stdout becomes stricter than today. Only one additional, positionally and cross-evidence-constrained teardown template is admitted, backed by the timeline above.",
+    "rejectedAlternatives": [
+      "Dropping or loosening trailing-invalid-stream on the merged stream (keeps the transport ambiguity).",
+      "Unsetting RUST_LOG (hides diagnostics and loses the discovery evidence).",
+      "Text-only whitelisting of the WARN in the merged stream.",
+      "GROK_LOG_FILE (documented) would move logs into the sandbox-writable runtime tree and need a new env and tree binding; launcher-side stderr capture is simpler and keeps the bound environment unchanged."
+    ]
+  },
+  "recommendedNextAction": {
+    "r44Terminalization": "Terminalize R44 like R43: classification incomplete-runtime-stream-refusal; 5 completed-awaiting-review, 1 failed (UI), 21 skipped; no coverage, dry, P3 or implementation credit. Independent reviews of completed lanes remain informative only, and a fresh full R45 is required (consistent with the R43->R44 no-inherited-coverage rule). Public artifacts must redact session IDs and must not include the raw WARN line.",
+    "codeChange": "New bundle: execution_core.run_process with a separate stderr file; stricter terminal_event over stdout; a new stderr_policy check wired into dispatch; the receipt records stderrSha256 and runtimeTeardownWarning. Launcher bundle members and preparation bindings change accordingly. No change to the confinement prefix, env, tools, commands, model or profile tree.",
+    "providerFreeTests": [
+      "stdout with a trailing non-JSON line fails",
+      "stdout with a pre-end non-JSON line fails (new strictness)",
+      "stderr unknown WARN fails",
+      "stderr ERROR fails",
+      "stderr unparseable/panic line fails",
+      "teardown template with a mismatched session_id, before prompt completion, with exit !=0, non end_turn, a duplicate, or nonzero errorCount fails",
+      "teardown template with all constraints satisfied passes and is flagged",
+      "startup templates outside their pinned value sets fail",
+      "402 text in stderr fails as exhaustion"
+    ],
+    "boundedProbePlan": {
+      "status": "proposed; do not run until the parent reviews it",
+      "P1": "One exact-command runtime probe (max-turns 1) under a named probe scope with the new split-stream core. Assert that stdout is pure JSON with end last, stderr contains only allowlisted startup templates, the tree, config and private HOME are unchanged, and five tools, seven commands and grok-4.7-build are present. Bind stdout, stderr and receipt hashes.",
+      "P2 (optional)": "One all-tools probe (max-turns 12), the same as the R44 all-tools probe, with split streams, to confirm the tool path writes nothing to stderr beyond the templates.",
+      "noAttemptToForce": "Do not try to reproduce the DeadFailed race deliberately; it is nondeterministic (1 of 6 lanes, longest turn count and slowest join). Its handling rests on the constrained template plus parent review of flagged lanes."
+    }
+  },
+  "remainingUncertainties": [
+    "The exact meaning of Grok's 'Resident session actor' and 'DeadFailed' reaping is undocumented in the bound docs; the evidence is behavioral only.",
+    "Whether the unified log and session signals always flush before the reap cannot be proven from one occurrence; the policy therefore also requires exit 0 and end_turn and flags the lane for review.",
+    "Whether a DeadFailed reap could ever precede a truncated stdout stream. The strict stdout rules (end last, exactly one end) would still catch that independently.",
+    "Grok session telemetry shows gcsQueue uploads (3 enqueued/uploaded) despite disabled codebase upload. This is provider-side session trace upload, orthogonal to this refusal, but worth a separate operator note."
+  ],
+  "claimsNotMade": {
+    "uiLaneSuccess": false,
+    "coverage": false,
+    "dry": false,
+    "P3": false,
+    "implementation": false
+  },
+  "sideEffects": {
+    "providerCalls": false,
+    "relaunch": false,
+    "sourceOrPacketEdits": false,
+    "runtimeEdits": false,
+    "testsRun": false,
+    "gitMutations": false
+  }
+}
