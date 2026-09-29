@@ -407,7 +407,7 @@ export const getsomesStructEntryFromCallExpression: {
  *
  * ```ts
  * import { schemaFirstParityEntriesFromSourceFile } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })

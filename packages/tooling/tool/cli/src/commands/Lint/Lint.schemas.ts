@@ -476,6 +476,13 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
 /**
  * CLI options for schema-first inventory verification.
  *
+ * **Details**
+ *
+ * `write` refreshes the committed inventory; for the parity backlog it only
+ * removes resolved occurrences and still fails on new ones.
+ * `admitParityBacklog` (with `write`) also admits new parity occurrences into
+ * the backlog; it exists for the initial capture, not for routine repair.
+ *
  * **Example** (Validate lint options)
  *
  * ```ts
@@ -485,13 +492,6 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
  * const candidate = { fix: false, write: false }
  * console.log(S.is(SchemaFirstLintOptions)(candidate)) // true
  * ```
- *
- * **Details**
- *
- * `write` refreshes the committed inventory; for the parity backlog it only
- * removes resolved occurrences and still fails on new ones.
- * `admitParityBacklog` (with `write`) also admits new parity occurrences into
- * the backlog; it exists for the initial capture, not for routine repair.
  *
  * @category models
  * @since 0.0.0
@@ -781,7 +781,7 @@ export class LiteralKitConstAssertionViolation extends S.Class<LiteralKitConstAs
  *
  * ```ts
  * import { encodeSchemaFirstInventoryDocument } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.succeed(encodeSchemaFirstInventoryDocument)
  * console.log(Effect.isEffect(program)) // true
