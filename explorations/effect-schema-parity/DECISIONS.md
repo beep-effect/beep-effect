@@ -48,12 +48,14 @@ does it serve both agents and a hosted gate when graft indexes are
 git-ignored and `.repos/effect` is machine-local?
 
 **Answer:** Hybrid, graft-led. (1) `graft build --only-dir packages/effect/src`
-inside `$HOME/YeeBois/dev/effect` (structural, no LLM key) so agents query it
+inside the effect checkout (structural, no LLM key; since 2026-09-28 the
+reference is `.repos/effect` -> `$HOME/YeeBois/references/effect/effect`, graphed
+nightly) so agents query it
 with `graft ask "<q>" --source <effect-dir>` and a second `graft mcp
 <effect-dir>` server. (2) A repo script emits one sha-pinned JSONL row per
 exported schema-relevant symbol (module, name, kind, signature, JSDoc
 sections, examples, since, sha), committed as a repo-cli test fixture like
-`effect-vitest-rc115`, and re-pinned on every effect bump. Sub-agent prompts
+`effect-vitest-rc115` (now `effect-vitest-rc118`), and re-pinned on every effect bump. Sub-agent prompts
 are templated from those rows; nobody hand-copies JSDoc.
 
 **Rationale:** Mechanical extraction is deterministic and cheap; agent quota
@@ -391,10 +393,11 @@ would ship as noise the ratchet merely freezes. Rejected: F01 and F26 only
 graduates, and how are they refreshed on each effect bump?
 
 **Answer:** The rows move to
-`packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/inventory/*.jsonl`,
+`packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/*.jsonl`,
 one directory per RC, following the `effect-vitest-rc112` and
-`effect-vitest-rc115` precedent. The packet's `research/tools/schema-inventory.ts`
-and `verify-schema-inventory.ts` move into repo-cli as the generator and
+`effect-vitest-rc118` precedent (renamed from rc115 on 2026-09-28, D4). The
+packet's `research/tools/schema-inventory.ts` and `verify-schema-inventory.ts`
+move into repo-cli as the generator and
 verifier. A bump runs the generator against `.repos/effect` at the new sha and
 commits the new directory. Hosted CI verifies row shape and the pinned sha
 only; `--check` against the live checkout is local, since hosted runners have
@@ -520,3 +523,87 @@ the record form and splits the key scheme from `Enum` and `is`); retire
 hand-write structs and lose literal coverage). Supersedes the 2026-09-14
 "LiteralKit retires; its helpers are ergonomics" entry, including its
 MappedLiteralKit sentence.
+
+## 2026-09-28 — Reopened at decompose: upstream ships a schema compiler surface
+
+**Question:** Effect main shipped three experimental schema compilers in PR
+#7908 (`c19c63fb71`, 2026-09-18, "Optimize Effect Schema and add
+experimental JIT and AOT compilers"; first release `effect@4.0.0-rc.116`):
+`SchemaCompiler` (one per-AST `WeakMap<SchemaAST.AST, Entry>` registry of
+compiled decoders, `internal/schema/compilerRegistry.ts:33`),
+`SchemaJITCompiler` (runtime codegen through `globalThis.Function`) and
+`SchemaAOTCompiler` (emits a self-installing ES module). The repo now runs a
+`main` snapshot, and the whole `packages/effect/src/unstable/` tree is gone.
+Does this reopen the packet, and on what terms?
+
+**Answer:** Yes. A new MAP re-entry gate, "upstream ships a schema compiler
+surface", is added and recorded as fired on 2026-09-28; the packet reopens
+at decompose and loops back to research and align. Preconditions recorded
+on 2026-09-28: `inventoryPin` = `e5f7d12af9abef188f7dc39b0207af1801b03ffd`
+(`effect@4.0.0-rc.118-1-ge5f7d12af9`), read from the root `package.json:161`
+catalog (a pkg.pr.new snapshot of upstream main, not an rc);
+`referenceHead` = `e5f7d12af9abef188f7dc39b0207af1801b03ffd`, equal to the
+pin, so the lookahead delta is none at 2026-09-28. At the pin
+`packages/effect/src/schema/` holds nine files including the three
+compilers and their subfolders, `internal/schema/` holds 19 files including
+`codegen.ts`, `compilerRegistry.ts` and `interpreter.ts`, and
+`packages/effect/src/unstable/` does not exist. Both nightly units
+(`beep-graft-deep-refresh.service`, `beep-refs-refresh.service`) were
+inactive. The run is bound by ten decisions:
+
+- D1: compilers are evaluated and decided: benchmarks plus a dated adopt /
+  defer / reject ruling; no production adoption in this run.
+- D2: any adoption lands in a separate goal (working slug
+  `effect-schema-compilers`) linked from this exploration; the parity goal
+  is amended only for inventory, pin and the SchemaUtils census.
+- D3: closeout is a packet-only branch published with Yeet
+  (`--start-pr-early --monitor --pr`), every thread answered, stopping at
+  `merge-ready: yes`; nobody merges from the run.
+- D4: the inventory pins to the repo's own catalog commit (`inventoryPin`);
+  `referenceHead` is recorded only as a dated lookahead delta. Fixture and
+  directory names carry the rc line, never a moving HEAD:
+  `effect-schema-rc118`, mirroring `effect-vitest-rc118`. That sibling has
+  no pin file (its sha, the rc.118 tag `ad61db80ef`, lives in
+  `standards/effect-vitest.primitives.jsonc:9`), so the schema fixture
+  records the full sha itself: in the `inventory/INDEX.md` pin line and in
+  every row's `sha`.
+- D5: lanes are Opus 5.5 children only (`model: "claude-opus-5-5"`).
+- D6: benchmarks are two server-side spikes on `inventoryPin` comparing the
+  interpreter, selective JIT and AOT: a bulk `S.Array` of a realistic
+  `SqlModel` row class against the same fields as a plain `S.Struct`, and a
+  recursive Pandoc strict decode (Lexical `SerializedEditorState` as
+  fallback). Every `S.Class` is a `SchemaAST.Declaration`, so the
+  Declaration fallback is recorded separately. Browser AOT is an open
+  question, not benchmarked.
+- D7: SchemaUtils deletions flow into the parity goal: zero-consumer DELETEs
+  join the P3 retirement groups; `withCodecStatics` stays in P5 behind the
+  `schema-utils-selective-codec-statics` gate, whose Yeet PR #927 merged on
+  2026-08-31 (`2731847346`), so the P5 precondition is met; that packet is
+  left untouched. The compilers goal takes nothing from SchemaUtils.
+- D8: the perf sequencing in `MAP.md` (runtime hot-path perf is LATER,
+  source decision "Performance", 2026-09-12) stands. The new gate is
+  evaluated now; if the verdict is adopt, the compilers goal is created
+  `paused` with `blockedBy: ["goals/effect-schema-parity"]`.
+- D9: the census covers every `SchemaUtils` export, not only statics.
+- D10: the compilers do not attach statics to schema classes. Every
+  SchemaUtils row is judged against Effect Schema's own instance members and
+  `SchemaParser` free functions, never against the compilers. Recorded
+  separately: the per-AST registry moots the hoisting rationale for
+  `withCodecStatics` (`goals/schema-utils-selective-codec-statics/SPEC.md:12-13`,
+  this packet's `MAP.md` P5 statics row, and the repo lint
+  `beep/no-inline-schema-compile` at `.oxlintrc.json:45`).
+
+The compiler verdict itself is not recorded here. It is pending the
+operator grill at align, where the spike numbers and the CSP constraint are
+presented; its dated entry follows this one.
+
+**Rationale:** `explorations/README.md:107` and `:176-180` reopen a
+graduated packet at decompose when a MAP gate fires, and a compiler surface
+is exactly the runtime hot-path perf lever the "Performance" decision
+parked as LATER. Pinning to the catalog commit keeps the inventory
+reproducible while the reference clone moves nightly. Rejected: spawning a
+compilers goal directly (bypasses the packet's gate doctrine); pinning the
+inventory to `referenceHead` (moves nightly, so the fixture would never
+reproduce); folding compiler adoption into the parity goal (mixes a perf
+experiment into a deletion train); censusing only the SchemaUtils statics
+(leaves `withNoneDefault`, the largest surface, unjudged).

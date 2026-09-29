@@ -17,7 +17,7 @@ upstream now covers.
 
 | Source | What it is | Verified how |
 |--------|------------|--------------|
-| `.repos/effect` -> `$HOME/YeeBois/dev/effect` | Effect-TS/effect `main` @ `51d4a2f08a` (2026-09-12); remotes `origin` = `git@github.com:Effect-TS/effect.git`, `fork` = `git@github.com:beep-effect/effect.git`; `LICENSE` = MIT (Effectful Technologies Inc) | `git remote -v`, `head LICENSE` |
+| `.repos/effect` -> `$HOME/YeeBois/references/effect/effect` (2026-09-12: the since-retired `dev/effect` checkout) | Effect-TS/effect `main` @ `51d4a2f08a` (2026-09-12; the 2026-09-28 reopen pins `e5f7d12af9`); remotes `origin` = `git@github.com:Effect-TS/effect.git`, `fork` = `git@github.com:beep-effect/effect.git`; `LICENSE` = MIT (Effectful Technologies Inc) | `git remote -v`, `head LICENSE` |
 | [Upstream SCHEMA.md](https://github.com/Effect-TS/effect/blob/main/packages/effect/SCHEMA.md) (7,223 lines, 216 KB) | The v4 Schema reference. Top-level sections: Schema, Design Philosophy, Runtime Performance, Defining Elementary Schemas, Defining Composite Schemas, Declaring Custom Types, Validation, Constructors, Transformations. The "Runtime Performance" section benchmarks against the public `schema-benchmarks` suite (Valibot, Zod). Checks are `.check()` runtime constraints that can report multiple issues; every schema exposes `make` with defaults/refinements/branding; transformations compose `Getter`s via `decodeTo`/`decode`. No top-level section covers JSON Schema, Standard Schema, arbitraries, or `ErrorClass`/`TaggedError`; those live in module JSDoc, which is why the symbol inventory (below) is needed. | Fetched `https://raw.githubusercontent.com/Effect-TS/effect/refs/heads/main/packages/effect/SCHEMA.md` (GitHub's rendered view at `https://github.com/Effect-TS/effect/blob/main/packages/effect/SCHEMA.md` failed to render server-side but reports the same size) |
 | `migration/schema.md` (repo root) | v3 -> v4 migration guide: summary table (auto / semi-auto / manual / removed), rename notes (`*FromSelf`, `Date` encoded contract), structural changes (`Record`, `Union`, `Tuple`, `pick`/`omit`, `extend`), transformation patterns (`transform`, `transformOrFail`, `filter`, optional fields via `decodeTo`), specialized APIs (`validate*` removed, `Data` removed, manual `rename`/`split`). | Fetched `https://github.com/Effect-TS/effect/blob/main/migration/schema.md` |
 | Commit `657254b821` "Optimize Schema initialization (#8196)" | 14 files, +279/-41. `make` uses `Object.assign` for standard props instead of always `Object.defineProperties`; `Suspend` thunk memoized with `??=`; `SchemaParser.makeEffect` compiles parsers lazily; `Objects` duplicate detection via a `Set`; adds creation benchmarks (2/32/256-field objects, template literals, encoded records). Consumer action: none required; the win is automatic on the next effect bump that includes it. rc.115 predates it (rc.115 = 2026-09-11 tag; commit = 2026-09-11 on main after the tag, see the delta lane). | Fetched `https://github.com/Effect-TS/effect/commit/657254b821` |
@@ -90,7 +90,9 @@ authority.
   broad. The plumbing lane's proposed agent route: `graft ask '<q>' --source
   --in packages/effect/src --no-refresh "$HOME/YeeBois/dev/effect"`, and a
   second `graft mcp` server pointed at the effect checkout, kept separate from
-  the repo index (no nested-repo following).
+  the repo index (no nested-repo following). Superseded 2026-09-28: the
+  `dev/effect` checkout is gone; query the nightly reference graph with
+  `graft ask "<q>" .repos/effect --source`.
 
 ### Retirement audit (DECISIONS "Equivalence test for retirement")
 
