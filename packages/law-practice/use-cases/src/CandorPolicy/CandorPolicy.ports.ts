@@ -9,8 +9,9 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
 import { Fn } from "@beep/schema";
-import { Context, Effect } from "effect";
+import { Context } from "effect";
 import * as S from "effect/Schema";
+import { EffectOutput } from "../internal/effectOutput.ts";
 import { CandorFilingScope } from "./CandorPolicy.values.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type * as Crypto from "effect/Crypto";
@@ -18,12 +19,6 @@ import type { CandorRecordReadError } from "./CandorPolicy.errors.ts";
 import type { CandorGateVerdict } from "./CandorPolicy.values.ts";
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
-
-type CandorGateEvaluation = Effect.Effect<
-  CandorGateVerdict,
-  CandorRecordReadError,
-  CandorRecordReader | SourceTextResolver | Crypto.Crypto
->;
 
 /**
  * One transactionally consistent view of the candor material for a filing.
@@ -108,7 +103,7 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
   {
     snapshotForFiling: Fn({
       input: CandorFilingScope,
-      output: S.declare((u): u is Effect.Effect<CandorRecordSnapshot, CandorRecordReadError> => Effect.isEffect(u)),
+      output: EffectOutput<CandorRecordSnapshot, CandorRecordReadError>(),
     }).annotateKey({
       description: "Read events and dispositions for one filing from one protected snapshot.",
     }),
@@ -217,7 +212,11 @@ export class CandorPolicyShape extends S.Class<CandorPolicyShape>($I`CandorPolic
   {
     evaluate: Fn({
       input: CandorFilingScope,
-      output: S.declare((u): u is CandorGateEvaluation => Effect.isEffect(u)),
+      output: EffectOutput<
+        CandorGateVerdict,
+        CandorRecordReadError,
+        CandorRecordReader | SourceTextResolver | Crypto.Crypto
+      >(),
     }).annotateKey({
       description: "Recompute the candor verdict for one filing from its recorded events and dispositions.",
     }),
