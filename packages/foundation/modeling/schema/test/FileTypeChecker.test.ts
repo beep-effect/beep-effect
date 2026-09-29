@@ -40,6 +40,7 @@ const decodeUnknownFileSignatureResult = S.decodeUnknownResult(FileSignature);
 const decodeUnknownFileTypeInfoResult = S.decodeUnknownResult(FileTypeInfo);
 const encodeUnknownDetectFileOptionsResult = S.encodeUnknownResult(DetectFileOptions);
 const encodeUnknownFileContentResult = S.encodeUnknownResult(FileContent);
+const encodeUnknownFileContentJsonResult = S.encodeUnknownResult(S.toCodecJson(FileContent));
 const encodeUnknownFileSignatureResult = S.encodeUnknownResult(FileSignature);
 const encodeUnknownValidateFileTypeOptionsResult = S.encodeUnknownResult(ValidateFileTypeOptions);
 const isDetectedFileInfo = S.is(DetectedFileInfo);
@@ -267,11 +268,9 @@ describe("FileTypeChecker schemas", () => {
   });
 
   it("encodes ArrayBuffer content to the same base64 JSON as Uint8Array content", () => {
-    const encodeFileContentJson = S.encodeUnknownResult(S.toCodecJson(FileContent));
-
-    expect(Result.getOrThrow(encodeFileContentJson(new Uint8Array([104, 105]).buffer))).toBe("aGk=");
-    expect(Result.getOrThrow(encodeFileContentJson(new ArrayBuffer(0)))).toBe("");
-    expect(Result.getOrThrow(encodeFileContentJson(new Uint8Array([104, 105])))).toBe("aGk=");
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new Uint8Array([104, 105]).buffer))).toBe("aGk=");
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new ArrayBuffer(0)))).toBe("");
+    expect(Result.getOrThrow(encodeUnknownFileContentJsonResult(new Uint8Array([104, 105])))).toBe("aGk=");
   });
 
   it("keeps catalog keys correlated, exhaustive, and schema-valid", () => {
