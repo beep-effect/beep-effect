@@ -153,7 +153,6 @@ import {
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
@@ -271,7 +270,7 @@ const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBase
 const carriedUnmeasuredNotices = (report: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(report, (line) => Str.includes("were not measured by this scoped run")(line));
 const coverageUncovered = (count: number): CoverageUncoveredCounts => {
-  const decoded = NonNegativeInt.make(count);
+  const decoded = S.Natural.make(count);
   return CoverageUncoveredCounts.make({
     lines: decoded,
     statements: decoded,
@@ -4124,7 +4123,7 @@ describe("quality task adapter", () => {
       const relativeFile = files["packages/existing/src/Relative.ts"];
       assert.isDefined(relativeFile);
       assert.strictEqual(relativeFile.lines, Percentage.make(50));
-      assert.strictEqual(relativeFile.uncovered.lines, NonNegativeInt.make(5));
+      assert.strictEqual(relativeFile.uncovered.lines, S.Natural.make(5));
     })
   );
 

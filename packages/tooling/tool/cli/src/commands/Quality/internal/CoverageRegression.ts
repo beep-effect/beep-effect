@@ -9,7 +9,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import {
@@ -219,10 +218,10 @@ const coverageConfigurationError = (message: string, cause: unknown): DomainErro
  */
 export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I`CoverageUncoveredCounts`)(
   {
-    lines: NonNegativeInt,
-    statements: NonNegativeInt,
-    branches: NonNegativeInt,
-    functions: NonNegativeInt,
+    lines: S.Natural,
+    statements: S.Natural,
+    branches: S.Natural,
+    functions: S.Natural,
   },
   $I.annote("CoverageUncoveredCounts", {
     description: "Absolute uncovered counts per metric for one workspace package.",
@@ -424,9 +423,9 @@ const baselineDecodeError = (cause: unknown): DomainError =>
 
 class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCoverageMetric`)(
   {
-    total: NonNegativeInt,
-    covered: NonNegativeInt,
-    skipped: NonNegativeInt,
+    total: S.Natural,
+    covered: S.Natural,
+    skipped: S.Natural,
     pct: VitestCoveragePct,
   },
   $I.annote("VitestCoverageMetric", {
@@ -671,7 +670,7 @@ class CoverageNewUncoveredFileFailure extends S.TaggedClass<CoverageNewUncovered
   "new-uncovered-file",
   {
     ...CoverageComparisonFailureFields,
-    uncovered: NonNegativeInt,
+    uncovered: S.Natural,
   },
   $I.annote("CoverageNewUncoveredFileFailure", {
     description: "A newly observed file with uncovered units and no prior file baseline identity.",
@@ -686,9 +685,9 @@ class CoverageRaisedRowFailure extends S.TaggedClass<CoverageRaisedRowFailure>($
     proposed: Percentage,
     // A row can be stricter by count alone (same percentage, fewer uncovered
     // units), so the counts travel with the percentages for the diagnostic.
-    baseUncovered: NonNegativeInt,
-    proposedUncovered: NonNegativeInt,
-    actualUncovered: NonNegativeInt,
+    baseUncovered: S.Natural,
+    proposedUncovered: S.Natural,
+    actualUncovered: S.Natural,
   },
   $I.annote("CoverageRaisedRowFailure", {
     description:
@@ -1068,8 +1067,7 @@ const coveragePercentageFromCounts = (metric: VitestCoverageMetric): Percentage 
     ? HUNDRED_PERCENTAGE
     : Percentage.make(Math.floor((1_000 * 100 * metric.covered) / metric.total / 10) / 100);
 
-const uncoveredCount = (metric: VitestCoverageMetric): NonNegativeInt =>
-  NonNegativeInt.make(metric.total - metric.covered);
+const uncoveredCount = (metric: VitestCoverageMetric): number => S.Natural.make(metric.total - metric.covered);
 
 const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): CoverageUncoveredCounts =>
   CoverageUncoveredCounts.make({
@@ -1658,13 +1656,13 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  * **Example** (One changed row)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import {
  *   coverageBaselineRowDelta,
  *   CoveragePackageBaseline,
  *   CoverageRegressionBaseline,
  *   CoverageUncoveredCounts
  * } from "@beep/repo-cli/test/Quality"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { Percentage } from "@beep/schema/Percentage"
  *
  * const pct = (value: number) => ({
@@ -1678,10 +1676,10 @@ const rationaleRecordEquivalence = S.toEquivalence(S.Record(S.String, S.NonEmpty
  *     path: "packages/example",
  *     ...pct(value),
  *     uncovered: CoverageUncoveredCounts.make({
- *       lines: NonNegativeInt.make(0),
- *       statements: NonNegativeInt.make(0),
- *       branches: NonNegativeInt.make(0),
- *       functions: NonNegativeInt.make(0)
+ *       lines: S.Natural.make(0),
+ *       statements: S.Natural.make(0),
+ *       branches: S.Natural.make(0),
+ *       functions: S.Natural.make(0)
  *     }),
  *     files: {}
  *   })
@@ -2960,7 +2958,7 @@ const raisedVanishedFileRowJudgements = (
               actual: ZERO_PERCENTAGE,
               baseUncovered: base.uncovered[metric],
               proposedUncovered: proposed.uncovered[metric],
-              actualUncovered: NonNegativeInt.make(0),
+              actualUncovered: S.Natural.make(0),
             })
           )
         : O.none()
@@ -3088,7 +3086,7 @@ const loweredMetricUncovered = (
   base: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
   proposed: Pick<CoverageFileBaseline, CoverageMetricName | "uncovered">,
   metrics: ReadonlyArray<CoverageMetricName>
-): NonNegativeInt => (A.contains(metrics, metric) ? proposed.uncovered[metric] : base.uncovered[metric]);
+): number => (A.contains(metrics, metric) ? proposed.uncovered[metric] : base.uncovered[metric]);
 
 // Per-metric selection: a package can have one metric lowered here and another
 // still governed by the base floor, and the uncovered counts must travel with

@@ -19,7 +19,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { LiteralKit, UnknownRecord } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
@@ -242,12 +242,12 @@ const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options
  * **Example** (Make oversized field projection)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { OversizedFieldProjection } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const oversized = OversizedFieldProjection.make({
  *   value: { id: "doc-1" },
- *   sizeBytes: NonNegativeInt.make(1000)
+ *   sizeBytes: S.Natural.make(1000)
  * })
  * console.log(oversized.sizeBytes)
  * // 1000
@@ -261,7 +261,7 @@ export class OversizedFieldProjection extends S.Class<OversizedFieldProjection>(
     value: UnknownRecord.annotateKey({
       description: "The oversized minimal-tier projection.",
     }),
-    sizeBytes: NonNegativeInt.annotateKey({
+    sizeBytes: S.Natural.annotateKey({
       description: "Estimated serialized size of `value`, in bytes.",
     }),
   },
@@ -278,13 +278,13 @@ export class OversizedFieldProjection extends S.Class<OversizedFieldProjection>(
  * **Example** (Make fetchable handle)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FetchableHandle } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const handle = FetchableHandle.make({
  *   handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
  *   expiresAt: "2026-07-01T01:00:00.000Z",
- *   sizeBytes: NonNegativeInt.make(2_000_000),
+ *   sizeBytes: S.Natural.make(2_000_000),
  *   tier: "complete"
  * })
  * console.log(handle.tier)
@@ -302,7 +302,7 @@ export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle
     expiresAt: S.NonEmptyString.annotateKey({
       description: "ISO-8601 timestamp after which the handle is no longer fetchable.",
     }),
-    sizeBytes: NonNegativeInt.annotateKey({
+    sizeBytes: S.Natural.annotateKey({
       description: "Approximate serialized size of the full payload, in bytes.",
     }),
     tier: FieldTierName.annotateKey({
@@ -380,7 +380,7 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
 
 type ProjectWithinBudgetOptions = {
   readonly tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>;
-  readonly budgetBytes: NonNegativeInt;
+  readonly budgetBytes: number;
   readonly mintFetchableHandle: (oversized: OversizedFieldProjection) => FetchableHandle;
 };
 
@@ -395,7 +395,6 @@ type ProjectWithinBudgetOptions = {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { NonNegativeInt } from "@beep/schema"
  * import { defineFieldTiers, FetchableHandle, projectWithinBudget } from "@beep/mcp-kit"
  *
  * const tiers = defineFieldTiers({
@@ -408,7 +407,7 @@ type ProjectWithinBudgetOptions = {
  *   { id: "doc-1", summary: "s", body: "b".repeat(100) },
  *   {
  *     tiers,
- *     budgetBytes: NonNegativeInt.make(40),
+ *     budgetBytes: S.Natural.make(40),
  *     mintFetchableHandle: (oversized) =>
  *       FetchableHandle.make({
  *         handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
@@ -438,7 +437,7 @@ export const projectWithinBudget: {
   const minimalProjected = projectFieldTier(value, "minimal", options.tiers);
   const oversized = OversizedFieldProjection.make({
     value: minimalProjected,
-    sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
+    sizeBytes: S.Natural.make(estimateJsonSize(minimalProjected)),
   });
   return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
 });

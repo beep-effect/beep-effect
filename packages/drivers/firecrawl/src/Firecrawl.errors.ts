@@ -7,7 +7,6 @@
 
 import { $FirecrawlId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { isNonNegative } from "@beep/schema/Number";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -15,7 +14,7 @@ import * as S from "effect/Schema";
 
 const $I = $FirecrawlId.create("Firecrawl.errors");
 
-const FirecrawlNonNegativeInt = S.Int.check(isNonNegative).pipe(
+const FirecrawlNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("FirecrawlNonNegativeInt", {
     description: "Non-negative integer diagnostic value returned by the Firecrawl SDK.",
   })

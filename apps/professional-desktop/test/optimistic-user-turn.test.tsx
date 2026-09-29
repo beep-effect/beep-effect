@@ -9,7 +9,6 @@ import {
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError } from "@beep/agents-use-cases/public";
 import * as MdModel from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { Composer } from "@/chat/ui/Composer";
@@ -23,6 +22,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { AsyncResult, Reactivity } from "effect/reactivity";
+import * as S from "effect/Schema";
 import type { JSX } from "react";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
@@ -52,19 +52,19 @@ const editTimeline = ThreadTimeline.make({
   turns: [
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(10),
-      turnIndex: NonNegativeInt.make(0),
+      turnIndex: S.Natural.make(0),
       items: [TimelineMessageItem.make({ role: "user", content: userMessage })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: editedTurnId,
-      turnIndex: NonNegativeInt.make(1),
+      turnIndex: S.Natural.make(1),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededMiddle })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: laterTurnId,
-      turnIndex: NonNegativeInt.make(2),
+      turnIndex: S.Natural.make(2),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
@@ -75,13 +75,13 @@ const retryTimeline = ThreadTimeline.make({
   turns: [
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(20),
-      turnIndex: NonNegativeInt.make(0),
+      turnIndex: S.Natural.make(0),
       items: [TimelineMessageItem.make({ role: "user", content: userMessage })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(21),
-      turnIndex: NonNegativeInt.make(1),
+      turnIndex: S.Natural.make(1),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
@@ -92,26 +92,26 @@ const branchedTimeline = ThreadTimeline.make({
   turns: [
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(30),
-      turnIndex: NonNegativeInt.make(0),
+      turnIndex: S.Natural.make(0),
       items: [TimelineMessageItem.make({ role: "user", content: userMessage })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(31),
-      turnIndex: NonNegativeInt.make(1),
+      turnIndex: S.Natural.make(1),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(32),
-      turnIndex: NonNegativeInt.make(2),
+      turnIndex: S.Natural.make(2),
       parentTurnId: O.some(WorkspaceIdentity.TurnId.make(30)),
       items: [TimelineMessageItem.make({ role: "user", content: replacementContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(33),
-      turnIndex: NonNegativeInt.make(3),
+      turnIndex: S.Natural.make(3),
       items: [TimelineMessageItem.make({ role: "assistant", content: replacementReply })],
       costMicros: 0,
     }),
@@ -122,41 +122,41 @@ const corruptBranchTimeline = ThreadTimeline.make({
   turns: [
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(40),
-      turnIndex: NonNegativeInt.make(0),
+      turnIndex: S.Natural.make(0),
       parentTurnId: O.some(WorkspaceIdentity.TurnId.make(40)),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(41),
-      turnIndex: NonNegativeInt.make(1),
+      turnIndex: S.Natural.make(1),
       parentTurnId: O.some(WorkspaceIdentity.TurnId.make(99)),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(42),
-      turnIndex: NonNegativeInt.make(2),
+      turnIndex: S.Natural.make(2),
       parentTurnId: O.some(WorkspaceIdentity.TurnId.make(43)),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(43),
-      turnIndex: NonNegativeInt.make(3),
+      turnIndex: S.Natural.make(3),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(44),
-      turnIndex: NonNegativeInt.make(4),
+      turnIndex: S.Natural.make(4),
       parentTurnId: O.some(WorkspaceIdentity.TurnId.make(45)),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(45),
-      turnIndex: NonNegativeInt.make(4),
+      turnIndex: S.Natural.make(4),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
@@ -420,7 +420,7 @@ describe("the message you just sent", { concurrent: false }, () => {
           ...retryTimeline.turns,
           TimelineTurn.make({
             turnId: WorkspaceIdentity.TurnId.make(22),
-            turnIndex: NonNegativeInt.make(2),
+            turnIndex: S.Natural.make(2),
             items: [
               TimelineMessageItem.make({
                 role: "assistant",

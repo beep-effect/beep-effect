@@ -1,13 +1,13 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research";
 import { discoverProfiles, historySiftImpl, VAULT_DIRS } from "@beep/repo-cli/test/Research";
-import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient } from "effect/http";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const provideTestLayer = provideScopedLayer(Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer));
@@ -169,7 +169,7 @@ describe("historySiftImpl", () => {
         const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
 
         const summary = yield* historySiftImpl(
-          ResearchHistorySiftOptions.make({ browser: "all", sinceDays: NonNegativeInt.make(7), vaultRoot })
+          ResearchHistorySiftOptions.make({ browser: "all", sinceDays: S.Natural.make(7), vaultRoot })
         ).pipe(withHome({ HOME: home }));
 
         expect(summary.profilesScanned).toBe(0);
@@ -192,7 +192,7 @@ describe("historySiftImpl", () => {
         const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
         const options = ResearchHistorySiftOptions.make({
           browser: "chrome",
-          sinceDays: NonNegativeInt.make(7),
+          sinceDays: S.Natural.make(7),
           vaultRoot,
         });
 

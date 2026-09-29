@@ -24,7 +24,7 @@ import {
   cachePromotionFailures,
   isCacheTransitionAllowed,
 } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -355,7 +355,7 @@ const baseline = CachePolicyBaseline.make({
   scope: [key.computation],
   projection,
 });
-const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] });
+const store = CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] });
 const auditRequest = CachePolicyAuditRequest.make({
   baseline,
   current: projection,
@@ -386,7 +386,7 @@ describe("cache governance audit", () => {
     const history = A.map([candidate, shadow, suspended], (entry, index) =>
       CacheQualificationEvent.make({ revision: PosInt.make(index + 1), entry })
     );
-    const ledger = CacheQualificationStore.make({ revision: NonNegativeInt.make(3), entries: [suspended], history });
+    const ledger = CacheQualificationStore.make({ revision: S.Natural.make(3), entries: [suspended], history });
     expect(cacheLedgerFailures(ledger)).toEqual([]);
     expect(ledger.history[1]?.entry.status).toEqual(shadow.status);
     expect(cacheLedgerFailures(CacheQualificationStore.make({ ...ledger, history: A.drop(history, 1) }))).toContain(
@@ -395,9 +395,9 @@ describe("cache governance audit", () => {
     expect(cacheLedgerFailures(CacheQualificationStore.make({ ...ledger, entries: [candidate] }))).toContain(
       "history-projection-mismatch"
     );
-    expect(
-      cacheLedgerFailures(CacheQualificationStore.make({ ...ledger, revision: NonNegativeInt.make(2) }))
-    ).toContain("revision-history-mismatch");
+    expect(cacheLedgerFailures(CacheQualificationStore.make({ ...ledger, revision: S.Natural.make(2) }))).toContain(
+      "revision-history-mismatch"
+    );
   });
 
   it("rejects history that skips candidate and shadow even when the head claims qualification", () => {
@@ -406,7 +406,7 @@ describe("cache governance audit", () => {
       status: { state: "qualified", contract, review, receipts: [review.basis] },
     });
     const history = [CacheQualificationEvent.make({ revision: PosInt.make(1), entry: qualified })];
-    const ledger = CacheQualificationStore.make({ revision: NonNegativeInt.make(1), entries: [qualified], history });
+    const ledger = CacheQualificationStore.make({ revision: S.Natural.make(1), entries: [qualified], history });
     expect(cacheLedgerFailures(ledger)).toContain("illegal-history-transition");
     expect(auditCachePolicy(CachePolicyAuditRequest.make({ ...auditRequest, store: ledger })).findings).toContainEqual({
       kind: "assessment-drift",

@@ -8,7 +8,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { UUID } from "@beep/schema/String";
 import { DateTime, SchemaGetter } from "effect";
@@ -92,8 +92,8 @@ const BooleanQueryValue = BooleanQueryValueDefinition.pipe(
 );
 
 const NonNegativeIntQuery = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt, {
-    decode: SchemaGetter.transform(NonNegativeInt.make),
+  S.decodeTo(S.Natural, {
+    decode: SchemaGetter.transform(S.Natural.make),
     encode: SchemaGetter.transform((value): number => value),
   }),
   $I.annoteSchema("NonNegativeIntQuery", {
@@ -363,8 +363,8 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
   {
     article: ArticleSummary,
     claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    entityCount: NonNegativeInt,
-    conflictCount: NonNegativeInt,
+    entityCount: S.Natural,
+    conflictCount: S.Natural,
   },
   $I.annote("ArticleDetailResponse", {
     description: "Detailed source article with ranked claims and non-negative entity and conflict counts.",
@@ -454,7 +454,7 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
     source: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     rank: S.OptionFromOptionalKey(ClaimRank).pipe(SchemaUtils.withNoneDefault),
     limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("TimelineClaimsQuery", {
     description: "Timeline-claim filters with Option-normalized criteria and constrained pagination defaults.",
@@ -485,9 +485,9 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
 export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`TimelineClaimsResponse`)(
   {
     claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
   },
   $I.annote("TimelineClaimsResponse", {
@@ -685,7 +685,7 @@ export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
     subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     articleId: S.OptionFromOptionalKey(UUID).pipe(SchemaUtils.withNoneDefault),
     limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("ConflictsQuery", {
     description: "Conflict filters with Option-normalized criteria and constrained pagination defaults.",
@@ -851,8 +851,8 @@ export type ConflictTransition = typeof ConflictTransition.Type;
 export class ConflictsResponse extends S.Class<ConflictsResponse>($I`ConflictsResponse`)(
   {
     conflicts: S.Array(ClaimConflict).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimConflict>()),
-    total: NonNegativeInt,
-    pendingCount: NonNegativeInt,
+    total: S.Natural,
+    pendingCount: S.Natural,
   },
   $I.annote("ConflictsResponse", {
     description: "Detected-conflict response with tagged conflicts and non-negative aggregate counts.",

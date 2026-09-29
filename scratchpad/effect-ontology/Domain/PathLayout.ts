@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "./Identity.ts";
@@ -738,7 +738,7 @@ const RunChunkPathParts = S.TemplateLiteralParser([
   "runs/",
   DocumentId,
   "/input/chunks/chunk-",
-  NonNegativeInt,
+  S.Natural,
   ".txt",
 ]).pipe(
   annotateParser(
@@ -757,13 +757,13 @@ const RunChunkPathParts = S.TemplateLiteralParser([
  *
  * **Example** (Use RunChunkPath)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { DocumentId } from "@effect-ontology/Identity"
  * import { RunChunkPath } from "@effect-ontology/PathLayout"
  *
  * console.log(RunChunkPath.fromParts(
  *   DocumentId.make("doc-deadbeefcafe"),
- *   NonNegativeInt.make(2)
+ *   S.Natural.make(2)
  * ))
  * // "runs/doc-deadbeefcafe/input/chunks/chunk-2.txt"
  * ```
@@ -772,7 +772,7 @@ const RunChunkPathParts = S.TemplateLiteralParser([
  * @category value-objects
  * @since 0.0.0
  */
-export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chunks/chunk-", NonNegativeInt, ".txt"])
+export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chunks/chunk-", S.Natural, ".txt"])
   .check(RunChunkCanonicalIndexCheck)
   .pipe(
     annotateStoragePath("RunChunkPath", "Extraction-run chunk path with a canonical non-negative decimal index."),
@@ -781,7 +781,7 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
     }),
     S.brand("RunChunkPath"),
     SchemaUtils.withStatics((schema) => ({
-      fromParts: (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
+      fromParts: (documentId: DocumentId, index: number): typeof schema.Type =>
         schema.make(`runs/${documentId}/input/chunks/chunk-${index}.txt`),
       parts: (path: unknown) =>
         pipe(

@@ -8,7 +8,6 @@
 
 import { $WorkspaceServerId } from "@beep/identity";
 import { Document } from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
@@ -66,7 +65,6 @@ export class ThreadEntityInput extends S.Class<ThreadEntityInput>($I`ThreadEntit
  * ```ts
  * import * as S from "effect/Schema"
  * import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test"
- * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
@@ -76,7 +74,7 @@ export class ThreadEntityInput extends S.Class<ThreadEntityInput>($I`ThreadEntit
  *   messageId: PosInt.make(2),
  *   parentTurnId: null,
  *   threadId: PosInt.make(1),
- *   turnIndex: NonNegativeInt.make(0),
+ *   turnIndex: S.Natural.make(0),
  * })
  * console.log(input.turnIndex)
  * ```
@@ -98,7 +96,7 @@ export class TurnEntityInput extends S.Class<TurnEntityInput>($I`TurnEntityInput
     threadId: PosInt.annotateKey({
       description: "Positive Thread id that owns this Turn.",
     }),
-    turnIndex: NonNegativeInt.annotateKey({
+    turnIndex: S.Natural.annotateKey({
       description: "Zero-based non-negative order of this Turn within its Thread.",
     }),
   },

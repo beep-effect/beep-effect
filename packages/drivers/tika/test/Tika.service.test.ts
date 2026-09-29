@@ -6,7 +6,6 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -66,7 +65,7 @@ const source = Effect.fn("TikaTest.source")(function* (ids: FixtureIds, extensio
     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
     name: `fixture.${extension}`,
     relativePath,
-    sizeBytes: NonNegativeInt.make(1),
+    sizeBytes: S.Natural.make(1),
     text: "a",
   });
 });
@@ -74,7 +73,7 @@ const source = Effect.fn("TikaTest.source")(function* (ids: FixtureIds, extensio
 describe("@beep/tika", () => {
   it("keeps Tika error encoded shapes byte-identical", () => {
     expect(encode(TikaErrorOptions, TikaErrorOptions.make({}))).toEqual({});
-    expect(encode(TikaErrorOptions, TikaErrorOptions.make({ statusCode: NonNegativeInt.make(503) }))).toEqual({
+    expect(encode(TikaErrorOptions, TikaErrorOptions.make({ statusCode: S.Natural.make(503) }))).toEqual({
       statusCode: 503,
     });
     expect(encode(TikaError, TikaError.fromReason("timeout"))).toEqual({
@@ -86,7 +85,7 @@ describe("@beep/tika", () => {
         TikaError,
         TikaError.fromReason(
           "response-status",
-          TikaErrorOptions.make({ cause: "exit 1", statusCode: NonNegativeInt.make(503) })
+          TikaErrorOptions.make({ cause: "exit 1", statusCode: S.Natural.make(503) })
         )
       )
     ).toEqual({

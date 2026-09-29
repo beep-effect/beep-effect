@@ -16,7 +16,6 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
@@ -149,8 +148,8 @@ const decodeAgentModel = <A, I>(
 
 const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Duration): ExtractionMetrics =>
   ExtractionMetrics.make({
-    entityCount: NonNegativeInt.make(outcome.graph.entities.length),
-    relationCount: NonNegativeInt.make(outcome.graph.relations.length),
+    entityCount: S.Natural.make(outcome.graph.entities.length),
+    relationCount: S.Natural.make(outcome.graph.relations.length),
     chunkCount: outcome.telemetry.chunkCount,
     usage: outcome.telemetry.usage,
     duration,
@@ -480,7 +479,7 @@ const makeOntologyAgent = Effect.gen(function* () {
         yield* Effect.logInfo("OntologyAgent.extractWithClaims complete", {
           entityCount: metrics.entityCount,
           relationCount: metrics.relationCount,
-          claimCount: NonNegativeInt.make(claimCount),
+          claimCount: S.Natural.make(claimCount),
           durationMs: Duration.toMillis(metrics.duration),
         });
 
@@ -563,7 +562,7 @@ const makeOntologyAgent = Effect.gen(function* () {
               error: Inspectable.toStringUnknown(error),
             }).pipe(
               Effect.map(() => ({
-                inferredTripleCount: NonNegativeInt.make(0),
+                inferredTripleCount: S.Natural.make(0),
                 rulesApplied: [],
                 durationMs: 0,
               }))
@@ -804,7 +803,7 @@ const makeOntologyAgent = Effect.gen(function* () {
         const shapesCount = rdfStoreSize(shapesStore);
 
         yield* Effect.logDebug("Generated SHACL shapes from ontology", {
-          shapesCount: NonNegativeInt.make(shapesCount),
+          shapesCount: S.Natural.make(shapesCount),
         });
 
         // Validate with policy if provided, otherwise just validate
@@ -844,8 +843,8 @@ const makeOntologyAgent = Effect.gen(function* () {
             explanations,
             byLevel,
             duration: Duration.toMillis(duration),
-            dataGraphTripleCount: NonNegativeInt.make(report.dataGraphTripleCount),
-            shapesCount: NonNegativeInt.make(shapesCount),
+            dataGraphTripleCount: S.Natural.make(report.dataGraphTripleCount),
+            shapesCount: S.Natural.make(shapesCount),
           },
           "enhanced validation report"
         );

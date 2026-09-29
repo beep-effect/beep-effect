@@ -10,7 +10,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { NonNegativeInt } from "@beep/schema/Number";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -41,7 +40,7 @@ const $I = $ScratchpadId.create("beep-docs/domain/SearchMetadata");
  */
 export class SearchSection extends S.Class<SearchSection>($I`SearchSection`)(
   {
-    line: NonNegativeInt,
+    line: S.Natural,
     level: PosInt,
     title: S.String,
     anchor: S.String,

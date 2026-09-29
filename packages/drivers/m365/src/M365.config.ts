@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { HashSet, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -224,7 +224,7 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
     graphBaseUrl: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(GRAPH_API_BASE_URL))).annotateKey({
       description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
     }),
-    maxRetries: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(DEFAULT_MAX_RETRIES))).annotateKey({
+    maxRetries: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(DEFAULT_MAX_RETRIES))).annotateKey({
       description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
     }),
     redirectUri: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(DEFAULT_REDIRECT_URI))).annotateKey({
@@ -279,7 +279,7 @@ export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM
     scopes: S.Array(S.NonEmptyString).annotateKey({ description: "Resolved delegated read scopes." }),
     redirectUri: URLStr.annotateKey({ description: "Resolved normalized loopback redirect URI base." }),
     graphBaseUrl: URLStr.annotateKey({ description: "Resolved Graph base URL (normalized, no trailing slash)." }),
-    maxRetries: NonNegativeInt.annotateKey({ description: "Resolved throttle-retry budget." }),
+    maxRetries: S.Natural.annotateKey({ description: "Resolved throttle-retry budget." }),
     tokenCachePath: S.Option(S.NonEmptyString).annotateKey({
       description: "Resolved encrypted token-cache path, if persistence is configured.",
     }),

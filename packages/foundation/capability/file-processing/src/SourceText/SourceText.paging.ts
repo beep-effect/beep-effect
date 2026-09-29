@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../internal/PosInt.ts";
 import { SourceTextResolverError } from "./SourceText.errors.ts";
@@ -48,7 +48,7 @@ const sourceTextPageBounds = (text: string): ReadonlyArray<SourceTextPageBound> 
 
 const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function* (
   source: ResolvedSourceText,
-  pageIndex: NonNegativeInt,
+  pageIndex: number,
   pageBounds: ReadonlyArray<SourceTextPageBound>
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
   const totalCodeUnits = Str.length(source.text);
@@ -63,16 +63,16 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
   );
 
   return SourceTextPage.make({
-    endOffset: NonNegativeInt.make(endOffset),
+    endOffset: S.Natural.make(endOffset),
     hasNextPage: pageIndex + 1 < pageCount,
     hasPreviousPage: pageIndex > 0,
     identity: source.identity,
     pageCount: PosInt.make(pageCount),
     pageIndex,
     pageSizeCodeUnits: SOURCE_TEXT_PAGE_CODE_UNITS,
-    startOffset: NonNegativeInt.make(startOffset),
+    startOffset: S.Natural.make(startOffset),
     text: Str.slice(startOffset, endOffset)(source.text),
-    totalCodeUnits: NonNegativeInt.make(totalCodeUnits),
+    totalCodeUnits: S.Natural.make(totalCodeUnits),
   });
 });
 
@@ -88,13 +88,13 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  * **Example** (Load first page)
  *
  * ```ts import.meta.vitest name="Load first page"
+ * import * as S from "effect/Schema"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const loadFirstPage = (source: ResolvedSourceText) =>
- *   Effect.runPromise(pageSourceText(source, NonNegativeInt.make(0)))
+ *   Effect.runPromise(pageSourceText(source, S.Natural.make(0)))
  *
  * typeof loadFirstPage // => "function"
  * ```
@@ -107,7 +107,7 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  */
 export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
   source: ResolvedSourceText,
-  pageIndex: NonNegativeInt
+  pageIndex: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
   return yield* sourceTextPageFromBounds(source, pageIndex, sourceTextPageBounds(source.text));
 });
@@ -125,16 +125,16 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  * **Example** (Load page for offset)
  *
  * ```ts import.meta.vitest name="Load page for offset"
+ * import * as S from "effect/Schema"
  * import {
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const loadPageContaining = (source: ResolvedSourceText, offset: number) =>
  *   Effect.runPromise(
- *     pageSourceTextContainingOffset(source, NonNegativeInt.make(offset))
+ *     pageSourceTextContainingOffset(source, S.Natural.make(offset))
  *   )
  *
  * typeof loadPageContaining // => "function"
@@ -148,7 +148,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  */
 export const pageSourceTextContainingOffset = Effect.fn("SourceText.pageSourceTextContainingOffset")(function* (
   source: ResolvedSourceText,
-  offset: NonNegativeInt
+  offset: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
   const pageBounds = sourceTextPageBounds(source.text);
   const pageIndex = yield* A.findFirstIndex(
@@ -163,7 +163,7 @@ export const pageSourceTextContainingOffset = Effect.fn("SourceText.pageSourceTe
             `Source-text offset ${offset} is outside the canonical source.`
           )
         ),
-      onSome: (index) => Effect.succeed(NonNegativeInt.make(index)),
+      onSome: (index) => Effect.succeed(S.Natural.make(index)),
     })
   );
   return yield* sourceTextPageFromBounds(source, pageIndex, pageBounds);

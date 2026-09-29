@@ -15,7 +15,6 @@ import {
 import { ArchiveExportResult, ExtractionResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
@@ -163,7 +162,7 @@ export const TestFileProcessingEngine: FileProcessingEngineShape = {
       id: childArtifactId,
       mediaType: "text/plain",
       relativePath: childRelativePath,
-      sizeBytes: NonNegativeInt.make(29),
+      sizeBytes: S.Natural.make(29),
     });
 
     return ArchiveExportResult.make({

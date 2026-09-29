@@ -12,7 +12,7 @@ import * as Crypto from "effect/Crypto";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Inspectable, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
@@ -133,7 +133,7 @@ export const BatchClassificationResponse = S.Struct({
   classifications: S.Array(
     S.Struct({
       /** Document index in the batch (0-based) */
-      index: NonNegativeInt,
+      index: S.Natural,
       /** Classification result */
       classification: DocumentClassification,
     })
@@ -212,7 +212,7 @@ export const ClassifyBatchInput = S.Struct({
   documents: S.Array(
     S.Struct({
       /** Index for result correlation */
-      index: NonNegativeInt,
+      index: S.Natural,
       /** Document text preview */
       preview: S.String,
       /** Content type hint */

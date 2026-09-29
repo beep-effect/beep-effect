@@ -7,7 +7,6 @@ import {
   SourceTextResolverError,
 } from "@beep/file-processing/SourceText";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -40,8 +39,8 @@ describe("@beep/file-processing SourceText", () => {
       const prefix = Str.repeat(SOURCE_TEXT_PAGE_CODE_UNITS - 1)("a");
       const text = `${prefix}😀z`;
       const source = ResolvedSourceText.make({ identity, text });
-      const first = yield* pageSourceText(source, NonNegativeInt.make(0));
-      const second = yield* pageSourceText(source, NonNegativeInt.make(1));
+      const first = yield* pageSourceText(source, S.Natural.make(0));
+      const second = yield* pageSourceText(source, S.Natural.make(1));
 
       expect(first.endOffset).toBe(SOURCE_TEXT_PAGE_CODE_UNITS - 1);
       expect(second.startOffset).toBe(first.endOffset);
@@ -51,10 +50,7 @@ describe("@beep/file-processing SourceText", () => {
       expect(first.hasNextPage).toBe(true);
       expect(second.hasPreviousPage).toBe(true);
 
-      const containing = yield* pageSourceTextContainingOffset(
-        source,
-        NonNegativeInt.make(SOURCE_TEXT_PAGE_CODE_UNITS - 1)
-      );
+      const containing = yield* pageSourceTextContainingOffset(source, S.Natural.make(SOURCE_TEXT_PAGE_CODE_UNITS - 1));
       expect(containing.pageIndex).toBe(1);
       expect(containing.startOffset).toBe(SOURCE_TEXT_PAGE_CODE_UNITS - 1);
       expect(containing.text).toBe("😀z");
@@ -68,9 +64,9 @@ describe("@beep/file-processing SourceText", () => {
       const suffix = Str.repeat(SOURCE_TEXT_PAGE_CODE_UNITS)("b");
       const text = `${prefix}😀${suffix}`;
       const source = ResolvedSourceText.make({ identity, text });
-      const first = yield* pageSourceText(source, NonNegativeInt.make(0));
-      const second = yield* pageSourceText(source, NonNegativeInt.make(1));
-      const third = yield* pageSourceText(source, NonNegativeInt.make(2));
+      const first = yield* pageSourceText(source, S.Natural.make(0));
+      const second = yield* pageSourceText(source, S.Natural.make(1));
+      const third = yield* pageSourceText(source, S.Natural.make(2));
 
       expect(Str.length(first.text)).toBeLessThanOrEqual(SOURCE_TEXT_PAGE_CODE_UNITS);
       expect(Str.length(second.text)).toBeLessThanOrEqual(SOURCE_TEXT_PAGE_CODE_UNITS);
@@ -84,8 +80,8 @@ describe("@beep/file-processing SourceText", () => {
     "exposes one empty page and fails closed for an unavailable page",
     Effect.fnUntraced(function* () {
       const source = ResolvedSourceText.make({ identity, text: "" });
-      const first = yield* pageSourceText(source, NonNegativeInt.make(0));
-      const missing = yield* Effect.result(pageSourceText(source, NonNegativeInt.make(1)));
+      const first = yield* pageSourceText(source, S.Natural.make(0));
+      const missing = yield* Effect.result(pageSourceText(source, S.Natural.make(1)));
 
       expect(first).toMatchObject({
         endOffset: 0,

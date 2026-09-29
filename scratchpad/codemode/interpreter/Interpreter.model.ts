@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MutableHashMapFromSelf, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MutableHashMapFromSelf, SchemaUtils } from "@beep/schema";
 import type { SafeObject } from "@beep/schema/SafeObject";
 import { A, N, O, P } from "@beep/utils";
 import { type Effect, MutableHashMap, Result } from "effect";
@@ -66,8 +66,8 @@ const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.model");
  */
 export class SourcePosition extends S.Class<SourcePosition>($I`SourcePosition`)(
   {
-    line: NonNegativeInt,
-    column: NonNegativeInt,
+    line: S.Natural,
+    column: S.Natural,
   },
   $I.annote("SourcePosition", {
     description: "One zero- or one-based parser source coordinate before CodeMode wrapper adjustment.",
@@ -75,8 +75,8 @@ export class SourcePosition extends S.Class<SourcePosition>($I`SourcePosition`)(
 ) {
   static readonly new = (line: number, column: number): SourcePosition =>
     SourcePosition.make({
-      line: NonNegativeInt.make(line),
-      column: NonNegativeInt.make(column),
+      line: S.Natural.make(line),
+      column: S.Natural.make(column),
     });
 }
 

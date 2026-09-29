@@ -26,7 +26,7 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import type { Sha256Hex } from "@beep/schema";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("internal/cli/FsGuards");
@@ -747,10 +747,10 @@ const isFsGuardError = S.is(FsGuardError);
  * **Example** (Bound a receipt to one MiB)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { readContainedFileBytesNoFollow } from "@beep/repo-cli/test/Cli"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
- * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", NonNegativeInt.make(1048576))
+ * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", S.Natural.make(1048576))
  * console.assert(Effect.isEffect(read))
  * ```
  *
@@ -764,7 +764,7 @@ const isFsGuardError = S.is(FsGuardError);
 export const readContainedFileBytesNoFollow = Effect.fn("RepoCli.FsGuards.readContainedFileBytesNoFollow")(function* (
   expectedRoot: string,
   target: string,
-  maxBytes: NonNegativeInt
+  maxBytes: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

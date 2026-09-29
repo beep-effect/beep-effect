@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { Defect, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -67,11 +67,11 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  * **Example** (Make options with status)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { EcfrErrorOptions } from "@beep/ecfr"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
- * const options = EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) })
+ * const options = EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) })
  * console.log(options.status)
  * ```
  *
@@ -86,7 +86,7 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
         description: "Original native or third-party defect when one was available.",
       })
     ),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    status: S.OptionFromOptionalKey(S.Natural).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",
@@ -125,7 +125,7 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
     reason: EcfrErrorReason.annotateKey({
       description: "Redacted technical error reason.",
     }),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    status: S.OptionFromOptionalKey(S.Natural).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "HTTP response status code associated with the eCFR failure when one was available.",

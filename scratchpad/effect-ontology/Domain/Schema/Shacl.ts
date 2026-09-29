@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Duration } from "effect";
 import * as A from "effect/Array";
@@ -44,10 +44,10 @@ class ShaclValidationReportFields extends S.Class<ShaclValidationReportFields>($
     validatedAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant at which validation completed.",
     }),
-    dataGraphTripleCount: NonNegativeInt.annotateKey({
+    dataGraphTripleCount: S.Natural.annotateKey({
       description: "Number of triples in the validated data graph.",
     }),
-    shapesGraphTripleCount: NonNegativeInt.annotateKey({
+    shapesGraphTripleCount: S.Natural.annotateKey({
       description: "Number of triples in the shapes graph used for validation.",
     }),
     durationMs: ValidationDurationMs.annotateKey({

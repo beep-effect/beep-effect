@@ -1,6 +1,5 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, it } from "@effect/vitest";
 import { Duration, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
@@ -125,10 +124,10 @@ describe("SubgraphExtractor", () => {
         const dataFirst = yield* extractor.extract(
           graph,
           [alice.id, bob.id, carol.id],
-          NonNegativeInt.make(2),
+          S.Natural.make(2),
           options
         );
-        const dataLast = yield* extractor.extract([alice.id, bob.id, carol.id], NonNegativeInt.make(2), options)(graph);
+        const dataLast = yield* extractor.extract([alice.id, bob.id, carol.id], S.Natural.make(2), options)(graph);
 
         assert.deepEqual(dataLast, dataFirst);
         assert.strictEqual(A.length(dataFirst.nodes), 2);
@@ -140,7 +139,7 @@ describe("SubgraphExtractor", () => {
       "records shortest hop distances and actual depth",
       Effect.fnUntraced(function* () {
         const extractor = yield* SubgraphExtractor;
-        const subgraph = yield* extractor.extract(graph, [alice.id], NonNegativeInt.make(3), {
+        const subgraph = yield* extractor.extract(graph, [alice.id], S.Natural.make(3), {
           maxNodes: PosInt.make(4),
           followIncoming: false,
           followOutgoing: true,
@@ -161,7 +160,7 @@ describe("SubgraphExtractor", () => {
         const extractor = yield* SubgraphExtractor;
         const options = {
           topK: PosInt.make(1),
-          hops: NonNegativeInt.make(2),
+          hops: S.Natural.make(2),
           minSimilarity: Confidence.make(0.3),
           filterTypes: [],
         };
@@ -183,7 +182,7 @@ describe("GraphRAG", () => {
         const graphRag = yield* GraphRAG;
         const retrievalOptions = {
           topK: PosInt.make(1),
-          hops: NonNegativeInt.make(2),
+          hops: S.Natural.make(2),
           maxNodes: PosInt.make(4),
           minScore: Confidence.make(0.3),
           includeTypes: [],
@@ -241,7 +240,7 @@ describe("GraphRAG", () => {
         const graphRag = yield* GraphRAG;
         const retrieval = yield* graphRag.retrieve(graph, "Who knows Carol?", {
           topK: PosInt.make(1),
-          hops: NonNegativeInt.make(2),
+          hops: S.Natural.make(2),
           maxNodes: PosInt.make(4),
           minScore: Confidence.make(0.3),
           includeTypes: [],

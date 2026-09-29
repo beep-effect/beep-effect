@@ -22,7 +22,6 @@ import {
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { CapturedStep, formatCommandLine } from "@beep/repo-cli/test/Process";
 import { resolveSystemdBunPath, SystemdUnitPath } from "@beep/repo-cli/test/Systemd";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -307,17 +306,17 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       // A build that summarized every file never prints the failure line.
       assertSome(
         O.map(parseDeepCoverage(FULL_COVERAGE), (coverage) => coverage.failedFiles),
-        NonNegativeInt.make(0)
+        S.Natural.make(0)
       );
       const noisy = `crux 4137/4138\rcrux 4138/4138\r${FULL_COVERAGE}`;
       assertSome(
         O.map(parseDeepCoverage(noisy), (coverage) => coverage.covered),
-        NonNegativeInt.make(38_520)
+        S.Natural.make(38_520)
       );
       // The last coverage line describes the finished build.
       assertSome(
         O.map(parseDeepCoverage(`${LOW_COVERAGE}${FULL_COVERAGE}`), (coverage) => coverage.covered),
-        NonNegativeInt.make(38_520)
+        S.Natural.make(38_520)
       );
       assertNone(parseDeepCoverage("graft build --deep: nothing to do\n"));
     })
@@ -344,7 +343,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       // The explicit coverage line still wins when both are present.
       assertSome(
         O.map(parseDeepCoverage(`${tally}${LOW_COVERAGE}`), (coverage) => coverage.total),
-        NonNegativeInt.make(1_000)
+        S.Natural.make(1_000)
       );
     })
   );
@@ -363,9 +362,9 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         phase: "done",
         outcome: "degraded",
         coverage: GraftDeepCoverage.make({
-          covered: NonNegativeInt.make(38_520),
-          total: NonNegativeInt.make(39_115),
-          failedFiles: NonNegativeInt.make(1),
+          covered: S.Natural.make(38_520),
+          total: S.Natural.make(39_115),
+          failedFiles: S.Natural.make(1),
         }),
         rebuilt: [],
         log: "/state/beep-graft/runs/20260911T023000Z.log",
@@ -593,11 +592,11 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       expect(status.model).toBe("(env default)");
       assertSome(
         O.map(O.fromUndefinedOr(status.coverage), (coverage) => coverage.covered),
-        NonNegativeInt.make(38_520)
+        S.Natural.make(38_520)
       );
       assertSome(
         O.map(O.fromUndefinedOr(status.seed), (seed) => seed.copied),
-        NonNegativeInt.make(12)
+        S.Natural.make(12)
       );
       expect(A.map(status.rebuilt, (entry) => entry.root)).toEqual(siblings);
       expect(A.every(status.rebuilt, (entry) => entry.exitCode === 0)).toBe(true);
@@ -682,7 +681,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       expect(status.message).toEqual(expect.stringContaining("below the 95% target"));
       assertSome(
         O.map(O.fromUndefinedOr(status.seed), (seed) => seed.refused),
-        NonNegativeInt.make(0)
+        S.Natural.make(0)
       );
       expect(yield* fs.exists(path.join(siblings[0] ?? "", "graft", "INDEX.md"))).toBe(true);
       // A degraded night is not a failure, so no operator notification fires.
@@ -1518,9 +1517,9 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
             phase: "done",
             outcome: "degraded",
             coverage: GraftDeepCoverage.make({
-              covered: NonNegativeInt.make(0),
-              total: NonNegativeInt.make(0),
-              failedFiles: NonNegativeInt.make(0),
+              covered: S.Natural.make(0),
+              total: S.Natural.make(0),
+              failedFiles: S.Natural.make(0),
             }),
             rebuilt: [],
             log: path.join(stateDir, "runs", "20260911T023000Z.log"),

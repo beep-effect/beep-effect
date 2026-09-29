@@ -19,7 +19,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { dual } from "@beep/utils";
 import * as P from "effect/Predicate";
@@ -210,18 +210,18 @@ export type ChunkKind = typeof ChunkKind.Type;
 
 class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
   {
-    end: NonNegativeInt,
-    start: NonNegativeInt,
+    end: S.Natural,
+    start: S.Natural,
   },
   $I.annote("SpanFields", {
     toCodecArbitrary: (): SchemaAST.Link =>
       S.link<SpanFields>()(
         S.Struct({
-          start: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
-          end: NonNegativeInt.check(S.isLessThanOrEqualTo(10_000)),
+          start: S.Natural.check(S.isLessThanOrEqualTo(10_000)),
+          end: S.Natural.check(S.isLessThanOrEqualTo(10_000)),
         }),
         SchemaTransformation.transform({
-          decode: (value) => SpanFields.make({ start: value.start, end: NonNegativeInt.make(value.start + value.end) }),
+          decode: (value) => SpanFields.make({ start: value.start, end: S.Natural.make(value.start + value.end) }),
           encode: (value) => value,
         })
       ),
@@ -235,10 +235,10 @@ class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
  * **Example** (Make half-open span)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
  *
- * console.log(Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) }))
+ * console.log(Span.make({ start: S.Natural.make(0), end: S.Natural.make(5) }))
  * ```
  *
  * @category models
@@ -266,10 +266,10 @@ export const Span = SpanFields.check(
  * **Example** (Compute span length)
  *
  * ```ts import.meta.vitest name="Compute span length"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Span } from "@beep/nlp/Handoff/Contract"
  *
- * const span: Span = Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) })
+ * const span: Span = Span.make({ start: S.Natural.make(0), end: S.Natural.make(5) })
  * span.end - span.start // => 5
  * ```
  *
@@ -331,14 +331,14 @@ export class Provenance extends S.Class<Provenance>($I`Provenance`)(
  * **Example** (Make sentence TextChunk)
  *
  * ```ts import.meta.vitest name="Make sentence TextChunk"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ChunkId, Provenance, Span, TextChunk } from "@beep/nlp/Handoff/Contract"
  *
  * const chunk = TextChunk.make({
  *   id: ChunkId.make("chunk-1"),
  *   kind: "sentence",
  *   provenance: Provenance.make({ generatedBy: "wink-nlp", source: "doc-1", timestamp: 0 }),
- *   span: Span.make({ end: NonNegativeInt.make(11), start: NonNegativeInt.make(0) }),
+ *   span: Span.make({ end: S.Natural.make(11), start: S.Natural.make(0) }),
  *   text: "Hello world"
  * })
  * chunk.kind // => "sentence"
@@ -367,14 +367,14 @@ export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
  * **Example** (Make surface mention)
  *
  * ```ts import.meta.vitest name="Make surface mention"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ChunkId, Mention, MentionId, Provenance, Span } from "@beep/nlp/Handoff/Contract"
  *
  * const mention = Mention.make({
  *   chunkId: ChunkId.make("chunk-1"),
  *   id: MentionId.make("mention-1"),
  *   provenance: Provenance.make({ generatedBy: "wink-nlp", source: "doc-1", timestamp: 0 }),
- *   span: Span.make({ end: NonNegativeInt.make(5), start: NonNegativeInt.make(0) }),
+ *   span: Span.make({ end: S.Natural.make(5), start: S.Natural.make(0) }),
  *   text: "Acme"
  * })
  * mention.chunkId // => "chunk-1"

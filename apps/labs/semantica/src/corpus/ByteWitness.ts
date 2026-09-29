@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Context, Crypto, Effect, Equal, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -15,13 +15,14 @@ const $I = $SemanticaId.create("corpus/ByteWitness");
  * **Example** (Describe expected bytes)
  *
  * ```ts
- * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ * import { Sha256Hex } from "@beep/schema"
  * import { ByteExpectation } from "@/corpus/ByteWitness"
  *
  * const expectation = ByteExpectation.make({
  *   relativePath: "documents/paper.pdf",
  *   sha256: Sha256Hex.make("0".repeat(64)),
- *   bytes: NonNegativeInt.make(12)
+ *   bytes: S.Natural.make(12)
  * })
  * console.log(expectation.relativePath) // "documents/paper.pdf"
  * ```
@@ -33,7 +34,7 @@ export class ByteExpectation extends S.Class<ByteExpectation>($I`ByteExpectation
   {
     relativePath: S.NonEmptyString,
     sha256: Sha256Hex,
-    bytes: NonNegativeInt,
+    bytes: S.Natural,
   },
   $I.annote("ByteExpectation", {
     description: "Expected relative path, SHA-256 digest, and byte length for one witnessed file.",
@@ -72,8 +73,8 @@ export const ByteDrift = ByteDriftKind.toTaggedUnion("kind")({
   },
   "bytes-mismatch": {
     relativePath: S.NonEmptyString,
-    expectedBytes: NonNegativeInt,
-    actualBytes: NonNegativeInt,
+    expectedBytes: S.Natural,
+    actualBytes: S.Natural,
   },
 }).pipe(
   $I.annoteSchema("ByteDrift", {
@@ -132,7 +133,7 @@ export const verifyByteExpectations = Effect.fn("ByteWitness.verifyByteExpectati
               Effect.succeed([ByteDrift.cases["missing-file"].make({ relativePath: expectation.relativePath })]),
             onSome: Effect.fn("ByteWitness.inspectBytes")(function* (actualBytes) {
               const actualSha256 = yield* hashBytes(actualBytes);
-              const actualByteLength = NonNegativeInt.make(actualBytes.byteLength);
+              const actualByteLength = S.Natural.make(actualBytes.byteLength);
               let drifts = A.empty<ByteDrift>();
               if (!Str.Equivalence(expectation.sha256, actualSha256)) {
                 drifts = A.append(

@@ -6,7 +6,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { AbsoluteIRI, IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, SemanticVersion } from "@beep/schema";
+import { SchemaUtils, SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
 
@@ -109,13 +109,13 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
     version: SemanticVersion.annotateKey({
       description: "Ontology release version.",
     }),
-    classCount: NonNegativeInt.annotateKey({
+    classCount: S.Natural.annotateKey({
       description: "Number of domain classes.",
     }),
-    propertyCount: NonNegativeInt.annotateKey({
+    propertyCount: S.Natural.annotateKey({
       description: "Number of ontology properties.",
     }),
-    importCount: NonNegativeInt.annotateKey({
+    importCount: S.Natural.annotateKey({
       description: "Number of imported vocabularies.",
     }),
   },
@@ -301,7 +301,7 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
     ontologyId: OntologyName.annotateKey({
       description: "Registry identifier of the ontology being browsed.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Reported total number of ontology classes.",
     }),
     classes: S.Array(ClassSummary).pipe(
@@ -342,7 +342,7 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
     ontologyId: OntologyName.annotateKey({
       description: "Registry identifier of the ontology being browsed.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Reported total number of ontology properties.",
     }),
     properties: S.Array(PropertySummary).pipe(

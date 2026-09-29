@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
+import { LiteralKit, MimeType, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { PosInt } from "../../Schema/PosInt.ts";
@@ -134,7 +134,7 @@ export class ImageCandidate extends S.Class<ImageCandidate>($I`ImageCandidate`)(
     role: ImageRole.annotateKey({
       description: "Semantic role the image plays in its source.",
     }),
-    order: NonNegativeInt.annotateKey({
+    order: S.Natural.annotateKey({
       description: "Zero-based image position in the source.",
     }),
     referrerUrl: URLStr.annotateKey({
@@ -267,7 +267,7 @@ export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Context-specific image caption." })
     ),
-    position: NonNegativeInt.annotateKey({
+    position: S.Natural.annotateKey({
       description: "Zero-based position within the owner content.",
     }),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
@@ -409,7 +409,7 @@ export class ImageForPrompt extends S.Class<ImageForPrompt>($I`ImageForPrompt`)(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Surrounding text supplied to the model." })
     ),
-    position: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    position: S.OptionFromOptionalKey(S.Natural).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Source-document position when available." })
     ),

@@ -12,7 +12,7 @@ import {
   verifyCurrentSpanHistory,
 } from "@beep/langextract/VerifiedSpan";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt, PosixPath, Sha256HexFromBytes } from "@beep/schema";
+import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
@@ -418,7 +418,7 @@ describe("verified-span persistence and re-anchor history", () => {
       }
       if (VerifiedSpanAttemptOutcome.guards.failed(ambiguous.attempts[0].outcome)) {
         expect(ambiguous.attempts[0].outcome.failure).toMatchObject({ reason: "ambiguous", stage: "location" });
-        assertSome(ambiguous.attempts[0].outcome.failure.candidateIndex, NonNegativeInt.make(0));
+        assertSome(ambiguous.attempts[0].outcome.failure.candidateIndex, S.Natural.make(0));
       }
       if (VerifiedSpanAttemptOutcome.guards.failed(unsupported.attempts[0].outcome)) {
         expect(unsupported.attempts[0].outcome.failure).toMatchObject({

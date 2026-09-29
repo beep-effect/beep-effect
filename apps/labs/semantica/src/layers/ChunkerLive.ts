@@ -1,8 +1,8 @@
 import { TextAnchor } from "@beep/provenance";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DocumentId } from "@/schema/Ids";
 import { Chunk, makeChunkId } from "@/schema/Text";
@@ -220,9 +220,9 @@ const makeChunker = Effect.gen(function* () {
         candidates,
         Effect.fnUntraced(function* (candidate, ordinal) {
           const anchor = TextAnchor.make({
-            endChar: NonNegativeInt.make(candidate.endChar),
+            endChar: S.Natural.make(candidate.endChar),
             quote: Str.slice(candidate.startChar, candidate.endChar)(canonical.text),
-            startChar: NonNegativeInt.make(candidate.startChar),
+            startChar: S.Natural.make(candidate.startChar),
           });
           const receipt = yield* canonicalizer.verify(canonical, anchor);
           const id = yield* Effect.fromResult(makeChunkId({ document, anchor, receipt })).pipe(Effect.orDie);
@@ -231,7 +231,7 @@ const makeChunker = Effect.gen(function* () {
             document,
             id,
             kind: candidate.kind,
-            ordinal: NonNegativeInt.make(ordinal),
+            ordinal: S.Natural.make(ordinal),
             receipt,
           });
         }),

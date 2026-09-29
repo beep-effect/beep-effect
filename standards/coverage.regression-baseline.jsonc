@@ -31767,18 +31767,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Fixed32.ts": {
-          "lines": 83.33,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 1
-          }
-        },
         "packages/foundation/modeling/schema/src/Fixed64.ts": {
           "lines": 100,
           "statements": 100,
@@ -32331,18 +32319,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Int64.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts": {
           "lines": 100,
           "statements": 100,
@@ -32596,18 +32572,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/NoSniff/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Number.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -33219,30 +33183,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Sfixed32.ts": {
-          "lines": 83.33,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Sfixed64.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Sha256.ts": {
           "lines": 92.85,
           "statements": 93.33,
@@ -33253,30 +33193,6 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Sint32.ts": {
-          "lines": 83.33,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Sint64.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/Slug.ts": {
@@ -33432,30 +33348,6 @@
             "lines": 0,
             "statements": 1,
             "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Uint32.ts": {
-          "lines": 83.33,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Uint64.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
             "functions": 0
           }
         },

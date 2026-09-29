@@ -1,6 +1,5 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
 import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache";
-import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -8,6 +7,7 @@ import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -84,7 +84,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
             warmEnvironment(validWarmEnvironment),
             runCacheWarmForTesting(root, O.none(), (command) => {
               observed = command;
-              return Effect.succeed(CacheWarmLane.make({ command, durationMs: NonNegativeInt.make(0), exitCode: 0 }));
+              return Effect.succeed(CacheWarmLane.make({ command, durationMs: S.Natural.make(0), exitCode: 0 }));
             })
           )
         );
@@ -208,9 +208,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
             warmEnvironment({ TURBO_API: undefined, TURBO_TOKEN: undefined, TURBO_TEAM: undefined }),
             runCacheWarmForTesting(root, O.none(), () => {
               invoked = true;
-              return Effect.succeed(
-                CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 })
-              );
+              return Effect.succeed(CacheWarmLane.make({ command: [], durationMs: S.Natural.make(0), exitCode: 0 }));
             }).pipe(Effect.flip)
           )
         );
@@ -232,7 +230,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
           Effect.andThen(
             warmEnvironment(validWarmEnvironment),
             runCacheWarmForTesting(root, O.none(), () =>
-              Effect.succeed(CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 }))
+              Effect.succeed(CacheWarmLane.make({ command: [], durationMs: S.Natural.make(0), exitCode: 0 }))
             ).pipe(Effect.flip)
           )
         );
@@ -248,7 +246,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
           Effect.andThen(
             warmEnvironment(validWarmEnvironment),
             runCacheWarmForTesting(root, O.none(), () =>
-              Effect.succeed(CacheWarmLane.make({ command: [], durationMs: NonNegativeInt.make(0), exitCode: 0 }))
+              Effect.succeed(CacheWarmLane.make({ command: [], durationMs: S.Natural.make(0), exitCode: 0 }))
             ).pipe(Effect.flip)
           )
         );
@@ -293,7 +291,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("cache command", (it) => 
             runCacheWarmForTesting(root, O.some(receiptPath), () =>
               fs.writeFileString(path.join(root, "README.md"), "# changed during warm\n").pipe(
                 Effect.mapError((cause) => CacheCommandError.new("injected warm mutation failed", cause)),
-                Effect.as(CacheWarmLane.make({ command: ["fixture"], durationMs: NonNegativeInt.make(1), exitCode: 0 }))
+                Effect.as(CacheWarmLane.make({ command: ["fixture"], durationMs: S.Natural.make(1), exitCode: 0 }))
               )
             ).pipe(Effect.flip)
           )

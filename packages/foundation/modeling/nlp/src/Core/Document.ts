@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Brand, Chunk, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -81,7 +81,7 @@ export type DocumentId = typeof DocumentId.Type;
  * @category models
  * @since 0.0.0
  */
-export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
+export type DocumentIndex = Brand.Branded<number, "DocumentIndex">;
 
 /**
  * Construct a branded document index after validating it is non-negative.
@@ -99,7 +99,7 @@ export type DocumentIndex = Brand.Branded<NonNegativeInt, "DocumentIndex">;
  * @since 0.0.0
  */
 export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<DocumentIndex>(
-  S.makeFilter(S.is(NonNegativeInt))
+  S.makeFilter(S.is(S.Natural))
 );
 
 /**
@@ -117,7 +117,7 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
  * @category validation
  * @since 0.0.0
  */
-export const DocumentIndex = NonNegativeInt.pipe(
+export const DocumentIndex = S.Natural.pipe(
   S.brand("DocumentIndex"),
   $I.annoteSchema("DocumentIndex", {
     description: "Non-negative ordered index for an NLP document.",

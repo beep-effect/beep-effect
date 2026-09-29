@@ -18904,14 +18904,6 @@
       "description": "Options controlling byte-window size and acceptance of closely related formats."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Fixed32.ts",
-      "symbol": "Fixed32",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Fixed32",
-      "description": "A protobuf fixed32 number in the inclusive unsigned 32-bit range."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Fixed64.ts",
       "symbol": "Fixed64",
       "kind": "brand",
@@ -19847,22 +19839,6 @@
       "description": "520 “Web Server Returned an Unknown Error” – This is a code used by\nCloudflare. It specifies that the origin server returned an unexpected or\nunknown response to Cloudflare."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Int64.ts",
-      "symbol": "Int64",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Int64",
-      "description": "A signed 64-bit integer represented as a BigInt."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int64.ts",
-      "symbol": "Int64FromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "Int64FromString",
-      "description": "A decimal string codec for signed 64-bit integer BigInt values."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
       "symbol": "Document",
       "kind": "schema-class",
@@ -20127,14 +20103,6 @@
       "owner": "@beep/schema",
       "identity": "NoSniffValue",
       "description": "The supported `X-Content-Type-Options` header values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Number.ts",
-      "symbol": "NonNegativeInt",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NonNegativeInt",
-      "description": "A non-negative integer"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Opaque.ts",
@@ -20616,22 +20584,6 @@
       "description": "The sex of a person (\"male\" or \"female\")."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Sfixed32.ts",
-      "symbol": "Sfixed32",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Sfixed32",
-      "description": "A protobuf sfixed32 number in the inclusive signed 32-bit range."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Sfixed64.ts",
-      "symbol": "Sfixed64",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Sfixed64",
-      "description": "A protobuf sfixed64 bigint in the inclusive signed 64-bit range."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Sha256.ts",
       "symbol": "Sha256Hex",
       "kind": "brand",
@@ -20654,22 +20606,6 @@
       "owner": "@beep/schema",
       "identity": "Sha256HexFromHexBytes",
       "description": "A one-way schema that hashes hex-encoded bytes into a canonical lowercase SHA-256 hex digest."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Sint32.ts",
-      "symbol": "Sint32",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Sint32",
-      "description": "A protobuf sint32 number in the inclusive signed 32-bit range."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Sint64.ts",
-      "symbol": "Sint64",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Sint64",
-      "description": "A protobuf sint64 bigint in the inclusive signed 64-bit range."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Slug.ts",
@@ -20858,22 +20794,6 @@
       "owner": "@beep/schema",
       "identity": "URLStr",
       "description": "A URL encoded as a string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Uint32.ts",
-      "symbol": "Uint32",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Uint32",
-      "description": "A protobuf uint32 number in the inclusive unsigned 32-bit range."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Uint64.ts",
-      "symbol": "Uint64",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Uint64",
-      "description": "A protobuf uint64 bigint in the inclusive unsigned 64-bit range."
     },
     {
       "file": "packages/foundation/modeling/schema/src/UnitInterval.ts",

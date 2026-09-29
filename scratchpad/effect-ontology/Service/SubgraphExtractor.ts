@@ -8,7 +8,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -30,11 +30,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
  * **Example** (Create a measured node distance)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { NodeDistance } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * const distance = NodeDistance.make({ entityId: EntityId.make("alice"), hops: NonNegativeInt.make(0) })
+ * const distance = NodeDistance.make({ entityId: EntityId.make("alice"), hops: S.Natural.make(0) })
  * console.log(distance.hops)
  * ```
  *
@@ -44,7 +44,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 export class NodeDistance extends S.Class<NodeDistance>($I`NodeDistance`)(
   {
     entityId: EntityId.annotateKey({ description: "Entity whose breadth-first distance was measured." }),
-    hops: NonNegativeInt.annotateKey({ description: "Shortest number of traversed relations from any seed." }),
+    hops: S.Natural.annotateKey({ description: "Shortest number of traversed relations from any seed." }),
   },
   $I.annote("NodeDistance", {
     description: "Shortest breadth-first hop count from any accepted subgraph seed to one entity.",
@@ -57,10 +57,10 @@ export class NodeDistance extends S.Class<NodeDistance>($I`NodeDistance`)(
  * **Example** (Create an empty subgraph)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Subgraph } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * const subgraph = Subgraph.make({ nodes: [], edges: [], centerNodes: [], depth: NonNegativeInt.make(0), distances: [] })
+ * const subgraph = Subgraph.make({ nodes: [], edges: [], centerNodes: [], depth: S.Natural.make(0), distances: [] })
  * console.log(subgraph.nodes.length)
  * ```
  *
@@ -72,7 +72,7 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
     nodes: S.Array(Entity).annotateKey({ description: "Entities admitted by the traversal bound." }),
     edges: S.Array(Relation).annotateKey({ description: "Relations whose entity endpoints are both admitted." }),
     centerNodes: S.Array(EntityId).annotateKey({ description: "Valid seed IDs admitted before traversal began." }),
-    depth: NonNegativeInt.annotateKey({ description: "Deepest hop distance actually reached." }),
+    depth: S.Natural.annotateKey({ description: "Deepest hop distance actually reached." }),
     distances: S.Array(NodeDistance).annotateKey({
       description: "Shortest measured hop distance for every admitted entity.",
     }),
@@ -154,8 +154,8 @@ export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`E
       SchemaUtils.withKeyDefaults(PosInt.make(5)),
       S.annotateKey({ description: "Maximum embedding matches used as traversal seeds." })
     ),
-    hops: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(1)),
+    hops: S.Natural.pipe(
+      SchemaUtils.withKeyDefaults(S.Natural.make(1)),
       S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
     ),
     minSimilarity: Confidence.pipe(
@@ -196,12 +196,12 @@ export interface SubgraphExtractorService {
     (
       graph: KnowledgeGraph,
       seeds: ReadonlyArray<EntityId>,
-      hops: NonNegativeInt,
+      hops: number,
       options: ExtractOptionsInput
     ): Effect.Effect<Subgraph>;
     (
       seeds: ReadonlyArray<EntityId>,
-      hops: NonNegativeInt,
+      hops: number,
       options: ExtractOptionsInput
     ): (graph: KnowledgeGraph) => Effect.Effect<Subgraph>;
   };
@@ -225,22 +225,22 @@ const emptySubgraph = (centerNodes: ReadonlyArray<EntityId>): Subgraph =>
     nodes: [],
     edges: [],
     centerNodes,
-    depth: NonNegativeInt.make(0),
+    depth: S.Natural.make(0),
     distances: [],
   });
 
 interface TraversalState {
   readonly nodes: HashSet.HashSet<EntityId>;
   readonly edges: HashSet.HashSet<Relation>;
-  readonly distances: HashMap.HashMap<EntityId, NonNegativeInt>;
-  readonly depth: NonNegativeInt;
+  readonly distances: HashMap.HashMap<EntityId, number>;
+  readonly depth: number;
   readonly seeds: ReadonlyArray<EntityId>;
 }
 
 const traverseHops = (
   graph: KnowledgeGraph,
   seeds: ReadonlyArray<EntityId>,
-  hops: NonNegativeInt,
+  hops: number,
   options: ExtractOptions
 ): TraversalState => {
   const validSeeds = A.filter(seeds, (id) => O.isSome(graph.getEntity(id)));
@@ -248,8 +248,8 @@ const traverseHops = (
   let visited = HashSet.fromIterable(acceptedSeeds);
   let frontier = HashSet.fromIterable(acceptedSeeds);
   let edges = HashSet.empty<Relation>();
-  let distances = HashMap.fromIterable(A.map(acceptedSeeds, (entityId) => [entityId, NonNegativeInt.make(0)]));
-  let actualDepth = NonNegativeInt.make(0);
+  let distances = HashMap.fromIterable(A.map(acceptedSeeds, (entityId) => [entityId, S.Natural.make(0)]));
+  let actualDepth = S.Natural.make(0);
 
   for (let hop = 1; hop <= hops && HashSet.size(frontier) > 0; hop += 1) {
     let nextFrontier = HashSet.empty<EntityId>();
@@ -258,8 +258,8 @@ const traverseHops = (
       if (!HashSet.has(visited, entityId) && HashSet.size(visited) < options.maxNodes) {
         visited = HashSet.add(visited, entityId);
         nextFrontier = HashSet.add(nextFrontier, entityId);
-        distances = HashMap.set(distances, entityId, NonNegativeInt.make(hop));
-        actualDepth = NonNegativeInt.make(hop);
+        distances = HashMap.set(distances, entityId, S.Natural.make(hop));
+        actualDepth = S.Natural.make(hop);
       }
     };
 
@@ -340,7 +340,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
       (
         graph: KnowledgeGraph,
         seeds: ReadonlyArray<EntityId>,
-        hops: NonNegativeInt,
+        hops: number,
         optionsInput: ExtractOptionsInput
       ) =>
         Effect.suspend(() => {

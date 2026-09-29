@@ -7,7 +7,6 @@ import {
   observeHttpApiEffect,
   observeHttpApiHandler,
 } from "@beep/observability/server";
-import { NonNegativeInt } from "@beep/schema";
 import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -112,7 +111,7 @@ describe("HttpApiTelemetry", () => {
       );
 
       expect(successState.count).toBe(1);
-      assertSome(httpApiFailureStatus(endpoint, { message: "backend unavailable" }), NonNegativeInt.make(503));
+      assertSome(httpApiFailureStatus(endpoint, { message: "backend unavailable" }), S.Natural.make(503));
 
       const failureExit = yield* Effect.exit(
         observeHttpApiEffect(

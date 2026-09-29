@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
-import { MappedLiteralKit, NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
+import { MappedLiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
 import { Chunk, Effect, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
@@ -37,7 +37,7 @@ const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
 const decodeJson = UnknownFromJsonString.decodeUnknownOption;
 const encodeJson = UnknownFromJsonString.encodeUnknownOption;
-const decodeNonNegativeInt = S.decodeUnknownOption(NonNegativeInt);
+const decodeNonNegativeInt = S.decodeUnknownOption(S.Natural);
 
 const EncodedPathPunctuation = MappedLiteralKit([
   ["!", "%21"],
@@ -556,7 +556,7 @@ const resolveAuth = (plan: Plan): Effect.Effect<AppliedAuth, ToolError> => {
 class ResponseBody extends S.Class<ResponseBody>($I`ResponseBody`)(
   {
     chunks: S.Chunk(S.Uint8Array),
-    size: NonNegativeInt,
+    size: S.Natural,
   },
   $I.annote("ResponseBody", {
     description: "A bounded immutable collection of HTTP response chunks.",
@@ -565,13 +565,13 @@ class ResponseBody extends S.Class<ResponseBody>($I`ResponseBody`)(
   static readonly empty = (): ResponseBody =>
     ResponseBody.make({
       chunks: Chunk.empty(),
-      size: NonNegativeInt.make(0),
+      size: S.Natural.make(0),
     });
 
   static readonly append = (body: ResponseBody, chunk: Uint8Array): ResponseBody =>
     ResponseBody.make({
       chunks: Chunk.append(body.chunks, chunk),
-      size: NonNegativeInt.make(body.size + chunk.byteLength),
+      size: S.Natural.make(body.size + chunk.byteLength),
     });
 }
 

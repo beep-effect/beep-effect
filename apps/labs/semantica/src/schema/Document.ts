@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { identity, Option, Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -138,7 +138,7 @@ const SourceDocumentFields = S.Struct({
   id: DocumentId,
   mediaType: MediaType,
   origin: Origin,
-  bytes: NonNegativeInt,
+  bytes: S.Natural,
   sha256: Sha256Hex,
   acquired: ProvenanceEventId,
 });

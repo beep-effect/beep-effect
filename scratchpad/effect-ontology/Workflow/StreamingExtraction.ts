@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { ObjectRef } from "@beep/rdf/Prov";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -238,12 +237,12 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
               })
             )
           );
-        yield* recordExtractionChunkCount(NonNegativeInt.make(chunks.length));
+        yield* recordExtractionChunkCount(S.Natural.make(chunks.length));
 
         // Save chunks to run folder
         yield* Effect.all(
           A.map(chunks, (chunk) =>
-            runService.saveChunk(run.id, NonNegativeInt.make(chunk.index), chunk.text).pipe(
+            runService.saveChunk(run.id, S.Natural.make(chunk.index), chunk.text).pipe(
               Effect.tapError((error) =>
                 Effect.logWarning("Failed to save chunk", {
                   stage: "chunking",
@@ -386,7 +385,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       })
                     )
                   );
-                const chunkId = ChunkId.fromDocument(run.id, NonNegativeInt.make(chunk.index));
+                const chunkId = ChunkId.fromDocument(run.id, S.Natural.make(chunk.index));
                 const rawEntityArray = Chunk.toReadonlyArray(rawEntities);
                 const activity = yield* decodeObjectRef(
                   `urn:beep:effect-ontology:activity:extraction:${run.id}:chunk:${chunk.index}`
@@ -454,7 +453,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         mention: result.entity.mention,
                         types: result.entity.types,
                         attributes: result.entity.attributes,
-                        chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
+                        chunkIndex: O.some(S.Natural.make(chunk.index)),
                         chunkId: O.some(chunkId),
                         documentId: result.entity.documentId,
                         sourceUri: result.entity.sourceUri,

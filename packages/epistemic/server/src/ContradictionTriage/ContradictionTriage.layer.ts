@@ -36,11 +36,11 @@ import {
 } from "@beep/file-processing/SourceText";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Cause, Crypto, Effect, Layer, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { makeDrizzleContradictionTriageRepository } from "./ContradictionTriage.repo.ts";
 import type {
   ContradictionActionErrorReason as ContradictionActionErrorReasonType,
@@ -437,7 +437,7 @@ export const ContradictionTriageRepositoryFixture = Layer.succeed(
     list: Effect.fnUntraced(function* () {
       return ContradictionCandidatePage.make({
         items: [],
-        total: NonNegativeInt.make(0),
+        total: S.Natural.make(0),
       });
     }),
     review: Effect.fnUntraced(function* (command) {

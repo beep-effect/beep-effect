@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import * as S from "effect/Schema";
-import { isNonNegative } from "../Number.ts";
 import { $I } from "./Graph.shared.ts";
 
 /**
@@ -30,7 +29,7 @@ import { $I } from "./Graph.shared.ts";
  * @category constructors
  * @since 0.0.0
  */
-export const NodeIndex = S.Int.check(isNonNegative).pipe(
+export const NodeIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   S.brand("NodeIndex"),
   $I.annoteSchema("NodeIndex", {
     description: "A branded non-negative graph node index.",
@@ -96,7 +95,7 @@ export const NodeIndexFromString = S.FiniteFromString.pipe(
  * @category validation
  * @since 0.0.0
  */
-export const EdgeIndex = S.Int.check(isNonNegative).pipe(
+export const EdgeIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   S.brand("EdgeIndex"),
   $I.annoteSchema("EdgeIndex", {
     description: "A branded non-negative graph edge index.",

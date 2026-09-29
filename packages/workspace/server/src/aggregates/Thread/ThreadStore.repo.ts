@@ -7,7 +7,6 @@
  */
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { OrganizationId } from "@beep/shared-domain/identity/Shared";
@@ -25,6 +24,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
@@ -321,7 +321,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
           A.fromIterable(HashMap.values(current.turns)),
           A.filter((turn) => WorkspaceIdentity.ThreadId.equivalence(turn.threadId, input.threadId))
         );
-        const turnIndex = NonNegativeInt.make(existingTurns.length);
+        const turnIndex = S.Natural.make(existingTurns.length);
         const turnId = current.nextId;
         const messageId = PosInt.make(current.nextId + 1);
         const message = makeMessageEntity(
@@ -505,7 +505,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
               const existingTurns = yield* tx.select().from(turnTable).where(eq(turnTable.threadId, input.threadId));
               const existingTurnRows = yield* tx.select().from(turnTable);
               const existingMessages = yield* tx.select().from(messageTable);
-              const turnIndex = NonNegativeInt.make(existingTurns.length);
+              const turnIndex = S.Natural.make(existingTurns.length);
               const nextTurnId = nextEntityId(existingTurnRows);
               const nextMessageId = nextEntityId(existingMessages);
 

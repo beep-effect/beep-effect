@@ -1,4 +1,4 @@
-import { NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
+import { NonEmptyTrimmedStr } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import {
@@ -250,7 +250,7 @@ describe("Uspto schema parity", () => {
     });
     const fullError = UsptoError.fromReason("response-status", {
       cause: "bad status",
-      status: NonNegativeInt.make(429),
+      status: S.Natural.make(429),
     });
     const minimalError = UsptoError.fromReason("transport");
 

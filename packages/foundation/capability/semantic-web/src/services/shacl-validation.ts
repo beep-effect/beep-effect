@@ -8,7 +8,7 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, NamedNode, ObjectTerm } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context, Tuple } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -97,8 +97,8 @@ export type ShaclSeverity = typeof ShaclSeverity.Type;
 export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclPropertyShape`)(
   {
     path: NamedNode,
-    minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
-    maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    minCount: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    maxCount: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
     datatype: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     class: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
@@ -250,7 +250,7 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
     dataset: Dataset,
     shapes: S.Array(ShaclNodeShape),
     shapesDataset: S.OptionFromOptionalKey(Dataset).pipe(SchemaUtils.withNoneDefault),
-    maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    maxResults: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclValidationRequest", {
     description: "SHACL validation request.",

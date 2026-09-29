@@ -10,7 +10,6 @@ import {
 } from "@beep/langextract/Service";
 import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
@@ -18,6 +17,7 @@ import { Context, Duration, Effect, Fiber, Layer, Ref, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as Num from "effect/Number";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 
@@ -139,7 +139,7 @@ describe("LangExtractService", () => {
       Effect.fnUntraced(function* () {
         const request = LangExtractRequest.make({
           documentId: DocumentId.make("doc-1"),
-          options: LangExtractOptions.make({ maxExtractions: O.some(NonNegativeInt.make(1)) }),
+          options: LangExtractOptions.make({ maxExtractions: O.some(S.Natural.make(1)) }),
           targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
           text: "Alice founded Acme.",
         });

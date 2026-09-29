@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
@@ -42,8 +41,8 @@ class RankByRelevanceParameters extends S.Class<RankByRelevanceParameters>($I`Ra
 class RankByRelevanceSuccess extends S.Class<RankByRelevanceSuccess>($I`RankByRelevanceSuccess`)(
   {
     ranked: S.Array(AiRankedText),
-    returned: NonNegativeInt,
-    totalTexts: NonNegativeInt,
+    returned: S.Natural,
+    totalTexts: S.Natural,
   },
   $I.annote("RankByRelevanceSuccess", {
     description: "Ranked relevance results and source-text count metadata.",

@@ -5,7 +5,6 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import * as MdModel from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
@@ -16,6 +15,7 @@ import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { AsyncResult, AtomRegistry } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { visibleThreadTurnsAtoms } from "@/chat/ui/Thread.atoms";
 
 const threadId = WorkspaceIdentity.ThreadId.make(7);
@@ -29,7 +29,7 @@ const message = (value: string) =>
 const turn = (turnId: WorkspaceIdentity.TurnId, index: number) =>
   TimelineTurn.make({
     turnId,
-    turnIndex: NonNegativeInt.make(index),
+    turnIndex: S.Natural.make(index),
     items: [TimelineMessageItem.make({ role: "user", content: message(`turn ${index}`) })],
     costMicros: 0,
   });

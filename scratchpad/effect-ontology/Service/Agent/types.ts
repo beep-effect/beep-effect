@@ -13,8 +13,6 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
-import { NonNegNum } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Duration } from "effect";
 import * as A from "effect/Array";
@@ -206,7 +204,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
   /**
    * Priority (lower = higher priority)
    */
-  priority: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  priority: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a text extraction task
@@ -232,7 +230,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
       text: O.some(text),
       documentId: O.fromUndefinedOr(documentId),
       agentConfig: O.fromUndefinedOr(agentConfig),
-      priority: O.some(NonNegativeInt.make(1)),
+      priority: O.some(S.Natural.make(1)),
     });
   }
 
@@ -254,7 +252,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @returns Result produced by this operation.
    */
   static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore) {
-    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(NonNegativeInt.make(2)) });
+    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(S.Natural.make(2)) });
   }
 
   /**
@@ -279,7 +277,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
       taskId,
       sourceUrl: O.some(sourceUrl),
       ingestionOptions: O.fromUndefinedOr(ingestionOptions),
-      priority: O.some(NonNegativeInt.make(0)),
+      priority: O.some(S.Natural.make(0)),
     });
   }
 
@@ -311,7 +309,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
       taskId,
       graph: O.some(graph),
       validationReport: O.some(validationReport),
-      priority: O.some(NonNegativeInt.make(3)),
+      priority: O.some(S.Natural.make(3)),
     });
   }
 }
@@ -764,17 +762,16 @@ export type RefinementStatus =
  * **Example** (Record a conformant refinement)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
  *
  * const result = RefinementResult.make({
  *   graph: KnowledgeGraph.make({}),
- *   iterations: NonNegativeInt.make(2),
+ *   iterations: S.Natural.make(2),
  *   status: "conformant",
- *   durationMs: NonNegNum.make(1200)
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(1200)
  * })
  * console.log(result.isConformant) // true
  * ```
@@ -792,7 +789,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
   /**
    * Number of refinement iterations
    */
-  iterations: NonNegativeInt,
+  iterations: S.Natural,
 
   /**
    * How the loop terminated
@@ -807,7 +804,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
   /**
    * Total duration in milliseconds
    */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 
   /**
    * Error message if status is "error"
@@ -817,7 +814,7 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
   /**
    * Violations fixed per iteration
    */
-  violationsFixed: S.Array(NonNegativeInt).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  violationsFixed: S.Array(S.Natural).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("RefinementResult", {
     description: "Final graph, iteration count, and termination status of a refinement loop.",
@@ -829,17 +826,16 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
    * **Example** (Inspect conformance)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
    * const result = RefinementResult.make({
    *   graph: KnowledgeGraph.make({}),
-   *   iterations: NonNegativeInt.make(1),
+   *   iterations: S.Natural.make(1),
    *   status: "conformant",
-   *   durationMs: NonNegNum.make(250)
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(250)
    * })
    * console.log(result.isConformant) // true
    * ```
@@ -854,18 +850,17 @@ export class RefinementResult extends S.Class<RefinementResult>($I`RefinementRes
    * **Example** (Average violations fixed)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
    * const result = RefinementResult.make({
    *   graph: KnowledgeGraph.make({}),
-   *   iterations: NonNegativeInt.make(2),
+   *   iterations: S.Natural.make(2),
    *   status: "max-iterations",
-   *   durationMs: NonNegNum.make(800),
-   *   violationsFixed: O.some([NonNegativeInt.make(2), NonNegativeInt.make(1)])
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(800),
+   *   violationsFixed: O.some([S.Natural.make(2), S.Natural.make(1)])
    * })
    * console.log(result.avgViolationsFixed) // 1.5
    * ```
@@ -936,8 +931,8 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  * **Example** (Create an execution context)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DateTime } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { ExecutionContext } from "@effect-ontology/Service/Agent/types"
  *
@@ -947,7 +942,7 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  *     startedAt: DateTime.nowUnsafe(),
  *     status: PipelineStatus.cases.Pending.make({})
  *   }),
- *   iteration: NonNegativeInt.make(0),
+ *   iteration: S.Natural.make(0),
  *   tracingEnabled: false
  * })
  * console.log(context.tracingEnabled) // false
@@ -966,7 +961,7 @@ export class ExecutionContext extends S.Class<ExecutionContext>($I`ExecutionCont
     /**
      * Current iteration (for loop mode)
      */
-    iteration: NonNegativeInt,
+    iteration: S.Natural,
 
     /**
      * Whether tracing is enabled

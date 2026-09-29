@@ -13,7 +13,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, HashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -55,14 +54,14 @@ const serializeQuad = (quad: Quad): string => {
  * **Example** (Construct an empty delta)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
  * const delta = QuadDelta.make({
  *   newQuads: [],
- *   originalCount: NonNegativeInt.make(0),
- *   enrichedCount: NonNegativeInt.make(0),
- *   deltaCount: NonNegativeInt.make(0)
+ *   originalCount: S.Natural.make(0),
+ *   enrichedCount: S.Natural.make(0),
+ *   deltaCount: S.Natural.make(0)
  * })
  * console.log(delta.deltaCount) // 0
  * ```
@@ -73,9 +72,9 @@ const serializeQuad = (quad: Quad): string => {
 export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
   {
     newQuads: S.Array(Quad).annotateKey({ description: "Quads present in the enriched graph only." }),
-    originalCount: NonNegativeInt.annotateKey({ description: "Number of quads in the original graph." }),
-    enrichedCount: NonNegativeInt.annotateKey({ description: "Number of quads in the enriched graph." }),
-    deltaCount: NonNegativeInt.annotateKey({ description: "Number of newly inferred quads." }),
+    originalCount: S.Natural.annotateKey({ description: "Number of quads in the original graph." }),
+    enrichedCount: S.Natural.annotateKey({ description: "Number of quads in the enriched graph." }),
+    deltaCount: S.Natural.annotateKey({ description: "Number of newly inferred quads." }),
   },
   $I.annote("QuadDelta", {
     description: "New RDF quads and non-negative graph-size statistics for one enrichment delta.",
@@ -133,9 +132,9 @@ export const computeQuadDelta: {
 
       return QuadDelta.make({
         newQuads,
-        originalCount: NonNegativeInt.make(originalQuads.length),
-        enrichedCount: NonNegativeInt.make(enrichedQuads.length),
-        deltaCount: NonNegativeInt.make(newQuads.length),
+        originalCount: S.Natural.make(originalQuads.length),
+        enrichedCount: S.Natural.make(enrichedQuads.length),
+        deltaCount: S.Natural.make(newQuads.length),
       });
     })
 );
@@ -151,11 +150,11 @@ export const computeQuadDelta: {
  * **Example** (Group an empty delta)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import * as HashMap from "effect/HashMap"
  * import { groupDeltaByPredicate, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * const zero = NonNegativeInt.make(0)
+ * const zero = S.Natural.make(0)
  * console.log(HashMap.size(groupDeltaByPredicate(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })))) // 0
  * ```
  *
@@ -180,10 +179,10 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
  * **Example** (Filter an empty delta)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { filterTypeInferences, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * const zero = NonNegativeInt.make(0)
+ * const zero = S.Natural.make(0)
  * console.log(filterTypeInferences(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).length) // 0
  * ```
  *
@@ -199,10 +198,10 @@ export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
  * **Example** (Summarize an empty delta)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { summarizeDelta, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * const zero = NonNegativeInt.make(0)
+ * const zero = S.Natural.make(0)
  * console.log(summarizeDelta(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).inferenceRatio) // 0
  * ```
  *

@@ -20,7 +20,6 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema";
 import { Cause, Context, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as AiError from "effect/ai/AiError";
@@ -330,7 +329,7 @@ const readCaller = (
   const sessionId = O.isSome(client)
     ? O.flatMap(httpRequest, (request) => O.filter(Headers.get(request.headers, mcpSessionIdHeader), Str.isNonEmpty))
     : O.none<string>();
-  return O.map(clientId, (id) => McpCallerIdentity.make({ clientId: NonNegativeInt.make(id), sessionId }));
+  return O.map(clientId, (id) => McpCallerIdentity.make({ clientId: S.Natural.make(id), sessionId }));
 };
 
 // What a handler can fail with: a declared failure (a tagged schema class or

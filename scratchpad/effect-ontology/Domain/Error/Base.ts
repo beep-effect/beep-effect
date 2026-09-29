@@ -12,7 +12,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 
@@ -224,18 +224,18 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
  *
  * **Example** (Use OptionalNonNegativeInt)
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { NonNegativeInt } from "@beep/schema"
  * import { OptionalNonNegativeInt } from "@effect-ontology/Error/Base"
  *
- * const count = OptionalNonNegativeInt.make(O.some(NonNegativeInt.make(3)))
+ * const count = OptionalNonNegativeInt.make(O.some(S.Natural.make(3)))
  * console.log(O.isSome(count)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt).pipe(
+export const OptionalNonNegativeInt = S.OptionFromNullishOr(S.Natural).pipe(
   SchemaUtils.withNoneDefault,
   $I.annoteSchema("OptionalNonNegativeInt", {
     description: "Optional finite non-negative integer normalized to an Effect Option.",
@@ -314,7 +314,7 @@ export type OptionalHttpStatusCode = typeof OptionalHttpStatusCode.Type;
  * @category errors
  * @since 0.0.0
  */
-export const Milliseconds = NonNegativeInt.pipe(
+export const Milliseconds = S.Natural.pipe(
   S.brand("Milliseconds"),
   $I.annoteSchema("Milliseconds", {
     description: "Finite non-negative integer duration measured in milliseconds.",

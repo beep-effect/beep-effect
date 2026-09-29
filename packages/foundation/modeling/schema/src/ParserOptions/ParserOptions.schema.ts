@@ -12,7 +12,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BuffEncoding } from "../BufferEncoding.ts";
-import { NonNegativeInt } from "../Number.ts";
 import { Defect } from "../Opaque.ts";
 import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -163,9 +162,9 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
     discardUnmappedColumns: SchemaUtils.BoolKeyDefaultFalse,
     carriageReturn: S.String.pipe(SchemaUtils.withKeyDefaults("\r")),
     encoding: BuffEncoding.pipe(SchemaUtils.withKeyDefaults(BuffEncoding.Enum.utf8)),
-    maxRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipLines: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    maxRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    skipLines: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    skipRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("ParserOptions", {
     description: "Schema-backed CSV parser options.",

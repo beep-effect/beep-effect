@@ -115,7 +115,6 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { encodeSourceProcessingRecordJson, SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -132,7 +131,7 @@ export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSum
  *     format: "plain-text",
  *     operationId,
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(4),
+ *     sizeBytes: S.Natural.make(4),
  *     status: "succeeded"
  *   }))
  * })
@@ -195,7 +194,6 @@ export const encodeFileProcessingFailureRecordJson: JsonEncodeEffect<unknown> = 
  * ```ts
  * import { ArtifactId, ArtifactReference } from "@beep/file-processing/Artifact"
  * import { ChildArtifactRecord, encodeChildArtifactRecordJson } from "@beep/file-processing/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -207,7 +205,7 @@ export const encodeFileProcessingFailureRecordJson: JsonEncodeEffect<unknown> = 
  *     id: artifactId,
  *     mediaType: "text/plain",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(12)
+ *     sizeBytes: S.Natural.make(12)
  *   })
  *
  *   return yield* encodeChildArtifactRecordJson(ChildArtifactRecord.make({ child, sourceArtifactId: artifactId }))

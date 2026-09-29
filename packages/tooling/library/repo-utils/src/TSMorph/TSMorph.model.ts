@@ -5,15 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import {
-  ArrayOfNonEmptyStrings,
-  FilePath,
-  LiteralKit,
-  NonNegativeInt,
-  SchemaUtils,
-  Sha256Hex,
-  Sha256HexFromBytes,
-} from "@beep/schema";
+import { ArrayOfNonEmptyStrings, FilePath, LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Match, Result, SchemaGetter, Tuple } from "effect";
 import * as S from "effect/Schema";
@@ -716,7 +708,7 @@ export type ColumnNumber = typeof ColumnNumber.Type;
  * @category models
  * @since 0.0.0
  */
-export const ByteOffset = NonNegativeInt.pipe(
+export const ByteOffset = S.Natural.pipe(
   S.brand("ByteOffset"),
   $I.annoteSchema("ByteOffset", {
     description: "A non-negative byte offset within a source file.",
@@ -753,7 +745,7 @@ export type ByteOffset = typeof ByteOffset.Type;
  * @category models
  * @since 0.0.0
  */
-export const ByteLength = NonNegativeInt.pipe(
+export const ByteLength = S.Natural.pipe(
   S.brand("ByteLength"),
   $I.annoteSchema("ByteLength", {
     description: "A non-negative byte length for a source span.",
@@ -2122,7 +2114,7 @@ export class TsMorphSymbolSearchResult extends S.Class<TsMorphSymbolSearchResult
     symbols: S.Array(Symbol).annotateKey({
       description: "Matching normalized symbols in rank order.",
     }),
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Total number of matching symbols before limit truncation.",
     }),
   },
@@ -2218,7 +2210,7 @@ export type TsMorphDiagnosticCategory = typeof TsMorphDiagnosticCategory.Type;
 
 class TsMorphDiagnosticBase extends S.Class<TsMorphDiagnosticBase>($I`TsMorphDiagnosticBase`)(
   {
-    code: NonNegativeInt,
+    code: S.Natural,
     message: S.NonEmptyString,
     source: S.OptionFromNullOr(S.NonEmptyString),
     startLine: LineNumber,

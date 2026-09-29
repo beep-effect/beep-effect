@@ -13,7 +13,6 @@ import * as Crypto from "effect/Crypto";
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
@@ -63,23 +62,23 @@ const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler
 
 class ExtractionStats extends S.Class<ExtractionStats>($I`ExtractionStats`)(
   {
-    totalEntities: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+    totalEntities: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total entities extracted across completed chunks.",
     }),
-    totalRelations: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+    totalRelations: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total relations extracted across completed chunks.",
     }),
-    verifiedRelations: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))
+    verifiedRelations: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))
     ).annotateKey({
       description: "Extracted relations accepted by grounding.",
     }),
-    successfulChunks: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey(
+    successfulChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey(
       {
         description: "Chunks that completed extraction successfully.",
       }
     ),
-    failedChunks: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+    failedChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Chunks whose extraction failed.",
     }),
     entityTypes: S.HashSet(S.String)
@@ -87,7 +86,7 @@ class ExtractionStats extends S.Class<ExtractionStats>($I`ExtractionStats`)(
       .annotateKey({
         description: "Distinct entity types observed during extraction.",
       }),
-    tokensUsed: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+    tokensUsed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Estimated language-model tokens consumed.",
     }),
   },
@@ -266,7 +265,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           chunking: {
             maxChunkSize: PosInt.make(500),
             preserveSentences: true,
-            overlapSentences: NonNegativeInt.make(0),
+            overlapSentences: S.Natural.make(0),
           },
           llm: {
             model: config.llm.model,
@@ -337,13 +336,13 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           yield* tokenBudget.recordUsage("entity_extraction", estimatedTokens);
           yield* Ref.update(statsRef, (stats) =>
             ExtractionStats.make({
-              totalEntities: NonNegativeInt.make(stats.totalEntities + entityArray.length),
-              totalRelations: NonNegativeInt.make(stats.totalRelations + relationArray.length),
-              verifiedRelations: NonNegativeInt.make(stats.verifiedRelations + verifiedRelations.length),
-              successfulChunks: NonNegativeInt.make(stats.successfulChunks + 1),
+              totalEntities: S.Natural.make(stats.totalEntities + entityArray.length),
+              totalRelations: S.Natural.make(stats.totalRelations + relationArray.length),
+              verifiedRelations: S.Natural.make(stats.verifiedRelations + verifiedRelations.length),
+              successfulChunks: S.Natural.make(stats.successfulChunks + 1),
               failedChunks: stats.failedChunks,
               entityTypes: HashSet.union(stats.entityTypes, entityTypes),
-              tokensUsed: NonNegativeInt.make(stats.tokensUsed + estimatedTokens),
+              tokensUsed: S.Natural.make(stats.tokensUsed + estimatedTokens),
             })
           );
           yield* rateLimiter.release(estimatedTokens, true);
@@ -363,12 +362,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const stats = yield* Ref.get(statsRef);
       const totalDuration = DateTime.distance(startTime, yield* DateTime.now).pipe(Duration.toMillis);
       yield* runService.updateStats(runId, {
-        chunkCount: NonNegativeInt.make(chunks.length),
-        entityCount: NonNegativeInt.make(stats.totalEntities),
-        relationCount: NonNegativeInt.make(stats.verifiedRelations),
-        resolvedCount: NonNegativeInt.make(0),
-        clusterCount: NonNegativeInt.make(0),
-        tokensUsed: NonNegativeInt.make(stats.tokensUsed),
+        chunkCount: S.Natural.make(chunks.length),
+        entityCount: S.Natural.make(stats.totalEntities),
+        relationCount: S.Natural.make(stats.verifiedRelations),
+        resolvedCount: S.Natural.make(0),
+        clusterCount: S.Natural.make(0),
+        tokensUsed: S.Natural.make(stats.tokensUsed),
         duration: Duration.millis(totalDuration),
       });
       yield* runService.completeRun(runId);

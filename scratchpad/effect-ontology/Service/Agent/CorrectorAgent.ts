@@ -23,9 +23,8 @@ import { $ScratchpadId } from "@beep/identity";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegNum } from "@beep/schema/Number";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { Config } from "effect";
 import { Clock, Context, Effect, Layer, Match } from "effect";
@@ -362,9 +361,9 @@ export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicat
  * **Example** (Record a skipped correction)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { makeNamedNode } from "@beep/rdf/Rdf"
- * import { NonNegNum } from "@beep/schema/Number"
  * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
  * import { Correction, CorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
@@ -381,7 +380,7 @@ export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicat
  *     confidence: Confidence.make(1)
  *   }),
  *   applied: false,
- *   durationMs: NonNegNum.make(12)
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(12)
  * })
  * console.log(result.applied) // false
  * ```
@@ -408,7 +407,7 @@ export class CorrectionResult extends S.Class<CorrectionResult>($I`CorrectionRes
   /**
    * Time taken in milliseconds
    */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("CorrectionResult", {
     description: "Single-violation correction, whether it was applied, and elapsed milliseconds.",
@@ -421,16 +420,15 @@ export class CorrectionResult extends S.Class<CorrectionResult>($I`CorrectionRes
  * **Example** (Record a fully skipped batch)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
  * const batch = BatchCorrectionResult.make({
  *   results: [],
- *   totalViolations: NonNegativeInt.make(1),
- *   correctedCount: NonNegativeInt.make(0),
- *   skippedCount: NonNegativeInt.make(1),
- *   durationMs: NonNegNum.make(12)
+ *   totalViolations: S.Natural.make(1),
+ *   correctedCount: S.Natural.make(0),
+ *   skippedCount: S.Natural.make(1),
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(12)
  * })
  * console.log(batch.allCorrected) // false
  * ```
@@ -447,22 +445,22 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>($I`Bat
   /**
    * Total violations processed
    */
-  totalViolations: NonNegativeInt,
+  totalViolations: S.Natural,
 
   /**
    * Number of corrections applied
    */
-  correctedCount: NonNegativeInt,
+  correctedCount: S.Natural,
 
   /**
    * Number of violations skipped
    */
-  skippedCount: NonNegativeInt,
+  skippedCount: S.Natural,
 
   /**
    * Total duration in milliseconds
    */
-  durationMs: NonNegNum,
+  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("BatchCorrectionResult", {
     description: "Per-violation results plus corrected, skipped, and elapsed counters.",
@@ -474,16 +472,15 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>($I`Bat
    * **Example** (Read the success rate)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
    * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
    *
    * const batch = BatchCorrectionResult.make({
    *   results: [],
-   *   totalViolations: NonNegativeInt.make(2),
-   *   correctedCount: NonNegativeInt.make(1),
-   *   skippedCount: NonNegativeInt.make(1),
-   *   durationMs: NonNegNum.make(40)
+   *   totalViolations: S.Natural.make(2),
+   *   correctedCount: S.Natural.make(1),
+   *   skippedCount: S.Natural.make(1),
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(40)
    * })
    * console.log(batch.successRate) // 0.5
    * ```
@@ -498,16 +495,15 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>($I`Bat
    * **Example** (Check whether every violation was corrected)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
    * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
    *
    * const batch = BatchCorrectionResult.make({
    *   results: [],
-   *   totalViolations: NonNegativeInt.make(1),
-   *   correctedCount: NonNegativeInt.make(0),
-   *   skippedCount: NonNegativeInt.make(1),
-   *   durationMs: NonNegNum.make(12)
+   *   totalViolations: S.Natural.make(1),
+   *   correctedCount: S.Natural.make(0),
+   *   skippedCount: S.Natural.make(1),
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(12)
    * })
    * console.log(batch.allCorrected) // false
    * ```
@@ -1057,16 +1053,16 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
       const correctedCount = A.filter(results, (result) => result.applied).length;
       const skippedCount = results.length - correctedCount;
       yield* Effect.logInfo("CorrectorAgent.correctAll complete", {
-        totalViolations: NonNegativeInt.make(results.length),
-        correctedCount: NonNegativeInt.make(correctedCount),
-        skippedCount: NonNegativeInt.make(skippedCount),
+        totalViolations: S.Natural.make(results.length),
+        correctedCount: S.Natural.make(correctedCount),
+        skippedCount: S.Natural.make(skippedCount),
         durationMs,
       });
       return BatchCorrectionResult.make({
         results: [...results],
-        totalViolations: NonNegativeInt.make(results.length),
-        correctedCount: NonNegativeInt.make(correctedCount),
-        skippedCount: NonNegativeInt.make(skippedCount),
+        totalViolations: S.Natural.make(results.length),
+        correctedCount: S.Natural.make(correctedCount),
+        skippedCount: S.Natural.make(skippedCount),
         durationMs,
       });
     });

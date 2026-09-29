@@ -5,15 +5,14 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { NonNegNum } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoConfigsId.create("next/models/PrefetchInliningConfig.schema");
 
 class PrefetchInliningConfigComplex extends S.Class<PrefetchInliningConfigComplex>($I`PrefetchInliningConfigComplex`)(
   {
-    maxSize: NonNegNum,
-    maxBundleSize: NonNegNum,
+    maxSize: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    maxBundleSize: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("PrefetchInliningConfigComplex", {
     description:

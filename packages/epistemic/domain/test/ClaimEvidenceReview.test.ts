@@ -6,7 +6,6 @@ import {
   reviewStatusFor,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -31,8 +30,8 @@ const basis = ClaimEvidenceBasis.make({
   assertion: "The source states fact.",
   subject: "Example source",
   evidence: EvidenceSpan.make({
-    startChar: NonNegativeInt.make(0),
-    endChar: NonNegativeInt.make(4),
+    startChar: S.Natural.make(0),
+    endChar: S.Natural.make(4),
     quote: "fact",
     confidence: UnitInterval.make(0.82),
   }),

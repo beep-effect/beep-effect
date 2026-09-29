@@ -35,7 +35,6 @@ const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.
  * ```ts
  * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
@@ -58,7 +57,7 @@ const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.
  *       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *       name: "office-action.txt",
  *       relativePath,
- *       sizeBytes: NonNegativeInt.make(21),
+ *       sizeBytes: S.Natural.make(21),
  *       text: "Claim 1 rejected."
  *     })
  *   })

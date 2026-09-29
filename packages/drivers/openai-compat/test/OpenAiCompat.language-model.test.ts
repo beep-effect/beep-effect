@@ -19,7 +19,6 @@ import {
   OpenAiCompatUsage,
   OpenAiCompatUserChatMessage,
 } from "@beep/openai-compat";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -65,7 +64,7 @@ const decodeResponse = S.decodeUnknownResult(OpenAiCompatChatCompletionResponse)
 const encodeChunk = S.encodeResult(OpenAiCompatChatCompletionChunk);
 const decodeChunk = S.decodeUnknownResult(OpenAiCompatChatCompletionChunk);
 
-const nonNegativeInt = NonNegativeInt.make;
+const nonNegativeInt = S.Natural.make;
 const userMessage = (content = ""): OpenAiCompatUserChatMessage =>
   OpenAiCompatUserChatMessage.make({ content, role: "user" });
 

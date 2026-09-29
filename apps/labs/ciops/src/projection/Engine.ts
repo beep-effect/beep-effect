@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema";
 import { Effect, HashMap, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { AdmissionPriority, AdmissionWorkKind, PolicyDecodeError, ScheduleProposal, ScheduleStep } from "./Schemas.ts";
 import type { AdmissionPolicyParams, PendingRequest, ProjectionInput } from "./Schemas.ts";
 
@@ -149,11 +149,11 @@ const admitInto =
       steps: A.append(
         state.steps,
         ScheduleStep.make({
-          stepIndex: NonNegativeInt.make(A.length(state.steps)),
+          stepIndex: S.Natural.make(A.length(state.steps)),
           scheduledUnitRef: request.nonce,
           scope: "admission",
           request,
-          activeTokenTotalAfter: NonNegativeInt.make(nextTotal),
+          activeTokenTotalAfter: S.Natural.make(nextTotal),
         })
       ),
       deferredTail: state.deferredTail,
@@ -181,7 +181,6 @@ const admitInto =
  *   ProjectionInput,
  *   emptyTokenLedger
  * } from "@/projection/Schemas"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -207,7 +206,7 @@ const admitInto =
  *   policy,
  *   pending: [],
  *   ledger: emptyTokenLedger,
- *   projectionInstantMillis: NonNegativeInt.make(1000),
+ *   projectionInstantMillis: S.Natural.make(1000),
  *   policyDigest: "policy",
  *   journalPrefixDigest: "prefix"
  * })))

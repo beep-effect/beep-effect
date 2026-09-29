@@ -16,7 +16,7 @@ import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
 import { Effect, Equal, Hash, MutableHashMap } from "effect";
 import * as A from "effect/Array";
@@ -147,7 +147,7 @@ class IriCollisionEntity extends S.Class<IriCollisionEntity>($I`IriCollisionEnti
     mention: S.NonEmptyString,
     types: S.Array(IRI),
     documentId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("IriCollisionEntity", {
     description: "Entity details retained when multiple extracted entities map to the same IRI.",
@@ -198,13 +198,13 @@ export class IriCollisionWarning extends S.Class<IriCollisionWarning>($I`IriColl
  * **Example** (Construct an empty collision report)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"
  *
  * const report = IriCollisionReport.make({
  *   collisions: [],
- *   totalEntities: NonNegativeInt.make(0),
- *   uniqueEntities: NonNegativeInt.make(0)
+ *   totalEntities: S.Natural.make(0),
+ *   uniqueEntities: S.Natural.make(0)
  * })
  * console.log(report.hasCollisions) // false
  * ```
@@ -215,8 +215,8 @@ export class IriCollisionWarning extends S.Class<IriCollisionWarning>($I`IriColl
 export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollisionReport`)(
   {
     collisions: S.Array(IriCollisionWarning).annotateKey({ description: "Detected IRI collisions." }),
-    totalEntities: NonNegativeInt.annotateKey({ description: "Entity count before deduplication." }),
-    uniqueEntities: NonNegativeInt.annotateKey({ description: "Entity count after grouping by identifier." }),
+    totalEntities: S.Natural.annotateKey({ description: "Entity count before deduplication." }),
+    uniqueEntities: S.Natural.annotateKey({ description: "Entity count after grouping by identifier." }),
   },
   $I.annote("IriCollisionReport", {
     description: "Collision inventory and entity counts for generated IRIs.",
@@ -228,9 +228,9 @@ export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollis
    * **Example** (Inspect an empty report)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
+   * import * as S from "effect/Schema"
    * import { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"
-   * const zero = NonNegativeInt.make(0)
+   * const zero = S.Natural.make(0)
    * console.log(IriCollisionReport.make({ collisions: [], totalEntities: zero, uniqueEntities: zero }).hasCollisions)
    * ```
    *
@@ -390,8 +390,8 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
 
   return IriCollisionReport.make({
     collisions,
-    totalEntities: NonNegativeInt.make(totalEntities),
-    uniqueEntities: NonNegativeInt.make(MutableHashMap.size(entityMap)),
+    totalEntities: S.Natural.make(totalEntities),
+    uniqueEntities: S.Natural.make(MutableHashMap.size(entityMap)),
   });
 });
 

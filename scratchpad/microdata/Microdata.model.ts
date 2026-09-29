@@ -17,7 +17,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { Double } from "@beep/schema/Double";
-import { Int64 } from "@beep/schema/Int64";
 import { UriReferenceString } from "@beep/schema/JSONSchema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -2698,7 +2697,9 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const VCardIntegerValue = Int64.pipe(
+export const VCardIntegerValue = S.BigInt.check(
+  S.isBetweenBigInt({ minimum: -9_223_372_036_854_775_808n, maximum: 9_223_372_036_854_775_807n })
+).pipe(
   S.brand("VCardIntegerValue"),
   $I.annoteSchema("VCardIntegerValue", {
     description: "Signed 64-bit integer decoded from an RFC 6350 INTEGER value.",

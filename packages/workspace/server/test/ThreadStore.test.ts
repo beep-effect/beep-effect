@@ -1,6 +1,5 @@
 import { Document, P, Text } from "@beep/md";
 import { CuidState } from "@beep/schema/Cuid";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -331,7 +330,7 @@ describe("ThreadStore in-memory", () => {
           messageId: PosInt.make(4),
           parentTurnId: null,
           threadId: PosInt.make(1),
-          turnIndex: NonNegativeInt.make(0),
+          turnIndex: S.Natural.make(0),
         })
       );
       expect(encodedTurn).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });

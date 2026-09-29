@@ -22,7 +22,6 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -64,7 +63,7 @@ export const spikeEntityInput: {
   2,
   (entityType: string, id: number): EntityInput =>
     EntityInput.make({
-      createdAt: NonNegativeInt.make(id),
+      createdAt: S.Natural.make(id),
       createdByPrincipal: SystemPrincipal.make({}),
       entityType,
       id: PosInt.make(id),
@@ -73,7 +72,7 @@ export const spikeEntityInput: {
       rowVersion: 1,
       schemaVersion: "0.0.0",
       source: "System",
-      updatedAt: NonNegativeInt.make(id + 1),
+      updatedAt: S.Natural.make(id + 1),
       updatedByPrincipal: SystemPrincipal.make({}),
     })
 );
@@ -95,7 +94,7 @@ export const spikeEntityInput: {
  */
 export class EntityInput extends S.Class<EntityInput>($I`EntityInput`)(
   {
-    createdAt: NonNegativeInt.annotateKey({
+    createdAt: S.Natural.annotateKey({
       description: "Synthetic creation timestamp in milliseconds for spike entity construction.",
     }),
     createdByPrincipal: SystemPrincipal.annotateKey({
@@ -122,7 +121,7 @@ export class EntityInput extends S.Class<EntityInput>($I`EntityInput`)(
     source: S.tag("System").annotateKey({
       description: "Synthetic source kind for spike entity construction.",
     }),
-    updatedAt: NonNegativeInt.annotateKey({
+    updatedAt: S.Natural.annotateKey({
       description: "Synthetic update timestamp in milliseconds for spike entity construction.",
     }),
     updatedByPrincipal: SystemPrincipal.annotateKey({

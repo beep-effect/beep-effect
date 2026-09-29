@@ -1,7 +1,6 @@
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
@@ -53,8 +52,8 @@ const input = (
   return PatentClaimCandidateInput.make({
     claim: candidateClaim,
     claimsHeading,
-    claimsSectionEnd: NonNegativeInt.make(claimsSectionEnd),
-    claimsSectionStart: NonNegativeInt.make(claimsSectionStart),
+    claimsSectionEnd: S.Natural.make(claimsSectionEnd),
+    claimsSectionStart: S.Natural.make(claimsSectionStart),
     digest,
     docket: "20001US05",
     entitySeed: PosInt.make(1),

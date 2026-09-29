@@ -8,7 +8,7 @@
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Order, pipe } from "effect";
@@ -186,7 +186,7 @@ export class TimelineTurn extends S.Class<TimelineTurn>($I`TimelineTurn`)(
     turnId: WorkspaceIdentity.TurnId.annotateKey({
       description: "Turn id projected into the timeline.",
     }),
-    turnIndex: NonNegativeInt.annotateKey({
+    turnIndex: S.Natural.annotateKey({
       description: "Zero-based non-negative turn order within the thread.",
     }),
     parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({

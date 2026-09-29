@@ -8,7 +8,6 @@
  */
 
 import { ContradictionListPayload } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
@@ -56,7 +55,7 @@ it.layer(RuntimeFixtureLive, { timeout: fixtureTimeout })("@beep/professional-de
           disposition: "open",
           knownAt: instant,
           limit: PosInt.make(20),
-          offset: NonNegativeInt.make(0),
+          offset: S.Natural.make(0),
           validAt: instant,
         })
       );

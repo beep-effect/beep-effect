@@ -13,7 +13,6 @@
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -100,7 +99,6 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Percentage } from "@beep/schema/Percentage"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { ProgressBuilderState } from "@effect-ontology/Service/ProgressStreaming"
@@ -110,7 +108,7 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * const state = ProgressBuilderState.make({
  *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
  *   totalChunks: PosInt.make(4),
- *   processedChunks: NonNegativeInt.make(0),
+ *   processedChunks: S.Natural.make(0),
  *   currentPhaseProgress: Percentage.make(0)
  * })
  * console.log(state.totalChunks) // 4
@@ -123,7 +121,7 @@ export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`Progr
   {
     runId: ExtractionRunId,
     totalChunks: PosInt,
-    processedChunks: NonNegativeInt,
+    processedChunks: S.Natural,
     currentPhaseProgress: Percentage,
   },
   $I.annote("ProgressBuilderState", {
@@ -167,7 +165,7 @@ export const makeProgressBuilder = dual2(
       ProgressBuilderState.make({
         runId,
         totalChunks,
-        processedChunks: NonNegativeInt.make(0),
+        processedChunks: S.Natural.make(0),
         currentPhaseProgress: Percentage.make(0),
       })
     )
@@ -259,7 +257,6 @@ export const createExtractionStarted: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkingProgress, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -270,8 +267,8 @@ export const createExtractionStarted: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createChunkingProgress(
  *       builder,
- *       NonNegativeInt.make(1),
- *       NonNegativeInt.make(1),
+ *       S.Natural.make(1),
+ *       S.Natural.make(1),
  *       PosInt.make(300)
  *     )
  *     return event._tag
@@ -286,21 +283,21 @@ export const createExtractionStarted: {
 export const createChunkingProgress: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: NonNegativeInt,
-    chunksProcessing: NonNegativeInt,
+    chunksCompleted: number,
+    chunksProcessing: number,
     avgChunkSize: PosInt
   ): Effect.Effect<ChunkingProgressEvent>;
   (
-    chunksCompleted: NonNegativeInt,
-    chunksProcessing: NonNegativeInt,
+    chunksCompleted: number,
+    chunksProcessing: number,
     avgChunkSize: PosInt
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent>;
 } = dual(
   4,
   Effect.fn("ProgressStreaming.createChunkingProgress")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: NonNegativeInt,
-    chunksProcessing: NonNegativeInt,
+    chunksCompleted: number,
+    chunksProcessing: number,
     avgChunkSize: PosInt
   ): Effect.fn.Return<ChunkingProgressEvent> {
     const state = yield* Ref.get(ref);
@@ -325,7 +322,6 @@ export const createChunkingProgress: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingStarted, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -336,7 +332,7 @@ export const createChunkingProgress: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createChunkProcessingStarted(
  *       builder,
- *       NonNegativeInt.make(0),
+ *       S.Natural.make(0),
  *       PosInt.make(18),
  *       "Ada founded Acme."
  *     )
@@ -352,12 +348,12 @@ export const createChunkingProgress: {
 export const createChunkProcessingStarted: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
   ): Effect.Effect<ChunkProcessingStartedEvent>;
   (
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent>;
@@ -365,7 +361,7 @@ export const createChunkProcessingStarted: {
   4,
   Effect.fn("ProgressStreaming.createChunkProcessingStarted")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
   ): Effect.fn.Return<ChunkProcessingStartedEvent> {
@@ -391,7 +387,6 @@ export const createChunkProcessingStarted: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createEntityFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -402,7 +397,7 @@ export const createChunkProcessingStarted: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createEntityFound(
  *       builder,
- *       NonNegativeInt.make(0),
+ *       S.Natural.make(0),
  *       "https://example.org/Ada",
  *       "Ada",
  *       ["Person"]
@@ -419,14 +414,14 @@ export const createChunkProcessingStarted: {
 export const createEntityFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
     confidence?: Confidence
   ): Effect.Effect<EntityFoundEvent>;
   (
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
@@ -436,7 +431,7 @@ export const createEntityFound: {
   5,
   Effect.fn("ProgressStreaming.createEntityFound")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
@@ -466,7 +461,6 @@ export const createEntityFound: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRelationFound, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -477,7 +471,7 @@ export const createEntityFound: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createRelationFound(
  *       builder,
- *       NonNegativeInt.make(0),
+ *       S.Natural.make(0),
  *       "https://example.org/Ada",
  *       "https://example.org/founded",
  *       "https://example.org/Acme",
@@ -495,7 +489,7 @@ export const createEntityFound: {
 export const createRelationFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -503,7 +497,7 @@ export const createRelationFound: {
     confidence?: Confidence
   ): Effect.Effect<RelationFoundEvent>;
   (
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -514,7 +508,7 @@ export const createRelationFound: {
   6,
   Effect.fn("ProgressStreaming.createRelationFound")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -546,7 +540,6 @@ export const createRelationFound: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createChunkProcessingComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -557,9 +550,9 @@ export const createRelationFound: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createChunkProcessingComplete(
  *       builder,
- *       NonNegativeInt.make(0),
- *       NonNegativeInt.make(1),
- *       NonNegativeInt.make(1),
+ *       S.Natural.make(0),
+ *       S.Natural.make(1),
+ *       S.Natural.make(1),
  *       PosInt.make(40)
  *     )
  *     return event._tag
@@ -574,16 +567,16 @@ export const createRelationFound: {
 export const createChunkProcessingComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.Effect<ChunkProcessingCompleteEvent>;
   (
-    chunkIndex: NonNegativeInt,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent>;
@@ -591,9 +584,9 @@ export const createChunkProcessingComplete: {
   6,
   Effect.fn("ProgressStreaming.createChunkProcessingComplete")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.fn.Return<ChunkProcessingCompleteEvent> {
@@ -621,7 +614,6 @@ export const createChunkProcessingComplete: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createExtractionComplete, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -632,12 +624,12 @@ export const createChunkProcessingComplete: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createExtractionComplete(
  *       builder,
- *       NonNegativeInt.make(2),
- *       NonNegativeInt.make(1),
- *       NonNegativeInt.make(1),
+ *       S.Natural.make(2),
+ *       S.Natural.make(1),
+ *       S.Natural.make(1),
  *       PosInt.make(250),
- *       NonNegativeInt.make(4),
- *       NonNegativeInt.make(0)
+ *       S.Natural.make(4),
+ *       S.Natural.make(0)
  *     )
  *     return event._tag
  *   })
@@ -651,31 +643,31 @@ export const createChunkProcessingComplete: {
 export const createExtractionComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: NonNegativeInt,
-    totalRelations: NonNegativeInt,
-    uniqueEntityTypes: NonNegativeInt,
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
     totalDurationMs: PosInt,
-    successfulChunks: NonNegativeInt,
-    failedChunks: NonNegativeInt
+    successfulChunks: number,
+    failedChunks: number
   ): Effect.Effect<ExtractionCompleteEvent>;
   (
-    totalEntities: NonNegativeInt,
-    totalRelations: NonNegativeInt,
-    uniqueEntityTypes: NonNegativeInt,
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
     totalDurationMs: PosInt,
-    successfulChunks: NonNegativeInt,
-    failedChunks: NonNegativeInt
+    successfulChunks: number,
+    failedChunks: number
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent>;
 } = dual(
   7,
   Effect.fn("ProgressStreaming.createExtractionComplete")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: NonNegativeInt,
-    totalRelations: NonNegativeInt,
-    uniqueEntityTypes: NonNegativeInt,
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
     totalDurationMs: PosInt,
-    successfulChunks: NonNegativeInt,
-    failedChunks: NonNegativeInt
+    successfulChunks: number,
+    failedChunks: number
   ): Effect.fn.Return<ExtractionCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionCompleteEvent.make({
@@ -698,11 +690,11 @@ type CreateExtractionFailedOptions = {
   readonly isTemporary?: boolean;
   readonly retryAfterMs?: PosInt;
   readonly partialResults?: {
-    readonly entityCount: NonNegativeInt;
-    readonly relationCount: NonNegativeInt;
-    readonly processedChunks: NonNegativeInt;
+    readonly entityCount: number;
+    readonly relationCount: number;
+    readonly processedChunks: number;
   };
-  readonly lastSuccessfulChunkIndex?: NonNegativeInt;
+  readonly lastSuccessfulChunkIndex?: number;
 };
 
 /**
@@ -789,7 +781,6 @@ export const createExtractionFailed: {
  * ```ts
  * import * as S from "effect/Schema"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { createRecoverableError, makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
  *
@@ -800,7 +791,7 @@ export const createExtractionFailed: {
  *     const builder = yield* makeProgressBuilder(ExtractionRunId.make("doc-deadbeefcafe"), PosInt.make(4))
  *     const event = yield* createRecoverableError(
  *       builder,
- *       NonNegativeInt.make(0),
+ *       S.Natural.make(0),
  *       "Timeout",
  *       "Chunk processing timed out",
  *       "extracting",
@@ -818,14 +809,14 @@ export const createExtractionFailed: {
 export const createRecoverableError: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     errorType: string,
     errorMessage: string,
     phase: string,
     recoveryAction: string
   ): Effect.Effect<RecoverableErrorEvent>;
   (
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -835,7 +826,7 @@ export const createRecoverableError: {
   6,
   Effect.fn("ProgressStreaming.createRecoverableError")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: NonNegativeInt,
+    chunkIndex: number,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -885,7 +876,7 @@ export const createRecoverableError: {
 export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.Effect<void> =>
   Ref.update(ref, (state) => ({
     ...state,
-    processedChunks: NonNegativeInt.make(state.processedChunks + 1),
+    processedChunks: S.Natural.make(state.processedChunks + 1),
   }));
 
 /**
@@ -1325,14 +1316,14 @@ export const withBackpressure: {
  * **Example** (Checkpoint a paused extraction)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
  *
  * const state = ResumableExtractionState.make({
  *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
- *   lastSuccessfulChunkIndex: NonNegativeInt.make(2),
- *   partialResults: { entityCount: NonNegativeInt.make(4), relationCount: NonNegativeInt.make(1) },
+ *   lastSuccessfulChunkIndex: S.Natural.make(2),
+ *   partialResults: { entityCount: S.Natural.make(4), relationCount: S.Natural.make(1) },
  *   pausedAt: new Date("2026-01-01T00:00:00.000Z")
  * })
  * console.log(state.lastSuccessfulChunkIndex) // 2
@@ -1343,8 +1334,8 @@ export const withBackpressure: {
  */
 class ResumablePartialResults extends S.Class<ResumablePartialResults>($I`ResumablePartialResults`)(
   {
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
+    entityCount: S.Natural,
+    relationCount: S.Natural,
   },
   $I.annote("ResumablePartialResults", {
     description: "Entity and relation counts retained at an extraction pause point.",
@@ -1369,14 +1360,14 @@ class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
  * **Example** (Create a resume checkpoint)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ExtractionRunId } from "@effect-ontology/Identity"
  * import { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
  *
  * const state = ResumableExtractionState.make({
  *   runId: ExtractionRunId.make("doc-deadbeefcafe"),
- *   lastSuccessfulChunkIndex: NonNegativeInt.make(2),
- *   partialResults: { entityCount: NonNegativeInt.make(4), relationCount: NonNegativeInt.make(1) },
+ *   lastSuccessfulChunkIndex: S.Natural.make(2),
+ *   partialResults: { entityCount: S.Natural.make(4), relationCount: S.Natural.make(1) },
  *   pausedAt: new Date("2026-01-01T00:00:00.000Z")
  * })
  * console.log(state.runId)
@@ -1388,7 +1379,7 @@ class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
 export class ResumableExtractionState extends S.Class<ResumableExtractionState>($I`ResumableExtractionState`)(
   {
     runId: ExtractionRunId,
-    lastSuccessfulChunkIndex: NonNegativeInt,
+    lastSuccessfulChunkIndex: S.Natural,
     partialResults: ResumablePartialResults,
     pausedAt: S.Date,
     pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),

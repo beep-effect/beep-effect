@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
+import { HttpsUrl, LiteralKit, SchemaUtils, UUID } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
@@ -239,8 +239,8 @@ const JobMetadataDefinition = S.Struct({
   id: BackgroundJobId.annotateKey({
     description: "Identifier of the job whose retries are tracked.",
   }),
-  attempts: NonNegativeInt.pipe(
-    SchemaUtils.withKeyDefaults(NonNegativeInt.make(0)),
+  attempts: S.Natural.pipe(
+    SchemaUtils.withKeyDefaults(S.Natural.make(0)),
     S.annotateKey({
       description: "Number of completed delivery attempts; defaults to zero.",
     })

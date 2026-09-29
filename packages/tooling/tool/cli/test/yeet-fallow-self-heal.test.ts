@@ -10,7 +10,6 @@ import {
   QualityIssueIndex,
   runYeetFallowFeedbackForTesting,
 } from "@beep/repo-cli/test/Yeet";
-import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -69,14 +68,14 @@ const okEnvelope = (options: {
     rawOutputRef: `.beep/fallow/raw/${feature}.json`,
     attributionKinds: ["inherited-adjacent"],
     findingAttributionSummary: FindingAttributionSummary.make({
-      introduced: NonNegativeInt.make(0),
-      inheritedAdjacent: NonNegativeInt.make(1),
-      notApplicable: NonNegativeInt.make(0),
+      introduced: S.Natural.make(0),
+      inheritedAdjacent: S.Natural.make(1),
+      notApplicable: S.Natural.make(0),
     }),
     status: "ok",
-    exitStatus: NonNegativeInt.make(0),
+    exitStatus: S.Natural.make(0),
     report: FallowReportPayload.make({
-      findingCount: NonNegativeInt.make(1),
+      findingCount: S.Natural.make(1),
       findings: [
         FallowReportFinding.make({
           attribution: "inherited-adjacent",

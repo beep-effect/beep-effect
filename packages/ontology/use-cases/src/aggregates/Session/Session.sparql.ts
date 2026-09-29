@@ -8,7 +8,7 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, graphPartitionIri, Session } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import {
   SparqlConstructResult,
   SparqlQueryRequest,
@@ -84,11 +84,11 @@ export type OntologySparqlPanelProfile = typeof OntologySparqlPanelProfile.Type;
  */
 export class OntologySparqlSafeguards extends S.Class<OntologySparqlSafeguards>($I`OntologySparqlSafeguards`)(
   {
-    defaultLimit: NonNegativeInt.pipe(
+    defaultLimit: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(100)),
       S.withDecodingDefaultKey(Effect.succeed(100))
     ),
-    maxResultCount: NonNegativeInt.pipe(
+    maxResultCount: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(200)),
       S.withDecodingDefaultKey(Effect.succeed(200))
     ),
@@ -185,15 +185,15 @@ export class RunOntologySparqlInput extends S.Class<RunOntologySparqlInput>($I`R
  * **Example** (Make safeguarded result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session"
- * import { NonNegativeInt } from "@beep/schema"
  * import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query"
  *
  * const result = RunOntologySparqlResult.make({
  *   profile: "select",
  *   submittedQuery: "SELECT ?s WHERE { ?s ?p ?o }",
  *   normalizedQuery: "SELECT ?s WHERE { ?s ?p ?o } LIMIT 100",
- *   effectiveLimit: NonNegativeInt.make(100),
+ *   effectiveLimit: S.Natural.make(100),
  *   limitInjected: true,
  *   truncated: false,
  *   rawResultCount: 0,
@@ -212,7 +212,7 @@ export class RunOntologySparqlResult extends S.Class<RunOntologySparqlResult>($I
     profile: OntologySparqlPanelProfile,
     submittedQuery: S.String,
     normalizedQuery: S.String,
-    effectiveLimit: NonNegativeInt,
+    effectiveLimit: S.Natural,
     limitInjected: S.Boolean,
     truncated: S.Boolean,
     rawResultCount: S.Int,
@@ -618,7 +618,7 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
     // The bound actually in force: the query's own LIMIT when it carried one, and the
     // safeguard's default only when we supplied it. Reporting the default either way
     // meant the badge described a limit the engine had never been given.
-    effectiveLimit: NonNegativeInt.make(O.getOrElse(topLevelLimit(input.query), () => input.safeguards.defaultLimit)),
+    effectiveLimit: S.Natural.make(O.getOrElse(topLevelLimit(input.query), () => input.safeguards.defaultLimit)),
     limitInjected: limited.injected,
     truncated: truncated.truncated,
     rawResultCount: truncated.rawResultCount,

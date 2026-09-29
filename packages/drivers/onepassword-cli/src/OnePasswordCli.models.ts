@@ -6,7 +6,7 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import * as S from "effect/Schema";
 
@@ -221,7 +221,7 @@ export class OnePasswordCliAccount extends S.Class<OnePasswordCliAccount>($I`One
  */
 export class OnePasswordReferenceProbe extends S.Class<OnePasswordReferenceProbe>($I`OnePasswordReferenceProbe`)(
   {
-    byteLength: NonNegativeInt.annotateKey({
+    byteLength: S.Natural.annotateKey({
       description: "Resolved secret byte length, without exposing the secret value.",
     }),
     reference: OnePasswordReference.annotateKey({

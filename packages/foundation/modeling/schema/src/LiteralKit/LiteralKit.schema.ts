@@ -12,7 +12,6 @@ import { HashMap, HashSet, Match, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isNonNegative } from "../Number.ts";
 import type { SchemaAST, Struct, Unify } from "effect";
 
 const $I = $SchemaId.create("LiteralKit");
@@ -378,8 +377,8 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<Li
   "LiteralKitEnumMappingDuplicateLiteralError",
   {
     literal: LiteralValueSchema,
-    firstIndex: S.Int.check(isNonNegative),
-    secondIndex: S.Int.check(isNonNegative),
+    firstIndex: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    secondIndex: S.Int.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annoteError<LiteralKitEnumMappingDuplicateLiteralError>("LiteralKitEnumMappingDuplicateLiteralError", {
     title: "LiteralKit Enum Mapping Duplicate Literal Error",

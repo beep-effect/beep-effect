@@ -26,13 +26,13 @@ import {
   selectedContradictionEvidenceSourceAtom,
 } from "@beep/epistemic-client";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { DateTime, Number as N } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import { Atom } from "effect/reactivity";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ContradictionTriageView } from "./ContradictionTriageView.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
@@ -137,7 +137,7 @@ const reviewDecision = (
 interface TemporalTriagePanelProps {
   readonly disposition: ContradictionTriage.ContradictionDispositionFilter;
   readonly knownAt: Atom.Type<typeof contradictionKnownAtAtom>;
-  readonly offset: NonNegativeInt;
+  readonly offset: number;
   readonly validAt: Atom.Type<typeof contradictionValidAtAtom>;
   readonly viewProps: Omit<ContradictionTriageViewProps, "query">;
 }
@@ -269,7 +269,7 @@ export function ContradictionTriagePanel(): JSX.Element {
           evidenceId: request.evidenceId,
           knownAt: request.knownAt,
           selector: ContradictionTriage.EvidenceSourcePageSelector.cases.page.make({
-            pageIndex: NonNegativeInt.make(pageIndex),
+            pageIndex: S.Natural.make(pageIndex),
           }),
           validAt: request.validAt,
         })
@@ -302,20 +302,21 @@ export function ContradictionTriagePanel(): JSX.Element {
       );
     });
   };
+  const resetPaging = (): void => {
+    setOffset(S.Natural.make(0));
+    setSelectedSource(O.none());
+    setReviewCandidateId(O.none());
+  };
   const changeValidAt = (value: DateTime.DateTime | null): void => {
     O.map(O.fromNullishOr(value), (dateTime) => {
       setValidAt(dateTime.pipe(DateTime.toUtc));
-      setOffset(NonNegativeInt.make(0));
-      setSelectedSource(O.none());
-      setReviewCandidateId(O.none());
+      resetPaging();
     });
   };
   const changeKnownAt = (value: DateTime.DateTime | null): void => {
     O.map(O.fromNullishOr(value), (dateTime) => {
       setKnownAt(dateTime.pipe(DateTime.toUtc));
-      setOffset(NonNegativeInt.make(0));
-      setSelectedSource(O.none());
-      setReviewCandidateId(O.none());
+      resetPaging();
     });
   };
 
@@ -333,13 +334,12 @@ export function ContradictionTriagePanel(): JSX.Element {
         onDetailRetry: refreshTriage,
         onDispositionChange: (nextDisposition) => {
           setDisposition(nextDisposition);
-          setOffset(NonNegativeInt.make(0));
+          setOffset(S.Natural.make(0));
         },
         onEvidenceSelect: selectEvidenceSource,
         onKnownAtChange: changeKnownAt,
-        onNextQueuePage: () => setOffset(NonNegativeInt.make(N.sum(offset, CONTRADICTION_QUEUE_LIMIT))),
-        onPreviousQueuePage: () =>
-          setOffset(NonNegativeInt.make(N.max(0, N.subtract(offset, CONTRADICTION_QUEUE_LIMIT)))),
+        onNextQueuePage: () => setOffset(S.Natural.make(N.sum(offset, CONTRADICTION_QUEUE_LIMIT))),
+        onPreviousQueuePage: () => setOffset(S.Natural.make(N.max(0, N.subtract(offset, CONTRADICTION_QUEUE_LIMIT)))),
         onQueueRetry: refreshTriage,
         onRejectRequested: openRejectReview,
         onResetNow: resetTemporalView,

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, NonNegativeInt } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -189,12 +189,12 @@ export class KnowledgeProbeBootError extends S.TaggedError<KnowledgeProbeBootErr
  * **Example** (Signal a failing semantic delta)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { KnowledgeIntroducedFindingsError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = KnowledgeIntroducedFindingsError.make({
  *   message: "knowledge semantic-delta: 2 introduced blocking finding(s).",
- *   introducedCount: NonNegativeInt.make(2),
+ *   introducedCount: S.Natural.make(2),
  * })
  *
  * console.log(error.introducedCount) // 2
@@ -209,7 +209,7 @@ export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeInt
   "KnowledgeIntroducedFindingsError",
   {
     message: S.String,
-    introducedCount: NonNegativeInt,
+    introducedCount: S.Natural,
   },
   $I.annoteError<KnowledgeIntroducedFindingsError>("KnowledgeIntroducedFindingsError", {
     description: "The report contains one or more introduced blocking Stage-1 findings.",
@@ -230,12 +230,12 @@ export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeInt
  * **Example** (Signal standing host-path debt)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { KnowledgeHostPathDebtError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const error = KnowledgeHostPathDebtError.make({
  *   message: "knowledge refs --check: 3 live host-path observation(s).",
- *   liveDebtCount: NonNegativeInt.make(3),
+ *   liveDebtCount: S.Natural.make(3),
  * })
  *
  * console.log(error.liveDebtCount) // 3
@@ -250,7 +250,7 @@ export class KnowledgeHostPathDebtError extends S.TaggedError<KnowledgeHostPathD
   "KnowledgeHostPathDebtError",
   {
     message: S.String,
-    liveDebtCount: NonNegativeInt,
+    liveDebtCount: S.Natural,
   },
   $I.annoteError<KnowledgeHostPathDebtError>("KnowledgeHostPathDebtError", {
     description: "The checked census carries live host-path observations in the gated classes.",

@@ -12,7 +12,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -152,7 +151,7 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
           alt: O.fromNullishOr(alt || undefined),
           caption: O.fromNullishOr(title || undefined),
           role: "inline",
-          order: NonNegativeInt.make(order++),
+          order: S.Natural.make(order++),
           referrerUrl: referrerUrl.value,
         })
       );
@@ -206,7 +205,7 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
             ImageCandidate.make({
               sourceUrl: normalizedUrl.value,
               role: "hero",
-              order: NonNegativeInt.make(0),
+              order: S.Natural.make(0),
               referrerUrl: content.url,
             })
           );
@@ -234,7 +233,7 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
             ImageCandidate.make({
               sourceUrl: normalizedUrl.value,
               role: "hero",
-              order: NonNegativeInt.make(0),
+              order: S.Natural.make(0),
               referrerUrl: referrerUrl.value,
             })
           );

@@ -6,7 +6,7 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
@@ -151,7 +151,7 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  * **Example** (Decoding form submission payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
@@ -159,7 +159,7 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(program).then((submission) => {
@@ -178,7 +178,7 @@ export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubm
     name: ContactName,
     phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
     posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
-    submittedAt: NonNegativeInt,
+    submittedAt: S.Natural,
     technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
     website: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
   },
@@ -190,13 +190,13 @@ export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubm
 }
 
 const ContactSubmissionFormSubmittedAtFromString = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt),
+  S.decodeTo(S.Natural),
   $I.annoteSchema("ContactSubmissionFormSubmittedAtFromString", {
     description: "Form-submitted contact timestamp decoded from a numeric string.",
   })
 );
 
-const ContactSubmissionFormSubmittedAt = S.Union([NonNegativeInt, ContactSubmissionFormSubmittedAtFromString]).pipe(
+const ContactSubmissionFormSubmittedAt = S.Union([S.Natural, ContactSubmissionFormSubmittedAtFromString]).pipe(
   S.withDecodingDefault(Effect.succeed(0)),
   $I.annoteSchema("ContactSubmissionFormSubmittedAt", {
     description: "Form-submitted contact timestamp decoded from a number or numeric string.",
@@ -209,14 +209,14 @@ const ContactSubmissionFormSubmittedAt = S.Union([NonNegativeInt, ContactSubmiss
  * **Example** (Making normalized form payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ContactSubmissionFormPayload } from "@beep/oip-web/contact"
  *
  * const payload = ContactSubmissionFormPayload.make({
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * console.log(payload.submittedAt)
@@ -275,7 +275,7 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
     email: requiredFormTextValue(formData.get("email")),
     message: requiredFormTextValue(formData.get("message")),
     name: requiredFormTextValue(formData.get("name")),
-    submittedAt: NonNegativeInt.make(0),
+    submittedAt: S.Natural.make(0),
     ...O.getSomesStruct({
       company: formTextOption(formData.get("company")),
       phone: formTextOption(formData.get("phone")),
@@ -373,7 +373,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  * **Example** (Decoding unknown input payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Effect } from "effect"
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
@@ -381,7 +381,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(program)

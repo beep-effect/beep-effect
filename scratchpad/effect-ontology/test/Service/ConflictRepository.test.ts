@@ -2,7 +2,6 @@ import { DrizzleError } from "@beep/drizzle";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { assert, it } from "@effect/vitest";
 import { Context, DateTime, Effect, Equal, Layer, Order } from "effect";
@@ -254,7 +253,7 @@ describe("ConflictRepository", { concurrent: false }, () => {
         const query = ConflictsQuery.make({
           ontologyId: OntologyA,
           limit: PosInt.make(1),
-          offset: NonNegativeInt.make(1),
+          offset: S.Natural.make(1),
         });
         const page = yield* conflicts.list(query);
         const counts = yield* conflicts.counts(query);

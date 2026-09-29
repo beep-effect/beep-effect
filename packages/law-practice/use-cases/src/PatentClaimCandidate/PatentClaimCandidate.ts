@@ -9,7 +9,7 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { Defect, NonNegativeInt } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
@@ -33,7 +33,6 @@ const decodeEvidence = S.decodeUnknownEffect(Evidence);
  * import * as S from "effect/Schema"
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
  * import { PatentClaimCandidateInput } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
@@ -58,10 +57,10 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
     claimsHeading: S.NonEmptyString.annotateKey({
       description: "Recognized claims-section heading used to constrain evidence alignment.",
     }),
-    claimsSectionEnd: NonNegativeInt.annotateKey({
+    claimsSectionEnd: S.Natural.annotateKey({
       description: "Exclusive source-text boundary of the structurally normalized claims section.",
     }),
-    claimsSectionStart: NonNegativeInt.annotateKey({
+    claimsSectionStart: S.Natural.annotateKey({
       description: "Inclusive source-text boundary of the structurally normalized claims section content.",
     }),
     digest: ContentDigest.annotateKey({
@@ -182,7 +181,6 @@ const claimEvidenceFrom = (
  *   PatentClaimCandidateInput,
  *   patentClaimCandidateFrom
  * } from "@beep/law-practice-use-cases/PatentClaimCandidate"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as Effect from "effect/Effect"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -198,8 +196,8 @@ const claimEvidenceFrom = (
  * const program = patentClaimCandidateFrom(PatentClaimCandidateInput.make({
  *   claim,
  *   claimsHeading: "CLAIMS",
- *   claimsSectionEnd: NonNegativeInt.make(44),
- *   claimsSectionStart: NonNegativeInt.make(21),
+ *   claimsSectionEnd: S.Natural.make(44),
+ *   claimsSectionStart: S.Natural.make(21),
  *   digest: ContentDigest.make("sha256:0000000000000000000000000000000000000000000000000000000000000000"),
  *   docket: "US-EXAMPLE-1",
  *   entitySeed: PosInt.make(1),

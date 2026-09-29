@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { GroupId, SplitId, SplitRatio } from "./Dock.ids.ts";
@@ -56,7 +56,7 @@ export class TabPlacement extends S.Class<TabPlacement>($I`TabPlacement`)(
   {
     kind: S.tag("tab"),
     groupId: GroupId,
-    index: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    index: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
     activate: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),
   },
   $I.annote("TabPlacement", {

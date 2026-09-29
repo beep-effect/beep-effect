@@ -8,7 +8,7 @@ import { $LangExtractId } from "@beep/identity";
 import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { Tuple } from "effect";
@@ -64,10 +64,10 @@ export type TextOffsetUnit = typeof TextOffsetUnit.Type;
 
 class TextOffsetRangeStruct extends S.Class<TextOffsetRangeStruct>($I`TextOffsetRangeStruct`)(
   {
-    end: NonNegativeInt.annotateKey({
+    end: S.Natural.annotateKey({
       description: "Exclusive end offset in unit.",
     }),
-    start: NonNegativeInt.annotateKey({
+    start: S.Natural.annotateKey({
       description: "Inclusive start offset in unit.",
     }),
     unit: TextOffsetUnit,
@@ -92,12 +92,12 @@ const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity).check
  * **Example** (Create half-open offset range)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { TextOffsetRange } from "@beep/langextract/VerifiedSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const range = TextOffsetRange.make({
- *   start: NonNegativeInt.make(1),
- *   end: NonNegativeInt.make(2),
+ *   start: S.Natural.make(1),
+ *   end: S.Natural.make(2),
  *   unit: "unicode-code-point",
  * })
  * console.log(range.unit)
@@ -114,7 +114,7 @@ export class TextOffsetRange extends S.Class<TextOffsetRange>($I`TextOffsetRange
         TextOffsetRangeStruct,
         SchemaTransformation.transform({
           decode: (value) =>
-            TextOffsetRange.make({ ...value, end: NonNegativeInt.make(value.start + 1 + (value.end % 10_000)) }),
+            TextOffsetRange.make({ ...value, end: S.Natural.make(value.start + 1 + (value.end % 10_000)) }),
           encode: (value) => value,
         })
       ),
@@ -124,10 +124,10 @@ export class TextOffsetRange extends S.Class<TextOffsetRange>($I`TextOffsetRange
 
 class Utf16TextRangeStruct extends S.Class<Utf16TextRangeStruct>($I`Utf16TextRangeStruct`)(
   {
-    endChar: NonNegativeInt.annotateKey({
+    endChar: S.Natural.annotateKey({
       description: "Exclusive UTF-16 code-unit offset.",
     }),
-    startChar: NonNegativeInt.annotateKey({
+    startChar: S.Natural.annotateKey({
       description: "Inclusive UTF-16 code-unit offset.",
     }),
   },
@@ -151,12 +151,12 @@ const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity).check(
  * **Example** (Create UTF-16 text range)
  *
  * ```ts import.meta.vitest name="Create UTF-16 text range"
+ * import * as S from "effect/Schema"
  * import { Utf16TextRange } from "@beep/langextract/VerifiedSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const range = Utf16TextRange.make({
- *   startChar: NonNegativeInt.make(1),
- *   endChar: NonNegativeInt.make(3),
+ *   startChar: S.Natural.make(1),
+ *   endChar: S.Natural.make(3),
  * })
  * range.endChar // => 3
  * ```
@@ -174,7 +174,7 @@ export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
           decode: (value) =>
             Utf16TextRange.make({
               ...value,
-              endChar: NonNegativeInt.make(value.startChar + 1 + (value.endChar % 10_000)),
+              endChar: S.Natural.make(value.startChar + 1 + (value.endChar % 10_000)),
             }),
           encode: (value) => value,
         })
@@ -193,11 +193,11 @@ export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
  * **Example** (Create raw text chunk)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RawTextChunk } from "@beep/langextract/VerifiedSpan"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const chunk = RawTextChunk.make({
- *   startChar: NonNegativeInt.make(0),
+ *   startChar: S.Natural.make(0),
  *   text: "page one\f",
  * })
  * console.log(chunk.text)
@@ -208,7 +208,7 @@ export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
  */
 export class RawTextChunk extends S.Class<RawTextChunk>($I`RawTextChunk`)(
   {
-    startChar: NonNegativeInt.annotateKey({
+    startChar: S.Natural.annotateKey({
       description: "Global UTF-16 code-unit offset of the first code unit in text.",
     }),
     text: S.NonEmptyString.annotateKey({
@@ -377,7 +377,7 @@ const VerifiedSpanLocationFailureReason = LiteralKit([
 const VerifiedSpanAnchorFailureReason = LiteralKit(["invalid-anchor", "quote-mismatch"]);
 
 const VerifiedSpanAttemptFailureStruct = S.Struct({
-  candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  candidateIndex: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   reason: VerifiedSpanAttemptFailureReason,
   stage: VerifiedSpanAttemptFailureStage,
 });
@@ -449,7 +449,7 @@ export class VerifiedSpanCandidateAnchorReceipt extends S.Class<VerifiedSpanCand
   $I`VerifiedSpanCandidateAnchorReceipt`
 )(
   {
-    candidateIndex: NonNegativeInt.annotateKey({
+    candidateIndex: S.Natural.annotateKey({
       description: "Zero-based position of the raw candidate associated with receipt.",
     }),
     receipt: TextAnchorVerificationReceipt,
@@ -591,7 +591,7 @@ const hasConsistentAttemptLink = (attempt: VerifiedSpanAttemptRecordStruct): boo
 
 const hasCandidateAt = (
   candidates: VerifiedSpanAttemptRecordStruct["candidates"],
-  candidateIndex: O.Option<NonNegativeInt>
+  candidateIndex: O.Option<number>
 ): boolean => O.exists(candidateIndex, (index) => index < A.length(candidates));
 
 const isGlobalLocationFailureReason = S.is(LiteralKit(["absent-text", "limit-exceeded"]));

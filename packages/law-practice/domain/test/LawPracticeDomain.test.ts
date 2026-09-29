@@ -56,7 +56,6 @@ import {
   WarningPosition,
   WipoSt13OfficeCode,
 } from "@beep/law-practice-domain";
-import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
@@ -145,10 +144,10 @@ const assertSchemaDecodesToSelf = Effect.fn("DomainTest.assertSchemaDecodesToSel
 
 const span = (end: number) =>
   Span.make({
-    cleanStart: NonNegativeInt.make(0),
-    cleanEnd: NonNegativeInt.make(end),
-    originalStart: NonNegativeInt.make(0),
-    originalEnd: NonNegativeInt.make(end),
+    cleanStart: S.Natural.make(0),
+    cleanEnd: S.Natural.make(end),
+    originalStart: S.Natural.make(0),
+    originalEnd: S.Natural.make(end),
   });
 
 const citationBaseInput = (text: string) => ({
@@ -157,7 +156,7 @@ const citationBaseInput = (text: string) => ({
   confidence: 1,
   matchedText: text,
   processTimeMs: 0,
-  patternsChecked: NonNegativeInt.make(1),
+  patternsChecked: S.Natural.make(1),
 });
 
 const citationBaseWire = (text: string) => ({
@@ -569,27 +568,27 @@ describe("@beep/law-practice-domain", () => {
     const base = CitationBase.make(citationBaseInput("base"));
     const fullCase = FullCaseCitation.make({
       ...citationBaseInput("410 U.S. 113"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
     });
     const id = IdCitation.make(citationBaseInput("Id."));
     const supra = SupraCitation.make(citationBaseInput("Smith, supra"));
     const shortForm = ShortFormCaseCitation.make({
       ...citationBaseInput("410 U.S. at 120"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
     });
     const neutral = NeutralCitation.make({
       ...citationBaseInput("2023 IL 128749"),
-      year: NonNegativeInt.make(2023),
+      year: S.Natural.make(2023),
       documentNumber: "128749",
     });
     const statute = StatuteCitation.make(citationBaseInput("28 U.S.C. § 1331"));
     const regulation = RegulationCitation.make(citationBaseInput("42 C.F.R. § 405.1"));
     const statutesAtLarge = StatutesAtLargeCitation.make({
       ...citationBaseInput("100 Stat. 3743"),
-      volume: NonNegativeInt.make(100),
-      page: NonNegativeInt.make(3743),
+      volume: S.Natural.make(100),
+      page: S.Natural.make(3743),
     });
     const parenthetical = Parenthetical.make({ text: "holding that X requires Y", type: "holding" });
     const pincite = PinciteInfo.make({ isRange: false, raw: "570" });
@@ -698,7 +697,7 @@ describe("@beep/law-practice-domain", () => {
     });
     const childCitation = FullCaseCitation.make({
       ...citationBaseInput("100 F.2d 1"),
-      volume: NonNegativeInt.make(100),
+      volume: S.Natural.make(100),
       reporter: "F.2d",
     });
     const parenthetical = Parenthetical.make({
@@ -710,10 +709,10 @@ describe("@beep/law-practice-domain", () => {
       signal: "affirmed",
       rawSignal: "aff'd",
       signalSpan: span(5),
-      order: NonNegativeInt.make(0),
+      order: S.Natural.make(0),
     });
     const extraPincite = PinciteInfo.make({
-      page: O.some(NonNegativeInt.make(580)),
+      page: O.some(S.Natural.make(580)),
       isRange: false,
       raw: "580",
     });
@@ -724,7 +723,7 @@ describe("@beep/law-practice-domain", () => {
     });
     const fullCase = FullCaseCitation.make({
       ...citationBaseInput("410 U.S. ___"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
       unpublished: true,
       hasBlankPage: true,
@@ -736,13 +735,13 @@ describe("@beep/law-practice-domain", () => {
     const supra = SupraCitation.make({ ...citationBaseInput("Smith, supra"), pinciteInherited: true });
     const shortForm = ShortFormCaseCitation.make({
       ...citationBaseInput("410 U.S. at 120"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
       pinciteInherited: true,
     });
     const neutral = NeutralCitation.make({
       ...citationBaseInput("2023 IL 128749-U"),
-      year: NonNegativeInt.make(2023),
+      year: S.Natural.make(2023),
       documentNumber: "128749",
       unpublished: true,
     });
@@ -756,8 +755,8 @@ describe("@beep/law-practice-domain", () => {
     });
     const statutesAtLarge = StatutesAtLargeCitation.make({
       ...citationBaseInput("100 Stat. 3743, 3755-58"),
-      volume: NonNegativeInt.make(100),
-      page: NonNegativeInt.make(3743),
+      volume: S.Natural.make(100),
+      page: S.Natural.make(3743),
       pinciteIsRange: true,
     });
     const pincite = PinciteInfo.make({
@@ -769,12 +768,12 @@ describe("@beep/law-practice-domain", () => {
     const resolution = ResolutionResult.make({ confidence: 0.5, warnings: ["Multiple antecedents"] });
     const context = ContextOptions.make({
       type: "paragraph",
-      maxLength: O.some(NonNegativeInt.make(1000)),
+      maxLength: O.some(S.Natural.make(1000)),
     });
     const locator = DurableLocatorOptions.make({
       space: "clean",
       fullSpan: true,
-      contextLength: NonNegativeInt.make(64),
+      contextLength: S.Natural.make(64),
     });
 
     expect(base.warnings).toStrictEqual([warning]);
@@ -795,7 +794,7 @@ describe("@beep/law-practice-domain", () => {
     expect(pincite.additionalPincites).toStrictEqual([extraPincite]);
     expect(resolution.warnings).toStrictEqual(["Multiple antecedents"]);
     expect(context.type).toBe("paragraph");
-    assertSome(context.maxLength, NonNegativeInt.make(1000));
+    assertSome(context.maxLength, S.Natural.make(1000));
     expect(locator.space).toBe("clean");
     expect(locator.fullSpan).toBe(true);
     expect(locator.contextLength).toBe(64);
@@ -804,13 +803,13 @@ describe("@beep/law-practice-domain", () => {
   it("formats full case citation option values without leaking Option representations", () => {
     const citation = FullCaseCitation.make({
       ...citationBaseInput("Smith v. Jones, 410 U.S. 113, 120 (2d Cir. 2020)"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
-      page: O.some(NonNegativeInt.make(113)),
-      pincite: O.some(NonNegativeInt.make(120)),
+      page: O.some(S.Natural.make(113)),
+      pincite: O.some(S.Natural.make(120)),
       court: O.some("Second Circuit"),
       normalizedCourt: O.some("2d Cir."),
-      year: O.some(NonNegativeInt.make(2020)),
+      year: O.some(S.Natural.make(2020)),
       caseName: O.some("Smith v. Jones"),
     });
 
@@ -818,11 +817,11 @@ describe("@beep/law-practice-domain", () => {
 
     const rawCourtCitation = FullCaseCitation.make({
       ...citationBaseInput("410 U.S. 113 (D. Mass. 2021)"),
-      volume: NonNegativeInt.make(410),
+      volume: S.Natural.make(410),
       reporter: "U.S.",
-      page: O.some(NonNegativeInt.make(113)),
+      page: O.some(S.Natural.make(113)),
       court: O.some("D. Mass."),
-      year: O.some(NonNegativeInt.make(2021)),
+      year: O.some(S.Natural.make(2021)),
     });
 
     expect(FullCaseCitation.toBlueBook(rawCourtCitation)).toBe("410 U.S. 113 (D. Mass. 2021)");

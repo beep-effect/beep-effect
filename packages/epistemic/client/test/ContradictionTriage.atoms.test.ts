@@ -22,7 +22,6 @@ import {
   GetContradictionCandidate,
   ReviewContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -224,7 +223,7 @@ describe("@beep/epistemic-client contradiction atoms", () => {
 
       registry.set(contradictionValidAtAtom, prior);
       registry.set(contradictionKnownAtAtom, prior);
-      registry.set(contradictionQueueOffsetAtom, NonNegativeInt.make(50));
+      registry.set(contradictionQueueOffsetAtom, S.Natural.make(50));
       registry.set(resetContradictionTemporalViewAtom, undefined);
       yield* AtomRegistry.getResult(registry, resetContradictionTemporalViewAtom);
 
@@ -293,7 +292,7 @@ describe("@beep/epistemic-client contradiction atoms", () => {
           evidenceId: 11,
           knownAt: 2_000,
           selector: EvidenceSourcePageSelector.cases.page.make({
-            pageIndex: NonNegativeInt.make(2),
+            pageIndex: S.Natural.make(2),
           }),
           validAt: 1_500,
         })
@@ -304,7 +303,7 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       assertSome(registry.get(selectedContradictionEvidenceSourceAtom), request);
       expect(request.selector).toStrictEqual(
         EvidenceSourcePageSelector.cases.page.make({
-          pageIndex: NonNegativeInt.make(2),
+          pageIndex: S.Natural.make(2),
         })
       );
     })
@@ -415,7 +414,7 @@ describe("@beep/epistemic-client contradiction atoms", () => {
       );
 
       registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(detailKnownAtMillis));
-      registry.set(contradictionQueueOffsetAtom, NonNegativeInt.make(50));
+      registry.set(contradictionQueueOffsetAtom, S.Natural.make(50));
       registry.set(reviewContradictionCandidateAtom, command);
       yield* AtomRegistry.getResult(registry, reviewContradictionCandidateAtom);
 

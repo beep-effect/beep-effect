@@ -25,21 +25,21 @@ const $I = $LawPracticeDomainId.create("values/CanonCitation/CanonCitation.model
  * **Example** (Make CanonCitation instance)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CanonCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = CanonCitation.make({
  *   text: "Code of Judicial Conduct Canon 7(B)(1)",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Code of Judicial Conduct Canon 7(B)(1)",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   canon: "7",
  * })
  *

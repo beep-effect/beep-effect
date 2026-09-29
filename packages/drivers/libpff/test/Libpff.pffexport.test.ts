@@ -13,7 +13,6 @@ import {
   PffexportEngineConfig,
   PffexportMessageRecord,
 } from "@beep/libpff";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -277,7 +276,7 @@ const fixture = Effect.fn(function* (stubScript: string) {
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name: "mailbox.pst",
       relativePath,
-      sizeBytes: NonNegativeInt.make(sourceBytes.length),
+      sizeBytes: S.Natural.make(sourceBytes.length),
       bytes: sourceBytes,
     }),
   });

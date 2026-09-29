@@ -20,7 +20,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Clock, Context, Effect, HashMap, Layer, Ref } from "effect";
 import { dual } from "effect/Function";
@@ -148,7 +147,7 @@ export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
  */
 export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
   {
-    hits: NonNegativeInt,
+    hits: S.Natural,
     key: S.Struct(ResultKey.fields),
     result: AnyOperationResult,
     timestamp: S.Finite,
@@ -164,13 +163,13 @@ export class StoredResult extends S.Class<StoredResult>($I`StoredResult`)(
  * **Example** (Build empty cache stats)
  *
  * ```ts import.meta.vitest name="Build empty cache stats"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { CacheStats } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import * as O from "effect/Option"
  *
  * const emptyStats = CacheStats.make({
- *   size: NonNegativeInt.make(0),
- *   totalHits: NonNegativeInt.make(0),
+ *   size: S.Natural.make(0),
+ *   totalHits: S.Natural.make(0),
  *   oldestEntry: O.none(),
  *   newestEntry: O.none()
  * })
@@ -185,8 +184,8 @@ export class CacheStats extends S.Class<CacheStats>($I`CacheStats`)(
   {
     newestEntry: S.Option(S.Finite),
     oldestEntry: S.Option(S.Finite),
-    size: NonNegativeInt,
-    totalHits: NonNegativeInt,
+    size: S.Natural,
+    totalHits: S.Natural,
   },
   $I.annote("CacheStats", {
     description: "Statistics about the cache.",
@@ -285,7 +284,7 @@ const makeResultStore = Effect.gen(function* () {
                 keyStr,
                 StoredResult.make({
                   ...stored,
-                  hits: NonNegativeInt.make(stored.hits + 1),
+                  hits: S.Natural.make(stored.hits + 1),
                 })
               )
             ),
@@ -312,8 +311,8 @@ const makeResultStore = Effect.gen(function* () {
           onEmpty: O.none<number>,
           onNonEmpty: (ts) => O.some(Math.min(...ts)),
         }),
-        size: NonNegativeInt.make(HashMap.size(map)),
-        totalHits: NonNegativeInt.make(A.reduce(entries, 0, (sum, e) => sum + e.hits)),
+        size: S.Natural.make(HashMap.size(map)),
+        totalHits: S.Natural.make(A.reduce(entries, 0, (sum, e) => sum + e.hits)),
       });
     }),
 
@@ -322,7 +321,7 @@ const makeResultStore = Effect.gen(function* () {
       Effect.fn("ResultStore.store")(function* (key: ResultKey, result: AnyOperationResult) {
         const timestamp = yield* Clock.currentTimeMillis;
         const stored = StoredResult.make({
-          hits: NonNegativeInt.make(0),
+          hits: S.Natural.make(0),
           key,
           result: AnyOperationResult.make(result),
           timestamp,

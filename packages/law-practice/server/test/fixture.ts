@@ -21,7 +21,6 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -71,7 +70,7 @@ export const makeOfficeActionReviewInput = Effect.fn("LawPracticeServerTest.make
       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
       name: "office-action-spike.txt",
       relativePath,
-      sizeBytes: NonNegativeInt.make(OFFICE_ACTION_FIXTURE.length),
+      sizeBytes: S.Natural.make(OFFICE_ACTION_FIXTURE.length),
       text: OFFICE_ACTION_FIXTURE,
     }),
   });

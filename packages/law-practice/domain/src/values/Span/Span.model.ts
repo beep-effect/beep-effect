@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import { HashMap } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -26,14 +25,14 @@ const $I = $LawPracticeDomainId.create("values/Span/Span.model");
  * **Example** (Creating a basic Span)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const span = Span.make({
- *   cleanEnd: NonNegativeInt.make(10),
- *   cleanStart: NonNegativeInt.make(0),
- *   originalEnd: NonNegativeInt.make(10),
- *   originalStart: NonNegativeInt.make(0),
+ *   cleanEnd: S.Natural.make(10),
+ *   cleanStart: S.Natural.make(0),
+ *   originalEnd: S.Natural.make(10),
+ *   originalStart: S.Natural.make(0),
  * })
  *
  * console.log(span.cleanStart)
@@ -44,16 +43,16 @@ const $I = $LawPracticeDomainId.create("values/Span/Span.model");
  */
 export class Span extends S.Class<Span>($I`Span`)(
   {
-    cleanStart: NonNegativeInt.annotateKey({
+    cleanStart: S.Natural.annotateKey({
       description: "Start position in cleaned/tokenized text used during parsing",
     }),
-    cleanEnd: NonNegativeInt.annotateKey({
+    cleanEnd: S.Natural.annotateKey({
       description: "End position in cleaned/tokenized text used during parsing",
     }),
-    originalStart: NonNegativeInt.annotateKey({
+    originalStart: S.Natural.annotateKey({
       description: "Start position in original input text returned to user",
     }),
-    originalEnd: NonNegativeInt.annotateKey({
+    originalEnd: S.Natural.annotateKey({
       description: "End position in original input text returned to user",
     }),
   },
@@ -68,11 +67,10 @@ export class Span extends S.Class<Span>($I`Span`)(
    *
    * ```ts
    * import { SegmentMap, Span, TransformationMap } from "@beep/law-practice-domain"
-   * import { NonNegativeInt } from "@beep/schema"
    * import * as HashMap from "effect/HashMap"
    * import * as O from "effect/Option"
    *
-   * const positions = HashMap.empty<NonNegativeInt, NonNegativeInt>()
+   * const positions = HashMap.empty<number, number>()
    * const map = TransformationMap.make({
    *   cleanToOriginal: positions,
    *   cleanToOriginalSegments: O.some(SegmentMap.identity(10)),
@@ -95,8 +93,8 @@ export class Span extends S.Class<Span>($I`Span`)(
     indices: readonly [number, number],
     map: TransformationMap
   ): Span => {
-    const cleanStart = NonNegativeInt.make(tokenCleanStart + indices[0]);
-    const cleanEnd = NonNegativeInt.make(tokenCleanStart + indices[1]);
+    const cleanStart = S.Natural.make(tokenCleanStart + indices[0]);
+    const cleanEnd = S.Natural.make(tokenCleanStart + indices[1]);
     const { originalEnd, originalStart } = Span.resolveOriginal({ cleanEnd, cleanStart }, map);
 
     return Span.make({ cleanEnd, cleanStart, originalEnd, originalStart });
@@ -108,12 +106,12 @@ export class Span extends S.Class<Span>($I`Span`)(
    * **Example** (Resolving original span positions)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { SegmentMap, Span, TransformationMap } from "@beep/law-practice-domain"
-   * import { NonNegativeInt } from "@beep/schema"
    * import * as HashMap from "effect/HashMap"
    * import * as O from "effect/Option"
    *
-   * const positions = HashMap.empty<NonNegativeInt, NonNegativeInt>()
+   * const positions = HashMap.empty<number, number>()
    * const map = TransformationMap.make({
    *   cleanToOriginal: positions,
    *   cleanToOriginalSegments: O.some(SegmentMap.identity(10)),
@@ -121,7 +119,7 @@ export class Span extends S.Class<Span>($I`Span`)(
    * })
    *
    * const resolved = Span.resolveOriginal(
-   *   { cleanEnd: NonNegativeInt.make(5), cleanStart: NonNegativeInt.make(0) },
+   *   { cleanEnd: S.Natural.make(5), cleanStart: S.Natural.make(0) },
    *   map,
    * )
    * console.log(resolved.originalStart)
@@ -132,29 +130,29 @@ export class Span extends S.Class<Span>($I`Span`)(
    */
   static readonly resolveOriginal: {
     (
-      span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt },
+      span: { readonly cleanStart: number; readonly cleanEnd: number },
       map: TransformationMap
-    ): { readonly originalStart: NonNegativeInt; readonly originalEnd: NonNegativeInt };
+    ): { readonly originalStart: number; readonly originalEnd: number };
     (
       map: TransformationMap
-    ): (span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt }) => {
-      readonly originalStart: NonNegativeInt;
-      readonly originalEnd: NonNegativeInt;
+    ): (span: { readonly cleanStart: number; readonly cleanEnd: number }) => {
+      readonly originalStart: number;
+      readonly originalEnd: number;
     };
   } = dual(
     2,
     (
-      span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt },
+      span: { readonly cleanStart: number; readonly cleanEnd: number },
       map: TransformationMap
-    ): { readonly originalStart: NonNegativeInt; readonly originalEnd: NonNegativeInt } =>
+    ): { readonly originalStart: number; readonly originalEnd: number } =>
       O.match(map.cleanToOriginalSegments, {
         onNone: () => ({
           originalEnd: HashMap.get(map.cleanToOriginal, span.cleanEnd).pipe(O.getOrElse(() => span.cleanEnd)),
           originalStart: HashMap.get(map.cleanToOriginal, span.cleanStart).pipe(O.getOrElse(() => span.cleanStart)),
         }),
         onSome: (segmentMap) => ({
-          originalEnd: NonNegativeInt.make(segmentMap.lookup(span.cleanEnd)),
-          originalStart: NonNegativeInt.make(segmentMap.lookup(span.cleanStart)),
+          originalEnd: S.Natural.make(segmentMap.lookup(span.cleanEnd)),
+          originalStart: S.Natural.make(segmentMap.lookup(span.cleanStart)),
         }),
       })
   );
@@ -172,11 +170,10 @@ export class Span extends S.Class<Span>($I`Span`)(
  *
  * ```ts
  * import { TransformationMap } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as HashMap from "effect/HashMap"
  * import * as O from "effect/Option"
  *
- * const positions = HashMap.empty<NonNegativeInt, NonNegativeInt>()
+ * const positions = HashMap.empty<number, number>()
  * const map = TransformationMap.make({
  *   cleanToOriginal: positions,
  *   cleanToOriginalSegments: O.none(),
@@ -191,10 +188,10 @@ export class Span extends S.Class<Span>($I`Span`)(
  */
 export class TransformationMap extends S.Class<TransformationMap>($I`TransformationMap`)(
   {
-    cleanToOriginal: S.HashMap(NonNegativeInt, NonNegativeInt).annotateKey({
+    cleanToOriginal: S.HashMap(S.Natural, S.Natural).annotateKey({
       description: "Maps cleaned text position to original text position",
     }),
-    originalToClean: S.HashMap(NonNegativeInt, NonNegativeInt).annotateKey({
+    originalToClean: S.HashMap(S.Natural, S.Natural).annotateKey({
       description: "Maps original text position to cleaned text position",
     }),
     cleanToOriginalSegments: S.OptionFromOptionalKey(SegmentMap).annotateKey({
