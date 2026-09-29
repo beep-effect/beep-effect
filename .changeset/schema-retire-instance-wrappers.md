@@ -19,6 +19,11 @@ Type-check cost, tsgo 7.0.2, fresh build-info, before → after. The gate is the
 | `@beep/repo-cli` | 4,126,448 → 4,126,398 | 1,059,620 → 1,059,612 | 11.661 → 11.906 s |
 | `@beep/law-practice-domain` | 874,541 → 874,541 | 259,729 → 259,729 | 1.296 → 1.413 s |
 
+Check time is advisory within a 5% band. Flagged: `@beep/law-practice-domain` single-threaded
+check time rose 9.0% (1.296 → 1.413 s) with identical instantiations and types, on a package
+whose sources this change does not touch, measured on a shared, loaded workstation; its
+four-checker time fell (0.788 → 0.755 s).
+
 The default four-checker run is advisory. Its totals depend on how files split across checkers,
 so the same change reads +41,833 with two checkers and −5,039 with three:
 
