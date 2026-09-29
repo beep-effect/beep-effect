@@ -22,7 +22,7 @@ This prompt is the knowledge half of a lane on the effect-schema-parity goal. Th
 
 ## Graft context
 
-Graft skeleton of the reference working tree at HEAD `e5f7d12af9abef188f7dc39b0207af1801b03ffd`. The module source is byte-identical at HEAD and at the pin, so the spans match the inlined source. Summaries are graft's, not Effect's documentation.
+Graft skeleton of the reference working tree (HEAD `e5f7d12af9abef188f7dc39b0207af1801b03ffd`), read as-is with `--no-refresh`. The working-tree module file hashes to the same blob as the pin, so the spans line up with the inlined source. Summaries are graft's, not Effect's documentation.
 
 | Span | Kind | Name | Summary |
 | --- | --- | --- | --- |

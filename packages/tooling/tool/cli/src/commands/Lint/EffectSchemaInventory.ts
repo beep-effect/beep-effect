@@ -23,9 +23,11 @@ import { EffectSchemaInventoryError } from "./Lint.errors.ts";
  * **Details**
  *
  * Every mode reads `inventoryPin` from the root `package.json` catalog and source bytes only
- * through `git -C .repos/effect show <pin>:<file>`. A missing reference clone or a pin it does
- * not contain fails the command; it never passes on empty input. Hosted CI does not run this
- * command: the repo-cli fixture test verifies the committed rows without an Effect checkout.
+ * through `git -C .repos/effect show <pin>:<file>`. A missing reference clone, a pin it does not
+ * contain, or an extraction with zero rows fails the command; it never passes on empty input.
+ * `--check` also re-renders the committed lane prompts, and `--prompt` fails when graft context
+ * cannot be read. Hosted CI does not run this command: the repo-cli fixture test verifies the
+ * committed rows without an Effect checkout and cannot verify prompts.
  *
  * **Example** (Build the command runner)
  *
@@ -50,7 +52,9 @@ export const lintEffectSchemaInventoryCommand = Command.make(
     ),
     check: Flag.Boolean("check").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Regenerate in memory and require byte-identical fixture files (the default mode)")
+      Flag.withDescription(
+        "Regenerate in memory and require byte-identical fixture files and lane prompts (the default mode)"
+      )
     ),
     prompt: Flag.String("prompt").pipe(
       Flag.withDescription("Write the lane prompt for one inventoried module, such as effect/SchemaIssue"),
@@ -108,6 +112,7 @@ export {
  * @since 0.0.0
  */
 export {
+  checkEffectSchemaInventoryPrompts,
   generateEffectSchemaInventoryPrompt,
   renderEffectSchemaInventoryPrompt,
 } from "./internal/EffectSchemaInventoryPrompt.ts";

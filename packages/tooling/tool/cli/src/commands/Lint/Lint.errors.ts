@@ -450,6 +450,40 @@ export class EffectSchemaInventoryPinAbsentError extends S.TaggedError<EffectSch
 }
 
 /**
+ * Reports that local graft context for a lane prompt could not be read.
+ *
+ * **Details**
+ *
+ * Graft is a local refresh input: `--prompt` fails loud when it is absent, times out, or reports
+ * something that does not decode, rather than writing a prompt without it.
+ *
+ * **Example** (Describe a missing graft binary)
+ *
+ * ```ts
+ * import { EffectSchemaInventoryGraftUnavailableError } from "@beep/repo-cli/commands/Lint"
+ *
+ * const error = EffectSchemaInventoryGraftUnavailableError.new("graft could not run: ENOENT")
+ * console.log(error._tag) // "EffectSchemaInventoryGraftUnavailableError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EffectSchemaInventoryGraftUnavailableError extends S.TaggedError<EffectSchemaInventoryGraftUnavailableError>(
+  $I`EffectSchemaInventoryGraftUnavailableError`
+)(
+  "EffectSchemaInventoryGraftUnavailableError",
+  { message: S.String },
+  $I.annoteError<EffectSchemaInventoryGraftUnavailableError>("EffectSchemaInventoryGraftUnavailableError", {
+    description:
+      "Raised when graft context for a schema inventory lane prompt cannot be read from the reference clone.",
+  })
+) {
+  static readonly new = (message: string): EffectSchemaInventoryGraftUnavailableError =>
+    EffectSchemaInventoryGraftUnavailableError.make({ message });
+}
+
+/**
  * Reports a committed inventory fixture that no longer matches the pinned sources.
  *
  * **Example** (Describe a missing index)

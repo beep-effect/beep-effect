@@ -12,7 +12,10 @@ import { EffectSchemaInventoryCheckReport, EffectSchemaInventoryRequest } from "
 import { EffectSchemaInventoryDriftError, EffectSchemaInventoryError } from "../Lint.errors.ts";
 import { extractEffectSchemaInventory } from "./EffectSchemaInventoryExtract.ts";
 import { EffectSchemaInventoryModules } from "./EffectSchemaInventoryModules.ts";
-import { generateEffectSchemaInventoryPrompt } from "./EffectSchemaInventoryPrompt.ts";
+import {
+  checkEffectSchemaInventoryPrompts,
+  generateEffectSchemaInventoryPrompt,
+} from "./EffectSchemaInventoryPrompt.ts";
 import {
   diffEffectSchemaInventoryFiles,
   formatEffectSchemaInventoryDrift,
@@ -20,9 +23,29 @@ import {
 } from "./EffectSchemaInventoryRender.ts";
 import { EffectSchemaInventorySource } from "./EffectSchemaInventorySource.ts";
 import { readEffectSchemaInventoryFixture, writeEffectSchemaInventoryFixture } from "./EffectSchemaInventoryStore.ts";
+import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { EffectSchemaInventoryReceipt } from "../EffectSchemaInventory.schemas.ts";
+import type {
+  EffectSchemaInventoryCatalogPinError,
+  EffectSchemaInventoryGraftUnavailableError,
+  EffectSchemaInventoryPinAbsentError,
+  EffectSchemaInventoryReferenceMissingError,
+} from "../Lint.errors.ts";
 
 const LOG_PREFIX = "[effect-schema-inventory]";
+
+/** Every request resolves to this effect, so the three cases share one error and service union. */
+type RunEffect = Effect.Effect<
+  void,
+  | EffectSchemaInventoryCatalogPinError
+  | EffectSchemaInventoryDriftError
+  | EffectSchemaInventoryError
+  | EffectSchemaInventoryGraftUnavailableError
+  | EffectSchemaInventoryPinAbsentError
+  | EffectSchemaInventoryReferenceMissingError,
+  EffectSchemaInventorySource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+>;
 
 const describeReceipt = (receipt: EffectSchemaInventoryReceipt): string =>
   `pin=${receipt.pin} parser=${receipt.parser} modules=${receipt.modules} rows=${receipt.rows} bytes=${receipt.bytes} internal=${receipt.internalRows} deprecated=${receipt.deprecatedRows} bareStarDeclarationsOmitted=${receipt.bareStarDeclarationsOmitted} digest=${receipt.digest}`;
@@ -69,6 +92,26 @@ export const effectSchemaInventoryRequestFromFlags = Effect.fn("EffectSchemaInve
   }
 );
 
+// Reads every module at the pin and extracts its rows. An empty result fails: a zero-row
+// inventory means the sources or the extractor broke, and must never be written or accepted by
+// `--check` (a single empty module, such as the side-effect-only `enable` entry, is legitimate).
+const extractPinned = Effect.fn("EffectSchemaInventoryRun.extractPinned")(function* () {
+  const source = yield* EffectSchemaInventorySource;
+  const pin = yield* source.readPin;
+  yield* source.verifyPin(pin);
+  const sources = yield* Effect.forEach(
+    EffectSchemaInventoryModules,
+    (module) => Effect.map(source.readPinned(pin, module.file), (text) => [module, text] as const),
+    { concurrency: 4 }
+  );
+  const extraction = yield* extractEffectSchemaInventory(pin, sources);
+  if (A.every(extraction.modules, (entry) => A.isReadonlyArrayEmpty(entry.rows)))
+    return yield* EffectSchemaInventoryError.new(
+      `Extraction produced 0 rows across ${extraction.modules.length} modules at ${pin}; refusing to write or accept an empty inventory.`
+    );
+  return { pin, sources, extraction };
+});
+
 /**
  * Regenerate the whole fixture in memory from `.repos/effect` at the catalog pin.
  *
@@ -76,7 +119,8 @@ export const effectSchemaInventoryRequestFromFlags = Effect.fn("EffectSchemaInve
  *
  * Reads the pin from the root `package.json` catalog, fails loud unless the reference clone
  * exists and contains that commit, and reads every source byte with `git show <pin>:<file>`.
- * The reference HEAD is never compared with the pin, so a HEAD that moved past it is fine.
+ * The reference HEAD is never compared with the pin, so a HEAD that moved past it is fine. A
+ * generation with zero rows in total fails rather than producing an empty fixture.
  *
  * **Example** (Build a generation)
  *
@@ -91,20 +135,20 @@ export const effectSchemaInventoryRequestFromFlags = Effect.fn("EffectSchemaInve
  * @since 0.0.0
  */
 export const generateEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.generate")(function* () {
-  const source = yield* EffectSchemaInventorySource;
-  const pin = yield* source.readPin;
-  yield* source.verifyPin(pin);
-  const sources = yield* Effect.forEach(
-    EffectSchemaInventoryModules,
-    (module) => Effect.map(source.readPinned(pin, module.file), (text) => [module, text] as const),
-    { concurrency: 4 }
-  );
-  const extraction = yield* extractEffectSchemaInventory(pin, sources);
+  const { pin, extraction } = yield* extractPinned();
   return yield* renderEffectSchemaInventory(pin, extraction);
 });
 
 /**
- * Compare a fresh in-memory generation with the committed fixture without writing anything.
+ * Compare a fresh in-memory generation with the committed fixture and committed lane prompts
+ * without writing anything.
+ *
+ * **Details**
+ *
+ * Every owned fixture file must match byte for byte, and every generated prompt under the prompt
+ * root must re-render to its committed bytes outside the graft section. Both need the pinned
+ * sources, so this is the local proof; hosted CI verifies the committed rows only and cannot
+ * verify prompts.
  *
  * **Example** (Build a check)
  *
@@ -119,11 +163,13 @@ export const generateEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun
  * @since 0.0.0
  */
 export const checkEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.check")(function* (root: string) {
-  const rendered = yield* generateEffectSchemaInventory();
+  const { pin, sources, extraction } = yield* extractPinned();
+  const rendered = yield* renderEffectSchemaInventory(pin, extraction);
   const committed = yield* readEffectSchemaInventoryFixture(root);
+  const promptDrift = yield* checkEffectSchemaInventoryPrompts(root, pin, extraction.modules, sources);
   return EffectSchemaInventoryCheckReport.make({
     receipt: rendered.receipt,
-    drift: diffEffectSchemaInventoryFiles(rendered.files, committed),
+    drift: A.appendAll(diffEffectSchemaInventoryFiles(rendered.files, committed), promptDrift),
   });
 });
 
@@ -134,7 +180,7 @@ export const checkEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.ch
  *
  * ```ts
  * import { EffectSchemaInventoryCheckReport, EffectSchemaInventoryReceipt, reportEffectSchemaInventoryCheck } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { Effect } from "effect"
  *
  * const receipt = EffectSchemaInventoryReceipt.make({
@@ -144,7 +190,7 @@ export const checkEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.ch
  *   modules: 0, rows: 0, bytes: 0, internalRows: 0, deprecatedRows: 0, bareStarDeclarationsOmitted: 0
  * })
  * Effect.runPromise(reportEffectSchemaInventoryCheck(EffectSchemaInventoryCheckReport.make({ receipt, drift: [] })))
- * // logs "[effect-schema-inventory] fixture is byte-identical; pin=df77fff9396fe31de72d1947ecb5b74f8cee89e1 ..."
+ * // logs "[effect-schema-inventory] fixture and prompts are byte-identical; pin=df77fff9396fe31de72d1947ecb5b74f8cee89e1 ..."
  * ```
  *
  * @param report - Receipt and drift from {@link checkEffectSchemaInventory}.
@@ -156,13 +202,14 @@ export const reportEffectSchemaInventoryCheck = (
   report: EffectSchemaInventoryCheckReport
 ): Effect.Effect<void, EffectSchemaInventoryDriftError> =>
   A.match(report.drift, {
-    onEmpty: () => Console.log(`${LOG_PREFIX} fixture is byte-identical; ${describeReceipt(report.receipt)}`),
+    onEmpty: () =>
+      Console.log(`${LOG_PREFIX} fixture and prompts are byte-identical; ${describeReceipt(report.receipt)}`),
     onNonEmpty: (drift) =>
       Effect.forEach(drift, (entry) => Console.error(formatEffectSchemaInventoryDrift(entry)), { discard: true }).pipe(
         Effect.andThen(
           Effect.fail(
             EffectSchemaInventoryDriftError.make({
-              message: `${drift.length} inventory fixture file(s) drift from inventoryPin ${report.receipt.pin}; regenerate with lint effect-schema-inventory --write and review the diff.`,
+              message: `${drift.length} inventory file(s) drift from inventoryPin ${report.receipt.pin}; regenerate the fixture with lint effect-schema-inventory --write or a prompt with --prompt <module>, then review the diff.`,
               drift,
             })
           )
@@ -195,7 +242,7 @@ export const runEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.run"
   root: string,
   request: EffectSchemaInventoryRequest
 ) {
-  return yield* EffectSchemaInventoryRequest.match(request, {
+  return yield* EffectSchemaInventoryRequest.match<RunEffect>(request, {
     write: Effect.fnUntraced(function* () {
       const rendered = yield* generateEffectSchemaInventory();
       yield* writeEffectSchemaInventoryFixture(root, rendered);
@@ -205,7 +252,7 @@ export const runEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.run"
     prompt: Effect.fnUntraced(function* ({ module, out }) {
       const receipt = yield* generateEffectSchemaInventoryPrompt(root, module, out);
       yield* Console.log(
-        `${LOG_PREFIX} wrote ${receipt.target} for ${receipt.module} (${receipt.rows} rows; graft ${receipt.graftAvailable ? "available" : "unavailable"})`
+        `${LOG_PREFIX} wrote ${receipt.target} for ${receipt.module} (${receipt.rows} rows; graft working tree ${receipt.workingTreeMatchesPin ? "matches" : "differs from"} the pin)`
       );
     }),
   });

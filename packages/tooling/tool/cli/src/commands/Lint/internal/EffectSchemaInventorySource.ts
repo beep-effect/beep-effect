@@ -12,6 +12,7 @@ import { A, Str } from "@beep/utils";
 import { Duration, Effect, FileSystem, Inspectable, Layer, Path, pipe } from "effect";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
@@ -24,6 +25,7 @@ import {
 import {
   EffectSchemaInventoryCatalogPinError,
   EffectSchemaInventoryError,
+  EffectSchemaInventoryGraftUnavailableError,
   EffectSchemaInventoryPinAbsentError,
   EffectSchemaInventoryReferenceMissingError,
 } from "../Lint.errors.ts";
@@ -46,7 +48,8 @@ const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
  *
  * `readPin` never consults the reference HEAD; `readPinned` is the only source-byte path and
  * reads `git show <pin>:<file>`, never the working tree. `graftContext` never fails: graft is
- * local-only, so its absence is reported as an `unavailable` context.
+ * local-only and never a hosted-CI input, but when a prompt asks for it and it cannot be read,
+ * `graftContext` fails with {@link EffectSchemaInventoryGraftUnavailableError}.
  *
  * **Example** (Describe a fake source)
  *
@@ -61,11 +64,11 @@ const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
  * @since 0.0.0
  */
 export interface EffectSchemaInventorySourceShape {
-  /** Graft skeleton of `<file>` in the reference working tree, or why it is unavailable. */
+  /** Graft skeleton of `<file>` in the reference working tree; fails when graft cannot be read. */
   readonly graftContext: (
     pin: EffectSchemaInventoryPin,
     file: string
-  ) => Effect.Effect<EffectSchemaInventoryGraftContext>;
+  ) => Effect.Effect<EffectSchemaInventoryGraftContext, EffectSchemaInventoryGraftUnavailableError>;
   /** `inventoryPin` from the root `package.json` catalog entry for `effect`. */
   readonly readPin: Effect.Effect<EffectSchemaInventoryPin, EffectSchemaInventoryCatalogPinError>;
   /** UTF-8 text of `<file>` at the pin. */
@@ -79,16 +82,14 @@ export interface EffectSchemaInventorySourceShape {
   ) => Effect.Effect<void, EffectSchemaInventoryReferenceMissingError | EffectSchemaInventoryPinAbsentError>;
 }
 
-const renderCause = (cause: unknown): string => Inspectable.toStringUnknown(cause, 0);
+const renderCause = (cause: unknown): string =>
+  P.isError(cause) ? cause.message : Inspectable.toStringUnknown(cause, 0);
 
 const gitAdapter = <E>(onFailure: (commandLine: string, detail: string) => E): GitCommandErrorAdapter<E> => ({
   onSpawnFailure: (commandLine) => (cause) => onFailure(commandLine, renderCause(cause)),
   onNonZeroExit: ({ commandLine, exitCode, output }) => onFailure(commandLine, `exit ${exitCode}: ${Str.trim(output)}`),
   onTruncated: O.none(),
 });
-
-const unavailable = (reason: string): EffectSchemaInventoryGraftContext =>
-  EffectSchemaInventoryGraftContext.cases.unavailable.make({ reason });
 
 const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.make")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -138,8 +139,12 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
       EffectSchemaInventoryError.new(`Unable to read ${file} at ${pin} (${commandLine}: ${detail}).`)
     ).pipe(Effect.withSpan("EffectSchemaInventorySource.readPinned", { attributes: { file } }));
 
+  // Messages can land in terminal output and committed prompts, so they never carry the checkout's
+  // absolute path.
   const graftFailure = (commandLine: string, detail: string) =>
-    EffectSchemaInventoryError.new(`${commandLine}: ${detail}`);
+    EffectSchemaInventoryGraftUnavailableError.new(
+      pipe(`${commandLine}: ${detail}`, Str.split("\n"), A.take(3), A.join(" "), Str.replaceAll(root, "<repo>"))
+    );
 
   const graftSkeleton = Effect.fn("EffectSchemaInventorySource.graftSkeleton")(function* (file: string) {
     const commandLine = `graft skeleton --json --no-refresh ${file} ${EffectSchemaInventoryReferencePath}`;
@@ -163,34 +168,28 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
     );
   });
 
+  // Graft reads the working tree, so span alignment is judged by the working-tree file's blob id
+  // (`git hash-object`) against the pin's blob, never by the committed HEAD blob.
   const graftContext: EffectSchemaInventorySourceShape["graftContext"] = Effect.fn(
     "EffectSchemaInventorySource.graftContext"
-  )(
-    function* (pin, file) {
-      const head = yield* git(["rev-parse", "--verify", "HEAD^{commit}"], graftFailure).pipe(
-        Effect.map(Str.trim),
-        Effect.flatMap((sha) =>
-          decodePin(sha).pipe(Effect.mapError((cause) => graftFailure("git rev-parse HEAD", renderCause(cause))))
-        )
-      );
-      const [headBlob, pinBlob] = yield* Effect.all([
-        git(["rev-parse", `${head}:${file}`], graftFailure).pipe(Effect.map(Str.trim)),
-        git(["rev-parse", `${pin}:${file}`], graftFailure).pipe(Effect.map(Str.trim)),
-      ]);
-      const skeleton = yield* graftSkeleton(file);
-      return EffectSchemaInventoryGraftContext.cases.available.make({
-        head,
-        identicalAtPin: headBlob === pinBlob,
-        entries: skeleton.entries,
-      });
-    },
-    // The reason lands in committed prompts, so it never carries the checkout's absolute path.
-    Effect.catchTag("EffectSchemaInventoryError", ({ message }) =>
-      Effect.succeed(
-        unavailable(pipe(A.take(Str.split(message, "\n"), 3), A.join(" "), Str.replaceAll(root, "<repo>")))
+  )(function* (pin, file) {
+    const head = yield* git(["rev-parse", "--verify", "HEAD^{commit}"], graftFailure).pipe(
+      Effect.map(Str.trim),
+      Effect.flatMap((sha) =>
+        decodePin(sha).pipe(Effect.mapError((cause) => graftFailure("git rev-parse HEAD", renderCause(cause))))
       )
-    )
-  );
+    );
+    const [workingTreeBlob, pinBlob] = yield* Effect.all([
+      git(["hash-object", "--", file], graftFailure).pipe(Effect.map(Str.trim)),
+      git(["rev-parse", `${pin}:${file}`], graftFailure).pipe(Effect.map(Str.trim)),
+    ]);
+    const skeleton = yield* graftSkeleton(file);
+    return EffectSchemaInventoryGraftContext.make({
+      head,
+      workingTreeMatchesPin: workingTreeBlob === pinBlob,
+      entries: skeleton.entries,
+    });
+  });
 
   return {
     readPin,

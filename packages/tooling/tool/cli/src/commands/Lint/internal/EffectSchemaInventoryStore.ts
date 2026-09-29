@@ -20,12 +20,25 @@ import type { EffectSchemaInventoryModule, EffectSchemaInventoryRendered } from 
 
 const INDEX_FILE = "INDEX.md";
 
-const writeError =
-  (name: string) =>
+/** Mode given to a freshly created fixture directory when there is no previous one to copy. */
+const DIRECTORY_MODE = 0o755;
+
+const fixtureError =
+  (action: string, name: string) =>
   (cause: unknown): EffectSchemaInventoryError =>
     EffectSchemaInventoryError.new(
-      `Unable to write ${EffectSchemaInventoryFixturePath}/${name}: ${Inspectable.toStringUnknown(cause, 0)}`
+      `${action} ${EffectSchemaInventoryFixturePath}/${name}: ${Inspectable.toStringUnknown(cause, 0)}`
     );
+
+// A missing directory lists as empty; any other listing failure fails loud instead of reading as empty.
+const listFixtureDirectory = Effect.fn("EffectSchemaInventoryStore.listFixtureDirectory")(function* (
+  directory: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const present = yield* fs.exists(directory).pipe(Effect.mapError(fixtureError("Unable to stat", ".")));
+  if (!present) return A.empty<string>();
+  return yield* fs.readDirectory(directory).pipe(Effect.mapError(fixtureError("Unable to list", ".")));
+});
 
 const isOwnedName = (name: string): boolean => Str.endsWith(".jsonl")(name) || name === INDEX_FILE;
 
@@ -36,8 +49,9 @@ const jsonlLines = (content: string): ReadonlyArray<string> => A.filter(Str.spli
  *
  * **Details**
  *
- * A missing fixture directory reads as empty, so `--check` reports every file as missing rather
- * than failing on IO. `README.md` and `LICENSE` are hand-maintained and never read here.
+ * A missing fixture directory reads as empty, so `--check` reports every file as missing; a
+ * directory that exists but cannot be listed fails. `README.md` is hand-maintained and never
+ * read here.
  *
  * **Example** (Build a fixture read)
  *
@@ -57,7 +71,7 @@ export const readEffectSchemaInventoryFixture = Effect.fn("EffectSchemaInventory
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.join(root, EffectSchemaInventoryFixturePath);
-  const names = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+  const names = yield* listFixtureDirectory(directory);
   const entries = yield* Effect.forEach(A.filter(names, isOwnedName), (name) =>
     fs.readFileString(path.join(directory, name)).pipe(
       Effect.map((content) => [name, content] as const),
@@ -106,27 +120,93 @@ const isOwnedStaleRows = Effect.fn("EffectSchemaInventoryStore.isOwnedStaleRows"
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const content = yield* fs.readFileString(path.join(directory, name)).pipe(Effect.orElseSucceed(() => ""));
+  const content = yield* fs
+    .readFileString(path.join(directory, name))
+    .pipe(Effect.mapError(fixtureError("Unable to read", name)));
   const lines = jsonlLines(content);
   return (
     !A.isReadonlyArrayEmpty(lines) && A.every(lines, (line) => O.isSome(decodeEffectSchemaInventoryRowOption(line)))
   );
 });
 
+// Entries the new directory keeps: everything except files the generation replaces and `.jsonl`
+// files it owns (every line decodes as a row) but no longer renders.
+const carriedEntries = Effect.fn("EffectSchemaInventoryStore.carriedEntries")(function* (
+  directory: string,
+  present: ReadonlyArray<string>,
+  rendered: EffectSchemaInventoryRendered
+) {
+  const replaced = HashSet.fromIterable(A.map(rendered.files, (file) => file.name));
+  return yield* Effect.filter(
+    A.filter(present, (name) => !HashSet.has(replaced, name)),
+    (name) =>
+      Str.endsWith(".jsonl")(name)
+        ? Effect.map(isOwnedStaleRows(directory, name), (owned) => !owned)
+        : Effect.succeed(true)
+  );
+});
+
+const stageFixture = Effect.fn("EffectSchemaInventoryStore.stageFixture")(function* (
+  staging: string,
+  directory: string,
+  carried: ReadonlyArray<string>,
+  rendered: EffectSchemaInventoryRendered
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.forEach(
+    carried,
+    (name) =>
+      fs
+        .copy(path.join(directory, name), path.join(staging, name))
+        .pipe(Effect.mapError(fixtureError("Unable to copy", name))),
+    { concurrency: 1, discard: true }
+  );
+  yield* Effect.forEach(
+    rendered.files,
+    (file) =>
+      writeArtifact({
+        path: path.join(staging, file.name),
+        body: file.content,
+        onError: fixtureError("Unable to write", file.name),
+      }),
+    { concurrency: 1, discard: true }
+  );
+});
+
+// Two renames replace the directory: the previous one moves aside, the staged one takes its name,
+// and the previous one is restored if that second rename fails.
+const swapFixture = Effect.fn("EffectSchemaInventoryStore.swapFixture")(function* (staging: string, directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const previous = `${staging}-previous`;
+  const existed = yield* fs.exists(directory).pipe(Effect.mapError(fixtureError("Unable to stat", ".")));
+  if (existed) yield* fs.rename(directory, previous).pipe(Effect.mapError(fixtureError("Unable to move aside", ".")));
+  yield* fs.rename(staging, directory).pipe(
+    Effect.mapError(fixtureError("Unable to move the staged fixture into", ".")),
+    Effect.tapError(() => (existed ? Effect.ignore(fs.rename(previous, directory)) : Effect.void))
+  );
+  if (existed)
+    yield* fs
+      .remove(previous, { recursive: true })
+      .pipe(Effect.mapError(fixtureError("Unable to remove the previous copy of", ".")));
+});
+
 /**
- * Write a rendered generation into the fixture directory and remove stale rows files it owns.
+ * Replace the fixture directory with a rendered generation in one swap.
  *
  * **Details**
  *
- * A `.jsonl` file outside the rendered set is removed only when every line decodes as a
- * `schema-inventory/v1` row; empty or foreign files stay, and `--check` then reports them as
- * unexpected. `README.md` and `LICENSE` are never touched.
+ * The generation is staged in a sibling temporary directory: entries that stay (`README.md`,
+ * foreign files, `.jsonl` files that do not decode as rows) are copied in, the rendered files are
+ * written, and the staged directory is renamed into place. A failure before the swap leaves the
+ * committed fixture untouched and the staging directory is removed. A fixture directory that
+ * exists but cannot be listed, or a stale `.jsonl` that cannot be read, fails the write.
  *
  * **Example** (Build a write)
  *
  * ```ts
  * import { EffectSchemaInventoryReceipt, EffectSchemaInventoryRendered, writeEffectSchemaInventoryFixture } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { Effect } from "effect"
  *
  * const receipt = EffectSchemaInventoryReceipt.make({
@@ -149,28 +229,22 @@ export const writeEffectSchemaInventoryFixture = Effect.fn("EffectSchemaInventor
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.join(root, EffectSchemaInventoryFixturePath);
-  yield* Effect.forEach(
-    rendered.files,
-    (file) =>
-      writeArtifact({
-        path: path.join(directory, file.name),
-        body: file.content,
-        onError: writeError(file.name),
-      }),
-    { concurrency: 1, discard: true }
-  );
-  const expected = HashSet.fromIterable(A.map(rendered.files, (file) => file.name));
-  const present = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
-  yield* Effect.forEach(
-    A.filter(present, (name) => Str.endsWith(".jsonl")(name) && !HashSet.has(expected, name)),
-    Effect.fnUntraced(function* (name) {
-      if (!(yield* isOwnedStaleRows(directory, name))) return;
-      yield* fs
-        .remove(path.join(directory, name), { force: true })
-        .pipe(
-          EffectSchemaInventoryError.mapError(`Unable to remove stale ${EffectSchemaInventoryFixturePath}/${name}`)
-        );
+  const parent = path.dirname(directory);
+  const present = yield* listFixtureDirectory(directory);
+  const carried = yield* carriedEntries(directory, present, rendered);
+  const mode = A.isReadonlyArrayEmpty(present)
+    ? DIRECTORY_MODE
+    : (yield* fs.stat(directory).pipe(Effect.mapError(fixtureError("Unable to stat", ".")))).mode;
+  yield* fs.makeDirectory(parent, { recursive: true }).pipe(Effect.mapError(fixtureError("Unable to create", "..")));
+  yield* Effect.acquireUseRelease(
+    fs
+      .makeTempDirectory({ directory: parent, prefix: ".inventory-write-" })
+      .pipe(Effect.mapError(fixtureError("Unable to stage beside", "."))),
+    Effect.fnUntraced(function* (staging) {
+      yield* fs.chmod(staging, mode).pipe(Effect.mapError(fixtureError("Unable to set the mode of the staged", ".")));
+      yield* stageFixture(staging, directory, carried, rendered);
+      yield* swapFixture(staging, directory);
     }),
-    { concurrency: 1, discard: true }
+    (staging) => Effect.ignore(fs.remove(staging, { recursive: true, force: true }))
   );
 });

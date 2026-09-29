@@ -11,14 +11,17 @@ and the History section below records every regeneration since.
 
 | Command | What it does |
 | --- | --- |
-| `bun run beep lint effect-schema-inventory --write` | Regenerates every `*.jsonl` file and `INDEX.md` from `.repos/effect` at the pin. Removes a stale `*.jsonl` only when every line decodes as a row. |
-| `bun run beep lint effect-schema-inventory --check` | The default mode. Regenerates in memory and fails with a per-file drift report unless every owned file is byte-identical. Writes nothing. |
-| `bun run beep lint effect-schema-inventory --prompt <module>` | Writes a lane prompt for one module: each row resolved at the pin to its full declaration and JSDoc block, plus local graft context. Defaults to `goals/effect-schema-parity/ops/prompts/<slug>.md`; `--out <path>` overrides it. |
+| `bun run beep lint effect-schema-inventory --write` | Regenerates every `*.jsonl` file and `INDEX.md` from `.repos/effect` at the pin. It builds the new directory in a sibling temporary directory and renames it into place, so a failed write leaves the committed fixture untouched. A stale `*.jsonl` is dropped only when every line decodes as a row; this README and foreign files are carried over. |
+| `bun run beep lint effect-schema-inventory --check` | The default mode. Regenerates in memory and fails with a per-file drift report unless every owned fixture file is byte-identical and every generated lane prompt under `goals/effect-schema-parity/ops/prompts/` re-renders to its committed bytes outside its graft section. Writes nothing. |
+| `bun run beep lint effect-schema-inventory --prompt <module>` | Writes a lane prompt for one module: each row resolved at the pin to its full declaration and JSDoc block, plus local graft context. Fails when graft cannot be read. Defaults to `goals/effect-schema-parity/ops/prompts/<slug>.md`; `--out <path>` overrides it. |
 
 All three modes fail loud when the catalog entry is not a snapshot URL, when
 `.repos/effect` is missing or is not a git checkout, or when it lacks the pinned
-commit. They never pass on empty input. This `README.md` and `../LICENSE`
-(Effect's MIT license) are maintained by hand; the command never writes them.
+commit, and `--write` and `--check` fail when extraction yields zero rows in
+total (one empty module, `enable`, is expected). A fixture directory that exists
+but cannot be listed fails too. Nothing passes on empty input. This `README.md`
+and `../LICENSE` (Effect's MIT license) are maintained by hand; the command never
+writes them.
 
 ## Inputs
 
@@ -105,7 +108,7 @@ Hosted CI never reads `.repos/effect`, graft, or a model. `packages/tooling/tool
 - every row's `sha` equals the `INDEX.md` pin line and the root `package.json` catalog pin, so an Effect bump PR fails until it regenerates this fixture with `--write`;
 - the `INDEX.md` row digest matches the JSONL bytes, and re-rendering `INDEX.md` from the committed rows reproduces it byte for byte.
 
-`--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-rc118/`) follows the same local-regenerate, hosted-verify split.
+Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-rc118/`) follows the same local-regenerate, hosted-verify split.
 
 ## Verification
 
@@ -119,7 +122,7 @@ bun run beep lint effect-schema-inventory --check
 `--check` output (2026-09-29):
 
 ```text
-[effect-schema-inventory] fixture is byte-identical; pin=df77fff9396fe31de72d1947ecb5b74f8cee89e1 parser=6.0.2 modules=24 rows=2232 bytes=998102 internal=195 deprecated=0 bareStarDeclarationsOmitted=0 digest=519a2ee22549217f9afcd6d1e015d50f97b045cdbf59449fe3d866821ecd90b4
+[effect-schema-inventory] fixture and prompts are byte-identical; pin=df77fff9396fe31de72d1947ecb5b74f8cee89e1 parser=6.0.2 modules=24 rows=2232 bytes=998102 internal=195 deprecated=0 bareStarDeclarationsOmitted=0 digest=519a2ee22549217f9afcd6d1e015d50f97b045cdbf59449fe3d866821ecd90b4
 ```
 
 `--check` regenerates in memory, so a failed or interrupted check leaves nothing behind. Drift output names each missing, stale, or unexpected file; a stale file reports its first differing line and column with both sides of that line.

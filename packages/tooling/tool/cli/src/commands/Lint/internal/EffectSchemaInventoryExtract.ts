@@ -13,7 +13,7 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, HashSet, MutableHashMap, Order, Path, pipe } from "effect";
+import { Effect, HashSet, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -185,32 +185,55 @@ const CALLABLE_KINDS = HashSet.make<ReadonlyArray<EffectSchemaInventoryKind>>(
 
 const sliceText = (node: ts.Node, end: number): string => Str.slice(0, end)(node.getText());
 
-const signatureOf = (node: ts.Node): string => {
-  if (ts.isVariableDeclaration(node) || ts.isBindingElement(node)) {
-    const name = node.name.getText();
-    const type = ts.isVariableDeclaration(node) ? O.fromUndefinedOr(node.type) : O.none<ts.TypeNode>();
-    if (O.isSome(type)) return compact(`const ${name}: ${type.value.getText()}`);
-    const initializer = node.initializer;
-    if (initializer !== undefined && (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer)))
-      return compact(`const ${name} = ${sliceText(initializer, initializer.body.pos - initializer.pos)}`);
-    return `const ${name}: <inferred; see source>`;
-  }
-  if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node))
-    return compact(sliceText(node, node.members.pos - node.getStart() - 1));
-  if (ts.isModuleDeclaration(node))
-    return compact(
-      O.match(O.fromUndefinedOr(node.body), {
-        onNone: () => node.getText(),
-        onSome: (body) => sliceText(node, body.pos - node.getStart()),
-      })
-    );
-  return compact(
+const isVariableLike = (node: ts.Node): node is ts.VariableDeclaration | ts.BindingElement =>
+  ts.isVariableDeclaration(node) || ts.isBindingElement(node);
+
+const isClassOrInterface = (node: ts.Node): node is ts.ClassDeclaration | ts.InterfaceDeclaration =>
+  ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node);
+
+const isFunctionInitializer = (expression: ts.Expression): expression is ts.ArrowFunction | ts.FunctionExpression =>
+  ts.isArrowFunction(expression) || ts.isFunctionExpression(expression);
+
+const declaredType = (node: ts.VariableDeclaration | ts.BindingElement): O.Option<ts.TypeNode> =>
+  ts.isVariableDeclaration(node) ? O.fromUndefinedOr(node.type) : O.none();
+
+// Measured from `pos`, leading trivia included, exactly as the prototype sliced it.
+const initializerHead = (initializer: ts.ArrowFunction | ts.FunctionExpression): string =>
+  sliceText(initializer, initializer.body.pos - initializer.pos);
+
+const variableSignature = (node: ts.VariableDeclaration | ts.BindingElement): string => {
+  const name = node.name.getText();
+  return pipe(
+    declaredType(node),
+    O.map((type) => compact(`const ${name}: ${type.getText()}`)),
+    O.orElse(() =>
+      pipe(
+        O.fromUndefinedOr(node.initializer),
+        O.filter(isFunctionInitializer),
+        O.map((initializer) => compact(`const ${name} = ${initializerHead(initializer)}`))
+      )
+    ),
+    O.getOrElse(() => `const ${name}: <inferred; see source>`)
+  );
+};
+
+const memberListSignature = (node: ts.ClassDeclaration | ts.InterfaceDeclaration): string =>
+  compact(sliceText(node, node.members.pos - node.getStart() - 1));
+
+// Functions, methods, accessors, and namespaces stop before their body; everything else is whole.
+const headSignature = (node: ts.Node): string =>
+  compact(
     O.match(nodeProperty(node, "body"), {
       onNone: () => node.getText(),
       onSome: (body) => sliceText(node, body.pos - node.getStart()),
     })
   );
-};
+
+const signatureOf: (node: ts.Node) => string = Match.type<ts.Node>().pipe(
+  Match.when(isVariableLike, variableSignature),
+  Match.when(isClassOrInterface, memberListSignature),
+  Match.orElse(headSignature)
+);
 
 const overloadCount = (node: ts.Node, kind: EffectSchemaInventoryKind): number => {
   if (HashSet.has(CALLABLE_KINDS, kind)) return O.isSome(nodeProperty(node, "body")) ? 0 : 1;
@@ -311,6 +334,109 @@ const addRow = (
   });
 };
 
+/** One statement list being walked: its module, symbol prefix, nesting depth, and local names. */
+type Visit = {
+  readonly walk: ModuleWalk;
+  readonly prefix: string;
+  readonly depth: number;
+  readonly locals: MutableHashMap.MutableHashMap<string, Declared>;
+};
+
+// Later declarations of a name win, as with the prototype's `new Map(entries)`.
+const localsOf = (declarations: ReadonlyArray<Declared>): MutableHashMap.MutableHashMap<string, Declared> =>
+  MutableHashMap.fromIterable(
+    A.getSomes(
+      A.map(declarations, (declared) =>
+        O.map(nodeProperty(declared.node, "name"), (name) => [name.getText(), declared] as const)
+      )
+    )
+  );
+
+const namespaceBody = (node: ts.Node): O.Option<ReadonlyArray<ts.Statement>> =>
+  ts.isModuleDeclaration(node) && node.body !== undefined && ts.isModuleBlock(node.body)
+    ? O.some(node.body.statements)
+    : O.none();
+
+const emitMembers = (walk: ModuleWalk, node: ts.Node, symbol: string): void => {
+  for (const member of A.filter(directMembers(node), (member) => !isHiddenMember(member)))
+    addRow(walk, member, member, `${symbol}.${memberName(member)}`);
+};
+
+// Top-level declarations also emit one level of members, or one level of namespace statements.
+const emitDeclaration = (visit: Visit, node: ts.Node, owner: ts.Node, name: string): void => {
+  const symbol = `${visit.prefix}${name}`;
+  addRow(visit.walk, node, owner, symbol);
+  if (visit.depth !== 0) return;
+  const nested = namespaceBody(node);
+  if (O.isSome(nested)) visitStatements(visit.walk, nested.value, `${symbol}.`, 1);
+  else emitMembers(visit.walk, node, symbol);
+};
+
+const namespaceTarget = (walk: ModuleWalk, declaration: ts.ExportDeclaration): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(declaration.moduleSpecifier),
+    O.filter(ts.isStringLiteral),
+    O.map((specifier) => walk.resolveTarget(walk.module.file, specifier.text))
+  );
+
+// A namespace re-export is one row; its target is inventoried under its own module path, so the
+// barrel never repeats the target's members.
+const visitNamespaceExport = (visit: Visit, declaration: ts.ExportDeclaration, clause: ts.NamespaceExport): void => {
+  const target = namespaceTarget(visit.walk, declaration);
+  if (O.exists(target, (file) => HashSet.has(visit.walk.moduleFiles, file))) {
+    const symbol = `${visit.prefix}${specifierText(clause.name)}`;
+    addRow(visit.walk, declaration, declaration, symbol, O.some(["namespace", compact(declaration.getText())]));
+    return;
+  }
+  visit.walk.failures.push(
+    `${visit.walk.module.file} re-exports ${O.getOrElse(target, () => declaration.getText())} as a namespace; add it to the module list first`
+  );
+};
+
+// A specifier naming a local declaration emits that declaration; anything else is a re-export row.
+const visitExportSpecifier = (visit: Visit, declaration: ts.ExportDeclaration, element: ts.ExportSpecifier): void => {
+  const local =
+    declaration.moduleSpecifier === undefined
+      ? MutableHashMap.get(visit.locals, specifierText(element.propertyName ?? element.name))
+      : O.none<Declared>();
+  const name = specifierText(element.name);
+  if (O.isNone(local)) {
+    addRow(
+      visit.walk,
+      element,
+      element,
+      `${visit.prefix}${name}`,
+      O.some(["re-export", compact(declaration.getText())])
+    );
+    return;
+  }
+  const owner = A.isReadonlyArrayNonEmpty(effectSchemaInventoryJsDocBlocks(element)) ? element : local.value.owner;
+  emitDeclaration(visit, local.value.node, owner, name);
+};
+
+const visitExportDeclaration = (visit: Visit, declaration: ts.ExportDeclaration): void => {
+  const clause = declaration.exportClause;
+  if (clause === undefined) {
+    visit.walk.starCount += 1;
+    return;
+  }
+  if (ts.isNamespaceExport(clause)) {
+    visitNamespaceExport(visit, declaration, clause);
+    return;
+  }
+  for (const element of clause.elements) visitExportSpecifier(visit, declaration, element);
+};
+
+const visitDeclared = (visit: Visit, { node, owner }: Declared): void => {
+  if (ts.isExportDeclaration(node)) {
+    visitExportDeclaration(visit, node);
+    return;
+  }
+  const exportedName = nodeProperty(node, "name");
+  if (O.isSome(exportedName) && hasModifier(owner, ts.SyntaxKind.ExportKeyword))
+    emitDeclaration(visit, node, owner, exportedName.value.getText());
+};
+
 const visitStatements = (
   walk: ModuleWalk,
   statements: ReadonlyArray<ts.Statement>,
@@ -318,80 +444,8 @@ const visitStatements = (
   depth: number
 ): void => {
   const declarations = declarationsOf(statements);
-  // Later declarations of a name win, as with the prototype's `new Map(entries)`.
-  const locals = MutableHashMap.fromIterable(
-    A.getSomes(
-      A.map(declarations, (declared) =>
-        O.map(nodeProperty(declared.node, "name"), (name) => [name.getText(), declared] as const)
-      )
-    )
-  );
-  const emit = (node: ts.Node, owner: ts.Node, name: string): void => {
-    const symbol = `${prefix}${name}`;
-    addRow(walk, node, owner, symbol);
-    if (depth !== 0) return;
-    if (ts.isModuleDeclaration(node) && node.body !== undefined && ts.isModuleBlock(node.body)) {
-      visitStatements(walk, node.body.statements, `${symbol}.`, 1);
-      return;
-    }
-    for (const member of directMembers(node)) {
-      if (isHiddenMember(member)) continue;
-      addRow(walk, member, member, `${symbol}.${memberName(member)}`);
-    }
-  };
-  for (const { node, owner } of declarations) {
-    if (ts.isExportDeclaration(node)) {
-      const clause = node.exportClause;
-      if (clause === undefined) {
-        walk.starCount += 1;
-        continue;
-      }
-      if (ts.isNamespaceExport(clause)) {
-        // A namespace re-export is one row; its target is inventoried under its own module path,
-        // so the barrel never repeats the target's members.
-        const specifier = node.moduleSpecifier;
-        const target =
-          specifier !== undefined && ts.isStringLiteral(specifier)
-            ? O.some(walk.resolveTarget(walk.module.file, specifier.text))
-            : O.none<string>();
-        if (!O.exists(target, (file) => HashSet.has(walk.moduleFiles, file))) {
-          walk.failures.push(
-            `${walk.module.file} re-exports ${O.getOrElse(target, () => node.getText())} as a namespace; add it to the module list first`
-          );
-          continue;
-        }
-        addRow(
-          walk,
-          node,
-          node,
-          `${prefix}${specifierText(clause.name)}`,
-          O.some(["namespace", compact(node.getText())])
-        );
-        continue;
-      }
-      for (const element of clause.elements) {
-        const local = MutableHashMap.get(locals, specifierText(element.propertyName ?? element.name));
-        if (node.moduleSpecifier === undefined && O.isSome(local)) {
-          const owner = A.isReadonlyArrayNonEmpty(effectSchemaInventoryJsDocBlocks(element))
-            ? element
-            : local.value.owner;
-          emit(local.value.node, owner, specifierText(element.name));
-        } else {
-          addRow(
-            walk,
-            element,
-            element,
-            `${prefix}${specifierText(element.name)}`,
-            O.some(["re-export", compact(node.getText())])
-          );
-        }
-      }
-      continue;
-    }
-    const exportedName = nodeProperty(node, "name");
-    if (O.isSome(exportedName) && hasModifier(owner, ts.SyntaxKind.ExportKeyword))
-      emit(node, owner, exportedName.value.getText());
-  }
+  const visit: Visit = { walk, prefix, depth, locals: localsOf(declarations) };
+  for (const declared of declarations) visitDeclared(visit, declared);
 };
 
 const parseModule = Effect.fn("EffectSchemaInventoryExtract.parse")(function* (

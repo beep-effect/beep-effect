@@ -13,25 +13,28 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, HashSet, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
+import { Effect, FileSystem, HashMap, HashSet, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { ts } from "ts-morph";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
 import {
+  EffectSchemaInventoryFile,
   EffectSchemaInventoryFixturePath,
-  EffectSchemaInventoryGraftContext,
   EffectSchemaInventoryPromptReceipt,
   EffectSchemaInventoryPromptRoot,
 } from "../EffectSchemaInventory.schemas.ts";
 import { EffectSchemaInventoryError } from "../Lint.errors.ts";
 import { effectSchemaInventoryJsDocBlocks } from "./EffectSchemaInventoryExtract.ts";
 import { findEffectSchemaInventoryModule } from "./EffectSchemaInventoryModules.ts";
-import { effectSchemaInventoryJsonlName } from "./EffectSchemaInventoryRender.ts";
+import { diffEffectSchemaInventoryFiles, effectSchemaInventoryJsonlName } from "./EffectSchemaInventoryRender.ts";
 import { EffectSchemaInventorySource } from "./EffectSchemaInventorySource.ts";
 import { readEffectSchemaInventoryModuleRows } from "./EffectSchemaInventoryStore.ts";
 import type {
+  EffectSchemaInventoryDrift,
+  EffectSchemaInventoryGraftContext,
   EffectSchemaInventoryGraftEntry,
   EffectSchemaInventoryModule,
+  EffectSchemaInventoryModuleRows,
   EffectSchemaInventoryPin,
   EffectSchemaInventoryRow,
 } from "../EffectSchemaInventory.schemas.ts";
@@ -187,34 +190,203 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
   );
 };
 
-const renderGraft = (context: EffectSchemaInventoryGraftContext): string =>
-  EffectSchemaInventoryGraftContext.match(context, {
-    unavailable: ({ reason }) =>
-      `Graft context is unavailable (${reason}). The declarations below are complete without it; graft is a local aid, never a hosted-CI input.\n`,
-    available: ({ head, identicalAtPin, entries }) =>
-      A.join(
-        [
-          `Graft skeleton of the reference working tree at HEAD \`${head}\`. ${
-            identicalAtPin
-              ? "The module source is byte-identical at HEAD and at the pin, so the spans match the inlined source."
-              : "The module source differs between HEAD and the pin: spans and summaries describe HEAD, and the inlined source below is authoritative."
-          } Summaries are graft's, not Effect's documentation.`,
-          "",
-          "| Span | Kind | Name | Summary |",
-          "| --- | --- | --- | --- |",
-          ...A.map(
-            entries,
-            (entry: EffectSchemaInventoryGraftEntry) =>
-              `| ${entry.span} | ${cell(entry.kind)} | \`${cell(entry.name)}\` | ${cell(O.getOrElse(entry.summary, () => ""))} |`
-          ),
-          "",
-        ],
-        "\n"
+/** The four inputs every prompt is rendered from; graft context is supplied separately. */
+type PromptInput = {
+  readonly module: EffectSchemaInventoryModule;
+  readonly pin: EffectSchemaInventoryPin;
+  readonly rows: ReadonlyArray<EffectSchemaInventoryRow>;
+  readonly source: string;
+};
+
+const graftAlignment = (workingTreeMatchesPin: boolean): string =>
+  workingTreeMatchesPin
+    ? "The working-tree module file hashes to the same blob as the pin, so the spans line up with the inlined source."
+    : "The working-tree module file differs from the pin, so treat this section as working-tree context whose spans and summaries may drift; the inlined source below is authoritative.";
+
+const graftRow = (entry: EffectSchemaInventoryGraftEntry): string =>
+  `| ${entry.span} | ${cell(entry.kind)} | \`${cell(entry.name)}\` | ${cell(O.getOrElse(entry.summary, () => ""))} |`;
+
+const renderGraftSection = (context: EffectSchemaInventoryGraftContext): string =>
+  A.join(
+    [
+      `Graft skeleton of the reference working tree (HEAD \`${context.head}\`), read as-is with \`--no-refresh\`. ${graftAlignment(context.workingTreeMatchesPin)} Summaries are graft's, not Effect's documentation.`,
+      "",
+      "| Span | Kind | Name | Summary |",
+      "| --- | --- | --- | --- |",
+      ...A.map(context.entries, graftRow),
+      "",
+    ],
+    "\n"
+  );
+
+const GRAFT_SECTION = /\n## Graft context\n\n([\s\S]*?)\n## Declarations\n/u;
+
+const committedGraftSection = (prompt: string): string =>
+  pipe(
+    Str.match(GRAFT_SECTION)(prompt),
+    O.flatMap((match) => O.fromUndefinedOr(match[1])),
+    O.getOrElse(() => "")
+  );
+
+const failForeignRows = (input: PromptInput): Effect.Effect<void, EffectSchemaInventoryError> => {
+  const foreign = A.filter(input.rows, (row) => row.file !== input.module.file || row.sha !== input.pin);
+  return A.match(foreign, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (rows) =>
+      Effect.fail(
+        EffectSchemaInventoryError.new(
+          `Rows for ${input.module.module} must all read ${input.module.file} at ${input.pin}; ${rows.length} do not (first: ${A.headNonEmpty(rows).symbol}).`
+        )
+      ),
+  });
+};
+
+const failUnresolved = (
+  input: PromptInput,
+  unresolved: ReadonlyArray<EffectSchemaInventoryRow>
+): Effect.Effect<void, EffectSchemaInventoryError> =>
+  A.match(unresolved, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (rows) =>
+      Effect.fail(
+        EffectSchemaInventoryError.new(
+          `${rows.length} ${input.module.module} rows resolve to no declaration at ${input.pin}: ${A.join(
+            A.map(A.take(rows, 5), (row) => `${row.symbol}@${row.line}`),
+            ", "
+          )}`
+        )
       ),
   });
 
+const failMissingExamples = (
+  rendered: ReadonlyArray<{ readonly block: DeclarationBlock; readonly text: string }>
+): Effect.Effect<void, EffectSchemaInventoryError> =>
+  A.match(
+    A.flatMap(rendered, ({ block, text }) =>
+      O.isSome(Str.match(EXAMPLE_MARKER)(text)) ? [] : A.filter(block.rows, (row) => row.hasExample)
+    ),
+    {
+      onEmpty: () => Effect.void,
+      onNonEmpty: (rows) =>
+        Effect.fail(
+          EffectSchemaInventoryError.new(
+            `Rows flagged hasExample inline no example: ${A.join(
+              A.map(A.take(rows, 5), (row) => row.symbol),
+              ", "
+            )}`
+          )
+        ),
+    }
+  );
+
+/** Resolve every row to the top-level declaration group whose lines contain it. */
+const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, source: ts.SourceFile) {
+  const groups = A.map(declarationGroups(source.statements), (statements) => ({
+    statements,
+    startLine: lineOf(source, A.headNonEmpty(statements).getStart(source)),
+    endLine: lineOf(source, A.lastNonEmpty(statements).getEnd()),
+  }));
+  const byName = MutableHashMap.fromIterable(
+    A.flatMap(source.statements, (statement) => A.map(statementNames(statement), (name) => [name, statement] as const))
+  );
+  const resolved = A.map(input.rows, (row) => ({
+    row,
+    at: A.findFirstIndex(groups, (entry) => entry.startLine <= row.line && row.line <= entry.endLine),
+  }));
+  yield* failUnresolved(
+    input,
+    A.map(
+      A.filter(resolved, ({ at }) => O.isNone(at)),
+      ({ row }) => row
+    )
+  );
+  const blockIndexes = A.sort(A.dedupe(A.getSomes(A.map(resolved, ({ at }) => at))), Order.Number);
+  // Statements are keyed by source position; AST nodes must not enter structural hashing.
+  const blockStatementStarts = HashSet.fromIterable(
+    A.flatMap(blockIndexes, (index) =>
+      O.getOrElse(
+        O.map(A.get(groups, index), (entry) => A.map(entry.statements, (statement) => statement.pos)),
+        A.empty<number>
+      )
+    )
+  );
+  return A.getSomes(
+    A.map(blockIndexes, (index) =>
+      O.map(
+        A.get(groups, index),
+        (entry): DeclarationBlock => ({
+          ...entry,
+          rows: A.map(
+            A.filter(resolved, ({ at }) => O.exists(at, (value) => value === index)),
+            ({ row }) => row
+          ),
+          locals: A.filter(
+            exportedLocals(A.headNonEmpty(entry.statements), byName),
+            (local) => !HashSet.has(blockStatementStarts, local.pos)
+          ),
+        })
+      )
+    )
+  );
+});
+
+const assemblePrompt = (
+  input: PromptInput,
+  blockCount: number,
+  blocksText: ReadonlyArray<string>,
+  graftSection: string
+): string =>
+  A.join(
+    [
+      `# Lane prompt: \`${input.module.module}\``,
+      "",
+      `Generated by \`bun run beep lint effect-schema-inventory --prompt ${input.module.module}\`. Regenerate it after every Effect pin change instead of editing it by hand.`,
+      "",
+      "## Provenance",
+      "",
+      "| Field | Value |",
+      "| --- | --- |",
+      `| Module | \`${input.module.module}\` (${input.module.importable ? "importable" : "provenance only: Effect's exports map nulls this path"}) |`,
+      `| Pin | \`${input.pin}\`, the root \`package.json\` catalog \`effect\` entry |`,
+      `| Source | \`${Str.slice(0, 10)(input.pin)}:${input.module.file}\`, read with \`git -C .repos/effect show\` |`,
+      `| Rows | ${input.rows.length} (${A.filter(input.rows, (row) => row.internal).length} \`@internal\`) from \`${EffectSchemaInventoryFixturePath}/${effectSchemaInventoryJsonlName(input.module.slug)}\` |`,
+      `| Declarations | ${blockCount} top-level declarations (overloads grouped), each inlined in full with its JSDoc |`,
+      "",
+      "## How to use this prompt",
+      "",
+      "This prompt is the knowledge half of a lane on the effect-schema-parity goal. The lane brief supplies the task, the phase done-signal, and the bounce conditions from `goals/effect-schema-parity/SPEC.md`.",
+      "",
+      "- Every declaration below is upstream Effect at the pin, inlined in full with its JSDoc block (signature, sections, examples). The reference checkout is not needed to read it.",
+      "- Judge coverage facet by facet. Only a public symbol covers a facet: a row marked `@internal`, or a row of a module that is not importable, is provenance and never a coverage target.",
+      "- Cite upstream evidence as `<file>:<line>` at the pin, using the line numbers in the tables.",
+      "",
+      "## Graft context",
+      "",
+      graftSection,
+      "## Declarations",
+      "",
+      ...blocksText,
+    ],
+    "\n"
+  );
+
+const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftSection: string) {
+  yield* failForeignRows(input);
+  const source = ts.createSourceFile(input.module.file, input.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const blocks = yield* declarationBlocks(input, source);
+  const rendered = A.map(blocks, (block) => ({ block, text: renderBlock(source, input.source, block) }));
+  yield* failMissingExamples(rendered);
+  return assemblePrompt(
+    input,
+    blocks.length,
+    A.map(rendered, ({ text }) => text),
+    graftSection
+  );
+});
+
 /**
- * Render the lane prompt for one module from its committed rows and pinned source text.
+ * Render the lane prompt for one module from its committed rows, pinned source text, and graft
+ * context.
  *
  * **Details**
  *
@@ -250,7 +422,7 @@ const renderGraft = (context: EffectSchemaInventoryGraftContext): string =>
  *   pin,
  *   rows: [row],
  *   source: "/** Says hi. *\/\nexport function hi(): string {\n  return \"hi\"\n}\n",
- *   graft: EffectSchemaInventoryGraftContext.cases.unavailable.make({ reason: "graft is not on PATH" })
+ *   graft: EffectSchemaInventoryGraftContext.make({ head: pin, workingTreeMatchesPin: true, entries: [] })
  * })
  * Effect.runPromise(program).then((prompt) => console.log(prompt.includes("return \"hi\""))) // true
  * ```
@@ -258,114 +430,95 @@ const renderGraft = (context: EffectSchemaInventoryGraftContext): string =>
  * @category formatting
  * @since 0.0.0
  */
-export const renderEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInventoryPrompt.render")(function* (input: {
-  readonly module: EffectSchemaInventoryModule;
-  readonly pin: EffectSchemaInventoryPin;
-  readonly rows: ReadonlyArray<EffectSchemaInventoryRow>;
-  readonly source: string;
-  readonly graft: EffectSchemaInventoryGraftContext;
-}) {
-  const { module, pin, rows } = input;
-  const foreign = A.filter(rows, (row) => row.file !== module.file || row.sha !== pin);
-  if (A.isReadonlyArrayNonEmpty(foreign))
-    return yield* EffectSchemaInventoryError.new(
-      `Rows for ${module.module} must all read ${module.file} at ${pin}; ${foreign.length} do not (first: ${A.headNonEmpty(foreign).symbol}).`
-    );
-  const source = ts.createSourceFile(module.file, input.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const groups = A.map(declarationGroups(source.statements), (statements) => ({
-    statements,
-    startLine: lineOf(source, A.headNonEmpty(statements).getStart(source)),
-    endLine: lineOf(source, A.lastNonEmpty(statements).getEnd()),
-  }));
-  const byName = MutableHashMap.fromIterable(
-    A.flatMap(source.statements, (statement) => A.map(statementNames(statement), (name) => [name, statement] as const))
-  );
-  const resolved = A.map(rows, (row) => ({
-    row,
-    at: A.findFirstIndex(groups, (entry) => entry.startLine <= row.line && row.line <= entry.endLine),
-  }));
-  const unresolved = A.filter(resolved, ({ at }) => O.isNone(at));
-  if (A.isReadonlyArrayNonEmpty(unresolved))
-    return yield* EffectSchemaInventoryError.new(
-      `${unresolved.length} ${module.module} rows resolve to no declaration at ${pin}: ${A.join(
-        A.map(A.take(unresolved, 5), ({ row }) => `${row.symbol}@${row.line}`),
-        ", "
-      )}`
-    );
-  const blockIndexes = A.dedupe(A.getSomes(A.map(resolved, ({ at }) => at)));
-  // Statements are keyed by source position; AST nodes must not enter structural hashing.
-  const blockStatementStarts = HashSet.fromIterable(
-    A.flatMap(blockIndexes, (index) =>
-      O.getOrElse(
-        O.map(A.get(groups, index), (entry) => A.map(entry.statements, (statement) => statement.pos)),
-        A.empty<number>
-      )
-    )
-  );
-  const blocks = A.getSomes(
-    A.map(A.sort(blockIndexes, Order.Number), (index) =>
+export const renderEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInventoryPrompt.render")(function* (
+  input: PromptInput & { readonly graft: EffectSchemaInventoryGraftContext }
+) {
+  return yield* renderPromptWith(input, renderGraftSection(input.graft));
+});
+
+const isPromptFor =
+  (name: string) =>
+  (module: EffectSchemaInventoryModule): boolean =>
+    `${module.slug}.md` === name;
+
+/**
+ * Re-render every committed generated prompt and compare it with the committed bytes.
+ *
+ * **Details**
+ *
+ * A prompt is owned when its file name under the prompt root is a module slug plus `.md`; any
+ * other file there is left alone. The graft section is the one part that depends on local graft,
+ * so the committed graft section is spliced into the re-rendered prompt and every other byte must
+ * match. This needs the pinned sources, so it runs in local `--check` only; hosted CI has no
+ * Effect checkout and cannot verify prompts.
+ *
+ * **Example** (Build a prompt check)
+ *
+ * ```ts
+ * import { checkEffectSchemaInventoryPrompts } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(checkEffectSchemaInventoryPrompts(process.cwd(), "df77fff9396fe31de72d1947ecb5b74f8cee89e1", [], []))) // true
+ * ```
+ *
+ * @param root - Repository root that owns the prompt directory.
+ * @param pin - Catalog pin the sources were read at.
+ * @param modules - Freshly extracted rows per module.
+ * @param sources - Pinned source text per module, in the same order as the module list.
+ * @returns Drift for every owned prompt whose bytes differ, keyed by repository-relative path.
+ * @category validation
+ * @since 0.0.0
+ */
+export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventoryPrompt.check")(function* (
+  root: string,
+  pin: EffectSchemaInventoryPin,
+  modules: ReadonlyArray<EffectSchemaInventoryModuleRows>,
+  sources: ReadonlyArray<readonly [EffectSchemaInventoryModule, string]>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.join(root, EffectSchemaInventoryPromptRoot);
+  if (
+    !(yield* fs
+      .exists(directory)
+      .pipe(EffectSchemaInventoryError.mapError(`Unable to stat ${EffectSchemaInventoryPromptRoot}`)))
+  )
+    return A.empty<EffectSchemaInventoryDrift>();
+  const names = yield* fs
+    .readDirectory(directory)
+    .pipe(EffectSchemaInventoryError.mapError(`Unable to list ${EffectSchemaInventoryPromptRoot}`));
+  const owned = A.getSomes(
+    A.map(names, (name) =>
       O.map(
-        A.get(groups, index),
-        (entry): DeclarationBlock => ({
-          ...entry,
-          rows: A.map(
-            A.filter(resolved, ({ at }) => O.exists(at, (value) => value === index)),
-            ({ row }) => row
-          ),
-          locals: A.filter(
-            exportedLocals(A.headNonEmpty(entry.statements), byName),
-            (local) => !HashSet.has(blockStatementStarts, local.pos)
-          ),
-        })
+        A.findFirst(modules, (entry) => isPromptFor(name)(entry.module)),
+        (entry) => [name, entry] as const
       )
     )
   );
-  const rendered = A.map(blocks, (block) => ({ block, text: renderBlock(source, input.source, block) }));
-  const missingExamples = A.flatMap(rendered, ({ block, text }) =>
-    O.isSome(Str.match(EXAMPLE_MARKER)(text)) ? [] : A.filter(block.rows, (row) => row.hasExample)
+  const drift = yield* Effect.forEach(owned, ([name, entry]) =>
+    Effect.gen(function* () {
+      const file = `${EffectSchemaInventoryPromptRoot}/${name}`;
+      const committed = yield* fs
+        .readFileString(path.join(directory, name))
+        .pipe(EffectSchemaInventoryError.mapError(`Unable to read ${file}`));
+      const source = yield* Effect.fromOption(
+        O.map(
+          A.findFirst(sources, ([module]) => module.file === entry.module.file),
+          ([, text]) => text
+        ),
+        () => EffectSchemaInventoryError.new(`No pinned source was read for ${entry.module.module}.`)
+      );
+      const expected = yield* renderPromptWith(
+        { module: entry.module, pin, rows: entry.rows, source },
+        committedGraftSection(committed)
+      );
+      return diffEffectSchemaInventoryFiles(
+        [EffectSchemaInventoryFile.make({ name: file, content: expected })],
+        HashMap.make([file, committed])
+      );
+    })
   );
-  if (A.isReadonlyArrayNonEmpty(missingExamples))
-    return yield* EffectSchemaInventoryError.new(
-      `Rows flagged hasExample inline no example: ${A.join(
-        A.map(A.take(missingExamples, 5), (row) => row.symbol),
-        ", "
-      )}`
-    );
-  const internalRows = A.filter(rows, (row) => row.internal).length;
-  const shortPin = Str.slice(0, 10)(pin);
-  return A.join(
-    [
-      `# Lane prompt: \`${module.module}\``,
-      "",
-      `Generated by \`bun run beep lint effect-schema-inventory --prompt ${module.module}\`. Regenerate it after every Effect pin change instead of editing it by hand.`,
-      "",
-      "## Provenance",
-      "",
-      "| Field | Value |",
-      "| --- | --- |",
-      `| Module | \`${module.module}\` (${module.importable ? "importable" : "provenance only: Effect's exports map nulls this path"}) |`,
-      `| Pin | \`${pin}\`, the root \`package.json\` catalog \`effect\` entry |`,
-      `| Source | \`${shortPin}:${module.file}\`, read with \`git -C .repos/effect show\` |`,
-      `| Rows | ${rows.length} (${internalRows} \`@internal\`) from \`${EffectSchemaInventoryFixturePath}/${effectSchemaInventoryJsonlName(module.slug)}\` |`,
-      `| Declarations | ${blocks.length} top-level declarations (overloads grouped), each inlined in full with its JSDoc |`,
-      "",
-      "## How to use this prompt",
-      "",
-      "This prompt is the knowledge half of a lane on the effect-schema-parity goal. The lane brief supplies the task, the phase done-signal, and the bounce conditions from `goals/effect-schema-parity/SPEC.md`.",
-      "",
-      "- Every declaration below is upstream Effect at the pin, inlined in full with its JSDoc block (signature, sections, examples). The reference checkout is not needed to read it.",
-      "- Judge coverage facet by facet. Only a public symbol covers a facet: a row marked `@internal`, or a row of a module that is not importable, is provenance and never a coverage target.",
-      "- Cite upstream evidence as `<file>:<line>` at the pin, using the line numbers in the tables.",
-      "",
-      "## Graft context",
-      "",
-      renderGraft(input.graft),
-      "## Declarations",
-      "",
-      ...A.map(rendered, ({ text }) => text),
-    ],
-    "\n"
-  );
+  return A.flatten(drift);
 });
 
 /**
@@ -375,7 +528,8 @@ export const renderEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInventor
  *
  * Fails loud on the same inputs as `--check`: an unreadable catalog pin, a missing reference
  * clone, or a pin absent from it. It also fails when the module's committed rows carry a sha
- * other than the catalog pin (regenerate with `--write` first). The prompt defaults to
+ * other than the catalog pin (regenerate with `--write` first), and when graft context cannot be
+ * read ({@link EffectSchemaInventoryGraftUnavailableError}). The prompt defaults to
  * `<promptRoot>/<slug>.md`; a relative `out` resolves against the repository root and may not
  * escape it, while an absolute `out` is written as given.
  *
@@ -402,6 +556,12 @@ export const generateEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInvent
   const module = yield* Effect.fromOption(findEffectSchemaInventoryModule(moduleName), () =>
     EffectSchemaInventoryError.new(`Unknown inventory module ${moduleName}.`)
   );
+  const requested = O.getOrElse(out, () => path.join(EffectSchemaInventoryPromptRoot, `${module.slug}.md`));
+  const target = path.resolve(root, requested);
+  if (!path.isAbsolute(requested) && Str.startsWith("..")(path.relative(root, target)))
+    return yield* EffectSchemaInventoryError.new(
+      `--out ${requested} resolves outside the repository root; pass an absolute path to write elsewhere.`
+    );
   const pin = yield* source.readPin;
   yield* source.verifyPin(pin);
   const rows = yield* readEffectSchemaInventoryModuleRows(root, module);
@@ -412,12 +572,6 @@ export const generateEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInvent
   const text = yield* source.readPinned(pin, module.file);
   const graft = yield* source.graftContext(pin, module.file);
   const prompt = yield* renderEffectSchemaInventoryPrompt({ module, pin, rows, source: text, graft });
-  const requested = O.getOrElse(out, () => path.join(EffectSchemaInventoryPromptRoot, `${module.slug}.md`));
-  const target = path.resolve(root, requested);
-  if (!path.isAbsolute(requested) && Str.startsWith("..")(path.relative(root, target)))
-    return yield* EffectSchemaInventoryError.new(
-      `--out ${requested} resolves outside the repository root; pass an absolute path to write elsewhere.`
-    );
   yield* writeArtifact({
     path: target,
     body: prompt,
@@ -428,6 +582,6 @@ export const generateEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInvent
     module: module.module,
     target: pipe(path.relative(root, target), (relative) => (Str.startsWith("..")(relative) ? target : relative)),
     rows: rows.length,
-    graftAvailable: EffectSchemaInventoryGraftContext.guards.available(graft),
+    workingTreeMatchesPin: graft.workingTreeMatchesPin,
   });
 });

@@ -169,7 +169,7 @@ const topCategoryOrder = Order.combine(
  *
  * ```ts
  * import { renderEffectSchemaInventoryIndex } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const index = renderEffectSchemaInventoryIndex({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",

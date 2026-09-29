@@ -1,31 +1,41 @@
 import { fileURLToPath } from "node:url";
 import {
+  checkEffectSchemaInventoryPrompts,
   compactEffectSchemaInventoryPreview,
   diffEffectSchemaInventoryFiles,
   digestEffectSchemaInventoryJsonl,
   EffectSchemaInventoryFile,
+  EffectSchemaInventoryFixturePath,
   EffectSchemaInventoryGraftContext,
+  EffectSchemaInventoryGraftEntry,
   EffectSchemaInventoryModule,
   EffectSchemaInventoryModules,
   EffectSchemaInventoryPinAbsentError,
+  EffectSchemaInventoryPromptRoot,
+  EffectSchemaInventoryReceipt,
   EffectSchemaInventoryReferenceMissingError,
+  EffectSchemaInventoryRendered,
   EffectSchemaInventoryRequest,
   EffectSchemaInventoryRow,
   EffectSchemaInventorySource,
   effectSchemaInventoryRequestFromFlags,
+  encodeEffectSchemaInventoryRowJson,
   extractEffectSchemaInventory,
   generateEffectSchemaInventory,
   parseEffectSchemaInventoryPin,
+  readEffectSchemaInventoryFixture,
   readEffectSchemaInventoryIndexHeader,
   renderEffectSchemaInventoryJsonl,
   renderEffectSchemaInventoryPrompt,
   runEffectSchemaInventory,
+  writeEffectSchemaInventoryFixture,
 } from "@beep/repo-cli/commands/Lint";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertInclude, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Path, Ref } from "effect";
+import { Effect, FileSystem, HashMap, Order, Path, Ref } from "effect";
 import * as O from "effect/Option";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";
 
@@ -123,20 +133,80 @@ const makeRow = (fields: { readonly line: number; readonly symbol: string; reado
     importable: true,
   });
 
-const unavailableGraft = EffectSchemaInventoryGraftContext.cases.unavailable.make({ reason: "graft is not on PATH" });
+const demoGraft = EffectSchemaInventoryGraftContext.make({
+  head: PIN,
+  workingTreeMatchesPin: true,
+  entries: [
+    EffectSchemaInventoryGraftEntry.make({
+      name: "a",
+      kind: "function",
+      span: "L13-L17",
+      signature: O.none(),
+      summary: O.some("Formats | values."),
+    }),
+  ],
+});
+
+const emptyReceipt = EffectSchemaInventoryReceipt.make({
+  pin: PIN,
+  parser: "6.0.2",
+  digest: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+  modules: 0,
+  rows: 0,
+  bytes: 0,
+  internalRows: 0,
+  deprecatedRows: 0,
+  bareStarDeclarationsOmitted: 0,
+});
+
+const renderedFiles = (files: ReadonlyArray<readonly [string, string]>) =>
+  EffectSchemaInventoryRendered.make({
+    receipt: emptyReceipt,
+    files: A.map(files, ([name, content]) => EffectSchemaInventoryFile.make({ name, content })),
+  });
+
+// Only `effect/Schema` has content, so a generation has rows without a real reference clone.
+const fakePinnedText = (file: string): string =>
+  file === "packages/effect/src/Schema.ts" ? "export const a = 1\n" : "";
 
 const fakeSource = (
   overrides: Partial<EffectSchemaInventorySourceShape>,
-  reads: Ref.Ref<number>
+  reads: Ref.Ref<number>,
+  pinnedText: (file: string) => string = fakePinnedText
 ): EffectSchemaInventorySourceShape => ({
   readPin: Effect.succeed(PIN),
   verifyPin: Effect.fn("EffectSchemaInventoryTest.verifyPin")(() => Effect.void),
-  readPinned: Effect.fn("EffectSchemaInventoryTest.readPinned")(() =>
-    Ref.update(reads, (count) => count + 1).pipe(Effect.as(""))
+  readPinned: Effect.fn("EffectSchemaInventoryTest.readPinned")((_pin, file) =>
+    Ref.update(reads, (count) => count + 1).pipe(Effect.as(pinnedText(file)))
   ),
-  graftContext: Effect.fn("EffectSchemaInventoryTest.graftContext")(() => Effect.succeed(unavailableGraft)),
+  graftContext: Effect.fn("EffectSchemaInventoryTest.graftContext")(() => Effect.succeed(demoGraft)),
   ...overrides,
 });
+
+const branchModule = EffectSchemaInventoryModule.make({
+  file: "packages/effect/src/Branches.ts",
+  module: "effect/Branches",
+  slug: "effect-Branches",
+  importable: true,
+});
+
+const branchSource = `export const typed: number = 1
+export const arrow = (x: number): number => x
+export const fn = function named(x: string) { return x }
+export const plain = 1
+export class K {
+  static readonly s = 1
+  get g(): string { return "" }
+  set g(value: string) {}
+  m(): void {}
+  [key: string]: unknown
+}
+export type Callable = { (x: number): string; (x: string): string; readonly p: number }
+export enum E { A, B }
+const hidden = 2
+export { hidden as renamed }
+export interface WithIndex { [key: string]: number; new (x: number): WithIndex }
+`;
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory", (it) => {
   it.effect(
@@ -341,6 +411,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         )
       );
       assertTrue(failure._tag === "EffectSchemaInventoryDriftError");
+      // Every module file plus INDEX.md; no prompt directory exists, so no prompt drift.
       strictEqual(failure.drift.length, EffectSchemaInventoryModules.length + 1);
       assertTrue(A.every(failure.drift, (entry) => entry._tag === "missing"));
       strictEqual(yield* Ref.get(reads), EffectSchemaInventoryModules.length);
@@ -377,9 +448,9 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       strictEqual((yield* verify(semver))._tag, "EffectSchemaInventoryCatalogPinError");
 
       const live = yield* EffectSchemaInventorySource.make(linked);
-      const graft = yield* live.graftContext(ABSENT_PIN, "packages/effect/src/Nope.ts");
-      assertTrue(graft._tag === "unavailable");
-      assertFalse(Str.includes(linked)(graft.reason), "graft reasons never carry the checkout path");
+      const graft = yield* Effect.flip(live.graftContext(ABSENT_PIN, "packages/effect/src/Nope.ts"));
+      strictEqual(graft._tag, "EffectSchemaInventoryGraftUnavailableError");
+      assertFalse(Str.includes(linked)(graft.message), "graft failures never carry the checkout path");
     })
   );
 
@@ -393,14 +464,22 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         pin: PIN,
         rows,
         source: demoSource,
-        graft: unavailableGraft,
+        graft: demoGraft,
       });
       assertInclude(prompt, "export function a(x: unknown): string {\n  return `${x}`\n}");
       assertInclude(prompt, "**Example** (Format)");
       assertInclude(prompt, "````ts\n/**\n * Formats a value.");
       assertInclude(prompt, "const local = 1");
-      assertInclude(prompt, "Graft context is unavailable (graft is not on PATH)");
-      assertFalse(Str.includes("/repo")(prompt));
+      assertInclude(prompt, "hashes to the same blob as the pin, so the spans line up with the inlined source");
+      assertInclude(prompt, "| L13-L17 | function | `a` | Formats \\| values. |");
+      const drifting = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: demoSource,
+        graft: EffectSchemaInventoryGraftContext.make({ ...demoGraft, workingTreeMatchesPin: false }),
+      });
+      assertInclude(drifting, "working-tree context whose spans and summaries may drift");
     })
   );
 
@@ -414,13 +493,159 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
             pin: PIN,
             rows,
             source: demoSource,
-            graft: unavailableGraft,
+            graft: demoGraft,
           })
         );
       const unresolved = yield* render([makeRow({ line: 999, symbol: "ghost", hasExample: false })]);
       assertInclude(unresolved.message, "ghost@999");
       const noExample = yield* render([makeRow({ line: 28, symbol: "C", hasExample: true })]);
       assertInclude(noExample.message, "hasExample");
+    })
+  );
+  it.effect(
+    "extracts signatures, kinds, and overload counts for every declaration shape",
+    Effect.fnUntraced(function* () {
+      const extraction = yield* extractEffectSchemaInventory(PIN, [[branchModule, branchSource]]);
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const row = (symbol: string, kind: string) => O.getOrThrow(rowOf(rows, symbol, kind));
+      strictEqual(row("typed", "const").signature, "const typed: number");
+      strictEqual(row("arrow", "const").signature, "const arrow = (x: number): number =>");
+      strictEqual(row("fn", "const").signature, "const fn = function named(x: string)");
+      strictEqual(row("plain", "const").signature, "const plain: <inferred; see source>");
+      strictEqual(row("K", "class").signature, "export class K");
+      strictEqual(row("K.s", "property").signature, "static readonly s = 1");
+      strictEqual(row("K.g", "accessor").signature, "get g(): string");
+      strictEqual(row("K.m", "method").signature, "m(): void");
+      strictEqual(row("K.m", "method").overloads, 0);
+      strictEqual(row("K.<index>", "property").signature, "[key: string]: unknown");
+      strictEqual(row("Callable", "type").overloads, 2);
+      strictEqual(row("Callable.<call>", "call").overloads, 2);
+      strictEqual(row("Callable.p", "property").signature, "readonly p: number");
+      strictEqual(row("E", "property").signature, "export enum E { A, B }");
+      strictEqual(row("E.B", "property").signature, "B");
+      strictEqual(row("renamed", "const").signature, "const hidden: <inferred; see source>");
+      strictEqual(row("renamed", "const").line, 14);
+      strictEqual(row("WithIndex.<new>", "constructor").overloads, 1);
+      strictEqual(row("WithIndex.<index>", "property").signature, "[key: string]: number;");
+      strictEqual(rows.length, 19);
+    })
+  );
+
+  it.effect(
+    "refuses to generate an inventory with zero rows",
+    Effect.fnUntraced(function* () {
+      const reads = yield* Ref.make(0);
+      const failure = yield* Effect.flip(
+        generateEffectSchemaInventory().pipe(
+          Effect.provideService(
+            EffectSchemaInventorySource,
+            fakeSource({}, reads, () => "")
+          )
+        )
+      );
+      strictEqual(failure._tag, "EffectSchemaInventoryError");
+      assertInclude(failure.message, "0 rows");
+    })
+  );
+
+  it.effect(
+    "swaps a staged fixture into place, keeping hand-maintained and foreign files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-write-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      const parent = path.dirname(directory);
+      const listing = (target: string) => Effect.map(fs.readDirectory(target), A.sort(Order.String));
+      const leftovers = Effect.map(fs.readDirectory(parent), A.filter(Str.startsWith(".inventory-")));
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "README.md"), "contract\n");
+      const ownedLine = yield* encodeEffectSchemaInventoryRowJson(
+        makeRow({ line: 1, symbol: "old", hasExample: false })
+      );
+      yield* fs.writeFileString(path.join(directory, "effect-Old.jsonl"), `${ownedLine}\n`);
+      yield* fs.writeFileString(path.join(directory, "notes.jsonl"), "{}\n");
+
+      yield* writeEffectSchemaInventoryFixture(
+        root,
+        renderedFiles([
+          ["effect-Demo.jsonl", "x\n"],
+          ["INDEX.md", "# index\n"],
+        ])
+      );
+      deepStrictEqual(yield* listing(directory), ["INDEX.md", "README.md", "effect-Demo.jsonl", "notes.jsonl"]);
+      strictEqual(yield* fs.readFileString(path.join(directory, "README.md")), "contract\n");
+      deepStrictEqual(yield* leftovers, []);
+
+      // ".." resolves to the staging parent, so the second write fails before the swap.
+      const failure = yield* Effect.flip(
+        writeEffectSchemaInventoryFixture(
+          root,
+          renderedFiles([
+            ["effect-Demo.jsonl", "y\n"],
+            ["..", "z"],
+          ])
+        )
+      );
+      strictEqual(failure._tag, "EffectSchemaInventoryError");
+      strictEqual(yield* fs.readFileString(path.join(directory, "effect-Demo.jsonl")), "x\n");
+      deepStrictEqual(yield* leftovers, []);
+    })
+  );
+
+  it.effect(
+    "fails instead of reading an unlistable fixture directory as empty",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-unlistable-" });
+      const directory = path.join(root, EffectSchemaInventoryFixturePath);
+      yield* fs.makeDirectory(path.dirname(directory), { recursive: true });
+      yield* fs.writeFileString(directory, "not a directory\n");
+      const read = yield* Effect.flip(readEffectSchemaInventoryFixture(root));
+      assertInclude(read.message, "Unable to list");
+      const write = yield* Effect.flip(
+        writeEffectSchemaInventoryFixture(root, renderedFiles([["INDEX.md", "# index\n"]]))
+      );
+      assertInclude(write.message, "Unable to list");
+      strictEqual(yield* fs.readFileString(directory), "not a directory\n");
+    })
+  );
+
+  it.effect(
+    "verifies committed prompts outside their graft section and ignores hand-written files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const extraction = yield* extractDemo;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-prompts-" });
+      const directory = path.join(root, EffectSchemaInventoryPromptRoot);
+      const file = path.join(directory, "effect-Demo.md");
+      const rows = O.getOrThrow(A.head(extraction.modules)).rows;
+      const prompt = yield* renderEffectSchemaInventoryPrompt({
+        module: demoModule,
+        pin: PIN,
+        rows,
+        source: demoSource,
+        graft: demoGraft,
+      });
+      const check = checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [
+        [demoModule, demoSource],
+        [otherModule, "export const other = 1\n"],
+      ]);
+      deepStrictEqual(yield* check, []);
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
+      yield* fs.writeFileString(file, prompt);
+      deepStrictEqual(yield* check, []);
+      yield* fs.writeFileString(file, Str.replace("Formats \\| values.", "Graft wording moved.")(prompt));
+      deepStrictEqual(yield* check, []);
+      yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
+      const drift = yield* check;
+      strictEqual(drift.length, 1);
+      const stale = O.getOrThrow(A.head(drift));
+      assertTrue(stale._tag === "stale");
+      strictEqual(stale.file, `${EffectSchemaInventoryPromptRoot}/effect-Demo.md`);
     })
   );
 });

@@ -369,7 +369,7 @@ export class EffectSchemaInventoryExtraction extends S.Class<EffectSchemaInvento
  *
  * ```ts
  * import { EffectSchemaInventoryIndexHeader } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const header = EffectSchemaInventoryIndexHeader.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
@@ -427,7 +427,7 @@ export class EffectSchemaInventoryFile extends S.Class<EffectSchemaInventoryFile
  *
  * ```ts
  * import { EffectSchemaInventoryReceipt } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const receipt = EffectSchemaInventoryReceipt.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
@@ -472,7 +472,7 @@ export class EffectSchemaInventoryReceipt extends S.Class<EffectSchemaInventoryR
  *
  * ```ts
  * import { EffectSchemaInventoryReceipt, EffectSchemaInventoryRendered } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const receipt = EffectSchemaInventoryReceipt.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
@@ -553,7 +553,7 @@ export type EffectSchemaInventoryDrift = typeof EffectSchemaInventoryDrift.Type;
  *
  * ```ts
  * import { EffectSchemaInventoryCheckReport, EffectSchemaInventoryReceipt } from "@beep/repo-cli/commands/Lint"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const receipt = EffectSchemaInventoryReceipt.make({
  *   pin: "df77fff9396fe31de72d1947ecb5b74f8cee89e1",
@@ -644,46 +644,45 @@ export class EffectSchemaInventoryGraftSkeleton extends S.Class<EffectSchemaInve
 ) {}
 
 /**
- * Local graft context for a lane prompt, or the reason it is absent.
+ * Local graft context for a lane prompt: the skeleton of one module file in the reference working
+ * tree.
  *
  * **Details**
  *
- * Graft indexes the reference working tree, not the pin. `available` records that tree's HEAD
- * and whether the module file is byte-identical at HEAD and at the pin; graft is never a
- * hosted-CI dependency, so `unavailable` is an expected outcome.
+ * Graft indexes the reference working tree, not the pin. `workingTreeMatchesPin` records whether
+ * the working-tree file hashes (`git hash-object`) to the same blob as the file at the pin; only
+ * then do graft's spans line up with the inlined source. Graft is local-only and never a
+ * hosted-CI input; when it cannot be read, prompt generation fails instead of building a context.
  *
- * **Example** (Record an absent graft)
+ * **Example** (Record a matching working tree)
  *
  * ```ts
  * import { EffectSchemaInventoryGraftContext } from "@beep/repo-cli/commands/Lint"
  *
- * const context = EffectSchemaInventoryGraftContext.cases.unavailable.make({ reason: "graft is not on PATH" })
- * console.log(context._tag) // "unavailable"
+ * const context = EffectSchemaInventoryGraftContext.make({
+ *   head: "e5f7d12af9abef188f7dc39b0207af1801b03ffd",
+ *   workingTreeMatchesPin: true,
+ *   entries: []
+ * })
+ * console.log(context.workingTreeMatchesPin) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const EffectSchemaInventoryGraftContext = S.TaggedUnion({
-  available: {
+export class EffectSchemaInventoryGraftContext extends S.Class<EffectSchemaInventoryGraftContext>(
+  $I`EffectSchemaInventoryGraftContext`
+)(
+  {
     head: EffectSchemaInventoryPin,
-    identicalAtPin: S.Boolean,
+    workingTreeMatchesPin: S.Boolean,
     entries: S.Array(EffectSchemaInventoryGraftEntry),
   },
-  unavailable: { reason: S.NonEmptyString },
-}).pipe(
-  $I.annoteSchema("EffectSchemaInventoryGraftContext", {
-    description: "Graft skeleton of a module at the reference HEAD, or why it could not be read.",
+  $I.annote("EffectSchemaInventoryGraftContext", {
+    description:
+      "Graft skeleton of a module in the reference working tree, its HEAD, and whether the working-tree file equals the pin blob.",
   })
-);
-
-/**
- * Decoded graft context.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type EffectSchemaInventoryGraftContext = typeof EffectSchemaInventoryGraftContext.Type;
+) {}
 
 /**
  * Outcome of one lane prompt generation.
@@ -697,7 +696,7 @@ export type EffectSchemaInventoryGraftContext = typeof EffectSchemaInventoryGraf
  *   module: "effect/SchemaIssue",
  *   target: "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
  *   rows: 65,
- *   graftAvailable: true
+ *   workingTreeMatchesPin: true
  * })
  * console.log(receipt.rows) // 65
  * ```
@@ -712,10 +711,11 @@ export class EffectSchemaInventoryPromptReceipt extends S.Class<EffectSchemaInve
     module: EffectSchemaInventoryModuleName,
     target: S.NonEmptyString,
     rows: EffectSchemaInventoryCount,
-    graftAvailable: S.Boolean,
+    workingTreeMatchesPin: S.Boolean,
   },
   $I.annote("EffectSchemaInventoryPromptReceipt", {
-    description: "Module, repository-relative output path, row count, and graft availability of a written lane prompt.",
+    description:
+      "Module, output path, row count, and whether graft's working-tree file matched the pin for a written lane prompt.",
   })
 ) {}
 
