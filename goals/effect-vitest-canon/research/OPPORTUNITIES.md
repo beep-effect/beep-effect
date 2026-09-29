@@ -5906,3 +5906,14 @@ required op-doctor service-account checks passed. A metadata-only signing
 preflight would distinguish these paths before an expensive publish cycle.
 The staged work and proof were preserved; no signing or authentication setting
 was changed, and no raw secrets were read for this diagnosis.
+
+
+### Effect callback migration exposes previously hidden error-channel diagnostics
+
+Migrating cli-kits.test.ts from direct runSync calls to it.effect preserved
+runtime behavior but exposed three globalErrorInEffectFailure diagnostics in
+its generic Error fixture. Both runtimes passed before the type artifact caught
+this. A local tagged error preserves the message and supports stronger exact
+failure assertions; final diagnostics are empty. Migration checks should inspect
+the actual test-type artifact even when ordinary package check and runtimes pass.
+See cli-kits-runtime-proof.md for the preserved API cases and final evidence.

@@ -28,13 +28,17 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, HashSet } from "effect";
+import { Data, Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeRunModeEffect = S.decodeEffect(RunMode);
 
 const toError = (cause: unknown) => new Error(String(cause));
+
+class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
+  readonly message: string;
+}> {}
 
 describe("internal/cli/FailureRendering", () => {
   it("stays quiet by default so causes do not leak transcript paths", () => {
@@ -183,13 +187,21 @@ describe("internal/cli/FsGuards", () => {
     expect(caseCollided.targetName).toBe("PHOTO_02.WEBP");
   });
 
-  it("validatePathSegment works data-first and data-last", () => {
-    const options = { onInvalid: (label: string, value: string) => new Error(`${label}: ${value}`) };
-    expect(Effect.runSync(validatePathSegment("source", "ok", options))).toBeUndefined();
-    expect(Effect.runSync(validatePathSegment("ok", options)("source"))).toBeUndefined();
-    expect(() => Effect.runSync(validatePathSegment("source", "..", options))).toThrow();
-    expect(() => Effect.runSync(validatePathSegment("..", options)("source"))).toThrow();
-  });
+  it.effect("validatePathSegment works data-first and data-last", () =>
+    Effect.gen(function* () {
+      const options = {
+        onInvalid: (label: string, value: string) => new InvalidPathSegment({ message: `${label}: ${value}` }),
+      };
+      expect(yield* validatePathSegment("source", "ok", options)).toBeUndefined();
+      expect(yield* validatePathSegment("ok", options)("source")).toBeUndefined();
+      expect(yield* validatePathSegment("source", "..", options).pipe(Effect.flip)).toEqual(
+        new InvalidPathSegment({ message: "source: .." })
+      );
+      expect(yield* validatePathSegment("..", options)("source").pipe(Effect.flip)).toEqual(
+        new InvalidPathSegment({ message: "source: .." })
+      );
+    })
+  );
 
   it("exposes both arities of the filesystem-dependent guards without running them", () => {
     const dirErrors = {
