@@ -2419,3 +2419,29 @@ current-head proof. Keeping the publish watcher's classification aligned with
 the readiness monitor's documented Vercel rate-limit exception would avoid
 misdirected source repairs and duplicate expensive proof attempts. This packet
 records the friction; Yeet proof ownership and gates remain unchanged.
+
+### Multiprocess debugger must wait for the whole task
+
+The first bounded ring-submission observer returned from GDB `run` when a
+short-lived child exited, then stopped the remaining task processes before
+lint completed. The task-output comparison rejected the observation; no queue
+entries or semantic-closure credit were accepted. Dependency hashes matched
+before and after. The retry explicitly continues surviving inferiors under
+a bounded deadline. A multiprocess completion condition, rather than the
+debugger command's exit status, would have prevented the failed attempt.
+
+The second attempt completed all six observed inferiors with exit zero and
+matched the uninstrumented task streams, but recorded zero setup/submission
+catch events. It was also rejected: absent events do not establish absent ring
+operations when debugger coverage across child inferiors is unverified. Both
+attempts and dependency-parity results are retained privately. The next step
+is a bounded catchpoint-coverage diagnostic before another task observation.
+
+Follow-up diagnostics confirmed that the original catchpoints covered the
+parent only. A per-inferior thread hook captured all eight expected entry/exit
+stops in both fork and fork/exec probes. Subsequent calibrated attempts rejected
+a wrong debug-variable name and an incorrect SQ index-array assumption. The
+accepted observation uses the installed `ctl` debug variable and observed
+`NO_SQARRAY` layout; independent review verifies twelve `EPOLL_CTL` entries
+across five submissions. These failed attempts remain retained and do not gain
+credit from the later successful observation.

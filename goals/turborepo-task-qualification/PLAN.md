@@ -2751,3 +2751,16 @@ native-I/O review. It binds 1,025 sources, 112 reviews and six artifacts, with
 25 unresolved obligations. All prior bindings remain unchanged; the census
 still contains 144 workspaces and 1,970 executable nodes. Attachment acceptance
 does not close the outstanding semantic, signed-remote or shadow requirements.
+
+### Patched dependency profile: direct ring submission observation
+
+The [ring review](research/current-patched-ring-review.json) decodes twelve
+submission entries across five `io_uring_enter` calls in a separate real lint
+execution. All are `EPOLL_CTL`; syscall returns accept the submitted counts.
+All six observed inferiors exit zero, task streams match the uninstrumented
+run and dependency identity is unchanged. Synthetic parent/fork/exec controls
+verify the per-inferior catchpoint installation. Four rejected calibration
+attempts are retained, including an index-array assumption corrected against
+the observed `NO_SQARRAY` mode and installed debug constant. This does not
+retroactively decode older traces or prove complete semantic closure, signed
+remote reuse, representative shadow acceptance or tuple qualification.
