@@ -54,3 +54,11 @@ Private receipts preserve these resolutions and the preview tree. They are
 unapplied and do not establish runtime integration proof. Re-evaluate against
 the actual merged main head before using them; the ledger, opportunities,
 and inventory conflicts still require their own reconciliation.
+
+The inventory preparation also compares existing rows across the merge base
+and both branches. Row IDs alone make moved findings look deleted. Conversely,
+file/rule/occurrence tuples are not unique: the baseline has 28 multi-row
+groups and the CLI ledger has 15 in all three inputs. Preserve group
+multiplicity and reconcile individual lineages; neither replacing the entire
+inventory nor collapsing a group to one map entry is a valid merge strategy.
+Private three-way reports retain the input rows for this reconciliation.

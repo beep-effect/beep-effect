@@ -5796,3 +5796,21 @@ Improve browser-runner failure artifacts with setup-module HTTP status and
 server-side transform errors, so fetch failures can be attributed without a
 whole-suite rerun. Preserve the failed chunk identity and distinguish setup
 collection failures from failed story assertions.
+
+## Inventory merge keys can collapse existing rows
+
+Preparing the PR 1323 checkpoint integration exposed duplicate identity
+groups in the existing inventories. Grouping by file, rule ID, and occurrence
+hash yields 28 groups with multiple rows in the baseline and 15 in the CLI
+ledger. The counts are identical in the merge base and both branch inputs;
+this preparation did not introduce them. For example, the baseline contains
+two EV002 rows for one occurrence in `contradiction-qa-seed.pglite.test.ts`,
+with row IDs that differ by line number.
+
+A reconciliation map that stores only one row for that tuple would silently
+discard history. Preserve each group as a multiset and match individual
+lineages before changing statuses or removing rows. Distinguish moved
+identities from deleted findings, and reject ambiguous matches. Add a focused
+regression for colliding identities when improving the reconciliation tooling.
+The analysis keeps multi-row groups intact; no baseline or ledger was
+rewritten and no finding was closed by this analysis.
