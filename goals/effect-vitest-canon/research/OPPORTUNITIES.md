@@ -5417,3 +5417,21 @@ explicit #2 ledger suffix for the new row and a public collision receipt.
 Future cumulative inventory tooling should distinguish snapshot identity from
 finding lineage and check occurrence/evidence before treating matching location
 IDs as the same row. This does not require changing the current baseline IDs.
+
+
+### Quality-task temporary-repository setup registers cleanup too late
+
+Preparing quality-tasks.test.ts exposed a setup defect in withTempRepo: it
+allocates a directory and overrides process.cwd, then creates .git before
+registering either cleanup action. An extracted-body control with native
+NodeServices and an injected mkdir failure reproduces both the directory leak
+and the retained cwd override on Node and Bun. The control restores its own cwd
+function and removes its directory afterward; no repository source is changed
+while the lint-command package proof runs.
+
+Repair this helper in the next cohort by registering directory cleanup and cwd
+restoration before fallible setup. Preserve its process.cwd function override;
+replacing that behavior with process.chdir would change how subprocesses see
+cwd. Prove success, failure, interruption and setup-defect cleanup, and audit
+call-site scope boundaries before flattening the wrapper. Private receipts:
+cli-quality-tasks-setup-leak-{node,bun}.log.
