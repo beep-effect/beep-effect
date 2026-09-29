@@ -103,10 +103,14 @@ export class Span extends S.Class<Span>($I`Span`)(
   /**
    * Resolve cleaned-text span positions against the original input text.
    *
+   * **Gotchas**
+   *
+   * Both clean positions are checked as non-negative integers first; a
+   * negative or fractional position throws a `SchemaError`.
+   *
    * **Example** (Resolving original span positions)
    *
    * ```ts
-   * import * as S from "effect/Schema"
    * import { SegmentMap, Span, TransformationMap } from "@beep/law-practice-domain"
    * import * as HashMap from "effect/HashMap"
    * import * as O from "effect/Option"
@@ -119,7 +123,7 @@ export class Span extends S.Class<Span>($I`Span`)(
    * })
    *
    * const resolved = Span.resolveOriginal(
-   *   { cleanEnd: S.Natural.make(5), cleanStart: S.Natural.make(0) },
+   *   { cleanEnd: 5, cleanStart: 0 },
    *   map,
    * )
    * console.log(resolved.originalStart)
@@ -144,17 +148,20 @@ export class Span extends S.Class<Span>($I`Span`)(
     (
       span: { readonly cleanStart: number; readonly cleanEnd: number },
       map: TransformationMap
-    ): { readonly originalStart: number; readonly originalEnd: number } =>
-      O.match(map.cleanToOriginalSegments, {
+    ): { readonly originalStart: number; readonly originalEnd: number } => {
+      const cleanStart = S.Natural.make(span.cleanStart);
+      const cleanEnd = S.Natural.make(span.cleanEnd);
+      return O.match(map.cleanToOriginalSegments, {
         onNone: () => ({
-          originalEnd: HashMap.get(map.cleanToOriginal, span.cleanEnd).pipe(O.getOrElse(() => span.cleanEnd)),
-          originalStart: HashMap.get(map.cleanToOriginal, span.cleanStart).pipe(O.getOrElse(() => span.cleanStart)),
+          originalEnd: HashMap.get(map.cleanToOriginal, cleanEnd).pipe(O.getOrElse(() => cleanEnd)),
+          originalStart: HashMap.get(map.cleanToOriginal, cleanStart).pipe(O.getOrElse(() => cleanStart)),
         }),
         onSome: (segmentMap) => ({
-          originalEnd: S.Natural.make(segmentMap.lookup(span.cleanEnd)),
-          originalStart: S.Natural.make(segmentMap.lookup(span.cleanStart)),
+          originalEnd: S.Natural.make(segmentMap.lookup(cleanEnd)),
+          originalStart: S.Natural.make(segmentMap.lookup(cleanStart)),
         }),
-      })
+      });
+    }
   );
 }
 

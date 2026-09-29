@@ -2698,7 +2698,10 @@ export type VCardBooleanFromString = typeof VCardBooleanFromString.Type;
  * @since 0.0.0
  */
 export const VCardIntegerValue = S.BigInt.check(
-  S.isBetweenBigInt({ minimum: -9_223_372_036_854_775_808n, maximum: 9_223_372_036_854_775_807n })
+  S.isBetweenBigInt(
+    { minimum: -9_223_372_036_854_775_808n, maximum: 9_223_372_036_854_775_807n },
+    { message: "Expected a signed 64-bit integer" }
+  )
 ).pipe(
   S.brand("VCardIntegerValue"),
   $I.annoteSchema("VCardIntegerValue", {

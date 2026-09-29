@@ -391,6 +391,11 @@ type ProjectWithinBudgetOptions = {
  * with the oversized `minimal` projection and its size, and the result is
  * returned as the `Fetchable` outcome.
  *
+ * **Gotchas**
+ *
+ * `options.budgetBytes` is checked as a non-negative integer before any tier is
+ * projected; a negative or fractional budget throws a `SchemaError`.
+ *
  * **Example** (Project within budget bytes)
  *
  * ```ts
@@ -407,7 +412,7 @@ type ProjectWithinBudgetOptions = {
  *   { id: "doc-1", summary: "s", body: "b".repeat(100) },
  *   {
  *     tiers,
- *     budgetBytes: S.Natural.make(40),
+ *     budgetBytes: 40,
  *     mintFetchableHandle: (oversized) =>
  *       FetchableHandle.make({
  *         handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
@@ -428,9 +433,10 @@ export const projectWithinBudget: {
   (value: Record<string, unknown>, options: ProjectWithinBudgetOptions): FieldProjectionOutcome;
   (options: ProjectWithinBudgetOptions): (value: Record<string, unknown>) => FieldProjectionOutcome;
 } = dual(2, (value: Record<string, unknown>, options: ProjectWithinBudgetOptions): FieldProjectionOutcome => {
+  const budgetBytes = S.Natural.make(options.budgetBytes);
   for (const tier of TIER_ORDER) {
     const projected = projectFieldTier(value, tier, options.tiers);
-    if (estimateJsonSize(projected) <= options.budgetBytes) {
+    if (estimateJsonSize(projected) <= budgetBytes) {
       return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
     }
   }

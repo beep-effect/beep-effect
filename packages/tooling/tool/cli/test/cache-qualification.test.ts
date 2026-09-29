@@ -200,7 +200,7 @@ describe("Cache qualification writer", () => {
 // These are original-byte and safety-boundary tests, not passing qualification receipts.
 describe("bounded qualification evidence", () => {
   it.effect(
-    "preserves original bytes and rejects overflow and symlinks",
+    "preserves original bytes and rejects overflow, symlinks and an invalid byte limit",
     Effect.fnUntraced(function* () {
       const { root, fs, path } = yield* fixture();
       const target = path.join(root, "bytes.bin");
@@ -221,6 +221,10 @@ describe("bounded qualification evidence", () => {
       yield* fs.writeFile(target, new Uint8Array(0));
       const empty = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(0));
       expect(O.getOrThrow(empty.contents).byteLength).toBe(0);
+      const negative = yield* readContainedFileBytesNoFollow(root, "bytes.bin", -1).pipe(Effect.flip);
+      const fractional = yield* readContainedFileBytesNoFollow(root, "bytes.bin", 1.5).pipe(Effect.flip);
+      expect(negative.message).toBe("Maximum byte length must be a non-negative integer.");
+      expect(fractional.message).toBe("Maximum byte length must be a non-negative integer.");
     }, provideScopedLayer(testLayer))
   );
 

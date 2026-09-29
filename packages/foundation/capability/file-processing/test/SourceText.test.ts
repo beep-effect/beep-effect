@@ -98,6 +98,26 @@ describe("@beep/file-processing SourceText", () => {
     })
   );
 
+  it.effect(
+    "rejects a negative or fractional page index and offset",
+    Effect.fnUntraced(function* () {
+      const source = ResolvedSourceText.make({ identity, text: "abc" });
+      const failures = yield* Effect.all([
+        Effect.flip(pageSourceText(source, -1)),
+        Effect.flip(pageSourceText(source, 1.5)),
+        Effect.flip(pageSourceTextContainingOffset(source, -1)),
+        Effect.flip(pageSourceTextContainingOffset(source, 1.5)),
+      ]);
+
+      expect(failures).toMatchObject([
+        { message: "Source-text page -1 is not a non-negative integer.", reason: "page-out-of-range" },
+        { message: "Source-text page 1.5 is not a non-negative integer.", reason: "page-out-of-range" },
+        { message: "Source-text offset -1 is not a non-negative integer.", reason: "page-out-of-range" },
+        { message: "Source-text offset 1.5 is not a non-negative integer.", reason: "page-out-of-range" },
+      ]);
+    })
+  );
+
   it("rejects impossible page relationships", () => {
     const validPage = {
       endOffset: 5,

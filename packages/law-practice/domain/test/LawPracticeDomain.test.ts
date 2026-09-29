@@ -53,6 +53,7 @@ import {
   StatutesAtLargeCitation,
   SubsequentHistoryEntry,
   SupraCitation,
+  TransformationMap,
   WarningPosition,
   WipoSt13OfficeCode,
 } from "@beep/law-practice-domain";
@@ -65,6 +66,7 @@ import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -914,4 +916,17 @@ describe("@beep/law-practice-domain", () => {
       expect(equivalent(yield* decodeCitation(yield* encodeCitation(decoded)), decoded)).toBe(true);
     })
   );
+
+  it("rejects a negative or fractional clean position when resolving original span positions", () => {
+    const positions = HashMap.empty<number, number>();
+    const map = TransformationMap.make({
+      cleanToOriginal: positions,
+      cleanToOriginalSegments: O.none(),
+      originalToClean: positions,
+    });
+
+    expect(Span.resolveOriginal({ cleanEnd: 5, cleanStart: 0 }, map)).toEqual({ originalEnd: 5, originalStart: 0 });
+    expect(() => Span.resolveOriginal({ cleanEnd: 5, cleanStart: -1 }, map)).toThrow();
+    expect(() => Span.resolveOriginal({ cleanEnd: 1.5, cleanStart: 0 }, map)).toThrow();
+  });
 });

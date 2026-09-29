@@ -16,6 +16,19 @@ import { SourceTextResolverError } from "./SourceText.errors.ts";
 import { SOURCE_TEXT_PAGE_CODE_UNITS, SourceTextPage } from "./SourceText.schema.ts";
 import type { ResolvedSourceText } from "./SourceText.schema.ts";
 
+const decodeNatural = S.decodeEffect(S.Natural);
+
+const requireNatural = (value: number, subject: string): Effect.Effect<number, SourceTextResolverError> =>
+  decodeNatural(value).pipe(
+    Effect.mapError((cause) =>
+      SourceTextResolverError.new(
+        "page-out-of-range",
+        `Source-text ${subject} ${value} is not a non-negative integer.`,
+        cause
+      )
+    )
+  );
+
 const isHighSurrogate = N.between({ minimum: 0xd800, maximum: 0xdbff });
 const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
 
@@ -81,20 +94,19 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  *
  * **Gotchas**
  *
- * Empty sources have one empty page at index zero. A page index outside the
- * computed page count fails through {@link SourceTextResolverError}; text is
- * never truncated or fuzzy-relocated.
+ * Empty sources have one empty page at index zero. A negative or fractional
+ * page index, or one outside the computed page count, fails through
+ * {@link SourceTextResolverError}; text is never truncated or fuzzy-relocated.
  *
  * **Example** (Load first page)
  *
  * ```ts import.meta.vitest name="Load first page"
- * import * as S from "effect/Schema"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
  * import { Effect } from "effect"
  *
  * const loadFirstPage = (source: ResolvedSourceText) =>
- *   Effect.runPromise(pageSourceText(source, S.Natural.make(0)))
+ *   Effect.runPromise(pageSourceText(source, 0))
  *
  * typeof loadFirstPage // => "function"
  * ```
@@ -109,7 +121,8 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
   source: ResolvedSourceText,
   pageIndex: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
-  return yield* sourceTextPageFromBounds(source, pageIndex, sourceTextPageBounds(source.text));
+  const index = yield* requireNatural(pageIndex, "page");
+  return yield* sourceTextPageFromBounds(source, index, sourceTextPageBounds(source.text));
 });
 
 /**
@@ -121,11 +134,11 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  * This is the authoritative way to open an anchor's first page. Nominal
  * division by {@link SOURCE_TEXT_PAGE_CODE_UNITS} is insufficient because an
  * earlier page boundary can move backward to avoid splitting a surrogate pair.
+ * A negative or fractional offset fails through {@link SourceTextResolverError}.
  *
  * **Example** (Load page for offset)
  *
  * ```ts import.meta.vitest name="Load page for offset"
- * import * as S from "effect/Schema"
  * import {
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"
@@ -134,7 +147,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *
  * const loadPageContaining = (source: ResolvedSourceText, offset: number) =>
  *   Effect.runPromise(
- *     pageSourceTextContainingOffset(source, S.Natural.make(offset))
+ *     pageSourceTextContainingOffset(source, offset)
  *   )
  *
  * typeof loadPageContaining // => "function"
@@ -150,10 +163,12 @@ export const pageSourceTextContainingOffset = Effect.fn("SourceText.pageSourceTe
   source: ResolvedSourceText,
   offset: number
 ): Effect.fn.Return<SourceTextPage, SourceTextResolverError> {
+  const codeUnitOffset = yield* requireNatural(offset, "offset");
   const pageBounds = sourceTextPageBounds(source.text);
   const pageIndex = yield* A.findFirstIndex(
     pageBounds,
-    ([startOffset, endOffset]) => N.isLessThanOrEqualTo(startOffset, offset) && N.isLessThan(offset, endOffset)
+    ([startOffset, endOffset]) =>
+      N.isLessThanOrEqualTo(startOffset, codeUnitOffset) && N.isLessThan(codeUnitOffset, endOffset)
   ).pipe(
     O.match({
       onNone: () =>

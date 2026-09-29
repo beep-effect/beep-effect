@@ -3,7 +3,7 @@
 "@beep/agents-server": patch
 "@beep/agents-use-cases": minor
 "@beep/box": minor
-"@beep/ciops": patch
+"@beep/ciops": minor
 "@beep/dock": minor
 "@beep/dock-react": minor
 "@beep/doc-text": patch
@@ -33,7 +33,7 @@
 "@beep/nlp": minor
 "@beep/nlp-processing": minor
 "@beep/observability": minor
-"@beep/oip-web": patch
+"@beep/oip-web": minor
 "@beep/onepassword-cli": minor
 "@beep/ontology-client": patch
 "@beep/ontology-server": minor
@@ -43,13 +43,13 @@
 "@beep/pacer": minor
 "@beep/practice-kg-mcp": patch
 "@beep/pretext": patch
-"@beep/professional-desktop": patch
+"@beep/professional-desktop": minor
 "@beep/provenance": minor
 "@beep/rdf": minor
 "@beep/repo-ai-metrics": minor
 "@beep/repo-configs": minor
 "@beep/repo-docgen": minor
-"@beep/semantica": patch
+"@beep/semantica": minor
 "@beep/semantic-web": minor
 "@beep/shared-domain": minor
 "@beep/skill-contract": minor
@@ -70,6 +70,15 @@ under the "Upstream-First Foundation/Modeling" decision (`standards/architecture
 becomes `S.Finite.check(S.isGreaterThanOrEqualTo(0))`, the sign checks become
 `S.isGreaterThan(0)` and its siblings, and `FiniteFromString` becomes `S.FiniteFromString`;
 `@beep/govinfo` bounds its GovInfo counts with `S.BigInt.check(S.isBetweenBigInt(...))`. Packages
-that export schemas built on these members take a minor bump because their decoded types lose the
-`Int`, `NonNegativeInt`, and `Int64` brands; accepted values and encoded bytes are unchanged, and
-validation messages now come from the upstream checks.
+that export schemas or functions built on these members take a minor bump because their decoded
+types lose the `Int`, `NonNegativeInt`, and `Int64` brands; accepted values and encoded bytes are
+unchanged. The non-negative checks now report the upstream message ("Expected a value greater than
+or equal to 0"); the int64 range keeps "Expected a signed 64-bit integer".
+
+The brand was compile-time proof that a caller had validated the value, so each exported function
+that took a `NonNegativeInt` checks it at its boundary: `pageSourceText` and
+`pageSourceTextContainingOffset` (`@beep/file-processing`) fail with `SourceTextResolverError`;
+`projectWithinBudget` (`@beep/mcp-kit`), `Span.resolveOriginal` (`@beep/law-practice-domain`),
+`UsptoError.fromReason` and `makeUsptoError` (`@beep/uspto`) throw a `SchemaError`; and a write of
+a negative or fractional offset to `contradictionQueueOffsetAtom` (`@beep/epistemic-client`)
+throws and leaves the offset unchanged.

@@ -147,6 +147,11 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
 /**
  * Zero-based offset of the currently visible contradiction queue page.
  *
+ * **Gotchas**
+ *
+ * Each write is checked as a non-negative integer; setting a negative or
+ * fractional offset throws a `SchemaError` and leaves the offset unchanged.
+ *
  * **Example** (Reading default queue offset)
  *
  * ```ts
@@ -159,9 +164,10 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
  * @category atoms
  * @since 0.0.0
  */
-export const contradictionQueueOffsetAtom: Atom.Writable<number, number> = Atom.make(S.Natural.make(0)).pipe(
-  Atom.keepAlive
-);
+export const contradictionQueueOffsetAtom: Atom.Writable<number, number> = Atom.writable(
+  () => 0,
+  (ctx, offset: number) => ctx.setSelf(S.Natural.make(offset))
+).pipe(Atom.keepAlive);
 
 const queueQueryAtoms = Atom.family((disposition: ContradictionDispositionFilter) =>
   Atom.family((validAt: DateTime.Utc) =>

@@ -20,23 +20,22 @@ binary32 check (ADAPT), per the 2026-09-29 goal-time ruling. The consumer rewrit
 `number-members` codemod rule, cherry-picked as commit fdc400ecfd from 2b240e7cd3 and removed
 again in this change.
 
-Type-check cost, tsgo 7.0.2, fresh build-info, before (the Int retirement head ebf1fa1d0c) →
+Type-check cost, tsgo 7.0.2, fresh build-info, before (the Int retirement head 15d4bf7377,
+measured at ebf1fa1d0c: the commits between change only comments inside the measured closure) →
 after. The gate is the `--singleThreaded` instantiation count:
 
 | Package (`--singleThreaded`, gate) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 708,931 → 703,741 | 202,144 → 200,774 | 1.279 → 1.202 s |
-| `@beep/repo-cli` | 4,151,706 → 4,150,497 | 1,066,834 → 1,066,495 | 11.705 → 12.944 s |
-| `@beep/law-practice-domain` | 874,363 → 873,941 | 259,606 → 259,482 | 1.259 → 1.691 s |
+| `@beep/schema` | 708,931 → 703,741 | 202,144 → 200,774 | 1.279 → 0.952 s |
+| `@beep/repo-cli` | 4,151,706 → 4,150,596 | 1,066,834 → 1,066,521 | 11.705 → 10.634 s |
+| `@beep/law-practice-domain` | 874,363 → 873,941 | 259,606 → 259,482 | 1.259 → 1.116 s |
 
-Check time is advisory within a 5% band. Flagged: the `@beep/repo-cli` (+10.6%) and
-`@beep/law-practice-domain` (+34%) single-threaded times rose with lower instantiation and type
-counts, measured on a shared workstation at load average 24 to 34.
+Check time is advisory within a 5% band; no package breached it.
 
 The default four-checker run is advisory:
 
 | Package (default, 4 checkers, advisory) | Instantiations | Types | Check time |
 | --- | --- | --- | --- |
-| `@beep/schema` | 1,114,282 → 1,106,375 | 368,572 → 366,190 | 0.544 → 0.618 s |
-| `@beep/repo-cli` | 8,426,349 → 8,423,810 | 2,148,815 → 2,148,113 | 5.279 → 5.139 s |
-| `@beep/law-practice-domain` | 1,286,201 → 1,285,263 | 375,234 → 374,957 | 0.762 → 1.810 s |
+| `@beep/schema` | 1,114,282 → 1,106,375 | 368,572 → 366,190 | 0.544 → 0.529 s |
+| `@beep/repo-cli` | 8,426,349 → 8,424,192 | 2,148,815 → 2,148,220 | 5.279 → 4.072 s |
+| `@beep/law-practice-domain` | 1,286,201 → 1,285,263 | 375,234 → 374,957 | 0.762 → 0.706 s |

@@ -30,7 +30,10 @@ const $I = $GovinfoId.create("domain/values/GovinfoNumeric");
  * @since 0.0.0
  */
 export const NonNegativeInt64 = S.BigInt.check(
-  S.isBetweenBigInt({ minimum: BigInt("-9223372036854775808"), maximum: BigInt("9223372036854775807") }),
+  S.isBetweenBigInt(
+    { minimum: BigInt("-9223372036854775808"), maximum: BigInt("9223372036854775807") },
+    { message: "Expected a signed 64-bit integer" }
+  ),
   S.isGreaterThanOrEqualToBigInt(BigInt(0), {
     description: "A non-negative signed 64-bit integer.",
     identifier: $I`NonNegativeInt64MinimumCheck`,

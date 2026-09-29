@@ -126,6 +126,15 @@ describe("field-tier projector", () => {
     assert.notProperty(projected, "value");
   });
 
+  it("rejects a negative or fractional budget before projecting", () => {
+    assert.throws(() =>
+      projectWithinBudget(largeDocumentBagPayload, { tiers: documentTiers, budgetBytes: -1, mintFetchableHandle })
+    );
+    assert.throws(() =>
+      projectWithinBudget(largeDocumentBagPayload, { tiers: documentTiers, budgetBytes: 1.5, mintFetchableHandle })
+    );
+  });
+
   it.effect.prop(
     "round-trips FetchableHandle through its encoded shape",
     [Arbitrary.schema(FetchableHandle)],

@@ -158,6 +158,21 @@ describe("@beep/epistemic-client contradiction atoms", () => {
   );
 
   it.effect(
+    "rejects a negative or fractional queue offset and keeps the last valid one",
+    Effect.fnUntraced(function* () {
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => AtomRegistry.make()),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+
+      registry.set(contradictionQueueOffsetAtom, 50);
+      expect(() => registry.set(contradictionQueueOffsetAtom, -1)).toThrow();
+      expect(() => registry.set(contradictionQueueOffsetAtom, 1.5)).toThrow();
+      expect(registry.get(contradictionQueueOffsetAtom)).toBe(50);
+    })
+  );
+
+  it.effect(
     "initializes both temporal axes from the Effect TestClock",
     Effect.fnUntraced(function* () {
       const targetMillis = 1_767_225_600_000;
