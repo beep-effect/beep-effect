@@ -5082,3 +5082,9 @@ three unchanged diagnostic strings into named fixtures keeps the redaction
 tests intact and produces portable source excerpts. Four finding identities
 were reconciled without changing status. Future inventory generation should
 model sanitized display evidence separately from stable source identity.
+
+The commit formatter then collapsed the two fixture calls onto single lines.
+Stable occurrence hashes survived, but changed evidence excerpts caused two
+ratchet failures. Refresh reviewed evidence after formatting and before the
+final ratchet; separate display evidence from occurrence matching to prevent
+formatting-only failures. The corrected entries preserve statuses and hashes.

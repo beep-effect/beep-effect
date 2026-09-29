@@ -58158,17 +58158,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1386:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1387:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1386,
-      "endLine": 1403,
+      "line": 1387,
+      "endLine": 1401,
       "symbol": "scoped",
       "occurrence": "v2:4fc11d9cc95a877d5e0511c6cfb76b02581406fb8d1b33ff217534f9b0337d08",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", probeWarningStderr ); const error = yield* Effect.flip(harness.oracle.probeCommands(",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness(\"resolved\\tgoals\\tdoctor\\nextra\", probeWarningStderr); const error = yield* Effect.flip(harness.oracle.probeCommands([[",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -58221,17 +58221,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1441:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1439:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 1441,
-      "endLine": 1478,
+      "line": 1439,
+      "endLine": 1472,
       "symbol": "scoped",
       "occurrence": "v2:e5f1e2f922d2eeb57dbc0692598f84900c6df5224c933e3ee8569decc6f8c1b6",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( probeFailureStdout, probeFailureStderr, 1 ); const error = yield* Effect.flip(harness.oracle.probeCommands([[\"goals\",",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness(probeFailureStdout, probeFailureStderr, 1); const error = yield* Effect.flip(harness.oracle.probeCommands([[\"goals\", \"d",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
