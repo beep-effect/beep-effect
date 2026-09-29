@@ -400,6 +400,8 @@ export class CheckCensusComparison extends S.Class<CheckCensusComparison>($I`Che
  *
  * `baselinePath` is repository-relative and defaults to
  * {@link CHECK_CENSUS_BASELINE_PATH}; the CLI stamps its `--baseline` value.
+ * `filter` records the `--filter` text that selected the rows, so an empty
+ * selection can name it.
  *
  * **Example** (Build an empty gate report)
  *
@@ -424,6 +426,7 @@ export class CheckCensusGateReport extends S.Class<CheckCensusGateReport>($I`Che
     baselineCommit: S.String,
     baselineCompiler: S.String,
     compiler: S.String,
+    filter: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     comparisons: S.Array(CheckCensusComparison),
   },
   $I.annote("CheckCensusGateReport", {
@@ -735,10 +738,17 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
   comparison.instantiations === CheckCensusInstantiationVerdict.Enum.increase;
 
 /**
- * Whether the gate fails: any instantiation increase, or a compiler that
- * differs from the one the baseline was measured with.
+ * Whether the gate fails: any instantiation increase, a compiler that
+ * differs from the one the baseline was measured with, or no selected
+ * baseline row at all.
  *
- * **Example** (An empty report passes)
+ * **Details**
+ *
+ * An empty selection fails because it proves nothing: a mistyped `--filter`
+ * or a baseline without rows would otherwise exit 0 without measuring
+ * anything.
+ *
+ * **Example** (An empty report fails)
  *
  * ```ts
  * import { CheckCensusGateReport, checkCensusGateFailed } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
@@ -749,7 +759,7 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
  *   compiler: "7.0.2",
  *   comparisons: [],
  * })
- * console.log(checkCensusGateFailed(report)) // false
+ * console.log(checkCensusGateFailed(report)) // true
  * ```
  *
  * @param report - The gate report to judge.
@@ -758,7 +768,48 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
  * @since 0.0.0
  */
 export const checkCensusGateFailed = (report: CheckCensusGateReport): boolean =>
-  compilerChanged(report) || A.some(report.comparisons, isIncrease);
+  compilerChanged(report) || A.isReadonlyArrayEmpty(report.comparisons) || A.some(report.comparisons, isIncrease);
+
+const filterLabel: (filter: O.Option<string>) => string = O.match({
+  onNone: () => "no --filter",
+  onSome: (text) => `--filter "${text}"`,
+});
+
+/**
+ * The one-line summary the CLI exits with when {@link checkCensusGateFailed}
+ * holds.
+ *
+ * **Details**
+ *
+ * An empty selection names the active `--filter` so a mistyped filter is
+ * visible; any other failure points at an instantiation increase or a
+ * compiler change.
+ *
+ * **Example** (Summarize an empty selection)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { CheckCensusGateReport, checkCensusGateFailureMessage } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const report = CheckCensusGateReport.make({
+ *   baselineCommit: "368998daff",
+ *   baselineCompiler: "7.0.2",
+ *   compiler: "7.0.2",
+ *   filter: O.some("__no_such_row__"),
+ *   comparisons: [],
+ * })
+ * console.log(checkCensusGateFailureMessage(report).includes('--filter "__no_such_row__"')) // true
+ * ```
+ *
+ * @param report - The failing gate report.
+ * @returns The failure summary, naming the baseline path.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const checkCensusGateFailureMessage = (report: CheckCensusGateReport): string =>
+  A.isReadonlyArrayEmpty(report.comparisons)
+    ? `check-census gate failed: no baselined program was selected (${filterLabel(report.filter)}, baseline ${report.baselinePath}).`
+    : `check-census gate failed: single-checker instantiations increased or the compiler changed (baseline ${report.baselinePath}).`;
 
 const signed = (value: number): string => (value > 0 ? `+${value}` : `${value}`);
 
@@ -776,6 +827,11 @@ const renderComparison = (comparison: CheckCensusComparison): string => {
 };
 
 const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
+  ...(A.isReadonlyArrayEmpty(report.comparisons)
+    ? [
+        `FAIL no baselined program was selected (${filterLabel(report.filter)}): an empty gate measures nothing. Check the filter against the baseline rows.`,
+      ]
+    : []),
   ...(compilerChanged(report)
     ? [
         `FAIL compiler changed: baseline measured with ${report.baselineCompiler}, this run used ${report.compiler}; counts are not comparable. Re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`,
@@ -812,11 +868,12 @@ const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
  * const lines = renderCheckCensusGateLines(
  *   CheckCensusGateReport.make({ baselineCommit: "368998daff", baselineCompiler: "7.0.2", compiler: "7.0.2", comparisons: [] })
  * )
- * console.log(lines.length) // 2
+ * console.log(lines.length) // 3
  * ```
  *
  * @param report - The gate report to render.
- * @returns A header, one line per comparison (or a no-selection line), then verdict lines.
+ * @returns A header, one line per comparison (or a no-selection line), then verdict lines; an
+ * empty selection adds a failing verdict naming the filter.
  * @category formatting
  * @since 0.0.0
  */
@@ -1137,6 +1194,7 @@ export const runCheckCensusGate = Effect.fn("CheckCensusGate.run")(function* (
     baselineCommit: baseline.commit,
     baselineCompiler: baseline.compiler,
     compiler,
+    filter,
     comparisons,
   });
 });

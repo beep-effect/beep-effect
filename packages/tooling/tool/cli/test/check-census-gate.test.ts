@@ -1,4 +1,5 @@
 import {
+  CHECK_CENSUS_BASELINE_PATH,
   CHECK_CENSUS_DEFAULT_TARGETS,
   CheckCensusBaseline,
   CheckCensusBaselineProvenance,
@@ -10,6 +11,7 @@ import {
   CheckCensusSampler,
   checkCensusBaselineRows,
   checkCensusGateFailed,
+  checkCensusGateFailureMessage,
   compareCheckCensusSample,
   compilerOutputLines,
   isCompilerDiagnosticLine,
@@ -25,7 +27,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { assertInstanceOf } from "@effect/vitest/utils";
+import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -298,6 +300,35 @@ describe("check-census gate orchestration", () => {
         "increase",
       ]);
       expect(checkCensusGateFailed(report)).toBe(true);
+    })
+  );
+
+  // `--gate-only --filter __no_such_row__`: a filter that selects no baseline row must not pass.
+  it.effect("fails a filter that selects no baseline row and names the filter", () =>
+    Effect.gen(function* () {
+      const measured: Array<string> = [];
+      const baseline = baselineOf(
+        [row("@beep/schema", 710979, 961)],
+        [row("@beep/schema#typeperf/baseline", 62827, 82)]
+      );
+
+      const report = yield* runCheckCensusGate(baseline, O.some("__no_such_row__")).pipe(
+        Effect.provideService(CheckCensusSampler, fixedSampler(HashMap.empty(), measured))
+      );
+
+      expect(measured).toStrictEqual([]);
+      expect(report.comparisons).toStrictEqual([]);
+      assertSome(report.filter, "__no_such_row__");
+      expect(checkCensusGateFailed(report)).toBe(true);
+      expect(checkCensusGateFailureMessage(report)).toBe(
+        `check-census gate failed: no baselined program was selected (--filter "__no_such_row__", baseline ${CHECK_CENSUS_BASELINE_PATH}).`
+      );
+      expect(
+        A.some(
+          renderCheckCensusGateLines(report),
+          Str.startsWith('FAIL no baselined program was selected (--filter "__no_such_row__")')
+        )
+      ).toBe(true);
     })
   );
 

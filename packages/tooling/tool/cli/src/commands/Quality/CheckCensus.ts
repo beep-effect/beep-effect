@@ -27,6 +27,7 @@ import {
   CheckCensusSampler,
   CheckCensusSamplerOptions,
   checkCensusGateFailed,
+  checkCensusGateFailureMessage,
   measureCheckCensusBaseline,
   readCheckCensusBaseline,
   readCheckCensusMetrics,
@@ -966,9 +967,7 @@ const gateCheckCensusCli = Effect.fn("CheckCensus.gateCli")(function* (
   yield* printLines(renderCheckCensusGateLines(gate));
   yield* writeCheckCensusReport(repoRoot, input.outputJson, CheckCensusReport.make({ ...census, gate: O.some(gate) }));
   if (checkCensusGateFailed(gate)) {
-    return yield* failWithReportedExit(
-      `check-census gate failed: single-checker instantiations increased or the compiler changed (baseline ${input.baseline}).`
-    );
+    return yield* failWithReportedExit(checkCensusGateFailureMessage(gate));
   }
 });
 
@@ -1006,8 +1005,8 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * The overlay census is evidence and never fails on what it counts. The
  * gate re-measures every baseline row (narrowed by `--filter`) with
  * `tsc --singleThreaded --extendedDiagnostics` and exits non-zero when a
- * row's instantiation count increased or the compiler differs from the
- * baseline's; check time beyond the 5% band is an advisory line and an
+ * row's instantiation count increased, the compiler differs from the
+ * baseline's, or no baseline row was selected (a mistyped `--filter`); check time beyond the 5% band is an advisory line and an
  * instantiation decrease prints a tighten hint. `--gate-only` skips the overlay census;
  * `--write-baseline` re-measures every baseline row (the built-in defaults
  * when no baseline exists) and rewrites the baseline, refusing any program
