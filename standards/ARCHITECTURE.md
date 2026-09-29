@@ -771,10 +771,13 @@ schema-topology` enforces the retired lowercase topology, retired suite
 aggregators, private role-file exports, promoted concept folder exports,
 private parser seams, and generated root alias drift.
 
-`foundation/modeling` is upstream-first: where upstream Effect covers a
-concept's intent, the repo concept retires in the same PR that migrates every
-consumer, with no alias, and a new concept is not added
-(`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
+`foundation/modeling` is upstream-first. Where upstream covers a
+`foundation/modeling` concept's intent, its covered facets retire in the same
+PR that migrates their consumers, with no alias; the whole concept retires
+unless the lines reading its uncovered members outnumber the lines using its
+covered facets (ADAPT, per the facet census). A new concept is not added where
+upstream already covers it (`standards/architecture/DECISIONS.md`
+"Upstream-First Foundation/Modeling").
 Named internal literal domains use `LiteralKit`; anonymous inline unions never
 referenced by name use `S.Literals`.
 

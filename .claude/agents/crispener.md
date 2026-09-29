@@ -20,8 +20,12 @@ Given code that already works, make the schema the single source of truth:
 - Remove `*Defaults` constants by moving defaults into the schema where safe.
 - Collapse hand-rolled literal families into named `LiteralKit` domains and
   derived guards (`S.Literals` for anonymous inline unions never referenced by
-  name). Where upstream Effect covers a concept's intent, use upstream
-  (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
+  name).
+- Where upstream covers a `foundation/modeling` concept's intent, its covered
+  facets retire in the same PR that migrates their consumers, with no alias;
+  the whole concept retires unless the lines reading its uncovered members
+  outnumber the lines using its covered facets (ADAPT, per the facet census in
+  `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Option-ify nullish fields instead of scattering null checks.
 - Tear down helper walls whose only job is to re-shape schema-known data;
   colocate behavior with the schema that owns it.

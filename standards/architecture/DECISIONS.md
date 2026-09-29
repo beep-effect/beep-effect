@@ -2014,12 +2014,15 @@ contributor walking the drawing.
 
 Decision:
 
-`foundation/modeling` packages use upstream Effect wherever it covers a
-concept's intent, and a new concept is not added where upstream already covers
-it. An existing concept that upstream covers is retired: its implementation,
-exports, and tests are deleted and every consumer moves to the upstream API in
-the same PR, with no alias left behind (no deprecation shim, re-export alias,
-or compat module).
+`foundation/modeling` packages defer to upstream Effect facet by facet. A
+concept retires unless the consumer lines that read its uncovered members
+outnumber the lines that use its covered facets, construction included.
+Retiring deletes its implementation, exports, and tests and moves every
+consumer to the upstream API in the same PR, with no alias left behind (no
+deprecation shim, re-export alias, or compat module). Otherwise the concept is
+ADAPT: its covered facets are deleted the same way, in the PR that migrates
+their consumers, and the rest stays. A new concept is not added where upstream
+already covers its intent.
 
 - Intent is judged per facet on the consumed surface: the schema value and
   each member or static consumers read. A facet is covered when public
@@ -2027,10 +2030,6 @@ or compat module).
   `effect` declarations (`dist/*.d.ts`); an `@internal` symbol never counts.
   The upstream API may live outside `effect/Schema` or be an inline
   composition at the consumer, such as `S.String.check(S.isPattern(...))`.
-- A concept is ADAPT when the consumer lines that read its uncovered members
-  outnumber the lines that use its covered facets, construction included: its
-  covered facets are deleted in the PR that migrates their consumers, and the
-  rest stays.
 - A RETIRE with more than 100 audited consumers runs a facet census before its
   PR opens; the census and any flip to ADAPT are logged in the owning goal
   packet's decision log before the PR opens.

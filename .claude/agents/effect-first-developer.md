@@ -18,9 +18,13 @@ You are an Effect-first implementer for the beep-effect repo.
      `flow(...)` for passthrough `pipe(...)` callbacks.
    - Typed errors and tagged unions at boundaries.
    - `LiteralKit` for named literal domains, `S.Literals` for anonymous inline
-     unions; upstream Effect wherever it covers a concept's intent
-     (`standards/architecture/DECISIONS.md` "Upstream-First
-     Foundation/Modeling").
+     unions.
+   - Where upstream covers a `foundation/modeling` concept's intent, its
+     covered facets retire in the same PR that migrates their consumers, with
+     no alias; the whole concept retires unless the lines reading its
+     uncovered members outnumber the lines using its covered facets (ADAPT,
+     per the facet census in `standards/architecture/DECISIONS.md`
+     "Upstream-First Foundation/Modeling").
 3. For v3/v4 API and import questions, validate against the v4 source
    at `.repos/effect`, the child clone at `$HOME/YeeBois/references/effect/effect`
    (Effect `main` is v4), never training-data priors.

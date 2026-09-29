@@ -42,10 +42,14 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
 1. **Can the schema carry this invariant instead of code?** (default, refinement,
    brand, `Option` field)
 2. **Does a schema/combinator/primitive already exist?** Check upstream
-   `effect/Schema` first (it wins where it covers the intent:
-   `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling"),
-   then search `@beep/schema` and `@beep/identity` before inventing — see
-   `schema-first-development` → `references/local-primitives.md`.
+   `effect/Schema` first, then search `@beep/schema` and `@beep/identity` before
+   inventing — see `schema-first-development` →
+   `references/local-primitives.md`. Where upstream covers a
+   `foundation/modeling` concept's intent, its covered facets retire in the same
+   PR that migrates their consumers, with no alias; the whole concept retires
+   unless the lines reading its uncovered members outnumber the lines using its
+   covered facets (ADAPT, per the facet census in
+   `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 3. **Absence/nullish → `Option` in the schema**, not a null-check.
 4. **Constant/bool default → the schema**, not a `*Defaults` spread.
 5. **Decode/guard wall → colocated statics** on the schema const/class.

@@ -9,16 +9,15 @@ reuse without taking product-domain dependencies.
 
 ## Upstream First
 
-Upstream Effect wins where it covers a concept's intent. Before adding a
-schema, codec, or helper here, check the public API in the installed `effect`
-declarations, and do not add a concept upstream already covers. A concept that
-upstream covers is retired in the same PR that moves every consumer to the
-upstream API, with no alias, shim, or compat module left behind. Intent is
-judged per facet: when a usage census shows the uncovered facets carry more
-consumer lines than the covered ones, the concept keeps the uncovered facets
-and loses the covered ones, as LiteralKit keeps `Enum`, `is`, `$match`,
-`toTaggedUnion` and `LiteralToKey`. Persisted and served encodings stay
-byte-identical.
+Upstream Effect comes first. Before adding a schema, codec, or helper here,
+check the public API in the installed `effect` declarations, and do not add a
+concept upstream already covers. Where upstream covers a `foundation/modeling`
+concept's intent, its covered facets retire in the same PR that migrates their
+consumers, with no alias; the whole concept retires unless the lines reading
+its uncovered members outnumber the lines using its covered facets (ADAPT, per
+the facet census). Retirement leaves no shim or compat module. LiteralKit is
+ADAPT: it keeps `Enum`, `is`, `$match`, `toTaggedUnion` and `LiteralToKey`.
+Persisted and served encodings stay byte-identical.
 
 Decision: `standards/architecture/DECISIONS.md`, "Upstream-First
 Foundation/Modeling". Operational rules:

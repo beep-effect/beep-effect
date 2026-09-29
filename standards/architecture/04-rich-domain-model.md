@@ -81,9 +81,11 @@ For named internal literal domains, use `LiteralKit` helpers such as `.Enum`,
 `.literals` and `.pick(...)` for the member tuple and subsets; use
 `MappedLiteralKit` when a protocol/code map needs helpers on both the encoded
 and decoded sides. Anonymous inline unions never referenced by name use
-`S.Literals`. Where upstream Effect covers a modeling concept's intent, use
-upstream (`standards/architecture/DECISIONS.md` "Upstream-First
-Foundation/Modeling").
+`S.Literals`. Where upstream covers a `foundation/modeling` concept's intent,
+its covered facets retire in the same PR that migrates their consumers, with no
+alias; the whole concept retires unless the lines reading its uncovered members
+outnumber the lines using its covered facets (ADAPT, per the facet census in
+`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Hybrid Style
 

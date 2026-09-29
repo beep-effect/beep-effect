@@ -284,7 +284,7 @@ export type Tenant = typeof Tenant.Type
 
 - If an intermediate domain concept is named, reused, matched on, or structurally validated, model it as a schema first instead of an ad-hoc boolean helper.
 - Prefer built-in schema constructors/checks such as `S.NonEmptyString`, `S.NonEmptyArray`, `S.TupleWithRest`, `S.Union`, `S.isPattern`, and `S.isIncludes` before reaching for `S.makeFilter`.
-- Prefer upstream Effect wherever it covers a concept's intent; a `@beep/schema` concept that upstream covers retires in the same PR that migrates its consumers, with no alias (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
+- Where upstream covers a `foundation/modeling` concept's intent, its covered facets retire in the same PR that migrates their consumers, with no alias; the whole concept retires unless the lines reading its uncovered members outnumber the lines using its covered facets (ADAPT, per the facet census in `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Derive domain guards with `S.is(SomeSchema)`.
 - Use `LiteralKit` for a named internal literal domain, especially one that needs `.Enum`, `.is`, `$match`, `.toTaggedUnion`, or an annotation-bearing schema value; use `S.Literals` for anonymous inline unions never referenced by name.
 - Do not add `as const` to inline array literals passed directly to `LiteralKit(...)`; `LiteralKit` uses const type parameters already.

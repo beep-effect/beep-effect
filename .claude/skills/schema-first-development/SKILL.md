@@ -49,11 +49,13 @@ Keep `Schema` as the source of truth for pure data models.
 - Model pure data with `Schema` first.
 - Prefer `S.Class` for object models unless a boundary exception makes
   `S.Struct` the better fit.
-- Prefer upstream `effect/Schema` where it covers the intent, then reuse
-  `@beep/schema` and existing local schemas before inventing new checks
-  (`standards/architecture/DECISIONS.md` "Upstream-First
-  Foundation/Modeling": a covered `@beep/schema` concept retires in the same
-  PR that migrates its consumers, with no alias).
+- Check upstream `effect/Schema` first, then reuse `@beep/schema` and existing
+  local schemas before inventing new checks. Where upstream covers a
+  `foundation/modeling` concept's intent, its covered facets retire in the
+  same PR that migrates their consumers, with no alias; the whole concept
+  retires unless the lines reading its uncovered members outnumber the lines
+  using its covered facets (ADAPT, per the facet census in
+  `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 - Move normalization, defaults, nullable handling, and JSON parsing into the
   schema.
 - Annotate reusable schemas with `$I.annote(...)`.

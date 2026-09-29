@@ -11,10 +11,11 @@ Use `Schema` for pure data models.
   the same shape.
 - Service contracts may stay interfaces, but wire payloads, persisted rows,
   config payloads, and domain object models should be schema-first.
-- Prefer upstream Effect where it covers a concept's intent. A `@beep/schema`
-  concept that upstream covers retires in the same PR that migrates its
-  consumers, with no alias (`standards/architecture/DECISIONS.md`
-  "Upstream-First Foundation/Modeling").
+- Where upstream covers a `foundation/modeling` concept's intent, its covered
+  facets retire in the same PR that migrates their consumers, with no alias;
+  the whole concept retires unless the lines reading its uncovered members
+  outnumber the lines using its covered facets (ADAPT, per the facet census in
+  `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 The repo enforces this inventory with `packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts`.
 

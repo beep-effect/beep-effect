@@ -109,9 +109,10 @@ migration path; the tag is the start of a removal, not a home.
 Decision: `DECISIONS.md` "Upstream-First Foundation/Modeling" (2026-09-29).
 
 The section above removes an unreleased in-repo symbol at once only when no consumer remains. A
-`foundation/modeling` concept that upstream Effect covers reaches that state inside one change: the
-PR that retires it also migrates every consumer, so the concept has no consumers when it is
-deleted. These packages are `private: true` and no version of them has reached a consumer outside
+`foundation/modeling` concept that retires under rule 2, or a covered facet trimmed from an ADAPT
+concept, reaches that state inside one change: the PR that deletes it also migrates every consumer
+of it, so nothing it removes has a consumer when it goes. What an ADAPT concept keeps is not
+deprecated. These packages are `private: true` and no version of them has reached a consumer outside
 this repository, so nobody waits on a window. The rules:
 
 1. **Intent is judged per facet, on the consumed surface.** A facet is the schema value itself or

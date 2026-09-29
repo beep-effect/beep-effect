@@ -4,9 +4,13 @@ This repo uses both upstream `effect/Schema` and local helpers from
 `@beep/schema`.
 
 Reach for existing local building blocks before inventing new schemas or custom
-filters. Upstream comes first: where upstream Effect covers a concept's intent,
-use it instead of a `@beep/schema` concept, and do not add a local one
-(`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
+filters. Upstream comes first: check upstream `effect/Schema` before a
+`@beep/schema` concept, and do not add a local concept upstream already covers.
+Where upstream covers a `foundation/modeling` concept's intent, its covered
+facets retire in the same PR that migrates their consumers, with no alias; the
+whole concept retires unless the lines reading its uncovered members outnumber
+the lines using its covered facets (ADAPT, per the facet census in
+`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 
 ## Import Baseline
 
