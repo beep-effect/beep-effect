@@ -16,6 +16,7 @@
 "@beep/file-processing": patch
 "@beep/firecrawl": patch
 "@beep/html": patch
+"@beep/infra": patch
 "@beep/langextract": patch
 "@beep/law-practice-domain": patch
 "@beep/law-practice-server": patch
