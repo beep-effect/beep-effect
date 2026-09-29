@@ -607,7 +607,7 @@ Package/scope scanned:
 
 - Effect v4 APIs cited in this batch were verified against `.repos/effect-v4/packages/effect/src/Schema.ts`: `S.Class`, `S.Struct`, `S.TaggedUnion`, `S.NonEmptyString`, `S.OptionFromNullOr`, `S.decodeUnknownEffect`, `S.decodeUnknownSync`, `S.decodeUnknownResult`, `S.is`, `S.encodeUnknownSync`, and `S.UnknownFromJsonString`.
 - Repo-local `Fn`, `.implement`, `.implementEffect`, and `.implementSync` were verified in `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts`.
-- Repo-local `EffectSchema()` was verified as a factory in `packages/foundation/modeling/schema/src/EffectSchema.ts`; `PromiseSchema` was verified as a value in `packages/foundation/modeling/schema/src/PromiseSchema.ts`.
+- Repo-local `EffectSchema()` was verified as a factory in the `@beep/schema` EffectSchema module; `PromiseSchema` was verified as a value in the `@beep/schema` PromiseSchema module (both modules were retired later by the effect-schema-parity group A PR).
 - In-repo exemplars used for proposed targets include `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`, `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:94`, `apps/oip-web/src/contact/ContactSubmission.http.ts:38`, `apps/oip-web/src/contact/ContactSubmission.http.ts:66`, and `apps/oip-web/src/app/api/contact/ContactHttpApiRoute.ts:14`.
 
 ---
@@ -705,7 +705,7 @@ Packages scanned:
 
 - Module-scope decode/encode helper walls are common in spike/use-case adapters. Some are legitimate boundary codecs (`UsageRecord` <-> Drizzle row, test fixtures), but repeated production walls such as `IrToLaw.service.ts` and `OfficeActionReview.service.ts` are better future candidates for named schema-backed construction boundaries.
 - Internal function contracts can still reveal schema truth even when they are below the current exported-function detector. `anchorOf` returns an inline `{ startChar, endChar, quote }` object that duplicates `@beep/provenance` `TextAnchor`, which is already the schema used by `Distinction.anchor`.
-- Effect v4 / repo API checks used this batch: `EffectSchema` is called as a factory in `IrToLawShape.toLaw` (`packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:97`), `Fn` exposes `implementSync` / `implement` / `implementEffect` in `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:169`, and `PromiseSchema` is a value at `packages/foundation/modeling/schema/src/PromiseSchema.ts:91`.
+- Effect v4 / repo API checks used this batch: `EffectSchema` is called as a factory in `IrToLawShape.toLaw` (`packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:97`), `Fn` exposes `implementSync` / `implement` / `implementEffect` in `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:169`, and `PromiseSchema` is a value in the `@beep/schema` PromiseSchema module (since retired by the effect-schema-parity group A PR).
 
 ---
 

@@ -234,7 +234,8 @@ const ghKey = (invocation: Invocation): string =>
 // The snapshot collectYeetStatus wrote for this fixture BEFORE the W10 change,
 // captured from the sequential implementation with the temp root replaced by
 // `<root>`, the run id digest replaced by `<run>`, and createdAt at the
-// TestClock epoch.
+// TestClock epoch. The one later edit is the `closeoutGatesPassed` criterion,
+// which merge readiness gained after W10.
 const PRE_CHANGE_SNAPSHOT_JSON = [
   '{"base":"origin/main","branch":"feature/chain","closeout":{"detail":"no closeout artifact found for ',
   'this branch","path":"<root>/.beep/yeet/runs/feature_chain-<run>/pr-closeout.json","state":"missing"}',
@@ -266,7 +267,8 @@ const PRE_CHANGE_SNAPSHOT_JSON = [
   '"path":"<root>/.beep/yeet/runs/feature_chain-<run>/verdict.json","state":"missing"},"worktree":{"cle',
   'an":true,"staged":0,"unstaged":0,"untracked":0},"mergeReady":{"ready":false,"failing":"closeout-run"',
   ',"criteria":{"prOpen":true,"notDraft":true,"closeoutRun":false,"requiredChecksGreen":false,"threadsR',
-  'esolved":false,"mergeable":true,"mergeStateAcceptable":false,"reviewDecisionAcceptable":true}},"stal',
+  'esolved":false,"mergeable":true,"mergeStateAcceptable":false,"reviewDecisionAcceptable":true',
+  ',"closeoutGatesPassed":true}},"stal',
   'eGates":[],"unprovenGates":[{"status":"unproven","gateId":"coverage-regression","detail":"standards/',
   'coverage.regression-baseline.jsonc does not exist"},{"status":"unproven","gateId":"jsdoc-totals-ratc',
   'het","detail":"standards/jsdoc-totals.regression-baseline.jsonc does not exist"},{"status":"unproven',

@@ -18,7 +18,8 @@ import {
   PracticeKgGraphToolRow,
   PracticeKgToolkit,
 } from "@beep/law-practice-use-cases/server";
-import { EntityInput } from "@beep/law-practice-use-cases/test";
+import { EffectOutput, EntityInput } from "@beep/law-practice-use-cases/test";
+import { Fn } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -34,6 +35,13 @@ const decodeUnknownIrToLawShapeResult = S.decodeUnknownResult(IrToLawShape);
 const encodeEntityInput = S.encodeEffect(EntityInput);
 const encodeIrToLawExtractionError = S.encodeEffect(IrToLawExtractionError);
 const encodeOfficeActionReviewError = S.encodeEffect(OfficeActionReviewError);
+
+const CountOutput = EffectOutput<number, string>();
+const isCountOutput = S.is(CountOutput);
+const decodeUnknownCountOutput = S.decodeUnknownEffect(CountOutput);
+const encodeCountOutput = S.encodeEffect(CountOutput);
+const IncrementPort = Fn({ input: S.Finite, output: EffectOutput<number>() });
+const increment = IncrementPort.implementSync((count) => Effect.succeed(count + 1));
 
 const assertSchemaEncodeDecodeRoundTrip = Effect.fn("SchemaParityTest.assertSchemaEncodeDecodeRoundTrip")(function* <
   Schema extends S.Codec<unknown>,
@@ -224,4 +232,30 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     pipe(decodeUnknownIrToLawShapeResult({ toLaw: () => Effect.void }), Result.isSuccess, assertTrue);
     pipe(decodeUnknownIrToLawShapeResult({ toLaw: "not-a-function" }), Result.isFailure, assertTrue);
   });
+
+  // Port outputs declare an Effect; the guard checks the runtime value only and
+  // never runs it, so a non-effect is the one input it must reject.
+  it("accepts only Effect values as a port output", () => {
+    Effect.succeed(1).pipe(isCountOutput, assertTrue);
+    Effect.fail("unavailable").pipe(isCountOutput, assertTrue);
+    expect(isCountOutput(1)).toBe(false);
+    expect(isCountOutput(globalThis.Promise.resolve(1))).toBe(false);
+    expect(isCountOutput(undefined)).toBe(false);
+  });
+
+  it.effect("decodes and encodes a port output by reference", () =>
+    Effect.gen(function* () {
+      const program = Effect.succeed(1);
+      expect(yield* decodeUnknownCountOutput(program)).toBe(program);
+      expect(yield* encodeCountOutput(program)).toBe(program);
+      const rejected = yield* Effect.exit(decodeUnknownCountOutput("not-an-effect"));
+      expect(rejected._tag).toBe("Failure");
+    })
+  );
+
+  it.effect("validates a port implementation's Effect output", () =>
+    Effect.gen(function* () {
+      expect(yield* increment(1)).toBe(2);
+    })
+  );
 });

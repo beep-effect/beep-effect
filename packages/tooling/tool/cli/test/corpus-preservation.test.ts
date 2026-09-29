@@ -49,6 +49,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const isPreservationManifestRow = S.is(PreservationManifestRow);
+const isArchiveWriterHookOutput = S.is(ArchiveWriterLiveOptions.fields.afterPayloadSync.schema.outputSchema);
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
@@ -137,6 +138,10 @@ const serviceLayer = (
   ).pipe(Layer.provideMerge(NodeServices.layer));
 
 describe("T7 corpus preservation", () => {
+  it("declares the payload-sync hook output as an Effect", () => {
+    expect(isArchiveWriterHookOutput(Effect.void)).toBe(true);
+    expect(isArchiveWriterHookOutput(undefined)).toBe(false);
+  });
   it.effect("validates refreshed roots and copy-time destination capacity", () =>
     Effect.gen(function* () {
       const rootMismatch = yield* validateRefreshedCapacityForTesting("/approved", "/current", 1, 1, 1).pipe(
