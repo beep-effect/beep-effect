@@ -5496,3 +5496,28 @@ cleanup and cwd restoration even when chdir defects; success, body failure
 and interruption also pass. Reusing the existing constructor avoids maintaining
 a second cleanup implementation. All 23 actual tests and console isolation
 controls pass; grouped full package proof remains pending.
+
+
+### Package creation test fixtures delay cleanup until after setup
+
+The next existing-inventory batch contains matching withTempRepoCommand
+helpers in create-package.test.ts and create-package-lab.test.ts. Both allocate
+a temporary directory, change cwd and create `.git` inside acquireUseRelease's
+acquisition; release is registered only after all three operations succeed.
+A chdir or mkdir defect can therefore strand a directory, and a mkdir defect
+can leave cwd changed. Reuse the existing scope-owned cwd constructor and
+register cleanup before fallible setup. Source review identified the gap;
+injected setup-failure controls and the grouped package proof remain pending.
+
+Injected chdir and `.git` mkdir failures now reproduce the gap in both original
+create fixtures on Node and Bun. Every failure leaks its allocated directory;
+the mkdir failures also leave cwd changed. Each private control restores cwd
+and removes its own directory afterward. The migration draft has not yet
+been applied while the previous grouped package proof is active.
+
+The lifecycle draft preview also exposes a detector blind spot: the unchanged
+withBunShim resource wrapper disappears from EV003 after it moves inside the
+public fixture callback. Its narrow environment-restoration lifetime remains
+in the source and its judgment must remain open. The preview's finding-count
+drop therefore exceeds the actual resolved scope by one. Extend nested helper
+discovery in the tooling follow-up; do not close the row based on silence.
