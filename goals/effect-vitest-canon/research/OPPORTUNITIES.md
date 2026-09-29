@@ -5405,3 +5405,15 @@ conservation script: custom expectReportedExit calls were not counted. Including
 expect-prefixed assertion helpers raises the preserved-tree count from 159 to
 198. Future reusable audits should inventory custom assertion entrypoints as
 well as imported Vitest utilities; naming heuristics alone are incomplete.
+
+
+### Location-based detector IDs can collide across source snapshots
+
+While recording the lint-command migration, the ledger guard rejected a new
+finding at lint-command.test.ts:1010 because its raw detector ID already belonged
+to a different historical finding. Their evidence and occurrence fingerprints
+differ. The guard prevented an overwrite. Both rows are preserved, with an
+explicit #2 ledger suffix for the new row and a public collision receipt.
+Future cumulative inventory tooling should distinguish snapshot identity from
+finding lineage and check occurrence/evidence before treating matching location
+IDs as the same row. This does not require changing the current baseline IDs.

@@ -36,5 +36,13 @@ and unique test-title lineage. The other two follow explicit test renames in
 8c69730bfec (PR #1110), which changed the TaggedError-equivalence policy. Their
 renamed registrations match the full pre-batch tests after whitespace
 normalization. This migration preserves the current policy assertions; it does
-not restore the retired policy. Eight additional current runtime rows must also
-be represented in the ledger. Full CLI package proof remains pending.
+not restore the retired policy. All 57 historical rows are marked fixed by f5e6ab0018, with eight additional
+current runtime rows recorded as fixed. One new row shares a location-based
+ID with a different historical finding. Its ledger ID uses suffix #2 rather
+than #1 solely to disambiguate history; both evidence strings and occurrence
+fingerprints remain intact. The public cli-lint-ledger-collision-receipt.json
+records the raw detector ID and mapping. No baseline identity was changed.
+
+The CLI ledger contains 3,489 unique schema-valid rows: 1,541 fixed,
+12 exceptions and 1,936 open. Full CLI package verification is running for
+source f5e6ab0018; its terminal result is not yet available.
