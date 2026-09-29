@@ -1,0 +1,298 @@
+{
+  "authority": "Reviewed local pinned-native pilot report; no signed-remote credit",
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "channel": "stable",
+  "client": {
+    "version": "2.11.4",
+    "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+    "namespace": "qualification-patched-local-stable-b410-matrix"
+  },
+  "clientSelection": "pinned-native-skip-infer",
+  "dependencyTreeSha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+  "exitCode": 0,
+  "observations": 67,
+  "checks": 40,
+  "allChecksPassed": true,
+  "shadowDecisions": [
+    {
+      "id": "baseline",
+      "authoritative": "shadow-baseline-authoritative",
+      "producer": "shadow-baseline-producer",
+      "replay": "shadow-baseline-replay",
+      "environmentNames": [],
+      "expectedInputHash": "stable",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "source-comment",
+      "authoritative": "shadow-source-comment-authoritative",
+      "producer": "shadow-source-comment-producer",
+      "replay": "shadow-source-comment-replay",
+      "environmentNames": [],
+      "expectedInputHash": "changed",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "added-source",
+      "authoritative": "shadow-added-source-authoritative",
+      "producer": "shadow-added-source-producer",
+      "replay": "shadow-added-source-replay",
+      "environmentNames": [],
+      "expectedInputHash": "changed",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "readme",
+      "authoritative": "shadow-readme-authoritative",
+      "producer": "shadow-readme-producer",
+      "replay": "shadow-readme-replay",
+      "environmentNames": [],
+      "expectedInputHash": "changed",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "declared-env",
+      "authoritative": "shadow-declared-env-authoritative",
+      "producer": "shadow-declared-env-producer",
+      "replay": "shadow-declared-env-replay",
+      "environmentNames": [
+        "BEEP_ESLINT_PROFILE"
+      ],
+      "expectedInputHash": "changed",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "declared-env-empty",
+      "authoritative": "shadow-declared-env-empty-authoritative",
+      "producer": "shadow-declared-env-empty-producer",
+      "replay": "shadow-declared-env-empty-replay",
+      "environmentNames": [
+        "BEEP_ESLINT_PROFILE"
+      ],
+      "expectedInputHash": "changed",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "orchestration-env",
+      "authoritative": "shadow-orchestration-env-authoritative",
+      "producer": "shadow-orchestration-env-producer",
+      "replay": "shadow-orchestration-env-replay",
+      "environmentNames": [
+        "BEEP_AGENT_SESSION_ID"
+      ],
+      "expectedInputHash": "stable",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "locale",
+      "authoritative": "shadow-locale-authoritative",
+      "producer": "shadow-locale-producer",
+      "replay": "shadow-locale-replay",
+      "environmentNames": [
+        "LANG",
+        "LC_ALL"
+      ],
+      "expectedInputHash": "stable",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "timezone",
+      "authoritative": "shadow-timezone-authoritative",
+      "producer": "shadow-timezone-producer",
+      "replay": "shadow-timezone-replay",
+      "environmentNames": [
+        "TZ"
+      ],
+      "expectedInputHash": "stable",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    },
+    {
+      "id": "absolute-root",
+      "authoritative": "shadow-absolute-root-authoritative",
+      "producer": "shadow-absolute-root-producer",
+      "replay": "shadow-absolute-root-replay",
+      "environmentNames": [],
+      "expectedInputHash": "stable",
+      "inputHashExpectationMet": true,
+      "equivalent": true
+    }
+  ],
+  "mutations": [
+    {
+      "id": "root-task-config",
+      "changedPath": "turbo.json",
+      "beforeSha256": "6cb34f764fbdc31be11dc188bcc274d4d955b7695f2d7cf26bb4c3df3fffc7aa",
+      "afterSha256": "5af6acc820545bc267b35f1f95ccd4335f65f6348934f321043330c0746dea57",
+      "baseline": "root-task-config-baseline",
+      "changed": "root-task-config-changed",
+      "replay": "root-task-config-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "child-task-config",
+      "changedPath": "packages/foundation/modeling/identity/turbo.json",
+      "beforeSha256": "66331a0377520228df239c6e4b7ae8a3b6de790d6392c7156888fef357f81dff",
+      "afterSha256": "82d12ba5764e1dd87834e188971d9a46c3d226c2913e5cb5f1c47fa5f3c7f0b5",
+      "baseline": "child-task-config-baseline",
+      "changed": "child-task-config-changed",
+      "replay": "child-task-config-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "missing-child-config",
+      "changedPath": "packages/foundation/modeling/identity/turbo.json",
+      "beforeSha256": "66331a0377520228df239c6e4b7ae8a3b6de790d6392c7156888fef357f81dff",
+      "baseline": "missing-child-config-baseline",
+      "changed": "missing-child-config-changed",
+      "replay": "missing-child-config-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "root-lint-config",
+      "changedPath": "biome.jsonc",
+      "beforeSha256": "e4e0b1144a84786e65443af3ddbf7be34945395b1eaea247ddb1f66cdd3a5dc3",
+      "afterSha256": "34226c9eef370df341b64e389a59606bd4249c7c58ac3f211e596c874126614a",
+      "baseline": "root-lint-config-baseline",
+      "changed": "root-lint-config-changed",
+      "replay": "root-lint-config-replay",
+      "expectedBaselineExit": 1,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "lockfile",
+      "changedPath": "bun.lock",
+      "beforeSha256": "7c69a4c119d863794daa86db4e65a95078251e27a1be3c400a448645449ae150",
+      "afterSha256": "e121396239cc08e7642e43f15c96800e34d9065c8ba3b3cae5e91df8a0266914",
+      "baseline": "lockfile-baseline",
+      "changed": "lockfile-changed",
+      "replay": "lockfile-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "package-manager",
+      "changedPath": "package.json",
+      "beforeSha256": "b2e543a1b92a770b9297747b00d80fa47e2db0d180416d4c00d35988ee8de5aa",
+      "afterSha256": "311aded1ffb0c432f58319df48aae4a93b4c24b1714830328918491bbf58615f",
+      "baseline": "package-manager-baseline",
+      "changed": "package-manager-changed",
+      "replay": "package-manager-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "generated-alias",
+      "changedPath": "tsconfig.json",
+      "beforeSha256": "f83f5227ca34f566c6093ba001f1bfca566ea9b0bc0158da8ac9bfbf8131b522",
+      "afterSha256": "39384653cb0f08b7e7f09b247e3591e8588ef747551392814afdc15e97d6accd",
+      "baseline": "generated-alias-baseline",
+      "changed": "generated-alias-changed",
+      "replay": "generated-alias-replay",
+      "expectedBaselineExit": 0,
+      "expectedChangedExit": 0,
+      "passed": true
+    },
+    {
+      "id": "dependency-source",
+      "changedPath": "packages/foundation/primitive/types/src/index.ts",
+      "beforeSha256": "655a6b3747cc3afe2d0f51e06fb273e901f004c8e64ef6a027d2c61805078b36",
+      "afterSha256": "5e92d72f6eba48189317084c77410d641d06f52aea2f0f6fa5dca4c62ad5d78b",
+      "baseline": "dependency-source-baseline",
+      "changed": "dependency-source-changed",
+      "replay": "dependency-source-replay",
+      "expectedBaselineExit": 1,
+      "expectedChangedExit": 0,
+      "passed": true
+    }
+  ],
+  "nonExecutions": [
+    {
+      "id": "missing-root-config",
+      "reason": "missing-root-config",
+      "exitCode": 1,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "1ab83d3a848c77fbe94d1ae780392e684bf760e96270f1f5118437c504e54d2c",
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true
+    },
+    {
+      "id": "malformed-root-config",
+      "reason": "malformed-root-config",
+      "exitCode": 1,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "f5bdeaab7a0d7a3f8dd97f0e85b4e2a7bdd867a9b9c98f624c5bc2d361fde94e",
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true
+    },
+    {
+      "id": "malformed-child-config",
+      "reason": "malformed-child-config",
+      "exitCode": 1,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "dcd345d7937818e2bf925621884fd8f6a5698e43badf4de3ea6f55db4d93c3b0",
+      "summaryPresent": false,
+      "selectedExecutionObserved": false,
+      "passed": true
+    },
+    {
+      "id": "absent-script",
+      "reason": "absent-script",
+      "exitCode": 0,
+      "stdoutSha256": "4cd6f5a10acb4da5370ff8010bc6a80804f2be107a5ef909380a150b9819ccd9",
+      "stderrSha256": "490d60c6507720a889551db67d1d35efbe474f64feb22888def36bf5bcd06d7a",
+      "summaryPresent": true,
+      "selectedExecutionObserved": false,
+      "passed": true
+    }
+  ],
+  "review": {
+    "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+    "channel": "stable",
+    "reportSha256": "89f873c62deb263783a9a22bbbf398f9f288e5433ab91ff6e7d8a0fdab611b3b",
+    "requestSha256": "c66e20a0de186431b30ad9f525ccffd15235efb4285a09d4eb866b8085b8dcbf",
+    "reviewerSha256": "e541f90bb057c859a0df2a691f55b9bd7ae7e42775d98067fa86f8ba019e0891",
+    "observations": 67,
+    "checks": 40,
+    "shadowDecisions": 10,
+    "result": "passed",
+    "authority": "bounded-local-report-relationship-review",
+    "limits": [
+      "No signed remote credit.",
+      "Pinned native matrix does not by itself establish ordinary entrypoint semantic closure.",
+      "Report relationships checked; raw command evidence remains separate."
+    ]
+  },
+  "retention": {
+    "reference": "patched-shadow-stable-b410",
+    "files": 11,
+    "bytes": 409188,
+    "manifestSha256": "19a1bd55e17a42dc489eeec1a0af95f4634d1881d64790e7658d2489ea840c23"
+  },
+  "limits": [
+    "Reports, requests, preparation inputs and run log retained; scoped disposable experiment roots were removed by the runner.",
+    "Local archive copying is not signed remote transport.",
+    "Pinned-native shadow observations do not alone establish ordinary-entrypoint semantic closure.",
+    "Canary is a separate pending run; no tuple is qualified.",
+    "This receipt postdates the 112-review canonical census attachment."
+  ]
+}

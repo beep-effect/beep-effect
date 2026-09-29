@@ -1,0 +1,44 @@
+{
+  "baseRevision": "cafc1f8eb9f07e19b25f6be6a4146cd11fc21c27",
+  "revision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "economicsChanges": [
+    {
+      "path": "$.inputs.sourceFiles[2].bytes",
+      "before": 102635,
+      "after": 143257
+    },
+    {
+      "path": "$.inputs.sourceFiles[2].sha256_12",
+      "before": "18d03bfaab75",
+      "after": "912b48cf467b"
+    }
+  ],
+  "economicsSha256": "70a7f12944660b83f8a4bda1c8ccf51419378399656ccdb6171fd09b224601dd",
+  "handoffBindingMatches": true,
+  "reproductionScriptBytes": 143257,
+  "reproductionScriptSha256": "912b48cf467be83b9e71082077e375c332322558f6d46f90c5dfd3cea4c3e2f9",
+  "limit": "Source-provenance binding only; no economics reproduction or runtime proof was run.",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+      "sha256": "49d76b5b1f27e8893470839833554de96384cdf2031c63a53d9c47e75baa15ee"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofFact.ts",
+      "sha256": "c01dfffab4c1736d6ffa6fe6015af493d7ad0b89204454c518f33f227702fdac"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+      "sha256": "dbbd7462ad4a40334e19ee7651f5c131682ab31c0425b25f7086b3a581a7f7d7"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
+      "sha256": "cb34b6a8fbbfb0c7866bdbedd875feb48994709aa286d40290d774be51c57737"
+    }
+  ],
+  "sourceObservations": [
+    "LaneProofReuse and ProofState replace digest-byte Encoding.encodeHex calls with Hex.encode; the previously reviewed byte-encoding helper is the relevant limited equivalence evidence, not the whole hashing pipeline.",
+    "ProofFact changes documentation and schema description from per-checkout to per-clone; its schema representation description changes.",
+    "WaveOrder replaces the economics artifact digest with the current matching digest; gate ordering values in the inspected economics JSON do not change."
+  ]
+}

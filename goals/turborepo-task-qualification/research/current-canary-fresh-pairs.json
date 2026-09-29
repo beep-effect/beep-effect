@@ -1,0 +1,131 @@
+{
+  "authority": "Independent retained-summary and output-tree comparison of three fresh/fresh pairs",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "observations": [
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-m7larjjp",
+      "receiptSha256": "8442abbdac96ea57fd1e43e9742855deeec193514aa15dfcaf5b91ff78a1cfb3",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-3rc3hw7j",
+      "receiptSha256": "e3416230dab262155e6c807e27199795bbe48d8ac39e650589a18798e47d79b0",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-fvi4a0qg",
+      "receiptSha256": "48547faba7fab77b8e9ddee0ea366375f8673a47ba2c15d279e97a75100c9599",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-tlbsj3nn",
+      "receiptSha256": "aa2f0b2a4150423b3c5b6c1d29886502f50bd2eb3070cf0c9575d01ce829a8f2",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-2ub70jtj",
+      "receiptSha256": "66f3249c18b6da3afd34d4fabe9e0b6a0d77dd8d8d26c3d8a8b6d23edb548a49",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    },
+    {
+      "directory": "~/.cache/beep/turbo-qualification/observations/canary-fresh-pair-local-replay-d4lcd11n",
+      "receiptSha256": "84c0ba4f73b647b6820d73e8bbc7e5a8a4e56cdb1615cf00c1a4203988a71479",
+      "taskHash": "09c592cc5530dbaf",
+      "inputCount": 769,
+      "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657"
+    }
+  ],
+  "pairs": [
+    {
+      "pair": 1,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 2,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    },
+    {
+      "pair": 3,
+      "checks": {
+        "independentDirectories": true,
+        "freshMisses": true,
+        "noRemote": true,
+        "samePins": true,
+        "sameTaskHash": true,
+        "sameInputMap": true,
+        "sameHashedEnvironment": true,
+        "sameIdentityTreeAfterFreshRun": true,
+        "sameTaskLog": true
+      }
+    }
+  ],
+  "limits": [
+    "Exact canary client only; each isolated execution also performs two local replay controls.",
+    "Identity overlay file-tree and task-log equality are checked; unrelated dependency logs and whole CLI streams are not asserted equal.",
+    "No signed remote comparison, complete semantic closure, cross-root equivalence or shadow acceptance is established.",
+    "No tuple is promoted and normal checkout caching remains disabled."
+  ],
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "retainedEvidence": "~/.cache/beep/turbo-qualification/evidence/fresh-pairs-2.11.5-canary.2-7f53b4a840",
+  "observationManifestSha256": "3c1a26570b7771e2924f1cf0603e6e4994a1ea0753409b9f30e2aca201fb742b",
+  "retainedFiles": 9282,
+  "freshExecutions": 6,
+  "localReplayControls": 12,
+  "exitCode": 0,
+  "runnerSha256": "aa73fa79a95c5f4b039e0f99bbc644aa560b2df5dc8c77eda11007f2205363ba",
+  "matrixRunnerSha256": "3a7d92f0ee1b6ad95d8c9f3d4547db4d5400e9e760767b9dfe6b2260deac101d",
+  "matrixReviewerSha256": "befd0f6140eab013e29502a6eff962bfe83e442e29df6795b8af5e0e651773d1",
+  "allSixSameIdentity": {
+    "hash": true,
+    "inputs": true,
+    "environmentVariables": true,
+    "pins": true
+  }
+}

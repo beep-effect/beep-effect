@@ -1,0 +1,42 @@
+{
+  "profile": "stable",
+  "sourceRevision": "7f53b4a840542c42bf47dcf85966ccea75e54605",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "6faf0e6f421c8e51916060b198108ca61630a7323350b0ac0066f5bafbdd8a8b",
+      "version": "2.11.4"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "taskLogBytes": 53,
+  "archiveOnlyContainsTaskLog": true,
+  "syntheticCredentialAbsent": true,
+  "homeAndCheckoutPathsAbsentFromArchive": true,
+  "limits": [
+    "Synthetic TURBO_TOKEN only; no real credential was used.",
+    "Local network-isolated replay; does not prove remote telemetry or remote authentication behavior.",
+    "Private CLI streams retain diagnostic checkout paths; safe capture claim covers the cache archive, not publication of raw streams.",
+    "No exhaustive secret-pattern proof or qualification promotion."
+  ],
+  "scannedFiles": 1547,
+  "nativeSyntheticTokenPresenceVerified": true,
+  "retention": {
+    "reference": "capture-stable-7f53b4a840",
+    "files": 1549,
+    "manifestSha256": "a8ca531aa05e3bc1c35656b4ce1a2fadfe2f265333852aba9ab6e58e54c39fa1",
+    "reviewSha256": "64b65f42bcf590a49823b40cbf7029d41238cd436d48392cf3970bc6118804b5",
+    "presenceReviewSha256": "ded18b587a9ed4e69080df7e059daad4d7df9a625999ba6b9d00cd4dfc1e9b8d"
+  }
+}

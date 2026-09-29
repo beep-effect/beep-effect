@@ -1,0 +1,144 @@
+{
+  "sourceRevision": "b410da2b6d750e4b4aaea54d3cfbd53aada5ef10",
+  "clientVersion": "2.11.5-canary.2",
+  "receiptSha256": "dbce514368cf5f8663c44f4ac5c29e92ad13b7b97605fa7e5aa119b14af63f2c",
+  "cases": [
+    {
+      "case": "fresh",
+      "exitCode": 0,
+      "hash": "18fbb1ef6ee4bd88",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "replay",
+      "exitCode": 0,
+      "hash": "18fbb1ef6ee4bd88",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "git-comment",
+      "exitCode": 0,
+      "hash": "c15842dcf40efc06",
+      "cache": "MISS",
+      "exclusionSha256": "099916d464f46bc757d0672c9f16d92d1bdc11995c5f9021f43176cdb3004d5d"
+    },
+    {
+      "case": "git-restored",
+      "exitCode": 0,
+      "hash": "18fbb1ef6ee4bd88",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "invalid-source",
+      "exitCode": 1,
+      "hash": "60a0084aed476901",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "git-excluded",
+      "exitCode": 0,
+      "hash": "423e9b56233de095",
+      "cache": "MISS",
+      "exclusionSha256": "1709970cd2062a910bb26a86b4ac4053927a13d0d7f7c851534222e53f97600a"
+    },
+    {
+      "case": "excluded-replay",
+      "exitCode": 0,
+      "hash": "423e9b56233de095",
+      "cache": "HIT",
+      "exclusionSha256": "1709970cd2062a910bb26a86b4ac4053927a13d0d7f7c851534222e53f97600a"
+    },
+    {
+      "case": "exclusion-restored",
+      "exitCode": 1,
+      "hash": "60a0084aed476901",
+      "cache": "MISS",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    },
+    {
+      "case": "source-restored",
+      "exitCode": 0,
+      "hash": "18fbb1ef6ee4bd88",
+      "cache": "HIT",
+      "exclusionSha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+    }
+  ],
+  "commentOnlyNativeInputsEqual": true,
+  "commentOnlyRuntimeBindingChanged": true,
+  "failedTaskArchiveAbsent": true,
+  "successfulArchiveLogsEqual": true,
+  "taskLogBytes": 53,
+  "taskLogSha256": "db2b52f91b0ba6385820431d5156e12964323843e5a6371a528d93fa5f562657",
+  "archives": [
+    {
+      "taskHash": "18fbb1ef6ee4bd88",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "423e9b56233de095",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    },
+    {
+      "taskHash": "c15842dcf40efc06",
+      "archiveSha256": "dcbbae44ef1080d23fa96dc30fe6f547d8f10b793d5853e09137719e74129cd3"
+    }
+  ],
+  "hostGitExclusionsUnchanged": true,
+  "limits": [
+    "Exact frozen patched source and dependency profile only; no other profile is renewed.",
+    "Static Git exclusion overlay does not prove concurrent metadata mutation safety or alternate Git layouts.",
+    "No signed remote, complete semantic closure, representative shadow acceptance or qualification credit."
+  ],
+  "authority": "Bounded ordinary CLI Git exclusion invalidation and behavior controls on the patched profile",
+  "pins": {
+    "bun": {
+      "sha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+      "version": "1.4.2"
+    },
+    "node": {
+      "sha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+      "version": "v24.20.0"
+    },
+    "turbo": {
+      "sha256": "9c3cef6db4744c9f557040ba2a2d18a02adefaae6862aa60043f05e0229ccfcd",
+      "version": "2.11.5-canary.2"
+    },
+    "biome": {
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "version": "Version: 2.5.6"
+    }
+  },
+  "dependencyParity": {
+    "before": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "after": {
+      "sha256": "9586421df6b85393bf8559a150cf94ae51a0b38e23d9fcdde9cbc9ceb66d3a27",
+      "archiveBytes": 5619353600
+    },
+    "equal": true,
+    "command": [
+      "tar",
+      "--sort=name",
+      "--mtime=@0",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--hard-dereference",
+      "--pax-option=delete=atime,delete=ctime",
+      "-cf",
+      "-",
+      "node_modules"
+    ]
+  },
+  "retention": {
+    "reference": "patched-git-exclusion-canary-b410da2b6d",
+    "files": 1582,
+    "manifestSha256": "b0b786a84e3e7a24b7110e15a4b13d74c37be03abb0b563c2b448f430cc9580e"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "authority": "Canonical census attachment acceptance; byte identity and bounded receipt attachment only",
+  "revision": "37c597297ba2546f3d2bdf898299b857b54e5144",
+  "exitCode": 0,
+  "population": {
+    "workspaces": 144,
+    "graphNodes": 3473,
+    "executableNodes": 1970
+  },
+  "attachment": {
+    "sources": 1025,
+    "reviews": 96,
+    "artifacts": 6,
+    "unresolved": 23
+  },
+  "changedSourceBindings": [],
+  "changedReviewBindings": [
+    "goals/turborepo-task-qualification/research/current-undici-remediation.json"
+  ],
+  "addedReviews": [
+    "goals/turborepo-task-qualification/research/current-config-controls-stable.json",
+    "goals/turborepo-task-qualification/research/current-config-controls-canary.json",
+    "goals/turborepo-task-qualification/research/current-native-io-review.json",
+    "goals/turborepo-task-qualification/research/current-git-exclusion-control.json",
+    "goals/turborepo-task-qualification/research/current-git-exclusion-canary-control.json",
+    "goals/turborepo-task-qualification/research/current-packet-verification.json"
+  ],
+  "changeAttribution": "Undici review timestamp clarified against maintainer and global advisory API endpoints; no change to remediation. Six bounded runtime and packet receipts added.",
+  "retention": {
+    "reference": "input-controls-attachment-37c597297b",
+    "artifacts": [
+      {
+        "path": "input-controls-reviewed-request.json",
+        "sha256": "d9745ed9d8eb332e17ca377bca69c0e2443c066585dc907a93538953a2e1d472"
+      },
+      {
+        "path": "input-controls-reviewed-census.json",
+        "sha256": "d8b7e5089b574139cd9bcc9c06c0109b27b0b962c8c3e3a56537ebd56e0e78de"
+      },
+      {
+        "path": "input-controls-census.log",
+        "sha256": "3aedfe7b5eee8329e79a7695d86d683dba361cae12a68eb6e1f50a17ba1c5e26"
+      },
+      {
+        "path": "input-controls-binding-diff.json",
+        "sha256": "29dc6a0716a29cf74d28ce713617673b1c20b4d339882ef489838b524998be9e"
+      }
+    ]
+  },
+  "limits": [
+    "Historical review obligations remain explicit; attachment acceptance does not establish complete semantic closure.",
+    "Runtime observations retain frozen source 7f53b4a840 and its dependency profile; no patched-dependency runtime renewal is claimed.",
+    "Undecoded ring operations, concurrent metadata mutation, alternate Git layouts, signed remote and representative shadow acceptance remain incomplete."
+  ]
+}

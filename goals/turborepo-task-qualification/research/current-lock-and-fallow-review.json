@@ -1,0 +1,85 @@
+{
+  "lockChangedValuesBySection": {
+    "workspaces": 139,
+    "patchedDependencies": 4,
+    "overrides": 1,
+    "catalog": 29,
+    "packages": 88
+  },
+  "boundaryRuleCount": 143,
+  "changedBoundaryWorkspaces": 122,
+  "ruleDeltaPatterns": [
+    {
+      "added": [
+        "@beep/test-runner"
+      ],
+      "removed": [],
+      "orderOnly": false,
+      "fieldOccurrences": 220
+    },
+    {
+      "added": [
+        "@beep/test-runner"
+      ],
+      "removed": [
+        "@beep/types"
+      ],
+      "orderOnly": false,
+      "fieldOccurrences": 2
+    },
+    {
+      "added": [
+        "@beep/test-runner"
+      ],
+      "removed": [
+        "@beep/test-utils"
+      ],
+      "orderOnly": false,
+      "fieldOccurrences": 4
+    },
+    {
+      "added": [
+        "@beep/test-runner",
+        "@beep/test-utils"
+      ],
+      "removed": [],
+      "orderOnly": false,
+      "fieldOccurrences": 12
+    },
+    {
+      "added": [
+        "@beep/fc-runs",
+        "@beep/test-runner"
+      ],
+      "removed": [],
+      "orderOnly": false,
+      "fieldOccurrences": 4
+    },
+    {
+      "added": [
+        "@beep/schema",
+        "@beep/test-runner"
+      ],
+      "removed": [],
+      "orderOnly": false,
+      "fieldOccurrences": 2
+    }
+  ],
+  "limits": [
+    "Lockfile changes require runtime and dependency-materialization validation; a parsed diff is not equivalence.",
+    "Generated boundary policy changes constrain imports; they are not cache qualification."
+  ],
+  "rawDeltaSha256": "a8150a0113fb299087e78521fb5e257766f7e99516e6d5ff2483b87ecb4e3f57",
+  "revision": "2ec13b831bc2330ba321439539371250ec75b642",
+  "comparisonBase": "cafc1f8eb9f07e19b25f6be6a4146cd11fc21c27",
+  "sources": [
+    {
+      "path": "bun.lock",
+      "sha256": "40b3d524cc8ac578e3ae292eedf6527eeab103402556400844d2dbb5d786402e"
+    },
+    {
+      "path": "standards/fallow.boundaries.generated.jsonc",
+      "sha256": "51fe3e19cc56be13a575de474f90a4bdd4e145b069dd27e754ee651b0f4b9b4d"
+    }
+  ]
+}
