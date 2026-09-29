@@ -1,0 +1,169 @@
+{
+  "kind": "boolean-creep-partial-integration/v1",
+  "sourceSha": "224222d1389c30170d0518f00a0d58ee87014843",
+  "originMainSha": "dcf64397ec9835e989e7ea94e9c708582a035f22",
+  "reconciledSuccessfulLanes": 7,
+  "rawReportRecords": 2,
+  "rawRecordIds": [
+    "color-support-level-flags",
+    "r2-foundation-unique-match-search"
+  ],
+  "rawRecordsDisposition": "Both raw records restate existing qualified canonical ids with corrected cardinality or anchor. No new owner.",
+  "kindCorrections": [],
+  "citationCorrectionsInstalled": [],
+  "newQualifiedIds": [],
+  "newDisqualifiedIds": [],
+  "inventoryChanged": false,
+  "inventorySha256": "503206b017522a40ad4da4c00f494c1536128f4909f5c2ec3edd93469216742c",
+  "inventoryCounts": {
+    "total": 726,
+    "qualified": 108,
+    "disqualified": 618,
+    "applied": 0
+  },
+  "deferredReviewedRemediation": [
+    {
+      "id": "capability-cardinality-and-anchor",
+      "addresses": ["CAP-1", "CAP-2"],
+      "lane": "r45-foundation-capability",
+      "canonicalTargets": [
+        "goals/boolean-creep/designs/color-support-level-flags.md",
+        "goals/boolean-creep/designs/r2-foundation-unique-match-search.md",
+        "goals/boolean-creep/data/inventory.jsonl"
+      ],
+      "reviewVerdict": "correctionsAccepted: true (independent reviewer)",
+      "parentRemediationAcceptanceRecorded": false,
+      "reviewSha256": "a5d756db7c65b429ad4245c040d1edce04918a73f809837857853413a4898674",
+      "candidateSha256": [
+        "15e246de4d97457c64ad2ce681b7b7cd9516d032fa325ff8ce08a8ddaa181121",
+        "3cec5ccb0f4ffdcd97d0270950708344ecc233962e6de379aa263474b7231d9e",
+        "58e3513ccfce49ab34e46c4b80f5aa75348e201fbd828964ea72fe1c3b04abd8"
+      ],
+      "sourceDependencies": [
+        "packages/foundation/capability/chalk/src/Chalk.ts",
+        "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+        "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+        "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+        "packages/foundation/capability/chalk/test/index.test.ts",
+        "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+        "packages/foundation/capability/langextract/test/Alignment.test.ts",
+        "packages/tooling/tool/cli/src/commands/Files/Files.progress.ts",
+        "packages/tooling/tool/docgen/src/Core.ts"
+      ],
+      "sourceDependenciesChangedUnderMainDelta": false,
+      "intersectsSevenChangedCorpusFiles": [],
+      "installed": false
+    },
+    {
+      "id": "schema-invariant-enforcement-reanchor",
+      "addresses": ["AM-3"],
+      "lane": "r45-foundation-schema-a-m",
+      "canonicalTargets": [
+        "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md"
+      ],
+      "reviewVerdict": "accepted, no findings",
+      "parentRemediationAcceptanceRecorded": true,
+      "reviewSha256": "11a97ccb35bd1c66ff28e90c1f56c6bbd3508e06cad47ab3b141153ee5208c97",
+      "candidateSha256": [
+        "a8db521173feda609b515a09376ca0834a51d6ae609efe671595f01af3101cd7"
+      ],
+      "sourceDependencies": [
+        "packages/foundation/modeling/schema/src/Conformance",
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+        "packages/foundation/modeling/schema/test/Conformance.test.ts",
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts"
+      ],
+      "sourceDependenciesChangedUnderMainDelta": false,
+      "intersectsSevenChangedCorpusFiles": [],
+      "installed": false
+    },
+    {
+      "id": "duckdb-transaction-began-closed-reanchor",
+      "addresses": ["DAF-2"],
+      "lane": "r45-drivers-a-f",
+      "canonicalTargets": [
+        "goals/boolean-creep/designs/duckdb-transaction-began-closed.md"
+      ],
+      "reviewVerdict": "accepted, no findings",
+      "parentRemediationAcceptanceRecorded": true,
+      "reviewSha256": "61a7a67fdb78224c4a25dbd9f24ef78b969c248273e65419f40ac19d84b4fa77",
+      "candidateSha256": [
+        "101e8efa4f253345c8b63477ec79783463b90d2ca3fb86dac22b029d1d6409b2"
+      ],
+      "sourceDependencies": [
+        "packages/drivers/duckdb/src/DuckDb.service.ts",
+        "packages/drivers/duckdb/test/DuckDb.service.test.ts"
+      ],
+      "sourceDependenciesChangedUnderMainDelta": false,
+      "intersectsSevenChangedCorpusFiles": [],
+      "installed": false
+    },
+    {
+      "id": "ui-react-atoms-owner-disposition",
+      "addresses": ["UI-1"],
+      "lane": "r45-foundation-ui",
+      "canonicalTargets": [],
+      "reviewVerdict": "UI-1 withdrawn; no census addition",
+      "parentRemediationAcceptanceRecorded": true,
+      "reviewSha256": "8aa9c50ea3d289f15921d424d62a286a10e853a7a149ae482d4f2ced8e6b0e52",
+      "candidateSha256": [],
+      "sourceDependencies": [
+        "packages/foundation/ui-system/ui/src/internal/react-atoms.ts"
+      ],
+      "sourceDependenciesChangedUnderMainDelta": false,
+      "intersectsSevenChangedCorpusFiles": [],
+      "installed": false
+    }
+  ],
+  "deferredRemediationNote": "Reviewed candidates are listed, not installed. This closeout does not re-review their contracts.",
+  "sourceSupersession": {
+    "historicalSource": "224222d1389c30170d0518f00a0d58ee87014843",
+    "currentSource": "587d11c1420e3d75be3399e72d1c8638fc4a50fc",
+    "currentOriginMain": "f590617f158d79782129bd8874b3ce2379fb6dab",
+    "changedFrozenInputs": 23,
+    "changedCorpusFiles": [
+      {
+        "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+        "lane": "r45-foundation-modeling-rest",
+        "laneOutcome": "reconciled"
+      },
+      {
+        "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+        "lane": "r45-foundation-modeling-rest",
+        "laneOutcome": "reconciled"
+      },
+      {
+        "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+        "lane": "r45-foundation-modeling-rest",
+        "laneOutcome": "reconciled"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/Thunk.ts",
+        "lane": "r45-foundation-schema-n-z",
+        "laneOutcome": "reconciled"
+      },
+      {
+        "file": "packages/foundation/modeling/schema/src/URL.ts",
+        "lane": "r45-foundation-schema-n-z",
+        "laneOutcome": "reconciled"
+      },
+      {
+        "file": "packages/shared/domain/src/entity/EntityId.ts",
+        "lane": "r45-shared-documents",
+        "laneOutcome": "not-executed"
+      },
+      {
+        "file": "packages/shared/domain/src/entity/PublicEntityId.ts",
+        "lane": "r45-shared-documents",
+        "laneOutcome": "not-executed"
+      }
+    ],
+    "sourceChangeSha256": "9a374c84ce8045b1cb3c5769255d5354fe245c690268e335154b3dbe2af7a218",
+    "requiresFreshCensus": true,
+    "note": "Reconciled lanes establish historical coverage at the R45 source only. They do not cover the current source, including the changed files in reconciled lanes."
+  },
+  "complete": false,
+  "dryCredit": false,
+  "P3Credit": false,
+  "implementationCredit": false
+}

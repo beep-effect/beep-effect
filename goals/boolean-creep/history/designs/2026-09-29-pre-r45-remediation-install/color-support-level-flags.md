@@ -28,10 +28,7 @@ export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
 
 # Cardinality gap
 
-The complete owner declares four `ColorSupportLevel` alternatives (0, 1, 2,
-and 3) alongside three Boolean flags: 4 × 2³ = **32 representable states**.
-For enabled `ColorSupport` objects only three cumulative level/flag tuples
-are legal:
+The three flags represent eight combinations. For enabled `ColorSupport` objects only three cumulative levels are legal:
 
 - level `1`: basic ANSI.
 - level `2`: basic ANSI plus 256 colors.
@@ -94,10 +91,3 @@ Although inventory classifies this Tier 1/internal, `ColorSupport` is re-exporte
 This is an atomic decoded TypeScript migration under the 2026-09-03 ruling;
 do not add a compatibility alias for the removed flags. Keep `@beep/chalk` in
 its current package and include the README named-consumer repair in this PR.
-
-# R45 evidence correction
-
-Reconciled against source `224222d1389c30170d0518f00a0d58ee87014843`
-and main `dcf64397ec9835e989e7ea94e9c708582a035f22`. This corrects owner
-evidence without changing the migration or target shape. Replacement
-campaign-wide P3 and GATE 2 remain required before implementation.

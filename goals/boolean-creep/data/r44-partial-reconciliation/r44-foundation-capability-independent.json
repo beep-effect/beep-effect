@@ -1,0 +1,226 @@
+{
+  "kind": "boolean-creep-lane-independent-reconciliation/v1",
+  "reviewedAt": "2026-09-28T20:57:25.442717+00:00",
+  "reviewer": "claude-opus-5-5 (independent, read-only)",
+  "lane": "r44-foundation-capability",
+  "round": "refresh-2026-09-28-r44-main-8c16e6",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "bindings": {
+    "headVerified": true,
+    "originMainVerified": true,
+    "workingTree": "clean except the live round's untracked report directory",
+    "laneMapSha256": "49f953e656c281aa9006088ba83366d2c5d5a4ad194d1b9876e69cca5ad18481",
+    "frozenInputsSha256": "48306ccc8f64bc79773dfab6e710f988905a237e93199943b48dc8e9103e7d65",
+    "seedSha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91 (equals the canonical inventory.jsonl R43 binding)",
+    "executionReceiptSha256": "843c9a765fa5b48627d90d807c7f120b71392ba9479e3da0e9c9fc8872f32fed",
+    "transcriptSha256": "acff87c737e521c6263f261ff18300fe7b33d5a5d098c5926c44ea88b3877be0 (matches the receipt)",
+    "rawReportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (empty)",
+    "laneFiles": "all 165 assigned files hash-equal to frozen-inputs"
+  },
+  "scannerRun": {
+    "status": "completed-awaiting-independent-coverage-review",
+    "exitCode": 0,
+    "stopReason": "end_turn",
+    "turns": 20,
+    "toolCalls": {
+      "read_file": 40,
+      "grep": 36,
+      "list_dir": 3,
+      "write": 1
+    },
+    "distinctFilesRead": 30,
+    "note": "The scanner's own evidence is partial: 30 of 165 files were read, many greps were head-limited, and 2 results look truncated. Its empty report carries no coverage or dry weight on its own. Acceptance below rests on this independent review. Its claimed citation drift for BackendCapabilities/AnnotationOptions/ShaclValidationResult/SourceTextPageStruct is incorrect: canonical anchors 247/316/284/131 are current (first-member or declaration line, both allowed by the SPEC field rule)."
+  },
+  "coverage": {
+    "assignedRoots": 9,
+    "assignedFiles": 165,
+    "fileTypes": {
+      "ts": 165
+    },
+    "method": [
+      "A brace-scoped pass over all 165 files for owners with >=2 Boolean-typed or literal Boolean members (S.Boolean/optionalKey/withKeyDefaults, `: boolean`, true/false literals): 53 blocks in 21 files, all mapping to seeded owners, their constructors/JSDoc examples, or producers of seeded owners.",
+      "An inferred-name pass (is/has/should/can/supports/include/*Enabled/*Hint/*Truncated and related locals and keys, clustered within 12 lines): 41 clusters in 26 files.",
+      "A declaration census: 140 Boolean declaration lines in 44 files. Every file with >=2 declarations outside a seeded block was read at the site."
+    ],
+    "nonSeededCandidatesAdjudicated": [
+      "chalk Chalk.browser.ts:337 supportsColor/supportsColorStderr: ColorInfo (ColorSupport|false) exports, not Boolean members",
+      "chalk SupportsColor.ts:222-262 is*/has* and SupportsColor.browser.ts:36 hasUserAgentData: callable predicates, ineligible",
+      "chalk ChalkRuntime.ts:101 BuilderMeta.isEmpty: single Boolean owner",
+      "colors Colors.ts:65 ProcessLike.isTTY: single Boolean; createColors(enabled) is a function parameter",
+      "file-processing SourceText.paging.ts:18 surrogate predicates; PathSafety.policy.ts and Strategy.schema.ts: predicates or methods",
+      "langextract Alignment.behavior.ts:288 MinimalFoldStartSearch{exhausted, matches}: a single Boolean plus an array, out of net; enqueueMinimalFoldTransitions returns a Boolean; allOptional is a single local",
+      "langextract Service.policy.ts:41 allowRemoteExtraction: an effectful policy method, not a Boolean member",
+      "langextract VerifiedSpan.model.ts:386/585/737 and VerifiedSpan.behavior.ts: consistency predicates; HistoryScanState is a tuple with one Boolean",
+      "mcp-kit ApiKeyRequired.ts:211, SanitizedSpan.ts:306/399: CallToolResult.isError, a single MCP wire Boolean; isParameterValidationError/isDeclaredFailure are predicates",
+      "mcp-kit SanitizedSpan.ts:341 ToolHandlerResult{isFailure, failureOrigin?}: one Boolean plus an optional payload. Below the >=2-Boolean recall requirement, so not admitted",
+      "mcp-kit TierGate.ts:150 TierGateAuditRecord.destructive: a single stored Boolean (the seeded evaluate cluster covers the locals)",
+      "nlp-processing Executor.ts:48 Application.fromCache: single; `cache` is a function parameter. Types.ts:525 ValidationResult.valid: single. LearnCorpus.ts:31/47 dedupeById and reindexRequired belong to distinct owners. internal/observability.ts `hit` is a parameter. TextGraph, NLPBackend.ts:41/486: predicates or constructors",
+      "observability CauseRedaction.ts:272 RedactedCause.truncated: single (the seeded locals cover the source facts); :322-324 predicates. Metric.ts, HttpApiTelemetry.ts, NodeSdk.ts: data-first or guard predicates"
+    ],
+    "independentCoverageAccepted": true,
+    "basis": "Every assigned file was examined by the independent passes. Every multi-Boolean owner is either seeded or ineligible under the net and eligibility rules, and no admissible new owner exists at this exact source."
+  },
+  "seedDispositions": [
+    {
+      "id": "color-support-level-flags",
+      "canonical": "reviewed E4 literalkit T1",
+      "disposition": "upheld",
+      "evidence": "ChalkSchema.ts:262-268 ColorSupport{level,hasBasic,has256,has16m}; sole Node writer SupportsColor.ts:318-329 translateLevel sets has16m=level>=3, has256=level>=2, hasBasic=true (has16m=>has256=>hasBasic); browser constants SupportsColor.browser.ts:41-53 obey the same ladder. E4 cites (323, 41) still resolve."
+    },
+    {
+      "id": "backend-capabilities",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "NLPBackend.ts:245-274 nine independent capability flags; the only in-lane combinator Composition.ts:131-140 ORs each field independently. The single driver producer (drivers/wink) is outside this lane. No implication or exclusivity is enforced anywhere. Canonical anchor 247 (first member) is current; not drift."
+    },
+    {
+      "id": "four-hint-annotations",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "ToolAnnotations.ts:42-72 mirror MCP ToolAnnotations hints (readOnly/destructive/idempotent/openWorld) at the protocol boundary; presets exist, but the external spec admits all combinations."
+    },
+    {
+      "id": "annotation-options-include-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "AnnotatedTextGraph.ts:316-330. Four defaulted include toggles are serialized independently (:395-398) and each gates its own layer (:421-430). Anchor 316 (declaration) is current; not drift."
+    },
+    {
+      "id": "corpus-stats-parameters-include-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "CorpusStats.ts:16-31 includeIdf/includeMatrix optional request toggles; topIdfTerms is a non-Boolean payload scoped to includeIdf. The two flags are independent."
+    },
+    {
+      "id": "server-observability-config-toggles",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "observability/server/Config.ts:39-50 otlpEnabled/devtoolsEnabled are independent exporter toggles."
+    },
+    {
+      "id": "error-reporter-layer-options-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "ErrorReporting.ts:64-70 includeCause/mergeWithExisting are independent option knobs."
+    },
+    {
+      "id": "ai-token-annotation-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Tools/_schemas.ts:123-130 isPunctuation/isStopWord are independently observed token facts; co-occurrence is legal."
+    },
+    {
+      "id": "execution-options-cache-trace",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "GraphOperations/Types.ts:636-642 cache(default true)/trace(default false) are independent execution knobs; Executor threads `cache` as a function parameter (outside the net)."
+    },
+    {
+      "id": "shacl-validation-result-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "shacl-validation.ts:284-293. The live producer drivers/shacl/Shacl.validation.ts:420-424 sets conforms = engine.conforms && violations empty and truncated = results > kept. With maxResults 0 and conforming nonviolation findings, conforms=true with truncated=true is reachable, so all four pairs are supported (matches the canonical note and the 2026-09-08 design refresh). Anchor 284 is current; not drift."
+    },
+    {
+      "id": "source-text-page-nav-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "SourceText.schema.ts:131-140; producer SourceText.paging.ts:~66. The flags derive from pageIndex/pageCount, and the first/middle/last/only pages cover all four combinations. Anchor 131 is current; not drift."
+    },
+    {
+      "id": "supports-color-decision-input-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "SupportsColor.ts:82-96 optional isTTY/sniffFlags are independent caller inputs, built through O.getSomesStruct (:471-487)."
+    },
+    {
+      "id": "color-heuristic-input-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "SupportsColor.ts:98-114, the same independent isTTY/sniffFlags inputs for the heuristic stage."
+    },
+    {
+      "id": "langextract-minimal-fold-segment-kind",
+      "canonical": "designed E1/E2 literalkit T1",
+      "disposition": "upheld",
+      "evidence": "Alignment.behavior.ts:186-189 segmentKind {endOfLineHyphen: match[1]!==undefined, whitespace: match[2]!==undefined}. The MINIMAL_FOLD_SEGMENTS alternation (:118) makes the capture groups exclusive (E1), and the Match.when chain (:190-) never handles both true (E2)."
+    },
+    {
+      "id": "path-safety-atomic-write-remove-options",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "PathSafety.service.ts:290-291 inline FileSystem.remove {force, recursive} platform-fs SDK options."
+    },
+    {
+      "id": "r2-foundation-retry1-cause-redaction-truncation",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "CauseRedaction.ts:341-356 messageTruncated/detailTruncated are independent truncations of two strings, OR-folded into the single stored RedactedCause.truncated (:272). Both true is legal."
+    },
+    {
+      "id": "r2-foundation-unique-match-search",
+      "canonical": "designed E1/E1/E2 tagged-union T1",
+      "disposition": "upheld",
+      "evidence": "Alignment.behavior.ts:32-35 UniqueMatchSearch{ambiguous, match:Option} and :114-116 MinimalFoldMatchSearch adds exhausted. Writers :37, :52-54, :354-360 set exactly one of ambiguous/exhausted/Some(match) (E1); the reader bestAlignedMatch :466-471 checks exhausted then ambiguous exclusively (E2). match is an Option payload counted in the coarse 8/4 cardinality, not a Boolean member."
+    },
+    {
+      "id": "r3-foundation-tier-gate-tool-hints",
+      "canonical": "designed E4 literalkit T1",
+      "disposition": "upheld",
+      "evidence": "TierGate.ts:408-416 and :464-475. The evaluate locals destructive/readOnly/approved satisfy (readOnly && !destructive) => approved (isPolicyApproved), and audit reasons branch on the combination. E4 cites 415 and 464 resolve. TierGateAuditRecord (:150) stores only destructive, so it has a single Boolean and is out of the net."
+    },
+    {
+      "id": "r3-foundation-verified-span-source-failure-facts",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "VerifiedSpan.model.ts:615-626. The four locals are independently computed equality facts over distinct fields, used by per-reason matching; each combination is reachable from independent attempt data."
+    },
+    {
+      "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "SanitizedSpan.ts:458-470 wireToolFor.annotations maps to the MCP wire readOnlyHint/destructiveHint/idempotentHint/openWorldHint."
+    },
+    {
+      "id": "r32-foundation-capability-http-protocol-supports",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "client.ts:929 (object at :892) {supportsAck, supportsTransferables} satisfies the effect RpcClient Protocol contract at the transport boundary."
+    },
+    {
+      "id": "r32-foundation-capability-ndjson-protocol-supports",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "client.ts:1084 (object at :1042), the same RpcClient Protocol contract."
+    }
+  ],
+  "seedSummary": {
+    "count": 22,
+    "upheld": 22,
+    "corrected": 0,
+    "withdrawn": 0,
+    "qualified": 4,
+    "disqualified": 18
+  },
+  "newRecords": [],
+  "classificationChanges": [],
+  "unresolvedOwnerQuestions": [],
+  "laneReconciliation": "This lane's empty raw report reconciles to no new qualified records and no seed changes.",
+  "claimsNotMade": {
+    "roundComplete": false,
+    "dryRound": false,
+    "dryStreakCredit": false,
+    "campaignP3": false,
+    "designRatification": false,
+    "implementationApproval": false
+  },
+  "sideEffects": {
+    "sourceEdits": false,
+    "canonicalInventoryEdits": false,
+    "testsRun": false,
+    "gitMutations": false,
+    "providerCalls": false,
+    "runtimeTouched": false
+  }
+}

@@ -1,0 +1,282 @@
+{
+  "kind": "boolean-creep-lane-independent-reconciliation/v1",
+  "reviewedAt": "2026-09-28T21:03:32.151431+00:00",
+  "reviewer": "claude-opus-5-5 (independent, read-only)",
+  "lane": "r44-foundation-modeling-rest",
+  "round": "refresh-2026-09-28-r44-main-8c16e6",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "bindings": {
+    "headVerified": true,
+    "originMainVerified": true,
+    "packagesDiffVsMain": "none",
+    "workingTree": "only the live round's untracked sweep reports",
+    "laneFiles": "all 177 assigned files hash-equal to frozen-inputs (175 .ts, legal-intake.ttl, legal-intake.jsonld)",
+    "laneMapSha256": "49f953e656c281aa9006088ba83366d2c5d5a4ad194d1b9876e69cca5ad18481",
+    "frozenInputsSha256": "48306ccc8f64bc79773dfab6e710f988905a237e93199943b48dc8e9103e7d65",
+    "seedSha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91",
+    "executionReceiptSha256": "383302865a0e9ef643a2253dfa0b45c49f4c8b09e564cb74529227d6b312a4f8",
+    "transcriptSha256": "6dd66f86dfe3761fc330b8ba8f731f7d7bc75593614227d0cfebf31cdf8cca90 (matches receipt)",
+    "rawReportSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (empty)"
+  },
+  "scannerRun": {
+    "exitCode": 0,
+    "stopReason": "end_turn",
+    "turns": 33,
+    "toolCalls": {
+      "grep": 63,
+      "read_file": 44,
+      "list_dir": 3,
+      "write": 1
+    },
+    "distinctFilesRead": 28,
+    "claims": "0 confirmed / 0 disqualified; all roots covered including .ttl/.jsonld; all 24 seeds unchanged; no drift.",
+    "assessment": "The scanner's recall rested mainly on per-root greps (some head-limited) plus 28 file reads, which is not sufficient coverage on its own. Its classification claims agree with this review, but its assertion that metadata is unchanged misses the three kind corrections below. The empty report earns no credit by itself."
+  },
+  "parentSearchInputs": {
+    "files": [
+      "modeling-parent-search-0.txt (1204 lines)",
+      "modeling-parent-search-1.txt (96 lines)"
+    ],
+    "note": "Used as a cross-check only. They are raw grep listings and not an exhaustive inferred-form proof; coverage below is completed independently."
+  },
+  "coverage": {
+    "assignedRoots": 11,
+    "assignedFiles": 177,
+    "method": [
+      "A brace-scoped owner pass over all 175 .ts files for >=2 Boolean-valued members (S.Boolean and wrappers such as optionalKey, OptionFromOptionalKey, .pipe, withKeyDefaults; `: boolean`; Option<boolean>; true/false literals): 8 files, every owner seeded.",
+      "An alias sweep for SchemaUtils.BoolKeyDefault*/BoolDefault* (missed by literal matching): in-lane uses are Md.escape AllowListUrlPolicySpec (seeded), Md.model TaskItem.checked (single) and Table.headerRow (single).",
+      "An inferred-local pass over const/let Boolean locals by type annotation, Boolean-producing RHS or Boolean-style name, clustered by proximity: 50 clusters in 26 files, all read at the site.",
+      "An inheritance check: the Lexical BaseNode/ElementNode/TextBase bases have no Boolean fields, so each subclass carries at most one Boolean (QuoteNode.shadowRoot, ListItemNode.checked, TableNode.rowStriping).",
+      "Ontology seed legal-intake.ttl (34 lines) and legal-intake.jsonld (90 lines) contain no Boolean literals or xsd:boolean."
+    ],
+    "nonSeededCandidatesAdjudicated": [
+      "Html.conformance.ts:385 hasParseError, :1761 significantText, :729 afterSection/fieldIndex: single latches or non-Boolean",
+      "Html.source-size.ts:647-658 hasTrailingSpace with hasLeadingSpace: the second is a function parameter (out of net); :711/:731 single parse/enclosed latches",
+      "Html.policy.ts:221-239 regex and predicate combinators (callables); Html.foreign/script/serialize/heading-conformance, PnLocal, Lexical.strict-invariants, Pandoc.registry, PatternParsers, TextAnchor.isWellOrdered/isInternallyConsistent: predicates",
+      "Html.script-conformance.ts:103 hasSource: a single Boolean passed to a derivation (allowed is an array)",
+      "Md.escape.ts:480 hasUnsafeProtocol: a single local; Md.model.ts:1221 insideAnchor: callback parameter aliases (excluded)",
+      "Fold.assembly.ts:778/796 missingScheme/missingPrefLabel: warning arrays, not Booleans",
+      "Glob.ts:401-411 isHiddenPath with isDirectory: isHiddenPath returns early before isDirectory is declared, so they never coexist at an observation boundary",
+      "Lexical TaskItem/Table/QuoteNode/ListItemNode/TableNode, Ontology.models deprecated, Lexical.codec checked, TierGate-like records: single-Boolean owners",
+      "Excluded generated Html.meta.ts and Html.model.ts are not in the 177-file inventory (consistent with the scope correction)"
+    ],
+    "independentCoverageAccepted": true,
+    "basis": "All 177 files were examined by the independent passes. Every eligible >=2-Boolean owner is seeded, and all other candidates are ineligible under the net, eligibility and coexistence rules."
+  },
+  "seedDispositions": [
+    {
+      "id": "glob-options-scan-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "utils/Glob.ts:84-100 GlobOptions optional absolute/dot/nodir are independent traversal knobs; the walker reads dot (:400) and nodir independently."
+    },
+    {
+      "id": "resolved-glob-options-scan-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Glob.ts:108-114 ResolvedGlobOptions defaulted (false) forms of the same three independent knobs."
+    },
+    {
+      "id": "rm-sync-options-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "FileSystem.ts:122-133 RmSyncOptions force/recursive are independent node:fs rmSync knobs; the canonical D1 classification is preserved."
+    },
+    {
+      "id": "nlp-token-annotation-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "nlp/Core/Token.ts:234-237 abbrevFlag/contractionFlag/stopWordFlag/negationFlag are Option<boolean> independently observed wink token facts."
+    },
+    {
+      "id": "allow-list-url-policy-relative-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Md.escape.ts:125-131 BoolKeyDefaultTrue/False aliases. The docs at :100-105 declare the axes independent, and isAllowedRelativeDestination (:402-410) ANDs allowRelative with the narrower flags, so all 8 policies are legal. Minor: the canonical note cites 404-407 while the evaluator spans 402-410 (note-text only)."
+    },
+    {
+      "id": "html-picture-source-sizes-auto",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Html.conformance.ts:1082-1083 hasSizes (source attribute) and followingImageAllowsAuto (sibling img) are independent observations, combined only in the issue predicate."
+    },
+    {
+      "id": "taxonomy-loader-manifest-presence",
+      "canonical": "disqualified D1",
+      "disposition": "upheld; METADATA kind sibling-state -> object-literal",
+      "evidence": "TaxonomyLoader.ts:527 is an actual Match.value({hasLoadKind, hasLoadStatus}) object literal inside decodeLoadManifestEntry (line and symbol exact). The raw asset row (:480-481) carries two optional columns. The alignment row carries both (:183-184), a vendor row carries only status, and a plain asset row carries neither. kind-only decodes to a manifest parse error, i.e. a raw-input diagnostic, not a supported state. Priority Match.when handles combined-true, so the D1 classification is unchanged."
+    },
+    {
+      "id": "identity-property-descriptor-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "identity/Id.ts:1974-1995 Object.defineProperties descriptors set enumerable/writable/configurable (all true) per property; the ECMAScript descriptor attributes are independent. Kind object-literal and anchor 1976 are correct."
+    },
+    {
+      "id": "html-select-child-grammar",
+      "canonical": "designed E1 literalkit T1",
+      "disposition": "upheld (invariant verified)",
+      "evidence": "Html.conformance.ts:1923-1934. traditional requires every tag in option/optgroup/hr, while customizable requires sequenceTags[0]==='button'. They are mutually exclusive (empty sequence => traditional only), and the reader ORs them for a single valid/invalid grammar. The design's none/traditional/customizable literal holds."
+    },
+    {
+      "id": "html-dl-child-grammar",
+      "canonical": "designed E1 literalkit T1",
+      "disposition": "upheld (invariant verified)",
+      "evidence": "Html.conformance.ts:1797-1829. direct = dt/dd groups directly, while wrapped requires every element child to be div or script-supporting with length>0. The two cannot both hold, so the design's none/direct/wrapped literal holds."
+    },
+    {
+      "id": "html-datalist-child-grammar",
+      "canonical": "designed E4 literalkit T1",
+      "disposition": "upheld (invariant verified)",
+      "evidence": "Html.conformance.ts:1895-1908 mixed = optionMode && (...), so mixed => optionMode (E4); the phrasing/options/mixed literal holds."
+    },
+    {
+      "id": "html-media-child-grammar",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Html.conformance.ts:1856-1883. hasSrc (attribute) and valid (child-order scan that consults hasSrc) reach all four combinations."
+    },
+    {
+      "id": "r3-foundation-auto-button-command-presence",
+      "canonical": "disqualified D1",
+      "disposition": "upheld; METADATA kind type-literal -> object-literal",
+      "evidence": "Html.form-control.ts:264-268 is an actual constructed Match.value({hasCommand, hasCommandFor, parentIsSelect}) object in resolveAutoButtonState (line and symbol exact). The facts are independent HTML observations; Match.when explicitly handles both-true (auto-command-and-commandfor), and every combination is a legal Auto reason."
+    },
+    {
+      "id": "r3-foundation-skill-completion-summary-bindings",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "SkillCompletion.ts:327-345. uniqueResultIds and resultsMatchDeclarations are independent validation facts over raw completion input."
+    },
+    {
+      "id": "r2-foundation-html-foreign-entry-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Html.conformance.ts:2024-2040. entersFromHtml (parent) and usesIntegrationElement (node name) are independent; the issue fires on one conjunction only."
+    },
+    {
+      "id": "r3-foundation-attribute-requirement-gates",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Html.conformance.ts:1341-1362. applies (parent/attribute applicability) and hasViolation (OR of violation checks) are independent. missingRequired is an array, not a Boolean member."
+    },
+    {
+      "id": "struct-from-entries-property-descriptor-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld; METADATA kind type-literal -> object-literal",
+      "evidence": "Struct.ts:697-702 is an actual Reflect.defineProperty descriptor object in fromEntries (first Boolean member line 698 exact) with configurable:true, enumerable:!isBlockedObjectKey(key) and writable:true. The ECMAScript attributes are independent."
+    },
+    {
+      "id": "r2-foundation-iri-ipv6-segment-facts",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "rdf/Iri.ts:306-307 isLast/hasDot are per-segment observations over raw input. hasDot on a non-last segment is a parse rejection (raw diagnostic), not a supported-state restriction."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-link-sizes-issue-flags",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Html.conformance.ts:1037-1042. imageSizesIncompatible (imagesizes/imagesrcset) and iconSizesMisplaced (sizes vs rel) concern different attributes and are independent."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "Recovery.ts:227-275. Eight independent coherence checks over raw failure records, AND-folded; any subset can fail."
+    },
+    {
+      "id": "r24-foundation-modeling-rest-gate-summary-coherence",
+      "canonical": "disqualified D1",
+      "disposition": "upheld",
+      "evidence": "EvidenceReceipt.ts:315-330 is a filter over raw summaries. passed is derived from gateResults, and resultMatches/levelsMatch compare other stored fields against it. Each can independently fail."
+    },
+    {
+      "id": "html-img-sizes-disposition",
+      "canonical": "designed E4 literalkit T1",
+      "disposition": "upheld (invariant verified)",
+      "evidence": "Html.conformance.ts:984-1022. sourceSizeAnalysis is Some only when sizes is present, so incompatibleSizes => hasSizes and sizesIsExactlyAuto => hasSizes; missingSizes => width profile => hasSrcset && !hasSizes. missing and incompatible are exclusive, so the ok/missing/incompatible disposition literal holds (E4). The consumer (:1003-1022) emits at most one of the two issues."
+    },
+    {
+      "id": "html-link-imagesizes-disposition",
+      "canonical": "designed E4 literalkit T1",
+      "disposition": "upheld (invariant verified)",
+      "evidence": "Html.conformance.ts:1026-1060. imageSizesIncompatible => hasImageSizes (O.exists over the imagesizes analysis), and the missing condition (width && !hasImageSizes) is exclusive with it, so the disposition literal holds. iconSizesMisplaced is an independent axis (separate D1 seed)."
+    },
+    {
+      "id": "r28-foundation-modeling-rest-bun-glob-scan-options",
+      "canonical": "disqualified D2",
+      "disposition": "upheld",
+      "evidence": "Glob.ts:491-495 Bun.GlobScanOptions {dot, onlyFiles} is the Bun API option object at the runtime boundary."
+    }
+  ],
+  "seedSummary": {
+    "count": 24,
+    "classificationUpheld": 24,
+    "classificationChanged": 0,
+    "qualified": 5,
+    "disqualified": 19,
+    "metadataCorrections": 3
+  },
+  "metadataCorrections": [
+    {
+      "id": "taxonomy-loader-manifest-presence",
+      "field": "kind",
+      "from": "sibling-state",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "line": 527,
+      "symbol": "decodeLoadManifestEntry",
+      "locator": "Match.value({ hasLoadKind, hasLoadStatus }) object",
+      "classificationEffect": "none"
+    },
+    {
+      "id": "r3-foundation-auto-button-command-presence",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/html/src/Html.form-control.ts",
+      "line": 264,
+      "symbol": "resolveAutoButtonState",
+      "locator": "Match.value({ hasCommand, hasCommandFor, parentIsSelect }) object (members 265-267)",
+      "classificationEffect": "none"
+    },
+    {
+      "id": "struct-from-entries-property-descriptor-flags",
+      "field": "kind",
+      "from": "type-literal",
+      "to": "object-literal",
+      "file": "packages/foundation/modeling/utils/src/Struct.ts",
+      "line": 698,
+      "symbol": "fromEntries",
+      "locator": "Reflect.defineProperty(out, key, { configurable, enumerable, value, writable }) descriptor object (opens 697, first Boolean member 698)",
+      "classificationEffect": "none"
+    }
+  ],
+  "optionalNoteRefresh": [
+    {
+      "id": "allow-list-url-policy-relative-flags",
+      "note": "The canonical note cites isAllowedRelativeDestination at 404-407; current source spans 402-410. Text-only and classification unaffected."
+    }
+  ],
+  "newRecords": [],
+  "classificationChanges": [],
+  "unresolvedOwnerQuestions": [],
+  "laneReconciliation": "The empty raw report reconciles to no new qualified records and no classification changes. Three kind-metadata corrections are recommended for parent application with no contract effect.",
+  "claimsNotMade": {
+    "roundComplete": false,
+    "dryRound": false,
+    "dryStreakCredit": false,
+    "campaignP3": false,
+    "designRatification": false,
+    "implementationApproval": false
+  },
+  "sideEffects": {
+    "sourceEdits": false,
+    "canonicalInventoryEdits": false,
+    "testsRun": false,
+    "gitMutations": false,
+    "providerCalls": false,
+    "runtimeTouched": false
+  }
+}

@@ -1,8 +1,8 @@
 # Instance
 
 - id: `r2-foundation-unique-match-search`
-- exact source SHA: `224222d1389c30170d0518f00a0d58ee87014843`
-- corpus source SHA: `dcf64397ec9835e989e7ea94e9c708582a035f22`
+- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
+- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
 - file:line: `packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts:114`
 - symbol: `MinimalFoldMatchSearch`
 - members: `ambiguous`, `exhausted`
