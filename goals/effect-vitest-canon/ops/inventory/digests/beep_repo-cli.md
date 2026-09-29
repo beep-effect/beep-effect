@@ -464,3 +464,14 @@ rows close and one captured timeout finding is added as fixed, preserving all
 existing IDs. The detector ledger now has 3,496 rows: 1,967 fixed, twelve
 exceptions and 1,517 open. Package-proof status and timing limits are explicit
 in [the proof](../../../research/cli-shared-labs-runtime-proof.md).
+
+
+## CI hook budgets and pure guard runtimes
+
+Signed commits `6665e3dc33` and `f18ae4a35e` close ten historical findings and
+capture one new hook-budget finding as fixed. CI-lane retains 74 passing cases;
+CLI guards retain 25 cases with stronger typed-error assertions. Both runtimes,
+actual test-type diagnostics and package quick gates pass. The ledger has
+3,497 unique rows: 1,978 fixed, twelve exceptions and 1,507 open. Ecosystem
+resource findings remain open while their separate full package proof runs.
+See the CI hook-budget and CLI-kits proof receipts in research for scope.

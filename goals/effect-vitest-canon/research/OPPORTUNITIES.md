@@ -5907,6 +5907,11 @@ preflight would distinguish these paths before an expensive publish cycle.
 The staged work and proof were preserved; no signing or authentication setting
 was changed, and no raw secrets were read for this diagnosis.
 
+Later, a metadata-only check confirmed a listening SSH-agent socket. A signed
+commit then succeeded without configuration changes. This distinguishes the
+initial unavailable signer from the recovered path rather than treating a
+service-account health check as signing proof.
+
 
 ### Effect callback migration exposes previously hidden error-channel diagnostics
 

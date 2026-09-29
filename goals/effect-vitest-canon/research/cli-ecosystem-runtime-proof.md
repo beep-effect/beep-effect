@@ -31,9 +31,12 @@ The checked command source contains no timer or retry path.
   2,168 resolved against the existing baseline.
 - Targeted detection drops from four findings to zero. Four historical runtime
   records match exactly by rule and occurrence. Ledger status remains open
-  pending a signed source commit and fixSha; other lens judgments are untouched.
+  pending full package proof; other lens judgments are untouched.
 
 Full CLI package verification is running on the restored migration source. Its
-terminal result remains required. Git publication is held after the configured
-signer failed to connect to its socket; signing settings have not been changed.
+terminal result remains required. The source is saved in commit
+`f18ae4a35e19ba67e8a510625962746abe484c8e`. Signing recovered without changing
+configuration. The commit hook sorted imports; test bodies are unchanged and
+the committed revision passes all four cases on Node (3.84 seconds) and Bun
+(1.76 seconds).
 This is local migration evidence, not hosted readiness or goal completion.

@@ -30,9 +30,12 @@ captured finding. Four match by rule and occurrence. Two retain their original
 IDs through the doctestCiLayer to ciExecutionLayer fixture rename in commit
 `e08b24b004`; the named tests and their assertions establish continuity.
 
-Publication is pending: both signed commit attempts failed because the configured
-1Password Git signer could not connect to its socket. Hooks passed, and the
-source remains staged. No signing settings were changed. The service-account
-secret doctor passed, which does not establish Desktop signer availability.
-Ledger rows remain open until a source commit can supply their fixSha. This
-receipt does not claim hosted readiness or goal completion.
+The initial signed commit attempts failed because the configured 1Password Git
+signer could not connect to its socket. After a metadata-only check confirmed
+that the SSH-agent socket accepted a connection, the retry succeeded without
+changing signing or authentication settings.
+
+Source commit: `6665e3dc33c5c84fd8e2d50f1f91e9b3c25a4180`.
+Ledger reconciliation closes six historical IDs and adds one captured timeout
+finding as fixed. No unrelated row is changed. Hosted readiness and the broader
+goal remain open.

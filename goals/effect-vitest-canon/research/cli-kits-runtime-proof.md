@@ -29,9 +29,10 @@ or process work and require no shared resource layer.
 - The final root ratchet scans 1,217 files: 2,867 findings, zero introduced
   and 2,164 resolved against the existing baseline.
 - The targeted detector drops from four findings to zero. Four historical
-  inventory identities match exactly by rule and occurrence. Rows remain open
-  pending a source commit; no new finding or exception is introduced.
+  inventory identities match exactly by rule and occurrence. All four are fixed
+  with the source commit below; no new finding or exception is introduced.
 
-The source is preserved locally while the separate Git signing socket issue
-prevents a commit. Its evidence does not establish hosted readiness or completion
-of the broader migration goal.
+Source commit: `f18ae4a35e19ba67e8a510625962746abe484c8e`.
+Signing recovered without configuration changes. The combined ledger now has
+3,497 unique schema-valid CLI rows: 1,978 fixed, twelve exceptions and 1,507 open.
+This evidence does not establish hosted readiness or goal completion.
