@@ -33,7 +33,7 @@ suppress such evidence, and never soften a finding because it conflicts with an 
   `@effect/ai` v3 APIs.
 - Known result (orchestrator spike, 2026-09-16): pinning all 16 effect-family catalog entries to
   pkg.pr.new `a7a71921de` installs cleanly; repo-wide `turbo run check` then fails only on
-  `packages/foundation/modeling/schema/src/EffectSchema.ts:88` (`Effect.isEffect` guard now typed
+  the `@beep/schema` EffectSchema module, since retired (`Effect.isEffect` guard now typed
   `u is Effect<unknown, unknown, unknown>`) and
   `packages/tooling/library/ai-metrics/src/source-discovery.ts:338` (`Stream.scan` initial value
   is a `LazyArg`); with those two fixed, all 251 check tasks pass. Type-level breakage is small;
