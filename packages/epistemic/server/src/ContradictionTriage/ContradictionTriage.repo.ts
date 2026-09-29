@@ -53,7 +53,6 @@ import {
   SupersedeEdgeFact,
 } from "@beep/epistemic-use-cases/server";
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, O } from "@beep/utils";
@@ -734,8 +733,8 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         total: pipe(
           totals,
           A.head,
-          O.map((row) => NonNegativeInt.make(row.total)),
-          O.getOrElse(() => NonNegativeInt.make(0))
+          O.map((row) => S.Natural.make(row.total)),
+          O.getOrElse(() => S.Natural.make(0))
         ),
       });
     }),

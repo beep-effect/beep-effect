@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -132,9 +132,9 @@ export class CacheQualificationEvent extends S.Class<CacheQualificationEvent>($I
  * **Example** (Inspect the policy contract)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CacheQualificationStore } from "@beep/repo-configs/cache"
- * import { NonNegativeInt } from "@beep/schema/Number"
- * const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
+ * const store = CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
  * console.assert(store.entries.length === 0)
  * ```
  *
@@ -144,7 +144,7 @@ export class CacheQualificationEvent extends S.Class<CacheQualificationEvent>($I
 export class CacheQualificationStore extends S.Class<CacheQualificationStore>($I`CacheQualificationStore`)(
   {
     schemaVersion: S.tag("cache-qualification-store/v1"),
-    revision: NonNegativeInt,
+    revision: S.Natural,
     entries: S.Array(CacheQualificationEntry),
     history: S.Array(CacheQualificationEvent),
   },
@@ -366,9 +366,9 @@ const sameEntries = S.toEquivalence(S.Array(CacheQualificationEntry));
  * **Example** (Accept an empty initial ledger)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CacheQualificationStore, cacheLedgerFailures } from "@beep/repo-configs/cache"
- * import { NonNegativeInt } from "@beep/schema/Number"
- * const store = CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
+ * const store = CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
  * console.assert(cacheLedgerFailures(store).length === 0)
  * ```
  *
@@ -487,8 +487,8 @@ const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyP
  * **Example** (Audit an empty executable population)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { NonNegativeInt } from "@beep/schema/Number"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const projection = Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] })
@@ -498,7 +498,7 @@ const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyP
  * })
  * const report = Cache.auditCachePolicy(Cache.CachePolicyAuditRequest.make({
  *   baseline, current: projection, profile: "fixture", epoch: "v1",
- *   store: Cache.CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
+ *   store: Cache.CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
  * }))
  * console.assert(report.unassessed.length === 0 && report.findings.length === 0)
  * ```

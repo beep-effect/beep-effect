@@ -145,7 +145,6 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
@@ -527,14 +526,14 @@ const fallowOkEnvelope = (options: {
     rawOutputRef: `.beep/fallow/raw/${options.feature}.json`,
     attributionKinds: [attribution],
     findingAttributionSummary: FindingAttributionSummary.make({
-      introduced: NonNegativeInt.make(options.blocking ? 1 : 0),
-      inheritedAdjacent: NonNegativeInt.make(options.blocking ? 0 : 1),
-      notApplicable: NonNegativeInt.make(0),
+      introduced: S.Natural.make(options.blocking ? 1 : 0),
+      inheritedAdjacent: S.Natural.make(options.blocking ? 0 : 1),
+      notApplicable: S.Natural.make(0),
     }),
     status: "ok",
-    exitStatus: NonNegativeInt.make(options.blocking ? 1 : 0),
+    exitStatus: S.Natural.make(options.blocking ? 1 : 0),
     report: FallowReportPayload.make({
-      findingCount: NonNegativeInt.make(1),
+      findingCount: S.Natural.make(1),
       findings: [finding],
     }),
   });

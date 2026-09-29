@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.model");
@@ -24,13 +24,13 @@ const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.mod
  * **Example** (Year-month with missing day)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ParsedDate } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const parsed = ParsedDate.make({
- *   year: NonNegativeInt.make(2023),
- *   month: O.some(NonNegativeInt.make(6)),
+ *   year: S.Natural.make(2023),
+ *   month: O.some(S.Natural.make(6)),
  * })
  *
  * console.log(O.isSome(parsed.month)) // true
@@ -42,17 +42,17 @@ const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.mod
  */
 export class ParsedDate extends S.Class<ParsedDate>($I`ParsedDate`)(
   {
-    year: NonNegativeInt.annotateKey({
+    year: S.Natural.annotateKey({
       description: "Four-digit calendar year.",
     }),
-    month: NonNegativeInt.pipe(
+    month: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Calendar month (1-12); absent for year-only dates.",
       })
     ),
-    day: NonNegativeInt.pipe(
+    day: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -109,15 +109,15 @@ export declare namespace ParsedDate {
  * **Example** (ISO with parsed components)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ParsedDate, StructuredDate } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const date = StructuredDate.make({
  *   iso: "2023-06",
  *   parsed: ParsedDate.make({
- *     year: NonNegativeInt.make(2023),
- *     month: O.some(NonNegativeInt.make(6)),
+ *     year: S.Natural.make(2023),
+ *     month: O.some(S.Natural.make(6)),
  *   }),
  * })
  *

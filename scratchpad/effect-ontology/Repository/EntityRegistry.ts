@@ -14,7 +14,7 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
+import { SchemaUtils, UUID } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
@@ -190,7 +190,7 @@ export class CanonicalEntityFilter extends S.Class<CanonicalEntityFilter>($I`Can
     ontologyId: S.NonEmptyString,
     types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults()),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    offset: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("CanonicalEntityFilter", {
     description: "Ontology-scoped canonical-entity filters with schema-owned type and pagination defaults.",

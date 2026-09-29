@@ -1,7 +1,6 @@
 // @vitest-environment node
 
 import { SourceTextExtractor } from "@beep/provenance";
-import { NonNegativeInt } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Layer, Match, Number as N, Path, Stream } from "effect";
@@ -128,7 +127,7 @@ const makeGoldTestLayer = (
   const documentFor = (paperId: CorpusPaperId) =>
     SourceDocument.make({
       acquired: ProvenanceEventId.make(sourceDigest),
-      bytes: NonNegativeInt.make(sourceBytes.byteLength),
+      bytes: S.Natural.make(sourceBytes.byteLength),
       id: documentId,
       mediaType: "text/markdown",
       origin: Origin.cases.W1Paper.make({

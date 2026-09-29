@@ -163,11 +163,6 @@ export * as FileTypeChecker from "./FileTypeChecker/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Fixed32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Fixed64.ts";
 /**
  * @since 0.0.0
@@ -231,11 +226,6 @@ export * as HttpMethod from "./HttpMethod/index.ts";
  * @since 0.0.0
  */
 export { HttpStatusCode } from "./HttpStatus/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Int64.ts";
 /**
  * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`
  * class, lossless wire codec, `boolean | Node` subschema union, document
@@ -315,11 +305,6 @@ export * from "./MutableHashMap.ts";
  * @category validation
  */
 export * from "./MutableHashSet.ts";
-/**
- * @category validation
- * @since 0.0.0
- */
-export * from "./Number.ts";
 /**
  * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
  *
@@ -429,27 +414,7 @@ export * from "./SeverityLevel.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Sfixed32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sfixed64.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Sha256.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sint32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Sint64.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -490,16 +455,6 @@ export * from "./Toml.ts";
  * @category validation
  */
 export * from "./Transformations.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Uint32.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Uint64.ts";
 /**
  * @since 0.0.0
  * @category validation

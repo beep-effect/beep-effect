@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 
@@ -612,7 +612,7 @@ export class CourtVocabularyArtifact extends S.Class<CourtVocabularyArtifact>($I
     projectionVersion,
     artifactVersion: CourtReporterArtifactVersion,
     source: VocabularySourceProvenance,
-    stableIdCount: NonNegativeInt,
+    stableIdCount: S.Natural,
     records: S.Array(CourtVocabularyRecord),
   },
   $I.annote("CourtVocabularyArtifact", {
@@ -640,7 +640,7 @@ export class ReporterVocabularyArtifact extends S.Class<ReporterVocabularyArtifa
     projectionVersion,
     artifactVersion: CourtReporterArtifactVersion,
     source: VocabularySourceProvenance,
-    stableIdCount: NonNegativeInt,
+    stableIdCount: S.Natural,
     records: S.Array(ReporterVocabularyRecord),
   },
   $I.annote("ReporterVocabularyArtifact", {
@@ -727,7 +727,7 @@ class CourtVocabularyArtifactComparison extends S.Class<CourtVocabularyArtifactC
     projectionVersion: S.Finite,
     artifactVersion: CourtReporterArtifactVersion,
     source: VocabularySourceProvenance,
-    stableIdCount: NonNegativeInt,
+    stableIdCount: S.Natural,
     records: S.Array(CourtVocabularyRecord),
   },
   $I.annote("CourtVocabularyArtifactComparison", {
@@ -743,7 +743,7 @@ class ReporterVocabularyArtifactComparison extends S.Class<ReporterVocabularyArt
     projectionVersion: S.Finite,
     artifactVersion: CourtReporterArtifactVersion,
     source: VocabularySourceProvenance,
-    stableIdCount: NonNegativeInt,
+    stableIdCount: S.Natural,
     records: S.Array(ReporterVocabularyRecord),
   },
   $I.annote("ReporterVocabularyArtifactComparison", {

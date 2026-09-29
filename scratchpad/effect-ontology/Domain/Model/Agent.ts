@@ -6,7 +6,7 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import type { Duration, Effect } from "effect";
 import { DateTime } from "effect";
@@ -508,8 +508,8 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
     status: PipelineStatus.annotateKey({
       description: "Canonical discriminated pipeline status.",
     }),
-    iterationCount: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(0)),
+    iterationCount: S.Natural.pipe(
+      SchemaUtils.withKeyDefaults(S.Natural.make(0)),
       S.annotateKey({ description: "Completed loop iterations." })
     ),
   },

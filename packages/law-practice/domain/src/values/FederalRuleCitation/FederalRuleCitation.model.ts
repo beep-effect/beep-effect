@@ -26,21 +26,21 @@ const $I = $LawPracticeDomainId.create("values/FederalRuleCitation/FederalRuleCi
  * **Example** (Make civil rule citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FederalRuleCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = FederalRuleCitation.make({
  *   text: "Fed. R. Civ. P. 12",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Fed. R. Civ. P. 12",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   ruleSet: "civil",
  *   rule: "12",
  * })

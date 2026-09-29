@@ -1,12 +1,12 @@
 // @vitest-environment node
 
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { F1FixtureId } from "@/fixtures/F1";
 import { LedgerLive } from "@/layers/LedgerLive";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
@@ -22,7 +22,7 @@ const ingestedId = Result.getOrThrow(makeProvenanceEventId({ body: ingestedBody,
 const ingested = ProvenanceEvent.make({ body: ingestedBody, id: ingestedId, prev: O.none() });
 const document = SourceDocument.make({
   acquired: ingested.id,
-  bytes: NonNegativeInt.make(7),
+  bytes: S.Natural.make(7),
   id: documentId,
   mediaType: "text/markdown",
   origin: Origin.cases.Fixture.make({

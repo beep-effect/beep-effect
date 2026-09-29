@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
@@ -562,7 +562,7 @@ export class SessionLeaseExpiryCandidate extends S.Class<SessionLeaseExpiryCandi
     leaseDigest: Sha256Hex,
     evaluatedAt: S.DateTimeUtcFromString,
     ttlMs: PosInt,
-    idleMs: NonNegativeInt,
+    idleMs: S.Natural,
   }).check(
     S.makeFilter(
       (input) => {

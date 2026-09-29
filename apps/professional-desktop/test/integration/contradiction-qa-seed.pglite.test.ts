@@ -13,7 +13,6 @@ import {
   SOURCE_TEXT_PAGE_CODE_UNITS,
 } from "@beep/file-processing/SourceText";
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
@@ -269,7 +268,7 @@ describe("Professional Desktop contradiction browser-QA seed", { concurrent: fal
               disposition: "open",
               knownAt: instant(1_767_225_610_000),
               limit: PosInt.make(10),
-              offset: NonNegativeInt.make(0),
+              offset: S.Natural.make(0),
               orgId: 1,
               validAt: instant(1_767_225_610_000),
             })

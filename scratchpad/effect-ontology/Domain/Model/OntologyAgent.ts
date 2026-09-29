@@ -9,7 +9,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { thunkTrue } from "@beep/utils/thunk";
 import { Number as Num } from "effect";
@@ -132,9 +132,9 @@ export type OntologyAgentConfig = typeof OntologyAgentConfig.Type;
  */
 export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionMetrics`)(
   {
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
-    chunkCount: NonNegativeInt,
+    entityCount: S.Natural,
+    relationCount: S.Natural,
+    chunkCount: S.Natural,
     usage: ProviderTokenUsage,
     duration: S.DurationFromMillis,
     runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
@@ -164,10 +164,10 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
    *
    * @returns Sum of the non-negative input and output token counters.
    */
-  get totalTokens(): O.Option<NonNegativeInt> {
+  get totalTokens(): O.Option<number> {
     return ProviderTokenUsage.match(this.usage, {
-      Complete: ({ inputTokens, outputTokens }) => O.some(NonNegativeInt.make(Num.sum(inputTokens, outputTokens))),
-      Partial: ({ inputTokens, outputTokens }) => O.some(NonNegativeInt.make(Num.sum(inputTokens, outputTokens))),
+      Complete: ({ inputTokens, outputTokens }) => O.some(S.Natural.make(Num.sum(inputTokens, outputTokens))),
+      Partial: ({ inputTokens, outputTokens }) => O.some(S.Natural.make(Num.sum(inputTokens, outputTokens))),
       Unavailable: O.none,
     });
   }
@@ -483,7 +483,7 @@ export type ExtractWithClaimsOptions = typeof ExtractWithClaimsOptions.Type;
 export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I`ExtractWithClaimsResult`)(
   {
     ...ExtractionResult.fields,
-    claimCount: NonNegativeInt.annotateKey({
+    claimCount: S.Natural.annotateKey({
       description: "Number of provenance-bearing claims created from extracted relations.",
     }),
     articleId: S.NonEmptyString.annotateKey({
@@ -738,7 +738,7 @@ export type QueryResult = typeof QueryResult.Type;
 
 class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningResult`)(
   {
-    inferredTripleCount: NonNegativeInt,
+    inferredTripleCount: S.Natural,
     rulesApplied: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     duration: S.DurationFromMillis,
   },
@@ -950,8 +950,8 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
       S.annotateKey({ description: "Diagnostics partitioned by SHACL severity." })
     ),
     duration: S.DurationFromMillis,
-    dataGraphTripleCount: NonNegativeInt,
-    shapesCount: NonNegativeInt,
+    dataGraphTripleCount: S.Natural,
+    shapesCount: S.Natural,
   },
   $I.annote("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",

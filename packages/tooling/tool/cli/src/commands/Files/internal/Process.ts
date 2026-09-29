@@ -43,7 +43,7 @@ import {
   makePffexportFileProcessingEngine,
   PffexportEngineConfig,
 } from "@beep/libpff";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { NativePathToPosixPath, normalizePath } from "@beep/schema/PosixPath";
 import {
   makeTikaAppFileProcessingEngine,
@@ -96,7 +96,7 @@ interface ProcessCollectedFile {
   readonly extension: string;
   readonly name: string;
   readonly relativePath: string;
-  readonly sizeBytes: NonNegativeInt;
+  readonly sizeBytes: number;
   readonly sourcePath: string;
 }
 
@@ -170,7 +170,7 @@ const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeArtifactId = S.decodeUnknownEffect(ArtifactId);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodeProcessPosixPath = S.decodeUnknownEffect(NativePathToPosixPath);
-const processCount = (count: number): NonNegativeInt => NonNegativeInt.make(count);
+const processCount = (count: number): number => S.Natural.make(count);
 
 const classifyProcessExtension = classifyFormatFromExtension;
 

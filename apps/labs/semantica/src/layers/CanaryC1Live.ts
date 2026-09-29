@@ -1,4 +1,4 @@
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Console, Crypto, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -381,17 +381,17 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
       .makeDirectory(outputDirectory, { recursive: true })
       .pipe(Effect.mapError(() => failed("report-invalid", "The C1 output directory could not be created.")));
     const telemetry = C1EvalTelemetry.make({
-      embeddingMs: NonNegativeInt.make(N.max(0, embeddingEndedAt - embeddingStartedAt)),
+      embeddingMs: S.Natural.make(N.max(0, embeddingEndedAt - embeddingStartedAt)),
       mode,
-      rdfRebuildMs: NonNegativeInt.make(N.max(0, rdfGEndedAt - rdfStartedAt) + N.max(0, rdfEndedAt - fullRdfStartedAt)),
+      rdfRebuildMs: S.Natural.make(N.max(0, rdfGEndedAt - rdfStartedAt) + N.max(0, rdfEndedAt - fullRdfStartedAt)),
       reportDigest,
       runId: base.report.run.id,
       schemaVersion: "c1-eval-telemetry/v1",
       startedAt: base.telemetry.startedAt,
-      vectorRebuildMs: NonNegativeInt.make(
+      vectorRebuildMs: S.Natural.make(
         N.max(0, vectorGEndedAt - vectorStartedAt) + N.max(0, vectorEndedAt - fullVectorStartedAt)
       ),
-      wallClockMs: NonNegativeInt.make(N.max(0, endedAt - startedAt)),
+      wallClockMs: S.Natural.make(N.max(0, endedAt - startedAt)),
     });
     const artifactFailure = {
       encode: failed("report-invalid", "A C1 output artifact did not encode."),

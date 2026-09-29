@@ -27,7 +27,6 @@ import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/So
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -235,7 +234,7 @@ const makeHandlersLayer = (expanded: ContradictionCandidateExpandedDetail, sourc
         captures.listOrgId = query.orgId;
         return ContradictionCandidatePage.make({
           items: [],
-          total: NonNegativeInt.make(0),
+          total: S.Natural.make(0),
         });
       })
     ),
@@ -329,7 +328,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
   it.layer(
     registrationLayer(
       `${Str.repeat(65_535)("a")}😀fact`,
-      TextAnchor.make({ endChar: NonNegativeInt.make(65_541), quote: "fact", startChar: NonNegativeInt.make(65_537) }),
+      TextAnchor.make({ endChar: S.Natural.make(65_541), quote: "fact", startChar: S.Natural.make(65_537) }),
       "private/surrogate-source.txt",
       "workspace:1"
     ),
@@ -345,7 +344,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
             disposition: "open",
             knownAt: instant(2_000),
             limit: PosInt.make(20),
-            offset: NonNegativeInt.make(0),
+            offset: S.Natural.make(0),
             validAt: instant(2_000),
           })
         );
@@ -406,7 +405,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
   it.layer(
     registrationLayer(
       `${Str.repeat(65_534)("a")}WXYZ`,
-      TextAnchor.make({ endChar: NonNegativeInt.make(65_538), quote: "WXYZ", startChar: NonNegativeInt.make(65_534) }),
+      TextAnchor.make({ endChar: S.Natural.make(65_538), quote: "WXYZ", startChar: S.Natural.make(65_534) }),
       "private/cross-page-source.txt",
       "workspace:1"
     ),
@@ -430,7 +429,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
   it.layer(
     registrationLayer(
       "fact",
-      TextAnchor.make({ endChar: NonNegativeInt.make(4), quote: "leak", startChar: NonNegativeInt.make(0) }),
+      TextAnchor.make({ endChar: S.Natural.make(4), quote: "leak", startChar: S.Natural.make(0) }),
       "private/quote-leak.txt",
       "workspace:1"
     ),
@@ -453,7 +452,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
   it.layer(
     registrationLayer(
       "short",
-      TextAnchor.make({ endChar: NonNegativeInt.make(110), quote: "range-leak", startChar: NonNegativeInt.make(100) }),
+      TextAnchor.make({ endChar: S.Natural.make(110), quote: "range-leak", startChar: S.Natural.make(100) }),
       "private/range-leak.txt",
       "workspace:1"
     ),
@@ -477,9 +476,9 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
     registrationLayer(
       "A😀B",
       TextAnchor.make({
-        endChar: NonNegativeInt.make(3),
+        endChar: S.Natural.make(3),
         quote: Str.slice(2, 3)("A😀B"),
-        startChar: NonNegativeInt.make(2),
+        startChar: S.Natural.make(2),
       }),
       "private/surrogate-leak.txt",
       "workspace:1"
@@ -500,7 +499,7 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
   it.layer(
     registrationLayer(
       "fact",
-      TextAnchor.make({ endChar: NonNegativeInt.make(4), quote: "fact", startChar: NonNegativeInt.make(0) }),
+      TextAnchor.make({ endChar: S.Natural.make(4), quote: "fact", startChar: S.Natural.make(0) }),
       "private/foreign-workspace.txt",
       "workspace:2"
     ),

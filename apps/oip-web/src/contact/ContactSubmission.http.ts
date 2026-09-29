@@ -82,14 +82,14 @@ export class ContactSubmissionRejected extends S.Class<ContactSubmissionRejected
  * **Example** (Creating contact submission payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ContactSubmissionPayload } from "@beep/oip-web/contact"
  *
  * const payload: ContactSubmissionPayload = {
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * }
  *
  * console.log(payload.email)
@@ -113,14 +113,14 @@ export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
  * **Example** (Typing contact submission payload)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import type { ContactSubmissionPayload } from "@beep/oip-web/contact"
  *
  * const payload: ContactSubmissionPayload = {
  *   email: "builder@example.com",
  *   message: "I would like to discuss a patent matter.",
  *   name: "Builder",
- *   submittedAt: NonNegativeInt.make(0)
+ *   submittedAt: S.Natural.make(0)
  * }
  *
  * console.log(payload.submittedAt)

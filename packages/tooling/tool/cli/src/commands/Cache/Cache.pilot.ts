@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
@@ -101,7 +101,7 @@ const NativeTask = S.Struct({
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
 class PilotFile extends S.Class<PilotFile>($I`PilotFile`)(
-  { path: S.NonEmptyString, mode: NonNegativeInt, sha256: Sha256Hex },
+  { path: S.NonEmptyString, mode: S.Natural, sha256: Sha256Hex },
   $I.annote("PilotFile", { description: "A regular package source file observed before or after execution." })
 ) {}
 class PilotRoot extends S.Class<PilotRoot>($I`PilotRoot`)(
@@ -206,7 +206,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
         const link = yield* fs.readLink(path.join(root, child)).pipe(Effect.option);
         if (O.isSome(link)) {
           files.push(
-            PilotFile.make({ path: child, mode: NonNegativeInt.make(0o120000), sha256: yield* hashText(link.value) })
+            PilotFile.make({ path: child, mode: S.Natural.make(0o120000), sha256: yield* hashText(link.value) })
           );
           return;
         }
@@ -216,7 +216,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
           files.push(
             PilotFile.make({
               path: child,
-              mode: NonNegativeInt.make(info.mode & 0o777),
+              mode: S.Natural.make(info.mode & 0o777),
               sha256: yield* readBytes(root, child).pipe(Effect.flatMap(hashBytes)),
             })
           );
@@ -755,7 +755,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       const log = yield* readContainedFileBytesNoFollow(
         fixture.directory,
         "identity-log/turbo-lint.log",
-        NonNegativeInt.make(64 * 1024)
+        S.Natural.make(64 * 1024)
       );
       const replayLogMatches =
         O.isSome(log.contents) && (yield* hashBytes(log.contents.value)) === (yield* hashText(text));
@@ -874,7 +874,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           return CachePilotOutcome.cases.Executed.make({
             selected: observation,
             logSha256: yield* hashText(text),
-            logBytes: NonNegativeInt.make(new TextEncoder().encode(text).byteLength),
+            logBytes: S.Natural.make(new TextEncoder().encode(text).byteLength),
             replayLogMatches,
           });
         }),

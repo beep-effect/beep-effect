@@ -12,7 +12,6 @@ import { DateTime, Effect, flow, Order as Order_, pipe, SchemaIssue, SchemaTrans
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "../Number.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";
@@ -108,7 +107,7 @@ export type ISOStr = typeof ISOStr.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const EpochMillis = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast).pipe(
+export const EpochMillis = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
   S.brand("EpochMillis"),
   $I.annoteSchema("EpochMillis", {
     description: "Epoch milliseconds since 1970-01-01T00:00:00.000Z",

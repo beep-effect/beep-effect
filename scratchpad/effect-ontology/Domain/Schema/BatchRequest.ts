@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { MimeType, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { MimeType, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
 import { defaultPreprocessingOptions, PreprocessingOptions } from "./DocumentMetadata.ts";
@@ -51,7 +51,7 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
     contentType: MimeType.annotateKey({
       description: "Recognized MIME type of the stored source document.",
     }),
-    sizeBytes: NonNegativeInt.pipe(
+    sizeBytes: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({

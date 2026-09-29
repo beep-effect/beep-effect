@@ -8,7 +8,7 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -174,7 +174,7 @@ export class CanonicalizeDatasetRequest extends S.Class<CanonicalizeDatasetReque
   {
     dataset: Dataset,
     algorithm: CanonicalizationAlgorithm,
-    workLimit: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    workLimit: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CanonicalizeDatasetRequest", {
     description: "Dataset canonicalization request.",
@@ -209,7 +209,7 @@ export class FingerprintDatasetRequest extends S.Class<FingerprintDatasetRequest
   {
     dataset: Dataset,
     algorithm: CanonicalizationAlgorithm,
-    workLimit: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    workLimit: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FingerprintDatasetRequest", {
     description: "Dataset fingerprint request.",

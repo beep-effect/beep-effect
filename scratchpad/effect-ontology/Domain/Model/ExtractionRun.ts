@@ -6,7 +6,7 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
@@ -129,7 +129,7 @@ export class OutputMetadata extends S.Class<OutputMetadata>($I`OutputMetadata`)(
     hash: Sha256Hex.annotateKey({
       description: "Full SHA-256 digest of the saved artifact.",
     }),
-    size: NonNegativeInt.annotateKey({
+    size: S.Natural.annotateKey({
       description: "Artifact size in bytes.",
     }),
     savedAt: S.DateTimeUtcFromString.annotateKey({
@@ -266,7 +266,7 @@ const ChunkSize = PosInt.check(
     })
   );
 
-const SentenceOverlap = NonNegativeInt.check(
+const SentenceOverlap = S.Natural.check(
   S.isBetween(
     { minimum: 0, maximum: 20 },
     {
@@ -550,12 +550,12 @@ export class RunConfig extends S.Class<RunConfig>($I`RunConfig`)(
  */
 export class RunStats extends S.Class<RunStats>($I`RunStats`)(
   {
-    chunkCount: NonNegativeInt,
-    entityCount: NonNegativeInt,
-    relationCount: NonNegativeInt,
-    resolvedCount: NonNegativeInt,
-    clusterCount: NonNegativeInt,
-    tokensUsed: NonNegativeInt,
+    chunkCount: S.Natural,
+    entityCount: S.Natural,
+    relationCount: S.Natural,
+    resolvedCount: S.Natural,
+    clusterCount: S.Natural,
+    tokensUsed: S.Natural,
     duration: S.DurationFromMillis,
   },
   $I.annote("RunStats", {
@@ -629,13 +629,13 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * **Example** (Use chunkId)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
+   * import * as S from "effect/Schema"
    * import { DocumentId } from "@effect-ontology/Identity"
    * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const id = ExtractionRun.chunkId(
    *   DocumentId.make("doc-abc123def456"),
-   *   NonNegativeInt.make(2)
+   *   S.Natural.make(2)
    * )
    * console.log(id) // "doc-abc123def456-chunk-2"
    * ```
@@ -644,7 +644,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * @param index - Zero-based chunk index.
    * @returns A run-scoped chunk identifier in `{runId}-chunk-{index}` form.
    */
-  static chunkId(runId: DocumentId, index: NonNegativeInt): ChunkId {
+  static chunkId(runId: DocumentId, index: number): ChunkId {
     return ChunkId.fromDocument(runId, index);
   }
 

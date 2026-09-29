@@ -10,7 +10,6 @@ import {
   summarizeCause,
   tapRedactedCause,
 } from "@beep/observability";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
@@ -171,7 +170,7 @@ describe("CauseRedaction", () => {
   it("respects a custom message limit via options", () => {
     const safe = redactCause(
       Cause.fail(new Error("x".repeat(500))),
-      RedactCauseOptions.make({ messageLimit: NonNegativeInt.make(32) })
+      RedactCauseOptions.make({ messageLimit: S.Natural.make(32) })
     );
     expect(safe.message.length).toBeLessThanOrEqual(32 + 3);
     assertTrue(safe.truncated);

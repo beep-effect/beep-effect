@@ -9,7 +9,6 @@ import {
   PatentClaims,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { Md } from "@beep/md";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -170,15 +169,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
-      sourceEnd: NonNegativeInt.make(36),
-      sourceStart: NonNegativeInt.make(23),
+      sourceEnd: S.Natural.make(36),
+      sourceStart: S.Natural.make(23),
     });
     const background = PatentApplicationSection.make({
       content: "Sensor background",
       heading: "BACKGROUND",
       role: "background",
-      sourceEnd: NonNegativeInt.make(65),
-      sourceStart: NonNegativeInt.make(48),
+      sourceEnd: S.Natural.make(65),
+      sourceStart: S.Natural.make(48),
     });
     const rejectedOrder = decodePatentApplicationSectionsResult([background, title]);
     const rejectedDuplicate = decodePatentApplicationSectionsResult([title, title]);
@@ -213,15 +212,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
-      sourceEnd: NonNegativeInt.make(13),
-      sourceStart: NonNegativeInt.make(0),
+      sourceEnd: S.Natural.make(13),
+      sourceStart: S.Natural.make(0),
     });
     const claims = PatentApplicationSection.make({
       content: "1. A system comprising a sensor.",
       heading: "CLAIMS",
       role: "claims",
-      sourceEnd: NonNegativeInt.make(40),
-      sourceStart: NonNegativeInt.make(7),
+      sourceEnd: S.Natural.make(40),
+      sourceStart: S.Natural.make(7),
     });
     const claim = independentClaim(1);
 

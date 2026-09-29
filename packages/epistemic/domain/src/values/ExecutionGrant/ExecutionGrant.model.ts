@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as S from "effect/Schema";
@@ -373,7 +373,7 @@ export type PolicyRevision = typeof PolicyRevision.Type;
  */
 export class GrantBudget extends S.Class<GrantBudget>($I`GrantBudget`)(
   {
-    maxToolCalls: NonNegativeInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+    maxToolCalls: S.Natural.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
       description: "Recorded ceiling on tool calls; not enforced in v1.",
     }),
   },

@@ -17,7 +17,6 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Context, DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -114,7 +113,7 @@ const EnrichmentOutputSchema = S.Struct({
   language: S.String.annotate({
     description: "ISO 639-1 language code (e.g., 'en', 'es', 'de')",
   }),
-  wordCount: NonNegativeInt.annotate({
+  wordCount: S.Natural.annotate({
     description: "Approximate word count of the content",
   }),
 });
@@ -254,7 +253,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
         keyEntities: output.keyEntities,
         topics: output.topics,
         language: output.language || "en",
-        wordCount: NonNegativeInt.make(output.wordCount || wordCount),
+        wordCount: S.Natural.make(output.wordCount || wordCount),
       });
     });
 

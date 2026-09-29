@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { JournalComponentSpan } from "../ComponentSpan/index.ts";
@@ -26,21 +26,21 @@ const $I = $LawPracticeDomainId.create("values/JournalCitation/JournalCitation.m
  * **Example** (Construct journal citation value)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { JournalCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = JournalCitation.make({
  *   text: "93 Harv. L. Rev. 518",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "93 Harv. L. Rev. 518",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   journal: "Harvard Law Review",
  *   abbreviation: "Harv. L. Rev.",
  * })
@@ -75,28 +75,28 @@ export class JournalCitation extends S.Class<JournalCitation>($I`JournalCitation
         description: "Article title (if extracted).",
       })
     ),
-    volume: S.Union([NonNegativeInt, S.String]).pipe(
+    volume: S.Union([S.Natural, S.String]).pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: 'Volume number (string for hyphenated volumes like "1984-1").',
       })
     ),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Starting page of article.",
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Specific page reference.",
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({

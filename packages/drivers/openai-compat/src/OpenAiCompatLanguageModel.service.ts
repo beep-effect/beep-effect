@@ -8,7 +8,6 @@
 import { $OpenaiCompatId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -51,7 +50,7 @@ import type { OpenAiCompatClientShape } from "./OpenAiCompatClient.service.ts";
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault);
-const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault);
 const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault);
 const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
 const OptionalNullableTemperature = OpenAiCompatTemperature.pipe(

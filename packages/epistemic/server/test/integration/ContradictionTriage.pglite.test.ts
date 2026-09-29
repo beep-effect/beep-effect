@@ -47,7 +47,6 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
@@ -436,7 +435,7 @@ const listQuery = (disposition: "all" | "open" | "rejected" | "superseded", know
     disposition,
     knownAt: instant(knownAt),
     limit: PosInt.make(20),
-    offset: NonNegativeInt.make(0),
+    offset: S.Natural.make(0),
     orgId: 1,
     validAt: instant(1_500),
   });

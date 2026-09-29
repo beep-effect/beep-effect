@@ -1,5 +1,4 @@
 import * as Effect from "effect/Effect";
-import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -108,7 +107,7 @@ describe("effect-ontology storage path layout", () => {
 
   it("parses structured paths through total Result-returning schema statics", () => {
     const ontologyPath = OntologyFilePath.fromParts(namespace, OntologyName.make("patents"), hash);
-    const chunkPath = RunChunkPath.fromParts(documentId, NonNegativeInt.make(2));
+    const chunkPath = RunChunkPath.fromParts(documentId, S.Natural.make(2));
 
     expect(Result.getOrThrow(OntologyFilePath.parts(ontologyPath))).toEqual([namespace, "patents", hash]);
     expect(Result.getOrThrow(RunChunkPath.parts(chunkPath))).toEqual([documentId, 2]);

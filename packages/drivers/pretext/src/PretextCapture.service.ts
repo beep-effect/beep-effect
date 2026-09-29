@@ -12,7 +12,6 @@
 
 import { $PretextId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { isNonNegative } from "@beep/schema/Number";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
@@ -51,7 +50,7 @@ const $I = $PretextId.create("PretextCapture.service");
 export class PretextCaptureRequest extends S.Class<PretextCaptureRequest>($I`PretextCaptureRequest`)(
   {
     font: S.String,
-    lineHeight: S.Finite.check(isNonNegative),
+    lineHeight: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     words: S.Array(S.String),
     sentence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },

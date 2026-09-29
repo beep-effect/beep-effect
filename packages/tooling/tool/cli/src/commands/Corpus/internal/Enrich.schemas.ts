@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -44,14 +44,14 @@ export class CorpusEnrichOptions extends S.Class<CorpusEnrichOptions>($I`CorpusE
  * **Example** (Make resolved patent record)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusEnrichmentRecord } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const record = CorpusEnrichmentRecord.make({
  *   candidate: "10772255",
  *   candidateKind: "patent",
  *   docketFamilies: ["10109"],
- *   occurrenceCount: NonNegativeInt.make(3),
+ *   occurrenceCount: S.Natural.make(3),
  *   parentApplicationNumbers: [],
  *   patentNumber: "10772255",
  *   status: "resolved"
@@ -71,7 +71,7 @@ export class CorpusEnrichmentRecord extends S.Class<CorpusEnrichmentRecord>($I`C
     firstApplicantName: S.optionalKey(S.String),
     firstInventorName: S.optionalKey(S.String),
     inventionTitle: S.optionalKey(S.String),
-    occurrenceCount: NonNegativeInt,
+    occurrenceCount: S.Natural,
     parentApplicationNumbers: S.Array(S.String),
     patentNumber: S.optionalKey(S.String),
     status: LiteralKit(["resolved", "not-found", "failed"]),
@@ -87,15 +87,15 @@ export class CorpusEnrichmentRecord extends S.Class<CorpusEnrichmentRecord>($I`C
  * **Example** (Encode enrichment record JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusEnrichmentRecord, encodeCorpusEnrichmentRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusEnrichmentRecord.make({
  *   candidate: "10772255",
  *   candidateKind: "patent",
  *   docketFamilies: [],
- *   occurrenceCount: NonNegativeInt.make(1),
+ *   occurrenceCount: S.Natural.make(1),
  *   parentApplicationNumbers: [],
  *   status: "not-found"
  * })
@@ -114,16 +114,16 @@ export const encodeCorpusEnrichmentRecordJson = JsonStringCodec(CorpusEnrichment
  * **Example** (Make enrich summary counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusEnrichSummary } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusEnrichSummary.make({
- *   applicationCandidates: NonNegativeInt.make(1),
- *   failedLookups: NonNegativeInt.make(0),
- *   familyAnchors: NonNegativeInt.make(1),
- *   notFound: NonNegativeInt.make(0),
- *   patentCandidates: NonNegativeInt.make(2),
- *   resolved: NonNegativeInt.make(2)
+ *   applicationCandidates: S.Natural.make(1),
+ *   failedLookups: S.Natural.make(0),
+ *   familyAnchors: S.Natural.make(1),
+ *   notFound: S.Natural.make(0),
+ *   patentCandidates: S.Natural.make(2),
+ *   resolved: S.Natural.make(2)
  * })
  * console.log(summary.resolved) // 2
  * ```
@@ -133,12 +133,12 @@ export const encodeCorpusEnrichmentRecordJson = JsonStringCodec(CorpusEnrichment
  */
 export class CorpusEnrichSummary extends S.Class<CorpusEnrichSummary>($I`CorpusEnrichSummary`)(
   {
-    applicationCandidates: NonNegativeInt,
-    failedLookups: NonNegativeInt,
-    familyAnchors: NonNegativeInt,
-    notFound: NonNegativeInt,
-    patentCandidates: NonNegativeInt,
-    resolved: NonNegativeInt,
+    applicationCandidates: S.Natural,
+    failedLookups: S.Natural,
+    familyAnchors: S.Natural,
+    notFound: S.Natural,
+    patentCandidates: S.Natural,
+    resolved: S.Natural,
   },
   $I.annote("CorpusEnrichSummary", {
     description: "Summary counts returned by corpus enrich.",
@@ -151,17 +151,17 @@ export class CorpusEnrichSummary extends S.Class<CorpusEnrichSummary>($I`CorpusE
  * **Example** (Encode enrich summary JSON)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CorpusEnrichSummary, encodeCorpusEnrichSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const summary = CorpusEnrichSummary.make({
- *   applicationCandidates: NonNegativeInt.make(0),
- *   failedLookups: NonNegativeInt.make(0),
- *   familyAnchors: NonNegativeInt.make(0),
- *   notFound: NonNegativeInt.make(0),
- *   patentCandidates: NonNegativeInt.make(0),
- *   resolved: NonNegativeInt.make(0)
+ *   applicationCandidates: S.Natural.make(0),
+ *   failedLookups: S.Natural.make(0),
+ *   familyAnchors: S.Natural.make(0),
+ *   notFound: S.Natural.make(0),
+ *   patentCandidates: S.Natural.make(0),
+ *   resolved: S.Natural.make(0)
  * })
  *
  * Effect.runPromise(encodeCorpusEnrichSummaryJson(summary)).then((json) => console.log(json.includes("resolved"))) // true

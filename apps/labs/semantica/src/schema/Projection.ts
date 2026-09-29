@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Equal, identity, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -255,7 +255,7 @@ export class KnnQueryResult extends S.Class<KnnQueryResult>($I`KnnQueryResult`)(
 ) {}
 
 const SparqlResultWitnessFields = S.Struct({
-  count: NonNegativeInt,
+  count: S.Natural,
   id: S.NonEmptyString,
   rows: S.Array(S.Record(S.String, S.NonEmptyString)),
 });
@@ -472,14 +472,14 @@ export class C1EvalReport extends S.Class<C1EvalReport>($I`C1EvalReport`)(
 export class C1EvalTelemetry extends S.Class<C1EvalTelemetry>($I`C1EvalTelemetry`)(
   {
     schemaVersion: S.Literal("c1-eval-telemetry/v1"),
-    embeddingMs: NonNegativeInt,
+    embeddingMs: S.Natural,
     mode: ProjectionMode,
-    rdfRebuildMs: NonNegativeInt,
+    rdfRebuildMs: S.Natural,
     reportDigest: Sha256Hex,
     runId: RunId,
     startedAt: S.DateTimeUtcFromString,
-    vectorRebuildMs: NonNegativeInt,
-    wallClockMs: NonNegativeInt,
+    vectorRebuildMs: S.Natural,
+    wallClockMs: S.Natural,
   },
   $I.annote("C1EvalTelemetry", {
     description: "Embedding and rebuild costs kept outside the replay-stable C1 report digest.",

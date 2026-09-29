@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Unknown } from "@beep/schema/Unknown";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
@@ -195,7 +194,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
     chunking: ChunkingConfig.make({
       maxChunkSize: PosInt.make(2000),
       preserveSentences: true,
-      overlapSentences: NonNegativeInt.make(2),
+      overlapSentences: S.Natural.make(2),
     }),
     llm: LlmConfig.make({
       model: "claude-haiku-4-5",

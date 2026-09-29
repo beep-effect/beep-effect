@@ -141,7 +141,6 @@ export const collectSourceOutcomeRecords = (
  * import { DetectFileOperation } from "@beep/file-processing/Operation"
  * import { detectFile, makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -159,7 +158,7 @@ export const collectSourceOutcomeRecords = (
  *     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *     name: "README.md",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(11),
+ *     sizeBytes: S.Natural.make(11),
  *     text: "hello"
  *   })
  *
@@ -195,7 +194,6 @@ export const detectFile = Effect.fn("FileProcessing.detectFile")(function* (
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
  * import { extractFile, makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -213,7 +211,7 @@ export const detectFile = Effect.fn("FileProcessing.detectFile")(function* (
  *     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *     name: "note.txt",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(5),
+ *     sizeBytes: S.Natural.make(5),
  *     text: "hello"
  *   })
  *
@@ -250,7 +248,6 @@ export const extractFile = Effect.fn("FileProcessing.extractFile")(function* (
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
  * import { exportArchive, makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -268,7 +265,7 @@ export const extractFile = Effect.fn("FileProcessing.extractFile")(function* (
  *     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *     name: "mailbox.pst",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(128)
+ *     sizeBytes: S.Natural.make(128)
  *   })
  *
  *   return yield* exportArchive(ExportArchiveOperation.make({
@@ -304,7 +301,6 @@ export const exportArchive = Effect.fn("FileProcessing.exportArchive")(function*
  * import { ProcessFileOperation } from "@beep/file-processing/Operation"
  * import { makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
@@ -322,7 +318,7 @@ export const exportArchive = Effect.fn("FileProcessing.exportArchive")(function*
  *     locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *     name: "note.txt",
  *     relativePath,
- *     sizeBytes: NonNegativeInt.make(5),
+ *     sizeBytes: S.Natural.make(5),
  *     text: "hello"
  *   })
  *

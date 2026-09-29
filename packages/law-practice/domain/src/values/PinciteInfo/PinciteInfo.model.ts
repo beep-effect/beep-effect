@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
 
@@ -49,13 +49,13 @@ export declare namespace PinciteInfo {
    */
   export interface Type {
     readonly additionalPincites: ReadonlyArray<PinciteInfo.Type>;
-    readonly endPage: O.Option<NonNegativeInt>;
-    readonly endParagraph: O.Option<NonNegativeInt>;
-    readonly footnote: O.Option<NonNegativeInt>;
-    readonly footnoteEnd: O.Option<NonNegativeInt>;
+    readonly endPage: O.Option<number>;
+    readonly endParagraph: O.Option<number>;
+    readonly footnote: O.Option<number>;
+    readonly footnoteEnd: O.Option<number>;
     readonly isRange: boolean;
-    readonly page: O.Option<NonNegativeInt>;
-    readonly paragraph: O.Option<NonNegativeInt>;
+    readonly page: O.Option<number>;
+    readonly paragraph: O.Option<number>;
     readonly raw: string;
     readonly starPage: boolean;
   }
@@ -119,18 +119,18 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
  * **Example** (Build page-range pincite)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PinciteInfo } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const pincite = PinciteInfo.make({
- *   page: O.some(NonNegativeInt.make(570)),
- *   endPage: O.some(NonNegativeInt.make(575)),
+ *   page: O.some(S.Natural.make(570)),
+ *   endPage: O.some(S.Natural.make(575)),
  *   isRange: true,
  *   raw: "570-75",
  *   additionalPincites: [
  *     PinciteInfo.make({
- *       page: O.some(NonNegativeInt.make(580)),
+ *       page: O.some(S.Natural.make(580)),
  *       isRange: false,
  *       raw: "580",
  *     }),
@@ -147,21 +147,21 @@ const AdditionalPincites = S.Array(S.suspend((): S.Codec<PinciteInfo.Type, Pinci
  */
 export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
   {
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Primary page number. Undefined when the pincite is paragraph-only (#204).",
       })
     ),
-    endPage: NonNegativeInt.pipe(
+    endPage: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: 'End page for ranges: "570-75" → 575',
       })
     ),
-    footnote: NonNegativeInt.pipe(
+    footnote: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -169,7 +169,7 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
           'Footnote number: "570 n.3" → 3. For multi-footnote refs ("nn.3-5"), the first note; see footnoteEnd for the range end.',
       })
     ),
-    footnoteEnd: NonNegativeInt.pipe(
+    footnoteEnd: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -185,14 +185,14 @@ export class PinciteInfo extends S.Class<PinciteInfo>($I`PinciteInfo`)(
           'True when the pincite uses star-pagination (e.g., "*2"), denoting a slip-opinion page or unreported-decision page rather than a reporter page.',
       })
     ),
-    paragraph: NonNegativeInt.pipe(
+    paragraph: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Paragraph number for ¶ N / para. N pincites (#204).",
       })
     ),
-    endParagraph: NonNegativeInt.pipe(
+    endParagraph: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({

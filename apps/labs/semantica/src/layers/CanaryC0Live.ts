@@ -1,6 +1,5 @@
 import * as NLPService from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
-import { NonNegativeInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
 import { Clock, Console, Crypto, DateTime, Effect, FileSystem, Layer, Number as N, Order, Path } from "effect";
@@ -367,18 +366,18 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       .makeDirectory(outputDirectory, { recursive: true })
       .pipe(Effect.mapError(() => executionFailed("The C0 output directory could not be created.")));
     const telemetry = EvalRunTelemetry.make({
-      coldStartMs: NonNegativeInt.make(execution.coldStartMs),
+      coldStartMs: S.Natural.make(execution.coldStartMs),
       dependencyBytes: O.none(),
-      diskGrowthBytes: NonNegativeInt.make(N.max(0, afterBytes - beforeBytes)),
+      diskGrowthBytes: S.Natural.make(N.max(0, afterBytes - beforeBytes)),
       mode,
       modelBytes: O.none(),
-      p95Ms: NonNegativeInt.make(p95(execution.timings)),
+      p95Ms: S.Natural.make(p95(execution.timings)),
       reportDigest: execution.report.reportDigest,
-      rssBytes: NonNegativeInt.make(process.memoryUsage().rss),
+      rssBytes: S.Natural.make(process.memoryUsage().rss),
       runId: run.id,
       schemaVersion: "eval-telemetry/v1",
       startedAt,
-      wallClockMs: NonNegativeInt.make(N.max(0, endedMillis - startedMillis)),
+      wallClockMs: S.Natural.make(N.max(0, endedMillis - startedMillis)),
     });
     const artifactFailure = {
       encode: executionFailed("A C0 output artifact did not encode."),

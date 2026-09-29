@@ -10,7 +10,7 @@ import {
   TextAnchor,
   TextAnchorVerificationReceipt,
 } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
@@ -155,7 +155,7 @@ describe("C1 committed projection gate", () => {
         ...emptyKnn,
         neighbors: [KnnNeighbor.make({ chunk: chunkId("3"), distance: 0.1, rank: PosInt.make(1) })],
       });
-      const wrongSparql = [SparqlResultWitness.make({ count: NonNegativeInt.make(0), id: "claims", rows: [] })];
+      const wrongSparql = [SparqlResultWitness.make({ count: S.Natural.make(0), id: "claims", rows: [] })];
 
       const emptyFailure = yield* verifyGNeighbors(expectation)(emptyKnn).pipe(Effect.flip);
       const mismatchFailure = yield* verifyGNeighbors(expectation)(wrongKnn).pipe(Effect.flip);
@@ -263,7 +263,7 @@ const sourceIdentity = SourceTextIdentity.make({
   sourceRef: document,
   textDigest: SourceTextDigest.make(`sha256:${sha("5")}`),
 });
-const anchor = TextAnchor.make({ endChar: NonNegativeInt.make(6), quote: "Effect", startChar: NonNegativeInt.make(0) });
+const anchor = TextAnchor.make({ endChar: S.Natural.make(6), quote: "Effect", startChar: S.Natural.make(0) });
 const receipt = TextAnchorVerificationReceipt.make({ anchor, source: sourceIdentity });
 const claimChunk = chunkId("6");
 const entityBody = ClaimBody.cases.Entity.make({

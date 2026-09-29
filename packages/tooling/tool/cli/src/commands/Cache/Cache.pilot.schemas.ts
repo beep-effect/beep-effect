@@ -11,7 +11,7 @@ import {
   CacheEvidenceReference,
   CacheQualificationKey,
 } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -131,7 +131,7 @@ export const CachePilotOutcome = S.TaggedUnion({
   Executed: {
     selected: CachePilotTask,
     logSha256: Sha256Hex,
-    logBytes: NonNegativeInt,
+    logBytes: S.Natural,
     replayLogMatches: S.Boolean,
   },
   Blocked: { failedDependencies: S.NonEmptyArray(CachePilotTask) },

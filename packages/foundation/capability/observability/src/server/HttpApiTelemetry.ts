@@ -16,7 +16,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
-import type { NonNegativeInt } from "@beep/schema";
 import type * as HttpServerResponse from "effect/http/HttpServerResponse";
 import type { HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
 
@@ -46,11 +45,10 @@ class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusFie
  * **Example** (Make telemetry descriptor)
  *
  * ```typescript
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { HttpApiTelemetryDescriptor } from "@beep/observability/server"
  *
- * const successStatus = S.decodeUnknownSync(NonNegativeInt)(201)
+ * const successStatus = S.decodeUnknownSync(S.Natural)(201)
  * const descriptor = HttpApiTelemetryDescriptor.make({
  *   apiName: "TodoApi",
  *   endpointName: "createTodo",
@@ -152,15 +150,13 @@ const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.leng
  * @since 0.0.0
  */
 export const httpApiSuccessStatus: {
-  (schema: S.Top, fallback?: number): NonNegativeInt;
-  (fallback?: number): (schema: S.Top) => NonNegativeInt;
-} = dual(
-  isHttpApiSuccessStatusDataFirst,
-  (schema: S.Top, fallback = 200): NonNegativeInt =>
-    HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback)
+  (schema: S.Top, fallback?: number): number;
+  (fallback?: number): (schema: S.Top) => number;
+} = dual(isHttpApiSuccessStatusDataFirst, (schema: S.Top, fallback = 200): number =>
+  HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback)
 );
 
-const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
+const httpApiErrorStatus = (schema: S.Top, fallback = 500): number =>
   HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback);
 
 const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): A.NonEmptyReadonlyArray<S.Top> => {
@@ -331,11 +327,11 @@ export const makeHttpApiTelemetryDescriptor: {
  * @since 0.0.0
  */
 export const httpApiFailureStatus: {
-  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt>;
-  (error: unknown): (endpoint: HttpApiEndpointMetadata) => O.Option<NonNegativeInt>;
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<number>;
+  (error: unknown): (endpoint: HttpApiEndpointMetadata) => O.Option<number>;
 } = dual(
   2,
-  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt> =>
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<number> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
       O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.decodeUnknownSync(400)) : O.none())),
@@ -459,7 +455,6 @@ const observeHttpApiEffectImpl = <E, R>(
  *
  * ```typescript
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,
@@ -470,7 +465,7 @@ const observeHttpApiEffectImpl = <E, R>(
  * import * as HttpServerResponse from "effect/http/HttpServerResponse"
  *
  * const endpoint = HttpApiEndpoint.get("listTodos", "/todos", { success: S.String })
- * const successStatus = S.decodeUnknownSync(NonNegativeInt)(200)
+ * const successStatus = S.decodeUnknownSync(S.Natural)(200)
  * const descriptor = HttpApiTelemetryDescriptor.make({
  *   apiName: "TodoApi",
  *   endpointName: "listTodos",
@@ -605,7 +600,6 @@ export const layerHttpApiTelemetryMiddleware = (
  *
  * ```ts import.meta.vitest name="Observe handler with annotations"
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,
@@ -613,7 +607,7 @@ export const layerHttpApiTelemetryMiddleware = (
  *   observeHttpApiHandler
  * } from "@beep/observability/server"
  *
- * const successStatus = S.decodeUnknownSync(NonNegativeInt)(200)
+ * const successStatus = S.decodeUnknownSync(S.Natural)(200)
  * const descriptor = HttpApiTelemetryDescriptor.make({
  *   apiName: "TodoApi",
  *   endpointName: "listTodos",
@@ -676,7 +670,6 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
  *
  * ```typescript
  * import { Effect } from "effect"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import {
  *   HttpApiTelemetryDescriptor,
@@ -684,7 +677,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
  *   observeHttpApiHandler
  * } from "@beep/observability/server"
  *
- * const successStatus = S.decodeUnknownSync(NonNegativeInt)(200)
+ * const successStatus = S.decodeUnknownSync(S.Natural)(200)
  * const descriptor = HttpApiTelemetryDescriptor.make({
  *   apiName: "TodoApi",
  *   endpointName: "listTodos",

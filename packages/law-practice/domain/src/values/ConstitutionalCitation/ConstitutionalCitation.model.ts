@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { ConstitutionalComponentSpan } from "../ComponentSpan/index.ts";
@@ -27,21 +27,21 @@ const $I = $LawPracticeDomainId.create("values/ConstitutionalCitation/Constituti
  * **Example** (Make a constitutional citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ConstitutionalCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = ConstitutionalCitation.make({
  *   text: "U.S. Const. amend. XIV",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "U.S. Const. amend. XIV",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "constitutional"
@@ -61,14 +61,14 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
         description: 'Jurisdiction code: "US", 2-letter state code, or undefined for bare "Const.".',
       })
     ),
-    article: NonNegativeInt.pipe(
+    article: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Article number (parsed from Roman numerals) — mutually exclusive with amendment / preamble.",
       })
     ),
-    amendment: NonNegativeInt.pipe(
+    amendment: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -90,7 +90,7 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
         description: 'Section identifier (string to handle non-numeric like "3-a").',
       })
     ),
-    clause: NonNegativeInt.pipe(
+    clause: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -98,10 +98,10 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
       })
     ),
     currentLocation: S.Struct({
-      article: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      amendment: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      article: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      amendment: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
       section: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      clause: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      clause: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     }).pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,

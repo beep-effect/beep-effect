@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -66,7 +65,7 @@ export class SyncItem extends ProductEntity.Entity<SyncItem>()(SyncItemId)(
     contentDigest: DocumentContentDigest.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Digest of the local bytes last observed for this item; none for folders." })
       .pipe(pg.text(), pg.columnName("content_digest")),
-    contentSizeBytes: NonNegativeInt.pipe(S.OptionFromNullOr)
+    contentSizeBytes: S.Natural.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Size in bytes of the local content last observed; none for folders." })
       .pipe(pg.integer(), pg.columnName("content_size_bytes")),
     itemKind: SyncItemKind.annotateKey({
@@ -80,10 +79,10 @@ export class SyncItem extends ProductEntity.Entity<SyncItem>()(SyncItemId)(
         description: "Digest of the content most recently pushed to the provider; none before first push.",
       })
       .pipe(pg.text(), pg.columnName("last_pushed_digest")),
-    lastPushedGeneration: NonNegativeInt.pipe(S.OptionFromNullOr)
+    lastPushedGeneration: S.Natural.pipe(S.OptionFromNullOr)
       .annotateKey({ description: "Local generation counter captured by the most recent successful push." })
       .pipe(pg.integer(), pg.columnName("last_pushed_generation")),
-    localGeneration: NonNegativeInt.annotateKey({
+    localGeneration: S.Natural.annotateKey({
       description: "Monotonic counter incremented per observed local change.",
     }).pipe(pg.integer(), pg.columnName("local_generation")),
     localRelPath: VaultRelPath.annotateKey({

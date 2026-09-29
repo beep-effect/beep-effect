@@ -23,7 +23,6 @@ import { ExtractFileOperation, ProcessFileOperation } from "@beep/file-processin
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -108,7 +107,7 @@ const makeSource = Effect.fn("FileProcessingTest.makeSource")(function* (
     locator: ArtifactLocator.make({ kind: "synthetic", value: locatorPath }),
     name: `readme.${extension}`,
     relativePath,
-    sizeBytes: NonNegativeInt.make(text?.length ?? 11),
+    sizeBytes: S.Natural.make(text?.length ?? 11),
     ...(text === undefined ? {} : { text }),
   });
 });

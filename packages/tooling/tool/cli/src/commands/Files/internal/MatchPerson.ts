@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
 import {
   Config,
@@ -71,7 +71,7 @@ const workerScoreRoundingTolerance = 0.000001;
 const adaFaceHipVersionPrefix = "7.2";
 const adaFaceRocmArchitecture = "gfx1201";
 const trustedUvRoots = ["/usr/bin", "/usr/local/bin"] as const;
-const personMatchDeviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
+const personMatchDeviceIndexesEquivalence = S.toEquivalence(S.Array(S.Natural));
 const PersonMatchSupportedImageExtension = LiteralKit(["jpg", "jpeg", "png", "webp"]).pipe(
   $I.annoteSchema("PersonMatchSupportedImageExtension", {
     description: "A lowercase image extension discovered by the isolated person-match worker.",
@@ -265,7 +265,7 @@ class CanonicalMatchPersonCacheChildren extends S.Class<CanonicalMatchPersonCach
 
 class ValidatedWorkerReferences extends S.Class<ValidatedWorkerReferences>($I`ValidatedWorkerReferences`)(
   {
-    acceptedCount: NonNegativeInt,
+    acceptedCount: S.Natural,
     acceptedNames: S.Array(S.NonEmptyString),
   },
   $I.annote("ValidatedWorkerReferences", {
@@ -1326,7 +1326,7 @@ const validateWorkerReferences = Effect.fn("Files.validatePersonMatchWorkerRefer
     MutableHashSet.add(acceptedNames, reference.sourceName);
   }
   return ValidatedWorkerReferences.make({
-    acceptedCount: NonNegativeInt.make(acceptedCount),
+    acceptedCount: S.Natural.make(acceptedCount),
     acceptedNames: A.fromIterable(acceptedNames),
   });
 });

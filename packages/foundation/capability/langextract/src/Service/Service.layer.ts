@@ -13,12 +13,12 @@ import {
   parseModelOutput,
 } from "@beep/langextract/Extraction";
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as A from "@beep/utils/Array";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ensureRemoteExtractionAllowed } from "./Service.policy.ts";
 import { buildPrompt } from "./Service.prompt.ts";
@@ -99,10 +99,10 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
       return LangExtractResult.make({
         annotatedDocument,
         diagnostics: LangExtractDiagnostics.make({
-          alignedCount: NonNegativeInt.make(alignedCount),
-          candidateCount: NonNegativeInt.make(A.length(candidates)),
-          promptChars: NonNegativeInt.make(Str.length(prompt)),
-          unalignedCount: NonNegativeInt.make(unalignedCount),
+          alignedCount: S.Natural.make(alignedCount),
+          candidateCount: S.Natural.make(A.length(candidates)),
+          promptChars: S.Natural.make(Str.length(prompt)),
+          unalignedCount: S.Natural.make(unalignedCount),
         }),
         documentId: request.documentId,
         extractions,

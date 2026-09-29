@@ -14,7 +14,6 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils as SchemaDefaults } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -339,14 +338,14 @@ export class ChunkingProgressEvent extends S.TaggedClass<ChunkingProgressEvent>(
     ...BaseProgressEvent.fields,
 
     /** Number of chunks fully produced when the event was emitted. */
-    chunksCompleted: NonNegativeInt.pipe(
+    chunksCompleted: S.Natural.pipe(
       $I.annoteKey("ChunkingProgressEvent.chunksCompleted", {
         description: "Number of chunks fully produced when the event was emitted.",
       })
     ),
 
     /** Estimated number of chunks currently being assembled. */
-    chunksProcessing: NonNegativeInt.pipe(
+    chunksProcessing: S.Natural.pipe(
       $I.annoteKey("ChunkingProgressEvent.chunksProcessing", {
         description: "Estimated number of chunks currently being assembled.",
       })
@@ -447,7 +446,7 @@ export class ChunkProcessingStartedEvent extends S.TaggedClass<ChunkProcessingSt
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk entering pipeline processing. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingStartedEvent.chunkIndex", {
         description: "Zero-based index of the chunk entering pipeline processing.",
       })
@@ -503,7 +502,7 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing mention extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("MentionExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing mention extraction.",
       })
@@ -517,7 +516,7 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
     ),
 
     /** Number of mentions detected in the active chunk so far. */
-    mentionCount: NonNegativeInt.pipe(
+    mentionCount: S.Natural.pipe(
       $I.annoteKey("MentionExtractionProgressEvent.mentionCount", {
         description: "Number of mentions detected in the active chunk so far.",
       })
@@ -558,7 +557,7 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing entity extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("EntityExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing entity extraction.",
       })
@@ -572,7 +571,7 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
     ),
 
     /** Number of entities extracted from the active chunk so far. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("EntityExtractionProgressEvent.entityCount", {
         description: "Number of entities extracted from the active chunk so far.",
       })
@@ -618,7 +617,7 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the entity was found. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("EntityFoundEvent.chunkIndex", {
         description: "Zero-based index of the chunk in which the entity was found.",
       })
@@ -692,7 +691,7 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing relation extraction. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing relation extraction.",
       })
@@ -706,14 +705,14 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
     ),
 
     /** Number of relations extracted from the active chunk so far. */
-    relationCount: NonNegativeInt.pipe(
+    relationCount: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.relationCount", {
         description: "Number of relations extracted from the active chunk so far.",
       })
     ),
 
     /** Number of extracted entities available as relation endpoints. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("RelationExtractionProgressEvent.entityCount", {
         description: "Number of extracted entities available as relation endpoints.",
       })
@@ -753,7 +752,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the relation was found. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RelationFoundEvent.chunkIndex", {
         description: "Zero-based index of the chunk in which the relation was found.",
       })
@@ -833,21 +832,21 @@ export class GroundingProgressEvent extends S.TaggedClass<GroundingProgressEvent
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing grounding verification. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.chunkIndex", {
         description: "Zero-based index of the chunk undergoing grounding verification.",
       })
     ),
 
     /** Number of candidate relations checked by the grounding stage. */
-    verifiedRelations: NonNegativeInt.pipe(
+    verifiedRelations: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.verifiedRelations", {
         description: "Number of candidate relations checked by the grounding stage.",
       })
     ),
 
     /** Number of verified relations meeting the grounding threshold. */
-    groundedRelations: NonNegativeInt.pipe(
+    groundedRelations: S.Natural.pipe(
       $I.annoteKey("GroundingProgressEvent.groundedRelations", {
         description: "Number of verified relations meeting the grounding threshold.",
       })
@@ -895,21 +894,21 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk that completed processing. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.chunkIndex", {
         description: "Zero-based index of the chunk that completed processing.",
       })
     ),
 
     /** Number of entities extracted from the completed chunk. */
-    entityCount: NonNegativeInt.pipe(
+    entityCount: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.entityCount", {
         description: "Number of entities extracted from the completed chunk.",
       })
     ),
 
     /** Number of relations extracted from the completed chunk. */
-    relationCount: NonNegativeInt.pipe(
+    relationCount: S.Natural.pipe(
       $I.annoteKey("ChunkProcessingCompleteEvent.relationCount", {
         description: "Number of relations extracted from the completed chunk.",
       })
@@ -987,21 +986,21 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
     ...BaseProgressEvent.fields,
 
     /** Total number of entities in the merged knowledge graph. */
-    totalEntities: NonNegativeInt.pipe(
+    totalEntities: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.totalEntities", {
         description: "Total number of entities in the merged knowledge graph.",
       })
     ),
 
     /** Total number of relations in the merged knowledge graph. */
-    totalRelations: NonNegativeInt.pipe(
+    totalRelations: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.totalRelations", {
         description: "Total number of relations in the merged knowledge graph.",
       })
     ),
 
     /** Number of distinct ontology classes represented by final entities. */
-    uniqueEntityTypes: NonNegativeInt.pipe(
+    uniqueEntityTypes: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.uniqueEntityTypes", {
         description: "Number of distinct ontology classes represented by final entities.",
       })
@@ -1015,14 +1014,14 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
     ),
 
     /** Number of chunks that completed every extraction phase. */
-    successfulChunks: NonNegativeInt.pipe(
+    successfulChunks: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.successfulChunks", {
         description: "Number of chunks that completed every extraction phase.",
       })
     ),
 
     /** Number of chunks omitted because of recoverable failures. */
-    failedChunks: NonNegativeInt.pipe(
+    failedChunks: S.Natural.pipe(
       $I.annoteKey("ExtractionCompleteEvent.failedChunks", {
         description: "Number of chunks omitted because of recoverable failures.",
       })
@@ -1187,17 +1186,17 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.entityCount", {
           description: "Number of entities retained before extraction failed.",
         })
       ),
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.relationCount", {
           description: "Number of relations retained before extraction failed.",
         })
       ),
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("ExtractionFailedEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before extraction failed.",
         })
@@ -1214,7 +1213,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
     ),
 
     /** Optional zero-based checkpoint from which a resumable extraction may continue. */
-    lastSuccessfulChunkIndex: NonNegativeInt.pipe(
+    lastSuccessfulChunkIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       $I.annoteKey("ExtractionFailedEvent.lastSuccessfulChunkIndex", {
@@ -1264,19 +1263,19 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
     /** Optional usable counts accumulated before cancellation. */
     partialResults: S.Struct({
       /** Number of entities retained before cancellation. */
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.entityCount", {
           description: "Number of entities retained before cancellation.",
         })
       ),
       /** Number of relations retained before cancellation. */
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.relationCount", {
           description: "Number of relations retained before cancellation.",
         })
       ),
       /** Number of chunks completed before cancellation. */
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("ExtractionCancelledEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before cancellation.",
         })
@@ -1293,7 +1292,7 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
     ),
 
     /** Optional zero-based index of the last chunk processed before cancellation. */
-    lastProcessedChunkIndex: NonNegativeInt.pipe(
+    lastProcessedChunkIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       $I.annoteKey("ExtractionCancelledEvent.lastProcessedChunkIndex", {
@@ -1399,7 +1398,7 @@ export class RecoverableErrorEvent extends S.TaggedClass<RecoverableErrorEvent>(
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk affected by the recoverable failure. */
-    chunkIndex: NonNegativeInt.pipe(
+    chunkIndex: S.Natural.pipe(
       $I.annoteKey("RecoverableErrorEvent.chunkIndex", {
         description: "Zero-based index of the chunk affected by the recoverable failure.",
       })
@@ -1490,19 +1489,19 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
     /** Optional usable counts accumulated before the fatal failure. */
     partialResults: S.Struct({
       /** Number of entities retained before the fatal failure. */
-      entityCount: NonNegativeInt.pipe(
+      entityCount: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.entityCount", {
           description: "Number of entities retained before the fatal failure.",
         })
       ),
       /** Number of relations retained before the fatal failure. */
-      relationCount: NonNegativeInt.pipe(
+      relationCount: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.relationCount", {
           description: "Number of relations retained before the fatal failure.",
         })
       ),
       /** Number of chunks completed before the fatal failure. */
-      processedChunks: NonNegativeInt.pipe(
+      processedChunks: S.Natural.pipe(
         $I.annoteKey("FatalErrorEvent.partialResults.processedChunks", {
           description: "Number of chunks completed before the fatal failure.",
         })
@@ -1643,14 +1642,14 @@ export class StageProgressEvent extends S.TaggedClass<StageProgressEvent>($I`Sta
     ),
 
     /** Number of stage work items completed so far. */
-    itemsProcessed: NonNegativeInt.pipe(
+    itemsProcessed: S.Natural.pipe(
       $I.annoteKey("StageProgressEvent.itemsProcessed", {
         description: "Number of stage work items completed so far.",
       })
     ),
 
     /** Total number of work items expected by the stage. */
-    itemsTotal: NonNegativeInt.pipe(
+    itemsTotal: S.Natural.pipe(
       $I.annoteKey("StageProgressEvent.itemsTotal", {
         description: "Total number of work items expected by the stage.",
       })
@@ -1696,14 +1695,14 @@ export class StageCompletedEvent extends S.TaggedClass<StageCompletedEvent>($I`S
     ),
 
     /** Elapsed stage duration in milliseconds. */
-    durationMs: NonNegativeInt.pipe(
+    durationMs: S.Natural.pipe(
       $I.annoteKey("StageCompletedEvent.durationMs", {
         description: "Elapsed stage duration in milliseconds.",
       })
     ),
 
     /** Number of work items completed by the stage. */
-    itemCount: NonNegativeInt.pipe(
+    itemCount: S.Natural.pipe(
       $I.annoteKey("StageCompletedEvent.itemCount", {
         description: "Number of work items completed by the stage.",
       })
@@ -1741,7 +1740,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
     ...BaseProgressEvent.fields,
 
     /** Server-imposed delay in milliseconds before work may continue. */
-    waitMs: NonNegativeInt.pipe(
+    waitMs: S.Natural.pipe(
       $I.annoteKey("RateLimitedEvent.waitMs", {
         description: "Server-imposed delay in milliseconds before work may continue.",
       })

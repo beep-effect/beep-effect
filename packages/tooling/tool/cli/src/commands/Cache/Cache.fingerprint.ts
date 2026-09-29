@@ -6,7 +6,7 @@
  */
 
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
@@ -105,7 +105,7 @@ export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusio
     "--path-format=absolute",
     "--git-common-dir",
   ]);
-  const file = yield* readContainedFileBytesNoFollow(commonDirectory, "info/exclude", NonNegativeInt.make(1048576));
+  const file = yield* readContainedFileBytesNoFollow(commonDirectory, "info/exclude", S.Natural.make(1048576));
   if (file.exists && O.isNone(file.contents))
     return yield* CacheCommandError.new("Git local exclusions must be a bounded regular file or absent.");
   const contents = O.getOrElse(file.contents, () => new Uint8Array(0));
@@ -139,7 +139,7 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
   const biomePath = path.join(root, "node_modules/@biomejs/cli-linux-x64/biome");
   if (!(yield* fs.exists(biomePath))) return yield* CacheCommandError.new("The glibc Biome binary is not installed.");
   const bun = yield* fingerprintExecutable(root, bunPath);
-  const declared = yield* readContainedFileBytesNoFollow(root, ".bun-version", NonNegativeInt.make(128));
+  const declared = yield* readContainedFileBytesNoFollow(root, ".bun-version", S.Natural.make(128));
   const declaration = yield* declared.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new("A regular bounded .bun-version file is required."))
   );

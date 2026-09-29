@@ -14,7 +14,7 @@
 
 import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Config, Context, Effect, Layer, Match, Stream } from "effect";
 import { FetchHttpClient } from "effect/http";
@@ -126,14 +126,14 @@ export class EcfrTitleParams extends S.Class<EcfrTitleParams>($I`EcfrTitleParams
  * **Example** (Make search params with pagination)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { EcfrSearchParams } from "@beep/ecfr"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const params = EcfrSearchParams.make({
  *   query: O.some("water"),
- *   page: O.some(NonNegativeInt.make(1)),
- *   perPage: O.some(NonNegativeInt.make(20))
+ *   page: O.some(S.Natural.make(1)),
+ *   perPage: O.some(S.Natural.make(20))
  * })
  * console.log(params.query)
  * ```
@@ -150,9 +150,9 @@ export class EcfrSearchParams extends S.Class<EcfrSearchParams>($I`EcfrSearchPar
     lastModifiedOnOrAfter: optional(S.String),
     lastModifiedOnOrBefore: optional(S.String),
     order: optional(SearchOrder),
-    page: optional(NonNegativeInt),
+    page: optional(S.Natural),
     paginateBy: optional(SearchPagination),
-    perPage: optional(NonNegativeInt),
+    perPage: optional(S.Natural),
     query: optional(S.String),
   },
   $I.annote("EcfrSearchParams", {
@@ -243,7 +243,7 @@ export class EcfrVersionsParams extends S.Class<EcfrVersionsParams>($I`EcfrVersi
     issueDateGte: optional(S.String),
     issueDateLte: optional(S.String),
     issueDateOn: optional(S.String),
-    page: optional(NonNegativeInt),
+    page: optional(S.Natural),
     part: optional(S.String),
     section: optional(S.String),
     subchapter: optional(S.String),
@@ -357,7 +357,7 @@ const toHierarchyQuery = (params: EcfrVersionerParams | EcfrVersionsParams): G.G
 
 class StatusCause extends S.Class<StatusCause>($I`StatusCause`)(
   {
-    response: S.Struct({ status: NonNegativeInt }),
+    response: S.Struct({ status: S.Natural }),
   },
   $I.annote("StatusCause", {
     description: "External HTTP client failure carrying a numeric response status.",
@@ -365,7 +365,7 @@ class StatusCause extends S.Class<StatusCause>($I`StatusCause`)(
 ) {}
 
 const decodeStatusCause = S.decodeUnknownOption(StatusCause);
-const readStatus = (cause: HttpClientError.HttpClientError): O.Option<NonNegativeInt> =>
+const readStatus = (cause: HttpClientError.HttpClientError): O.Option<number> =>
   O.map(decodeStatusCause(cause), ({ response }) => response.status);
 
 const mapHttpClientError = (cause: HttpClientError.HttpClientError): EcfrError =>

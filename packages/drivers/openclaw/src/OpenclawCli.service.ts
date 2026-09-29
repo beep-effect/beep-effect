@@ -13,7 +13,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -340,7 +340,7 @@ const projectGatewayHealth = (wire: OpenclawGatewayHealthWire): OpenclawGatewayH
   OpenclawGatewayHealth.make({
     channels: wire.channels,
     ok: wire.ok,
-    pluginErrorCount: NonNegativeInt.make(
+    pluginErrorCount: S.Natural.make(
       pipe(
         wire.plugins,
         O.map((plugins) => A.length(plugins.errors)),

@@ -7,7 +7,7 @@
 
 import { fileURLToPath } from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Console, Context, Effect, FileSystem, flow, Layer, Match, Number as Num, Path } from "effect";
@@ -62,8 +62,8 @@ const rocmLibraryPathConfigName = "BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH";
 const localRocmLibraryDirectorySegments = ["rocm-libs", "hipsparselt-7.2.4-1.1", "opt", "rocm", "lib"] as const;
 const hipSparseLtSoname = "libhipsparselt.so.0";
 const hipSparseLtVersionedName = "libhipsparselt.so.0.2";
-const deviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
-const isNonNegativeInt = S.is(NonNegativeInt);
+const deviceIndexesEquivalence = S.toEquivalence(S.Array(S.Natural));
+const isNonNegativeInt = S.is(S.Natural);
 const PersonMatchWorkerEnvironment = LiteralKit(["primary", "cpu"]);
 type PersonMatchWorkerEnvironment = typeof PersonMatchWorkerEnvironment.Type;
 
@@ -73,7 +73,7 @@ class MatchPersonWorkerEnvironmentSetupError extends S.TaggedError<MatchPersonWo
   "MatchPersonWorkerEnvironmentSetupError",
   {
     environment: PersonMatchWorkerEnvironment,
-    exitCode: NonNegativeInt,
+    exitCode: S.Natural,
     message: S.NonEmptyString,
   },
   $I.annoteError<MatchPersonWorkerEnvironmentSetupError>("MatchPersonWorkerEnvironmentSetupError", {

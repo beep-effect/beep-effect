@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -41,16 +41,16 @@ const DurableLocatorFields = {
     description: "W3C TextQuoteSelector — the anchor of record.",
   }),
   position: S.Struct({
-    start: NonNegativeInt.annotateKey({
+    start: S.Natural.annotateKey({
       description: "Start offset in space.",
     }),
-    end: NonNegativeInt.annotateKey({
+    end: S.Natural.annotateKey({
       description: "End offset in space.",
     }),
   }).annotateKey({
     description: "W3C TextPositionSelector — offsets in space. Hint/audit; may drift.",
   }),
-  occurrence: NonNegativeInt.pipe(
+  occurrence: S.Natural.pipe(
     S.OptionFromOptionalKey,
     SchemaUtils.withNoneDefault,
     S.annotateKey({
@@ -87,8 +87,8 @@ const makeDurableLocatorMember = <T extends typeof DurableLocatorSpace.Type>(lit
  * **Example** (Creating a DurableLocator)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { DurableLocator } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const locator = DurableLocator.make({
@@ -96,8 +96,8 @@ const makeDurableLocatorMember = <T extends typeof DurableLocatorSpace.Type>(lit
  *   space: "original",
  *   quote: { exact: "410 U.S. 113" },
  *   position: {
- *     start: NonNegativeInt.make(0),
- *     end: NonNegativeInt.make(12),
+ *     start: S.Natural.make(0),
+ *     end: S.Natural.make(12),
  *   },
  *   contentHash: "9f2c4a1b7e3d0056",
  * })

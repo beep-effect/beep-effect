@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { FiniteFromString } from "@beep/schema";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -31,13 +30,15 @@ const captureAt = Effect.fnUntraced(function* (
   );
 });
 
+const decodeFinite = S.decodeEffect(S.FiniteFromString);
+
 const decodePosInt = S.decodeEffect(PosInt);
 
 const decodePositiveInteger = Effect.fnUntraced(function* (
   raw: string,
   label: string
 ): Effect.fn.Return<PosInt, PolicyDecodeError> {
-  const finite = yield* FiniteFromString.decodeEffect(raw).pipe(
+  const finite = yield* decodeFinite(raw).pipe(
     Effect.mapError(() => schemaFailure(`A-Box value "${label}" was not a finite number.`))
   );
   return yield* decodePosInt(finite).pipe(

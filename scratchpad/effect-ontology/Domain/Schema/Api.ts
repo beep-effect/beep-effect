@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunConfig } from "../Model/ExtractionRun.ts";
 import { BackgroundJobId } from "./JobSchema.ts";
@@ -235,16 +235,16 @@ export type JobErrorType = typeof JobErrorType.Type;
  */
 export class JobProgress extends S.Class<JobProgress>($I`JobProgress`)(
   {
-    chunksTotal: NonNegativeInt.annotateKey({
+    chunksTotal: S.Natural.annotateKey({
       description: "Total chunks planned for the job.",
     }),
-    chunksProcessed: NonNegativeInt.annotateKey({
+    chunksProcessed: S.Natural.annotateKey({
       description: "Chunks whose extraction work has completed.",
     }),
-    entitiesExtracted: NonNegativeInt.annotateKey({
+    entitiesExtracted: S.Natural.annotateKey({
       description: "Entities extracted so far.",
     }),
-    relationsExtracted: NonNegativeInt.annotateKey({
+    relationsExtracted: S.Natural.annotateKey({
       description: "Relations extracted so far.",
     }),
   },

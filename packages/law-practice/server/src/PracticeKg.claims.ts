@@ -23,7 +23,7 @@ import { PatentApplicationDocument } from "@beep/law-practice-domain/values/Pate
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { Defect, NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Defect, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
@@ -175,13 +175,13 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
  *
  * **Example** (Usage)
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PracticeKgClaimsSummary } from "@beep/law-practice-server"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = PracticeKgClaimsSummary.make({
- *   claims: NonNegativeInt.make(1),
- *   failedFiles: NonNegativeInt.make(0),
- *   files: NonNegativeInt.make(1)
+ *   claims: S.Natural.make(1),
+ *   failedFiles: S.Natural.make(0),
+ *   files: S.Natural.make(1)
  * })
  * console.log(summary.claims)
  * ```
@@ -191,9 +191,9 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
  */
 export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I`PracticeKgClaimsSummary`)(
   {
-    claims: NonNegativeInt,
-    failedFiles: NonNegativeInt,
-    files: NonNegativeInt,
+    claims: S.Natural,
+    failedFiles: S.Natural,
+    files: S.Natural,
   },
   $I.annote("PracticeKgClaimsSummary", {
     description: "Extracted, extraction-failed, and persisted-claim counts for a batch.",
@@ -374,7 +374,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
             locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
             name: filename,
             relativePath,
-            sizeBytes: NonNegativeInt.make(text.length),
+            sizeBytes: S.Natural.make(text.length),
             text,
           }),
         })
@@ -486,9 +486,9 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       });
     }
     return PracticeKgClaimsSummary.make({
-      claims: NonNegativeInt.make(A.headNonEmpty(claimCountRows).count),
-      failedFiles: NonNegativeInt.make(A.length(failedExtractions)),
-      files: NonNegativeInt.make(A.length(extractedFiles) + A.length(persistedPatentDocuments)),
+      claims: S.Natural.make(A.headNonEmpty(claimCountRows).count),
+      failedFiles: S.Natural.make(A.length(failedExtractions)),
+      files: S.Natural.make(A.length(extractedFiles) + A.length(persistedPatentDocuments)),
     });
   },
   Effect.mapError((cause) =>

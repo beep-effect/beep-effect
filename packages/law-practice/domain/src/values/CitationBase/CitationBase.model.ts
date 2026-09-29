@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 import { CitationSignal } from "../CitationSignal/index.ts";
@@ -33,22 +33,22 @@ const $I = $LawPracticeDomainId.create("values/CitationBase/CitationBase.model")
  * **Example** (Make CitationBase with fields)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CitationBase, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const base = CitationBase.make({
  *   text: "410 U.S. 113",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(12),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(12),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(12),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(12),
  *   }),
  *   confidence: 1,
  *   matchedText: "410 U.S. 113",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(3),
+ *   patternsChecked: S.Natural.make(3),
  * })
  *
  * console.log(base.text) // "410 U.S. 113"
@@ -84,7 +84,7 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
     processTimeMs: S.Finite.annotateKey({
       description: "Time spent processing this citation (milliseconds).",
     }),
-    patternsChecked: NonNegativeInt.annotateKey({
+    patternsChecked: S.Natural.annotateKey({
       description: "Number of regex patterns checked before match.",
     }),
     warnings: S.Array(CitationWarning).pipe(
@@ -107,14 +107,14 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
         description: "Group ID for string citations sharing the same proposition.",
       })
     ),
-    stringCitationIndex: NonNegativeInt.pipe(
+    stringCitationIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Position within the string citation group (0-indexed).",
       })
     ),
-    stringCitationGroupSize: NonNegativeInt.pipe(
+    stringCitationGroupSize: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
@@ -136,7 +136,7 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
         description: "Whether this citation appears in a footnote (only populated when detectFootnotes enabled).",
       })
     ),
-    footnoteNumber: NonNegativeInt.pipe(
+    footnoteNumber: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({

@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt } from "@beep/schema/Number";
 import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";
@@ -476,8 +475,8 @@ export interface PersistentEntityIndexService extends EntityIndexService {
    * Get index statistics
    */
   readonly stats: Effect.Effect<{
-    readonly entityCount: NonNegativeInt;
-    readonly typeCount: NonNegativeInt;
+    readonly entityCount: number;
+    readonly typeCount: number;
     readonly lastPersistedAt: O.Option<EpochMillis>;
   }>;
 }
@@ -615,8 +614,8 @@ export const makePersistentEntityIndex = dual3(
         const state = yield* Ref.get(stateRef);
         const lastPersistedAt = yield* Ref.get(lastPersistedRef);
         return {
-          entityCount: NonNegativeInt.make(HashMap.size(state.entities)),
-          typeCount: NonNegativeInt.make(HashMap.size(state.typeIndex)),
+          entityCount: S.Natural.make(HashMap.size(state.entities)),
+          typeCount: S.Natural.make(HashMap.size(state.typeIndex)),
           lastPersistedAt,
         };
       });

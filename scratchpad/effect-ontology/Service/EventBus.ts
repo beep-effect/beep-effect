@@ -11,7 +11,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
@@ -716,7 +715,7 @@ export const EventBusServiceSql = Layer.effect(
 
     const readPendingJobCount = SqlSchema.findOne({
       Request: S.Void,
-      Result: S.Struct({ count: NonNegativeInt }),
+      Result: S.Struct({ count: S.Natural }),
       execute: () => sql`
         SELECT COUNT(*)::int AS count
         FROM effect_queue

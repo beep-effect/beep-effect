@@ -15,7 +15,6 @@ import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
@@ -66,7 +65,7 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  * **Example** (Create an empty resolution result)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { CrossBatchResolutionResult, ResolutionStats } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const result = CrossBatchResolutionResult.make({
@@ -74,10 +73,10 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  *   newCanonicals: [],
  *   mergedEntities: [],
  *   stats: ResolutionStats.make({
- *     totalEntities: NonNegativeInt.make(0),
- *     matchedToExisting: NonNegativeInt.make(0),
- *     createdNew: NonNegativeInt.make(0),
- *     candidatesEvaluated: NonNegativeInt.make(0)
+ *     totalEntities: S.Natural.make(0),
+ *     matchedToExisting: S.Natural.make(0),
+ *     createdNew: S.Natural.make(0),
+ *     candidatesEvaluated: S.Natural.make(0)
  *   })
  * })
  * console.log(result.newCanonicals.length) // 0
@@ -146,14 +145,14 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
  * **Example** (Record resolution counts)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ResolutionStats } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const stats = ResolutionStats.make({
- *   totalEntities: NonNegativeInt.make(2),
- *   matchedToExisting: NonNegativeInt.make(1),
- *   createdNew: NonNegativeInt.make(1),
- *   candidatesEvaluated: NonNegativeInt.make(4)
+ *   totalEntities: S.Natural.make(2),
+ *   matchedToExisting: S.Natural.make(1),
+ *   createdNew: S.Natural.make(1),
+ *   candidatesEvaluated: S.Natural.make(4)
  * })
  * console.log(stats.createdNew) // 1
  * ```
@@ -163,10 +162,10 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
  */
 export class ResolutionStats extends S.Class<ResolutionStats>($I`ResolutionStats`)(
   {
-    totalEntities: NonNegativeInt,
-    matchedToExisting: NonNegativeInt,
-    createdNew: NonNegativeInt,
-    candidatesEvaluated: NonNegativeInt,
+    totalEntities: S.Natural,
+    matchedToExisting: S.Natural,
+    createdNew: S.Natural,
+    candidatesEvaluated: S.Natural,
   },
   $I.annote("ResolutionStats", {
     description: "Non-negative counts describing one cross-batch resolution pass.",
@@ -495,10 +494,10 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
             newCanonicals: [],
             mergedEntities: [],
             stats: {
-              totalEntities: NonNegativeInt.make(0),
-              matchedToExisting: NonNegativeInt.make(0),
-              createdNew: NonNegativeInt.make(0),
-              candidatesEvaluated: NonNegativeInt.make(0),
+              totalEntities: S.Natural.make(0),
+              matchedToExisting: S.Natural.make(0),
+              createdNew: S.Natural.make(0),
+              candidatesEvaluated: S.Natural.make(0),
             },
           };
         }
@@ -533,10 +532,10 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         );
 
         const stats: ResolutionStats = {
-          totalEntities: NonNegativeInt.make(entities.length),
-          matchedToExisting: NonNegativeInt.make(resolutionResult.matchedEntities.length),
-          createdNew: NonNegativeInt.make(finalResult.newCanonicals.length),
-          candidatesEvaluated: NonNegativeInt.make(resolutionResult.candidatesEvaluated),
+          totalEntities: S.Natural.make(entities.length),
+          matchedToExisting: S.Natural.make(resolutionResult.matchedEntities.length),
+          createdNew: S.Natural.make(finalResult.newCanonicals.length),
+          candidatesEvaluated: S.Natural.make(resolutionResult.candidatesEvaluated),
         };
 
         yield* Effect.logInfo("Cross-batch entity resolution complete", {

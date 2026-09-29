@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationId } from "../CitationId/index.ts";
 
@@ -26,13 +26,13 @@ const $I = $LawPracticeDomainId.create("values/ResolutionResult/ResolutionResult
  * **Example** (Make a resolution result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ResolutionResult } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const result = ResolutionResult.make({
- *   resolvedTo: O.some(NonNegativeInt.make(2)),
- *   antecedentIndex: O.some(NonNegativeInt.make(2)),
+ *   resolvedTo: O.some(S.Natural.make(2)),
+ *   antecedentIndex: O.some(S.Natural.make(2)),
  *   confidence: 0.92,
  * })
  *
@@ -45,14 +45,14 @@ const $I = $LawPracticeDomainId.create("values/ResolutionResult/ResolutionResult
  */
 export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionResult`)(
   {
-    resolvedTo: NonNegativeInt.pipe(
+    resolvedTo: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Index of the citation this resolves to. undefined if resolution failed.",
       })
     ),
-    antecedentIndex: NonNegativeInt.pipe(
+    antecedentIndex: S.Natural.pipe(
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({

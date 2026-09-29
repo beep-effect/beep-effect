@@ -13,7 +13,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import { Clock, Context, Duration, Effect, Layer, Order, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
@@ -309,8 +308,8 @@ const WikidataSearchResponse = S.Struct({
     search: S.String,
   }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   search: S.Array(WikidataSearchResult),
-  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  "search-continue": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  success: S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  "search-continue": S.Natural.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const WikidataEntityText = S.Struct({

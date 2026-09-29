@@ -9,7 +9,6 @@ import {
   ContradictionTriageService,
 } from "@beep/epistemic-use-cases/server";
 import { SourceTextResolver } from "@beep/file-processing/SourceText";
-import { NonNegativeInt } from "@beep/schema";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
@@ -33,13 +32,13 @@ const payload = ContradictionListPayload.make({
   disposition: "open",
   knownAt: DateTime.makeUnsafe(2_000),
   limit: PosInt.make(20),
-  offset: NonNegativeInt.make(0),
+  offset: S.Natural.make(0),
   validAt: DateTime.makeUnsafe(1_000),
 });
 
 const emptyPage = ContradictionCandidatePage.make({
   items: [],
-  total: NonNegativeInt.make(0),
+  total: S.Natural.make(0),
 });
 
 const TestCrypto = Layer.succeed(

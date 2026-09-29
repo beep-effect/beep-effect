@@ -8,7 +8,6 @@
 import { FaceDetectionConfidence, FaceDetectionPercentage } from "@beep/face-detection";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { NonNegativeInt, NonNegNum } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { Effect, SchemaTransformation } from "effect";
@@ -715,7 +714,7 @@ export class PersonMatchThresholdProfile extends S.Class<PersonMatchThresholdPro
  * @category schemas
  * @since 0.0.0
  */
-export const PersonMatchDeviceIndexes = S.UniqueArray(NonNegativeInt).pipe(
+export const PersonMatchDeviceIndexes = S.UniqueArray(S.Natural).pipe(
   $I.annoteSchema("PersonMatchDeviceIndexes", {
     description:
       "Duplicate-free GPU indexes selected by a runtime; current person-match backends emit zero or one index.",
@@ -732,13 +731,13 @@ export type PersonMatchDeviceIndexes = typeof PersonMatchDeviceIndexes.Type;
 
 const PersonMatchDeviceIndexFromString = S.NonEmptyString.pipe(
   S.decodeTo(S.Finite, SchemaTransformation.numberFromString),
-  S.decodeTo(NonNegativeInt),
+  S.decodeTo(S.Natural),
   $I.annoteSchema("PersonMatchDeviceIndexFromString", {
     description: "A non-empty decimal string decoded into a non-negative integer device index.",
   })
 );
 
-const PersonMatchRequestedDeviceIndexes = S.Tuple([NonNegativeInt]).pipe(
+const PersonMatchRequestedDeviceIndexes = S.Tuple([S.Natural]).pipe(
   $I.annoteSchema("PersonMatchRequestedDeviceIndexes", {
     description: "Exactly one explicitly requested ROCm device index.",
   })
@@ -876,7 +875,7 @@ export class PersonMatchModelArtifact extends S.Class<PersonMatchModelArtifact>(
   {
     name: S.NonEmptyString,
     path: S.NonEmptyString,
-    sizeBytes: NonNegativeInt,
+    sizeBytes: S.Natural,
     sha256: Sha256Hex,
   },
   $I.annote("PersonMatchModelArtifact", {
@@ -941,7 +940,7 @@ export class PersonMatchModelComponent extends S.Class<PersonMatchModelComponent
  */
 export class PersonMatchRuntimeDevice extends S.Class<PersonMatchRuntimeDevice>($I`PersonMatchRuntimeDevice`)(
   {
-    index: NonNegativeInt,
+    index: S.Natural,
     name: S.NonEmptyString,
     architecture: S.NonEmptyString,
   },
@@ -1256,7 +1255,7 @@ export class PersonMatchReference extends S.Class<PersonMatchReference>($I`Perso
     sourceName: S.NonEmptyString,
     sourcePath: S.NonEmptyString,
     accepted: S.Boolean,
-    faceCount: NonNegativeInt,
+    faceCount: S.Natural,
     detectionScore: S.optionalKey(FaceDetectionConfidence),
     reason: S.optionalKey(PersonMatchReferenceRejectionReason),
   },
@@ -1286,10 +1285,10 @@ export class PersonMatchReference extends S.Class<PersonMatchReference>($I`Perso
  */
 export class PersonMatchFaceBox extends S.Class<PersonMatchFaceBox>($I`PersonMatchFaceBox`)(
   {
-    x1: NonNegNum,
-    y1: NonNegNum,
-    x2: NonNegNum,
-    y2: NonNegNum,
+    x1: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    y1: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    x2: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    y2: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("PersonMatchFaceBox", {
     description: "An axis-aligned face bounding box in source-image pixel coordinates.",
@@ -1377,7 +1376,7 @@ export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEn
     sourcePath: S.NonEmptyString,
     relativePath: S.NonEmptyString,
     disposition: PersonMatchDisposition,
-    faceCount: NonNegativeInt,
+    faceCount: S.Natural,
     bestScore: S.optionalKey(PersonMatchSimilarityScore),
     faces: S.Array(PersonMatchFace).check(S.isMaxLength(PERSON_MATCH_MAX_FACES_PER_IMAGE)),
     reason: S.optionalKey(PersonMatchEntryReason),
@@ -1419,16 +1418,16 @@ export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEn
  */
 export class PersonMatchSummary extends S.Class<PersonMatchSummary>($I`PersonMatchSummary`)(
   {
-    totalCount: NonNegativeInt,
-    soloMatchCount: NonNegativeInt,
-    groupMatchCount: NonNegativeInt,
-    lowQualityMatchCount: NonNegativeInt,
-    reviewCount: NonNegativeInt,
-    noMatchCount: NonNegativeInt,
-    noFaceCount: NonNegativeInt,
-    unreadableCount: NonNegativeInt,
-    acceptedReferenceCount: NonNegativeInt,
-    rejectedReferenceCount: NonNegativeInt,
+    totalCount: S.Natural,
+    soloMatchCount: S.Natural,
+    groupMatchCount: S.Natural,
+    lowQualityMatchCount: S.Natural,
+    reviewCount: S.Natural,
+    noMatchCount: S.Natural,
+    noFaceCount: S.Natural,
+    unreadableCount: S.Natural,
+    acceptedReferenceCount: S.Natural,
+    rejectedReferenceCount: S.Natural,
   },
   $I.annote("PersonMatchSummary", {
     description: "Disposition and reference-acceptance counts for a person-matching run.",
@@ -1593,7 +1592,7 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
     references: S.Array(PersonMatchReference).check(S.isMaxLength(PERSON_MATCH_MAX_REFERENCE_IMAGES)),
     entries: S.Array(PersonMatchEntry).check(S.isMaxLength(PERSON_MATCH_MAX_CANDIDATE_IMAGES)),
     summary: PersonMatchSummary,
-    elapsedSeconds: NonNegNum,
+    elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("PersonMatchWorkerSuccess", {
     description: "A successful versioned response from the local person-matching Python worker.",
@@ -1641,7 +1640,7 @@ export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>(
     ok: S.Literal(false),
     limits: PersonMatchWorkerLimits,
     error: PersonMatchWorkerError,
-    elapsedSeconds: NonNegNum,
+    elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("PersonMatchWorkerFailure", {
     description: "A failed versioned response from the local person-matching Python worker.",
@@ -1778,7 +1777,7 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
     references: S.Array(PersonMatchReference).check(S.isMaxLength(PERSON_MATCH_MAX_REFERENCE_IMAGES)),
     entries: S.Array(PersonMatchEntry).check(S.isMaxLength(PERSON_MATCH_MAX_CANDIDATE_IMAGES)),
     summary: PersonMatchSummary,
-    elapsedSeconds: NonNegNum,
+    elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     manifestPath: S.NonEmptyString,
     manifestWritten: S.Boolean,
     outputDirectory: S.optionalKey(S.NonEmptyString),

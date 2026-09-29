@@ -23,7 +23,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { thunk0 } from "@beep/utils/thunk";
@@ -390,7 +389,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
     const makeFailedPipelineState = Effect.fn("AgentCoordinator.makeFailedPipelineState")(function* (
       pipelineId: string,
       startedAt: DateTime.Utc,
-      iterationCount: NonNegativeInt = NonNegativeInt.make(0)
+      iterationCount: number = S.Natural.make(0)
     ) {
       const failedAt = yield* DateTime.now;
       return PipelineState.make({
@@ -690,7 +689,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       state = PipelineState.make({
         ...state,
         status: PipelineStatus.cases.Running.make({}),
-        iterationCount: NonNegativeInt.make(0),
+        iterationCount: S.Natural.make(0),
       });
       const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
@@ -736,7 +735,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           state = PipelineState.make({
             ...state,
             currentAgentId: O.some(agentId),
-            iterationCount: NonNegativeInt.make(iteration),
+            iterationCount: S.Natural.make(iteration),
           });
 
           const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
@@ -784,7 +783,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         const now = yield* DateTime.now;
         state = PipelineState.make({
           ...state,
-          iterationCount: NonNegativeInt.make(iteration),
+          iterationCount: S.Natural.make(iteration),
           currentAgentId: O.none(),
         });
 
@@ -809,7 +808,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       state = PipelineState.make({
         ...state,
         status: PipelineStatus.cases.Completed.make({ completedAt }),
-        iterationCount: NonNegativeInt.make(iteration),
+        iterationCount: S.Natural.make(iteration),
       });
 
       const finalCheckpoint = PipelineCheckpoint.make({
@@ -1024,7 +1023,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       state = PipelineState.make({
         ...state,
         status: PipelineStatus.cases.Running.make({}),
-        iterationCount: NonNegativeInt.make(0),
+        iterationCount: S.Natural.make(0),
       });
       const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
@@ -1057,7 +1056,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           state = PipelineState.make({
             ...state,
             currentAgentId: O.some(agentId),
-            iterationCount: NonNegativeInt.make(iteration),
+            iterationCount: S.Natural.make(iteration),
           });
 
           const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
@@ -1180,7 +1179,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let iteration = 0;
       let status: RefinementStatus = "max-iterations";
       let lastValidationReport = O.none<ShaclValidationReport>();
-      const violationsFixed: Array<NonNegativeInt> = [];
+      const violationsFixed: Array<number> = [];
 
       // Main refinement loop
       while (iteration < refinementConfig.maxIterations) {
@@ -1213,7 +1212,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 pipelineId,
                 message: `Validation failed: ${e.message}`,
                 failedAgentId: O.some(validatorId),
-                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, S.Natural.make(iteration)),
                 cause: O.some(e),
               });
             })
@@ -1227,7 +1226,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 pipelineId,
                 message: "Validator returned an invalid agent task",
                 failedAgentId: O.some(validatorId),
-                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, S.Natural.make(iteration)),
                 cause: O.some(cause),
               });
             })
@@ -1238,7 +1237,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             pipelineId,
             message: "Validator returned no SHACL validation report",
             failedAgentId: O.some(validatorId),
-            state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+            state: yield* makeFailedPipelineState(pipelineId, startTime, S.Natural.make(iteration)),
           });
         }
         const validationReport = validationTask.validationReport.value;
@@ -1267,7 +1266,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 pipelineId,
                 message: `Correction failed: ${e.message}`,
                 failedAgentId: O.some(correctorId),
-                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, S.Natural.make(iteration)),
                 cause: O.some(e),
               });
             })
@@ -1281,7 +1280,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 pipelineId,
                 message: "Corrector returned an invalid agent task",
                 failedAgentId: O.some(correctorId),
-                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, S.Natural.make(iteration)),
                 cause: O.some(cause),
               });
             })
@@ -1292,7 +1291,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         violationsFixed.push(
           O.getOrElse(
             O.map(correctionBatch, (batch) => batch.correctedCount),
-            () => NonNegativeInt.make(0)
+            () => S.Natural.make(0)
           )
         );
 
@@ -1321,7 +1320,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
               intermediateResults: [],
               startedAt: startTime,
               status: PipelineStatus.cases.Running.make({}),
-              iterationCount: NonNegativeInt.make(iteration),
+              iterationCount: S.Natural.make(iteration),
             }),
             reason: "scheduled",
             timestamp: checkpointAt,
@@ -1351,7 +1350,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         intermediateResults: [],
         startedAt: startTime,
         status: PipelineStatus.cases.Completed.make({ completedAt }),
-        iterationCount: NonNegativeInt.make(iteration),
+        iterationCount: S.Natural.make(iteration),
       });
 
       const finalCheckpoint = PipelineCheckpoint.make({
@@ -1364,7 +1363,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
       return RefinementResult.make({
         graph: currentGraph,
-        iterations: NonNegativeInt.make(iteration),
+        iterations: S.Natural.make(iteration),
         status,
         validationReport: lastValidationReport,
         durationMs,

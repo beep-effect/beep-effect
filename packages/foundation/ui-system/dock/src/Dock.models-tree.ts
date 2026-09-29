@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, flow, HashSet, Number as N, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -1184,7 +1184,7 @@ export class FloatingMember extends S.Class<FloatingMember>($I`FloatingMember`)(
 export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
   {
     kind: S.tag("empty"),
-    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    revision: S.Natural.pipe(SchemaUtils.withConstantDefault<number>(0)),
     floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
   },
   $I.annote("EmptyWorkspace", {
@@ -1212,7 +1212,7 @@ export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
 export class PopulatedWorkspace extends S.Class<PopulatedWorkspace>($I`PopulatedWorkspace`)(
   {
     kind: S.tag("populated"),
-    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    revision: S.Natural.pipe(SchemaUtils.withConstantDefault<number>(0)),
     root: DockNode,
     maximized: S.toType(GroupId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
@@ -1448,9 +1448,9 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
         })
     );
 
-    const withRevision: Dual2<DockWorkspaceShape, NonNegativeInt, DockWorkspaceShape> = dual(
+    const withRevision: Dual2<DockWorkspaceShape, number, DockWorkspaceShape> = dual(
       2,
-      (workspace: DockWorkspaceShape, revision: NonNegativeInt): DockWorkspaceShape =>
+      (workspace: DockWorkspaceShape, revision: number): DockWorkspaceShape =>
         DockWorkspaceBase.match(workspace, {
           empty: ({ floating }) => EmptyWorkspace.make({ revision, floating }),
           populated: ({ floating, maximized, root }) =>

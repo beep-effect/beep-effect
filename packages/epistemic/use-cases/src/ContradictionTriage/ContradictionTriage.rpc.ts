@@ -14,7 +14,6 @@ import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import { identity, Number as N } from "effect";
@@ -61,7 +60,7 @@ export class ContradictionListPayload extends S.Class<ContradictionListPayload>(
     limit: ContradictionCandidatePageLimit.annotateKey({
       description: "Maximum number of ordered candidate rows returned.",
     }),
-    offset: NonNegativeInt.annotateKey({
+    offset: S.Natural.annotateKey({
       description: "Number of ordered candidate rows skipped.",
     }),
     validAt: S.DateTimeUtcFromMillis.annotateKey({
@@ -76,7 +75,7 @@ export class ContradictionListPayload extends S.Class<ContradictionListPayload>(
 const EvidenceSourcePageSelectorBase = LiteralKit(["anchor", "page"]).toTaggedUnion("kind")({
   anchor: {},
   page: {
-    pageIndex: NonNegativeInt.annotateKey({
+    pageIndex: S.Natural.annotateKey({
       description: "Zero-based canonical source-text page index.",
     }),
   },
@@ -276,13 +275,13 @@ export class ContradictionCandidateDetailView extends S.Class<ContradictionCandi
 
 class EvidenceSourceHighlightStruct extends S.Class<EvidenceSourceHighlightStruct>($I`EvidenceSourceHighlightStruct`)(
   {
-    endChar: NonNegativeInt.annotateKey({
+    endChar: S.Natural.annotateKey({
       description: "Exclusive absolute UTF-16 code-unit offset of the verified anchor.",
     }),
     source: SourceTextIdentity.annotateKey({
       description: "Exact source manifestation against which the offsets were verified.",
     }),
-    startChar: NonNegativeInt.annotateKey({
+    startChar: S.Natural.annotateKey({
       description: "Inclusive absolute UTF-16 code-unit offset of the verified anchor.",
     }),
   },
@@ -604,8 +603,8 @@ export const EvidenceSourceHighlightArbitrary = Arbitrary.schema(
 ).pipe(
   Arbitrary.map(({ startChar, width, source }) =>
     EvidenceSourceHighlight.make({
-      startChar: NonNegativeInt.make(startChar),
-      endChar: NonNegativeInt.make(startChar + width),
+      startChar: S.Natural.make(startChar),
+      endChar: S.Natural.make(startChar + width),
       source,
     })
   )
@@ -638,7 +637,7 @@ export const EvidenceSourcePageArbitrary = Arbitrary.all({
       page: SourceTextPage.make({
         ...page,
         identity: highlight.source,
-        totalCodeUnits: NonNegativeInt.make(N.max(page.totalCodeUnits, highlight.endChar)),
+        totalCodeUnits: S.Natural.make(N.max(page.totalCodeUnits, highlight.endChar)),
       }),
     })
   )

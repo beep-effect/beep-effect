@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -456,15 +456,15 @@ export type PatentClaims = typeof PatentClaims.Type;
  * **Example** (Construct a claims section)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { PatentApplicationSection } from "@beep/law-practice-domain/values/PatentDocument"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const section = PatentApplicationSection.make({
  *   content: "1. A system comprising a sensor.",
  *   heading: "CLAIMS",
  *   role: "claims",
- *   sourceEnd: NonNegativeInt.make(48),
- *   sourceStart: NonNegativeInt.make(7)
+ *   sourceEnd: S.Natural.make(48),
+ *   sourceStart: S.Natural.make(7)
  * })
  * console.log(section.role) // "claims"
  * ```
@@ -483,10 +483,10 @@ export class PatentApplicationSection extends S.Class<PatentApplicationSection>(
     content: S.NonEmptyString.annotateKey({
       description: "Plain-text section content projected from the canonical Markdown AST.",
     }),
-    sourceEnd: NonNegativeInt.annotateKey({
+    sourceEnd: S.Natural.annotateKey({
       description: "Exclusive offset of the section content in the normalized document source text.",
     }),
-    sourceStart: NonNegativeInt.annotateKey({
+    sourceStart: S.Natural.annotateKey({
       description: "Inclusive offset of the section content in the normalized document source text.",
     }),
   },
@@ -564,12 +564,11 @@ const PatentApplicationSectionOrderCheck = S.makeFilter(
  *
  * ```ts
  * import { PatentApplicationSection, PatentApplicationSections } from "@beep/law-practice-domain/values/PatentDocument"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const sections = [
- *   PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE OF THE INVENTION", role: "title-of-invention", sourceEnd: NonNegativeInt.make(36), sourceStart: NonNegativeInt.make(23) }),
- *   PatentApplicationSection.make({ content: "1. A system.", heading: "CLAIMS", role: "claims", sourceEnd: NonNegativeInt.make(56), sourceStart: NonNegativeInt.make(44) })
+ *   PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE OF THE INVENTION", role: "title-of-invention", sourceEnd: S.Natural.make(36), sourceStart: S.Natural.make(23) }),
+ *   PatentApplicationSection.make({ content: "1. A system.", heading: "CLAIMS", role: "claims", sourceEnd: S.Natural.make(56), sourceStart: S.Natural.make(44) })
  * ]
  * console.log(S.is(PatentApplicationSections)(sections)) // true
  * ```
@@ -643,7 +642,6 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
  * ```ts
  * import * as S from "effect/Schema"
  * import { PatentApplicationDocument, PatentApplicationSection, PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
@@ -657,8 +655,8 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
  * const document = PatentApplicationDocument.make({
  *   claims: [claim],
  *   sections: [
- *     PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE", role: "title-of-invention", sourceEnd: NonNegativeInt.make(18), sourceStart: NonNegativeInt.make(6) }),
- *     PatentApplicationSection.make({ content: "1. A system comprising a sensor.", heading: "CLAIMS", role: "claims", sourceEnd: NonNegativeInt.make(59), sourceStart: NonNegativeInt.make(26) })
+ *     PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE", role: "title-of-invention", sourceEnd: S.Natural.make(18), sourceStart: S.Natural.make(6) }),
+ *     PatentApplicationSection.make({ content: "1. A system comprising a sensor.", heading: "CLAIMS", role: "claims", sourceEnd: S.Natural.make(59), sourceStart: S.Natural.make(26) })
  *   ],
  *   sourceText: "Sensor system\nCLAIMS\n1. A system comprising a sensor."
  * })

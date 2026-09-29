@@ -24,21 +24,21 @@ const $I = $LawPracticeDomainId.create("values/LocalOrdinanceCitation/LocalOrdin
  * **Example** (Make local ordinance citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LocalOrdinanceCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = LocalOrdinanceCitation.make({
  *   text: "CCCO § 2.12.010(1)",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "CCCO § 2.12.010(1)",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   code: "CCCO",
  *   section: "2.12.010(1)",
  * })

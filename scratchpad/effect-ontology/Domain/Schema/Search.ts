@@ -6,7 +6,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
@@ -52,7 +52,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
     dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     rank: S.OptionFromOptionalKey(ClaimRank).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    offset: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("ClaimSearchRequest", {
     description: "Claim-search body with normalized filters and constrained pagination defaults.",
@@ -62,12 +62,12 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
 const PredicateFacet = S.Struct({
   iri: IRI,
   label: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-  count: NonNegativeInt,
+  count: S.Natural,
 });
 
 const SourceFacet = S.Struct({
   name: S.NonEmptyString,
-  count: NonNegativeInt,
+  count: S.Natural,
 });
 
 const ClaimSearchFacets = S.Struct({
@@ -103,9 +103,9 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
   {
     query: S.NonEmptyString,
     claims: S.Array(ClaimWithRank).pipe(SchemaUtils.withEmptyArrayDefaults<ClaimWithRank>()),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
     facets: S.OptionFromOptionalKey(ClaimSearchFacets).pipe(SchemaUtils.withNoneDefault),
   },
@@ -174,7 +174,7 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
     iri: IRI,
     label: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults<IRI>()),
-    claimCount: NonNegativeInt,
+    claimCount: S.Natural,
     topClaims: S.Array(EntityTopClaim).pipe(SchemaUtils.withEmptyArrayDefaults<typeof EntityTopClaim.Type>()),
   },
   $I.annote("EntitySearchResult", {
@@ -205,7 +205,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
   {
     query: S.NonEmptyString,
     entities: S.Array(EntitySearchResult).pipe(SchemaUtils.withEmptyArrayDefaults<EntitySearchResult>()),
-    total: NonNegativeInt,
+    total: S.Natural,
   },
   $I.annote("EntitySearchResponse", {
     description: "Entity-search response with an always-present result collection and non-negative total.",
@@ -317,7 +317,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    offset: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("ArticleSearchRequest", {
     description: "Article-search body with normalized filters and constrained pagination defaults.",
@@ -352,8 +352,8 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
 export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`ArticleSearchResult`)(
   {
     article: ArticleSummary,
-    claimCount: NonNegativeInt,
-    conflictCount: NonNegativeInt,
+    claimCount: S.Natural,
+    conflictCount: S.Natural,
   },
   $I.annote("ArticleSearchResult", {
     description: "Article-search hit with non-negative extracted-claim and pending-conflict counts.",
@@ -384,9 +384,9 @@ export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`Article
 export class ArticleSearchResponse extends S.Class<ArticleSearchResponse>($I`ArticleSearchResponse`)(
   {
     articles: S.Array(ArticleSearchResult).pipe(SchemaUtils.withEmptyArrayDefaults<ArticleSearchResult>()),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
   },
   $I.annote("ArticleSearchResponse", {

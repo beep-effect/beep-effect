@@ -18,7 +18,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Duration, Effect, Inspectable, Layer, Match, Number as Num, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -207,11 +207,11 @@ export const DEFAULT_RETRY_AFTER = Duration.minutes(1);
 const VoyageEmbeddingData = S.Struct({
   object: S.Literal("embedding"),
   embedding: S.Array(S.Finite),
-  index: NonNegativeInt,
+  index: S.Natural,
 });
 
 const VoyageUsage = S.Struct({
-  total_tokens: NonNegativeInt,
+  total_tokens: S.Natural,
 });
 
 const VoyageResponseSchema = S.Struct({

@@ -15,7 +15,7 @@ import {
   CacheReviewDecision,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -71,11 +71,11 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
   yield* fs.writeFileString(
     path.join(root, "standards/cache-qualification.json"),
     yield* encodeCacheQualificationStoreJson(
-      CacheQualificationStore.make({ revision: NonNegativeInt.make(0), entries: [], history: [] })
+      CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })
     )
   );
   const entry = CacheQualificationEntry.make({ key, status: { state: "excluded", review } });
-  const request = CacheTransitionRequest.make({ expectedRevision: NonNegativeInt.make(0), entry });
+  const request = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(0), entry });
   return { root, fs, path, request, entry };
 });
 const encodeCacheQualificationStoreJsonResult = S.encodeResult(S.fromJsonString(CacheQualificationStore));
@@ -187,7 +187,7 @@ describe("Cache qualification writer", () => {
       yield* fs.writeFileString(target, "{}");
       expect(yield* cache.inspect(root).pipe(Effect.isFailure)).toBe(true);
       const duplicate = CacheQualificationStore.make({
-        revision: NonNegativeInt.make(2),
+        revision: S.Natural.make(2),
         entries: [entry, entry],
         history: [],
       });
@@ -200,27 +200,31 @@ describe("Cache qualification writer", () => {
 // These are original-byte and safety-boundary tests, not passing qualification receipts.
 describe("bounded qualification evidence", () => {
   it.effect(
-    "preserves original bytes and rejects overflow and symlinks",
+    "preserves original bytes and rejects overflow, symlinks and an invalid byte limit",
     Effect.fnUntraced(function* () {
       const { root, fs, path } = yield* fixture();
       const target = path.join(root, "bytes.bin");
       const bytes = new Uint8Array([0, 255, 128, 1]);
       yield* fs.writeFile(target, bytes);
-      const read = yield* readContainedFileBytesNoFollow(root, "bytes.bin", NonNegativeInt.make(4));
+      const read = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(4));
       expect(O.getOrThrow(read.contents)).toEqual(bytes);
-      expect(
-        yield* readContainedFileBytesNoFollow(root, "bytes.bin", NonNegativeInt.make(3)).pipe(Effect.isFailure)
-      ).toBe(true);
+      expect(yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(3)).pipe(Effect.isFailure)).toBe(
+        true
+      );
       yield* fs.symlink(target, path.join(root, "linked.bin"));
+      expect(yield* readContainedFileBytesNoFollow(root, "linked.bin", S.Natural.make(4)).pipe(Effect.isFailure)).toBe(
+        true
+      );
       expect(
-        yield* readContainedFileBytesNoFollow(root, "linked.bin", NonNegativeInt.make(4)).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(
-        yield* readContainedFileBytesNoFollow(root, "../outside.bin", NonNegativeInt.make(4)).pipe(Effect.isFailure)
+        yield* readContainedFileBytesNoFollow(root, "../outside.bin", S.Natural.make(4)).pipe(Effect.isFailure)
       ).toBe(true);
       yield* fs.writeFile(target, new Uint8Array(0));
-      const empty = yield* readContainedFileBytesNoFollow(root, "bytes.bin", NonNegativeInt.make(0));
+      const empty = yield* readContainedFileBytesNoFollow(root, "bytes.bin", S.Natural.make(0));
       expect(O.getOrThrow(empty.contents).byteLength).toBe(0);
+      const negative = yield* readContainedFileBytesNoFollow(root, "bytes.bin", -1).pipe(Effect.flip);
+      const fractional = yield* readContainedFileBytesNoFollow(root, "bytes.bin", 1.5).pipe(Effect.flip);
+      expect(negative.message).toBe("Maximum byte length must be a non-negative integer.");
+      expect(fractional.message).toBe("Maximum byte length must be a non-negative integer.");
     }, provideScopedLayer(testLayer))
   );
 

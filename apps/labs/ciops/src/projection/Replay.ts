@@ -6,7 +6,7 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, HashMap, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -68,16 +68,16 @@ export type ReplayEventOutcome = typeof ReplayEventOutcome.Type;
  * **Example** (Construct a passing event verdict)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReplayEventVerdict } from "@/projection/Replay"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const verdict = ReplayEventVerdict.make({
- *   eventIndex: NonNegativeInt.make(0),
- *   admittedAtMillis: NonNegativeInt.make(1000),
+ *   eventIndex: S.Natural.make(0),
+ *   admittedAtMillis: S.Natural.make(1000),
  *   expectedNonce: "request-1",
  *   projectedNonce: "request-1",
- *   pendingCount: NonNegativeInt.make(1),
- *   activeTokenTotal: NonNegativeInt.make(0),
+ *   pendingCount: S.Natural.make(1),
+ *   activeTokenTotal: S.Natural.make(0),
  *   outcome: "pass"
  * })
  * console.log(verdict.outcome) // "pass"
@@ -88,12 +88,12 @@ export type ReplayEventOutcome = typeof ReplayEventOutcome.Type;
  */
 export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEventVerdict`)(
   {
-    eventIndex: NonNegativeInt,
-    admittedAtMillis: NonNegativeInt,
+    eventIndex: S.Natural,
+    admittedAtMillis: S.Natural,
     expectedNonce: S.NonEmptyString,
     projectedNonce: S.String,
-    pendingCount: NonNegativeInt,
-    activeTokenTotal: NonNegativeInt,
+    pendingCount: S.Natural,
+    activeTokenTotal: S.Natural,
     outcome: ReplayEventOutcome,
   },
   $I.annote("ReplayEventVerdict", {
@@ -115,16 +115,15 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
  * ```ts
  * import * as S from "effect/Schema"
  * import { InferredLeaseEviction } from "@/projection/Replay"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const eviction = InferredLeaseEviction.make({
- *   eventIndex: NonNegativeInt.make(66),
+ *   eventIndex: S.Natural.make(66),
  *   evictedNonce: "1813f29f-example",
  *   weightTokens: PosInt.make(5),
- *   activeTokenTotalBefore: NonNegativeInt.make(10),
- *   activeTokenTotalAfter: NonNegativeInt.make(5)
+ *   activeTokenTotalBefore: S.Natural.make(10),
+ *   activeTokenTotalAfter: S.Natural.make(5)
  * })
  * console.log(eviction.activeTokenTotalAfter) // 5
  * ```
@@ -134,11 +133,11 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
  */
 export class InferredLeaseEviction extends S.Class<InferredLeaseEviction>($I`InferredLeaseEviction`)(
   {
-    eventIndex: NonNegativeInt,
+    eventIndex: S.Natural,
     evictedNonce: S.NonEmptyString,
     weightTokens: PosInt,
-    activeTokenTotalBefore: NonNegativeInt,
-    activeTokenTotalAfter: NonNegativeInt,
+    activeTokenTotalBefore: S.Natural,
+    activeTokenTotalAfter: S.Natural,
   },
   $I.annote("InferredLeaseEviction", {
     description: "A never-released active grant evicted when a recorded admission proves its lease had died.",
@@ -151,13 +150,13 @@ export class InferredLeaseEviction extends S.Class<InferredLeaseEviction>($I`Inf
  * **Example** (Construct an empty replay report)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReplayReport } from "@/projection/Replay"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({
- *   eventCount: NonNegativeInt.make(0),
- *   admittedCount: NonNegativeInt.make(0),
- *   releasedCount: NonNegativeInt.make(0),
+ *   eventCount: S.Natural.make(0),
+ *   admittedCount: S.Natural.make(0),
+ *   releasedCount: S.Natural.make(0),
  *   verdicts: [],
  *   mismatches: [],
  *   evictions: [],
@@ -171,9 +170,9 @@ export class InferredLeaseEviction extends S.Class<InferredLeaseEviction>($I`Inf
  */
 export class ReplayReport extends S.Class<ReplayReport>($I`ReplayReport`)(
   {
-    eventCount: NonNegativeInt,
-    admittedCount: NonNegativeInt,
-    releasedCount: NonNegativeInt,
+    eventCount: S.Natural,
+    admittedCount: S.Natural,
+    releasedCount: S.Natural,
     verdicts: S.Array(ReplayEventVerdict),
     mismatches: S.Array(ProjectionMismatch),
     evictions: S.Array(InferredLeaseEviction),
@@ -287,7 +286,7 @@ const admitToLedger = Effect.fnUntraced(function* (
     activeReviewFixNonces: AdmissionWorkKind.is["review-fix"](event.kind)
       ? HashSet.add(ledger.activeReviewFixNonces, event.nonce)
       : ledger.activeReviewFixNonces,
-    activeTokenTotal: NonNegativeInt.make(ledger.activeTokenTotal + event.weightTokens),
+    activeTokenTotal: S.Natural.make(ledger.activeTokenTotal + event.weightTokens),
   });
 });
 
@@ -302,7 +301,7 @@ const releaseFromLedger = Effect.fnUntraced(function* (
   return TokenLedgerState.make({
     activeGrants: HashMap.remove(ledger.activeGrants, nonce),
     activeReviewFixNonces: HashSet.remove(ledger.activeReviewFixNonces, nonce),
-    activeTokenTotal: NonNegativeInt.make(ledger.activeTokenTotal - releasedWeight),
+    activeTokenTotal: S.Natural.make(ledger.activeTokenTotal - releasedWeight),
   });
 });
 
@@ -412,7 +411,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
         Effect.fromOption(() => replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`))
       );
       const activeTokenTotalBefore = ledger.activeTokenTotal;
-      const activeTokenTotalAfter = NonNegativeInt.make(activeTokenTotalBefore - weightTokens);
+      const activeTokenTotalAfter = S.Natural.make(activeTokenTotalBefore - weightTokens);
       ledger = TokenLedgerState.make({
         activeGrants: HashMap.remove(ledger.activeGrants, phantom.nonce),
         activeReviewFixNonces: HashSet.remove(ledger.activeReviewFixNonces, phantom.nonce),
@@ -421,7 +420,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       evictions = A.append(
         evictions,
         InferredLeaseEviction.make({
-          eventIndex: NonNegativeInt.make(eventIndex),
+          eventIndex: S.Natural.make(eventIndex),
           evictedNonce: phantom.nonce,
           weightTokens,
           activeTokenTotalBefore,
@@ -450,11 +449,11 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     verdicts = A.append(
       verdicts,
       ReplayEventVerdict.make({
-        eventIndex: NonNegativeInt.make(eventIndex),
+        eventIndex: S.Natural.make(eventIndex),
         admittedAtMillis: admitted.admittedAtMillis,
         expectedNonce: admitted.nonce,
         projectedNonce,
-        pendingCount: NonNegativeInt.make(A.length(pending)),
+        pendingCount: S.Natural.make(A.length(pending)),
         activeTokenTotal: ledger.activeTokenTotal,
         outcome: passed ? "pass" : "mismatch",
       })
@@ -463,11 +462,11 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       mismatches = A.append(
         mismatches,
         ProjectionMismatch.make({
-          eventIndex: NonNegativeInt.make(eventIndex),
+          eventIndex: S.Natural.make(eventIndex),
           admittedAtMillis: admitted.admittedAtMillis,
           expectedNonce: admitted.nonce,
           projectedNonce,
-          pendingCount: NonNegativeInt.make(A.length(pending)),
+          pendingCount: S.Natural.make(A.length(pending)),
           activeTokenTotal: ledger.activeTokenTotal,
           requestWeightTokens: admitted.weightTokens,
           wouldBeActiveTokenTotal: PosInt.make(ledger.activeTokenTotal + admitted.weightTokens),
@@ -510,9 +509,9 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
   }
 
   return ReplayReport.make({
-    eventCount: NonNegativeInt.make(A.length(events)),
-    admittedCount: NonNegativeInt.make(admittedCount),
-    releasedCount: NonNegativeInt.make(releasedCount),
+    eventCount: S.Natural.make(A.length(events)),
+    admittedCount: S.Natural.make(admittedCount),
+    releasedCount: S.Natural.make(releasedCount),
     verdicts,
     mismatches,
     evictions,
@@ -526,14 +525,14 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
  * **Example** (Accept an empty replay report)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReplayReport, requireReplayMatch } from "@/projection/Replay"
- * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const report = ReplayReport.make({
- *   eventCount: NonNegativeInt.make(0),
- *   admittedCount: NonNegativeInt.make(0),
- *   releasedCount: NonNegativeInt.make(0),
+ *   eventCount: S.Natural.make(0),
+ *   admittedCount: S.Natural.make(0),
+ *   releasedCount: S.Natural.make(0),
  *   verdicts: [],
  *   mismatches: [],
  *   evictions: [],
@@ -563,13 +562,13 @@ export const requireReplayMatch = Effect.fn("Replay.requireReplayMatch")(functio
  * **Example** (Render a pass summary)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReplayReport, renderReplayEvidence } from "@/projection/Replay"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({
- *   eventCount: NonNegativeInt.make(0),
- *   admittedCount: NonNegativeInt.make(0),
- *   releasedCount: NonNegativeInt.make(0),
+ *   eventCount: S.Natural.make(0),
+ *   admittedCount: S.Natural.make(0),
+ *   releasedCount: S.Natural.make(0),
  *   verdicts: [],
  *   mismatches: [],
  *   evictions: [],

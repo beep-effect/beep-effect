@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { DirectedGraph, NodeIndex, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { DirectedGraph, NodeIndex, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 
 import * as S from "effect/Schema";
@@ -200,16 +200,16 @@ export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringRes
  */
 export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`EntityResolutionStats`)(
   {
-    mentionCount: NonNegativeInt.annotateKey({
+    mentionCount: S.Natural.annotateKey({
       description: "Number of immutable mention nodes.",
     }),
-    resolvedCount: NonNegativeInt.annotateKey({
+    resolvedCount: S.Natural.annotateKey({
       description: "Number of canonical resolved-entity nodes.",
     }),
-    relationCount: NonNegativeInt.annotateKey({
+    relationCount: S.Natural.annotateKey({
       description: "Number of canonical relation edges.",
     }),
-    clusterCount: NonNegativeInt.annotateKey({
+    clusterCount: S.Natural.annotateKey({
       description: "Number of clusters produced by resolution.",
     }),
   },

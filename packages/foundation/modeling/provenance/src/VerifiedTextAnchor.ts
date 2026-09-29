@@ -459,6 +459,7 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  * **Example** (Convert verified anchor to receipt)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
  * import {
@@ -472,7 +473,6 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  *   VerifyTextAnchorInput,
  *   verifyTextAnchor,
  * } from "@beep/provenance/VerifiedTextAnchor"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make(
@@ -489,9 +489,9 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  * })
  * const program = verifyTextAnchor(VerifyTextAnchorInput.make({
  *   anchor: TextAnchor.make({
- *     endChar: NonNegativeInt.make(4),
+ *     endChar: S.Natural.make(4),
  *     quote: "fact",
- *     startChar: NonNegativeInt.make(0),
+ *     startChar: S.Natural.make(0),
  *   }),
  *   expectedSource: source,
  *   source,
@@ -660,6 +660,7 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  * **Example** (Verify matching text anchor)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { Effect } from "effect"
  * import {
@@ -672,7 +673,6 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  *   VerifyTextAnchorInput,
  *   verifyTextAnchor,
  * } from "@beep/provenance/VerifiedTextAnchor"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make(
@@ -689,8 +689,8 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  * })
  * const program = verifyTextAnchor(VerifyTextAnchorInput.make({
  *   anchor: TextAnchor.make({
- *     startChar: NonNegativeInt.make(0),
- *     endChar: NonNegativeInt.make(4),
+ *     startChar: S.Natural.make(0),
+ *     endChar: S.Natural.make(4),
  *     quote: "fact",
  *   }),
  *   expectedSource: source,

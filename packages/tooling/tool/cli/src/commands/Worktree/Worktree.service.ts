@@ -20,7 +20,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
@@ -74,7 +74,7 @@ const RESIDUE_ROOT_ENV = "BEEP_WORKTREE_RESIDUE_ROOT";
 const textEncoder = new TextEncoder();
 
 const GitCountFromString = S.FiniteFromString.pipe(
-  S.decodeTo(NonNegativeInt),
+  S.decodeTo(S.Natural),
   $I.annoteSchema("GitCountFromString", {
     description: "Non-negative integer count decoded from Git command output.",
   })
@@ -567,7 +567,7 @@ const runPreservationProbe = Effect.fn("WorktreeRemovalService.runPreservationPr
 const decodeCount = Effect.fn("WorktreeRemovalService.decodeCount")(function* (
   output: string,
   step: WorktreePreservationError["step"]
-): Effect.fn.Return<NonNegativeInt, WorktreePreservationError> {
+): Effect.fn.Return<number, WorktreePreservationError> {
   return yield* decodeGitCount(Str.trim(output)).pipe(
     Effect.mapError((cause) => WorktreePreservationError.new(step, "Git returned an invalid commit count.", { cause }))
   );
@@ -577,11 +577,7 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   targetPath: string,
   revision: string,
   step: WorktreePreservationError["step"]
-): Effect.fn.Return<
-  NonNegativeInt,
-  WorktreePreservationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<number, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* runPreservationProbe(
     targetPath,
     ["rev-list", "--count", revision, "--"],
@@ -655,7 +651,7 @@ const judgePrunedUpstream = Effect.fn("WorktreeRemovalService.judgePrunedUpstrea
   targetPath: string,
   branchName: string,
   base: O.Option<string>,
-  baseCount: NonNegativeInt
+  baseCount: number
 ): Effect.fn.Return<WorktreeUpstreamVerdict, WorktreePreservationError, UpstreamProbeRequirements> {
   // The pruned upstream can no longer be counted against, so the verdict records what
   // proved the tip pushed instead. A tip already reachable from the remote default
@@ -741,9 +737,9 @@ const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(func
   );
   // A pruned upstream leaves nothing to count, so the default-branch range answers for it.
   const upstreamCount = yield* WorktreeUpstreamState.match<
-    Effect.Effect<NonNegativeInt, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
+    Effect.Effect<number, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
   >(upstream, {
-    unset: () => Effect.succeed(NonNegativeInt.make(0)),
+    unset: () => Effect.succeed(S.Natural.make(0)),
     pruned: () => Effect.succeed(baseCount),
     live: ({ ref }) => countCommits(targetPath, `${ref}..HEAD`, "inspect-upstream"),
   });

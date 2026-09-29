@@ -28,7 +28,6 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { makeDrizzle, makeDrizzleLayer, migrate, NativePgClient } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -53,8 +52,8 @@ const makeMigrationCapableLayer = () =>
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const remoteId = RemoteItemId.make("9001");
 const syncItemOne = Documents.SyncItemId.make(1);
-const zeroAttempts = NonNegativeInt.make(0);
-const generationOne = NonNegativeInt.make(1);
+const zeroAttempts = S.Natural.make(0);
+const generationOne = S.Natural.make(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({

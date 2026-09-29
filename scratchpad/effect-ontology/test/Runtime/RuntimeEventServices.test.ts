@@ -1,5 +1,4 @@
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Context, DateTime, Effect, Exit, Fiber, Layer, PubSub, Scope } from "effect";
 import * as A from "effect/Array";
@@ -11,6 +10,7 @@ import { EventBridgeLive, EventBridgeService } from "../../Runtime/EventBridge.t
 import { BroadcastEvent, EventBroadcastHub, EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
 import { InferenceJobStore, InferenceJobStoreLive } from "../../Runtime/InferenceRouter.ts";
 import { EventBusService, EventBusServiceMemory } from "../../Service/EventBus.ts";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/test/Runtime/RuntimeEventServices.test");
 
@@ -92,7 +92,7 @@ describe("EventBridge", () => {
         const event = BroadcastEvent.make({
           entry,
           ontologyId,
-          timestamp: NonNegativeInt.make(0),
+          timestamp: S.Natural.make(0),
         });
 
         yield* hub.broadcast(ontologyId, event);

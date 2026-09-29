@@ -17,7 +17,6 @@ import type { Quad } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema";
 import type { Config } from "effect";
 import { Context, DateTime, Effect, Layer, Random } from "effect";
 import * as O from "effect/Option";
@@ -86,8 +85,8 @@ export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimIn
     evidence: S.optionalKey(
       S.Struct({
         text: S.String,
-        startOffset: NonNegativeInt,
-        endOffset: NonNegativeInt,
+        startOffset: S.Natural,
+        endOffset: S.Natural,
       })
     ),
     validFrom: S.optionalKey(S.Date),

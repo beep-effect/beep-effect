@@ -10,7 +10,6 @@ import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { NonNegativeInt } from "../Number.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as AST from "effect/SchemaAST";
 
@@ -68,9 +67,9 @@ export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions
     rtrim: SchemaUtils.BoolKeyDefaultFalse,
     trim: SchemaUtils.BoolKeyDefaultFalse,
     strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
-    maxRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipLines: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
-    skipRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    maxRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    skipLines: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
+    skipRows: S.Natural.pipe(SchemaUtils.withKeyDefaults(S.Natural.make(0))),
   },
   $I.annote("CsvCodecOptions", {
     description: "Schema-backed CSV text codec options.",

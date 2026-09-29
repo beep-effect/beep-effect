@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { LiteralKit, SchemaUtils, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -140,7 +140,7 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
         description: "Detected ISO 639-1 language code, defaulting to English.",
       })
     ),
-    wordCount: NonNegativeInt.annotateKey({
+    wordCount: S.Natural.annotateKey({
       description: "Approximate number of words in the source.",
     }),
   },
@@ -183,14 +183,14 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
    *
    * **Example** (Use JinaContentFields)
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
+   * import * as S from "effect/Schema"
    * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const content = EnrichedContent.make({
    *   headline: "Example",
    *   description: "Example description",
    *   sourceType: "news",
-   *   wordCount: NonNegativeInt.make(2)
+   *   wordCount: S.Natural.make(2)
    * })
    * console.log(content.hasPublicationDate) // false
    * ```
@@ -239,7 +239,7 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
     content: S.String.annotateKey({
       description: "Cleaned Markdown content returned by the reader.",
     }),
-    length: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    length: S.OptionFromOptionalKey(S.Natural).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Reader-reported character count when available.",

@@ -18,7 +18,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { GcsUri, withContentHashIdStatics } from "../Identity.ts";
@@ -222,10 +222,10 @@ export const RuleId = S.String.check(
 export type RuleId = typeof RuleId.Type;
 
 const LegacyTextSpan = S.Struct({
-  start: NonNegativeInt.annotateKey({
+  start: S.Natural.annotateKey({
     description: "Inclusive zero-based character offset in the source text.",
   }),
-  end: NonNegativeInt.annotateKey({
+  end: S.Natural.annotateKey({
     description: "Exclusive zero-based character offset in the source text.",
   }),
   text: S.NonEmptyString.annotateKey({
@@ -260,8 +260,8 @@ export const TextSpan = LegacyTextSpan.pipe(
     })),
     encode: SchemaGetter.transform(
       (anchor: typeof TextAnchor.Encoded): LegacyTextSpanValue => ({
-        start: NonNegativeInt.make(anchor.startChar),
-        end: NonNegativeInt.make(anchor.endChar),
+        start: S.Natural.make(anchor.startChar),
+        end: S.Natural.make(anchor.endChar),
         text: anchor.quote,
       })
     ),

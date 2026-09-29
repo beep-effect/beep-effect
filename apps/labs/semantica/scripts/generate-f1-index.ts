@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
@@ -125,7 +125,7 @@ const generateF1Index = Effect.gen(function* () {
       return F1Fixture.make({
         ...spec,
         sha256,
-        bytes: NonNegativeInt.make(bytes.byteLength),
+        bytes: S.Natural.make(bytes.byteLength),
       });
     }),
     { concurrency: 4 }
