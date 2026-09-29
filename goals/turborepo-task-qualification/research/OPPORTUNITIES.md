@@ -2393,3 +2393,14 @@ The original result is retained and one additional stable pair is admitted.
 An explicit requested-overlap criterion and bounded retry budget would make
 this evidence distinction visible before reporting acceptance. No production
 configuration or task command is changed for the retry.
+
+### Retained replay harnesses need explicit cache-root bindings
+
+While renewing patched-profile cross-root replay, setup failed before execution
+because the older canary harness expected `ordinary-canary-cache`, while the
+retained patched fresh-pair runner used `ordinary-replay-cache`. The archive
+lookup assertion prevented importing an unrelated artifact. The corrected
+private harness binds the retained receipt's target hash and checks archive
+bytes before use. A versioned observation receipt containing its cache-relative
+root would avoid repeating this path inference across control suites. No
+runtime or portability credit is assigned to the failed setup.

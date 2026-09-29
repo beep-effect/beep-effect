@@ -2715,3 +2715,17 @@ archive log bytes. Host exclusions and installed dependency identity remain
 unchanged. Static overlays do not prove metadata race safety, alternate Git
 layouts, signed replay, semantic closure or shadow acceptance. These two
 receipts postdate the 107-review canonical attachment.
+
+### Patched dependency profile: shared-dependency cross-root replay
+
+The renewed [stable](research/current-patched-cross-root-shared-view-stable.json)
+and [canary](research/current-patched-cross-root-shared-view-canary.json) controls
+each pass a fresh execution at a second frozen root followed by two local hits
+using the first root's retained archive. Exact native versions, source/pins,
+fresh identity trees, input maps, hashed environment, archive and task-log
+bytes agree. The complete dependency tree is mounted read-only and its
+before/after identity is unchanged. Absolute profile-root passthrough differs.
+This demonstrates relocation with shared dependency bytes, not portability
+across independent installations. Signed replay, complete input closure,
+representative shadow and tuple promotion remain open. These receipts postdate
+the 107-review canonical attachment.
