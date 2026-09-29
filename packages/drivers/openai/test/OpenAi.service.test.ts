@@ -350,3 +350,17 @@ describe("OpenAI model Layers", () => {
     }
   );
 });
+
+describe("makeOpenAiEmbeddingModelLive boundary", () => {
+  it.effect(
+    "fails the Layer with a SchemaError instead of a defect when dimensions is not a positive integer",
+    Effect.fnUntraced(function* () {
+      const layer = makeOpenAiEmbeddingModelLive(0).pipe(
+        Layer.provide(makeConfigProviderLayer({ [OPENAI_API_KEY_ENV]: "fixture", [OPENAI_EMBEDDING_MODEL_ENV]: "" }))
+      );
+      const failure = yield* Layer.build(layer).pipe(Effect.scoped, Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+      expect(String(failure)).toContain("Expected a positive integer");
+    })
+  );
+});
