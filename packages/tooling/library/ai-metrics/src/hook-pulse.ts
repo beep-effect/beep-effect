@@ -240,6 +240,8 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  * including auto-approved ones, so counting it as waiting measures execution
  * rather than blocking. `PermissionRequest` is the event that actually starts a
  * human wait, and that distinction is the whole point of the instrument.
+ * `SessionStart` is never a wait either: it exists so the row can carry the
+ * harness hash the session started under (goals/harness-evidence-ledger, D9).
  *
  * **Example** (Separate the human-wait marker from the execution marker)
  *
@@ -250,7 +252,7 @@ export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
  *
  * console.log(startsHumanWait(HookPulseEvent.Enum.PermissionRequest)) // true
  * console.log(startsHumanWait(HookPulseEvent.Enum.PreToolUse)) // false
- * console.log(HookPulseEvent.Options.length) // 9
+ * console.log(HookPulseEvent.Options.length) // 10
  * ```
  *
  * @see {@link HookPulseWaitReason} for the attribution derived from these events.
@@ -267,6 +269,7 @@ export const HookPulseEvent = LiteralKit([
   "Stop",
   "SessionEnd",
   "PermissionDenied",
+  "SessionStart",
 ]).pipe(
   $I.annoteSchema("HookPulseEvent", {
     description: "Hook lifecycle events retained by the hook-pulse ledger.",
@@ -705,6 +708,11 @@ class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPuls
     // be turned back into the `tool_input` it came from; decode prefers it over
     // re-deriving, the same passthrough `privateReference` gives a 64-hex id.
     surface: S.OptionFromOptionalKey(Sha256Hex),
+    // The harness hash the writer computed from the repo's agent-facing config at
+    // SessionStart. Unlike `surface` there is nothing to re-derive it from: the
+    // codec has no repo root to walk, so decode passes the stamp through (owned by
+    // SessionStart, dropped on every other event) and absence stays absence.
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
   },
   $I.annote("HookPulseRawEventInput", {
     description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
@@ -885,6 +893,7 @@ const deriveWaitReason = (
     Stop: HookPulseWaitReason.thunk.none,
     SessionEnd: HookPulseWaitReason.thunk.none,
     PermissionDenied: HookPulseWaitReason.thunk.none,
+    SessionStart: HookPulseWaitReason.thunk.none,
   });
 
 const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPulseEvidenceTier =>
@@ -992,7 +1001,13 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
 // `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
 // both — so binding them to an event would reject legitimate future rows, and
 // rejecting rows costs real telemetry.
-const HookPulseEventOwnedField = LiteralKit(["notificationType", "sessionEndReason", "isInterrupt", "surface"]).pipe(
+const HookPulseEventOwnedField = LiteralKit([
+  "notificationType",
+  "sessionEndReason",
+  "isInterrupt",
+  "surface",
+  "harnessHash",
+]).pipe(
   $I.annoteSchema("HookPulseEventOwnedField", {
     description: "Canonical hook-pulse fields whose meaning is owned by exactly one hook event.",
   })
@@ -1006,6 +1021,9 @@ const hookPulseEventOwningField = HookPulseEventOwnedField.$match({
   // A surface counts as touched only once its tool call succeeded, so the
   // completion event owns it; PreToolUse would count denied and failed calls.
   surface: HookPulseEvent.thunk.PostToolUse,
+  // The harness a session runs under is decided when it starts; a mid-session
+  // stamp would describe a regime the session did not start in.
+  harnessHash: HookPulseEvent.thunk.SessionStart,
 });
 
 const doesHookPulseEventOwnField = (field: HookPulseEventOwnedField, hookEvent: HookPulseEvent): boolean =>
@@ -1075,8 +1093,8 @@ const hookPulseSurfaceReference = (input: HookPulseRawEventInput) =>
  * row is never rewritten. Two invariants make the schema its own oracle against
  * the shell writer. The event-owned field invariant rejects `notificationType`
  * outside `Notification`, `sessionEndReason` outside `SessionEnd`,
- * `isInterrupt` outside `PostToolUseFailure`, and `surface` outside
- * `PostToolUse`. The wait-reason invariant
+ * `isInterrupt` outside `PostToolUseFailure`, `surface` outside
+ * `PostToolUse`, and `harnessHash` outside `SessionStart`. The wait-reason invariant
  * recomputes `waitReason` from `hookEvent`, `toolName`, and `notificationType`
  * and rejects a row that disagrees, which is what catches a jq derivation that
  * has drifted away from this contract.
@@ -1153,6 +1171,10 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     // hook, AGENTS.md, an MCP server) the tool call touched. Only the digest is
     // representable; the skill name or file path it came from never is.
     surface: S.OptionFromOptionalKey(Sha256Hex),
+    // SHA-256 of the harness regime the session started under (see
+    // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
+    // written before the stamp existed simply lack it.
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
   }).check(
     S.makeFilterGroup(
       [
@@ -1241,16 +1263,17 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
       sessionEndReason: filterHookPulseEventOwnedField("sessionEndReason", value.hookEvent, value.sessionEndReason),
       isInterrupt: filterHookPulseEventOwnedField("isInterrupt", value.hookEvent, value.isInterrupt),
       surface: filterHookPulseEventOwnedField("surface", value.hookEvent, value.surface),
+      harnessHash: filterHookPulseEventOwnedField("harnessHash", value.hookEvent, value.harnessHash),
       waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
     });
   })
 );
 
-// Deliberately without `isInterrupt` or `surface`, and the omission is a dating argument
+// Deliberately without `isInterrupt`, `surface`, or `harnessHash`, and the omission is a dating argument
 // rather than an oversight. "Legacy" here means exactly one thing: a row written
 // before private identifiers were pseudonymized. `isInterrupt` and its only
 // owning event `PostToolUseFailure` were both added *after* that change (and
-// `surface` later still), so no
+// `surface` and `harnessHash` later still), so no
 // row can be legacy-shaped and carry the field — declaring it would model a
 // combination that cannot exist and would give a future reader the false
 // impression that some legacy corpus distinguishes an interrupt from an error.
@@ -1365,6 +1388,10 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  * `.patterns/`. Encoding cannot invert that digest, so it rides back as the
  * input's `surface` stamp and decoding passes a stamp through unchanged.
  *
+ * On `SessionStart`, the input's `harnessHash` stamp passes through unchanged
+ * and is dropped on every other event. Nothing re-derives it: the harness hash
+ * is a digest of files under a repo root the codec never sees.
+ *
  * **Gotchas**
  *
  * An `observed` raw event yields a `derived` row. That clamp is the weakest-link
@@ -1469,6 +1496,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.is_interrupt
               ),
               surface,
+              harnessHash: filterHookPulseEventOwnedField(
+                HookPulseEventOwnedField.Enum.harnessHash,
+                input.event.hook_event_name,
+                input.harnessHash
+              ),
             }),
           }))
         ),
@@ -1539,6 +1571,11 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                         HookPulseEventOwnedField.Enum.surface,
                         input.hookEvent,
                         O.map(O.fromUndefinedOr(input.surface), Sha256Hex.make)
+                      ),
+                      harnessHash: filterHookPulseEventOwnedField(
+                        HookPulseEventOwnedField.Enum.harnessHash,
+                        input.hookEvent,
+                        O.map(O.fromUndefinedOr(input.harnessHash), Sha256Hex.make)
                       ),
                     })
                   ),

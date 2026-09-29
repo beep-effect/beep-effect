@@ -9,6 +9,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   contextSurfaceId,
+  deriveHarnessHash,
   HarnessEditRefKind,
   HarnessFingerprintParts,
   HarnessLedgerRow,
@@ -17,8 +18,9 @@ import {
   LedgerDisposition,
   makeHarnessLedgerRowId,
 } from "@beep/repo-ai-metrics";
-import { A, O, pipe } from "@beep/utils";
+import { A, O, pipe, Str } from "@beep/utils";
 import { Context, DateTime, Effect, Layer } from "effect";
+import * as Bool from "effect/Boolean";
 import * as HashSet from "effect/HashSet";
 import { HarnessLedgerChainError, HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
 import {
@@ -37,6 +39,7 @@ import {
   withLedgerWriteFence,
 } from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow } from "./internal/PruneWindow.ts";
+import type { HarnessFingerprint } from "@beep/repo-ai-metrics";
 import type { FileSystem, Path } from "effect";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 import type {
@@ -88,9 +91,10 @@ export interface HarnessLedgerServiceShape {
   ) => Effect.Effect<HarnessLedgerRow, HarnessLedgerCommandError>;
 
   /**
-   * Propose retiring every skill and MCP server with zero touches in
-   * the last N hook-pulse sessions for read-only inspection. Writes fail until
-   * sessions can be filtered by the current harness hash.
+   * Propose retiring every skill and MCP server with zero touches in the last
+   * N hook-pulse sessions under the current harness hash. With `write`, the
+   * fresh proposals are appended under the ledger write fence; otherwise
+   * nothing is written.
    *
    * @since 0.0.0
    */
@@ -234,13 +238,17 @@ const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedg
 
 const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(function* (
   options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
   candidates: ReadonlyArray<PruneSurfaceCandidate>,
-  sessionsObserved: number,
+  observed: ObservedSessionWindow,
   windowEnd: DateTime.Utc
 ) {
-  const fingerprint = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
   const createdAt = yield* DateTime.now;
-  const evidence = `zero touches across ${sessionsObserved} sessions ending ${DateTime.formatIso(windowEnd)}`;
+  // Names the regime by a hash prefix, never by a path.
+  const evidence = `zero touches across ${observed.sessionsObserved} sessions under harness hash ${Str.slice(
+    0,
+    12
+  )(observed.harnessHash)} ending ${DateTime.formatIso(windowEnd)}`;
   return yield* Effect.forEach(candidates, (candidate) =>
     makeHarnessLedgerRowId(createdAt).pipe(
       Effect.map((rowId) =>
@@ -263,11 +271,12 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   );
 });
 
-// Reads open proposals and plans fresh ones without writing. Appending waits
-// on hook-pulse sessions being scoped by the current harness hash; until then
-// `pruneProposalsImpl` refuses `write` before this runs.
+// Reads open proposals and plans fresh ones without writing. With `write` it
+// runs under the ledger write fence, so the open-proposal read and the append
+// cannot interleave with another writer and propose one surface twice.
 const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(function* (
   options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
   candidates: ReadonlyArray<PruneSurfaceCandidate>,
   observed: ObservedSessionWindow
 ) {
@@ -285,11 +294,14 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
   const fresh = A.filter(zeroTouch, (candidate) => !HashSet.has(openTargets, candidate.surfaceId));
   const proposals = yield* O.match(observed.windowEnd, {
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
-    onSome: (windowEnd) => buildPruneProposals(options, fresh, observed.sessionsObserved, windowEnd),
+    onSome: (windowEnd) => buildPruneProposals(options, fingerprint, fresh, observed, windowEnd),
   });
   return HarnessLedgerPruneReport.make({
     windowSessions: options.windowSessions,
+    harnessHash: observed.harnessHash,
     sessionsObserved: observed.sessionsObserved,
+    sessionsSkippedOutOfRegime: observed.sessionsSkippedOutOfRegime,
+    sessionsSkippedUnstamped: observed.sessionsSkippedUnstamped,
     windowEnd: observed.windowEnd,
     shardsRead: observed.shardsRead,
     undecodableLines: observed.undecodableLines,
@@ -297,18 +309,41 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     touchedCandidates: A.length(candidates) - A.length(untouched),
     alreadyProposed: A.length(zeroTouch) - A.length(fresh),
     proposals,
+    written: false,
+  });
+});
+
+// Plans and appends inside one fence; an empty plan appends nothing and
+// reports `written: false`.
+const appendPruneProposals = Effect.fn("HarnessLedger.appendPruneProposals")(function* (
+  options: HarnessLedgerPruneOptions,
+  fingerprint: HarnessFingerprint,
+  candidates: ReadonlyArray<PruneSurfaceCandidate>,
+  observed: ObservedSessionWindow
+) {
+  const report = yield* planPruneProposals(options, fingerprint, candidates, observed);
+  return yield* A.match(report.proposals, {
+    onEmpty: () => Effect.succeed(report),
+    onNonEmpty: (proposals) =>
+      appendLedgerRows(
+        options.repoRoot,
+        A.map(proposals, (proposal) => proposal.row)
+      ).pipe(Effect.as(HarnessLedgerPruneReport.make({ ...report, written: true }))),
   });
 });
 
 const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
-  if (options.write) {
-    return yield* HarnessLedgerInputError.new(
-      "Cannot append pruning proposals until hook-pulse sessions are scoped by the current harness hash."
-    );
-  }
   const candidates = yield* enumeratePruneCandidates(options.repoRoot);
-  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions);
-  return yield* planPruneProposals(options, candidates, observed);
+  const fingerprint = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
+  const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
+    Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
+  );
+  const observed = yield* observeSessionWindow(options.stateDir, options.windowSessions, harnessHash);
+  return yield* Bool.match(options.write, {
+    onFalse: () => planPruneProposals(options, fingerprint, candidates, observed),
+    onTrue: () =>
+      withLedgerWriteFence(options.repoRoot, appendPruneProposals(options, fingerprint, candidates, observed)),
+  });
 });
 
 /**

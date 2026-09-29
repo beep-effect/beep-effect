@@ -64,6 +64,14 @@ const autoApprovedPostToolUse = rawInput("2026-08-01T08:39:56.000Z", {
 
 const autoApprovedSequence = [autoApprovedPreToolUse, autoApprovedPostToolUse];
 
+// Harness-hash fixture (goals/harness-evidence-ledger, D9). The writer stamps the
+// digest on SessionStart; the codec only passes it through.
+const harnessHashStamp = "e".repeat(64);
+
+const sessionStart = rawInput("2026-08-01T06:20:00.000Z", {
+  hook_event_name: HookPulseEvent.Enum.SessionStart,
+});
+
 // Context-surface fixtures (goals/harness-evidence-ledger, D8). The raw skill
 // name and paths below must never appear in a row; only the unsalted digest of
 // `${kind}:${name}` may.
@@ -775,7 +783,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "round-trips all nine hook events and all three observed wait classes after derivation",
+    "round-trips all ten hook events and all three observed wait classes after derivation",
     Effect.fn("HookPulseTest.roundTripsDerivedEvents")(function* () {
       const fixtures = [
         autoApprovedPreToolUse,
@@ -788,6 +796,7 @@ describe("HookPulseV1", () => {
         sessionEnd,
         permissionDenied,
         approvedPlanPermissionRequest,
+        { ...sessionStart, harnessHash: harnessHashStamp },
       ];
       const derived = yield* Effect.forEach(fixtures, (fixture) => decodeHookPulseFromRaw(fixture), {
         concurrency: 1,
@@ -808,6 +817,7 @@ describe("HookPulseV1", () => {
         "SessionEnd",
         "PermissionDenied",
         "PermissionRequest",
+        "SessionStart",
       ]);
       // Every member of `HookPulseEvent` survives derivation and both round-trip
       // hops; a member added to the literal domain without a fixture here would
@@ -824,7 +834,9 @@ describe("HookPulseV1", () => {
         "none",
         "none",
         "plan-approval",
+        "none",
       ]);
+      assertSome(O.getOrThrow(A.last(roundTripped)).harnessHash, harnessHashStamp);
     })
   );
 
@@ -1163,6 +1175,49 @@ describe("HookPulseV1", () => {
       expect(failure.message).toContain("surface");
       expect(failure.message).toContain("PostToolUse");
       expect(failure.message).toContain("PreToolUse");
+    })
+  );
+
+  it.effect(
+    "passes a harnessHash stamp through on SessionStart and drops it on every other event",
+    Effect.fn("HookPulseTest.ownsHarnessHash")(function* () {
+      const decoded = yield* withSaltEnv(
+        {},
+        Effect.all(
+          {
+            stamped: decodeHookPulseFromRaw({ ...sessionStart, harnessHash: harnessHashStamp }),
+            unstamped: decodeHookPulseFromRaw(sessionStart),
+            misowned: decodeHookPulseFromRaw({ ...stop, harnessHash: harnessHashStamp }),
+          },
+          { concurrency: 1 }
+        )
+      );
+      const raw = yield* encodeHookPulseToRaw(decoded.stamped);
+      const roundTripped = yield* decodeHookPulseFromRaw(raw);
+
+      assertSome(decoded.stamped.harnessHash, harnessHashStamp);
+      expect(decoded.stamped.waitReason).toBe(HookPulseWaitReason.Enum.none);
+      // Absence stays absence: the codec has no repo root to recompute a hash from.
+      assertNone(decoded.unstamped.harnessHash);
+      assertNone(decoded.misowned.harnessHash);
+      expect(raw.harnessHash).toBe(harnessHashStamp);
+      pipe(hookPulseEquivalent(roundTripped, decoded.stamped), assertTrue);
+    })
+  );
+
+  it.effect(
+    "rejects harnessHash on a non-SessionStart event and decodes rows written before the stamp",
+    Effect.fn("HookPulseTest.rejectsMisownedHarnessHash")(function* () {
+      const canonical = yield* decodeHookPulseFromRaw(autoApprovedPreToolUse);
+      const encoded = yield* encodeHookPulse(canonical);
+      const failure = yield* Effect.flip(decodeHookPulse({ ...encoded, harnessHash: harnessHashStamp }));
+      const started = yield* encodeHookPulse(yield* decodeHookPulseFromRaw(sessionStart));
+      const legacyStart = yield* decodeHookPulse(started);
+
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain("harnessHash belongs to SessionStart");
+      expect(started).not.toHaveProperty("harnessHash");
+      assertNone(legacyStart.harnessHash);
     })
   );
 
