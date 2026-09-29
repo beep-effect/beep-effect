@@ -31,3 +31,26 @@ checkpoint knowledge-reference repair. Preserve those exact strings and the
 follow-up branch's canonical assertions. For the two overlapping scope/provider
 pairs, compare rule IDs as well as occurrence hashes: different rules can
 share a hash because they refer to the same enclosing source expression.
+
+## Source conflict resolution preview
+
+Against checkpoint `90cd89d70c`, the four source conflicts can preserve the
+follow-up's canonical assertions:
+
+- Docgen watchdog: three conflict blocks. Retain `Effect.flip` for expected
+  failures. The resolved preview equals the follow-up file byte for byte.
+- Residue reap: one conflict block. Retain both `Effect.flip` checks for
+  invalid home roots. The resolved preview equals the follow-up file exactly.
+- Worktree reap: two conflict blocks. Retain `assertNone` and the expected
+  failure check through `Effect.flip`. The resolved preview equals the
+  follow-up file exactly.
+- Knowledge semantic delta: two call-site conflicts and three duplicate
+  diagnostic constants introduced by the automatic merge. All three pairs
+  have identical literal expressions. Retain the follow-up names and remove
+  the duplicate checkpoint declarations. The resulting whole-file syntax
+  tree equals the follow-up file without assertion normalization.
+
+Private receipts preserve these resolutions and the preview tree. They are
+unapplied and do not establish runtime integration proof. Re-evaluate against
+the actual merged main head before using them; the ledger, opportunities,
+and inventory conflicts still require their own reconciliation.
