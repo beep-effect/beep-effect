@@ -303,5 +303,10 @@
     "fixed": 1936,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof"
+  "fullPackageProof": {
+    "exitCode": 0,
+    "auditSeconds": 703.9,
+    "docgenSeconds": 20.1,
+    "sourceFixSha": "81f4119e9c09f6514f49505f23cd33328c9bba42"
+  }
 }
