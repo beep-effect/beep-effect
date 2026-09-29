@@ -5656,3 +5656,13 @@ a visible finalizer defect, returning a failed Exit for that same control;
 the harness removes intentional residue afterward. Consider a targeted
 fixture-cleanup-error check in future resource reviews. This is a test-helper
 repair, not a change to model-store production behavior.
+
+### Scheduler status output is dominated by historical quarantine entries
+
+While checking whether an active package proof was waiting for admission,
+`bun run beep quality scheduler status` emitted 2,071 lines, mostly historical
+quarantine paths. Its live capacity and queue summary were only a few lines.
+Default to a quarantine count and bounded recent examples, with an explicit
+verbose listing for diagnosis. This would keep routine proof-state inspection
+readable without discarding the quarantine evidence. No scheduler state was
+changed during this observation.
