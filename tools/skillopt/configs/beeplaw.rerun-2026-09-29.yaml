@@ -1,17 +1,22 @@
-# SkillOpt pilot rerun (goals/harness-evidence-ledger P2, decisions D11 + D14).
-# Cloned from beeplaw.template.yaml. Changes vs template: cosine edit budget
-# 4 -> 1 over 3 epochs, 4 rollout workers, 2 analyst workers, Opus optimizer,
-# Claude Code (opus) rollout target (D14 amended 2026-09-25: Codex quota
-# exhausted until Oct 2) via `claude -p --model opus`; the codex_exec target
-# stays configurable. P5 batch/minibatch 2 over the same 8 train / 4 val
-# split, gate on the full 4-item selection set.
-# Launch recipe: docs/runbooks/skillopt-rerun.md.
+# SkillOpt pilot rerun, second attempt (goals/harness-evidence-ledger P4 closing
+# PR; decisions D11 + D14 amendment, routine calls 2026-09-29).
+# Same parameters as beeplaw.rerun-2026-09.yaml: cosine edit budget 4 -> 1 over
+# 3 epochs, 4 rollout workers, 2 analyst workers, Opus optimizer
+# (`claude_chat`), Claude Code rollout target (`claude_code_exec`, effort
+# medium), P5 batch/minibatch 2 over the same 8 train / 4 val split, soft gate
+# on the full 4-item selection set.
+# Changes vs that config: optimizer and rollout target pinned to the explicit
+# model id `claude-opus-5-5` (both backends pass it verbatim to
+# `claude --model`; the `opus` alias is not a stable pin), the pre-evaluation
+# diff screen on, three baseline noise-band measurements before the loop, and
+# a new out_root under history/p4-rerun.
+# Preflight + launch recipe: docs/runbooks/skillopt-rerun.md.
 model:
   backend: codex_exec
   optimizer_backend: claude_chat
   target_backend: claude_code_exec
-  optimizer: opus
-  target: opus
+  optimizer: claude-opus-5-5
+  target: claude-opus-5-5
   reasoning_effort: ""
   claude_code_exec_path: claude
   claude_code_exec_effort: medium
@@ -62,7 +67,7 @@ evaluation:
 env:
   name: beeplaw
   skill_init: .claude/skills/schema-first-development/SKILL.md
-  out_root: goals/harness-evidence-ledger/history/p2-rerun/out
+  out_root: goals/harness-evidence-ledger/history/p4-rerun/out
   split_mode: split_dir
   split_dir: goals/skillopt-training-pilot/corpus/splits
   repo_root: .
@@ -74,3 +79,9 @@ env:
   workers: 4
   limit: 0
   max_completion_tokens: 4096
+  # Loop controls (beep_skillopt.controls). The screen rejects a candidate
+  # before any evaluation spend; the noise band is rerun analysis only and
+  # never changes the gate.
+  screen_candidates: true
+  screen_shingle_k: 5
+  baseline_repeats: 3
