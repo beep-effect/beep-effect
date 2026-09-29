@@ -9,6 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- consumer-local composition that replaces the retired `@beep/schema` `PosInt`; the upstream-first doctrine (standards/architecture/DECISIONS.md, 2026-09-29) forbids a shared replacement.
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
