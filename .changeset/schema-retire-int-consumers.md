@@ -1,6 +1,6 @@
 ---
 "@beep/anthropic": minor
-"@beep/ciops": patch
+"@beep/ciops": minor
 "@beep/documents-domain": patch
 "@beep/documents-server": minor
 "@beep/epistemic-client": patch
@@ -15,7 +15,7 @@
 "@beep/law-practice-domain": minor
 "@beep/law-practice-server": minor
 "@beep/law-practice-use-cases": minor
-"@beep/lejeune-bolt-workbench": patch
+"@beep/lejeune-bolt-workbench": minor
 "@beep/lexical-schema": minor
 "@beep/libpff": minor
 "@beep/m365": minor
@@ -29,7 +29,7 @@
 "@beep/repo-ai-metrics": minor
 "@beep/repo-configs": minor
 "@beep/repo-docgen": minor
-"@beep/semantica": patch
+"@beep/semantica": minor
 "@beep/shared-domain": minor
 "@beep/skill-contract": minor
 "@beep/tika": minor
