@@ -111,6 +111,7 @@ const snapshot = (root: string, input: SnapshotInput) => {
     mergeable: input.mergeable !== "CONFLICTING",
     mergeStateAcceptable: input.mergeStateStatus !== "DIRTY",
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.none(),
   });
   const failing = A.findFirst(

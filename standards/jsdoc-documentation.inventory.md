@@ -14,20 +14,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2895 |
-| publicExports | 20449 |
-| openModules | 377 |
-| openExports | 3087 |
+| publicModules | 2883 |
+| publicExports | 20397 |
+| openModules | 375 |
+| openExports | 3085 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3325 |
+| exampleImportFindings | 3323 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
-| multiple-description-paragraphs | 434 |
+| multiple-description-paragraphs | 432 |
 | leading-blank | 0 |
 | trailing-blank | 1 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3324 |
+| no-root-package-import | 3322 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 253 | 1527 | 25 | 159 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1475 | 23 | 157 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -613,7 +613,6 @@ Module findings:
 - `src/Color/Color.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoTxnHash/CryptoTxnHash.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EffectSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthAmount/EthAmount.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/EvmAddress/EvmAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -627,7 +626,6 @@ Module findings:
 - `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Options.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/PromiseSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SafeObject/index.ts:1` (packageDocumentation) - 1 example import violation(s)
 - `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -678,8 +676,6 @@ Export findings:
 - `src/Did.ts:108` `Did` (type) - 1 example import violation(s)
 - `src/Did.ts:131` `Did` (namespace) - 1 example import violation(s)
 - `src/Double.ts:52` `Double` (const) - 1 example import violation(s)
-- `src/EffectSchema.ts:60` `isEffect` (const) - 1 example import violation(s)
-- `src/EffectSchema.ts:85` `EffectSchema` (const) - 1 example import violation(s)
 - `src/Email.ts:33` `EmailString` (const) - 1 example import violation(s)
 - `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
 - `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
@@ -791,10 +787,10 @@ Export findings:
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:204` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:240` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:340` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:385` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:194` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:230` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:330` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:370` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 
