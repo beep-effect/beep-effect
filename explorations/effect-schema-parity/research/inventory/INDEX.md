@@ -1,6 +1,6 @@
 # Schema inventory index
 
-Pin: `e5f7d12af9abef188f7dc39b0207af1801b03ffd` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.3`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `explorations/effect-schema-parity/research/tools/modules.ts`.
+Pin: `df77fff9396fe31de72d1947ecb5b74f8cee89e1` (inventoryPin: root package.json catalog `effect`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.3`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `explorations/effect-schema-parity/research/tools/modules.ts`.
 
 Regenerate from repo root (offline):
 
@@ -16,7 +16,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 
 | Module | Importable | Rows | Bytes |
 | --- | --- | ---: | ---: |
-| [effect/Schema](effect-Schema.jsonl) | yes | 1109 | 493938 |
+| [effect/Schema](effect-Schema.jsonl) | yes | 1109 | 494031 |
 | [effect/SchemaAST](effect-SchemaAST.jsonl) | yes | 315 | 127436 |
 | [effect/SchemaParser](effect-SchemaParser.jsonl) | yes | 37 | 20288 |
 | [effect/SchemaIssue](effect-SchemaIssue.jsonl) | yes | 65 | 28813 |
@@ -40,7 +40,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/internal/schema/codegen](effect-internal-schema-codegen.jsonl) | no | 11 | 4352 |
 | [effect/internal/schema/compilerRegistry](effect-internal-schema-compilerRegistry.jsonl) | no | 25 | 10464 |
 | [effect/internal/schema/interpreter](effect-internal-schema-interpreter.jsonl) | no | 3 | 1487 |
-| **Total** | | **2232** | **998009** |
+| **Total** | | **2232** | **998102** |
 
 ## Per-module kinds and categories
 
