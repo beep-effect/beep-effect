@@ -6,12 +6,12 @@
     "title": "Effect Schema Parity",
     "status": "active",
     "created": "2026-09-15",
-    "updated": "2026-09-15",
+    "updated": "2026-09-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-schema-parity",
   "lifecycle": "active",
-  "mission": "Retire or trim every @beep/schema concept upstream rc.115 covers, migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
+  "mission": "Retire or trim every @beep/schema concept upstream Effect covers at the main snapshot e5f7d12af9 (rc.118 line), migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -74,6 +74,6 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement PR would change a persisted or externally served encoding; that is a migration goal, not this one.",
     "A facet census flips a RETIRE row to ADAPT and no decision-log entry records the flip.",
-    "P5 would open before goals/schema-utils-selective-codec-statics has merged its Yeet PR."
+    "P5 would open before goals/schema-utils-selective-codec-statics has merged its Yeet PR (satisfied: PR #927 merged 2026-08-31 as 2731847346)."
   ]
 }
