@@ -380,5 +380,5 @@
     "fixed": 1881,
     "exception": 12
   },
-  "fullPackageProof": "pending grouped CLI proof"
+  "fullPackageProof": "passed: audit 653.8 seconds, docgen 19.0 seconds"
 }
