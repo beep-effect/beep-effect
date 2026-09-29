@@ -1,5 +1,9 @@
 # Bootstrap plan migration preparation
 
+Status: applied; current runtime/provider migration evidence is in
+`cli-reflection-bootstrap-runtime-proof.md`. The preparation and merged-main
+property reconciliation below describe the earlier unchanged-source checkpoint.
+
 The existing historical ledger includes ten runtime findings and two other
 findings for goals-bootstrap-plan.test.ts. Original line/evidence matching
 recognizes all twelve rows. Current-source inspection requires three lineage

@@ -5732,3 +5732,15 @@ success case or correct this fixture in a behavior-focused follow-up, preserving
 the explicit opt-out test. The migration draft retains the current fixture and
 assertions and does not claim this missing coverage. Receipt:
 `cli-reflection-lint-preparation.md`.
+
+### Anonymous layer concurrency options do not serialize nested suites
+
+The Effect reference's makeLayer implementation applies options.concurrent to
+named layers, while anonymous layers register tests in the existing suite.
+During bootstrap-plan migration, the fixture's concurrent:false option alone
+therefore did not prove serialization of cwd-changing tests. The applied suite
+sets concurrent:false on all thirteen existing describes, preserving test names
+and per-test timeouts. Audit earlier anonymous fixtures that mutate process-wide
+state for an explicit serial parent; default serial Vitest execution can hide
+this gap. The same reference confirms layer timeout governs fixture hooks, not
+individual test deadlines. Receipt: cli-reflection-bootstrap-runtime-proof.md.

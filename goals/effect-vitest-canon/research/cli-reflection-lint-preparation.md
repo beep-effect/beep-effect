@@ -1,5 +1,8 @@
 # Reflection lint runtime preparation
 
+Status: applied; current evidence is in `cli-reflection-bootstrap-runtime-proof.md`.
+The notes below record the pre-application preparation.
+
 The existing CLI inventory identifies ten open runtime boundaries in
 reflection-lint.test.ts. All ten historical rows match uniquely by original
 line/evidence and callback title. A private draft removes those boundaries,

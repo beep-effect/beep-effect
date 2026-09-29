@@ -22,11 +22,11 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
+import { Console, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -38,11 +38,9 @@ import * as TestConsole from "effect/testing/TestConsole";
 import {
   expectReportedExit,
   permutedDirectoryReadsFileSystem,
-  withTempWorkingDirectory,
+  temporaryWorkingDirectory,
   writeProjectFile,
 } from "./support/CommandTest.ts";
-import type { Path } from "effect";
-import type * as Crypto from "effect/Crypto";
 
 const decodeGoalSlugEffect = S.decodeEffect(GoalSlug);
 const decodeUnknownGoalSlug = S.decodeUnknownEffect(GoalSlug);
@@ -98,50 +96,43 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
   const golden = yield* fs.readFileString(goldenPath);
   expect(rendered).toBe(golden);
 });
+const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
 
-const run = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto | FileSystem.FileSystem | Path.Path>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)));
+it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
+  describe("goals bootstrap --plan golden fixtures", { concurrent: false }, () => {
+    it.effect.prop(
+      "round-trips arbitrary goal slugs through the schema codec",
+      [Arbitrary.schema(GoalSlug)],
+      Effect.fnUntraced(
+        function* ([slug]) {
+          expect(yield* decodeGoalSlugEffect(yield* encodeGoalSlugEffect(slug))).toBe(slug);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      ),
+      { arbitrary: { runs: 32 } }
+    );
 
-const commandTestLayer = Layer.mergeAll(
-  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TestConsole.layer
-);
-
-describe("goals bootstrap --plan golden fixtures", () => {
-  it.effect.prop(
-    "round-trips arbitrary goal slugs through the schema codec",
-    [Arbitrary.schema(GoalSlug)],
-    Effect.fnUntraced(function* ([slug]) {
-      expect(yield* decodeGoalSlugEffect(yield* encodeGoalSlugEffect(slug))).toBe(slug);
-    }),
-    { arbitrary: { runs: 32 } }
-  );
-
-  it("pins the minimal standard-delivery plan byte-for-byte", () =>
-    run(
+    it.effect("pins the minimal standard-delivery plan byte-for-byte", () =>
       Effect.gen(function* () {
         yield* expectGolden("bootstrap-minimal", yield* compileMaterializationPlan(minimalInput, []));
-      })
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("pins the fully populated plan with capabilities and exploration provenance", () =>
-    run(
+    it.effect("pins the fully populated plan with capabilities and exploration provenance", () =>
       Effect.gen(function* () {
         yield* expectGolden("bootstrap-full", yield* compileMaterializationPlan(fullInput, []));
-      })
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("pins the report-first archetype plan", () =>
-    run(
+    it.effect("pins the report-first archetype plan", () =>
       Effect.gen(function* () {
         yield* expectGolden("bootstrap-report-first", yield* compileMaterializationPlan(reportFirstInput, []));
-      })
-    ));
-});
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("goals bootstrap --plan determinism", () => {
-  it("compiles identical bytes and plan ids across repeated runs and permuted input field order", () =>
-    run(
+  describe("goals bootstrap --plan determinism", { concurrent: false }, () => {
+    it.effect("compiles identical bytes and plan ids across repeated runs and permuted input field order", () =>
       Effect.gen(function* () {
         const permuted = BootstrapInput.make({
           today: "2026-08-17",
@@ -157,58 +148,54 @@ describe("goals bootstrap --plan determinism", () => {
         const firstBytes = yield* encodePlan(first);
         const secondBytes = yield* encodePlan(second);
         expect(secondBytes).toBe(firstBytes);
-      })
-    ));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it.effect("property: schema-generated inputs compile deterministic schema-valid plans", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(BootstrapInput)]),
-        ([input]) =>
-          Effect.gen(function* () {
-            const first = yield* compileMaterializationPlan(input, []);
-            const second = yield* compileMaterializationPlan(input, []);
-            expect(isMaterializationPlan2(first)).toBe(true);
-            expect(second.planId).toBe(first.planId);
-            expect(second.entries).toStrictEqual(first.entries);
-            return true;
-          }),
-        fcRuns(32)
-      );
-      expect(result._tag).toBe("Passed");
-    }).pipe(provideScopedLayer(NodeServices.layer))
-  );
-});
+    it.effect("property: schema-generated inputs compile deterministic schema-valid plans", () =>
+      Effect.gen(function* () {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(BootstrapInput)]),
+          ([input]) =>
+            Effect.gen(function* () {
+              const first = yield* compileMaterializationPlan(input, []);
+              const second = yield* compileMaterializationPlan(input, []);
+              expect(isMaterializationPlan2(first)).toBe(true);
+              expect(second.planId).toBe(first.planId);
+              expect(second.entries).toStrictEqual(first.entries);
+              return true;
+            }),
+          fcRuns(32)
+        );
+        expect(result._tag).toBe("Passed");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("goals bootstrap --plan input rejection", () => {
-  it.each(["Uppercase-Slug", "slug/with/separators", "../escape", "spaced slug", "_template"])(
-    "rejects %j at the slug grammar",
-    (candidate) =>
-      Effect.runPromise(
+  describe("goals bootstrap --plan input rejection", { concurrent: false }, () => {
+    it.effect.each(["Uppercase-Slug", "slug/with/separators", "../escape", "spaced slug", "_template"])(
+      "rejects %j at the slug grammar",
+      (candidate) =>
         Effect.gen(function* () {
           const outcome = yield* Effect.exit(decodeUnknownGoalSlug(candidate));
           expect(outcome._tag).toBe("Failure");
-        })
-      )
-  );
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("fails closed with a slug-exists conflict and no entries", () =>
-    run(
+    it.effect("fails closed with a slug-exists conflict and no entries", () =>
       Effect.gen(function* () {
         const plan = yield* compileMaterializationPlan(minimalInput, ["example-goal"]);
         expect(A.length(plan.conflicts)).toBe(1);
         expect(plan.conflicts[0]?.reason).toBe("slug-exists");
         expect(A.length(plan.entries)).toBe(0);
         expect(A.length(plan.validations)).toBe(0);
-      })
-    ));
-});
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("goals adopt --plan evergreen pilot", () => {
-  it(
-    "retains every live pilot file once, preserves the five unmodeled manifest keys, and creates nothing authored",
-    () =>
-      run(
+  describe("goals adopt --plan evergreen pilot", { concurrent: false }, () => {
+    it.effect(
+      "retains every live pilot file once, preserves the five unmodeled manifest keys, and creates nothing authored",
+      () =>
         Effect.gen(function* () {
           const repoRoot = yield* findRepoRoot();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
@@ -251,15 +238,13 @@ describe("goals adopt --plan evergreen pilot", () => {
           // digest untouched, so any doctor run before and after sees identical input.
           const after = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
           expect(A.map(after.files, (file) => file.digest)).toStrictEqual(A.map(snapshot.files, (file) => file.digest));
-        })
-      ),
-    30_000
-  );
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
 
-  it(
-    "is idempotent and a fixed point: recompiling matches, and the simulated overlay plans zero creates",
-    () =>
-      run(
+    it.effect(
+      "is idempotent and a fixed point: recompiling matches, and the simulated overlay plans zero creates",
+      () =>
         Effect.gen(function* () {
           const repoRoot = yield* findRepoRoot();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
@@ -292,15 +277,13 @@ describe("goals adopt --plan evergreen pilot", () => {
           const fixedPoint = yield* compileAdoptionPlan(overlay, O.none());
           const creates = A.filter(fixedPoint.entries, (entry) => entry.action === "create");
           expect(A.length(creates)).toBe(0);
-        })
-      ),
-    30_000
-  );
-});
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
+  });
 
-describe("goals adopt --plan preservation counterfactual", () => {
-  it("proves the naive decode-encode round trip destroys the pilot's unmodeled keys", () =>
-    run(
+  describe("goals adopt --plan preservation counterfactual", { concurrent: false }, () => {
+    it.effect("proves the naive decode-encode round trip destroys the pilot's unmodeled keys", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const repoRoot = yield* findRepoRoot();
@@ -327,16 +310,16 @@ describe("goals adopt --plan preservation counterfactual", () => {
           expect(originalKeys).toContain(lost);
           expect(roundTripKeys).not.toContain(lost);
         }
-      })
-    ));
-});
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("goals adopt --plan manifest-less packet", () => {
-  it(
-    "plans exactly one generated manifest plus report rows, never writing the README",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+  describe("goals adopt --plan manifest-less packet", { concurrent: false }, () => {
+    it.effect(
+      "plans exactly one generated manifest plus report rows, never writing the README",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             yield* writeProjectFile("goals/_template/SPEC.md", "# <Goal Title> Spec\n");
@@ -373,16 +356,15 @@ describe("goals adopt --plan manifest-less packet", () => {
             const authoredCreates = A.filter(creates, (entry) => entry.ownership === "authored");
             expect(A.length(authoredCreates)).toBe(0);
           })
-        ).pipe(provideScopedLayer(NodeServices.layer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
 
-  it(
-    "fails closed with packet-not-found for a missing packet",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "fails closed with packet-not-found for a missing packet",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             const snapshot = yield* readPacketSnapshot("missing-goal");
@@ -390,16 +372,15 @@ describe("goals adopt --plan manifest-less packet", () => {
             expect(plan.conflicts[0]?.reason).toBe("packet-not-found");
             expect(A.length(plan.entries)).toBe(0);
           })
-        ).pipe(provideScopedLayer(NodeServices.layer))
-      ),
-    30_000
-  );
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
 
-  it(
-    "fails closed with manifest-unparseable for a corrupt manifest",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "fails closed with manifest-unparseable for a corrupt manifest",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             yield* writeProjectFile("goals/broken/ops/manifest.json", "{ not json");
@@ -408,17 +389,15 @@ describe("goals adopt --plan manifest-less packet", () => {
             expect(plan.conflicts[0]?.reason).toBe("manifest-unparseable");
             expect(A.length(plan.entries)).toBe(0);
           })
-        ).pipe(provideScopedLayer(NodeServices.layer))
-      ),
-    30_000
-  );
-});
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
+  });
 
-describe("goals adopt --plan index parity", () => {
-  it(
-    "regenerating the local index around a retain-only pilot plan is deterministic",
-    () =>
-      run(
+  describe("goals adopt --plan index parity", { concurrent: false }, () => {
+    it.effect(
+      "regenerating the local index around a retain-only pilot plan is deterministic",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const repoRoot = yield* findRepoRoot();
@@ -443,18 +422,17 @@ describe("goals adopt --plan index parity", () => {
           expect(A.every(generated, (content) => content === first.value)).toBe(true);
           // The local goals/INDEX.md projection is git-ignored workstation state; drift against it is
           // the `goals index --check` command's job (covered below on a temp dir), not this test's.
-        })
-      ),
-    60_000
-  );
-});
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      60_000
+    );
+  });
 
-describe("goals index command", () => {
-  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+  describe("goals index command", { concurrent: false }, () => {
+    const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 
-  it("accepts an absent or matching local projection and refreshes a stale copy in place", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+    it.effect("accepts an absent or matching local projection and refreshes a stale copy in place", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals", { recursive: true });
@@ -475,36 +453,35 @@ describe("goals index command", () => {
             "[goals:index] refreshed stale git-ignored goals/INDEX.md from goals/*/ops/manifest.json.",
           ]);
         })
-      ).pipe(provideScopedLayer(commandTestLayer))
-    ));
-});
-
-describe("goals plan validation mapping", () => {
-  const BLOCKING_KINDS: ReadonlyArray<GoalDoctorFindingKind> = [
-    "manifest-missing",
-    "manifest-invalid",
-    "lifecycle-mismatch",
-    "readme-status-line",
-    "goal-md-oversize",
-    "phases-terminal-but-active",
-    "reflection-frontmatter-invalid",
-  ];
-
-  it("maps every blocking doctor finding kind to at least one validation requirement", () => {
-    for (const kind of GoalDoctorFindingKind.Options) {
-      const requirements = validationRequirementsForGoalDoctorFinding(kind);
-      if (A.contains(BLOCKING_KINDS, kind)) {
-        expect(A.isReadonlyArrayNonEmpty(requirements)).toBe(true);
-      } else {
-        expect(Array.isArray(requirements)).toBe(true);
-      }
-    }
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
   });
-});
 
-describe("goals plan human rendering", () => {
-  it("renders preserved unmodeled keys with their pre-image digest", () =>
-    run(
+  describe("goals plan validation mapping", { concurrent: false }, () => {
+    const BLOCKING_KINDS: ReadonlyArray<GoalDoctorFindingKind> = [
+      "manifest-missing",
+      "manifest-invalid",
+      "lifecycle-mismatch",
+      "readme-status-line",
+      "goal-md-oversize",
+      "phases-terminal-but-active",
+      "reflection-frontmatter-invalid",
+    ];
+
+    it("maps every blocking doctor finding kind to at least one validation requirement", () => {
+      for (const kind of GoalDoctorFindingKind.Options) {
+        const requirements = validationRequirementsForGoalDoctorFinding(kind);
+        if (A.contains(BLOCKING_KINDS, kind)) {
+          expect(A.isReadonlyArrayNonEmpty(requirements)).toBe(true);
+        } else {
+          expect(Array.isArray(requirements)).toBe(true);
+        }
+      }
+    });
+  });
+
+  describe("goals plan human rendering", { concurrent: false }, () => {
+    it.effect("renders preserved unmodeled keys with their pre-image digest", () =>
       Effect.gen(function* () {
         const plan = yield* sealMaterializationPlan({
           mode: "adopt",
@@ -526,58 +503,59 @@ describe("goals plan human rendering", () => {
         expect(renderMaterializationPlanHuman(plan)).toContain(
           "preserve-keys goals/render-goal/ops/manifest.json: risk, steward (pre-image e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)"
         );
-      })
-    ));
-});
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 
-describe("goals bootstrap command gate", () => {
-  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+  describe("goals bootstrap command gate", { concurrent: false }, () => {
+    const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 
-  it.effect(
-    "rejects an invalid slug and defaults the plan date to the current day",
-    () =>
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const invalidSlug = yield* Effect.exit(
-            runGoalsCommand([
-              "bootstrap",
-              "--slug",
-              "Not A Slug",
-              "--title",
-              "Invalid",
-              "--mission",
-              "The slug grammar refuses this.",
-              "--plan",
-            ])
-          );
-          expectReportedExit(invalidSlug);
+    it.effect(
+      "rejects an invalid slug and defaults the plan date to the current day",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const invalidSlug = yield* Effect.exit(
+              runGoalsCommand([
+                "bootstrap",
+                "--slug",
+                "Not A Slug",
+                "--title",
+                "Invalid",
+                "--mission",
+                "The slug grammar refuses this.",
+                "--plan",
+              ])
+            );
+            expectReportedExit(invalidSlug);
 
-          // No --today: the compiler falls back to the current date rather
-          // than refusing, which is the only path that reads the clock.
-          const defaultedDate = yield* Effect.exit(
-            runGoalsCommand([
-              "bootstrap",
-              "--slug",
-              "dated-goal",
-              "--title",
-              "Dated Goal",
-              "--mission",
-              "Default the capture date from the clock.",
-              "--plan",
-              "--json",
-            ])
-          );
-          assertExitSuccess(defaultedDate, undefined);
-        })
-      ).pipe(provideScopedLayer(commandTestLayer)),
-    30_000
-  );
+            // No --today: the compiler falls back to the current date rather
+            // than refusing, which is the only path that reads the clock.
+            const defaultedDate = yield* Effect.exit(
+              runGoalsCommand([
+                "bootstrap",
+                "--slug",
+                "dated-goal",
+                "--title",
+                "Dated Goal",
+                "--mission",
+                "Default the capture date from the clock.",
+                "--plan",
+                "--json",
+              ])
+            );
+            assertExitSuccess(defaultedDate, undefined);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
 
-  it(
-    "refuses without --plan, rejects a provides/requires self-cycle, and prints a JSON plan on the happy path",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "refuses without --plan, rejects a provides/requires self-cycle, and prints a JSON plan on the happy path",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             const missingPlan = yield* Effect.exit(
               runGoalsCommand(["bootstrap", "--slug", "x-goal", "--title", "X", "--mission", "Y."])
@@ -621,20 +599,19 @@ describe("goals bootstrap command gate", () => {
             );
             assertTrue(Exit.isSuccess(happy));
           })
-        ).pipe(provideScopedLayer(commandTestLayer))
-      ),
-    30_000
-  );
-});
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
+  });
 
-describe("goals adopt command gate", () => {
-  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+  describe("goals adopt command gate", { concurrent: false }, () => {
+    const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 
-  it(
-    "refuses without --plan, prints a JSON plan for a fixture packet, and gates on packet-not-found",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
+    it.effect(
+      "refuses without --plan, prints a JSON plan for a fixture packet, and gates on packet-not-found",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
           Effect.gen(function* () {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             yield* writeProjectFile("goals/_template/ops/manifest.json", "{}\n");
@@ -658,20 +635,18 @@ describe("goals adopt command gate", () => {
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);
           })
-        ).pipe(provideScopedLayer(commandTestLayer))
-      ),
-    30_000
-  );
-});
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
+  });
 
-// The sealed design's empirical zero-write proof: git state is byte-identical
-// around compilation and snapshotting (equality, not emptiness, so a dirty
-// developer tree does not false-fail the suite).
-describe("goals plan zero-write proof", () => {
-  it(
-    "leaves git status byte-identical around compilation and snapshotting",
-    () =>
-      run(
+  // The sealed design's empirical zero-write proof: git state is byte-identical
+  // around compilation and snapshotting (equality, not emptiness, so a dirty
+  // developer tree does not false-fail the suite).
+  describe("goals plan zero-write proof", { concurrent: false }, () => {
+    it.effect(
+      "leaves git status byte-identical around compilation and snapshotting",
+      () =>
         Effect.gen(function* () {
           const repoRoot = yield* findRepoRoot();
           const porcelain = (): string =>
@@ -685,8 +660,8 @@ describe("goals plan zero-write proof", () => {
           yield* compileAdoptionPlan(snapshot, O.none());
           yield* compileMaterializationPlan(minimalInput, []);
           expect(porcelain()).toBe(before);
-        })
-      ),
-    30_000
-  );
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      30_000
+    );
+  });
 });
