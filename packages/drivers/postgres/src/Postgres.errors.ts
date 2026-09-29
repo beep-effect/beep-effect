@@ -6,7 +6,7 @@
  */
 
 import { $PostgresId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, pipe, Result } from "effect";
 import * as S from "effect/Schema";
@@ -340,7 +340,7 @@ const optionFrom = <A>(value: A | undefined): O.Option<A> => O.fromUndefinedOr(v
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
   !isCause(value) &&
   P.hasInspectableObjectShape(value) &&
-  safeBoolean(() => S.is(Defect({ includeStack: true }))(value))
+  safeBoolean(() => S.is(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))(value))
     ? optionFrom(value)
     : O.none();
 
@@ -363,7 +363,7 @@ export class PostgresError extends S.TaggedError<PostgresError>($I`PostgresError
   "PostgresError",
   {
     operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
     ...PostgresDiagnosticFields,

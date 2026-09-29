@@ -14,7 +14,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as HttpClient from "effect/http/HttpClient";
@@ -366,7 +366,7 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
 export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Underlying platform, HTTP, timeout, or schema failure when available.",

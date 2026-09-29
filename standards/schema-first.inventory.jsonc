@@ -470,16 +470,6 @@
       "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
     },
     {
-      "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 17,
-      "owner": "@beep/schema",
-      "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
-    },
-    {
       "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
       "symbol": "ChatComposerMountConfig",
       "kind": "exported-interface",

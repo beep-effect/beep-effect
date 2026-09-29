@@ -12,12 +12,14 @@ import {
   PracticeKgEpistemicStatus,
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { Path } from "effect";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
 

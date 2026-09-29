@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -45,7 +45,7 @@ const $I = $RepoAiMetricsId.create("ingest");
 export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<AiMetricsIngestError>("AiMetricsIngestError", {

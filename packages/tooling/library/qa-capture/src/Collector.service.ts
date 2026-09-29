@@ -13,7 +13,7 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
@@ -62,7 +62,7 @@ export const SERVER_MARKER_SEQ_BASE = 1000000;
 // The witness encodes its own `seq`, but only the collector knows the canonical
 // session-wide one. Re-reading the encoded line through a schema keeps the
 // rewrite schema-owned rather than a raw JSON.parse round trip.
-const EventLine = S.fromJsonString(UnknownRecord);
+const EventLine = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeEventLine = S.decodeUnknownEffect(EventLine);
 const encodeEventLine = S.encodeUnknownEffect(EventLine);
 

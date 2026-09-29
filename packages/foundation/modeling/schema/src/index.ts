@@ -321,18 +321,6 @@ export * from "./MutableHashSet.ts";
  */
 export * from "./Number.ts";
 /**
- * Opaque payload schemas (`Defect`, `OpaqueUnknown`) whose equivalence is declared always-true.
- *
- * @category schemas
- * @since 0.0.0
- */
-export * from "./Opaque.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Options.ts";
-/**
  * @since 0.0.0
  * @category validation
  */
@@ -364,42 +352,12 @@ export * from "./PosixPath.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Primitive.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./PromiseSchema.ts";
-/**
- * @since 0.0.0
- * @category schemas
- */
-export * from "./Record/index.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./RegExp.ts";
-/**
- * Nominal safe-object schema and object-keyword normalization codec.
- *
- * **Example** (Decode safe object value)
- *
- * ```ts import.meta.vitest name="Decode safe object value"
- * import { SafeObject } from "@beep/schema"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- *
- * const value = await Effect.runPromise(
- *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
- * )
- * value.enabled // => true
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -485,11 +443,6 @@ export * from "./Timezone.ts";
  * @category validation
  */
 export * from "./Toml.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Transformations.ts";
 /**
  * @since 0.0.0
  * @category validation

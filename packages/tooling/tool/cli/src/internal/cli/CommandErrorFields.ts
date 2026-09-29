@@ -17,11 +17,11 @@
  * @since 0.0.0
  */
 
-import { Defect } from "@beep/schema";
 import { Console, Effect, Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import { failWithReportedExit } from "./ExitCodeError.ts";
 
 const causeMessage = (cause: unknown): string => {
@@ -68,7 +68,7 @@ export const commandErrorFields = {
   message: S.String,
   command: S.optionalKey(S.String),
   exitCode: S.optionalKey(S.Finite),
-  cause: S.optionalKey(Defect({ includeStack: true })),
+  cause: S.optionalKey(OpaqueDefect),
 } satisfies S.Struct.Fields;
 
 /**

@@ -13,7 +13,7 @@
 
 import { PosInt } from "@beep/schema";
 import { dual } from "effect/Function";
-import type { SafeObject } from "@beep/schema/SafeObject";
+import type { SafeObject } from "../Codemode.values.ts";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";

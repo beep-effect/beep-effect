@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, Path, Redacted, Result } from "effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -212,7 +212,7 @@ export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {

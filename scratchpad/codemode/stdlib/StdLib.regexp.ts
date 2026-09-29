@@ -7,11 +7,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { dual } from "effect/Function";
-import { LiteralKit, type SafeObject } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, P, pipe, R } from "@beep/utils";
 import { type RegExpMethod, type RegExpStatic, regexpMethods } from "../Codemode.method-names.ts";
 import { isBlockedMember } from "../Codemode.tool-runtime.ts";
-import { CodeModeRegExp, makeEmptySafeObject } from "../Codemode.values.ts";
+import { CodeModeRegExp, makeEmptySafeObject, type SafeObject } from "../Codemode.values.ts";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts";
 import * as S from "effect/Schema";

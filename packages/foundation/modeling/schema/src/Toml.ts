@@ -10,7 +10,8 @@ import { Effect, flow, SchemaGetter, SchemaIssue } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { UnknownRecord } from "./Record/index.ts";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $SchemaId.create("Toml");
 

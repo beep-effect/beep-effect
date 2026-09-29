@@ -17,7 +17,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Inspectable, pipe, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -109,7 +109,7 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
   "BackendInitError",
   {
     backend: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<BackendInitError>("BackendInitError", {
@@ -154,7 +154,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
   "BackendOperationError",
   {
     backend: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
     operation: S.String,
   },

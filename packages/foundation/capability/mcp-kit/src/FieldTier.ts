@@ -19,13 +19,15 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual, identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $McpKitId.create("FieldTier");
 

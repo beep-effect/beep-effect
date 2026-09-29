@@ -8,7 +8,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, pipe, Random } from "effect";
 import { dual } from "effect/Function";
@@ -181,7 +181,7 @@ export const contextSurfaceKey: {
 export class HarnessLedgerError extends S.TaggedError<HarnessLedgerError>($I`HarnessLedgerError`)(
   "HarnessLedgerError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<HarnessLedgerError>("HarnessLedgerError", {

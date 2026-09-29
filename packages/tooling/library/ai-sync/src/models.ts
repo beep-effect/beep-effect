@@ -6,7 +6,7 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { Defect, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -791,7 +791,11 @@ export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
     sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    cause: Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    cause: S.Defect({ includeStack: true }).pipe(
+      S.overrideToEquivalence(() => () => true),
+      S.OptionFromOptionalKey,
+      SchemaUtils.withNoneDefault
+    ),
   },
   $I.annoteError<AiSyncError>("AiSyncError", {
     description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",

@@ -6,7 +6,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MutableHashMapFromSelf, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import type { SafeObject } from "@beep/schema/SafeObject";
 import { A, N, O, P } from "@beep/utils";
 import { type Effect, MutableHashMap, Result } from "effect";
 import { dual } from "effect/Function";
@@ -44,6 +43,7 @@ import {
   CodeModeURL,
   CodeModeURLSearchParams,
 } from "../Codemode.values.ts";
+import type { SafeObject } from "../Codemode.values.ts";
 
 const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.model");
 
@@ -467,7 +467,7 @@ const MemberReferenceTarget = S.declare<MemberReferenceTarget>(
  * **Example** (Point at an object field)
  *
  * ```ts
- * import { SafeObject } from "@beep/schema"
+ * import { SafeObject } from "../../../codemode/Codemode.values.ts"
  * import { MemberReference } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
  * const target = SafeObject.make({ count: 1 })

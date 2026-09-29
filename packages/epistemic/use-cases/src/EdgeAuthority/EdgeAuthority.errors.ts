@@ -15,10 +15,11 @@
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { optionalDefect } from "../internal/OptionalDefect.ts";
 
 const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.errors");
 
@@ -110,13 +111,6 @@ export const EdgeWriteOperation = EdgeWriteOperationBase.pipe(
  * @since 0.0.0
  */
 export type EdgeWriteOperation = typeof EdgeWriteOperation.Type;
-
-const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description,
-    });
 
 /**
  * Raised when a supersession cannot be applied to the version the caller named.

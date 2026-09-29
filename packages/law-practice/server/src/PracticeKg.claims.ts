@@ -23,7 +23,7 @@ import { PatentApplicationDocument } from "@beep/law-practice-domain/values/Pate
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
-import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
@@ -214,7 +214,7 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
 export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
     message: S.NonEmptyString,
   },
   $I.annoteError<PracticeKgClaimsError>("PracticeKgClaimsError", {

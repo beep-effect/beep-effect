@@ -61,7 +61,7 @@ source topology. Utility namespaces such as `SchemaUtils` may expose helper
 leaves when direct helper imports are the intended API.
 
 Public package subpaths are explicit. `SchemaUtils` helper leaves such as
-`@beep/schema/SchemaUtils/pluck` remain intentional public imports, but concept
+`@beep/schema/SchemaUtils/collectAnnotationsAt` remain intentional public imports, but concept
 role files such as `@beep/schema/Duration/Duration.schema` are private source
 topology.
 

@@ -19,7 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -460,7 +460,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<AgentEffectivenessError>("AgentEffectivenessError", {
@@ -4055,7 +4055,7 @@ const forbiddenPatterns = [
   { code: "raw-worker-draft", pattern: /draftJsDoc|@example|```ts/u },
 ] as const;
 
-const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownRecord);
+const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const maxPrivacyScanDepth = 16;
 
 const checkText = (

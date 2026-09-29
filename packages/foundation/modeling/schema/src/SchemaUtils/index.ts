@@ -24,21 +24,6 @@ export * from "./isCodecDataFirst.ts";
  * @since 0.0.0
  * @category utilities
  */
-export * from "./optional.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
-export * from "./optionalKeyWithDefaults.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
-export * from "./pluck.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
 export * from "./split.ts";
 /**
  * @since 0.0.0
@@ -55,11 +40,6 @@ export * from "./withCodecStatics.ts";
  * @category utilities
  */
 export * from "./withConstructorDefaults.ts";
-/**
- * @since 0.0.0
- * @category utilities
- */
-export * from "./withEncodeDefault.ts";
 /**
  * @since 0.0.0
  * @category utilities

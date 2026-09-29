@@ -6,13 +6,13 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $QaCaptureId.create("QaCapture.errors");
-const QaCaptureDefect = Defect({ includeStack: true });
+const QaCaptureDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true));
 const isQaCaptureDefect = S.is(QaCaptureDefect);
 type QaCaptureErrorContextInput = {
   readonly cause?: unknown;

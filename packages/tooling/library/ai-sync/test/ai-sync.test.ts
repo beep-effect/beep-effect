@@ -367,7 +367,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
     "renders generated literal domains through LiteralKit",
     Effect.fn(function* () {
       const generatedSchemas = renderGeneratedSchemas();
-      expect(generatedSchemas).toContain('import { LiteralKit, UnknownRecord } from "@beep/schema";');
+      expect(generatedSchemas).toContain('import { LiteralKit } from "@beep/schema";');
       expect(generatedSchemas).toContain("approval_policy: LiteralKit([");
       expect(generatedSchemas).toContain("sandbox_mode: LiteralKit([");
       expect(generatedSchemas).toContain("type: LiteralKit([");

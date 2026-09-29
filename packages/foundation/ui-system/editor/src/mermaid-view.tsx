@@ -8,7 +8,6 @@
 "use client";
 
 import { $EditorId } from "@beep/identity";
-import { Defect } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
@@ -47,7 +46,7 @@ export class MermaidRenderError extends S.TaggedError<MermaidRenderError>($I`Mer
   "MermaidRenderError",
   {
     message: S.String.annotateKey({ description: "User-safe diagram failure message." }),
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).annotateKey({
       description: "Optional underlying Mermaid defect retained for diagnostics.",
     }),
   },

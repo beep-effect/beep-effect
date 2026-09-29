@@ -21,8 +21,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | `SchemaUtils.withKeyDefaults` | `dual` `(self, v) => withDecodingDefaultKey<withConstructorDefault<Sch>>` | double-wiring a default for **both** make and decode | `SchemaUtils/withKeyDefaults.ts:50` |
 | `SchemaUtils.withEmptyArrayDefaults` | `(self) => …` default `A.empty<T>()` for make + missing-key decode | repeated `[]` default wiring on array fields | `SchemaUtils/withKeyDefaults.ts:114` |
 | `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` | annotated boolean field defaulting make + missing key | `O.getOrElse(O.fromUndefinedOr(...), thunkFalse)` plumbing | `Md.model.ts:1101,1468` |
-| `SchemaUtils.withEncodeDefault` | `dual` decode-only default, keeps encode strict | a decode fallback that must NOT leak into the encoded shape | `SchemaUtils/withEncodeDefault.ts:40` |
-| `SchemaUtils.optionalKeyWithDefault` | `dual` optional key + default | v4 replacement for `S.optionalWith(s, { exact, default })` | `SchemaUtils/optionalKeyWithDefaults.ts:29` |
+| `S.withDecodingDefaultTypeKey(Effect.succeed(v))` | upstream decode-only default for a missing key; encode stays strict | a decode fallback that must NOT leak into the encoded shape; the v4 form of `S.optionalWith(s, { exact, default })` | `effect/Schema` |
 
 > `withConstantDefault` / `withNoneDefault` are **constructor-only** (they wrap
 > `S.withConstructorDefault`), so the encoded/wire contract stays unchanged. Use

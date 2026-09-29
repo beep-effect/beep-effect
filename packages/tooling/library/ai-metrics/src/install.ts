@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Match, pipe } from "effect";
@@ -134,7 +134,7 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
 )(
   "AiMetricsInstallConfigurationError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     message: S.String,
   },
   $I.annoteError<AiMetricsInstallConfigurationError>("AiMetricsInstallConfigurationError", {

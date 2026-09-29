@@ -5,10 +5,12 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { ArrayOfNonEmptyStrings, UnknownRecord } from "@beep/schema";
+import { ArrayOfNonEmptyStrings } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $WorkspaceDomainId.create("entities/EmailArtifact/EmailArtifact.model");
 const pg = ProductEntity.pg;

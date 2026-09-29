@@ -668,9 +668,6 @@
   "@beep/schema/MappedLiteralKit": [
     "./packages/foundation/modeling/schema/src/MappedLiteralKit/index.ts"
   ],
-  "@beep/schema/Record": [
-    "./packages/foundation/modeling/schema/src/Record/index.ts"
-  ],
   "@beep/acp/agent": ["./packages/drivers/acp/src/AcpAgent.service.ts"],
   "@beep/acp/client": ["./packages/drivers/acp/src/AcpClient.service.ts"],
   "@beep/acp/errors": ["./packages/drivers/acp/src/Acp.errors.ts"],
@@ -766,9 +763,6 @@
   "@beep/schema/Number": [
     "./packages/foundation/modeling/schema/src/Number.ts"
   ],
-  "@beep/schema/Options": [
-    "./packages/foundation/modeling/schema/src/Options.ts"
-  ],
   "@beep/schema/PascalStr": [
     "./packages/foundation/modeling/schema/src/PascalStr.ts"
   ],
@@ -777,9 +771,6 @@
   ],
   "@beep/schema/PosixPath": [
     "./packages/foundation/modeling/schema/src/PosixPath.ts"
-  ],
-  "@beep/schema/Primitive": [
-    "./packages/foundation/modeling/schema/src/Primitive.ts"
   ],
   "@beep/schema/PromiseSchema": [
     "./packages/foundation/modeling/schema/src/PromiseSchema.ts"
@@ -820,9 +811,6 @@
     "./packages/foundation/modeling/schema/src/Timezone.ts"
   ],
   "@beep/schema/Toml": ["./packages/foundation/modeling/schema/src/Toml.ts"],
-  "@beep/schema/Transformations": [
-    "./packages/foundation/modeling/schema/src/Transformations.ts"
-  ],
   "@beep/schema/URL": ["./packages/foundation/modeling/schema/src/URL.ts"],
   "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
   "@beep/schema/Yaml": ["./packages/foundation/modeling/schema/src/Yaml.ts"],
@@ -1320,9 +1308,6 @@
   ],
   "@beep/agents-client/Chat.layer": [
     "./packages/agents/client/src/Chat.layer.ts"
-  ],
-  "@beep/schema/SafeObject": [
-    "./packages/foundation/modeling/schema/src/SafeObject/index.ts"
   ],
   "@beep/schema/JSONSchema": [
     "./packages/foundation/modeling/schema/src/JSONSchema/index.ts"
@@ -1933,9 +1918,6 @@
   ],
   "@beep/schema/FileDiff": [
     "./packages/foundation/modeling/schema/src/FileDiff.schema.ts"
-  ],
-  "@beep/schema/Opaque": [
-    "./packages/foundation/modeling/schema/src/Opaque.ts"
   ],
   "@beep/schema/SafeRemoteHost": [
     "./packages/foundation/modeling/schema/src/SafeRemoteHost.ts"

@@ -6,7 +6,7 @@
  */
 
 import { $TailscaleId } from "@beep/identity";
-import { Defect, LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $TailscaleId.create("Tailscale.errors");
@@ -70,9 +70,11 @@ export class TailscaleCommandSpawnError extends S.TaggedError<TailscaleCommandSp
   "TailscaleCommandSpawnError",
   {
     ...commandContextFields,
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Underlying platform failure raised while spawning Tailscale.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Underlying platform failure raised while spawning Tailscale.",
+      }),
   },
   $I.annoteError<TailscaleCommandSpawnError>("TailscaleCommandSpawnError", {
     description: "Failure raised when the operating system cannot spawn the Tailscale CLI.",
@@ -109,9 +111,11 @@ export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandO
   "TailscaleCommandOutputError",
   {
     ...commandContextFields,
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Underlying stream failure raised while collecting process output.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Underlying stream failure raised while collecting process output.",
+      }),
   },
   $I.annoteError<TailscaleCommandOutputError>("TailscaleCommandOutputError", {
     description: "Failure raised while collecting output from a running Tailscale process.",
@@ -196,9 +200,11 @@ export class TailscaleCommandTimeoutError extends S.TaggedError<TailscaleCommand
     timeoutMs: NonNegativeInteger.annotateKey({
       description: "Timeout duration in milliseconds.",
     }),
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Timeout defect emitted by Effect.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Timeout defect emitted by Effect.",
+      }),
   },
   $I.annoteError<TailscaleCommandTimeoutError>("TailscaleCommandTimeoutError", {
     description: "Failure raised when a Tailscale process exceeds its configured timeout.",
@@ -285,9 +291,11 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 export class TailscaleStatusParseError extends S.TaggedError<TailscaleStatusParseError>($I`TailscaleStatusParseError`)(
   "TailscaleStatusParseError",
   {
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Schema decoding failure retained for structured diagnostics.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Schema decoding failure retained for structured diagnostics.",
+      }),
   },
   $I.annoteError<TailscaleStatusParseError>("TailscaleStatusParseError", {
     description: "Failure raised when Tailscale status JSON cannot be decoded.",

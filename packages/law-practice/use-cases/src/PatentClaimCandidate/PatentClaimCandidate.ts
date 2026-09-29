@@ -9,7 +9,7 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { Defect, NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
@@ -107,7 +107,7 @@ export class PatentClaimCandidateInput extends S.Class<PatentClaimCandidateInput
 export class PatentClaimCandidateError extends S.TaggedError<PatentClaimCandidateError>($I`PatentClaimCandidateError`)(
   "PatentClaimCandidateError",
   {
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
     message: S.NonEmptyString,
   },
   $I.annoteError<PatentClaimCandidateError>("PatentClaimCandidateError", {

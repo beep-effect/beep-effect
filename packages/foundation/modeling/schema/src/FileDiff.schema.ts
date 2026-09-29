@@ -8,14 +8,13 @@
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { NonNegativeInt } from "./Int.ts";
-import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("FileDiff.schema");
 
 class InfoBase extends S.Class<InfoBase>($I`InfoBase`)(
   {
-    file: SchemaUtils.optional(S.String),
-    patch: SchemaUtils.optional(S.String),
+    file: S.optionalKey(S.String),
+    patch: S.optionalKey(S.String),
     additions: NonNegativeInt,
     deletions: NonNegativeInt,
   },

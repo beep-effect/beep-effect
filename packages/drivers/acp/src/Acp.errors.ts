@@ -6,7 +6,7 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -34,7 +34,7 @@ const $I = $AcpId.create("errors");
 export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original spawn failure cause, when one was available.",
@@ -74,7 +74,7 @@ export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError
 export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original process-exit cause, when one was available.",
@@ -115,7 +115,7 @@ export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>(
 export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original parse failure cause, when one was available.",
@@ -163,7 +163,7 @@ export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>(
 export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Original transport failure cause, when one was available.",

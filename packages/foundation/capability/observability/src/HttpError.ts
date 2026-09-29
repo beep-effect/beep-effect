@@ -27,7 +27,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { Defect, makeStatusCauseError, StatusCauseFields } from "@beep/schema";
+import { makeStatusCauseError, StatusCauseFields } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { ErrorReporter } from "effect";
 import { dual } from "effect/Function";
@@ -95,7 +95,7 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHtt
   {
     message: S.String,
     status: HttpStatus.HttpStatus4XX,
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
   },
   $I.annoteError<ClientHttpError>("ClientHttpError", {
     description: "Shared tagged error for 4xx HTTP responses.",
@@ -131,7 +131,7 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHtt
   {
     message: S.String,
     status: HttpStatus.HttpStatus5XX,
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
   },
   $I.annoteError<ServerHttpError>("ServerHttpError", {
     description: "Shared tagged error for 5xx HTTP responses.",
