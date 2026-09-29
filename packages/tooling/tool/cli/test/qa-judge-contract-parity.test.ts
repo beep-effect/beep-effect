@@ -58,6 +58,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Equal, Exit, FileSystem, HashSet, Layer, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -128,7 +129,7 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
         const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
         const verdict = yield* evaluateCitedArtifactExists(input);
 
-        expect(Exit.isSuccess(exit)).toBe(true);
+        assertTrue(Exit.isSuccess(exit));
         expect(verdict.verdict).toBe("denied");
         expect(verdict.audit.detail.checkedPaths).toEqual(input.citedPaths);
         expect(missingPathsOf(verdict)).toEqual([
@@ -153,7 +154,7 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
         const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
         const verdict = yield* evaluateCitedArtifactExists(input);
 
-        expect(Exit.isSuccess(exit)).toBe(true);
+        assertTrue(Exit.isSuccess(exit));
         expect(verdict.verdict).toBe("denied");
         expect(missingPathsOf(verdict)).toEqual(["frames/ghost.png"]);
       })

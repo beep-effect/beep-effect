@@ -96,7 +96,8 @@ Runbook: `docs/runbooks/agent-pools.md`.
   helper refs over trivial lambdas, `flow(...)` over passthrough `pipe(...)`
   callbacks, shared thunks already in scope.
 - Prefer named schema building blocks, derived `S.is(...)` guards, and
-  `LiteralKit` internal domains over ad-hoc predicate helpers. Do not add
+  named `LiteralKit` internal domains over ad-hoc predicate helpers;
+  `S.Literals` for anonymous inline unions never referenced by name. Do not add
   `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
   type parameters already.
 - Apply schema defaults when safe. Keep changes focused and testable.

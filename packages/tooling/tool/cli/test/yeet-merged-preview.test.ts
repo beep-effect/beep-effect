@@ -17,6 +17,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
 import * as O from "effect/Option";
 
@@ -167,7 +168,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "publish" }))
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -177,7 +178,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "verify", tier: "review-fix" }))
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -187,7 +188,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "verify", tier: "full" }))
       );
 
-      expect(Exit.isSuccess(exit)).toBe(true);
+      assertTrue(Exit.isSuccess(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -197,7 +198,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "verify", tier: "full" }))
       );
 
-      expect(Exit.isSuccess(exit)).toBe(true);
+      assertTrue(Exit.isSuccess(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -210,8 +211,8 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, merged: true, mode: "verify" }))
       );
 
-      expect(Exit.isFailure(publishExit)).toBe(true);
-      expect(Exit.isFailure(mergedExit)).toBe(true);
+      assertTrue(Exit.isFailure(publishExit));
+      assertTrue(Exit.isFailure(mergedExit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

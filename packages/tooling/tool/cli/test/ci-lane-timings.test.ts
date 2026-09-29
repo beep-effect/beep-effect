@@ -32,6 +32,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -447,7 +448,7 @@ describe("ci lane timings attempt filter", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -498,7 +499,7 @@ describe("ci lane timings gh api retry", () => {
       ]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isSuccess(exit)).toBe(true);
+      assertTrue(Exit.isSuccess(exit));
       expect(Exit.isSuccess(exit) ? exit.value.jobCount : -1).toBe(2);
       expect(scripted.state.spawned).toBe(4 + 3);
     })
@@ -509,7 +510,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 0, output: "x".repeat(512 * 1024 + 1) }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
       expect(scripted.state.spawned).toBe(1);
     })
@@ -520,7 +521,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 1, output: "gh: Not Found (HTTP 404)" }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exited 1: gh: Not Found (HTTP 404)");
       expect(scripted.state.spawned).toBe(1);
     })
@@ -533,7 +534,7 @@ describe("ci lane timings gh api retry", () => {
       ]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("(HTTP 422)");
       expect(scripted.state.spawned).toBe(1);
     })
@@ -551,7 +552,7 @@ describe("ci lane timings gh api retry", () => {
       yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
       const exit = yield* Fiber.join(fiber);
 
-      expect(Exit.isSuccess(exit)).toBe(true);
+      assertTrue(Exit.isSuccess(exit));
       expect(scripted.state.spawned).toBe(1 + 3);
     })
   );
@@ -561,7 +562,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner(A.replicate(BAD_RECORD_MAC, 6));
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("on every one of 5 attempts");
       expect(rendered).toContain("bad record MAC");
@@ -576,7 +577,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
       expect(scripted.state.spawned).toBe(1);
     })
@@ -599,7 +600,7 @@ describe("ci lane timings jobs pagination", () => {
       });
       const exit = yield* collectWithRetries(stalledSpawner);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("ended after 1 of 2 jobs");
     })
   );
@@ -1105,7 +1106,7 @@ describe("ci lane timing admission window", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
         "must expose a ratified required-context count (17 or 18); observed 19"
       );
@@ -1320,7 +1321,7 @@ describe("ci lane timing admission window", () => {
         collectCiLaneTimingWindow(".", windowOptions({ since: boundary, until: boundary }))
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("--since must be earlier than --until");
       expect(commands).toStrictEqual([]);
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
@@ -1335,7 +1336,7 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
         "pull_request workflow-runs pagination ended after 0 of 1 runs"
       );
@@ -1363,8 +1364,8 @@ describe("ci lane timing admission window", () => {
         runLaneTimingsCommand(["--window", "--since", "2026-09-11T00:00:00Z", "--until", "2026-09-04T00:00:00Z"])
       );
 
-      expect(Exit.isFailure(formatsExit)).toBe(true);
-      expect(Exit.isFailure(boundsExit)).toBe(true);
+      assertTrue(Exit.isFailure(formatsExit));
+      assertTrue(Exit.isFailure(boundsExit));
       expect(Exit.isFailure(formatsExit) ? formatsExit.cause.toString() : "").toContain(
         "Choose only one of --tsv or --markdown"
       );
@@ -1449,7 +1450,7 @@ describe("ci lane timing admission window", () => {
         ])
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("--until 2026-09-30T00:00:00.000Z is in the future");
       expect(rendered).toContain("Pass --preview to run a preview that is never an admission census.");
@@ -1468,7 +1469,7 @@ describe("ci lane timing admission window", () => {
         runLaneTimingsCommand(["--window", "--since", "2026-09-04T00:00:01Z", "--until", "2026-09-11T00:00:00Z"])
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("window spans 6d 23h 59m 59s, under seven days");
       expect(rendered).not.toContain("is in the future");

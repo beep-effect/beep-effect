@@ -30,28 +30,49 @@ export const permutedDirectoryReadsFileSystem: {
     })
 );
 
-export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const originalCwd = process.cwd();
-      const workingDirectory = yield* fs.makeTempDirectory();
-
-      yield* Effect.sync(() => {
-        process.chdir(workingDirectory);
-      });
-      yield* Effect.addFinalizer(() =>
-        Effect.gen(function* () {
-          yield* Effect.sync(() => {
-            process.chdir(originalCwd);
-          });
-          yield* fs.remove(workingDirectory, { force: true, recursive: true }).pipe(Effect.orDie);
-        })
-      );
-
-      return yield* use;
-    })
+/**
+ * Enters a fresh native temporary directory for the lifetime of the caller's scope.
+ *
+ * **Details**
+ *
+ * Scope finalizers restore the previous cwd before removing the temporary tree.
+ * Acquisition registers cleanup before the next interruptible operation.
+ *
+ * **Gotchas**
+ *
+ * The process cwd is shared. Consume this only from sequential test bodies.
+ *
+ * **Example** (A directory owned by one test)
+ *
+ * ```ts
+ * import { Effect, FileSystem } from "effect"
+ * import { temporaryWorkingDirectory } from "./CommandTest.ts"
+ *
+ * const writeFixture = Effect.gen(function* () {
+ *   yield* temporaryWorkingDirectory
+ *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("fixture.txt", "fixture")
+ * })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const temporaryWorkingDirectory = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const originalCwd = yield* Effect.sync(() => process.cwd());
+  const workingDirectory = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)
   );
+  yield* Effect.acquireRelease(
+    Effect.sync(() => process.chdir(workingDirectory)),
+    () => Effect.sync(() => process.chdir(originalCwd))
+  );
+  return workingDirectory;
+}).pipe(Effect.withSpan("CommandTest.temporaryWorkingDirectory"));
+
+export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
+  Effect.scoped(Effect.andThen(temporaryWorkingDirectory, use));
 
 const projectFilePath = Effect.fn("CommandTest.projectFilePath")(function* (relativePath: string) {
   const path = yield* Path.Path;

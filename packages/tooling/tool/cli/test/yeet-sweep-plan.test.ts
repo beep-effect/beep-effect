@@ -26,7 +26,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -932,7 +932,7 @@ describe("sweep branch override", () => {
   it.effect("refuses an option-like branch name instead of passing it to git", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(overrideSweepBranch(contextAt("main"), "--upload-pack=touch /tmp/pwn"));
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });

@@ -1,0 +1,12 @@
+{
+  "kind": "boolean-creep-runtime-profile-refusal/v1",
+  "reason": "profile-tree-drift",
+  "unexpectedFiles": [
+    "vendor/rg-15.0.0-override",
+    "memtrace/1790627744-2.jsonl"
+  ],
+  "expectedSourceSha": "df3b127353a95a3bf2e53b81020a3224cc209e58",
+  "runtimeBindingsUnchangedExceptAddedFiles": true,
+  "emptyReportIsNotDryEvidence": true,
+  "recovery": "Prepare a new full round with the search binary preinstalled and hash-bound, explicit memory-trace runtime handling, and a probe exercising all allowed tool families."
+}

@@ -1,11 +1,12 @@
 import { codegenCommand } from "@beep/repo-cli/commands/Codegen";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 
 const runCodegenCommand = Command.runWith(codegenCommand, { version: "0.0.0" });
 const testLayer = Layer.mergeAll(

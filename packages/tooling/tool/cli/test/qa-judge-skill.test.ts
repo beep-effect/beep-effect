@@ -1,13 +1,13 @@
 import { QaJudgeContract, QaJudgeSkillOptions, runQaJudgeSkill } from "@beep/repo-cli/commands/Qa";
 import { renderSkillMarkdown } from "@beep/skill-contract";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { vi } from "vitest";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const expectedMarkdown = Result.getOrThrow(renderSkillMarkdown(QaJudgeContract));

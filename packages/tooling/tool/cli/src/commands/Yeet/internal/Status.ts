@@ -50,6 +50,7 @@ import {
   classifyYeetCheckOutcome,
   YeetCheckSignal,
   YeetWatchCheck,
+  yeetCheckBlocksMerge,
   yeetCheckRecordInstant,
   yeetCheckRecordText,
 } from "./WatchStream.ts";
@@ -513,6 +514,7 @@ export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatu
 export class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
   {
     bucket: S.String,
+    description: S.String.pipe(S.optionalKey),
     completedAt: S.NullOr(S.String).pipe(S.optionalKey),
     link: S.NullOr(S.String).pipe(S.optionalKey),
     name: S.String,
@@ -540,6 +542,7 @@ const statusWatchCheck = (row: GhStatusCheck, required: boolean): YeetWatchCheck
   const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
   return YeetWatchCheck.make({
     name: row.name,
+    description: yeetCheckRecordText(row.description),
     outcome: classifyYeetCheckOutcome(signal),
     required,
     link: O.getOrNull(yeetCheckRecordText(row.link)),
@@ -1415,14 +1418,35 @@ const CLOSEOUT_COMMAND =
   "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
 const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
 
-const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean =>
-  pipe(
+// Retain the serialized criterion name while enforcing the complete PR check
+// policy. Count-only failures cannot receive an evidence-based exemption.
+const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean => {
+  const exemptFailures = A.filter(
+    remote.checks,
+    (check) => check.outcome === "fail" && !yeetCheckBlocksMerge(check)
+  ).length;
+  return pipe(
     O.fromUndefinedOr(remote.requiredCheckCount),
     O.exists(
       (count) =>
-        count > 0 && (remote.failingRequiredCheckCount ?? 0) === 0 && (remote.pendingRequiredCheckCount ?? 0) === 0
+        count > 0 &&
+        A.every(
+          [
+            remote.failingRequiredCheckCount,
+            remote.pendingRequiredCheckCount,
+            remote.pendingOptionalCheckCount,
+            remote.pendingCheckCount,
+          ],
+          (value) => (value ?? 0) === 0
+        ) &&
+        A.every(
+          [remote.failingCheckCount, remote.failingOptionalCheckCount],
+          (value) => (value ?? 0) <= exemptFailures
+        ) &&
+        !A.some(remote.checks, yeetCheckBlocksMerge)
     )
   );
+};
 
 const acceptableMergeStateStatuses: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
 

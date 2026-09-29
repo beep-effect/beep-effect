@@ -21,6 +21,7 @@ import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -148,7 +149,7 @@ describe("reviewed cache activation projection", () => {
           const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
             Effect.result
           );
-          expect(Result.isFailure(result)).toBe(true);
+          result.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(result))
             expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
           return true;
@@ -197,7 +198,7 @@ describe("reviewed cache activation projection", () => {
         const result = yield* projectCacheActivation(key, f.census, toolchain, activation, f.before, after).pipe(
           Effect.result
         );
-        expect(Result.isFailure(result)).toBe(true);
+        result.pipe(Result.isFailure, assertTrue);
         if (Result.isFailure(result))
           expect(result.failure.message).toBe("Activation may change only the selected task's cache flag.");
       }

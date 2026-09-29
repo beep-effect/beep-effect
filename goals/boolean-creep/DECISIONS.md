@@ -230,3 +230,45 @@ The original R32 8/6 proposal is superseded: it missed the summary implication
 and reason-specific pass conditions. Qualification/design, independent review,
 ratification, runtime implementation, and exact-main closeout remain separate
 evidence gates. No source implementation is authorized ahead of those gates.
+
+## 2026-09-28 — delegated decisions and one remaining PR
+
+Benjamin delegates judgment on all further campaign blockers and questions,
+authorizes the agent to merge its own PR through the ChatGPT Chrome extension,
+and directs that the entire remaining goal land in one PR to reduce hosted
+CI costs and queue contention. This supersedes the campaign's earlier
+Benjamin-only merge rule, packet-only ratification merge, Tier 1/Tier 2 PR
+partitioning, and separate closeout PR requirements. Preserve the dated
+historical decisions and evidence; this amendment changes the remaining workflow.
+
+Use the existing open PR #1328 for the remainder. Resolve contract and incidental
+verification blockers within the campaign using documented recommendations and
+independent review. The inherited fast-uri advisory is authorized for a narrow
+compatible lockfile update. Do not treat delegated judgment as evidence that a
+contract, review, census, implementation, or quality gate has passed.
+
+Keep two complete current-source dry census rounds and replacement independent
+zero-finding P3 before implementation. Ratify the packet under the delegated
+GATE 2 transition in this PR. Implement in dependency order with per-owner
+compatibility and guard-deletion proof, package verification and required UI QA.
+Batch pushes for substantive review or final integration rather than launching
+hosted CI for each local checkpoint. Complete the final candidate residue rounds,
+reflection and lifecycle change in the same PR. Merge only after exact-head
+quality, review closure, and merge readiness are verified, using the authorized
+Chrome extension route.
+
+After merge, verify the merged source and run both required exact-main residue
+rounds. Preserve their receipts locally and report the resulting main SHA and
+outcomes. These read-only post-merge checks do not require another PR. Completion
+is unproven until they pass; a pre-merge lifecycle change does not override a
+failed or incomplete post-merge acceptance audit. If substantive work remains,
+continue remediation rather than claiming the single-PR constraint proves success.
+
+## 2026-09-29 — push available fixes before local full proof
+
+Benjamin directs that ready fixes be pushed immediately instead of waiting for
+local proof. This supersedes the 2026-09-28 batching instruction and the local
+full-proof prerequisite for publishing. Use hosted checks and review closure
+to establish exact-head merge readiness. Keep the census, compatibility,
+independent review, implementation and exact-main acceptance requirements.
+Continue using PR #1328 for all remaining work.
