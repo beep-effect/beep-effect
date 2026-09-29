@@ -2456,3 +2456,13 @@ not begun. The queued child was interrupted, the wrapper exited and released
 its token, and preparation resumed without an outer admission wrapper.
 Checking the command's admission ownership before wrapping it would prevent
 this queue pressure. Existing running proof work was left intact.
+
+### Stable shadow receipt: derived digest tripped secret scanning
+
+Publishing the stable matrix receipt stopped in the commit hook: gitleaks
+reported `generic-api-key` for the public `runtimeKeyDigest` field. The value
+is a computed toolchain fingerprint, not a credential. Removed this redundant
+public field; the private full report retains it and the public report hash
+binds the evidence. No scanner rule or baseline was weakened. A minimal public
+receipt projection that omits redundant runtime-key fields would prevent this
+false-positive publication failure.

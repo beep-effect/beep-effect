@@ -2764,3 +2764,16 @@ attempts are retained, including an index-array assumption corrected against
 the observed `NO_SQARRAY` mode and installed debug constant. This does not
 retroactively decode older traces or prove complete semantic closure, signed
 remote reuse, representative shadow acceptance or tuple qualification.
+
+### Patched dependency profile: stable full local shadow matrix
+
+The [stable matrix review](research/current-patched-shadow-stable.json) records
+67 observations, 40 passing checks and ten representative local shadow decisions
+at `b410da2b6d`, using Turbo 2.11.4 and the patched dependency snapshot.
+Separate report review confirms disabled-cache fresh authority, fresh producers,
+local replay hits, equal logs, fresh dependency execution and expected hash
+changes. Configuration mutations and non-execution controls pass. Retained
+reports preserve exact bindings; disposable fixture roots were scoped and
+removed. This pinned-native local matrix does not prove signed transport or
+ordinary-entrypoint semantic closure. Exact canary remains a separate run; no
+tuple is promoted. The receipt postdates the 112-review census attachment.
