@@ -1,11 +1,12 @@
 import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Ref, Result } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });

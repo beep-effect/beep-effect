@@ -1,13 +1,14 @@
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 

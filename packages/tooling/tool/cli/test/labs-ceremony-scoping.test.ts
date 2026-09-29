@@ -3,10 +3,11 @@ import {
   isModuleTagScannedPathForTesting,
   planCoverageAffectedScope,
 } from "@beep/repo-cli/test/Quality";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodePath from "@effect/platform-node/NodePath";
+import { describe, expect } from "@effect/vitest";
 import { Effect, Path } from "effect";
-import { describe, expect, it } from "vitest";
 
 const labOwner = CoverageScopeOwner.make({
   packageName: "@beep/lab-demo",

@@ -1,6 +1,8 @@
 import { renderTruncatedLines } from "@beep/repo-cli/test/Artifacts";
 import { diffMembership, diffTotals, enforceRatchet, RatchetTotalsDiff } from "@beep/repo-cli/test/Ratchet";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Data, Effect, Exit, Order } from "effect";
 import * as O from "effect/Option";
 
@@ -99,7 +101,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
       if (Exit.isFailure(exit)) {
         expect(exit.cause.toString()).toContain("baseline grew");
       }
@@ -117,7 +119,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      expect(Exit.isSuccess(exit)).toBe(true);
+      assertTrue(Exit.isSuccess(exit));
     })
   );
 });

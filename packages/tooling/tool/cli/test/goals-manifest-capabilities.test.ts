@@ -10,6 +10,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -207,7 +208,7 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
       ];
 
       for (const input of invalidInputs) {
-        expect(Exit.isFailure(yield* Effect.exit(decodeGoalManifest(input)))).toBe(true);
+        assertTrue(Exit.isFailure(yield* Effect.exit(decodeGoalManifest(input))));
       }
 
       const selfCycleError = yield* decodeGoalManifest({

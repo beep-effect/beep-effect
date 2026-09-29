@@ -49,6 +49,7 @@ import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platf
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
@@ -163,7 +164,7 @@ const rangeRejectingSpawnerLayer = (spawned: Array<string>) =>
   );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
@@ -984,7 +985,7 @@ export const ProofFixture = 1;
           }).pipe(provideScopedLayer(rangeRejectingSpawnerLayer(spawned)))
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
       })
     );
@@ -1147,7 +1148,7 @@ export const ProofFixture = 1;
           }).pipe(provideScopedLayer(recordingSpawnerLayer(spawned)))
         );
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        assertTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
           expect(Cause.squash(exit.cause)).toMatchObject({
             _tag: "DomainError",
@@ -1720,7 +1721,7 @@ export const ProofFixture = 1;
           const aggregatedPath = path.join(tmpDir, "docs", "generated", "foundation", "modeling", "schema");
           const aggregatedExists = yield* fs.exists(aggregatedPath);
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           expect(aggregatedExists).toBe(false);
         })
       )
@@ -3860,7 +3861,7 @@ export const parseValue = (value: string): string => value.trim();
             sourceQualityReport: "quality.json",
           }).pipe(provideScopedLayer(RunpodTestLayer), Effect.exit);
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
           expect(yield* Ref.get(stoppedPodIds)).toEqual(["pod-recovered"]);
           expect(yield* Ref.get(deletedPodIds)).toEqual(["pod-recovered"]);
         })
@@ -4009,7 +4010,7 @@ export const parseValue = (value: string): string => value.trim();
 
           const exit = yield* analyzePackageDocumentation(target!).pipe(Effect.exit);
 
-          expect(Exit.isFailure(exit)).toBe(true);
+          assertTrue(Exit.isFailure(exit));
         })
       )
     ));

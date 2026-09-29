@@ -40,6 +40,7 @@ import { A, thunk } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -185,7 +186,7 @@ describe("commands/Qa round resolution", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -199,7 +200,7 @@ describe("commands/Qa round resolution", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });
@@ -242,7 +243,7 @@ describe("commands/Qa live-session control", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });
@@ -394,7 +395,7 @@ describe("commands/Qa report command", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 });
@@ -530,7 +531,7 @@ describe("commands/Qa judge ingest and lint", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 
@@ -598,7 +599,7 @@ describe("commands/Qa judge ingest and lint", () => {
           })
         )
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     })
   );
 

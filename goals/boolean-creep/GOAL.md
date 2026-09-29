@@ -45,12 +45,11 @@ Workflow:
 4. Merge live `origin/main` forward before each review/publish. Apply serially
    by landing tier; set an instance `applied` in its implementation PR; use
    Yeet repair, full verify, publish, and monitor to exact-head merge-ready.
-5. Preserve unrelated user/worktree changes; never merge PRs — Benjamin
-   merges.
-6. After Benjamin merges every implementation, run residue rounds on exact
-   `main` until two consecutive rounds add no qualified record. Then use the
-   `reflect` skill and canonical Goals status transition; publish and verify the
-   separate closeout PR on merged `main`.
+5. Preserve unrelated work. The 2026-09-28 decision authorizes agent merge
+   through the ChatGPT Chrome extension; use one remaining PR (#1328).
+6. Include implementation, final candidate rounds, reflection and lifecycle
+   change in that PR. After merge, run two exact-main dry rounds and verify
+   completion. Follow the 2026-09-28 decision for consolidated landing.
 
 Acceptance:
 
@@ -74,7 +73,8 @@ git diff --check -- goals/boolean-creep
 Atomic decoded TypeScript migrations and reviewed Tier 2 compatibility codecs
 are authorized. Stop before changing encoded property names/values/defaults,
 accepted legitimate payloads, dependencies, lockfiles, or generated files
-unless the reviewed design explicitly requires and proves it.
+unless reviewed design requires it or delegated judgment under the 2026-09-28
+amendment authorizes the necessary change with evidence.
 
 Done only when acceptance passes and verification is complete, or when a
 blocker is reported with file/command evidence.

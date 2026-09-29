@@ -1,8 +1,9 @@
 import { runTerseEffectRules, TerseEffectRulesOptions } from "@beep/repo-cli/test/Laws";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   NodeTestLayer,
   readProjectFile,

@@ -1,15 +1,15 @@
 import { collectSchemaTopologyViolations } from "@beep/repo-cli/test/Lint";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { layer } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, flow, Result } from "effect";
 import * as S from "effect/Schema";
-import { expect } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
-layer(NodeServices.layer)("schema topology lint", (it) => {
+it.layer(NodeServices.layer, { timeout: "5 seconds" })("schema topology lint", (it) => {
   it.effect(
     "keeps @beep/schema on the canonical topology",
     Effect.fn("SchemaTopologyTest.keepsCanonicalTopology")(function* () {

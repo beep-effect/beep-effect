@@ -6,12 +6,14 @@ import {
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
@@ -26,7 +28,7 @@ const testLayer = Layer.mergeAll(
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  expect(Exit.isFailure(exit)).toBe(true);
+  assertTrue(Exit.isFailure(exit));
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -72,7 +74,7 @@ describe("goals doctor baseline ratchet", () => {
             yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
             yield* writeBaseline([]);
             const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
@@ -104,7 +106,7 @@ describe("goals doctor baseline ratchet", () => {
             yield* writeDriftedPacket("demo");
             yield* writeBaseline(["demo lifecycle-mismatch"]);
             const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

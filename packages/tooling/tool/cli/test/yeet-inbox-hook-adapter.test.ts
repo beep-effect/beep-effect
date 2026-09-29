@@ -7,8 +7,9 @@ import {
   YeetInboxObservedRowKind,
   YeetInboxWaveExemptRowKind,
 } from "@beep/repo-cli/test/Yeet";
+import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";

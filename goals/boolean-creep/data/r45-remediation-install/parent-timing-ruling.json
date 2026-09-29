@@ -1,0 +1,44 @@
+{
+  "kind": "boolean-creep-parent-timing-ruling/v1",
+  "status": "parent-confirmed",
+  "date": "2026-09-29",
+  "round": "refresh-2026-09-29-r45-main-dcf643",
+  "ruling": "Install the independently reviewed R45 CAP-1/CAP-2, AM-3 and DAF-2 canonical corrections after the historical partial closeout, instead of after full R45 composition.",
+  "reason": "R45 is sealed as historical and incomplete (closeout 79ee8264ae, binding repair 2f8e603b28). Its recovery was superseded when main f590617f15 changed its frozen inputs, so full R45 composition can no longer occur.",
+  "changes": ["install timing"],
+  "unchanged": [
+    "correction contracts",
+    "review verdicts and acceptances",
+    "reviewed candidate bytes",
+    "record ids and statuses"
+  ],
+  "supersededTimingConditions": [
+    {
+      "source": "schema remediation parent acceptance",
+      "sha256": "f9ed983ebfa7b32416023d410447dc4e58ce32c486e7a2206c96576414c63d18",
+      "condition": "installAfterFullRoundComposition: true"
+    },
+    {
+      "source": "duckdb remediation parent acceptance",
+      "sha256": "0ca60b780427e894254521649493590d5c496fb3e63b3c18e62656dcbf224724",
+      "condition": "installAfterFullRoundComposition: true"
+    }
+  ],
+  "satisfiedTimingConditions": [
+    {
+      "source": "capability remediation review",
+      "sha256": "a5d756db7c65b429ad4245c040d1edce04918a73f809837857853413a4898674",
+      "condition": "Install only after the live census reaches terminal state and its receipts are sealed.",
+      "evidence": "R45 terminal and sealed at 2f8e603b28"
+    }
+  ],
+  "capabilityAcceptanceNote": "CAP-1/CAP-2 have an independent review with correctionsAccepted true and no separate parent remediation acceptance. Confirming this ruling is the parent's authorization to install them; it does not re-review or widen their contract.",
+  "credit": {
+    "P3": false,
+    "dry": false,
+    "implementation": false,
+    "census": false,
+    "currentSourceCoverage": false
+  },
+  "freshCensusRequired": true
+}

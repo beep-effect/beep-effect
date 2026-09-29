@@ -110,12 +110,16 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
   `standards/jsdoc-documentation.inventory.md`,
   `standards/schema-first.inventory.jsonc`.
 - Measure: `bun run tsc -p <pkg>/tsconfig.json --noEmit --extendedDiagnostics
-  --tsBuildInfoFile <fresh file>` on the three baseline packages before and
-  after, same compiler (`7.0.2+effect-tsgo` line), fresh build-info per run.
-  The committed baseline sample is the verification supplement's
+  --singleThreaded --tsBuildInfoFile <fresh file>` on the three baseline
+  packages before and after, same compiler (`7.0.2+effect-tsgo` line), fresh
+  build-info per run. The single-checker count (the same as `--checkers 1`) is
+  the gate; the default run uses four checkers, varies with the file
+  partition, and is reported as advisory beside check time (goal-time ruling
+  2026-09-29). The verification supplement's 2026-09-12 sample
   (`explorations/effect-schema-parity/research/performance-verification-supplement.md:34-38`:
-  1,307,910 / 0.529 s, 7,786,120 / 3.717 s, 1,289,820 / 0.659 s), not the
-  earlier `performance-baseline.md` run; commands in both files.
+  1,307,910 / 0.529 s, 7,786,120 / 3.717 s, 1,289,820 / 0.659 s) was taken
+  in default mode at `51d4a2f08a` and stays historical; commands in both
+  files.
 - One PR, about 250 files; expected under the Yeet capture cap.
 
 ## P3 — Retirement train
@@ -217,12 +221,12 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
   keys go to free functions; the mechanism and
   `SchemaUtils/internal/staticDescriptors.ts` retire with their last user.
 - Extend `commands/Quality/CheckCensus.ts` rows with `instantiations` and
-  `checkTimeMs`; commit the baseline from the verification supplement's
-  2026-09-12 sample, measured at `51d4a2f08a` and kept at that sha (`@beep/schema` 1,307,910 / 0.529 s; repo-cli
-  7,786,120 / 3.717 s; law-practice-domain 1,289,820 / 0.659 s;
-  `performance-verification-supplement.md:34-38`, same compiler, fresh
-  build-info) and compare on every run: instantiations are the hard gate,
-  check time is advisory within a 5% band (goal-time ruling 2026-09-16);
+  `checkTimeMs`; commit a baseline re-measured `--singleThreaded` (goal-time
+  ruling 2026-09-29; the verification supplement's 2026-09-12 default-mode
+  sample at `51d4a2f08a`, `performance-verification-supplement.md:34-38`,
+  stays historical) and compare on every run: single-checker instantiations
+  are the hard gate, check time is advisory within a 5% band (goal-time
+  rulings 2026-09-16 and 2026-09-29);
   mirror one or two suites from
   `.repos/effect/packages/effect/typeperf/suites/schema`.
 - Drive `bun run beep lint schema-first` parity backlog to zero.

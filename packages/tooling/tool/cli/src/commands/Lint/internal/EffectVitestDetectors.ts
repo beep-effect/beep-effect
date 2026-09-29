@@ -243,7 +243,14 @@ const isBooleanAssertion = (call: CallExpression, imports: EffectVitestImports):
     "assert",
   ]);
 const isAssertion = (call: CallExpression, imports: EffectVitestImports): boolean =>
-  isExpectCall(call, imports) || isBooleanAssertion(call, imports);
+  isExpectCall(call, imports) ||
+  isBooleanAssertion(call, imports) ||
+  O.exists(
+    terminalPipeStage(call, imports),
+    (stage) =>
+      Node.isExpression(stage) &&
+      isProvenanceExpression(stage, imports, ["@effect/vitest/utils"], "utils", ["assertTrue", "assertFalse"])
+  );
 const nearestTestCallback = (node: MorphNode, imports: EffectVitestImports): O.Option<EffectVitestFunctionNode> =>
   O.map(enclosingTest(node, imports), ({ callback }) => callback);
 
@@ -263,7 +270,7 @@ const assertedOutcome = (call: CallExpression, imports: EffectVitestImports): bo
       callbackCalls(callback),
       (candidate) =>
         isAssertion(candidate, imports) &&
-        A.some(candidate.getArguments(), (argument) =>
+        A.some([candidate.getExpression(), ...candidate.getArguments()], (argument) =>
           A.some(
             Node.isIdentifier(argument) ? [argument] : argument.getDescendantsOfKind(SyntaxKind.Identifier),
             (reference) => O.exists(imports.resolveBinding(reference), (binding) => binding === declaration)

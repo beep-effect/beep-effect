@@ -91,11 +91,12 @@ Additional checks with no law counterpart below:
 50. Do not use native `fetch` in production/tooling source. Use `HttpClient` from `effect/http` and provide platform client layers (Bun: `BunHttpClient.layer`).
 51. Named or reused domain constraints must be modeled as schemas first; prefer built-in schema constructors/checks before `S.makeFilter`, then derive guards with `S.is(...)`.
 52. Reusable `S.makeFilter`, `S.makeFilterGroup`, and reusable built-in check blocks must include `identifier`, `title`, and `description`; `message` stays user-facing.
-53. Use `LiteralKit` for internal literal domains when `.is`, `.thunk`, `$match`, or annotation-bearing schema values are part of the design.
+53. Use `LiteralKit` for named internal literal domains, especially when `.Enum`, `.is`, `$match`, `.toTaggedUnion`, or annotation-bearing schema values are part of the design; use `S.Literals` for anonymous inline unions never referenced by name.
 54. Prefer `P.isTagged("Tag")` over manual `_tag` guard helpers built from `P.hasProperty`, `P.isObject`, or inline `_tag` string checks.
 55. When a matcher is the function body or a reusable helper, prefer `Match.type<T>().pipe(...)` / `Match.tags(...)` over `Match.value(...)`.
 56. At logging/recovery boundaries, render causes with `Cause.pretty(...)` or `Cause.prettyErrors(...)` instead of ad-hoc `String(error)` fallback chains.
 57. Prefer the tersest equivalent helper form when behavior is unchanged: direct helper refs over trivial wrapper lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
+58. Where upstream covers a `foundation/modeling` concept's intent, its covered facets retire in the same PR that migrates their consumers, with no alias; the whole concept retires unless the lines reading its uncovered members outnumber the lines using its covered facets (ADAPT, per the facet census). Do not add a concept upstream already covers (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling"; effect-laws-v1 law 24).
 
 ## Always / Never Examples (load on demand)
 

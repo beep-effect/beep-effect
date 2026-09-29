@@ -217,6 +217,7 @@ export const yeetCheckRecordInstant = (value: string | null | undefined): O.Opti
 export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   {
     name: S.NonEmptyString,
+    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     outcome: YeetCheckOutcome,
     required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     link: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
@@ -232,10 +233,50 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   })
 ) {}
 
-const instantMillis = (instant: string): number =>
-  O.getOrElse(O.map(DateTime.make(instant), DateTime.toEpochMillis), () => Number.POSITIVE_INFINITY);
+/**
+ * Whether one reported check prevents merge readiness.
+ *
+ * **Details**
+ * Pending checks and failures block regardless of heavy-tier admission or
+ * required-check classification. Only an optional Vercel deployment with an
+ * explicit rate-limit description is exempt; missing evidence fails closed.
+ *
+ * **Example** (An optional heavy failure blocks)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetCheckBlocksMerge } from "@beep/repo-cli/test/Yeet";
+ *
+ * yeetCheckBlocksMerge(YeetWatchCheck.make({
+ *   name: "Heavy / Coverage Regression",
+ *   outcome: "fail",
+ *   required: false,
+ * })); // true
+ * ```
+ *
+ * @param check - The classified check and its original failure description.
+ * @returns Whether the check blocks readiness under the repository merge policy.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetCheckBlocksMerge = (check: YeetWatchCheck): boolean =>
+  check.outcome === "pending" ||
+  (check.outcome === "fail" &&
+    !(
+      !check.required &&
+      /^Vercel\s*[-–—]\s*\S/u.test(check.name) &&
+      O.exists(check.description, (description) =>
+        /^Deployment rate limited\s*[-–—]\s*retry in \d+ (?:seconds?|minutes?|hours?|days?)\.?$/iu.test(description)
+      )
+    ));
 
-const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
+const instantOrder: Order.Order<string> = Order.mapInput(
+  Order.Number,
+  flow(
+    DateTime.make,
+    O.map(DateTime.toEpochMillis),
+    O.getOrElse(() => Number.POSITIVE_INFINITY)
+  )
+);
 
 const headRedOrder: Order.Order<YeetHeadRed> = Order.mapInput(instantOrder, (red: YeetHeadRed) => red.at);
 

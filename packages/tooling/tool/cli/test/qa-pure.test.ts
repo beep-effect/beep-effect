@@ -85,6 +85,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -216,7 +217,7 @@ describe("commands/Qa Qa.session pure helpers", () => {
       const exit = yield* Effect.exit(
         resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -225,7 +226,7 @@ describe("commands/Qa Qa.session pure helpers", () => {
       const exit = yield* Effect.exit(
         resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
       );
-      expect(Exit.isFailure(exit)).toBe(true);
+      assertTrue(Exit.isFailure(exit));
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 });
@@ -695,11 +696,11 @@ describe("commands/Qa JudgeCheck citation collection", () => {
       const clean = yield* Effect.exit(
         raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))
       );
-      expect(Exit.isSuccess(clean)).toBe(true);
+      assertTrue(Exit.isSuccess(clean));
       const dirty = yield* Effect.exit(
         raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [9], missingPaths: [] }))
       );
-      expect(Exit.isFailure(dirty)).toBe(true);
+      assertTrue(Exit.isFailure(dirty));
     })
   );
 });
