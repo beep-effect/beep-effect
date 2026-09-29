@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { normalizedTokens } from "../../../../internal/cli/Flags.ts";
 import { GhActor, GhComment } from "../../../../internal/github/index.ts";
-import { QualityIssue, QualityIssueRouting } from "../../Yeet.schemas.ts";
+import { QualityIssue, QualityIssueCategory, QualityIssueRouting } from "../../Yeet.schemas.ts";
 import {
   parseYeetReviewBodySignal,
   YeetReviewBodySignalInput,
@@ -196,6 +196,46 @@ export const reviewFollowUpThreadIssue = (thread: GhReviewThread): QualityIssue 
     `Unanswered reviewer follow-up on a resolved PR review thread at ${reviewThreadLocation(thread)}.`,
     reviewThreadEvidence(thread)
   );
+
+/**
+ * Whether a closeout issue was raised by a review thread rather than a bot gate.
+ *
+ * **Details**
+ *
+ * Closeout reports carry two kinds of blocking issue in one list: those a
+ * review thread raised (an unresolved thread, an unanswered follow-up, or the
+ * actionable-thread count gate), all categorised `pr-review`, and those a
+ * non-thread gate raised, such as the Greptile score and issue-count gates.
+ * Merge readiness charges the first kind to `threads-resolved` and the second
+ * to `closeout-gates-passed`; reading the category here keeps every reader of
+ * a closeout report on the same split.
+ *
+ * **Example** (Split closeout issues by source)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { closeoutIssueFromReviewThread, gateIssues, GreptileSummary, PrCloseoutOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * const options = PrCloseoutOptions.make({
+ *   bots: "greptile",
+ *   requireGreptileIssues: 0,
+ *   requireGreptileScore: "5/5",
+ *   requireReviewComments: 0,
+ *   retriggerGreptile: false
+ * })
+ * const [threadGate, scoreGate] = gateIssues(options, 1, GreptileSummary.make({ issueCount: 0 }))
+ *
+ * strictEqual(threadGate !== undefined && closeoutIssueFromReviewThread(threadGate), true)
+ * strictEqual(scoreGate !== undefined && closeoutIssueFromReviewThread(scoreGate), false)
+ * ```
+ *
+ * @param issue - One blocking issue from a closeout report.
+ * @returns Whether a review thread raised the issue.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const closeoutIssueFromReviewThread = (issue: QualityIssue): boolean =>
+  QualityIssueCategory.is["pr-review"](issue.category);
 
 const newestCommentFacts = (
   author: GhActor | null | undefined,

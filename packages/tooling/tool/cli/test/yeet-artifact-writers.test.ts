@@ -100,6 +100,7 @@ const blockedMergeReady = YeetMergeReady.make({
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    closeoutGatesPassed: true,
     greptileScore: O.some("5/5"),
   }),
 });
