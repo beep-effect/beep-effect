@@ -31,7 +31,9 @@ Scope:
   `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/**`, every
   consumer of a retired or trimmed concept, tracked generated baselines under
   `standards/`, skill and agent prose naming LiteralKit.
-- Out: the 77 KEEP concepts; persisted or externally served encodings
+- Out: the 77 KEEP concepts (SchemaUtils is one ADAPT concept outside the
+  totals: 39 exports, 32 DELETE, 4 ADAPT, 3 KEEP, per the 2026-09-28
+  census); persisted or externally served encodings
   (migration goals); new `@beep/schema` abstractions; the user's global rule
   files; a new workspace package; graft, `.repos/effect` or LLM dependencies
   in hosted CI.

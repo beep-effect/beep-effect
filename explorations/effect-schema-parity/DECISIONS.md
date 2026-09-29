@@ -607,3 +607,72 @@ inventory to `referenceHead` (moves nightly, so the fixture would never
 reproduce); folding compiler adoption into the parity goal (mixes a perf
 experiment into a deletion train); censusing only the SchemaUtils statics
 (leaves `withNoneDefault`, the largest surface, unjudged).
+
+## 2026-09-28 — Schema compilers: defer
+
+**Question:** After the two D6 spikes
+(`research/2026-09-28-compiler-evaluation.md`), should the repo adopt,
+defer or reject Effect's experimental schema compilers (`SchemaCompiler`,
+`SchemaJITCompiler`, `SchemaAOTCompiler`)?
+
+**Answer:** Defer, ruled by the operator in the align grill on 2026-09-28.
+No production adoption and, per D8, no `effect-schema-compilers` goal. The
+MAP gate "upstream ships a schema compiler surface" stays live with three
+re-entry triggers:
+
+- a measured bulk hot path that decodes transformation-free wire shapes
+  (ingest, JSONL or row fan-out);
+- upstream lifts the `Declaration` exclusion or ships `Suspend`-following
+  AOT;
+- the compiler API leaves `@stability unstable`.
+
+At re-entry the cheapest experiment is the global side-effect import
+`effect/schema/SchemaJITCompiler/enable` on one server entry point, behind a
+flag: no package, no law change, no codegen. Browser and desktop AOT stays a
+separate question for oip-web and the Tauri shells.
+
+**Rationale:** The spikes were taken under load 33–66, so only per-pass
+ratios count, not absolute throughput. A transformation-free wire struct
+array gains about 3.7x under both JIT and AOT. Class rows and rows with
+transformations gain 1.2–1.4x with wide ranges: every `S.Class` is a
+`Declaration` the code generator never emits, and a child that carries
+`encoding` strips its parent's fast validator (`codegen.ts:34`, `:45-47`,
+`:135`). The recursive Pandoc decode shows no gain on any path: 102
+Declarations and 7 Suspends fall back, and AOT does not follow `Suspend`
+(`SchemaAOTCompiler.ts:141-177`). JIT runs through `globalThis.Function` and
+every production CSP in the repo blocks eval (oip-web, professional-desktop,
+semantica lab, api-docs lab), where it measured at interpreter speed. AOT is
+CSP-safe but needs a JavaScript build-artifact convention the repo does not
+have, regenerated on every schema or Effect bump. The API is
+`@stability unstable`, first released in rc.116, and runtime hot-path perf
+is already sequenced after the parity close ("Performance", 2026-09-12).
+Rejected: adopt the global JIT now (dev/prod divergence under CSP, gains
+confined to shapes the repo rarely decodes, unstable API); adopt AOT through
+codegen-kit now (an `ExtraRenderer` is a shape stretch, no `.js` artifact
+precedent, per-bump churn, explicit targets past every `Suspend` and private
+schema, no gain on the recursive model); a `foundation/capability` wrapper
+package (fails `standards/architecture/07-non-slice-families.md:66-89`
+criteria (a) and (c)); reject outright (the wire-struct 3.7x is real and
+upstream is still moving, so a dated deferral with measurable triggers costs
+nothing).
+
+## 2026-09-28 — isCodecDataFirst: keep
+
+**Question:** The 2026-09-14 "SchemaUtils: ship the selective-statics goal,
+then retire statics" entry named `collectAnnotationsAt` as the only
+SchemaUtils survivor. The 2026-09-28 census
+(`research/2026-09-28-schemautils-census.md`) rates `isCodecDataFirst`
+KEEP. Which holds?
+
+**Answer:** Keep `isCodecDataFirst`, ruled by the operator in the align grill
+on 2026-09-28. This supersedes the 2026-09-14 entry for this symbol only;
+`withCodecStatics` still retires in P5 and `collectAnnotationsAt` still
+survives.
+
+**Rationale:** Effect has no equivalent at `inventoryPin`: `Function.dual`
+accepts an `isDataFirst` predicate, and this export is that predicate
+specialised to `ParseOptions`. It has 42 production files and 123 uses, every
+one the repo's `dual(SchemaUtils.isCodecDataFirst, <bound decoder>)`
+convention, so there is nothing upstream to converge on. Rejected: retire it
+with the statics (no target to migrate 123 uses to); inline the predicate at
+each call site (duplicates one function 42 times).
