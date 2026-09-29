@@ -20718,14 +20718,6 @@
       "description": "A reversible CLDR territory code to English display-name codec."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Thunk.ts",
-      "symbol": "ThunkUnknown",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "ThunkUnknown",
-      "description": "A schema for a function that returns a value."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
       "symbol": "EpochMillis",
       "kind": "brand",
