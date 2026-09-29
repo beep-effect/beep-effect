@@ -1,4 +1,4 @@
-# GOAL: Bring @beep/schema to parity with upstream Effect main snapshot e5f7d12af9 (rc.118 line)
+# GOAL: Bring @beep/schema to parity with upstream Effect main snapshot df77fff939 (rc.118 line)
 
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths

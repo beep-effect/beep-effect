@@ -51,6 +51,20 @@ machine ids, quote only the minimal identifying error text.
   decision for the explorations convention. Also: route a cheap-gates red to
   the lane that actually failed, not the first lane in the repair hint.
 
+## 2026-09-29 — An Effect snapshot bump merged without regenerating the inventory
+
+- **What I was doing:** Starting P0 from the `/goal` launcher.
+- **Evidence:** PR #1330 moved the root `package.json` catalog `effect` to
+  `df77fff939` while every inventory row and the `INDEX.md` pin line still
+  read `e5f7d12af9`. The SPEC stop condition ("regenerate the inventory
+  directory for the new sha in the bump PR itself before any further phase
+  PR opens") held P0 until a catch-up PR regenerated the rows.
+- **What would have prevented it:** A gate the bump PR cannot miss. Until
+  P1 ships `lint effect-schema-inventory --check`, the rule lives only in
+  packet prose that the effect bump lane never reads. P1 should run the
+  pin check (catalog sha equals the fixture pin line) as a cheap gate in
+  hosted CI, so a bump PR goes red until it regenerates.
+
 ## 2026-09-29 — Fresh lane gives invalid `--extendedDiagnostics` numbers until the dependency closure is built
 
 - **What I was doing:** P2 before-measurement on a newly cut lane, using the
