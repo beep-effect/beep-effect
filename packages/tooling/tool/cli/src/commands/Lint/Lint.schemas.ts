@@ -192,16 +192,19 @@ export const SchemaFirstParityRuleId = SchemaFirstPolicyRuleId.pick([
 export type SchemaFirstParityRuleId = typeof SchemaFirstParityRuleId.Type;
 
 /**
- * Line-free anchor that identifies one parity occurrence inside a file.
+ * Content anchor that identifies one parity occurrence inside a file.
  *
  * **Details**
  *
- * The anchor is `<lexical path>::<evidence>#<ordinal>`. The lexical path names
- * the enclosing declarations and property keys (for example `Widget.title`),
- * the evidence names the flagged helper or guarded type, and the ordinal counts
- * identical path/evidence pairs in document order. Inserting or deleting lines
- * elsewhere in the file leaves every anchor unchanged; renaming the enclosing
- * declaration or adding another identical occurrence changes membership.
+ * The anchor is `<lexical path>::<export>@<hash>`, with `#<n>` appended only
+ * to the second and later of byte-identical calls on one path. The lexical
+ * path names the enclosing declarations and property keys (for example
+ * `Widget.title`) for display; the export names the flagged wrapper; the hash
+ * is the first 12 hex digits of the SHA-256 of the wrapper call's tokens
+ * (widened to the call that receives it as an argument), ignoring whitespace,
+ * comments, trailing commas and quote style. Line shifts and reformatting
+ * leave every anchor unchanged, and adding or removing one occurrence never
+ * re-keys another unless the two calls are byte-identical on the same path.
  *
  * **Example** (Validate an occurrence anchor)
  *
@@ -210,16 +213,20 @@ export type SchemaFirstParityRuleId = typeof SchemaFirstParityRuleId.Type;
  * import * as S from "effect/Schema"
  *
  * const isAnchor = S.is(SchemaFirstOccurrenceAnchor)
- * console.log(isAnchor("Widget.title::withNoneDefault#1")) // true
- * console.log(isAnchor("Widget.title:12")) // false
+ * console.log(isAnchor("Widget.title::withNoneDefault@3f2a9c41b0de")) // true
+ * console.log(isAnchor("Widget.title::withNoneDefault@3f2a9c41b0de#2")) // true
+ * console.log(isAnchor("Widget.title::withNoneDefault#1")) // false
  * ```
  *
  * @category schema
  * @since 0.0.0
  */
-export const SchemaFirstOccurrenceAnchor = S.String.check(S.isPattern(/^[^\n]+::[A-Za-z_$][\w$.]*#[1-9]\d*$/u)).pipe(
+export const SchemaFirstOccurrenceAnchor = S.String.check(
+  S.isPattern(/^[^\n]+::[A-Za-z_$][\w$]*@[0-9a-f]{12}(?:#(?:[2-9]|[1-9]\d+))?$/u)
+).pipe(
   $I.annoteSchema("SchemaFirstOccurrenceAnchor", {
-    description: "Line-free `<lexical path>::<evidence>#<ordinal>` anchor for one parity occurrence in a file.",
+    description:
+      "Content anchor `<lexical path>::<export>@<hash>` (plus `#<n>` for byte-identical calls on one path) for one parity occurrence in a file.",
   })
 );
 
@@ -231,8 +238,8 @@ export const SchemaFirstOccurrenceAnchor = S.String.check(S.isPattern(/^[^\n]+::
  * ```ts
  * import type { SchemaFirstOccurrenceAnchor } from "@beep/repo-cli/commands/Lint"
  *
- * const anchor: SchemaFirstOccurrenceAnchor = "Widget.cause::Defect#1"
- * console.log(anchor) // "Widget.cause::Defect#1"
+ * const anchor: SchemaFirstOccurrenceAnchor = "Widget.cause::Defect@9b1c02de77aa"
+ * console.log(anchor) // "Widget.cause::Defect@9b1c02de77aa"
  * ```
  *
  * @category type-level
@@ -257,7 +264,7 @@ export type SchemaFirstOccurrenceAnchor = typeof SchemaFirstOccurrenceAnchor.Typ
  * const row = SchemaFirstBacklogRow.make({
  *   ruleId: "SFV4-default-wrapper",
  *   file: "packages/example/src/Widget.ts",
- *   occurrences: ["Widget.title::withNoneDefault#1"]
+ *   occurrences: ["Widget.title::withNoneDefault@3f2a9c41b0de"]
  * })
  * console.log(row.occurrences.length) // 1
  * ```
@@ -479,12 +486,23 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
  * console.log(S.is(SchemaFirstLintOptions)(candidate)) // true
  * ```
  *
+ * **Details**
+ *
+ * `write` refreshes the committed inventory; for the parity backlog it only
+ * removes resolved occurrences and still fails on new ones.
+ * `admitParityBacklog` (with `write`) also admits new parity occurrences into
+ * the backlog; it exists for the initial capture, not for routine repair.
+ *
  * @category models
  * @since 0.0.0
  */
 export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`SchemaFirstLintOptions`)(
   {
     write: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    admitParityBacklog: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
@@ -841,10 +859,10 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
  * const row = SchemaFirstBacklogRow.make({
  *   ruleId: "SFV4-opaque-wrapper",
  *   file: "packages/example/src/Widget.ts",
- *   occurrences: ["WidgetError.cause::Defect#1"]
+ *   occurrences: ["WidgetError.cause::Defect@9b1c02de77aa"]
  * })
  * console.log(schemaFirstBacklogRowKeys(row))
- * // ["packages/example/src/Widget.ts::SFV4-opaque-wrapper::WidgetError.cause::Defect#1"]
+ * // ["packages/example/src/Widget.ts::SFV4-opaque-wrapper::WidgetError.cause::Defect@9b1c02de77aa"]
  * ```
  *
  * @param row - The committed backlog row to expand.

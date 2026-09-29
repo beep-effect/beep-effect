@@ -7,7 +7,7 @@
 
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
-import { Effect, HashMap, Path, pipe } from "effect";
+import { Effect, HashMap, HashSet, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -44,6 +44,7 @@ import type {
   SchemaFirstBacklogRow,
   SchemaFirstEntryKind,
   SchemaFirstLintOptions,
+  SchemaFirstParityFindings,
 } from "../Lint.schemas.ts";
 import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
 import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
@@ -312,7 +313,10 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     const owner = ownerResolver(sourceFile.getFilePath());
     appendArbitraryEntries(entries, sourceFile, filePath, owner);
     if (isSchemaFirstExcludedFile(filePath)) continue;
-    A.appendAllInPlace(parityEntries, SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner));
+    A.appendAllInPlace(
+      parityEntries,
+      yield* SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner)
+    );
     appendInterfaceEntries(entries, sourceFile, filePath, owner);
     appendTypeAliasEntries(entries, sourceFile, filePath, owner);
     appendCallEntries(entries, sourceFile, filePath, owner);
@@ -337,9 +341,25 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   };
 });
 
+// The parity backlog only shrinks on `--write`: occurrences the committed backlog does not
+// already track stay out unless `--admit-parity-backlog` explicitly admits them.
+const parityBacklogToWrite = (
+  options: SchemaFirstLintOptions,
+  parityEntries: ReadonlyArray<SchemaFirstInventoryEntry>,
+  parity: SchemaFirstParityFindings
+): ReadonlyArray<SchemaFirstBacklogRow> => {
+  const introducedKeys = HashSet.fromIterable(A.map(parity.introduced, makeSchemaFirstEntryKey));
+  return toSchemaFirstBacklog(
+    options.admitParityBacklog
+      ? parityEntries
+      : A.filter(parityEntries, (entry) => !HashSet.has(introducedKeys, makeSchemaFirstEntryKey(entry)))
+  );
+};
+
 const mergeInventory = (
   liveDocument: SchemaFirstInventoryDocument,
-  existingDocument: O.Option<SchemaFirstInventoryDocument>
+  existingDocument: O.Option<SchemaFirstInventoryDocument>,
+  backlog: ReadonlyArray<SchemaFirstBacklogRow>
 ): SchemaFirstInventoryDocument => {
   const existingByKey = pipe(
     existingDocument,
@@ -363,13 +383,13 @@ const mergeInventory = (
     generatedOn: liveDocument.generatedOn,
     scope: liveDocument.scope,
     entries: sortSchemaFirstEntries(mergedEntries),
-    backlog: liveDocument.backlog,
+    backlog,
   });
 };
 
 const collectSchemaFirstLintFindings = (
   liveDocument: SchemaFirstInventoryDocument,
-  parityEntries: ReadonlyArray<SchemaFirstInventoryEntry>,
+  parity: SchemaFirstParityFindings,
   existingDocument: O.Option<SchemaFirstInventoryDocument>,
   mergedDocument: SchemaFirstInventoryDocument,
   policyDocument: O.Option<SchemaCrispeningPolicyDocument>
@@ -447,14 +467,7 @@ const collectSchemaFirstLintFindings = (
       ...nullReturnAdvisories,
       ...getsomesStructAdvisories,
     ],
-    parity: diffSchemaFirstParity(
-      parityEntries,
-      pipe(
-        existingDocument,
-        O.map((document) => document.backlog),
-        O.getOrElse(A.empty<SchemaFirstBacklogRow>)
-      )
-    ),
+    parity,
     policyExemptCount,
   };
 };
@@ -490,11 +503,23 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   const { document: liveDocument, parityEntries } = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
-  const mergedDocument = mergeInventory(liveDocument, existingDocument);
+  const parity = diffSchemaFirstParity(
+    parityEntries,
+    pipe(
+      existingDocument,
+      O.map((document) => document.backlog),
+      O.getOrElse(A.empty<SchemaFirstBacklogRow>)
+    )
+  );
+  const mergedDocument = mergeInventory(
+    liveDocument,
+    existingDocument,
+    parityBacklogToWrite(options, parityEntries, parity)
+  );
   const policyDocument = yield* readCrispeningPolicyDocument();
   const findings = collectSchemaFirstLintFindings(
     liveDocument,
-    parityEntries,
+    parity,
     existingDocument,
     mergedDocument,
     policyDocument

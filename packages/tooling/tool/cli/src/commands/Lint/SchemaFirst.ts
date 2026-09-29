@@ -11,9 +11,11 @@ import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as O from "effect/Option";
 import type { CallExpression, SourceFile } from "ts-morph";
 import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
+import type { SchemaFirstInventoryReadError } from "./Lint.errors.ts";
 import type { SchemaFirstInventoryEntry } from "./Lint.schemas.ts";
 
 type SchemaFirstDetectorContext = Pick<SchemaFirstInventoryEntry, "file" | "owner">;
@@ -395,14 +397,17 @@ export const getsomesStructEntryFromCallExpression: {
  *
  * **Details**
  *
- * Runs `SFV4-default-wrapper` and `SFV4-opaque-wrapper` over the file. Each entry carries a line-free occurrence anchor
- * (`<lexical path>::<evidence>#<ordinal>`), which is the membership key the
- * committed parity backlog ratchets on.
+ * Runs `SFV4-default-wrapper` and `SFV4-opaque-wrapper` over the file. A
+ * reference counts only when its binding resolves to the `@beep/schema`
+ * declaration of that export. Each entry carries a content anchor
+ * (`<lexical path>::<export>@<hash>`), which is the membership key the
+ * committed parity backlog ratchets on; hashing needs the `Crypto` service.
  *
  * **Example** (Detect a SchemaUtils default wrapper)
  *
  * ```ts
  * import { schemaFirstParityEntriesFromSourceFile } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -410,19 +415,27 @@ export const getsomesStructEntryFromCallExpression: {
  *   "Widget.ts",
  *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withNoneDefault) })'
  * )
- * const [entry] = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
- * console.log(entry?.occurrence) // "Widget.title::withNoneDefault#1"
+ * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
+ * // Provide Crypto (for example NodeServices.layer) to run it; the entry's symbol is "Widget.title".
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param sourceFile - The ts-morph source file to scan.
  * @param context - Repo-relative source path and owning package recorded on every emitted entry.
- * @returns One advisory entry per parity occurrence, in document order.
+ * @returns An effect with one advisory entry per parity occurrence, in document order.
  * @category utilities
  * @since 0.0.0
  */
 export const schemaFirstParityEntriesFromSourceFile: {
-  (context: SchemaFirstDetectorContext): (sourceFile: SourceFile) => ReadonlyArray<SchemaFirstInventoryEntry>;
-  (sourceFile: SourceFile, context: SchemaFirstDetectorContext): ReadonlyArray<SchemaFirstInventoryEntry>;
+  (
+    context: SchemaFirstDetectorContext
+  ): (
+    sourceFile: SourceFile
+  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  (
+    sourceFile: SourceFile,
+    context: SchemaFirstDetectorContext
+  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
 } = dual(2, (sourceFile: SourceFile, context: SchemaFirstDetectorContext) =>
   SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, context.file, context.owner)
 );
@@ -449,10 +462,18 @@ export const lintSchemaFirstCommand = Command.make(
   {
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Refresh standards/schema-first.inventory.jsonc")
+      Flag.withDescription(
+        "Refresh standards/schema-first.inventory.jsonc; the parity backlog only drops resolved occurrences"
+      )
+    ),
+    admitParityBacklog: Flag.Boolean("admit-parity-backlog").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "With --write, also admit new upstream-parity occurrences into the backlog (initial capture only)"
+      )
     ),
   },
-  Effect.fn(function* ({ write }) {
-    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write }));
+  Effect.fn(function* ({ write, admitParityBacklog }) {
+    yield* runSchemaFirstLint(SchemaFirstLintOptions.make({ write, admitParityBacklog }));
   })
 ).pipe(Command.withDescription("Verify the repo-wide schema-first inventory baseline"));

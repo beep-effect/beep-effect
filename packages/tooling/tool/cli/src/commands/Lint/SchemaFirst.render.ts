@@ -240,11 +240,12 @@ const parityIntroducedFinding = (entry: SchemaFirstInventoryEntry): SchemaFirstP
     message: entry.reason,
     remediation: missingEntryRemediation(entry),
     ...optionalProp("line", O.fromUndefinedOr(entry.line)),
+    ...optionalProp("occurrence", O.fromUndefinedOr(entry.occurrence)),
   });
 
 const parityIntroducedLines = Effect.fn("parityIntroducedLines")(function* (entry: SchemaFirstInventoryEntry) {
   return [
-    `- ${entry.file}:${entry.line ?? 0} :: ${entry.symbol} [${entry.ruleId ?? ""}] ${entry.reason}`,
+    `- ${entry.file}:${entry.line ?? 0} :: ${entry.occurrence ?? entry.symbol} [${entry.ruleId ?? ""}] ${entry.reason}`,
     yield* renderSchemaFirstPolicyFindingLine(parityIntroducedFinding(entry)),
   ];
 });
@@ -258,12 +259,13 @@ const PARITY_TIGHTEN_LIMIT = 20;
  * **Details**
  *
  * The floor is membership. An occurrence anchor absent from the committed
- * backlog is a regression that fails the check (not the `--write` run); an
- * anchor the scan no longer finds is resolved and only prints a
- * tighten-baseline nudge, because `--write` shrinks the backlog.
+ * backlog is a regression that fails the check and `--write` alike; only
+ * `--write --admit-parity-backlog` records it. An anchor the scan no longer
+ * finds is resolved: the check prints a tighten-baseline nudge and `--write`
+ * drops it from the backlog.
  *
  * @param parity - The classified parity-ratchet findings.
- * @param options - The lint options; `--write` never regresses.
+ * @param options - The lint options; only `--write --admit-parity-backlog` admits growth.
  * @returns The ordered regression checks, ok line, and tighten block for `enforceRatchet`.
  * @category utilities
  * @since 0.0.0
@@ -279,11 +281,11 @@ const parityRatchetInput = Effect.fn("parityRatchetInput")(function* (
   return {
     regressions: [
       {
-        present: !options.write && A.isReadonlyArrayNonEmpty(parity.introduced),
+        present: A.isReadonlyArrayNonEmpty(parity.introduced) && !(options.write && options.admitParityBacklog),
         lines: [
           `[schema-first] parity ratchet: ${parity.introduced.length} new occurrence(s) outside the committed backlog:`,
           ...introducedLines,
-          "[schema-first] Migrate each occurrence to its upstream form; the parity backlog only shrinks. Record an occurrence with `bun run beep lint schema-first --write` only when the backlog must grow, and justify it in review.",
+          "[schema-first] Migrate each occurrence to its upstream form; the parity backlog only shrinks, and `--write` drops resolved occurrences but never admits new ones.",
         ],
         error: CliReportedExit.make({
           message: "schema-first: parity ratchet failed on new occurrences.",
@@ -292,8 +294,10 @@ const parityRatchetInput = Effect.fn("parityRatchetInput")(function* (
       },
     ],
     okLine: options.write
-      ? `[schema-first] parity backlog written: occurrences=${parity.liveCount} previous_baseline=${parity.baselineCount}`
-      : `[schema-first] parity ratchet ok: current=${parity.liveCount} baseline=${parity.baselineCount} introduced=0 resolved=${A.length(resolvedOccurrences)}`,
+      ? options.admitParityBacklog
+        ? `[schema-first] parity backlog admitted: occurrences=${parity.liveCount} previous_baseline=${parity.baselineCount} admitted=${parity.introduced.length}`
+        : `[schema-first] parity backlog written: occurrences=${parity.liveCount} previous_baseline=${parity.baselineCount} dropped=${resolvedOccurrences.length}`
+      : `[schema-first] parity ratchet ok: current=${parity.liveCount} baseline=${parity.baselineCount} introduced=0 resolved=${resolvedOccurrences.length}`,
     tighten: O.liftPredicate(
       [
         `[schema-first] tighten-baseline: ${resolvedOccurrences.length} parity occurrence(s) resolved; run \`bun run beep lint schema-first --write\` to shrink the committed backlog.`,

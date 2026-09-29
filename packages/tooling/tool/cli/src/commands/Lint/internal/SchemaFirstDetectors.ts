@@ -6,16 +6,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { flow, HashMap, HashSet, MutableHashMap, Order, pipe } from "effect";
+import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
+import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type {
-  ImportDeclaration,
   InterfaceDeclaration,
+  Symbol as MorphSymbol,
   SourceFile,
   Type,
   TypeAliasDeclaration,
@@ -1061,7 +1063,8 @@ const equivalenceEntryFromVariableDeclaration = (
 };
 
 // Upstream-parity detectors (SFV4-default-wrapper, SFV4-opaque-wrapper).
-// Findings carry a line-free occurrence anchor and ratchet on committed backlog membership.
+// A reference counts only when its binding resolves to the @beep/schema declaration it names;
+// every finding carries a content anchor and ratchets on committed backlog membership.
 
 // SchemaUtils default-combinator wrappers matched by export name; BoolKeyDefault* are named
 // schema constants the parity audit keeps, so they are not listed.
@@ -1105,89 +1108,258 @@ const opaqueWrapperUpstreamForm = OpaqueSchemaWrapper.$match({
   OpaqueUnknown: () => "S.Unknown",
 });
 
+// The module an unresolved wrapper binding points at: the @beep/schema root (the opaque
+// wrappers and the SchemaUtils namespace), the SchemaUtils modules, or the Opaque module.
+const ParityWrapperModule = LiteralKit(["schema-root", "schema-utils", "opaque"]).pipe(
+  $I.annoteSchema("ParityWrapperModule", {
+    description: "The @beep/schema module kind an unresolved parity wrapper binding is imported from.",
+  })
+);
+type ParityWrapperModule = typeof ParityWrapperModule.Type;
+
 const BEEP_SCHEMA_ROOT_MODULE = "@beep/schema";
 const SCHEMA_UTILS_MODULE_PATTERN = /^(?:@beep\/schema|\.{1,2}(?:\/[^/]+)*)\/SchemaUtils(?:\/[^/]+)*$/u;
 const OPAQUE_MODULE_PATTERN = /^(?:@beep\/schema|\.{1,2}(?:\/[^/]+)*)\/Opaque(?:\.ts)?$/u;
+const SCHEMA_UTILS_SOURCE_PATTERN = /\/modeling\/schema\/src\/SchemaUtils\/[^/]+\.ts$/u;
+const OPAQUE_SOURCE_PATTERN = /\/modeling\/schema\/src\/Opaque\.ts$/u;
+const PARITY_WRAPPER_NAMES = [...SchemaUtilsDefaultWrapper.literals, ...OpaqueSchemaWrapper.literals];
+const PARITY_WRAPPER_SIGNAL_PATTERN = new RegExp(`\\b(?:${A.join(PARITY_WRAPPER_NAMES, "|")})\\b`, "u");
+const OCCURRENCE_HASH_LENGTH = 12;
+const CLOSING_TOKEN_KINDS = HashSet.fromIterable([
+  SyntaxKind.CloseParenToken,
+  SyntaxKind.CloseBracketToken,
+  SyntaxKind.CloseBraceToken,
+]);
 
-type ParityImportIndex = {
-  readonly schemaRootNamespaces: HashSet.HashSet<string>;
-  readonly schemaUtilsNamespaces: HashSet.HashSet<string>;
-  readonly defaultWrappers: HashMap.HashMap<string, typeof SchemaUtilsDefaultWrapper.Type>;
-  readonly opaqueWrappers: HashMap.HashMap<string, typeof OpaqueSchemaWrapper.Type>;
-};
-
-type ParityCandidate = {
+type ParityWrapper = {
   readonly ruleId: SchemaFirstParityRuleId;
-  readonly start: number;
-  readonly line: number;
-  readonly path: string;
-  readonly evidence: string;
+  readonly name: string;
   readonly reason: string;
 };
 
-const namedImportBindings = (
-  declaration: ImportDeclaration
-): ReadonlyArray<readonly [local: string, imported: string]> =>
-  A.map(declaration.getNamedImports(), (specifier) => [
-    specifier.getAliasNode()?.getText() ?? specifier.getName(),
-    specifier.getName(),
+type ParityCandidate = {
+  readonly wrapper: ParityWrapper;
+  readonly node: Node;
+};
+
+type UnresolvedWrapperBinding = {
+  readonly module: ParityWrapperModule;
+  readonly imported: O.Option<string>;
+};
+
+const defaultWrapper = (name: typeof SchemaUtilsDefaultWrapper.Type): ParityWrapper => ({
+  ruleId: "SFV4-default-wrapper",
+  name,
+  reason: `SchemaUtils.${name} wraps an upstream schema default; use ${defaultWrapperUpstreamForm(name)} directly so the default stays on Effect's own combinators.`,
+});
+
+const opaqueWrapper = (name: typeof OpaqueSchemaWrapper.Type): ParityWrapper => ({
+  ruleId: "SFV4-opaque-wrapper",
+  name,
+  reason: `${name} from @beep/schema wraps ${opaqueWrapperUpstreamForm(name)} with an always-equal equivalence; use ${opaqueWrapperUpstreamForm(name)} and put S.overrideToEquivalence on the one field whose payload must stay out of equality.`,
+});
+
+const wrapperDeclaredAt = (name: string, sourcePath: string): O.Option<ParityWrapper> =>
+  isSchemaUtilsDefaultWrapper(name) && SCHEMA_UTILS_SOURCE_PATTERN.test(sourcePath)
+    ? O.some(defaultWrapper(name))
+    : isOpaqueSchemaWrapper(name) && OPAQUE_SOURCE_PATTERN.test(sourcePath)
+      ? O.some(opaqueWrapper(name))
+      : O.none();
+
+const wrapperModuleOf = (moduleSpecifier: string): O.Option<ParityWrapperModule> =>
+  Str.Equivalence(moduleSpecifier, BEEP_SCHEMA_ROOT_MODULE)
+    ? O.some("schema-root")
+    : SCHEMA_UTILS_MODULE_PATTERN.test(moduleSpecifier)
+      ? O.some("schema-utils")
+      : OPAQUE_MODULE_PATTERN.test(moduleSpecifier)
+        ? O.some("opaque")
+        : O.none();
+
+const wrapperExportedBy =
+  (member: string) =>
+  (module: ParityWrapperModule): O.Option<ParityWrapper> =>
+    ParityWrapperModule.$match(module, {
+      "schema-root": () => pipe(member, O.liftPredicate(isOpaqueSchemaWrapper), O.map(opaqueWrapper)),
+      "schema-utils": () => pipe(member, O.liftPredicate(isSchemaUtilsDefaultWrapper), O.map(defaultWrapper)),
+      opaque: () => pipe(member, O.liftPredicate(isOpaqueSchemaWrapper), O.map(opaqueWrapper)),
+    });
+
+const aliasedTarget = (symbol: MorphSymbol): O.Option<MorphSymbol> =>
+  symbol.isAlias() ? O.fromUndefinedOr(symbol.getAliasedSymbol()) : O.some(symbol);
+
+// Follow the binding through imports and barrel re-exports to the declaration it names.
+const declaredWrapper = (reference: Node): O.Option<ParityWrapper> =>
+  pipe(
+    O.fromUndefinedOr(reference.getSymbol()),
+    O.flatMap(aliasedTarget),
+    O.flatMap((target) =>
+      A.head(
+        A.getSomes(
+          A.map(target.getDeclarations(), (declaration) =>
+            wrapperDeclaredAt(target.getName(), declaration.getSourceFile().getFilePath())
+          )
+        )
+      )
+    )
+  );
+
+const isUnresolvedAlias = (symbol: MorphSymbol): boolean =>
+  symbol.isAlias() && !O.exists(aliasedTarget(symbol), (target) => A.isReadonlyArrayNonEmpty(target.getDeclarations()));
+
+// When the imported module does not resolve (fixtures, unmapped paths) the import declaration is
+// the only evidence left, so an unresolved alias falls back to its module specifier.
+const unresolvedWrapperBinding = (identifier: Node): O.Option<UnresolvedWrapperBinding> =>
+  pipe(
+    O.fromUndefinedOr(identifier.getSymbol()),
+    O.filter(isUnresolvedAlias),
+    O.flatMap((symbol) => A.head(symbol.getDeclarations())),
+    O.flatMap((declaration) =>
+      pipe(
+        O.fromUndefinedOr(declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration)),
+        O.flatMap((importDeclaration) => wrapperModuleOf(importDeclaration.getModuleSpecifierValue())),
+        O.map((module) => ({
+          module,
+          imported: Node.isImportSpecifier(declaration) ? O.some(declaration.getName()) : O.none<string>(),
+        }))
+      )
+    )
+  );
+
+const unwrapParentheses = (node: Node): Node =>
+  Node.isParenthesizedExpression(node) ? unwrapParentheses(node.getExpression()) : node;
+
+const memberAccessName = (node: Node): O.Option<string> =>
+  Node.isPropertyAccessExpression(node)
+    ? O.some(node.getName())
+    : Node.isElementAccessExpression(node)
+      ? pipe(
+          O.fromUndefinedOr(node.getArgumentExpression()),
+          O.filter(Node.isStringLiteral),
+          O.map((literal) => literal.getLiteralValue())
+        )
+      : O.none();
+
+// The wrapper module an unresolved receiver denotes: a namespace import of a wrapper module, the
+// `SchemaUtils` namespace imported from the root, or `<root namespace>.SchemaUtils`.
+const unresolvedReceiverModule = (receiver: Node): O.Option<ParityWrapperModule> => {
+  const expression = unwrapParentheses(receiver);
+  return Node.isIdentifier(expression)
+    ? pipe(
+        unresolvedWrapperBinding(expression),
+        O.flatMap(({ module, imported }) =>
+          O.match(imported, {
+            onNone: () => O.some(module),
+            onSome: (name) =>
+              module === "schema-root" && Str.Equivalence(name, "SchemaUtils")
+                ? O.some<ParityWrapperModule>("schema-utils")
+                : O.none(),
+          })
+        )
+      )
+    : Node.isPropertyAccessExpression(expression) || Node.isElementAccessExpression(expression)
+      ? pipe(
+          memberAccessName(expression),
+          O.filter((name) => Str.Equivalence(name, "SchemaUtils")),
+          O.flatMap(() => unresolvedReceiverModule(expression.getExpression())),
+          O.filter((module) => module === "schema-root"),
+          O.map((): ParityWrapperModule => "schema-utils")
+        )
+      : O.none();
+};
+
+// A reference is any identifier use that is not an import/export specifier, a member or
+// property name, or the name of a declaration.
+const isBindingReference = (identifier: Node): boolean => {
+  const parent = identifier.getParent();
+  return !(
+    parent === undefined ||
+    Node.isImportSpecifier(parent) ||
+    Node.isExportSpecifier(parent) ||
+    Node.isNamespaceImport(parent) ||
+    (Node.isQualifiedName(parent) && parent.getRight() === identifier) ||
+    (Node.hasName(parent) && !Node.isShorthandPropertyAssignment(parent) && parent.getNameNode() === identifier)
+  );
+};
+
+const memberCandidate = (access: Node, reference: Node, receiver: Node, member: string): O.Option<ParityCandidate> =>
+  pipe(
+    declaredWrapper(reference),
+    O.orElse(() =>
+      reference.getSymbol() === undefined
+        ? pipe(unresolvedReceiverModule(receiver), O.flatMap(wrapperExportedBy(member)))
+        : O.none()
+    ),
+    O.map((wrapper) => ({ wrapper, node: access }))
+  );
+
+const bindingCandidate = (identifier: Node): O.Option<ParityCandidate> =>
+  pipe(
+    declaredWrapper(identifier),
+    O.orElse(() =>
+      pipe(
+        unresolvedWrapperBinding(identifier),
+        O.flatMap(({ module, imported }) => O.flatMap(imported, (name) => wrapperExportedBy(name)(module)))
+      )
+    ),
+    O.map((wrapper) => ({ wrapper, node: identifier }))
+  );
+
+const identifierCandidate = (identifier: Node): O.Option<ParityCandidate> => {
+  const parent = identifier.getParent();
+  return Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier
+    ? memberCandidate(parent, identifier, parent.getExpression(), parent.getName())
+    : isBindingReference(identifier)
+      ? bindingCandidate(identifier)
+      : O.none();
+};
+
+const elementAccessCandidate = (literal: Node): O.Option<ParityCandidate> => {
+  const parent = literal.getParent();
+  return Node.isStringLiteral(literal) &&
+    Node.isElementAccessExpression(parent) &&
+    parent.getArgumentExpression() === literal
+    ? memberCandidate(parent, literal, parent.getExpression(), literal.getLiteralValue())
+    : O.none();
+};
+
+// Local names that can denote a wrapper: the export names plus aliases a named import gives them.
+const wrapperReferenceNames = (sourceFile: SourceFile): HashSet.HashSet<string> =>
+  HashSet.fromIterable([
+    ...PARITY_WRAPPER_NAMES,
+    ...pipe(
+      sourceFile.getImportDeclarations(),
+      A.flatMap((declaration) => declaration.getNamedImports()),
+      A.filter((specifier) => A.contains(PARITY_WRAPPER_NAMES, specifier.getName())),
+      A.map((specifier) => specifier.getAliasNode()?.getText() ?? specifier.getName())
+    ),
   ]);
 
-const namespaceImportName = (declaration: ImportDeclaration): ReadonlyArray<string> =>
-  pipe(
-    O.fromUndefinedOr(declaration.getNamespaceImport()),
-    O.map((identifier) => identifier.getText()),
-    O.toArray
-  );
+const isWrapperSourceFile = (sourceFile: SourceFile): boolean =>
+  SCHEMA_UTILS_SOURCE_PATTERN.test(sourceFile.getFilePath()) || OPAQUE_SOURCE_PATTERN.test(sourceFile.getFilePath());
 
-const importedAs = <Name extends string>(
-  declarations: ReadonlyArray<ImportDeclaration>,
-  isModule: (moduleSpecifier: string) => boolean,
-  isName: (name: string) => name is Name
-): ReadonlyArray<readonly [local: string, imported: Name]> =>
-  pipe(
-    declarations,
-    A.filter((declaration) => isModule(declaration.getModuleSpecifierValue())),
-    A.flatMap(namedImportBindings),
-    A.map(([local, imported]) =>
-      pipe(
-        imported,
-        O.liftPredicate(isName),
-        O.map((name): readonly [local: string, imported: Name] => [local, name])
+const parityCandidates = (sourceFile: SourceFile): ReadonlyArray<ParityCandidate> => {
+  if (isWrapperSourceFile(sourceFile) || !PARITY_WRAPPER_SIGNAL_PATTERN.test(sourceFile.getFullText())) {
+    return A.empty<ParityCandidate>();
+  }
+  const names = wrapperReferenceNames(sourceFile);
+  return [
+    ...A.getSomes(
+      A.map(
+        A.filter(sourceFile.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) =>
+          HashSet.has(names, identifier.getText())
+        ),
+        identifierCandidate
       )
     ),
-    A.getSomes
-  );
-
-const isBeepSchemaRootModule = (moduleSpecifier: string): boolean =>
-  Str.Equivalence(moduleSpecifier, BEEP_SCHEMA_ROOT_MODULE);
-
-const isSchemaUtilsModule = (moduleSpecifier: string): boolean => SCHEMA_UTILS_MODULE_PATTERN.test(moduleSpecifier);
-
-const isOpaqueModule = (moduleSpecifier: string): boolean =>
-  isBeepSchemaRootModule(moduleSpecifier) || OPAQUE_MODULE_PATTERN.test(moduleSpecifier);
-
-const isSchemaUtilsExportName = (name: string): name is "SchemaUtils" => Str.Equivalence(name, "SchemaUtils");
-
-const parityImportIndex = (sourceFile: SourceFile): ParityImportIndex => {
-  const declarations = sourceFile.getImportDeclarations();
-  return {
-    schemaRootNamespaces: HashSet.fromIterable(
-      A.flatMap(
-        A.filter(declarations, (declaration) => isBeepSchemaRootModule(declaration.getModuleSpecifierValue())),
-        namespaceImportName
+    ...A.getSomes(
+      A.map(
+        A.filter(sourceFile.getDescendantsOfKind(SyntaxKind.StringLiteral), (literal) =>
+          A.contains(PARITY_WRAPPER_NAMES, literal.getLiteralValue())
+        ),
+        elementAccessCandidate
       )
     ),
-    schemaUtilsNamespaces: HashSet.fromIterable([
-      ...A.map(importedAs(declarations, isBeepSchemaRootModule, isSchemaUtilsExportName), ([local]) => local),
-      ...A.flatMap(
-        A.filter(declarations, (declaration) => isSchemaUtilsModule(declaration.getModuleSpecifierValue())),
-        namespaceImportName
-      ),
-    ]),
-    defaultWrappers: HashMap.fromIterable(importedAs(declarations, isSchemaUtilsModule, isSchemaUtilsDefaultWrapper)),
-    opaqueWrappers: HashMap.fromIterable(importedAs(declarations, isOpaqueModule, isOpaqueSchemaWrapper)),
-  };
+  ];
 };
 
 const occurrencePathSegment = (node: Node): O.Option<string> =>
@@ -1202,8 +1374,8 @@ const occurrencePathSegment = (node: Node): O.Option<string> =>
         )
       : O.none();
 
-// The lexical path names the declarations and property keys enclosing a node, outermost
-// first; it is the line-free half of every parity occurrence anchor.
+// The lexical path names the declarations and property keys enclosing a node, outermost first.
+// It is the display half of the anchor; the content hash carries the identity.
 const occurrencePath = (node: Node): string =>
   pipe(
     node.getAncestors(),
@@ -1213,120 +1385,60 @@ const occurrencePath = (node: Node): string =>
     A.match({ onEmpty: () => "<module>", onNonEmpty: A.join(".") })
   );
 
-const parityCandidate = (
-  node: Node,
-  ruleId: SchemaFirstParityRuleId,
-  evidence: string,
-  reason: string
-): ParityCandidate => ({
-  ruleId,
-  start: node.getStart(),
-  line: node.getStartLineNumber(),
-  path: occurrencePath(node),
-  evidence,
-  reason,
-});
+const isChainLink = (parent: Node | undefined, node: Node): parent is Node =>
+  (Node.isPropertyAccessExpression(parent) ||
+    Node.isElementAccessExpression(parent) ||
+    Node.isCallExpression(parent)) &&
+  parent.getExpression() === node;
 
-// A reference is any identifier use that is not an import/export specifier, a member or
-// property name, or the name of a declaration that shadows the import.
-const isBindingReference = (identifier: Node): boolean => {
-  const parent = identifier.getParent();
-  return !(
-    parent === undefined ||
-    Node.isImportSpecifier(parent) ||
-    Node.isExportSpecifier(parent) ||
-    Node.isNamespaceImport(parent) ||
-    (Node.isQualifiedName(parent) && parent.getRight() === identifier) ||
-    (Node.hasName(parent) && !Node.isShorthandPropertyAssignment(parent) && parent.getNameNode() === identifier)
+const chainHead = (node: Node): Node => {
+  const parent = node.getParent();
+  return isChainLink(parent, node) ? chainHead(parent) : node;
+};
+
+// The anchored content is the member/call chain that starts at the wrapper, widened to the call
+// that receives it as an argument (`X.pipe(SchemaUtils.withNoneDefault)`), so two wrappers that
+// default different schemas keep different anchors.
+const occurrenceSubject = (node: Node): Node => {
+  const head = chainHead(node);
+  const parent = head.getParent();
+  return Node.isCallExpression(parent) && A.some(parent.getArguments(), (argument) => argument === head)
+    ? parent
+    : head;
+};
+
+// A formatting-insensitive token stream: whitespace and comments are skipped, a trailing comma
+// before a closing token is dropped, and string literals compare by value, not quote style.
+const normalizedTokenText = (text: string): string => {
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, true, ts.LanguageVariant.Standard, text);
+  const tokens = A.empty<readonly [kind: SyntaxKind, value: string]>();
+  for (let kind = scanner.scan(); kind !== SyntaxKind.EndOfFileToken; kind = scanner.scan()) {
+    if (
+      HashSet.has(CLOSING_TOKEN_KINDS, kind) &&
+      O.exists(A.last(tokens), ([previous]) => previous === SyntaxKind.CommaToken)
+    ) {
+      tokens.pop();
+    }
+    tokens.push([kind, kind === SyntaxKind.StringLiteral ? scanner.getTokenValue() : scanner.getTokenText()]);
+  }
+  return A.join(
+    A.map(tokens, ([kind, value]) => `${kind}:${value.length}:${value}`),
+    ""
   );
 };
 
-const importedBindingCandidates = <Name extends string>(
-  sourceFile: SourceFile,
-  bindings: HashMap.HashMap<string, Name>,
-  toCandidate: (identifier: Node, name: Name) => ParityCandidate
-): ReadonlyArray<ParityCandidate> =>
-  HashMap.isEmpty(bindings)
-    ? A.empty<ParityCandidate>()
-    : pipe(
-        sourceFile.getDescendantsOfKind(SyntaxKind.Identifier),
-        A.filter(isBindingReference),
-        A.map((identifier) =>
-          O.map(HashMap.get(bindings, identifier.getText()), (name) => toCandidate(identifier, name))
-        ),
-        A.getSomes
-      );
+const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCandidate) => candidate.node.getStart());
 
-const namespaceMemberCandidates = <Name extends string>(
-  sourceFile: SourceFile,
-  isReceiver: (receiverText: string) => boolean,
-  isName: (name: string) => name is Name,
-  toCandidate: (access: Node, name: Name) => ParityCandidate
-): ReadonlyArray<ParityCandidate> =>
-  pipe(
-    sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression),
-    A.map((access) =>
-      pipe(
-        access.getName(),
-        O.liftPredicate(isName),
-        O.filter(() => isReceiver(access.getExpression().getText())),
-        O.map((name) => toCandidate(access, name))
-      )
-    ),
-    A.getSomes
+const anchoredCandidate = Effect.fnUntraced(function* (candidate: ParityCandidate) {
+  const digest = yield* sha256Hex(normalizedTokenText(occurrenceSubject(candidate.node).getText())).pipe(
+    SchemaFirstInventoryReadError.mapError("Failed to hash a schema-first parity occurrence.")
   );
-
-const defaultWrapperCandidate = (node: Node, name: typeof SchemaUtilsDefaultWrapper.Type): ParityCandidate =>
-  parityCandidate(
-    node,
-    "SFV4-default-wrapper",
-    name,
-    `SchemaUtils.${name} wraps an upstream schema default; use ${defaultWrapperUpstreamForm(name)} directly so the default stays on Effect's own combinators.`
-  );
-
-const opaqueWrapperCandidate = (node: Node, name: typeof OpaqueSchemaWrapper.Type): ParityCandidate =>
-  parityCandidate(
-    node,
-    "SFV4-opaque-wrapper",
-    name,
-    `${name} from @beep/schema wraps ${opaqueWrapperUpstreamForm(name)} with an always-equal equivalence; use ${opaqueWrapperUpstreamForm(name)} and put S.overrideToEquivalence on the one field whose payload must stay out of equality.`
-  );
-
-const defaultWrapperCandidates = (
-  sourceFile: SourceFile,
-  imports: ParityImportIndex
-): ReadonlyArray<ParityCandidate> => [
-  ...(HashSet.isEmpty(imports.schemaUtilsNamespaces) && HashSet.isEmpty(imports.schemaRootNamespaces)
-    ? A.empty<ParityCandidate>()
-    : namespaceMemberCandidates(
-        sourceFile,
-        (receiver) =>
-          HashSet.has(imports.schemaUtilsNamespaces, receiver) ||
-          HashSet.some(imports.schemaRootNamespaces, (namespace) =>
-            Str.Equivalence(receiver, `${namespace}.SchemaUtils`)
-          ),
-        isSchemaUtilsDefaultWrapper,
-        defaultWrapperCandidate
-      )),
-  ...importedBindingCandidates(sourceFile, imports.defaultWrappers, defaultWrapperCandidate),
-];
-
-const opaqueWrapperCandidates = (
-  sourceFile: SourceFile,
-  imports: ParityImportIndex
-): ReadonlyArray<ParityCandidate> => [
-  ...(HashSet.isEmpty(imports.schemaRootNamespaces)
-    ? A.empty<ParityCandidate>()
-    : namespaceMemberCandidates(
-        sourceFile,
-        (receiver) => HashSet.has(imports.schemaRootNamespaces, receiver),
-        isOpaqueSchemaWrapper,
-        opaqueWrapperCandidate
-      )),
-  ...importedBindingCandidates(sourceFile, imports.opaqueWrappers, opaqueWrapperCandidate),
-];
-
-const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCandidate) => candidate.start);
+  return {
+    candidate,
+    path: occurrencePath(candidate.node),
+    hash: Str.slice(0, OCCURRENCE_HASH_LENGTH)(digest),
+  };
+});
 
 /**
  * Detect every upstream-parity occurrence in one source file.
@@ -1334,17 +1446,23 @@ const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCand
  * **Details**
  *
  * Two rules run over the file: `SFV4-default-wrapper` (SchemaUtils default
- * wrappers resolved through their `@beep/schema` imports by export name) and
- * `SFV4-opaque-wrapper` (`Defect` / `OpaqueUnknown` imported from
- * `@beep/schema`). Each entry carries an occurrence anchor
- * `<lexical path>::<evidence>#<ordinal>`; ordinals count identical
- * path/evidence pairs per rule in document order, so the anchor never depends
- * on a line number.
+ * wrappers) and `SFV4-opaque-wrapper` (`Defect` / `OpaqueUnknown`). A
+ * reference counts only when its binding resolves, through imports and barrel
+ * re-exports, to the `@beep/schema` declaration of that export; a parameter
+ * or local that merely shares the name does not. When the module does not
+ * resolve, the import declaration decides. Each entry carries the anchor
+ * `<lexical path>::<export>@<hash>`, where the hash covers the
+ * formatting-insensitive tokens of the wrapper's call (widened to the call
+ * that receives it as an argument). Only byte-identical calls on one path
+ * share a hash; the second and later of those get `#2`, `#3` in document
+ * order.
  *
  * **Example** (Detect a SchemaUtils default wrapper)
  *
  * ```ts
  * import { schemaFirstParityEntriesFromSourceFile } from "@beep/repo-cli/commands/Lint"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { Effect } from "effect"
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
@@ -1352,8 +1470,9 @@ const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCand
  *   "Widget.ts",
  *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withNoneDefault) })'
  * )
- * const [entry] = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
- * console.log(entry?.occurrence) // "Widget.title::withNoneDefault#1"
+ * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
+ * const [entry] = await Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer)))
+ * console.log(entry?.symbol) // "Widget.title"
  * ```
  *
  * @param sourceFile - The ts-morph source file to scan.
@@ -1363,35 +1482,27 @@ const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCand
  * @category utilities
  * @since 0.0.0
  */
-const parityEntriesFromSourceFile = (
-  sourceFile: SourceFile,
-  file: string,
-  owner: string
-): ReadonlyArray<SchemaFirstInventoryEntry> => {
-  const imports = parityImportIndex(sourceFile);
-  const candidates = A.sort(
-    [...defaultWrapperCandidates(sourceFile, imports), ...opaqueWrapperCandidates(sourceFile, imports)],
-    parityCandidateOrder
-  );
-  const ordinals = MutableHashMap.empty<string, number>();
-  return A.map(candidates, (candidate) => {
-    const stem = `${candidate.path}::${candidate.evidence}`;
-    const ordinalKey = `${candidate.ruleId}::${stem}`;
-    const ordinal = 1 + O.getOrElse(MutableHashMap.get(ordinals, ordinalKey), () => 0);
-    MutableHashMap.set(ordinals, ordinalKey, ordinal);
+const parityEntriesFromSourceFile = Effect.fnUntraced(function* (sourceFile: SourceFile, file: string, owner: string) {
+  const anchored = yield* Effect.forEach(A.sort(parityCandidates(sourceFile), parityCandidateOrder), anchoredCandidate);
+  const duplicates = MutableHashMap.empty<string, number>();
+  return A.map(anchored, ({ candidate, path, hash }) => {
+    const stem = `${path}::${candidate.wrapper.name}@${hash}`;
+    const duplicateKey = `${candidate.wrapper.ruleId}::${stem}`;
+    const seen = O.getOrElse(MutableHashMap.get(duplicates, duplicateKey), () => 0);
+    MutableHashMap.set(duplicates, duplicateKey, seen + 1);
     return SchemaFirstInventoryEntry.make({
       file,
-      symbol: candidate.path,
+      symbol: path,
       kind: "schema-policy-advisory",
       status: "advisory",
-      ruleId: candidate.ruleId,
-      line: candidate.line,
-      occurrence: `${stem}#${ordinal}`,
+      ruleId: candidate.wrapper.ruleId,
+      line: candidate.node.getStartLineNumber(),
+      occurrence: seen === 0 ? stem : `${stem}#${seen + 1}`,
       owner,
-      reason: candidate.reason,
+      reason: candidate.wrapper.reason,
     });
   });
-};
+});
 
 /**
  * Grouped schema-first AST detectors consumed by the scan orchestrator.

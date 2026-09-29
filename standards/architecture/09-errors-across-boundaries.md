@@ -44,18 +44,22 @@ diagnostic identity and ignores the `Error` runtime metadata the class
 inherits. Nothing is declared at the class: no `toEquivalence` hook, no field
 constants, no comparator functions, no explicit schema type arguments.
 `$I.annoteError<Self>(identifier, extras?)` supplies identity metadata and
-documentation extras only. The schema-first rule
-`SFV4-tagged-error-equivalence` reports a class-level `toEquivalence` hook as
-redundant (decision log, 2026-09-12).
+documentation extras only. No lint rule polices a class-level hook any more:
+the `SFV4-tagged-error-equivalence` rule was retired on 2026-09-29 (decision
+log, 2026-09-12 entry, amended 2026-09-29), and the derived equivalence
+above is the law.
 
-Opaque payloads declare their own identity rule at the schema layer: `Defect`
-from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
-always-true equivalence, so a `cause` field stays payload and two errors that
-differ only in their defect compare equal. A local opaque field does the same
-with `S.Unknown.annotate({ toEquivalence: () => () => true })`. Excluding a
-field from equivalence at the class is not a pattern; the field's schema says
-whether it participates. Tests consume `S.toEquivalence(ErrorClass)` and never
-install test-local overrides.
+Opaque payloads declare their own identity rule at the field: a `cause`
+field uses `S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))`
+so it stays payload and two errors that differ only in their defect compare
+equal, and a local opaque field does the same with
+`S.Unknown.pipe(S.overrideToEquivalence(() => () => true))`. `Defect` and
+`OpaqueUnknown` from `@beep/schema` wrap exactly these forms; they retire with
+the Opaque concept (goal `effect-schema-parity`), and the schema-first rule
+`SFV4-opaque-wrapper` tracks the remaining uses on its occurrence backlog.
+Excluding a field from equivalence at the class is not a pattern; the field's
+schema says whether it participates. Tests consume `S.toEquivalence(ErrorClass)`
+and never install test-local overrides.
 
 ## 2. Translation contract
 
