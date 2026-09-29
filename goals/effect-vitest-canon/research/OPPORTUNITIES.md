@@ -5744,3 +5744,13 @@ and per-test timeouts. Audit earlier anonymous fixtures that mutate process-wide
 state for an explicit serial parent; default serial Vitest execution can hide
 this gap. The same reference confirms layer timeout governs fixture hooks, not
 individual test deadlines. Receipt: cli-reflection-bootstrap-runtime-proof.md.
+
+### Temporary repository acquisition can fail after changing cwd
+
+Source inspection of sync-data-to-ts.test.ts shows withTempRepoCommand creating
+a directory and changing process cwd before creating .git within a single
+acquireUseRelease acquisition. If that last step fails, the release has not yet
+been registered. The migration should register directory and cwd finalizers
+incrementally and inject a .git creation failure to verify restoration. This is
+a source-level hazard pending a targeted reproduction, not a claimed observed
+leak. Receipt: cli-sync-data-preparation.md.
