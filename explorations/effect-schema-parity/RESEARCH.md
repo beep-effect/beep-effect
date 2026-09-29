@@ -50,6 +50,8 @@ authority.
 | File | What it holds | Size |
 |------|---------------|------|
 | `research/inventory/` + `research/tools/` | The knowledge-layer prototype: `schema-inventory/v1` JSONL rows for the 14 Role A `.ts` modules, generator, verifier, INDEX and README | 2,105 rows / 853 KB |
+| `research/2026-09-28-inventory-refresh.md` | Reopen: inventory regenerated at `inventoryPin` `e5f7d12af9` (D4), module moves out of `unstable/`, generator and verifier repairs | 19 KB |
+| `research/2026-09-28-schemautils-census.md` + `research/tools/census-schemautils.py` | Reopen: every SchemaUtils export with upstream equivalent, consumer counts per scope, DELETE / ADAPT / KEEP and phase (32 / 4 / 3); D10 finding that the per-AST parser cache predates the compilers | 28 KB |
 | `research/retirement-A-F.md`, `research/retirement-G-Z.md` | Per-concept retirement audit of every top-level `@beep/schema` concept (137) with upstream citations, consumer counts, dispositions and migration recipes | 43 + 54 KB |
 | `research/idiom-families.md` | 30 usage families audited across 3,173 source files; 21 candidates, 9 rejected hypotheses, 1 correction to an existing gate | 582 lines |
 | `research/upstream-delta.md` + `research/upstream-verification-supplement.md` | All 28 rc.112..main commits tagged ADOPT / MIGRATE / RETIRE-LEAD / NOOP with repo exposure counts; the supplement is an independent second pass that withdrew two recommendations | 22 + 8 KB |
