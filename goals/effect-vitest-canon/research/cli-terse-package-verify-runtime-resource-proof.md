@@ -55,4 +55,5 @@ All 33 historical rows are fixed by source 0509e81669. No new rows were needed.
 The CLI ledger contains 3,495 unique rows: 1,776 fixed, 12 exceptions and
 1,707 open. Strict validation passes for all CLI rows and all 687 schema rows.
 The QA helper clock correction does not re-close its previously fixed rows.
-Full grouped CLI package verification is running against source 0509e81669.
+Full grouped CLI package verification passed against source 0509e81669:
+package audit 689.0 seconds and docgen 20.3 seconds, exit zero.

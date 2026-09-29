@@ -51,3 +51,13 @@ run the matching 29-case Node/Bun cohort, actual type diagnostics, root ratchet,
 assertion preservation, actual-suite cleanup and fresh-console probes. Then
 commit the source, reconcile historical rows and run one grouped package proof.
 Do not substitute these private controls for applied-suite verification.
+
+The transitive timing audit followed workspace discovery, dependency indexing,
+config planning/rendering and identity registration. Tsconfig rendering reaches
+renderBiomeJson, which launches Biome directly through ChildProcess. It does
+not use StepExec's Effect-clock capture deadlines. The installed shared Node
+spawner bounds process-group cleanup through native Date.now/setTimeout in
+awaitProcessExit; these continue advancing under TestClock. Identity lint uses
+filesystem, glob and ts-morph operations without an Effect-clock deadline.
+No live-clock override is needed for these two callback families. This is a
+source-path audit, not a process-descendant stress test.
