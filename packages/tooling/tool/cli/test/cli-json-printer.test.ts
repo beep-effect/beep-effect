@@ -11,7 +11,8 @@ import {
   resetProcessStreamStateForTesting,
   StreamWriteFailure,
 } from "@beep/repo-cli/test/Cli";
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -19,7 +20,6 @@ import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { vi } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -32,7 +32,7 @@ const collectLines = <A, E>(
   Effect.gen(function* () {
     yield* effect;
     return yield* TestConsole.logLines;
-  }).pipe(provideScopedLayer(TestConsole.layer));
+  }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
 
 describe("internal/cli/Json renderPrettyCommandJson", () => {
   it("pretty-formats a compact JSON payload with a trailing newline", () => {

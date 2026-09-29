@@ -1,10 +1,11 @@
 import { PersonMatchModel, prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "@beep/repo-cli/test/Files";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { HttpClient } from "effect/http";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const insightFaceSource = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
 const insightFaceLicense =

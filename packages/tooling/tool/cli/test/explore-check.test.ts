@@ -10,8 +10,11 @@ import {
   renderPacketTraceFile,
   StoredPacketEvent,
 } from "@beep/repo-cli/test/Goals";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect, Exit, Layer } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -19,7 +22,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
@@ -48,7 +50,7 @@ describe("explore --check", () => {
           Effect.gen(function* () {
             yield* writeProjectFile("goals/plain/README.md", "# plain\n");
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("streams=0 findings=0");
             expect(output).toContain("OK: no stream-integrity or fleet-graph findings");
@@ -131,7 +133,7 @@ describe("explore --check", () => {
             yield* writeProjectFile("goals/garbled/ops/trace.json", "not json\n");
 
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("streams=4");
             expect(output).toContain("[packet-stream-fork]");
@@ -174,7 +176,7 @@ describe("explore --check", () => {
               }
             }
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             const forkCount = A.length(Str.split(output, "[packet-stream-fork]")) - 1;
             const summaryCount = A.length(Str.split(output, "repair plan (read-only)")) - 1;
@@ -223,7 +225,7 @@ describe("explore --check", () => {
             yield* writeProjectFile("goals/Not A Slug/README.md", "# not a slug\n");
 
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("does not decode as PacketTraceProjection");
             expect(output).not.toContain("packet-status-drift");
@@ -274,7 +276,7 @@ describe("explore --check", () => {
             );
 
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(A.length(Str.split(output, "[packet-status-drift]")) - 1).toBe(2);
             expect(output).toContain("goals/goal-drift/ops/manifest.json status active");
@@ -317,7 +319,7 @@ describe("explore --check", () => {
             );
 
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("content drifts from the folded stream");
           })
@@ -342,7 +344,7 @@ describe("explore --check", () => {
             );
 
             const exit = yield* Effect.exit(runExploreCommand(["--check"]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("[packet-fleet-duplicate-slug]");
             expect(output).toContain("[packet-fleet-dependency-cycle]");
@@ -363,7 +365,7 @@ describe("explore --check", () => {
         withTempWorkingDirectory(
           Effect.gen(function* () {
             const exit = yield* Effect.exit(runExploreCommand([]));
-            expect(Exit.isSuccess(exit)).toBe(true);
+            assertTrue(Exit.isSuccess(exit));
             const output = yield* consoleText();
             expect(output).toContain("Explore commands:");
             expect(output).toContain("beep explore --check");

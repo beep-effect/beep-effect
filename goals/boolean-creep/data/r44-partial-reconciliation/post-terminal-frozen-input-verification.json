@@ -1,0 +1,12 @@
+{
+  "kind": "boolean-creep-frozen-input-verification/v1",
+  "observedAt": "2026-09-28T21:08:05.924865+00:00",
+  "sourceSha": "862327c74e0e40ae1f8ebb2a39a75873777af844",
+  "originMainSha": "8c16e648527af9da83f5cad411f7216bd1bca777",
+  "frozenInputsSha256": "48306ccc8f64bc79773dfab6e710f988905a237e93199943b48dc8e9103e7d65",
+  "checked": 4167,
+  "mismatches": [],
+  "allMatch": true,
+  "roundComplete": false,
+  "dryCredit": false
+}

@@ -319,8 +319,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
       ]);
       expect(A.sort(A.map(A.drop(gh, 1), ghKey), Order.String)).toStrictEqual([
         "api graphql -f -F id=PR_chain",
-        "pr checks --json name,state,bucket,link,workflow,completedAt,startedAt",
-        "pr checks --required --json name,state,bucket,link,workflow,completedAt,startedAt",
+        "pr checks --json name,state,bucket,link,workflow,completedAt,startedAt,description",
+        "pr checks --required --json name,state,bucket,link,workflow,completedAt,startedAt,description",
         "run list --branch feature/chain --limit 20 --json databaseId,headSha,status,conclusion,name",
       ]);
       // Two round-trips deep: the view starts and ends alone, then the other

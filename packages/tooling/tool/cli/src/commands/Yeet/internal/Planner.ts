@@ -708,13 +708,13 @@ const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
  * ```ts
  * import { YEET_STATUS_CHECK_FIELDS } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_STATUS_CHECK_FIELDS) // "name,state,bucket,link,workflow,completedAt,startedAt"
+ * console.log(YEET_STATUS_CHECK_FIELDS) // "name,state,bucket,link,workflow,completedAt,startedAt,description"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const YEET_STATUS_CHECK_FIELDS = "name,state,bucket,link,workflow,completedAt,startedAt" as const;
+export const YEET_STATUS_CHECK_FIELDS = "name,state,bucket,link,workflow,completedAt,startedAt,description" as const;
 
 const statusRemoteChecksStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({

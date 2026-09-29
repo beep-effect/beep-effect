@@ -5,37 +5,19 @@ import {
   formatSchemaDiagnostics,
   runAllowlistCheck,
 } from "@beep/repo-cli/test/Laws";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, FileSystem, Path, Result } from "effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const decodeUnknownStructInlineSchemaResult = S.decodeUnknownResult(
   S.Struct({
     token: S.Literal("expected-token"),
   })
 );
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const testLayer = Layer.mergeAll(NodeServices.layer);
-
-const withTempRepo = <A, E>(use: (tmpDir: string) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
-      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
-
-      return { fs, tmpDir } as const;
-    }),
-    ({ tmpDir }) => use(tmpDir),
-    ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true })
-  );
 
 const writeRepoFile = Effect.fn("AllowlistCheckTest.writeRepoFile")(function* (
   repoRoot: string,
@@ -51,11 +33,11 @@ const writeRepoFile = Effect.fn("AllowlistCheckTest.writeRepoFile")(function* (
   yield* fs.writeFileString(absolutePath, content).pipe(Effect.orDie);
 });
 
-describe("allowlist-check", () => {
+it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) => {
   it("formats schema diagnostics with path labels and optional redaction", () => {
     const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 
-    expect(Result.isFailure(result)).toBe(true);
+    assertTrue(Result.isFailure(result));
 
     if (Result.isFailure(result)) {
       const diagnostics = formatSchemaDiagnostics(result.failure);
@@ -75,273 +57,261 @@ describe("allowlist-check", () => {
     }
   });
 
-  it("passes when all referenced files exist", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeRepoFile(
-            tmpDir,
-            "packages/demo/src/index.ts",
-            "export const value = Object.keys({ ok: true });\n"
-          );
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+  it.effect("passes when all referenced files exist", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const value = Object.keys({ ok: true });\n");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: tmpDir,
-            })
-          );
-
-          expect(summary.ok).toBe(true);
-          expect(summary.diagnostics).toEqual([]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: tmpDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
 
-  it("fails when an allowlist entry points at a missing file", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/missing.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+      expect(summary.ok).toBe(true);
+      expect(summary.diagnostics).toEqual([]);
+    }).pipe(Effect.orDie)
+  );
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: tmpDir,
-            })
-          );
+  it.effect("fails when an allowlist entry points at a missing file", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/missing.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          expect(summary.ok).toBe(false);
-          expect(summary.diagnostics).toEqual([
-            "entries.0.file: Referenced file does not exist: packages/demo/src/missing.ts",
-          ]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: tmpDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
 
-  it("fails when allowlist entries repeat the same rule, file, and kind", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeRepoFile(
-            tmpDir,
-            "packages/demo/src/index.ts",
-            "export const value = Object.keys({ ok: true });\n"
-          );
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    },",
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test duplicate",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST-DUPLICATE"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([
+        "entries.0.file: Referenced file does not exist: packages/demo/src/missing.ts",
+      ]);
+    }).pipe(Effect.orDie)
+  );
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: tmpDir,
-            })
-          );
+  it.effect("fails when allowlist entries repeat the same rule, file, and kind", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const value = Object.keys({ ok: true });\n");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    },",
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test duplicate",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST-DUPLICATE"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          expect(summary.ok).toBe(false);
-          expect(summary.diagnostics).toEqual([
-            "entries.1: Duplicate allowlist key beep-laws/no-native-runtime::packages/demo/src/index.ts::object-method",
-          ]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: tmpDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
 
-  it("fails when an allowlist entry uses an unsupported rule id", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/unknown-rule",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([
+        "entries.1: Duplicate allowlist key beep-laws/no-native-runtime::packages/demo/src/index.ts::object-method",
+      ]);
+    }).pipe(Effect.orDie)
+  );
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: tmpDir,
-            })
-          );
+  it.effect("fails when an allowlist entry uses an unsupported rule id", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/unknown-rule",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          expect(summary.ok).toBe(false);
-          expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.rule")]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: tmpDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
 
-  it("fails when a native-runtime allowlist entry uses an unsupported kind", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "unknown-kind",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.rule")]);
+    }).pipe(Effect.orDie)
+  );
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: tmpDir,
-            })
-          );
+  it.effect("fails when a native-runtime allowlist entry uses an unsupported kind", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "unknown-kind",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          expect(summary.ok).toBe(false);
-          expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.kind")]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: tmpDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
 
-  it("resolves allowlist paths from the repository root when started in a subdirectory", () =>
-    Effect.runPromise(
-      withTempRepo((tmpDir) =>
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const workingDir = path.join(tmpDir, "packages/demo");
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.kind")]);
+    }).pipe(Effect.orDie)
+  );
 
-          yield* writeRepoFile(
-            tmpDir,
-            "packages/demo/src/index.ts",
-            "export const value = Object.keys({ ok: true });\n"
-          );
-          yield* writeRepoFile(
-            tmpDir,
-            ALLOWLIST_PATH,
-            A.join(
-              [
-                "{",
-                '  "$schema": "./effect-laws.allowlist.schema.json",',
-                '  "version": 1,',
-                '  "entries": [',
-                "    {",
-                '      "rule": "beep-laws/no-native-runtime",',
-                '      "file": "packages/demo/src/index.ts",',
-                '      "kind": "object-method",',
-                '      "reason": "test",',
-                '      "owner": "@beep/test",',
-                '      "issue": "TEST-ALLOWLIST"',
-                "    }",
-                "  ]",
-                "}",
-              ],
-              "\n"
-            )
-          );
+  it.effect("resolves allowlist paths from the repository root when started in a subdirectory", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
+      const path = yield* Path.Path;
+      const workingDir = path.join(tmpDir, "packages/demo");
 
-          const summary = yield* runAllowlistCheck(
-            AllowlistCheckOptions.make({
-              cwd: workingDir,
-            })
-          );
+      yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const value = Object.keys({ ok: true });\n");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        A.join(
+          [
+            "{",
+            '  "$schema": "./effect-laws.allowlist.schema.json",',
+            '  "version": 1,',
+            '  "entries": [',
+            "    {",
+            '      "rule": "beep-laws/no-native-runtime",',
+            '      "file": "packages/demo/src/index.ts",',
+            '      "kind": "object-method",',
+            '      "reason": "test",',
+            '      "owner": "@beep/test",',
+            '      "issue": "TEST-ALLOWLIST"',
+            "    }",
+            "  ]",
+            "}",
+          ],
+          "\n"
+        )
+      );
 
-          expect(summary.ok).toBe(true);
-          expect(summary.diagnostics).toEqual([]);
+      const summary = yield* runAllowlistCheck(
+        AllowlistCheckOptions.make({
+          cwd: workingDir,
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+      );
+
+      expect(summary.ok).toBe(true);
+      expect(summary.diagnostics).toEqual([]);
+    }).pipe(Effect.orDie)
+  );
 });
