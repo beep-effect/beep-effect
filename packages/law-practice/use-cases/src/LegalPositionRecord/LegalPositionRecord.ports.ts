@@ -16,8 +16,8 @@ import {
   LegalPositionRelator,
   PowerExercise,
 } from "@beep/law-practice-domain";
-import { Defect, EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Defect, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Context, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ActFrameRecordScope, LegalPositionRecordScope } from "./LegalPositionRecord.values.ts";
@@ -217,61 +217,85 @@ export class LegalPositionRecordRepositoryShape extends S.Class<LegalPositionRec
   {
     listCorrections: Fn({
       input: ActFrameRecordScope,
-      output: EffectSchema<ReadonlyArray<CorrectionDelta>, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare(
+        (u): u is Effect.Effect<ReadonlyArray<CorrectionDelta>, LegalPositionRecordRepositoryUnavailable> =>
+          Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Read every appended correction to one tenant-scoped act frame.",
     }),
     listExercises: Fn({
       input: ActFrameRecordScope,
-      output: EffectSchema<ReadonlyArray<PowerExercise>, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare(
+        (u): u is Effect.Effect<ReadonlyArray<PowerExercise>, LegalPositionRecordRepositoryUnavailable> =>
+          Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Read every recorded attempt made under one tenant-scoped act frame.",
     }),
     listFrames: Fn({
       input: LegalPositionRecordScope,
-      output: EffectSchema<ReadonlyArray<ActFrame>, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<ReadonlyArray<ActFrame>, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Read every recorded act frame for one organization.",
     }),
     listOppositionCandidates: Fn({
       input: LegalPositionRecordScope,
-      output: EffectSchema<ReadonlyArray<LegalOppositionCandidate>, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare(
+        (u): u is Effect.Effect<ReadonlyArray<LegalOppositionCandidate>, LegalPositionRecordRepositoryUnavailable> =>
+          Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Read every screened opposition candidate for one organization, in append order only.",
     }),
     listRelators: Fn({
       input: LegalPositionRecordScope,
-      output: EffectSchema<ReadonlyArray<LegalPositionRelator>, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare(
+        (u): u is Effect.Effect<ReadonlyArray<LegalPositionRelator>, LegalPositionRecordRepositoryUnavailable> =>
+          Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Read every stored advantage-side relation for one organization.",
     }),
     recordCorrection: Fn({
       input: CorrectionDelta,
-      output: EffectSchema<CorrectionDelta, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<CorrectionDelta, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Append one correction; revising it appends a further delta naming this one.",
     }),
     recordExercise: Fn({
       input: PowerExercise,
-      output: EffectSchema<PowerExercise, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<PowerExercise, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Append one attempted exercise, whether or not it was determined to have taken effect.",
     }),
     recordFrame: Fn({
       input: ActFrame,
-      output: EffectSchema<ActFrame, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<ActFrame, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Append one interpreter's reading of a norm as an act.",
     }),
     recordOppositionCandidate: Fn({
       input: LegalOppositionCandidate,
-      output: EffectSchema<LegalOppositionCandidate, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<LegalOppositionCandidate, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Append one screened candidate; a basis or a verdict family recorded later is its own row.",
     }),
     recordRelator: Fn({
       input: LegalPositionRelator,
-      output: EffectSchema<LegalPositionRelator, LegalPositionRecordRepositoryUnavailable, never>(),
+      output: S.declare((u): u is Effect.Effect<LegalPositionRelator, LegalPositionRecordRepositoryUnavailable> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Append one stored advantage-side relation; no derived view is ever written.",
     }),

@@ -189,10 +189,11 @@ Md.ts          — public builder namespace (Md.h1 … Md.table)
 `@beep/lexical-schema` specializes differently: `.model` / `.behavior` / `.codec` /
 `.normalize`. No package uses all five suffixes — pick per package.
 
-**8. Lesson — a value→function schema is a breaking change.** Exposing a *typed*
-`Effect<A,E,R>` schema legitimately requires a phantom-typed function
-(`export const EffectSchema = <A,E,R>() => S.declare<Effect.Effect<A,E,R>>(isEffect, …)`),
-because `S.declare` can't runtime-check type args. But turning a schema **value** into a
-**function** breaks every value-form consumer: tests and `**Example**` blocks must now call
-`EffectSchema()` (or `S.is(EffectSchema())`), not pass the bare function. When you
-parameterize a schema, sweep the guard/decode/example call sites in the same change.
+**8. Lesson — a value→function schema is a breaking change.** A schema whose type
+arguments are phantom (`S.declare` can't runtime-check them) tempts a type-parameterized
+factory (`<A,E,R>() => S.declare(...)`). Turning a schema **value** into a **function**
+breaks every value-form consumer: tests and `**Example**` blocks must now call the factory
+(or `S.is(factory())`), not pass the bare function. When you parameterize a schema, sweep
+the guard/decode/example call sites in the same change. For typed `Effect<A,E,R>` values,
+skip the factory: declare at the consumer with a typed guard,
+`S.declare((u): u is Effect.Effect<A, E, R> => Effect.isEffect(u))`.

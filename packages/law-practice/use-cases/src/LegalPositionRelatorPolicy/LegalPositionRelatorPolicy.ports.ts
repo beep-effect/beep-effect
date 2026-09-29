@@ -9,8 +9,8 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LegalPositionRelator } from "@beep/law-practice-domain";
-import { EffectSchema, Fn } from "@beep/schema";
-import { Context } from "effect";
+import { Fn } from "@beep/schema";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import { LegalOppositionCandidateInput, LegalPositionRelatorView } from "./LegalPositionRelatorPolicy.values.ts";
 import type { LegalPositionRelatorAdmissionError } from "./LegalPositionRelatorPolicy.errors.ts";
@@ -76,7 +76,9 @@ export class LegalPositionRelatorPolicyShape extends S.Class<LegalPositionRelato
   {
     admit: Fn({
       input: S.Unknown,
-      output: EffectSchema<LegalPositionRelator, LegalPositionRelatorAdmissionError, never>(),
+      output: S.declare((u): u is Effect.Effect<LegalPositionRelator, LegalPositionRelatorAdmissionError> =>
+        Effect.isEffect(u)
+      ),
     }).annotateKey({
       description: "Admit one candidate record as a stored advantage-side legal relation, or refuse it.",
     }),
