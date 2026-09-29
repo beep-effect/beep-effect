@@ -33,7 +33,6 @@ import {
 import { findSchemaParityCodemodEditOverlap, renderSchemaParityCodemodEdits } from "./SchemaParityCodemodEdits.ts";
 import { schemaParityCodemodValueImports } from "./SchemaParityCodemodImports.ts";
 import { literalKitFacetsRule } from "./SchemaParityCodemodLiteralKitRule.ts";
-import { intMembersRule, numberMembersRule } from "./SchemaParityCodemodMemberRules.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { SourceFile } from "ts-morph";
@@ -69,11 +68,7 @@ const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemodEngine")
  * @since 0.0.0
  */
 export const SchemaParityCodemodRules: HashMap.HashMap<SchemaParityCodemodRuleId, SchemaParityCodemodRule> =
-  HashMap.make(
-    [literalKitFacetsRule.id, literalKitFacetsRule],
-    [intMembersRule.id, intMembersRule],
-    [numberMembersRule.id, numberMembersRule]
-  );
+  HashMap.make([literalKitFacetsRule.id, literalKitFacetsRule]);
 
 const importKey = SchemaParityCodemodImport.match({
   NamespaceImport: (requirement) => `namespace:${requirement.moduleSpecifier}:${requirement.alias}`,
