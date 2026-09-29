@@ -10,13 +10,14 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
 import { Effect, Runtime } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
@@ -832,7 +833,7 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>(
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
     reason: S.optionalKey(QualitySchedulerErrorReason),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<QualitySchedulerError>("QualitySchedulerError", {
     description: "Failure raised while coordinating machine-wide quality admission.",

@@ -92,7 +92,6 @@ The full chain. Each block is one boundary.
 ````ts
 // packages/drivers/postgres/src/Postgres.errors.ts (excerpt)
 import { $PostgresId } from "@beep/identity";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -111,7 +110,7 @@ export class PostgresError extends S.TaggedError<PostgresError>(
     operation: S.String,
     sqlState: S.OptionFromOptionalKey(S.String),
     query: S.OptionFromOptionalKey(S.String),
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
   },
   $I.annoteError<PostgresError>("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",

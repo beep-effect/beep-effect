@@ -19,7 +19,6 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { Defect } from "@beep/schema";
 import { cn } from "@beep/ui/lib/utils";
 import { A } from "@beep/utils";
 import { useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -93,7 +92,7 @@ export class MentionLookupError extends S.TaggedError<MentionLookupError>($I`Men
     message: S.String.annotateKey({
       description: "User-safe lookup failure message.",
     }),
-    cause: S.optionalKey(Defect({ includeStack: true })).annotateKey({
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).annotateKey({
       description: "Underlying source or schema failure retained for structured diagnostics.",
     }),
   },

@@ -12,7 +12,6 @@
  */
 
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
 import { A, O, P, pipe, R, thunkFalse } from "@beep/utils";
 import {
   Cause,
@@ -60,6 +59,8 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
   makeEmptySafeObject,
+  type SafeObject,
+  SafeObject as SafeObjectSchema,
 } from "../Codemode.values.ts";
 import {
   AppliedBinaryOperator,

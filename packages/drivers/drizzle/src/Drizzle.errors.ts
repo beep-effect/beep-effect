@@ -6,7 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -150,7 +150,8 @@ const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reas
   );
 
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
-  P.hasInspectableObjectShape(value) && safeBoolean(() => S.is(Defect({ includeStack: true }))(value))
+  P.hasInspectableObjectShape(value) &&
+  safeBoolean(() => S.is(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))(value))
     ? O.some(value)
     : O.none();
 
@@ -312,7 +313,7 @@ export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
     operation: DrizzleOperation.annotateKey({
       description: "Driver operation being normalized.",
     }),
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true }))
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({
         description: "Inspectable defect retained as the normalized technical cause.",

@@ -6,10 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
 
@@ -32,7 +33,7 @@ export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`Cor
   "CorpusCommandError",
   {
     message: S.String,
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<CorpusCommandError>("CorpusCommandError", {
     description: "A failure raised while preparing or applying a corpus curation operation.",
@@ -155,7 +156,7 @@ export class PreservationArchiveIoError extends S.TaggedError<PreservationArchiv
 )(
   "PreservationArchiveIoError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: OpaqueDefect,
     message: S.NonEmptyString,
     operation: S.NonEmptyString,
     path: S.NonEmptyString,

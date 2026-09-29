@@ -11,7 +11,6 @@ import {
   NonEmptyTrimmedStr,
   NonNegativeInt,
   PosInt,
-  SafeObject as SafeObjectSchema,
   SchemaUtils,
 } from "@beep/schema";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
@@ -32,13 +31,14 @@ import {
   CodeModeURL,
   CodeModeURLSearchParams,
   isCodeModeValue,
+  SafeObject as SafeObjectSchema,
 } from "./Codemode.values.ts";
 
 const encodeUnknownJsonSync = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
-export type { SafeObject } from "@beep/schema/SafeObject";
+export type { SafeObject } from "./Codemode.values.ts";
 
 /**
  * Services required to obtain Toolkit handlers and run their streams.

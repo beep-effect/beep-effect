@@ -6,7 +6,7 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import { OnePasswordCliDiagnosticText, OnePasswordCliExitCode } from "./OnePasswordCli.models.ts";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.errors");
-const OnePasswordCliDefect = Defect({ includeStack: true });
+const OnePasswordCliDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true));
 const isOnePasswordCliDefect = S.is(OnePasswordCliDefect);
 
 type OnePasswordCliErrorContextInput = {

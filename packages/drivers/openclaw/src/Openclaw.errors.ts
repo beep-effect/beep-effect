@@ -11,7 +11,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OpenclawDiagnosticText, OpenclawExitCode } from "./Openclaw.models.ts";
 
@@ -64,9 +64,11 @@ export class OpenclawCommandSpawnError extends S.TaggedError<OpenclawCommandSpaw
     argumentCount: NonNegativeInteger.annotateKey({
       description: "Number of arguments passed to the executable.",
     }),
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Underlying platform failure raised while spawning the process.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Underlying platform failure raised while spawning the process.",
+      }),
   },
   $I.annoteError<OpenclawCommandSpawnError>("OpenclawCommandSpawnError", {
     description: "Failure raised when the operating system cannot spawn the OpenClaw executable.",
@@ -198,9 +200,11 @@ export class OpenclawOutputParseError extends S.TaggedError<OpenclawOutputParseE
   "OpenclawOutputParseError",
   {
     ...commandContextFields,
-    cause: Defect({ includeStack: true }).annotateKey({
-      description: "Schema decoding failure retained for structured diagnostics.",
-    }),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .annotateKey({
+        description: "Schema decoding failure retained for structured diagnostics.",
+      }),
     stdoutLength: NonNegativeInteger.annotateKey({
       description: "Captured standard-output length without exposing its contents.",
     }),

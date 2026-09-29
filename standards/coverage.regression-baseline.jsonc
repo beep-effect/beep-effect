@@ -32619,30 +32619,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Opaque.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Options.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts": {
           "lines": 86.36,
           "statements": 86.95,
@@ -32775,18 +32751,6 @@
             "functions": 1
           }
         },
-        "packages/foundation/modeling/schema/src/Primitive.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/PromiseSchema.ts": {
           "lines": 66.66,
           "statements": 60,
@@ -32797,30 +32761,6 @@
             "statements": 4,
             "branches": 0,
             "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/Record/Record.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Record/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts": {
@@ -32857,30 +32797,6 @@
             "statements": 1,
             "branches": 2,
             "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SafeObject/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/SafeRemoteHost.ts": {
@@ -32955,42 +32871,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/SchemaUtils/optional.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/optionalKeyWithDefaults.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/pluck.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/SchemaUtils/split.ts": {
           "lines": 100,
           "statements": 100,
@@ -33037,18 +32917,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts": {
-          "lines": 100,
-          "statements": 87.5,
-          "branches": 100,
-          "functions": 66.66,
-          "uncovered": {
-            "lines": 0,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts": {
@@ -33409,18 +33277,6 @@
             "statements": 3,
             "branches": 4,
             "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/Transformations.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/URL.ts": {

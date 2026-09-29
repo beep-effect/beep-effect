@@ -26,7 +26,6 @@
 
 import { LogicalEdgeIdentity, LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
@@ -34,6 +33,8 @@ import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { Equal } from "effect";
 import * as S from "effect/Schema";
+
+const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.commands");
 

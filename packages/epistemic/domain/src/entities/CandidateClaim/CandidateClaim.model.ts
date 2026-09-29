@@ -7,9 +7,9 @@
 
 import { ClaimLifecycle, EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.model");
 const pg = ProductEntity.pg;
@@ -52,7 +52,7 @@ export class CandidateClaim extends ProductEntity.Entity<CandidateClaim>()(Epist
       description: "Stable fixture key for the candidate claim.",
     }).pipe(pg.text(), pg.columnName("fixture_key")),
     lifecycle: ClaimLifecycle.pipe(pg.text()),
-    snapshot: UnknownRecord.pipe(pg.jsonb()),
+    snapshot: S.Record(S.String, S.Unknown).pipe(pg.jsonb()),
   },
   $I.annote("CandidateClaim", {
     description: "Candidate claim proposed by an agent with source evidence.",

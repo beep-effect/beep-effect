@@ -6,7 +6,7 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -220,7 +220,9 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  */
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+    ).pipe(SchemaUtils.withNoneDefault),
     status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("XAiErrorOptions", {

@@ -4,14 +4,14 @@
  * Effect v4 `@beep/nlp` implementation notes:
  * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
+ * `S.Defect({ includeStack: true })` with an always-true equivalence override,
+ * and node-scoped failures carry the `NodeId` schema.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -113,7 +113,7 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
 export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     nodeId: NodeId,
     operationName: S.String,
   },
@@ -181,7 +181,7 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
 export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
   {
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
     operation: S.Literals(["store", "retrieve", "delete", "query"]),
   },
   $I.annoteError<StorageError>("StorageError", {
@@ -212,7 +212,7 @@ export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
 export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
     message: S.String,
   },
   $I.annoteError<ExecutionError>("ExecutionError", {

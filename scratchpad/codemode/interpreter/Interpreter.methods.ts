@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { LiteralKit, SafeObject } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
 import { A, O, P, pipe, R } from "@beep/utils";
 import { Effect, flow, Result } from "effect";
@@ -36,6 +36,7 @@ import {
   CodeModeSet,
   type CodeModeURLSearchParams,
   isCodeModeValue,
+  SafeObject,
 } from "../Codemode.values.ts";
 import { dateSetterArgumentCount, invokeDateMethod, invokeDateStatic } from "../stdlib/StdLib.date.ts";
 import { invokeMathMethod } from "../stdlib/StdLib.math.ts";

@@ -6,13 +6,13 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $FfmpegId.create("FFmpeg.errors");
-const FFmpegDefect = Defect({ includeStack: true });
+const FFmpegDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true));
 const isFFmpegDefect = S.is(FFmpegDefect);
 
 /**

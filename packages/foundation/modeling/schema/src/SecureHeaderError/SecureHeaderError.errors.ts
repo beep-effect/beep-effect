@@ -6,14 +6,15 @@
 import { $SchemaId } from "@beep/identity";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import { Defect } from "../Opaque.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
   message: S.String,
-  cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).pipe(
+    SchemaUtils.withNoneDefault
+  ),
 } satisfies S.Struct.Fields;
 
 /**

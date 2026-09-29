@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Defect } from "@beep/schema";
 import { Runtime } from "effect";
 import * as S from "effect/Schema";
+import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Codex/Security.errors");
 
@@ -36,7 +36,7 @@ export class CodexSecurityError extends S.TaggedError<CodexSecurityError>($I`Cod
   {
     message: S.String,
     exitCode: S.optionalKey(S.Int),
-    cause: S.optionalKey(Defect({ includeStack: true })),
+    cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<CodexSecurityError>("CodexSecurityError", {
     description: "Safe failure from a local security scan or bundle import.",

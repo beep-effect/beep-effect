@@ -12,9 +12,10 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { optionalDefect } from "../internal/OptionalDefect.ts";
 
 const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.errors");
 
@@ -60,13 +61,6 @@ export const ExecutionLedgerOperation = LiteralKit([
  * @since 0.0.0
  */
 export type ExecutionLedgerOperation = typeof ExecutionLedgerOperation.Type;
-
-const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(Defect({ includeStack: true }))
-    .pipe(SchemaUtils.withNoneDefault)
-    .annotateKey({
-      description,
-    });
 
 /**
  * A ledger write the database rejected by constraint name.

@@ -6,7 +6,7 @@
  */
 
 import { $TestUtilsId } from "@beep/identity/packages";
-import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -536,7 +536,9 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
 export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
   {
-    cause: S.OptionFromOptionalKey(Defect({ includeStack: true })).pipe(
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+    ).pipe(
       SchemaUtils.withNoneDefault,
       $I.annoteKey("SqlTestHarnessError.cause", {
         description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",

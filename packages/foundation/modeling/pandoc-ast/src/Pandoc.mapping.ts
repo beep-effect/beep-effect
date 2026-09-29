@@ -8,7 +8,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
-import { Defect, PosInt } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import { A, O, R } from "@beep/utils";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
@@ -70,7 +70,7 @@ export class PandocMappingError extends S.TaggedError<PandocMappingError>($I`Pan
   "PandocMappingError",
   {
     message: S.String,
-    cause: Defect({ includeStack: true }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
   },
   $I.annoteError<PandocMappingError>("PandocMappingError", {
     description: "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed.",

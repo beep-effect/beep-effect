@@ -6,7 +6,6 @@
  */
 
 import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import type { UnknownRecord } from "@beep/schema";
 
 /**
  * Physical table name for practice knowledge-graph build provenance.
@@ -63,6 +62,6 @@ export const KG_BUILD_TABLE_NAME = "kg_build" as const;
 export const kgBuildTable = pgTable(KG_BUILD_TABLE_NAME, {
   bundleVersion: text("bundle_version").notNull(),
   builtFromRuns: text("built_from_runs").notNull(),
-  counts: jsonb("counts").notNull().$type<UnknownRecord>(),
+  counts: jsonb("counts").notNull().$type<Readonly<Record<string, unknown>>>(),
   builtAt: text("built_at").notNull(),
 });

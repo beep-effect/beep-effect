@@ -20161,14 +20161,6 @@
       "description": "A non-negative integer"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Opaque.ts",
-      "symbol": "OpaqueUnknown",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OpaqueUnknown",
-      "description": "Opaque payload; never part of declared identity."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
       "symbol": "HeaderValueInput",
       "kind": "union",
@@ -20361,22 +20353,6 @@
       "description": "Path string normalized to use '/' separators only."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Primitive.ts",
-      "symbol": "Primitive",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "Primitive",
-      "description": "A primitive data type, (string | number | boolean | bigint | null | undefined )"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Record/Record.schema.ts",
-      "symbol": "UnknownRecord",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "UnknownRecord",
-      "description": "A record of unknown values"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
       "symbol": "Header",
       "kind": "union",
@@ -20445,39 +20421,11 @@
       "description": "A string that can be converted directly to a JavaScript RegExp using new RegExp(value)."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
-      "symbol": "SafeObject",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "SafeObject",
-      "description": "A nominally branded record with string keys and unknown values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
-      "symbol": "SafeObjectFromObjectKeyword",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "SafeObjectFromObjectKeyword",
-      "description": "Normalizes any JavaScript object-keyword value into a nominally branded string-keyed record."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
       "symbol": "BlockedHostError",
       "kind": "tagged-error",
       "owner": "@beep/schema",
       "identity": "BlockedHostError"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/optionalKeyWithDefaults.ts",
-      "symbol": "optionalKeyWithDefault",
-      "kind": "codec",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts",
-      "symbol": "withEncodeDefault",
-      "kind": "codec",
-      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeader/SecureHeader.schema.ts",
@@ -20860,12 +20808,6 @@
       "owner": "@beep/schema",
       "identity": "TomlTextToUnknown",
       "description": "Schema transformation that parses TOML text into unknown values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Transformations.ts",
-      "symbol": "destructiveTransform",
-      "kind": "codec",
-      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/URL.ts",

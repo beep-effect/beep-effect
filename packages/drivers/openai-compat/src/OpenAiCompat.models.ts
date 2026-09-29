@@ -6,7 +6,7 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
-import { LiteralKit, OptionFromOptionalNullishKey, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -18,7 +18,7 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
-const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalNullableString = S.OptionFromOptionalNullOr(S.String).pipe(SchemaUtils.withNoneDefault);
 const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
 const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault);
 /**
