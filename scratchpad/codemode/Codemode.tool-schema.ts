@@ -95,9 +95,10 @@ const Node = RawJsonSchema.pipe(
   })
 );
 
+// Draft 2020-12 allows boolean subschemas at the root and in every definition.
 const Document = S.Struct({
-  schema: Node,
-  definitions: S.Record(S.String, Node),
+  schema: SubSchema,
+  definitions: SubSchemaRecord,
 }).pipe(
   $I.annoteSchema("Document", {
     description: "Render view of an upstream draft-2020-12 JSON Schema document.",
