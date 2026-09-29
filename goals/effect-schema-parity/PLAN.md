@@ -198,8 +198,10 @@ Groups and upstream targets are in `explorations/effect-schema-parity/MAP.md`
   `SchemaParser` free functions. Call path and measurements: census
   `explorations/effect-schema-parity/research/2026-09-28-schemautils-census.md` §D10.
 - F15 rule; retire `SchemaUtils/withCodecStatics.ts` with consumers; keep
-  `collectAnnotationsAt.ts` and `isCodecDataFirst.ts` (the latter KEEP departs
-  from the 2026-09-14 ruling and goes to the operator's grill). The same PR
+  `collectAnnotationsAt.ts` and `isCodecDataFirst.ts` (KEEP ruled by the
+  operator on 2026-09-28, superseding the 2026-09-14 ruling for this symbol
+  only: exploration `DECISIONS.md` "isCodecDataFirst: keep"; SPEC goal-time
+  row 2026-09-28). The same PR
   deletes `CodecStaticRegistry`, `CodecStaticKey`, `CodecStaticKeys`,
   `SelectedCodecStatics`, `CodecStaticSelectionError`, `toEquivalence` and
   `DualEquivalence` (10 + 1 consumers move to `S.toEquivalence`), and

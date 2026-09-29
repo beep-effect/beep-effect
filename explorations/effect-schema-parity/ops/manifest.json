@@ -3,14 +3,12 @@
   "exploration": {
     "slug": "effect-schema-parity",
     "title": "Effect Schema Parity",
-    "status": "active",
-    "stage": "decompose",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [
-      "Compiler verdict (adopt / defer / reject) for SchemaCompiler, SchemaJITCompiler and SchemaAOTCompiler: pending the operator grill at align with the D6 spike numbers and the CSP constraint.",
-      "Browser/desktop AOT: is a Build step worth it for oip-web and the Tauri shell, given prod CSP blocks JIT (no unsafe-eval) while dev CSP allows it?",
-      "Does SchemaCompiler.set with hand-written decoders have a place for @beep/schema kits (LiteralKit is fast path), or is that premature?",
-      "Should the planned effect-schema-inventory lint read the pin from the root package.json catalog and the source bytes from git -C .repos/effect show, so it never depends on the reference working tree? (Lane A answers this for the prototype.)",
-      "Does the Declaration fallback (every S.Class is a SchemaAST.Declaration) leave class-based models with any JIT gain at all, or is the win confined to struct-shaped wire schemas?"
+      "Browser/desktop AOT for oip-web and the Tauri shells (prod CSP blocks JIT): deferred, owner: compilers re-entry gate (MAP §Later Candidates).",
+      "SchemaCompiler.set with hand-written decoders for @beep/schema kits (LiteralKit is fast path): deferred as premature, no kit measured; owner: compilers re-entry gate (MAP §Later Candidates).",
+      "Declaration fallback: answered 2026-09-28 (class models gain about 1.2-1.4x, never the 3.7x wire-struct win); re-measure on a quiet machine, including the AOT recursive-model 0.69-0.78x reading, deferred, owner: compilers re-entry gate (MAP §Later Candidates)."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

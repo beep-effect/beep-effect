@@ -48,7 +48,9 @@ shipped schema compilers (effect #7908); see its `DECISIONS.md` 2026-09-28
 entry. This packet was amended in place by the `SPEC.md` goal-time row of the
 same date: pin `inventoryPin` `e5f7d12af9`, fixture `effect-schema-rc118`,
 bump rule for any pin change, Opus 5.5 lanes, and the P5 precondition met by
-PR #927. The compiler verdict is pending the operator; no phase has started.
+PR #927. The SchemaUtils census landed in P2, P3 and P5. The operator ruled
+the schema compilers DEFER (no compilers goal) and kept `isCodecDataFirst`;
+the exploration graduated again the same day. No phase has started.
 
 Earlier: exploration definition-of-ready passed on 2026-09-15
 (`explorations/effect-schema-parity/MAP.md`, final section). Packet
