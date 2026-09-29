@@ -29,3 +29,12 @@ Validation against merged dependencies:
 - Full touched-package verification and hosted checks remain pending.
 
 These are PR repairs, not completion of the migration goal.
+
+## Full-proof knowledge-reference repair
+
+The full branch proof passed build, docgen, integration, doctest, JSDoc ratchet
+and lint, then failed knowledge-reference policy. Six observations came from
+synthetic home paths in four evidence excerpts across the baseline and packet
+ledger. Those excerpts now use portable home notation. Test source, IDs,
+occurrence fingerprints and statuses are unchanged. This is evidence
+redaction, not a baseline waiver or assertion change.

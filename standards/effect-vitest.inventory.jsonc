@@ -58168,7 +58168,7 @@
       "symbol": "scoped",
       "occurrence": "v2:4cdd4699713101e402a5fc46737f1e95a964474802e3faac20197ccd94432fb3",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", \"\\u001B[31mwarning\\u001B[0m at /home/operator/private/runtime.ts\\u0001\" ); const err",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"resolved\\tgoals\\tdoctor\\nextra\", \"\\u001B[31mwarning\\u001B[0m at ~/private/runtime.ts\\u0001\" ); const err",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -58231,7 +58231,7 @@
       "symbol": "scoped",
       "occurrence": "v2:71542a3d44860cd2d6f2e5a8d2645f9119bce5581f3e23c5c45f7726f6710157",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"unsafe stdout from /home/operator/private/stdout.ts\", \"\\u001B[31mSyntaxError\\u001B[0m in /home/operator/private/stder",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const harness = yield* makeProbeHarness( \"unsafe stdout from ~/private/stdout.ts\", \"\\u001B[31mSyntaxError\\u001B[0m in ~/private/stder",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
