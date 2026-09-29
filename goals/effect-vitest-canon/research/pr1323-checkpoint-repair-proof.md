@@ -78,3 +78,21 @@ Full CLI package verification passed after this commit: audit 695.6 seconds,
 docgen 22.8 seconds. Review closeout for the same head reports zero issues and
 zero unresolved threads. Full repository proof and hosted heavy checks remain
 pending; this receipt does not claim merge readiness.
+
+## Hosted checkpoint readiness
+
+All seven hosted heavy jobs passed on `90cd89d70c`: Build, Check, Coverage
+Regression, Docgen, Doctest, Lint Policy, and Test Integration. All non-heavy
+verification jobs also passed. The only failed status is the acknowledged
+Vercel oip-web deployment rate limit; the todox deployment passed.
+
+The refreshed review closeout passed with zero issues, zero actionable
+threads, and zero unresolved threads. The attached Yeet monitor then exited
+zero with `merge-ready: yes`. GitHub still reports the same head as open and
+structurally mergeable. This establishes hosted readiness, not a completed
+merge or goal closure.
+
+The exact-head full local proof remains live in unit tests after passing
+JSDoc, integration, lint policy, and type checking. Keep that run intact and
+require its terminal result before merging. The saved follow-up migrations
+and remaining inventory still require integration and their own proofs.
