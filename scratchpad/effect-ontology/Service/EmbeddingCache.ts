@@ -10,8 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
-import { EpochMillis } from "@beep/schema/Timestamp";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -63,7 +62,7 @@ export type Embedding = typeof Embedding.Type;
  */
 interface CacheEntry {
   readonly embedding: Embedding;
-  readonly createdAt: EpochMillis;
+  readonly createdAt: NonNegativeInt;
   readonly lastAccessedAt: number;
 }
 
@@ -230,7 +229,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
               const evicted = evictLRU(map);
               return HashMap.set(evicted, hash, {
                 embedding,
-                createdAt: EpochMillis.make(now),
+                createdAt: NonNegativeInt.make(now),
                 lastAccessedAt: now,
               });
             });
@@ -379,7 +378,7 @@ export class PersistentEmbeddingCache extends Context.Service<
  */
 const PersistentEmbeddingEntry = S.Struct({
   vector: Embedding,
-  createdAt: EpochMillis,
+  createdAt: NonNegativeInt,
 });
 
 const EmbeddingBlob = S.Struct({
@@ -489,7 +488,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
       embeddings: {
         [hash]: {
           vector: embedding,
-          createdAt: EpochMillis.make(now),
+          createdAt: NonNegativeInt.make(now),
         },
       },
     };
@@ -552,7 +551,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
           const evicted = evictLRU(m);
           return HashMap.set(evicted, hash, {
             embedding: persisted.value,
-            createdAt: EpochMillis.make(now),
+            createdAt: NonNegativeInt.make(now),
             lastAccessedAt: now,
           });
         });
@@ -575,7 +574,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
         const evicted = evictLRU(map);
         return HashMap.set(evicted, hash, {
           embedding,
-          createdAt: EpochMillis.make(now),
+          createdAt: NonNegativeInt.make(now),
           lastAccessedAt: now,
         });
       });
@@ -720,7 +719,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
             const evicted = evictLRU(map);
             return HashMap.set(evicted, hash, {
               embedding,
-              createdAt: EpochMillis.make(now),
+              createdAt: NonNegativeInt.make(now),
               lastAccessedAt: now,
             });
           });

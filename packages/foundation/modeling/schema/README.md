@@ -12,18 +12,18 @@ reuse without taking product-domain dependencies.
 Canonical schema concept imports are namespace-first:
 
 ```ts
-import * as Duration from "@beep/schema/Duration"
+import * as Color from "@beep/schema/Color"
 import * as Glob from "@beep/schema/Glob"
 
-Duration.Input
-Duration.FromInput
+Color.HexColor
+Color.HexToRgb
 Glob.Schema
 ```
 
 The package root remains a curated flat facade:
 
 ```ts
-import { DurationInput, Glob } from "@beep/schema"
+import { Glob, HexColor } from "@beep/schema"
 ```
 
 Root flat exports are convenience and compatibility, not the canonical home for
@@ -32,10 +32,15 @@ full concept namespaces.
 Leaf concept modules use small role files:
 
 ```txt
-src/Duration/
-  Duration.schema.ts
-  Duration.input.ts
-  Duration.transforms.ts
+src/Color/
+  Color.adjust.ts
+  Color.hex.ts
+  Color.oklch.ts
+  Color.rgb.ts
+  Color.scale.ts
+  Color.shared.ts
+  Color.transforms.ts
+  Color.ts
   index.ts
 ```
 
@@ -45,7 +50,7 @@ leaves when direct helper imports are the intended API.
 
 Public package subpaths are explicit. `SchemaUtils` helper leaves such as
 `@beep/schema/SchemaUtils/pluck` remain intentional public imports, but concept
-role files such as `@beep/schema/Duration/Duration.schema` are private source
+role files such as `@beep/schema/Color/Color.hex` are private source
 topology.
 
 Former topical families are represented by PascalCase leaf concept modules and
@@ -90,11 +95,11 @@ bun add @beep/schema
 ## Usage
 
 ```ts
-import * as Duration from "@beep/schema/Duration"
+import * as Color from "@beep/schema/Color"
 import * as S from "effect/Schema"
 
-const decodeDuration = S.decodeUnknownEffect(Duration.FromInput)
-console.log(decodeDuration)
+const decodeHexColor = S.decodeUnknownEffect(Color.HexColor)
+console.log(decodeHexColor)
 ```
 
 ## Development

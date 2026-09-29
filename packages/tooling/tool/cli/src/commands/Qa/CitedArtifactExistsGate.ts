@@ -7,7 +7,6 @@
 
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { ISOStr } from "@beep/schema/Timestamp";
 import {
   AlwaysGateApplicability,
   EvidencePredicateType,
@@ -140,7 +139,6 @@ export class CitedArtifactExistsDenied extends S.Class<CitedArtifactExistsDenied
  *   CitedArtifactExistsGate,
  *   CitedArtifactExistsVerdict
  * } from "@beep/repo-cli/commands/Qa/CitedArtifactExistsGate"
- * import { ISOStr } from "@beep/schema/Timestamp"
  *
  * const verdict = CitedArtifactExistsVerdict.cases.denied.make({
  *   audit: {
@@ -150,7 +148,7 @@ export class CitedArtifactExistsDenied extends S.Class<CitedArtifactExistsDenied
  *     }),
  *     evaluator: "qa",
  *     gateId: CitedArtifactExistsGate.id,
- *     occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
+ *     occurredAt: "2026-08-24T00:00:00.000Z",
  *     outcome: "denied",
  *     reason: "The citation is missing."
  *   }
@@ -260,7 +258,7 @@ export const evaluateCitedArtifactExists: GateEvaluator<
   });
   const presentPaths = HashSet.fromIterable(A.getSomes(present));
   const missingPaths = A.filter(input.citedPaths, (citedPath) => !HashSet.has(presentPaths, citedPath));
-  const occurredAt = ISOStr.make(DateTime.formatIso(yield* DateTime.now));
+  const occurredAt = DateTime.formatIso(yield* DateTime.now);
 
   return A.match(missingPaths, {
     onEmpty: () =>

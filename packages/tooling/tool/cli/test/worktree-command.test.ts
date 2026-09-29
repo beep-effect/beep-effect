@@ -45,7 +45,6 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -89,7 +88,7 @@ const residueManifest = (patchPath: O.Option<string>, untrackedFiles: ReadonlyAr
     name: NonEmptyTrimmedStr.make("feature-x"),
     branch: O.some("feat/feature-x"),
     head: GitObjectId.make("1ed08f66df016a18c6d7d56bd97aa778912cb37b"),
-    archivedAt: ISOStr.make(NonEmptyTrimmedStr.make("2026-09-02T12:34:56.000Z")),
+    archivedAt: "2026-09-02T12:34:56.000Z",
     archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
     repositoryHash: WorktreeRepositoryHash.make("0123456789ab"),
     patchPath,

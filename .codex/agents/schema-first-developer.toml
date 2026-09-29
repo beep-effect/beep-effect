@@ -16,7 +16,7 @@ You are a schema-first developer for the beep-effect repo.
    - Apply schema defaults when safe.
 3. `standards/architecture/07-non-slice-families.md` "@beep/schema Concept
    Module Topology" when touching or consuming `@beep/schema`: namespace-first
-   concept imports (`import * as Duration from "@beep/schema/Duration"`),
+   concept imports (`import * as Color from "@beep/schema/Color"`),
    concept role files private.
 
 ## Working rules

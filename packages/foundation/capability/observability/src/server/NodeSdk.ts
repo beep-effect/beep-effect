@@ -6,7 +6,7 @@
  */
 
 import { $ObservabilityId } from "@beep/identity/packages";
-import { DurationInput, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
@@ -91,15 +91,15 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
  */
 export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeSdkServerOptions`)(
   {
-    loggerExportInterval: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(1))),
+    loggerExportInterval: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(1))),
     loggerMergeWithExisting: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
     logRecordProcessor: S.optionalKey(NodeSdkLogRecordProcessorOption),
     metricReader: S.optionalKey(NodeSdkMetricReaderOption),
-    metricsExportInterval: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(10))),
+    metricsExportInterval: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(10))),
     metricTemporality: NodeSdkMetricTemporality.pipe(
       SchemaUtils.withKeyDefaults(NodeSdkMetricTemporality.Enum.cumulative)
     ),
-    shutdownTimeout: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(3))),
+    shutdownTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(3))),
     spanProcessor: S.optionalKey(NodeSdkSpanProcessorOption),
   },
   $I.annote("NodeSdkServerOptions", {
@@ -193,8 +193,8 @@ export const makeNodeSdkServerConfig: {
   (args) => ServerObservabilityConfig.is(args[0]),
   (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration => {
     const resolvedOptions = NodeSdkServerOptions.make(options ?? {});
-    const loggerExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.loggerExportInterval));
-    const metricsExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.metricsExportInterval));
+    const loggerExportInterval = Duration.toMillis(resolvedOptions.loggerExportInterval);
+    const metricsExportInterval = Duration.toMillis(resolvedOptions.metricsExportInterval);
 
     return {
       resource: toNodeSdkResource(config),

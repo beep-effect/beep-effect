@@ -16,7 +16,6 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { Chunk, Clock, DateTime, Duration, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -231,7 +230,7 @@ export const createExtractionStarted: {
       _tag: "extraction_started",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(0),
       totalChunks: state.totalChunks,
       textMetadata: {
@@ -297,7 +296,7 @@ export const createChunkingProgress: {
       _tag: "chunking_progress",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunksCompleted,
       chunksProcessing,
@@ -360,7 +359,7 @@ export const createChunkProcessingStarted: {
       _tag: "chunk_processing_started",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunkIndex,
       chunkTextLength,
@@ -430,7 +429,7 @@ export const createEntityFound: {
       _tag: "entity_found",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
       chunkIndex,
       entityId,
@@ -506,7 +505,7 @@ export const createRelationFound: {
       _tag: "relation_found",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
       chunkIndex,
       subjectId,
@@ -579,7 +578,7 @@ export const createChunkProcessingComplete: {
       _tag: "chunk_processing_complete",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
       chunkIndex,
       entityCount,
@@ -656,7 +655,7 @@ export const createExtractionComplete: {
       _tag: "extraction_complete",
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(100),
       totalEntities,
       totalRelations,
@@ -735,7 +734,7 @@ export const createExtractionFailed: {
     return ExtractionFailedEvent.make({
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
@@ -814,7 +813,7 @@ export const createRecoverableError: {
     return RecoverableErrorEvent.make({
       eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      timestamp: DateTime.formatIso(yield* DateTime.now),
       overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
       chunkIndex,
       errorType,
@@ -1109,7 +1108,7 @@ export const enqueueEvent: {
             _tag: "backpressure_warning",
             eventId: UUID.make(uuidv4()),
             runId: event.runId,
-            timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+            timestamp: DateTime.formatIso(yield* DateTime.now),
             overallProgress: event.overallProgress,
             queuedEvents: PosInt.make(queueSize),
             maxQueueSize: PosInt.make(state.config.maxQueueSize),

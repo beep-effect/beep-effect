@@ -87,11 +87,6 @@ export * from "./CurrencyCode.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./DateTimeUtcFromValid/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Did.ts";
 /**
  * @since 0.0.0
@@ -102,23 +97,6 @@ export * from "./Did.ts";
  * @category validation
  */
 export * from "./Double.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export {
-  Duration,
-  type Duration as DurationValue,
-  DurationFromInput,
-  type DurationFromInput as DurationFromInputValue,
-  DurationInput,
-  type DurationInput as DurationInputValue,
-  DurationObject,
-  DurationUnit,
-  type DurationUnit as DurationUnitValue,
-  FromInput,
-  type Unit as DurationUnitAlias,
-} from "./Duration/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -480,11 +458,6 @@ export * from "./String.ts";
  * @category validation
  */
 export * from "./TerritoryCode.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Timezone.ts";
 /**
  * @since 0.0.0
  * @category validation
