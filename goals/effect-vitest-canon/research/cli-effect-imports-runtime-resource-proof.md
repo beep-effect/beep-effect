@@ -34,6 +34,10 @@ zero introduced and 1,858 resolved against the unchanged baseline.
 Historical runtime mappings match exact original line/evidence and unique
 current test titles. The two removed helpers also retain exact occurrence
 fingerprints and evidence from the older census. The native-platform judgment
-remains open. Ledger attribution will use the source commit. Full CLI package
+remains open. All 24 historical runtime/helper rows are now attributed to
+05440996f6; there are no additional current rows. The public ledger-lineage
+receipt records runtime mappings and exact helper evidence/fingerprints. Full CLI package
 verification will cover this batch and the packet-core migration together;
-that grouped proof remains pending.
+that grouped proof remains pending at source 05440996f6. The commit hook
+only sorted the named Effect import list after focused checks; the grouped
+proof runs the committed source.

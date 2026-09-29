@@ -1,0 +1,405 @@
+{
+  "sourceFixSha": "05440996f69bf9f13a0682d4f3adc0f582baab73",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:147:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:207:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:227:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:256:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:279:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:306:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:335:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:381:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:435:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:464:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:499:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:526:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:567:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:593:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:620:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:647:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:683:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:721:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:755:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:793:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:833:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:893:runPromise@4#1",
+    "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:13:provideScopedLayer@2#1",
+    "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:26:withTempWorkingDirectory@33#1"
+  ],
+  "runtimeLineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:147:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "validates candidate CLI flags and renders text and JSON summaries",
+      "currentTitle": "validates candidate CLI flags and renders text and JSON summaries",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 148,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile( \"packages/demo/src/index.ts\", 'import { Effect } from \"effect\";\\nexport const prog"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:207:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "is a no-op before a family is promoted",
+      "currentTitle": "is a no-op before a family is promoted",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 208,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"packages/demo/src/index.ts\", demoSource); const summary = yield* runEffectImportRu"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:227:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "plans aliases, Function bindings, and type-only namespaces in candidate mode without writing",
+      "currentTitle": "plans aliases, Function bindings, and type-only namespaces in candidate mode without writing",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 228,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"packages/ecosystem/member/test/index.test.ts\", demoSource); const summary = yield*"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:256:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects candidate writes at the exported runner boundary",
+      "currentTitle": "rejects candidate writes at the exported runner boundary",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 257,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"apps/demo/src/index.ts\", demoSource); const failure = yield* runEffectImportRules("
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:279:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "scans the union of explicit files and include prefixes",
+      "currentTitle": "scans the union of explicit files and include prefixes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 280,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"apps/explicit.ts\", demoSource); yield* writeProjectFile(\"packages/demo/src/prefix."
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:306:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves generated source files to their owning generators",
+      "currentTitle": "leaves generated source files to their owning generators",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 307,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"packages/demo/src/index.ts\", demoSource); yield* writeProjectFile(\"packages/demo/s"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:335:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rewrites promoted roots to per-module imports and never reverses stable submodules",
+      "currentTitle": "rewrites promoted roots to per-module imports and never reverses stable submodules",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 336,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeProjectFile(\"packages/demo/src/index.ts\", demoSource); const first = yield* runEffectImportRule"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:381:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps executable shebangs ahead of newly emitted imports",
+      "currentTitle": "keeps executable shebangs ahead of newly emitted imports",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 382,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"#!/usr/bin/env bun\", \"\", \"/**\", \" * Executable package entrypoint.\", \" *\", \" * @p"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:435:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "routes side-effect-only root imports to manual review",
+      "currentTitle": "routes side-effect-only root imports to manual review",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 436,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = 'import \"effect\";\\nexport const value = 1;\\n'; yield* writeProjectFile(\"apps/demo/src/index."
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:464:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps manual-review line numbers anchored after a shebang prefix",
+      "currentTitle": "keeps manual-review line numbers anchored after a shebang prefix",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 465,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"#!/usr/bin/env bun\", \"\", 'import { FutureModule } from \"effect\";', \"export const"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:499:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "leaves an entire declaration unchanged when any binding is unmapped",
+      "currentTitle": "leaves an entire declaration unchanged when any binding is unmapped",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 500,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = 'import { Effect, FutureModule } from \"effect\";\\nexport const value = Effect.void;\\n'; yield"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:526:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "derives foundation mappings from source barrels and both export maps",
+      "currentTitle": "derives foundation mappings from source barrels and both export maps",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 527,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeDemoFoundationPackage(true); const source = A.join( [ 'import { another } from \"@beep/demo/Help"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:567:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses a foundation target missing from the published export map",
+      "currentTitle": "refuses a foundation target missing from the published export map",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 568,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeDemoFoundationPackage(false); const source = 'import { type Model } from \"@beep/demo\";\\nexport"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:593:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "refuses foundation targets when a private package has no published export map",
+      "currentTitle": "refuses foundation targets when a private package has no published export map",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 594,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeDemoFoundationPackage(true, false, false); const source = 'import { Demo } from \"@beep/demo\";\\n"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:620:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "queues an ambiguous review when two public leaves expose the same source module",
+      "currentTitle": "queues an ambiguous review when two public leaves expose the same source module",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 621,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeDemoFoundationPackage(true, true); const source = 'import { renamedHelper } from \"@beep/demo\";\\"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:647:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "merges compatible destination imports and preserves declaration comments",
+      "currentTitle": "merges compatible destination imports and preserves declaration comments",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 648,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"/** Root import rationale. */\", 'import { Effect, pipe } from \"effect\"; // traili"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:683:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "merges a comment-bearing declaration without deleting unrelated unused imports",
+      "currentTitle": "merges a comment-bearing declaration without deleting unrelated unused imports",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 684,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'import { unused } from \"./unused.ts\";', 'import { flow } from \"effect/Function\";'"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:721:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "preserves aliases instead of inventing collision-prone canonical names",
+      "currentTitle": "preserves aliases instead of inventing collision-prone canonical names",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 722,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'import { Option as Maybe } from \"effect\";', \"const O = { sentinel: true };\", \"exp"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:755:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rewrites named root re-exports and preserves their exported aliases",
+      "currentTitle": "rewrites named root re-exports and preserves their exported aliases",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 756,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; yield* writeDemoFoundationPackage(true); const source = A.join( [ 'export { renamedHelper as publicHelper }"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:793:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "routes dynamic, import-type, and import-equals roots to structured manual review",
+      "currentTitle": "routes dynamic, import-type, and import-equals roots to structured manual review",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 794,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ 'const load = () => import(\"effect\");', 'type Program = import(\"effect\").Effect.Ef"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:833:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rewrites imports inside JSDoc TypeScript fences without touching executable imports",
+      "currentTitle": "rewrites imports inside JSDoc TypeScript fences without touching executable imports",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 834,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const source = A.join( [ \"/**\", \" * Demonstrates a fenced program.\", \" *\", \" * **Example** (Run a program)\""
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/effect-imports.test.ts:893:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "keeps the Markdown gate advisory until explicitly enforced and supports promoted writes",
+      "currentTitle": "keeps the Markdown gate advisory until explicitly enforced and supports promoted writes",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 894,
+          "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeTsconfig; const markdown = A.join( [ \"# Guide\", \"\", \"```ts\", 'import { Effect, flow } from \"effect\"', \"console.log(fl"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "helperLineage": [
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:13:provideScopedLayer@2#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:14:provideScopedLayer@2#1",
+      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
+      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
+      "judgment": "All 22 calls are whole-body wrappers. Public fixture owns stable services, public test scope owns the existing cwd constructor, and each case receives a fresh console."
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:26:withTempWorkingDirectory@33#1",
+      "beforeDetectorId": "EV003:packages/tooling/tool/cli/test/effect-imports.test.ts:27:withTempWorkingDirectory@33#1",
+      "occurrence": "v2:5b781757c7efa9e327caecd37b8f67432cb84c516e63b64ea5c706908729f592",
+      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const tmpDir = yield* fs.makeTempDirectory(); const previousCwd =",
+      "judgment": "All 22 calls are whole-body wrappers. Public fixture owns stable services, public test scope owns the existing cwd constructor, and each case receives a fresh console."
+    }
+  ],
+  "counts": {
+    "open": 1810,
+    "fixed": 1673,
+    "exception": 12
+  },
+  "fullPackageProof": "pending grouped CLI proof"
+}
