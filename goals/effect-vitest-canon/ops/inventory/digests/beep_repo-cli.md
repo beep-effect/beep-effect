@@ -493,3 +493,10 @@ native-filesystem finding is an explicit exception because the subject is the
 actual checkout's package scripts. No new inventory IDs are added. The ledger
 has 3,497 rows: 1,985 fixed, thirteen exceptions and 1,499 open. Validation and
 timing scope are recorded in research/cli-foundation-emit-runtime-proof.md.
+
+## New main compiler integration judgment
+
+The schema parity codemod native integration adds one reviewed EV010 exception.
+The ledger now contains 3,498 rows: 1,985 fixed, fourteen exceptions and 1,499
+open. See research/cli-schema-parity-native-proof.md for compiler provenance
+and Node/Bun verification; historical rows and the baseline remain intact.

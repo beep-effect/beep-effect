@@ -5922,3 +5922,14 @@ this. A local tagged error preserves the message and supports stronger exact
 failure assertions; final diagnostics are empty. Migration checks should inspect
 the actual test-type artifact even when ordinary package check and runtimes pass.
 See cli-kits-runtime-proof.md for the preserved API cases and final evidence.
+
+## Main integration exposed unreviewed platform provenance and detector complexity
+
+After main integration, `yeet verify --tier cheap-gates` found a new EV010 in
+`schema-parity-codemod.test.ts`, plus Fallow complexity findings in
+`dataAssertionRoute` and `detectBooleanDataShape`. The native compiler fixture
+needs a documented exception; Effect filesystem substitution alone cannot feed
+ts-morph. Reviewing platform provenance before merge would avoid rediscovery.
+Keep detector branch coverage and complexity checks together as assertion
+recognition grows. The same run also reported changeset and health gate failures;
+these remain under investigation, not waived.
