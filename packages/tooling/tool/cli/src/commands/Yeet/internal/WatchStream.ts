@@ -409,6 +409,7 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
             mergeable: false,
             mergeStateAcceptable: false,
             reviewDecisionAcceptable: false,
+            closeoutGatesPassed: false,
             greptileScore: O.none(),
           })
         )

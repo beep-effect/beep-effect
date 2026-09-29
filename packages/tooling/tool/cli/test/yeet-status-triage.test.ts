@@ -1,11 +1,18 @@
 import {
   deriveYeetMergeReady,
   GateUnproven,
+  GhReviewThread,
+  GhReviewThreadCommentConnection,
   GhStatusCheck,
+  GreptileSummary,
+  gateIssues,
+  PrCloseoutOptions,
   PrCloseoutReport,
+  PrCloseoutReportJson,
   renderYeetLaneDigestBlock,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
+  reviewThreadIssue,
   summarizeRemoteChecksForTesting,
   YeetCheckSignal,
   YeetStatusArtifact,
@@ -18,6 +25,7 @@ import {
   YeetVerdictLane,
   YeetWatchCheck,
   yeetReviewThreadExcerpt,
+  yeetStatusArtifactFromCloseoutForTesting,
   yeetStatusArtifactFromVerdictForTesting,
   yeetStatusNextCommandForTesting,
   yeetStatusThreadTriageForTesting,
@@ -26,7 +34,7 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, strictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertInclude, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -507,13 +515,16 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
   });
 
-  it("counts unresolved closeout issues as an open-thread blocker", () => {
+  it("charges every issue of a closeout summary written before the gate split to threads", () => {
     const mergeReady = deriveYeetMergeReady(
       closeoutArtifact(2, O.some("5/5")),
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0, unresolvedReviewThreadCount: 0 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    assertSome(
+      O.flatMap(mergeReady, (value) => value.failing),
+      "threads-resolved"
+    );
   });
 
   it("blocks on closeout-run when the closeout artifact is missing without mislabeling threads", () => {
@@ -765,6 +776,165 @@ describe("yeet merge readiness", () => {
 
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some(criterion));
   });
+});
+
+// PR #1332's closeout: Greptile never reviewed the head, so the two Greptile
+// gates `yeet closeout` was asked to enforce reported `unknown` while every
+// review thread was already answered.
+const greptileGatedCloseoutOptions = PrCloseoutOptions.make({
+  bots: "greptile",
+  requireGreptileIssues: 0,
+  requireGreptileScore: "5/5",
+  requireReviewComments: 0,
+  retriggerGreptile: false,
+});
+
+const openReviewThread = GhReviewThread.make({
+  comments: GhReviewThreadCommentConnection.make({
+    nodes: [
+      {
+        author: { login: "octocat" },
+        body: humanBody,
+        id: "comment-1",
+        url: "https://github.com/example/repo/pull/560#discussion_r1",
+      },
+    ],
+    pageInfo: { endCursor: null, hasNextPage: false },
+  }),
+  id: humanThread.threadId,
+  isOutdated: false,
+  isResolved: false,
+  line: 42,
+  path: "src/file.ts",
+});
+
+// The closeout artifact read back the way status reads it: issues composed as
+// `runPrCloseout` composes them, written as the JSON `yeet closeout` leaves on
+// disk, decoded, then projected into the status artifact.
+const persistedGreptileGatedCloseout = Effect.fnUntraced(function* (actionableThreads: ReadonlyArray<GhReviewThread>) {
+  const greptile = GreptileSummary.make({});
+  const issues = [
+    ...A.map(actionableThreads, reviewThreadIssue),
+    ...gateIssues(greptileGatedCloseoutOptions, A.length(actionableThreads), greptile),
+  ];
+  const json = yield* PrCloseoutReportJson.encode(
+    PrCloseoutReport.make({
+      actionableReviewThreadCount: A.length(actionableThreads),
+      botCommentCount: 0,
+      greptile,
+      issueCount: A.length(issues),
+      issues,
+      prNumber: 560,
+      prUrl: "https://github.com/example/repo/pull/560",
+      reviewedHeadSha: O.some(HEAD_A),
+      retriggeredGreptile: false,
+      schemaVersion: "yeet-pr-closeout/v1",
+    })
+  );
+  const report = yield* PrCloseoutReportJson.decode(json);
+  return yeetStatusArtifactFromCloseoutForTesting(".beep/yeet/runs/feature/pr-closeout.json", report);
+});
+
+const cleanWorktree = YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 });
+const publishedVerdict = YeetStatusArtifact.make({
+  detail: "publish success",
+  outcome: "success",
+  path: "verdict.json",
+  state: "present",
+});
+
+describe("yeet merge readiness with closeout gates split from review threads", () => {
+  it.effect(
+    "names closeout-gates-passed, not threads-resolved, when zero threads leave only Greptile's unknown gates",
+    Effect.fnUntraced(function* () {
+      const closeout = yield* persistedGreptileGatedCloseout(A.empty());
+      const remote = openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 });
+      const mergeReady = deriveYeetMergeReady(closeout, remote);
+
+      strictEqual(closeout.issueCount, 2);
+      deepStrictEqual(closeout.gateIssues, [
+        "Expected Greptile score 5/5; found unknown.",
+        "Expected at most 0 Greptile issues; found unknown.",
+      ]);
+      assertSome(
+        O.map(mergeReady, (value) => value.ready),
+        false
+      );
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "closeout-gates-passed"
+      );
+      assertSome(
+        O.map(mergeReady, (value) => value.criteria.threadsResolved),
+        true
+      );
+      assertSome(
+        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
+        false
+      );
+
+      const next = yeetStatusNextCommandForTesting(cleanWorktree, publishedVerdict, closeout, remote);
+      assertInclude(next, "closeout gate(s) unmet (Expected Greptile score 5/5; found unknown.");
+      assertInclude(next, "bun run beep yeet closeout");
+      assertFalse(Str.includes("yeet reply")(next));
+
+      const summary = renderYeetStatusSummary(
+        YeetStatusSnapshot.make({
+          base: "origin/main",
+          branch: "feature",
+          closeout,
+          createdAt: "2026-09-29T00:00:00.000Z",
+          head: "HEAD",
+          nextCommand: next,
+          remote,
+          runId: "feature",
+          schemaVersion: "yeet-status/v1",
+          statusPath: ".beep/yeet/runs/feature/status.json",
+          verdict: publishedVerdict,
+          worktree: cleanWorktree,
+          mergeReady,
+        })
+      );
+      assertInclude(summary, "- review threads: 0 unresolved");
+      assertInclude(summary, "- merge-ready: no, blocked on closeout-gates-passed");
+      assertInclude(summary, "0 actionable thread(s), 2 unmet gate(s)");
+    })
+  );
+
+  it.effect(
+    "names threads-resolved and suggests yeet reply for a real unresolved thread while the Greptile gates also wait",
+    Effect.fnUntraced(function* () {
+      const closeout = yield* persistedGreptileGatedCloseout([openReviewThread]);
+      const remote = openRemote({
+        checkCount: 24,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        unresolvedReviewThreadCount: 1,
+        unresolvedThreads: O.some([humanThread]),
+      });
+      const mergeReady = deriveYeetMergeReady(closeout, remote);
+
+      // The thread issue, the actionable-thread count gate, and two Greptile gates.
+      strictEqual(closeout.issueCount, 4);
+      strictEqual(A.length(closeout.gateIssues ?? A.empty()), 2);
+      assertSome(
+        O.flatMap(mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
+      assertSome(
+        O.map(mergeReady, (value) => value.criteria.threadsResolved),
+        false
+      );
+      assertSome(
+        O.map(mergeReady, (value) => value.criteria.closeoutGatesPassed),
+        false
+      );
+      assertInclude(
+        yeetStatusNextCommandForTesting(cleanWorktree, publishedVerdict, closeout, remote),
+        "bun run beep yeet reply"
+      );
+    })
+  );
 });
 
 describe("yeet remote check partitions", () => {

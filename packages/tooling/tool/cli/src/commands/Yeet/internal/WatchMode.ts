@@ -41,6 +41,7 @@ import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, R
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -49,7 +50,7 @@ import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../..
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
-import { PrCloseoutReportJson } from "./Closeout.ts";
+import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
@@ -439,11 +440,17 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       const outcome = classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state }));
       return YeetCheckOutcome.is.pass(outcome) || YeetCheckOutcome.is.skip(outcome);
     });
-  // Same predicate the status gate uses: a thread the author resolved with a
+  // Same predicates the status gate uses: a thread the author resolved with a
   // human reviewer speaking last still owes an answer, so a watch that only
   // asked `isResolved` would call the pull request ready while the gate held.
+  // Closeout issues split by source, so an unmet Greptile gate blocks
+  // `closeout-gates-passed` and never reads as an open thread.
   const threadsResolved =
-    !A.some(threadStates, yeetReviewThreadStateOutstanding) && !O.exists(closeout, (report) => report.issueCount > 0);
+    !A.some(threadStates, yeetReviewThreadStateOutstanding) &&
+    !O.exists(closeout, (report) => A.some(report.issues, closeoutIssueFromReviewThread));
+  const closeoutGatesPassed = !O.exists(closeout, (report) =>
+    A.some(report.issues, P.not(closeoutIssueFromReviewThread))
+  );
   const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
   const criteria = YeetMergeReadyCriteria.make({
     prOpen: Str.toUpperCase(view.state) === "OPEN",
@@ -457,6 +464,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       view.reviewDecision === null ||
       Str.isEmpty(view.reviewDecision) ||
       Str.toUpperCase(view.reviewDecision) === "APPROVED",
+    closeoutGatesPassed,
     greptileScore: O.none(),
   });
 
