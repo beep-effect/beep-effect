@@ -8,8 +8,9 @@
 import { A, Str } from "@beep/utils";
 import { Order } from "effect";
 import { dual } from "effect/Function";
+import { SchemaParityCodemodEdit } from "./SchemaParityCodemod.schemas.ts";
 import type * as O from "effect/Option";
-import type { SchemaParityCodemodEdit } from "./SchemaParityCodemod.schemas.ts";
+import type { Node } from "ts-morph";
 
 const byStartThenEnd: Order.Order<SchemaParityCodemodEdit> = Order.combine(
   Order.mapInput(Order.Number, (edit: SchemaParityCodemodEdit) => edit.start),
@@ -116,4 +117,54 @@ export const renderSchemaParityCodemodEdits: {
     );
     return A.join(A.append(rendered.parts, Str.slice(rendered.cursor, rangeEnd)(text)), "");
   }
+);
+
+/**
+ * Edit replacing a node's text, leading trivia excluded.
+ *
+ * **Example** (Replace a node)
+ *
+ * ```ts
+ * import { schemaParityCodemodReplaceNode } from "@beep/repo-cli/test/Lint"
+ * import { Project } from "ts-morph"
+ *
+ * const sourceFile = new Project({ useInMemoryFileSystem: true }).createSourceFile("/a.ts", "export const a = b;\n")
+ * const node = sourceFile.getVariableDeclarationOrThrow("a").getInitializerOrThrow()
+ * console.log(schemaParityCodemodReplaceNode(node, "c").start) // 17
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const schemaParityCodemodReplaceNode: {
+  (text: string): (node: Node) => SchemaParityCodemodEdit;
+  (node: Node, text: string): SchemaParityCodemodEdit;
+} = dual(
+  2,
+  (node: Node, text: string): SchemaParityCodemodEdit =>
+    SchemaParityCodemodEdit.make({ start: node.getStart(), end: node.getEnd(), text })
+);
+
+/**
+ * Edit inserting text at an offset without replacing anything.
+ *
+ * **Example** (Insert a call prefix)
+ *
+ * ```ts
+ * import { schemaParityCodemodInsertAt } from "@beep/repo-cli/test/Lint"
+ *
+ * const edit = schemaParityCodemodInsertAt(4, "f(")
+ * console.log(edit.start === edit.end) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const schemaParityCodemodInsertAt: {
+  (text: string): (offset: number) => SchemaParityCodemodEdit;
+  (offset: number, text: string): SchemaParityCodemodEdit;
+} = dual(
+  2,
+  (offset: number, text: string): SchemaParityCodemodEdit =>
+    SchemaParityCodemodEdit.make({ start: offset, end: offset, text })
 );

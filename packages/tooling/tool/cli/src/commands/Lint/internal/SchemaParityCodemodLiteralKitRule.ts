@@ -13,7 +13,7 @@ import { pipe, Result } from "effect";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { Node, SyntaxKind, ts } from "ts-morph";
+import { Node, SyntaxKind } from "ts-morph";
 import {
   SchemaParityCodemodEdit,
   SchemaParityCodemodImport,
@@ -22,8 +22,18 @@ import {
   SchemaParityCodemodRulePlan,
   SchemaParityCodemodSite,
 } from "./SchemaParityCodemod.schemas.ts";
-import { renderSchemaParityCodemodEdits } from "./SchemaParityCodemodEdits.ts";
-import { schemaParityCodemodValueImports } from "./SchemaParityCodemodImports.ts";
+import {
+  schemaParityCodemodInsertAt as insertAt,
+  renderSchemaParityCodemodEdits,
+  schemaParityCodemodReplaceNode as replaceNode,
+} from "./SchemaParityCodemodEdits.ts";
+import {
+  schemaParityCodemodNamedValueBinding as namedValueBinding,
+  schemaParityCodemodNamespaceBinding as namespaceBinding,
+  resolveSchemaParityCodemodName as resolveAt,
+  schemaParityCodemodNameResolvesTo as resolvesTo,
+  schemaParityCodemodValueImports,
+} from "./SchemaParityCodemodImports.ts";
 import type {
   ElementAccessExpression,
   Expression,
@@ -136,12 +146,6 @@ const rewrite = (
 
 const residue = (siteNode: Node, reason: string): SiteDecision => ({ _tag: "Residue", siteNode, reason });
 
-const replaceNode = (node: Node, text: string): SchemaParityCodemodEdit =>
-  SchemaParityCodemodEdit.make({ start: node.getStart(), end: node.getEnd(), text });
-
-const insertAt = (offset: number, text: string): SchemaParityCodemodEdit =>
-  SchemaParityCodemodEdit.make({ start: offset, end: offset, text });
-
 const isOwnerDeclaration = (declaration: Node): boolean => {
   const filePath = declaration.getSourceFile().getFilePath();
   return A.some(LiteralKitFacetOwnerModules, (suffix) => Str.endsWith(suffix)(filePath));
@@ -166,54 +170,12 @@ const isMappedDirectionFacet = (access: PropertyAccessExpression): boolean =>
     O.exists((symbol) => A.every(symbol.getDeclarations(), isDeclaredIn(MAPPED_LITERAL_KIT_MODULE)))
   );
 
-/**
- * The symbol `name` resolves to at `site`, across every enclosing scope
- * (parameters, catch bindings, nested declarations, the module, globals) and
- * every meaning (value, type, namespace).
- */
-const resolveAt = (site: Node, name: string): O.Option<ts.Symbol> =>
-  O.fromNullishOr(
-    site.getProject().getTypeChecker().compilerObject.resolveName(name, site.compilerNode, ts.SymbolFlags.All, false)
-  );
-
 const isFreeAt = (site: Node, name: string): boolean => O.isNone(resolveAt(site, name));
-
-const resolvesTo = (site: Node, name: string, declaration: Node): boolean =>
-  pipe(
-    resolveAt(site, name),
-    O.exists((symbol) => A.some(symbol.declarations ?? A.empty(), (node) => node === declaration.compilerNode))
-  );
 
 type ImportBinding = {
   readonly local: string;
   readonly declaration: Node;
 };
-
-const namespaceBinding = (sourceFile: SourceFile, moduleSpecifier: string): O.Option<ImportBinding> =>
-  A.findFirst(schemaParityCodemodValueImports(sourceFile, moduleSpecifier), (declaration) =>
-    pipe(
-      O.fromNullishOr(declaration.getNamespaceImport()),
-      O.flatMap((name) =>
-        O.map(O.fromNullishOr(name.getParent()), (node) => ({ local: name.getText(), declaration: node }))
-      )
-    )
-  );
-
-const namedValueBinding = (sourceFile: SourceFile, moduleSpecifier: string, name: string): O.Option<ImportBinding> =>
-  A.findFirst(schemaParityCodemodValueImports(sourceFile, moduleSpecifier), (declaration) =>
-    A.findFirst(declaration.getNamedImports(), (specifier) =>
-      !specifier.isTypeOnly() && specifier.getName() === name
-        ? O.some({
-            local: pipe(
-              O.fromNullishOr(specifier.getAliasNode()),
-              O.map((node) => node.getText()),
-              O.getOrElse(() => name)
-            ),
-            declaration: specifier,
-          })
-        : O.none()
-    )
-  );
 
 // An existing import is reused only where its name still resolves to it; a
 // parameter, catch binding or nested declaration of the same name shadows it.
