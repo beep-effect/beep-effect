@@ -4,16 +4,19 @@ import {
   renderSchemaParityCodemodEdits,
   runSchemaParityCodemod,
   SchemaParityCodemodEdit,
+  SchemaParityCodemodError,
   SchemaParityCodemodFileOutcome,
   SchemaParityCodemodOptions,
   SchemaParityCodemodRule,
   SchemaParityCodemodRuleContext,
   SchemaParityCodemodRulePlan,
+  sortSchemaParityCodemodEdits,
 } from "@beep/repo-cli/test/Lint";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertInstanceOf, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project, ts } from "ts-morph";
@@ -114,6 +117,32 @@ describe("schema-parity codemod edits", () => {
     ]);
     assert.strictEqual(rendered, "HashSet.fromIterable(Status.literals)");
   });
+
+  it("orders edits that share a start offset by their end offset", () => {
+    const sorted = sortSchemaParityCodemodEdits([
+      SchemaParityCodemodEdit.make({ start: 7, end: 14, text: "literals" }),
+      SchemaParityCodemodEdit.make({ start: 7, end: 7, text: "(" }),
+    ]);
+    assert.deepStrictEqual(
+      A.map(sorted, (edit) => edit.text),
+      ["(", "literals"]
+    );
+  });
+});
+
+describe("SchemaParityCodemodError", () => {
+  it.effect(
+    "appends the failure cause to the step message",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.fail("biome exited 1").pipe(
+        SchemaParityCodemodError.mapError("Failed to run biome check --write."),
+        Effect.flip
+      );
+      assertInstanceOf(error, SchemaParityCodemodError);
+      strictEqual(error._tag, "SchemaParityCodemodError");
+      strictEqual(error.message, "Failed to run biome check --write.: biome exited 1");
+    })
+  );
 });
 
 describe("literal-kit-facets rule", () => {
@@ -449,6 +478,33 @@ layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) =>
       assert.strictEqual(report.mode, "dry-run");
       assert.deepStrictEqual(report.filesChanged, [FIXTURE_MODULE]);
       assert.strictEqual(yield* fs.readFileString(path.join(root, FIXTURE_MODULE)), original);
+    })
+  );
+
+  it.effect(
+    "fails with SchemaParityCodemodError when the report cannot be written",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "schema-parity-codemod-" });
+      const original = `${kitHeader}export const all = Status.Options;\n`;
+      yield* fs.makeDirectory(path.join(root, path.dirname(KIT_MODULE)), { recursive: true });
+      yield* fs.makeDirectory(path.join(root, path.dirname(FIXTURE_MODULE)), { recursive: true });
+      yield* fs.writeFileString(path.join(root, "tsconfig.json"), '{ "compilerOptions": { "strict": true } }\n');
+      yield* fs.writeFileString(path.join(root, KIT_MODULE), KIT_STUB);
+      yield* fs.writeFileString(path.join(root, FIXTURE_MODULE), original);
+      // The report directory would sit under a regular file, so creating it fails.
+      const report = `${FIXTURE_MODULE}/report.jsonc`;
+
+      const error = yield* Effect.flip(
+        runSchemaParityCodemod(
+          SchemaParityCodemodOptions.make({ rules: ["literal-kit-facets"], paths: ["packages/example"], root, report })
+        )
+      );
+
+      assertInstanceOf(error, SchemaParityCodemodError);
+      assertTrue(Str.startsWith(`Failed to write ${report}: `)(error.message), error.message);
+      strictEqual(yield* fs.readFileString(path.join(root, FIXTURE_MODULE)), original);
     })
   );
 });
