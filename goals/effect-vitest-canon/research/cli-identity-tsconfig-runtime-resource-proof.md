@@ -56,5 +56,5 @@ that attribution. No new ledger rows were added.
 
 Strict validation passes for all 3,495 CLI rows and 687 schema rows. CLI totals
 are 1,805 fixed, 12 exceptions and 1,678 open. The full grouped CLI package
-proof is running against source 058e59a474; this focused evidence is not a
-substitute for that proof or goal-wide acceptance.
+proof passed against source 058e59a474: audit 686.2 seconds and docgen 25.6
+seconds, exit zero. Goal-wide acceptance remains incomplete.
