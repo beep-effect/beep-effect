@@ -59,3 +59,9 @@ Historical matching identifies ten runtime/helper and six provider rows.
 Helper identity disambiguates runtimes outside named test callbacks. Three
 wrapper rows match their original occurrence/evidence exactly. Full grouped
 CLI package proof is pending; this is not goal-wide or hosted acceptance.
+
+Source commit: `81f4119e9c09f6514f49505f23cd33328c9bba42`.
+Reconciliation closes exactly nineteen historical rows, adds none, and preserves
+all unrelated rows. Strict validation passes for 3,495 CLI and 687 schema rows.
+CLI totals are 1,936 fixed, 12 exceptions and 1,547 open. The grouped package
+proof is running and must finish before package handoff.

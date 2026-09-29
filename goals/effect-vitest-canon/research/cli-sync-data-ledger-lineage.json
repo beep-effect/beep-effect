@@ -1,0 +1,307 @@
+{
+  "sourceFixSha": "81f4119e9c09f6514f49505f23cd33328c9bba42",
+  "closedHistorical": [
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:171:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:191:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:358:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:778:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:830:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:852:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:868:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:886:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:899:runPromise@4#1",
+    "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:916:runPromise@4#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:461:provideScopedLayer@7#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:475:provideScopedLayer@7#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:489:provideScopedLayer@7#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:726:provideScopedLayer@7#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:755:provideScopedLayer@7#1",
+    "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:774:provideScopedLayer@7#1",
+    "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:51:provideScopedLayer@2#1",
+    "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:240:withTempRepoCommand@28#1",
+    "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:261:withRegisteredTarget@29#1"
+  ],
+  "lineage": [
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:171:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "helperName": "makeTextFixtureClient",
+      "beforeRegistrations": [],
+      "afterRegistrations": [],
+      "beforeMatches": [
+        {
+          "line": 171,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { return request.url === sourceUrl ? new Response(content, { status: 200, headers: { \"content-type\": contentType, }, }) : new Response(\"missing\", { status: 4"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:191:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "helperName": "makeIso3166Client",
+      "beforeRegistrations": [],
+      "afterRegistrations": [],
+      "beforeMatches": [
+        {
+          "line": 191,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const authorized = request.headers.get(\"authorization\") === \"Bearer test-token\"; if (!authorized) { return new Response(\"unauthorized\", { status: 401 }); }"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:358:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "round-trips a non-empty result from the real target producer",
+      "currentTitle": "round-trips a non-empty result from the real target producer",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 358,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { const result = yield* syncTargetForTesting(process.cwd(), \"dry-run\", csvTarget); const encoded = yield* encodeSyncDataTargetResult(result); const decoded ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:778:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reads missing and checked-in vocabulary artifacts for identity reconciliation",
+      "currentTitle": "reads missing and checked-in vocabulary artifacts for identity reconciliation",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 798,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual([]); expect(yield* readPreviousReporterVocabularyForTesting()).toStrictEqual([]); cons"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:830:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "writes the generated ISO 4217 module in write mode",
+      "currentTitle": "writes the generated ISO 4217 module in write mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 850,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runSyncDataToTsCommand([\"--target\", \"iso4217\"]); const content = yield* readGeneratedFile; const logs = yield* TestConsole.logLines; expect(content)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:852:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "does not write files in dry-run mode",
+      "currentTitle": "does not write files in dry-run mode",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 872,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runSyncDataToTsCommand([\"--target\", \"iso4217\", \"--dry-run\"]); const exists = yield* generatedFileExists; const logs = yield* TestConsole.logLines; e"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:868:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "fails check mode on drift without modifying the file",
+      "currentTitle": "fails check mode on drift without modifying the file",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 888,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* writeGeneratedFile(\"stale-content\\n\"); const exit = yield* Effect.exit(runSyncDataToTsCommand([\"--target\", \"iso4217\", \"--check\"])); const content ="
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:886:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "becomes a no-op when the generated file is already current",
+      "currentTitle": "becomes a no-op when the generated file is already current",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 906,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runSyncDataToTsCommand([\"--target\", \"iso4217\"]); yield* runSyncDataToTsCommand([\"--target\", \"iso4217\"]); const logs = yield* TestConsole.logLines; e"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:899:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "parses CSV targets with the canonical @beep/schema CSV implementation",
+      "currentTitle": "parses CSV targets with the canonical @beep/schema CSV implementation",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 919,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runSyncDataToTsCommand([\"--target\", \"test-csv\"]); const content = yield* readOutputFile(csvGeneratedOutputPath); const sidecar = yield* readOutputFi"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV001:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:916:runPromise@4#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "writes the authenticated ISO 3166 module without leaking private source URLs",
+      "currentTitle": "writes the authenticated ISO 3166 module without leaking private source URLs",
+      "beforeRegistrations": ["it"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 936,
+          "evidence": "Effect.runPromise( Effect.gen(function* () { yield* runSyncDataToTsCommand([\"--target\", \"iso3166\"]); const content = yield* readOutputFile(iso3166GeneratedOutputPath); const sidecar = yield* readOutpu"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:461:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "extracts an empty selection from a tar archive",
+      "currentTitle": "extracts an empty selection from a tar archive",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 461,
+          "evidence": "provideScopedLayer(NodeServices.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:475:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "extracts an archive entry by its root-relative suffix",
+      "currentTitle": "extracts an archive entry by its root-relative suffix",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 475,
+          "evidence": "provideScopedLayer(NodeServices.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:489:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "reports required entries missing from a tar archive",
+      "currentTitle": "reports required entries missing from a tar archive",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 489,
+          "evidence": "provideScopedLayer(NodeServices.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:726:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "projects reused court and reporter aliases with disambiguating context",
+      "currentTitle": "projects reused court and reporter aliases with disambiguating context",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 746,
+          "evidence": "provideScopedLayer(NodeCrypto.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:755:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "projects reporters into deterministic vocabulary identities and retains issued tombstones",
+      "currentTitle": "projects reporters into deterministic vocabulary identities and retains issued tombstones",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 775,
+          "evidence": "provideScopedLayer(NodeCrypto.layer)"
+        }
+      ],
+      "afterMatches": []
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:774:provideScopedLayer@7#1",
+      "historicalMatched": true,
+      "sourceRef": "2086a0a090c1ed441cc5099defda4acbd53a2ee0",
+      "title": "rejects colliding stable reporter identifiers",
+      "currentTitle": "rejects colliding stable reporter identifiers",
+      "beforeRegistrations": ["it.effect"],
+      "afterRegistrations": ["it.effect"],
+      "beforeMatches": [
+        {
+          "line": 794,
+          "evidence": "provideScopedLayer(NodeCrypto.layer)"
+        }
+      ],
+      "afterMatches": []
+    }
+  ],
+  "wrapperMatches": [
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:51:provideScopedLayer@2#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:51:provideScopedLayer@2#1",
+      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
+      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:240:withTempRepoCommand@28#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:240:withTempRepoCommand@28#1",
+      "occurrence": "v2:bc22bac5a07b68ec752cacaaa241593949a9f5abbe635c162f227e8b812404ae",
+      "evidence": "<A, E, R>(use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpDir = yield* fs.makeTempD"
+    },
+    {
+      "ledgerId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:261:withRegisteredTarget@29#1",
+      "detectorId": "EV003:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:261:withRegisteredTarget@29#1",
+      "occurrence": "v2:3acbbae34a4b96ad4b7ba6d1f49dc7d68b8f57f5bbce01868e9f3195cf3b18e1",
+      "evidence": "<A, E, R>(target: SyncDataTarget, use: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.sync(() => { const targets = syncDataTargets as unknown as Array<SyncDataTarget>; A.appendInPlace(tar"
+    }
+  ],
+  "addedCurrentRows": 0,
+  "counts": {
+    "open": 1547,
+    "fixed": 1936,
+    "exception": 12
+  },
+  "fullPackageProof": "pending grouped CLI proof"
+}
