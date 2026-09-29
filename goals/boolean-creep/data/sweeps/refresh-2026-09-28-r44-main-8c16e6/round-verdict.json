@@ -96,5 +96,5 @@
       "sha256": "3bb91f7fd6c798d39e2e737b43dd4cd548b6700d004c0a6530044b54066fbd91"
     }
   ],
-  "limitation": "Five successful execution lanes were reconciled. UI stays failed and21lanes were not executed. No partial coverage is inherited by the next full round; the new runtime needs independent admission."
+  "limitation": "Five successful execution lanes were reconciled. UI stays failed and 21 lanes were not executed. No partial coverage is inherited by the next full round; the new runtime needs independent admission."
 }

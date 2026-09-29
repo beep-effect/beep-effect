@@ -1896,3 +1896,22 @@ Keep historical evidence intact and bind subsequent census work to the merged
 source. Security's earlier fast-uri failure was remediated in the local branch
 but remained red remotely until publication; the new immediate-push directive
 prevents local proof waits from delaying available remediations.
+
+## 2026-09-29 — recursive grep bypassed the native .git read deny
+
+Offline analysis of the rejected second probe found that recursive `grep`
+with `glob: **/*` returned the synthetic `.git` canary. The read-deny rule
+did not filter recursive search results. This was synthetic probe data, but
+the same profile cannot be admitted for census use with repository metadata
+visible. The successor must mask `.git` at the kernel boundary and prove
+that both ordinary and failed-open-hook probes keep it hidden.
+
+The review also identified two verifier corrections. Hook-enabled profiles
+advertise five UI slash commands without adding model-callable tools, and
+the runner validates against the old core's command set. A missing-file
+response also uses wording absent from the bound grammar. Correct the exact
+command relation, candidate-core selection and observed missing-file grammar;
+retain exact tool restrictions and rejection of unknown diagnostic text.
+The rejected attempt gains no retrospective acceptance. A recursive-search
+canary test at the first confinement review would have exposed the metadata
+leak before the payload probes.
