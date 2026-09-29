@@ -2,7 +2,9 @@ import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetWatchSnapshot,
   GreptileSummary,
+  gateIssues,
   loadYeetRemediationWave,
+  PrCloseoutOptions,
   PrCloseoutReport,
   PrCloseoutReportJson,
   RepoRunContext,
@@ -531,6 +533,61 @@ describe("collectYeetWatchSnapshot", () => {
         const snapshot = yield* collectYeetWatchSnapshot(subjectContext);
 
         expect(snapshot.criteria.closeoutRun).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("charges a closeout's unmet Greptile gates to closeout-gates-passed, not to threads", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const subjectContext = contextFor(root);
+        const closeoutPath = yield* runArtifactPathForContext(subjectContext, "pr-closeout.json");
+        yield* fs.makeDirectory(closeoutPath.slice(0, closeoutPath.lastIndexOf("/")), { recursive: true });
+        const greptile = GreptileSummary.make({});
+        const issues = gateIssues(
+          PrCloseoutOptions.make({
+            bots: "greptile",
+            requireGreptileIssues: 0,
+            requireGreptileScore: "5/5",
+            requireReviewComments: 0,
+            retriggerGreptile: false,
+          }),
+          0,
+          greptile
+        );
+        const report = PrCloseoutReport.make({
+          actionableReviewThreadCount: 0,
+          botCommentCount: 0,
+          greptile,
+          issueCount: A.length(issues),
+          issues,
+          prNumber: 751,
+          prUrl: "https://github.com/beep/beep/pull/751",
+          reviewedHeadSha: O.some("aaa111"),
+          retriggeredGreptile: false,
+          schemaVersion: "yeet-pr-closeout/v1",
+        });
+        yield* fs.writeFileString(closeoutPath, yield* PrCloseoutReportJson.encode(report));
+
+        const snapshot = yield* collectYeetWatchSnapshot(subjectContext);
+
+        strictEqual(A.length(issues), 2);
+        strictEqual(snapshot.criteria.threadsResolved, true);
+        strictEqual(snapshot.criteria.closeoutGatesPassed, false);
       })
     ).pipe(
       provideScopedLayer(

@@ -14,6 +14,7 @@ const decodeMergeReady = S.decodeUnknownEffect(YeetMergeReadyFromEncoded);
 
 const currentCriteria = (
   overrides: Partial<{
+    readonly closeoutGatesPassed: boolean;
     readonly closeoutRun: boolean;
     readonly mergeStateAcceptable: boolean;
     readonly mergeable: boolean;
@@ -32,6 +33,7 @@ const currentCriteria = (
   mergeable: true,
   mergeStateAcceptable: true,
   reviewDecisionAcceptable: true,
+  closeoutGatesPassed: true,
   ...overrides,
 });
 
@@ -183,10 +185,38 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
     })
   );
 
+  it.effect("keeps a pre-split ready verdict ready, its closeout gates passing with its threads", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady(
+          '{"ready":true,"criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+        )
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.ready).toBe(true);
+      expect(mergeReady.criteria.closeoutGatesPassed).toBe(true);
+    })
+  );
+
+  it.effect("keeps a pre-split verdict blocked on threads-resolved, closeout gates unproven with it", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady(
+          '{"ready":false,"failing":"threads-resolved","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":false,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+        )
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      expect(mergeReady.failing).toStrictEqual(O.some("threads-resolved"));
+      expect(mergeReady.criteria.closeoutGatesPassed).toBe(false);
+    })
+  );
+
   it.effect("round-trips a current verdict byte-identically", () =>
     Effect.gen(function* () {
       const json = verdictJsonWithMergeReady(
-        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"closeoutGatesPassed":true}}'
       );
       const decoded = yield* YeetVerdictJson.decode(json);
 
