@@ -271,7 +271,7 @@ const scannedFilesCodec = S.String.pipe(S.Array, JsonStringCodec);
  *
  * ```ts
  * import { renderSchemaFirstScannedFilesLine } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.runSync(renderSchemaFirstScannedFilesLine(["packages/a/src/a.ts"])))
  * // [schema-first:scanned] ["packages/a/src/a.ts"]

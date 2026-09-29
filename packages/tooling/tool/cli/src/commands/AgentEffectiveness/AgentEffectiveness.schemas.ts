@@ -268,7 +268,7 @@ export type AgentEffectivenessEvalLaneStatus = typeof AgentEffectivenessEvalLane
  * **Example** (Make a measured lane report)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { AgentEffectivenessEvalLaneReport } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
  * const report = AgentEffectivenessEvalLaneReport.make({
