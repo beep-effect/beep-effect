@@ -2691,3 +2691,13 @@ Stable records 6,785 ms and 6,693 ms of CLI overlap in two bounded attempts,
 but zero lint-task overlap in both. Both attempts are retained; stable
 simultaneous lint execution remains unproven. These observations do not
 establish shared-writer safety, signed replay, shadow acceptance or promotion.
+
+### Patched dependency profile: canonical review attachment
+
+The [canonical attachment](research/current-patched-input-controls-attachment.json)
+accepts eleven new bounded runtime/packet reviews at `f80ee33672`: 1,025
+sources, 107 reviews and six artifacts, with 24 unresolved obligations. All
+previous source, review and artifact bindings remain byte-identical. The census
+remains 144 workspaces, 3,473 graph nodes and 1,970 executable nodes. Historical
+obligations remain explicit; this attachment does not establish semantic
+closure, signed replay, shadow acceptance or tuple promotion.
