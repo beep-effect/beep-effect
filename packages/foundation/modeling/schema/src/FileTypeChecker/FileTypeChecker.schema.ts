@@ -5,7 +5,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Number as Num, Order, SchemaTransformation } from "effect";
+import { Number as Num, Order, Result, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -159,8 +159,12 @@ const ChunkSize = S.Int.check(
 );
 
 // A detached buffer still passes `instanceof`, but it has transferred its
-// memory away: `byteLength` reads 0 and constructing any view throws.
-const NotDetached = S.makeFilter((buffer: globalThis.ArrayBuffer) => !buffer.detached, {
+// memory away: `byteLength` reads 0 and constructing any view throws. Probing
+// with a view avoids `ArrayBuffer.prototype.detached`, which needs the es2024 lib.
+const isNotDetached = (buffer: globalThis.ArrayBuffer): boolean =>
+  Result.isSuccess(Result.try(() => new globalThis.Uint8Array(buffer)));
+
+const NotDetached = S.makeFilter(isNotDetached, {
   identifier: $I`NotDetachedCheck`,
   title: "Attached ArrayBuffer",
   description:
@@ -171,7 +175,9 @@ const NotDetached = S.makeFilter((buffer: globalThis.ArrayBuffer) => !buffer.det
 
 const arrayBufferByteEquivalence = (self: globalThis.ArrayBuffer, that: globalThis.ArrayBuffer): boolean =>
   self === that ||
-  (!self.detached && !that.detached && Eq.equals(new globalThis.Uint8Array(self), new globalThis.Uint8Array(that)));
+  (isNotDetached(self) &&
+    isNotDetached(that) &&
+    Eq.equals(new globalThis.Uint8Array(self), new globalThis.Uint8Array(that)));
 
 // The JSON form of the ArrayBuffer member is base64, linked through the
 // upstream `Uint8ArrayFromBase64` codec so it matches the `Uint8Array` member.
