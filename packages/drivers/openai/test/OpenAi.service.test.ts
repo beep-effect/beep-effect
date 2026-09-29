@@ -358,7 +358,8 @@ describe("makeOpenAiEmbeddingModelLive boundary", () => {
       const layer = makeOpenAiEmbeddingModelLive(0).pipe(
         Layer.provide(makeConfigProviderLayer({ [OPENAI_API_KEY_ENV]: "fixture", [OPENAI_EMBEDDING_MODEL_ENV]: "" }))
       );
-      const failure = yield* Layer.build(layer).pipe(Effect.scoped, Effect.flip);
+      // Acquisition failure is the subject; the test runner owns its scope.
+      const failure = yield* Layer.build(layer).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
       expect(String(failure)).toContain("Expected a positive integer");
     })
