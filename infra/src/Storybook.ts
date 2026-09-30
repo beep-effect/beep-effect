@@ -6,7 +6,6 @@
  */
 
 import { $InfraId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
@@ -157,16 +156,42 @@ export class StorybookVercelProjectConfig extends S.Class<StorybookVercelProject
   $I`StorybookVercelProjectConfig`
 )(
   {
-    buildCommand: S.String.pipe(SchemaUtils.withKeyDefaults(defaultBuildCommand)),
-    installCommand: S.String.pipe(SchemaUtils.withKeyDefaults(defaultInstallCommand)),
-    outputDirectory: S.String.pipe(SchemaUtils.withKeyDefaults(defaultOutputDirectory)),
-    productionBranch: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProductionBranch)),
-    projectName: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProjectName)),
-    repository: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRepository)),
-    rootDirectory: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRootDirectory)),
-    teamId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    buildCommand: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultBuildCommand)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultBuildCommand))
+    ),
+    installCommand: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultInstallCommand)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultInstallCommand))
+    ),
+    outputDirectory: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultOutputDirectory)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultOutputDirectory))
+    ),
+    productionBranch: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultProductionBranch)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultProductionBranch))
+    ),
+    projectName: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultProjectName)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultProjectName))
+    ),
+    repository: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRepository)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRepository))
+    ),
+    rootDirectory: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultRootDirectory)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultRootDirectory))
+    ),
+    teamId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     vercelAuthenticationDeploymentType: StorybookVercelAuthenticationDeploymentType.pipe(
-      SchemaUtils.withKeyDefaults(defaultVercelAuthenticationDeploymentType)
+      S.withConstructorDefault(
+        Effect.succeed<typeof defaultVercelAuthenticationDeploymentType>(defaultVercelAuthenticationDeploymentType)
+      ),
+      S.withDecodingDefaultTypeKey(
+        Effect.succeed<typeof defaultVercelAuthenticationDeploymentType>(defaultVercelAuthenticationDeploymentType)
+      )
     ),
   },
   $I.annote("StorybookVercelProjectConfig", {

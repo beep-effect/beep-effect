@@ -6,8 +6,8 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { Number as Num, Order } from "effect";
+import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { Effect, Number as Num, Order } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoAiMetricsId.create("circuit-breaker");
@@ -306,7 +306,7 @@ export class CircuitBreakerEventV1 extends S.Class<CircuitBreakerEventV1>($I`Cir
     probe: CircuitBreakerProbe,
     caller: CircuitBreakerCaller,
     breakerRev: S.NonEmptyString,
-    evidenceTier: S.Literal("derived").pipe(SchemaUtils.withConstantDefault("derived")),
+    evidenceTier: S.Literal("derived").pipe(S.withConstructorDefault(Effect.succeed("derived"))),
     outcome: CircuitBreakerOutcome,
   },
   $I.annote("CircuitBreakerEventV1", {

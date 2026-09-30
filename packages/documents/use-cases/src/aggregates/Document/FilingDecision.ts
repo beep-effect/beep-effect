@@ -7,11 +7,9 @@
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
-import type { Effect } from "effect";
 import type { FilingDecisionUnavailable } from "./Document.errors.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Document/FilingDecision");
@@ -100,7 +98,7 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
     originalFileName: S.NonEmptyString.annotateKey({
       description: "Original source filename used by filename-based classification.",
     }),
-    textExcerpt: S.Option(FilingTextExcerpt).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    textExcerpt: S.Option(FilingTextExcerpt).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional bounded extracted-text excerpt for content-aware classification.",
     }),
   },

@@ -7,7 +7,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema/Sha256";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Crypto, Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -52,7 +51,7 @@ export const defaultBaseDirectory = ".data/api-reference";
  */
 export class ReflectionOptions extends S.Class<ReflectionOptions>($I`ReflectionOptions`)(
   {
-    baseDirectory: S.String.pipe(SchemaUtils.withConstantDefault<string>(defaultBaseDirectory)),
+    baseDirectory: S.String.pipe(S.withConstructorDefault(Effect.succeed<string>(defaultBaseDirectory))),
   },
   $I.annote("ReflectionOptions", {
     description: "Where reflection JSON files are read from; defaults to `.data/api-reference`.",

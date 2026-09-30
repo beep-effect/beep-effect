@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.config");
@@ -77,7 +77,8 @@ export const ECFR_RATE_LIMIT_WINDOW = "1 minute";
 export class EcfrConfigInput extends S.Class<EcfrConfigInput>($I`EcfrConfigInput`)(
   {
     apiUrl: S.String.pipe(
-      SchemaUtils.withKeyDefaults(ECFR_API_URL),
+      S.withConstructorDefault(Effect.succeed(ECFR_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ECFR_API_URL)),
       S.annotateKey({
         description: "Base origin for the eCFR admin, search, and versioner API families.",
       })

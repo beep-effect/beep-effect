@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import {
   CandidateRouting,
@@ -73,7 +73,7 @@ const pg = ProductEntity.pg;
 export class CorrectionDelta extends ProductEntity.Entity<CorrectionDelta>()(LawPractice.CorrectionDeltaId)(
   {
     candidateRouting: CandidateRouting.pipe(
-      SchemaUtils.withConstantDefault<CandidateRouting>("contradiction-candidate-input")
+      S.withConstructorDefault(Effect.succeed<CandidateRouting>("contradiction-candidate-input"))
     )
       .annotateKey({
         description: "Whether the difference stays an unresolved candidate input; unresolved is the default.",
@@ -97,7 +97,7 @@ export class CorrectionDelta extends ProductEntity.Entity<CorrectionDelta>()(Law
       description: "Which of interpretation, qualification, or assessment is being corrected.",
     }).pipe(pg.text()),
     supersedes: S.OptionFromNullOr(LawPractice.CorrectionDeltaId)
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Earlier correction this one replaces; absent for the first correction in a chain." })
       .pipe(pg.integer()),
     validatorReport: ValidatorReport.annotateKey({

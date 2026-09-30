@@ -6,9 +6,9 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { NonNegativeInt, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { HashSet, pipe, SchemaGetter } from "effect";
+import { Effect, HashSet, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -173,6 +173,9 @@ const M365ConfigUrl = S.String.pipe(
   })
 );
 
+const m365ConfigInputGraphBaseUrlDefault = makeNormalizedUrl(GRAPH_API_BASE_URL);
+const m365ConfigInputMaxRetriesDefault = NonNegativeInt.make(DEFAULT_MAX_RETRIES);
+const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI);
 /**
  * Runtime configuration accepted by the Microsoft 365 driver layers.
  *
@@ -213,21 +216,30 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
     clientId: S.NonEmptyString.annotateKey({
       description: "Entra application (public client) id used for the delegated PKCE flow.",
     }),
-    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
     }),
     clientSecret: S.OptionFromOptionalKey(S.NonEmptyString.pipe(S.RedactedFromValue))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Reserved confidential-client secret; redacted and unused by the v1 public-client flow.",
       }),
-    graphBaseUrl: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(GRAPH_API_BASE_URL))).annotateKey({
+    graphBaseUrl: M365ConfigUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
+    ).annotateKey({
       description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
     }),
-    maxRetries: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(DEFAULT_MAX_RETRIES))).annotateKey({
+    maxRetries: NonNegativeInt.pipe(
+      S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
+    ).annotateKey({
       description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
     }),
-    redirectUri: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(DEFAULT_REDIRECT_URI))).annotateKey({
+    redirectUri: M365ConfigUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(m365ConfigInputRedirectUriDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputRedirectUriDefault))
+    ).annotateKey({
       description: "Loopback redirect URI base for the interactive authorizer; defaults to http://localhost.",
     }),
     scopes: S.Array(S.NonEmptyString)
@@ -239,13 +251,18 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
           message: "Reserved write scope requested; the v1 Microsoft 365 driver is read-only.",
         })
       )
-      .pipe(SchemaUtils.withKeyDefaults(M365_READ_SCOPES))
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(M365_READ_SCOPES)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(M365_READ_SCOPES))
+      )
       .annotateKey({
         description: "Requested delegated scopes; defaults to M365_READ_SCOPES. Reserved write scopes are rejected.",
       }),
-    tokenCachePath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Filesystem path for the encrypted MSAL token cache; in-memory cache when omitted.",
-    }),
+    tokenCachePath: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Filesystem path for the encrypted MSAL token cache; in-memory cache when omitted.",
+      }),
   },
   $I.annote("M365ConfigInput", {
     description: "Runtime configuration accepted by the Microsoft 365 Graph driver layers.",

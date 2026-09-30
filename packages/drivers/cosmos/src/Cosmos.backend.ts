@@ -6,8 +6,9 @@
  */
 
 import { $CosmosId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -142,7 +143,7 @@ const HtmlCanvasElementLike = S.declare<HTMLCanvasElement>(isHtmlCanvasElement).
  */
 export class ProbeWebGl2Options extends S.Class<ProbeWebGl2Options>($I`ProbeWebGl2Options`)(
   {
-    canvas: S.OptionFromOptionalKey(HtmlCanvasElementLike).pipe(SchemaUtils.withNoneDefault),
+    canvas: S.OptionFromOptionalKey(HtmlCanvasElementLike).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProbeWebGl2Options", {
     description: "Optional canvas override for probing WebGL2 without creating a document element.",

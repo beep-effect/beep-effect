@@ -6,8 +6,7 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { naturalWidth, PretextCapture, PretextCaptureRequest } from "@beep/pretext";
-import { SchemaUtils } from "@beep/schema";
-import { Layer, Number as N, Order, pipe } from "effect";
+import { Effect, Layer, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -62,8 +61,8 @@ interface MakeTitleMinimaAtomInput {
  */
 export class TabChrome extends S.Class<TabChrome>($I`TabChrome`)(
   {
-    perTab: PixelAllowance.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    strip: PixelAllowance.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    perTab: PixelAllowance.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    strip: PixelAllowance.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
   },
   $I.annote("TabChrome", { description: "Per-tab and fixed tab-strip pixel allowances." })
 ) {}

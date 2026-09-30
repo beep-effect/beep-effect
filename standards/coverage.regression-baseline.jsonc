@@ -24729,6 +24729,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventorySource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 87.5,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts": {
           "lines": 98.87,
           "statements": 96.94,
@@ -32692,18 +32704,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

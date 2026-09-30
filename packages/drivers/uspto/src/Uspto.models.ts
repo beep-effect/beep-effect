@@ -323,7 +323,7 @@ const optionalUsptoMetadataText = (description: string) =>
         encode: (value) => O.flatten(value),
       })
     ),
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({ description })
   );
 

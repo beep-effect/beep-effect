@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { RestatementComponentSpan } from "../ComponentSpan/index.ts";
@@ -67,14 +67,14 @@ export class RestatementCitation extends S.Class<RestatementCitation>($I`Restate
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain (e.g., "(1)(b)") — undefined when not cited.',
       })
     ),
     spans: RestatementComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating this citation's sub-parts within the source text.",
       })

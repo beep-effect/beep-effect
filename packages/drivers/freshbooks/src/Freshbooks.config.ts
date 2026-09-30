@@ -12,9 +12,9 @@
  */
 
 import { $FreshbooksId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { identity, SchemaTransformation } from "effect";
+import { Effect, identity, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -256,6 +256,7 @@ export const FreshbooksBusinessId = S.Int.check(S.isGreaterThan(0)).pipe(
  */
 export type FreshbooksBusinessId = typeof FreshbooksBusinessId.Type;
 
+const freshbooksConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link Freshbooks.makeLayer}.
  *
@@ -292,15 +293,26 @@ export class FreshbooksConfigInput extends S.Class<FreshbooksConfigInput>($I`Fre
     redirectUri: FreshbooksRedirectUri.annotateKey({
       description: "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application.",
     }),
-    apiUrl: FreshbooksBaseUrl.pipe(SchemaUtils.withKeyDefaults(FRESHBOOKS_API_URL)).annotateKey({
+    apiUrl: FreshbooksBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(FRESHBOOKS_API_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(FRESHBOOKS_API_URL))
+    ).annotateKey({
       description: "Base URL for FreshBooks REST API requests.",
     }),
-    authUrl: FreshbooksBaseUrl.pipe(SchemaUtils.withKeyDefaults(FRESHBOOKS_AUTH_URL)).annotateKey({
+    authUrl: FreshbooksBaseUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(FRESHBOOKS_AUTH_URL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(FRESHBOOKS_AUTH_URL))
+    ).annotateKey({
       description: "Base URL for FreshBooks OAuth authorization.",
     }),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
-      description: "Additional HTTP headers merged into FreshBooks API requests.",
-    }),
+    headers: S.Record(S.String, S.String)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(freshbooksConfigInputHeadersDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(freshbooksConfigInputHeadersDefault))
+      )
+      .annotateKey({
+        description: "Additional HTTP headers merged into FreshBooks API requests.",
+      }),
   },
   $I.annote("FreshbooksConfigInput", {
     description: "Runtime configuration accepted by the FreshBooks API driver layer.",

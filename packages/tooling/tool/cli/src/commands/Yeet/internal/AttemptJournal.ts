@@ -55,8 +55,8 @@ export class YeetAttemptStarted extends S.Class<YeetAttemptStarted>($I`YeetAttem
     head: S.String,
     mode: S.String,
     startedAt: S.String,
-    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptStarted", {
@@ -124,7 +124,7 @@ export class YeetAttemptTerminated extends S.Class<YeetAttemptTerminated>($I`Yee
     attemptId: UUID,
     recordedAt: S.String,
     reason: YeetAttemptTerminationReason,
-    verdict: YeetVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    verdict: YeetVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptTerminated", {

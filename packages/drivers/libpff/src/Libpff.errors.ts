@@ -8,6 +8,7 @@
 import { $LibpffId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -109,13 +110,13 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
   "LibpffError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized technical cause string when one is safe to retain.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Process exit status associated with the libpff failure when one was available.",
       })
@@ -124,7 +125,7 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
       description: "Redacted technical error reason.",
     }),
     processClassification: S.OptionFromOptionalKey(LibpffProcessClassification).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Sanitized process-failure classification derived from bounded stderr.",
       })

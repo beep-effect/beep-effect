@@ -10,10 +10,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { MimeType, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { MimeType, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
 import { defaultPreprocessingOptions, PreprocessingOptions } from "./DocumentMetadata.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
 
@@ -53,28 +54,28 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
     }),
     sizeBytes: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-negative source size in bytes.",
       })
     ),
     documentId: DocumentId.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional caller-supplied document identifier; absence requests server derivation.",
       })
     ),
     eventTime: S.DateTimeUtcFromString.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional UTC instant of the real-world event described by the document.",
       })
     ),
     publishedAt: S.DateTimeUtcFromString.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional UTC instant at which the original source was published.",
       })
@@ -127,7 +128,7 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
 export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
   {
     batchId: S.OptionFromOptionalKey(BatchId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional caller-supplied batch identifier; absence requests server derivation.",
       })
@@ -145,13 +146,13 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
       description: "Validated namespace used when minting entity IRIs.",
     }),
     shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional storage URI of caller-supplied SHACL shapes.",
       })
     ),
     ontologyEmbeddingsUri: S.OptionFromOptionalKey(GcsUri).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional precomputed ontology-embedding artifact URI.",
       })
@@ -160,7 +161,7 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
       description: "Non-empty ordered collection of source documents to process.",
     }),
     preprocessing: PreprocessingOptions.pipe(
-      SchemaUtils.withKeyDefaults(defaultPreprocessingOptions),
+      S.withConstructorDefault(Effect.succeed(defaultPreprocessingOptions)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultPreprocessingOptions)),
       S.annotateKey({
         description: "Complete preprocessing policy; omission enables canonical defaults.",
       })

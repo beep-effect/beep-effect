@@ -13,9 +13,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Match, Number as N } from "effect";
+import { Match, Number as N, Effect } from "effect";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/DocumentMetadata");
 
@@ -248,7 +249,7 @@ export class ChunkingParams extends S.Class<ChunkingParams>($I`ChunkingParams`)(
       description: "Number of sentences repeated across neighboring chunks.",
     }),
     preserveSentences: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether chunks preserve sentence boundaries; defaults to true.",
       })
@@ -332,6 +333,7 @@ const ClassificationBatchSize = PosInt.check(
     })
   );
 
+const preprocessingOptionsClassificationBatchSizeDefault = ClassificationBatchSize.make(10);
 /**
  * Feature controls for document preprocessing.
  *
@@ -354,13 +356,13 @@ const ClassificationBatchSize = PosInt.check(
  */
 export class PreprocessingOptions extends S.Class<PreprocessingOptions>($I`PreprocessingOptions`)(
   {
-    enabled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    classifyDocuments: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    adaptiveChunking: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    priorityOrdering: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    chunkingStrategyOverride: S.OptionFromOptionalKey(ChunkingStrategy).pipe(SchemaUtils.withNoneDefault),
+    enabled: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    classifyDocuments: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    adaptiveChunking: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    priorityOrdering: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    chunkingStrategyOverride: S.OptionFromOptionalKey(ChunkingStrategy).pipe(S.withConstructorDefault(Effect.succeedNone)),
     classificationBatchSize: ClassificationBatchSize.pipe(
-      SchemaUtils.withKeyDefaults(ClassificationBatchSize.make(10))
+      S.withConstructorDefault(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault))
     ),
   },
   $I.annote("PreprocessingOptions", {
@@ -526,6 +528,7 @@ const recommendChunkingStrategy = (
     unknown: () => fallbackChunkingStrategy(entityDensity, complexity),
   });
 
+const documentMetadataDomainTagsDefault = A.empty<string>();
 /**
  * Complete preprocessing metadata for one source document.
  *
@@ -552,15 +555,15 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
     sourceUri: GcsUri,
     contentType: MimeType,
     sizeBytes: NonNegativeInt,
-    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     ingestedAt: S.DateTimeUtcFromString,
     preprocessedAt: S.DateTimeUtcFromString,
-    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     language: LanguageCode,
     estimatedTokens: NonNegativeInt,
     documentType: DocumentType,
-    domainTags: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    domainTags: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(documentMetadataDomainTagsDefault)), S.withDecodingDefaultType(Effect.succeed(documentMetadataDomainTagsDefault))),
     complexityScore: ComplexityScore,
     entityDensityHint: EntityDensity,
     chunkingStrategy: ChunkingStrategy,
@@ -705,6 +708,7 @@ export class PreprocessingStats extends S.Class<PreprocessingStats>($I`Preproces
   static readonly is = S.is(PreprocessingStats);
 }
 
+const enrichedManifestDocumentsDefault = A.empty<DocumentMetadata>();
 /**
  * Batch manifest enriched with preprocessing results.
  *
@@ -742,9 +746,9 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
     batchId: BatchId,
     ontologyUri: GcsUri,
     ontologyVersion: OntologyVersion,
-    shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
     targetNamespace: Namespace,
-    documents: S.Array(DocumentMetadata).pipe(SchemaUtils.withEmptyArrayDefaults<DocumentMetadata>()),
+    documents: S.Array(DocumentMetadata).pipe(S.withConstructorDefault(Effect.succeed(enrichedManifestDocumentsDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedManifestDocumentsDefault))),
     createdAt: S.DateTimeUtcFromString,
     preprocessedAt: S.DateTimeUtcFromString,
     preprocessingStats: PreprocessingStats,
@@ -790,7 +794,7 @@ export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInp
   {
     batchId: BatchId,
     manifestUri: GcsUri,
-    preprocessing: PreprocessingOptions.pipe(SchemaUtils.withKeyDefaults(defaultPreprocessingOptions)),
+    preprocessing: PreprocessingOptions.pipe(S.withConstructorDefault(Effect.succeed(defaultPreprocessingOptions)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultPreprocessingOptions))),
   },
   $I.annote("PreprocessingActivityInput", {
     description: "Preprocessing activity input with a complete schema-defaulted configuration.",

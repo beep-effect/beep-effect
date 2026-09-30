@@ -8,7 +8,7 @@
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contracts");
@@ -197,7 +197,7 @@ export class ProviderUsageMetadata extends S.Class<ProviderUsageMetadata>($I`Pro
     provider: S.NonEmptyString.annotateKey({
       description: "Provider identifier for the finalized request.",
     }),
-    stopReason: S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    stopReason: S.OptionFromNullOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional normalized provider stop reason; encoded absence is JSON null.",
     }),
   },

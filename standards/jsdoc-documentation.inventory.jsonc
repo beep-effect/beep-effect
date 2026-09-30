@@ -65,20 +65,20 @@
     "cleanPackages": 18,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
-    "publicModules": 2867,
-    "publicExports": 20281,
-    "openModules": 375,
-    "openExports": 3065,
+    "publicModules": 2866,
+    "publicExports": 20276,
+    "openModules": 374,
+    "openExports": 3064,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3302,
+    "exampleImportFindings": 3301,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 432,
+    "multiple-description-paragraphs": 431,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3301,
+    "no-root-package-import": 3300,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -18078,9 +18078,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 225,
-        "publicModuleCount": 225,
-        "publicExportCount": 1361
+        "sourceFileCount": 224,
+        "publicModuleCount": 224,
+        "publicExportCount": 1356
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -18089,20 +18089,20 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 23,
-        "openExports": 136,
+        "openModules": 22,
+        "openExports": 135,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 157,
+        "exampleImportFindings": 156,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 1,
-          "multiple-description-paragraphs": 20,
+          "multiple-description-paragraphs": 19,
           "leading-blank": 0,
           "trailing-blank": 1,
           "invalid-heading": 0,
@@ -18115,7 +18115,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 157
+          "no-root-package-import": 156
         }
       },
       "modules": [
@@ -22075,7 +22075,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 13,
           "remediationStatus": "resolved"
         },
         {
@@ -22264,32 +22264,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/SchemaUtils/withConstructorDefaults.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withconstructordefaults-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "exportCount": 2,
-          "remediationStatus": "open"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/SchemaUtils/withEncodeDefault.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts",
           "line": 1,
@@ -22329,7 +22303,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -25996,8 +25970,8 @@
           "exportKind": "class",
           "filePath": "src/Conformance/Conformance.invariant.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-          "line": 350,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-invariant-schema-ts-350-invariantdescriptor",
+          "line": 354,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-invariant-schema-ts-354-invariantdescriptor",
           "currentTags": [
             "@invariant",
             "@category",
@@ -26105,8 +26079,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.report.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-          "line": 77,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-77-conformanceissue",
+          "line": 84,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-84-conformanceissue",
           "currentTags": [
             "@category",
             "@since"
@@ -26133,8 +26107,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.report.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-          "line": 93,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-93-conformanceissue",
+          "line": 100,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-100-conformanceissue",
           "currentTags": [
             "@see",
             "@category",
@@ -26156,8 +26130,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.report.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-          "line": 223,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-223-conformancereport",
+          "line": 234,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-234-conformancereport",
           "currentTags": [
             "@invariant",
             "@category",
@@ -26185,8 +26159,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.report.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-          "line": 239,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-239-conformancereport",
+          "line": 250,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-report-schema-ts-250-conformancereport",
           "currentTags": [
             "@see",
             "@category",
@@ -29277,8 +29251,8 @@
           "exportKind": "class",
           "filePath": "src/CsvCodecOptions/CsvCodecOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-          "line": 51,
-          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-51-csvcodecoptions",
+          "line": 54,
+          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-54-csvcodecoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -29299,8 +29273,8 @@
           "exportKind": "type",
           "filePath": "src/CsvCodecOptions/CsvCodecOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-          "line": 105,
-          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-105-csvcodecoptionsargs",
+          "line": 120,
+          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-120-csvcodecoptionsargs",
           "currentTags": [
             "@category",
             "@since"
@@ -29321,8 +29295,8 @@
           "exportKind": "const",
           "filePath": "src/CsvCodecOptions/CsvCodecOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-121-csvcodecoptionsparseoptions",
+          "line": 136,
+          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-136-csvcodecoptionsparseoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -29343,8 +29317,8 @@
           "exportKind": "class",
           "filePath": "src/CsvCodecOptions/CsvCodecOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-          "line": 51,
-          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-51-schema",
+          "line": 54,
+          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-54-schema",
           "currentTags": [
             "@category",
             "@since"
@@ -29365,8 +29339,8 @@
           "exportKind": "const",
           "filePath": "src/CsvCodecOptions/CsvCodecOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-121-parseoptions",
+          "line": 136,
+          "anchor": "packages-foundation-modeling-schema-src-csvcodecoptions-csvcodecoptions-schema-ts-136-parseoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -31390,8 +31364,8 @@
           "exportKind": "const",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 66,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-66-expectctenabled",
+          "line": 69,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-69-expectctenabled",
           "currentTags": [
             "@category",
             "@since"
@@ -31412,8 +31386,8 @@
           "exportKind": "type",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 87,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-87-expectctenabled",
+          "line": 90,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-90-expectctenabled",
           "currentTags": [
             "@category",
             "@since"
@@ -31434,8 +31408,8 @@
           "exportKind": "const",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 105,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-105-expectctoption",
+          "line": 108,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-108-expectctoption",
           "currentTags": [
             "@category",
             "@since"
@@ -31456,8 +31430,8 @@
           "exportKind": "type",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 126,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-126-expectctoption",
+          "line": 129,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-129-expectctoption",
           "currentTags": [
             "@category",
             "@since"
@@ -31478,8 +31452,8 @@
           "exportKind": "class",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 144,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-144-expectctresponseheader",
+          "line": 147,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-147-expectctresponseheader",
           "currentTags": [
             "@category",
             "@since"
@@ -31500,8 +31474,8 @@
           "exportKind": "const",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 232,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-232-expectctheader",
+          "line": 235,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-235-expectctheader",
           "currentTags": [
             "@category",
             "@since"
@@ -31522,8 +31496,8 @@
           "exportKind": "type",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 307,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-307-expectctheader",
+          "line": 310,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-310-expectctheader",
           "currentTags": [
             "@category",
             "@since"
@@ -31566,8 +31540,8 @@
           "exportKind": "class",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 144,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-144-responseheader",
+          "line": 147,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-147-responseheader",
           "currentTags": [
             "@category",
             "@since"
@@ -31588,8 +31562,8 @@
           "exportKind": "const",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 332,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-332-option",
+          "line": 335,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-335-option",
           "currentTags": [
             "@category",
             "@since"
@@ -31610,8 +31584,8 @@
           "exportKind": "type",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 349,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-349-option",
+          "line": 352,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-352-option",
           "currentTags": [
             "@category",
             "@since"
@@ -31632,8 +31606,8 @@
           "exportKind": "const",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 367,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-367-header",
+          "line": 370,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-370-header",
           "currentTags": [
             "@category",
             "@since"
@@ -31654,8 +31628,8 @@
           "exportKind": "type",
           "filePath": "src/ExpectCt/ExpectCt.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-          "line": 388,
-          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-388-header",
+          "line": 391,
+          "anchor": "packages-foundation-modeling-schema-src-expectct-expectct-schema-ts-391-header",
           "currentTags": [
             "@category",
             "@since"
@@ -33820,8 +33794,8 @@
           "exportKind": "const",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 38,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-38-filetype",
+          "line": 37,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-37-filetype",
           "currentTags": [
             "@category",
             "@since"
@@ -33842,8 +33816,8 @@
           "exportKind": "type",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 102,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-102-filetype",
+          "line": 101,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-101-filetype",
           "currentTags": [
             "@see",
             "@category",
@@ -33865,8 +33839,8 @@
           "exportKind": "const",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-121-byte",
+          "line": 120,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-120-byte",
           "currentTags": [
             "@category",
             "@since"
@@ -33887,8 +33861,8 @@
           "exportKind": "type",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 145,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-145-byte",
+          "line": 144,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-144-byte",
           "currentTags": [
             "@see",
             "@category",
@@ -33910,8 +33884,8 @@
           "exportKind": "const",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 233,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-233-filecontent",
+          "line": 232,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-232-filecontent",
           "currentTags": [
             "@category",
             "@since"
@@ -33932,8 +33906,8 @@
           "exportKind": "type",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 246,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-246-filecontent",
+          "line": 245,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-245-filecontent",
           "currentTags": [
             "@see",
             "@category",
@@ -33955,8 +33929,8 @@
           "exportKind": "class",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 400,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-400-filesignature",
+          "line": 405,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-405-filesignature",
           "currentTags": [
             "@invariant",
             "@category",
@@ -33978,8 +33952,8 @@
           "exportKind": "namespace",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 430,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-430-filesignature",
+          "line": 435,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-435-filesignature",
           "currentTags": [
             "@category",
             "@since"
@@ -34000,8 +33974,8 @@
           "exportKind": "class",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 493,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-493-filetypeinfo",
+          "line": 498,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-498-filetypeinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -34022,8 +33996,8 @@
           "exportKind": "namespace",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 506,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-506-filetypeinfo",
+          "line": 511,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-511-filetypeinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -34044,8 +34018,8 @@
           "exportKind": "class",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 564,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-564-detectedfileinfo",
+          "line": 569,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-569-detectedfileinfo",
           "currentTags": [
             "@invariant",
             "@category",
@@ -34067,8 +34041,8 @@
           "exportKind": "namespace",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 597,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-597-detectedfileinfo",
+          "line": 602,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-602-detectedfileinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -34089,8 +34063,8 @@
           "exportKind": "class",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 628,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-628-detectfileoptions",
+          "line": 633,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-633-detectfileoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -34111,8 +34085,8 @@
           "exportKind": "namespace",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 643,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-643-detectfileoptions",
+          "line": 651,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-651-detectfileoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -34133,8 +34107,8 @@
           "exportKind": "class",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 674,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-674-validatefiletypeoptions",
+          "line": 682,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-682-validatefiletypeoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -34155,8 +34129,8 @@
           "exportKind": "namespace",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 690,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-690-validatefiletypeoptions",
+          "line": 701,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-701-validatefiletypeoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -34177,8 +34151,8 @@
           "exportKind": "const",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 715,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-715-isfilecontent",
+          "line": 726,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-726-isfilecontent",
           "currentTags": [
             "@category",
             "@since"
@@ -34199,8 +34173,8 @@
           "exportKind": "const",
           "filePath": "src/FileTypeChecker/FileTypeChecker.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-          "line": 731,
-          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-731-isfiletype",
+          "line": 742,
+          "anchor": "packages-foundation-modeling-schema-src-filetypechecker-filetypechecker-schema-ts-742-isfiletype",
           "currentTags": [
             "@category",
             "@since"
@@ -35204,8 +35178,8 @@
           "exportKind": "const",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 69,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-69-forcehttpsredirectenabled",
+          "line": 72,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-72-forcehttpsredirectenabled",
           "currentTags": [
             "@category",
             "@since"
@@ -35226,8 +35200,8 @@
           "exportKind": "type",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 90,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-90-forcehttpsredirectenabled",
+          "line": 93,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-93-forcehttpsredirectenabled",
           "currentTags": [
             "@category",
             "@since"
@@ -35248,8 +35222,8 @@
           "exportKind": "const",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 108,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-108-forcehttpsredirectoption",
+          "line": 111,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-111-forcehttpsredirectoption",
           "currentTags": [
             "@category",
             "@since"
@@ -35270,8 +35244,8 @@
           "exportKind": "type",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 129,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-129-forcehttpsredirectoption",
+          "line": 132,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-132-forcehttpsredirectoption",
           "currentTags": [
             "@category",
             "@since"
@@ -35292,8 +35266,8 @@
           "exportKind": "class",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 150,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-150-forcehttpsredirectresponseheader",
+          "line": 153,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-153-forcehttpsredirectresponseheader",
           "currentTags": [
             "@category",
             "@since"
@@ -35314,8 +35288,8 @@
           "exportKind": "const",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 191,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-191-forcehttpsredirectheader",
+          "line": 194,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-194-forcehttpsredirectheader",
           "currentTags": [
             "@category",
             "@since"
@@ -35336,8 +35310,8 @@
           "exportKind": "type",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 275,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-275-forcehttpsredirectheader",
+          "line": 278,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-278-forcehttpsredirectheader",
           "currentTags": [
             "@category",
             "@since"
@@ -35380,8 +35354,8 @@
           "exportKind": "class",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 150,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-150-responseheader",
+          "line": 153,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-153-responseheader",
           "currentTags": [
             "@category",
             "@since"
@@ -35402,8 +35376,8 @@
           "exportKind": "const",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 300,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-300-option",
+          "line": 303,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-303-option",
           "currentTags": [
             "@category",
             "@since"
@@ -35424,8 +35398,8 @@
           "exportKind": "type",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 317,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-317-option",
+          "line": 320,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-320-option",
           "currentTags": [
             "@category",
             "@since"
@@ -35446,8 +35420,8 @@
           "exportKind": "const",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 335,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-335-header",
+          "line": 338,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-338-header",
           "currentTags": [
             "@category",
             "@since"
@@ -35468,8 +35442,8 @@
           "exportKind": "type",
           "filePath": "src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-          "line": 356,
-          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-356-header",
+          "line": 359,
+          "anchor": "packages-foundation-modeling-schema-src-forcehttpsredirect-forcehttpsredirect-schema-ts-359-header",
           "currentTags": [
             "@category",
             "@since"
@@ -41493,8 +41467,8 @@
           "exportKind": "const",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 71,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-71-subschema",
+          "line": 70,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-70-subschema",
           "currentTags": [
             "@category",
             "@since"
@@ -41515,8 +41489,8 @@
           "exportKind": "type",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 92,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-92-subschema",
+          "line": 91,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-91-subschema",
           "currentTags": [
             "@category",
             "@since"
@@ -41537,8 +41511,8 @@
           "exportKind": "namespace",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 110,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-110-subschema",
+          "line": 109,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-109-subschema",
           "currentTags": [
             "@category",
             "@since"
@@ -41581,8 +41555,8 @@
           "exportKind": "namespace",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 288,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-288-node",
+          "line": 291,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-291-node",
           "currentTags": [
             "@category",
             "@since"
@@ -41603,8 +41577,8 @@
           "exportKind": "const",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 419,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-419-nodecodec",
+          "line": 422,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-422-nodecodec",
           "currentTags": [
             "@category",
             "@since"
@@ -41625,8 +41599,8 @@
           "exportKind": "type",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 446,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-446-nodecodec",
+          "line": 449,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-449-nodecodec",
           "currentTags": [
             "@category",
             "@since"
@@ -41647,8 +41621,8 @@
           "exportKind": "class",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 471,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-471-document",
+          "line": 475,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-475-document",
           "currentTags": [
             "@category",
             "@since"
@@ -41669,8 +41643,8 @@
           "exportKind": "namespace",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 512,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-512-document",
+          "line": 522,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-522-document",
           "currentTags": [
             "@category",
             "@since"
@@ -41691,8 +41665,8 @@
           "exportKind": "const",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 565,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-565-resolvelocalref",
+          "line": 575,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-575-resolvelocalref",
           "currentTags": [
             "@category",
             "@since"
@@ -41713,8 +41687,8 @@
           "exportKind": "const",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 607,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-607-resolvenoderef",
+          "line": 617,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-617-resolvenoderef",
           "currentTags": [
             "@category",
             "@since"
@@ -41735,8 +41709,8 @@
           "exportKind": "const",
           "filePath": "src/JSONSchema/JSONSchema.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
-          "line": 636,
-          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-636-resolvedocumentref",
+          "line": 646,
+          "anchor": "packages-foundation-modeling-schema-src-jsonschema-jsonschema-schema-ts-646-resolvedocumentref",
           "currentTags": [
             "@category",
             "@since"
@@ -45458,8 +45432,8 @@
           "exportKind": "class",
           "filePath": "src/ParserOptions/ParserOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
-          "line": 162,
-          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-162-parseroptions",
+          "line": 165,
+          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-165-parseroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -45480,8 +45454,8 @@
           "exportKind": "type",
           "filePath": "src/ParserOptions/ParserOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
-          "line": 251,
-          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-251-parseroptionsargs",
+          "line": 272,
+          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-272-parseroptionsargs",
           "currentTags": [
             "@category",
             "@since"
@@ -45502,8 +45476,8 @@
           "exportKind": "class",
           "filePath": "src/ParserOptions/ParserOptions.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
-          "line": 162,
-          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-162-schema",
+          "line": 165,
+          "anchor": "packages-foundation-modeling-schema-src-parseroptions-parseroptions-schema-ts-165-schema",
           "currentTags": [
             "@category",
             "@since"
@@ -47793,8 +47767,8 @@
           "exportKind": "class",
           "filePath": "src/SafeRemoteHost.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
-          "line": 92,
-          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-92-blockedhosterror",
+          "line": 91,
+          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-91-blockedhosterror",
           "currentTags": [
             "@category",
             "@since"
@@ -47821,8 +47795,8 @@
           "exportKind": "const",
           "filePath": "src/SafeRemoteHost.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
-          "line": 278,
-          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-278-isblockedremotehost",
+          "line": 277,
+          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-277-isblockedremotehost",
           "currentTags": [
             "@category",
             "@since"
@@ -47849,8 +47823,8 @@
           "exportKind": "const",
           "filePath": "src/SafeRemoteHost.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
-          "line": 323,
-          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-323-assertallowedremotehost",
+          "line": 322,
+          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-322-assertallowedremotehost",
           "currentTags": [
             "@effects",
             "@category",
@@ -47878,8 +47852,8 @@
           "exportKind": "const",
           "filePath": "src/SafeRemoteHost.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
-          "line": 388,
-          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-388-assertallowedremoteurl",
+          "line": 387,
+          "anchor": "packages-foundation-modeling-schema-src-saferemotehost-ts-387-assertallowedremoteurl",
           "currentTags": [
             "@effects",
             "@category",
@@ -48369,34 +48343,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./withConstructorDefaults.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/SchemaUtils/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 57,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-57-export-from-withconstructordefaults-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./withEncodeDefault.ts\";",
           "exportKind": "re-export",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 62,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-62-export-from-withencodedefault-ts",
+          "line": 57,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-57-export-from-withencodedefault-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -48417,8 +48369,8 @@
           "exportKind": "re-export",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 67,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-67-export-from-withkeydefaults-ts",
+          "line": 62,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-62-export-from-withkeydefaults-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -48439,8 +48391,8 @@
           "exportKind": "re-export",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 72,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-72-export-from-withliteralkitstatics-ts",
+          "line": 67,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-67-export-from-withliteralkitstatics-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -48461,8 +48413,8 @@
           "exportKind": "re-export",
           "filePath": "src/SchemaUtils/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
-          "line": 77,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-77-export-from-withstatics-ts",
+          "line": 72,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-index-ts-72-export-from-withstatics-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -48868,56 +48820,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "withNoneDefault",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/withConstructorDefaults.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
-          "line": 49,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withconstructordefaults-ts-49-withnonedefault",
-          "currentTags": [
-            "@typeParam",
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "withConstantDefault",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/withConstructorDefaults.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
-          "line": 86,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withconstructordefaults-ts-86-withconstantdefault",
-          "currentTags": [
-            "@typeParam",
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "withEncodeDefault",
           "exportKind": "const",
           "filePath": "src/SchemaUtils/withEncodeDefault.ts",
@@ -49055,68 +48957,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "withEmptyArrayDefaults",
-          "exportKind": "function",
-          "filePath": "src/SchemaUtils/withKeyDefaults.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 120,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-120-withemptyarraydefaults",
-          "currentTags": [
-            "@typeParam",
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "open"
-        },
-        {
-          "symbolName": "withKeyDefaults",
-          "exportKind": "const",
-          "filePath": "src/SchemaUtils/withKeyDefaults.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 53,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-53-withkeydefaults",
-          "currentTags": [
-            "@typeParam",
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "boolKeyWithDefault",
           "exportKind": "const",
           "filePath": "src/SchemaUtils/withKeyDefaults.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 197,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-197-boolkeywithdefault",
+          "line": 37,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-37-boolkeywithdefault",
           "currentTags": [
             "@param",
             "@returns",
@@ -49139,8 +48985,8 @@
           "exportKind": "const",
           "filePath": "src/SchemaUtils/withKeyDefaults.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 217,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-217-boolkeydefaultfalse",
+          "line": 61,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-61-boolkeydefaultfalse",
           "currentTags": [
             "@category",
             "@since"
@@ -49161,8 +49007,8 @@
           "exportKind": "type",
           "filePath": "src/SchemaUtils/withKeyDefaults.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 228,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-228-boolkeydefaultfalse",
+          "line": 72,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-72-boolkeydefaultfalse",
           "currentTags": [
             "@category",
             "@since"
@@ -49183,8 +49029,8 @@
           "exportKind": "const",
           "filePath": "src/SchemaUtils/withKeyDefaults.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 248,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-248-boolkeydefaulttrue",
+          "line": 92,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-92-boolkeydefaulttrue",
           "currentTags": [
             "@category",
             "@since"
@@ -49205,8 +49051,8 @@
           "exportKind": "type",
           "filePath": "src/SchemaUtils/withKeyDefaults.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
-          "line": 259,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-259-boolkeydefaulttrue",
+          "line": 103,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-withkeydefaults-ts-103-boolkeydefaulttrue",
           "currentTags": [
             "@category",
             "@since"
@@ -49381,8 +49227,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 35,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-35-csperror",
+          "line": 34,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-34-csperror",
           "currentTags": [
             "@category",
             "@since"
@@ -49403,8 +49249,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 57,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-57-forcehttpsredirecterror",
+          "line": 56,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-56-forcehttpsredirecterror",
           "currentTags": [
             "@category",
             "@since"
@@ -49425,8 +49271,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 81,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-81-xssprotectionerror",
+          "line": 80,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-80-xssprotectionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49447,8 +49293,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 103,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-103-referrerpolicyerror",
+          "line": 102,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-102-referrerpolicyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49469,8 +49315,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 125,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-125-nosnifferror",
+          "line": 124,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-124-nosnifferror",
           "currentTags": [
             "@category",
             "@since"
@@ -49491,8 +49337,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 147,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-147-noopenerror",
+          "line": 146,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-146-noopenerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49513,8 +49359,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 169,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-169-frameguarderror",
+          "line": 168,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-168-frameguarderror",
           "currentTags": [
             "@category",
             "@since"
@@ -49535,8 +49381,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 191,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-191-expectcterror",
+          "line": 190,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-190-expectcterror",
           "currentTags": [
             "@category",
             "@since"
@@ -49557,8 +49403,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 213,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-213-permissionspolicyerror",
+          "line": 212,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-212-permissionspolicyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49579,8 +49425,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 237,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-237-crossoriginopenerpolicyerror",
+          "line": 236,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-236-crossoriginopenerpolicyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49601,8 +49447,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 263,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-263-crossoriginembedderpolicyerror",
+          "line": 262,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-262-crossoriginembedderpolicyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49623,8 +49469,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 289,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-289-crossoriginresourcepolicyerror",
+          "line": 288,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-288-crossoriginresourcepolicyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49645,8 +49491,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 315,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-315-permittedcrossdomainpolicieserror",
+          "line": 314,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-314-permittedcrossdomainpolicieserror",
           "currentTags": [
             "@category",
             "@since"
@@ -49667,8 +49513,8 @@
           "exportKind": "class",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 341,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-341-coreerror",
+          "line": 340,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-340-coreerror",
           "currentTags": [
             "@category",
             "@since"
@@ -49689,8 +49535,8 @@
           "exportKind": "const",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 364,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-364-secureheadererror",
+          "line": 363,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-363-secureheadererror",
           "currentTags": [
             "@category",
             "@since"
@@ -49711,8 +49557,8 @@
           "exportKind": "type",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 403,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-403-secureheadererror",
+          "line": 402,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-402-secureheadererror",
           "currentTags": [
             "@category",
             "@since"
@@ -49739,8 +49585,8 @@
           "exportKind": "const",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 364,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-364-error",
+          "line": 363,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-363-error",
           "currentTags": [
             "@category",
             "@since"
@@ -49761,8 +49607,8 @@
           "exportKind": "type",
           "filePath": "src/SecureHeaderError/SecureHeaderError.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-          "line": 403,
-          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-403-error",
+          "line": 402,
+          "anchor": "packages-foundation-modeling-schema-src-secureheadererror-secureheadererror-errors-ts-402-error",
           "currentTags": [
             "@category",
             "@since"

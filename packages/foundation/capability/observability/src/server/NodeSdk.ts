@@ -6,7 +6,7 @@
  */
 
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
@@ -14,7 +14,7 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { Duration, Layer } from "effect";
+import { Duration, Effect, Layer } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -72,6 +72,9 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
   })
 );
 
+const nodeSdkServerOptionsLoggerExportIntervalDefault = Duration.seconds(1);
+const nodeSdkServerOptionsMetricsExportIntervalDefault = Duration.seconds(10);
+const nodeSdkServerOptionsShutdownTimeoutDefault = Duration.seconds(3);
 /**
  * Additional controls for the shared Node SDK layer.
  *
@@ -91,15 +94,28 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
  */
 export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeSdkServerOptions`)(
   {
-    loggerExportInterval: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(1))),
-    loggerMergeWithExisting: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    loggerExportInterval: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsLoggerExportIntervalDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsLoggerExportIntervalDefault))
+    ),
+    loggerMergeWithExisting: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
     logRecordProcessor: S.optionalKey(NodeSdkLogRecordProcessorOption),
     metricReader: S.optionalKey(NodeSdkMetricReaderOption),
-    metricsExportInterval: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(10))),
-    metricTemporality: NodeSdkMetricTemporality.pipe(
-      SchemaUtils.withKeyDefaults(NodeSdkMetricTemporality.Enum.cumulative)
+    metricsExportInterval: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsMetricsExportIntervalDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsMetricsExportIntervalDefault))
     ),
-    shutdownTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(3))),
+    metricTemporality: NodeSdkMetricTemporality.pipe(
+      S.withConstructorDefault(Effect.succeed(NodeSdkMetricTemporality.Enum.cumulative)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(NodeSdkMetricTemporality.Enum.cumulative))
+    ),
+    shutdownTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(nodeSdkServerOptionsShutdownTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(nodeSdkServerOptionsShutdownTimeoutDefault))
+    ),
     spanProcessor: S.optionalKey(NodeSdkSpanProcessorOption),
   },
   $I.annote("NodeSdkServerOptions", {

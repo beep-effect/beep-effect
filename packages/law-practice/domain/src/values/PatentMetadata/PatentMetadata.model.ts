@@ -7,8 +7,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
-import { flow, Match, Number as N, pipe } from "effect";
+import { LiteralKit, PosInt } from "@beep/schema";
+import { Effect, flow, Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -106,7 +106,7 @@ const normalizeDateText = (raw: string): O.Option<string> =>
 export class PatentFigure extends S.Class<PatentFigure>($I`PatentFigure`)(
   {
     label: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentFigure.label", {
         description: "Human-readable figure label such as FIG. 1 or the source filename.",
       })
@@ -117,7 +117,7 @@ export class PatentFigure extends S.Class<PatentFigure>($I`PatentFigure`)(
       })
     ),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentFigure.alt", {
         description: "Short alternate text for accessibility.",
       })
@@ -156,7 +156,7 @@ export class PatentAssignee extends S.Class<PatentAssignee>($I`PatentAssignee`)(
       })
     ),
     location: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentAssignee.location", {
         description: "Optional assignee location.",
       })
@@ -192,21 +192,21 @@ export class PatentReference extends S.Class<PatentReference>($I`PatentReference
   {
     country: OfficeCode.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentReference.country", {
         description: "WIPO ST.3 office code parsed from the reference.",
       })
     ),
     number: PatentNumber.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentReference.number", {
         description: "WIPO ST.6 patent publication number with punctuation removed.",
       })
     ),
     kindCode: KindCode.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentReference.kindCode", {
         description: "WIPO ST.16 kind code parsed from the reference.",
       })
@@ -244,46 +244,46 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
   {
     patentNumber: PatentNumber.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.patentNumber", {
         description: "WIPO ST.6 patent publication number.",
       })
     ),
     country: OfficeCode.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.country", {
         description: "WIPO ST.3 office code.",
       })
     ),
     kindCode: KindCode.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.kindCode", {
         description: "WIPO ST.16 patent document kind code.",
       })
     ),
     publicationDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.publicationDate", {
         description: "Publication date text normalized to ISO YYYY-MM-DD where possible.",
       })
     ),
     applicationNumber: ApplicationNumber.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.applicationNumber", {
         description: "WIPO ST.13 patent application number when present.",
       })
     ),
     filingDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.filingDate", {
         description: "Filing date text normalized to ISO YYYY-MM-DD where possible.",
       })
     ),
     priorityDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.priorityDate", {
         description: "Priority date text normalized to ISO YYYY-MM-DD where possible.",
       })
@@ -291,14 +291,14 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
     assignees: PatentAssignee.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.assignees", {
         description: "Assignees extracted from the patent record.",
       })
     ),
     claimsCount: PosInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.claimsCount", {
         description: "Positive count of patent claims.",
       })
@@ -306,7 +306,7 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
     inventors: S.NonEmptyString.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.inventors", {
         description: "Inventor names extracted from the patent record.",
       })
@@ -314,7 +314,7 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
     ipc: S.NonEmptyString.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.ipc", {
         description: "International Patent Classification symbols.",
       })
@@ -322,7 +322,7 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
     cpc: S.NonEmptyString.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PatentMetadata.cpc", {
         description: "Cooperative Patent Classification symbols.",
       })
@@ -545,11 +545,11 @@ export const PATENT_OFFICES = {
  */
 export class PatentDisplayMetadata extends S.Class<PatentDisplayMetadata>($I`PatentDisplayMetadata`)(
   {
-    patent_number: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    patentNumber: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    country: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    kind_code: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    kindCode: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    patent_number: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    patentNumber: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    country: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    kind_code: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    kindCode: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PatentDisplayMetadata", {
     description: "Snake-case or camelCase patent metadata fields accepted by display helpers.",
@@ -621,8 +621,8 @@ export declare namespace PatentDisplayMetadata {
 export class PatentDisplay extends S.Class<PatentDisplay>($I`PatentDisplay`)(
   {
     country: OfficeCode,
-    number: PatentNumber.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    kindCode: KindCode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    number: PatentNumber.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    kindCode: KindCode.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     formatted: S.NonEmptyString,
     office: PatentOffice,
     status: PatentStatus,
@@ -633,6 +633,8 @@ export class PatentDisplay extends S.Class<PatentDisplay>($I`PatentDisplay`)(
   })
 ) {}
 
+const patentClassificationsIpcDefault = A.empty<string>();
+const patentClassificationsCpcDefault = A.empty<string>();
 /**
  * Extracted IPC and CPC classification symbols.
  *
@@ -654,8 +656,16 @@ export class PatentDisplay extends S.Class<PatentDisplay>($I`PatentDisplay`)(
  */
 export class PatentClassifications extends S.Class<PatentClassifications>($I`PatentClassifications`)(
   {
-    ipc: S.NonEmptyString.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
-    cpc: S.NonEmptyString.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
+    ipc: S.NonEmptyString.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(patentClassificationsIpcDefault)),
+      S.withDecodingDefaultType(Effect.succeed(patentClassificationsIpcDefault))
+    ),
+    cpc: S.NonEmptyString.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(patentClassificationsCpcDefault)),
+      S.withDecodingDefaultType(Effect.succeed(patentClassificationsCpcDefault))
+    ),
   },
   $I.annote("PatentClassifications", {
     description: "IPC and CPC classification symbols extracted from patent content.",
@@ -728,11 +738,11 @@ export type PatentSectionKind = typeof PatentSectionKind.Type;
  */
 export class PatentSections extends S.Class<PatentSections>($I`PatentSections`)(
   {
-    abstract: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    claims: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    citations: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    drawings: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    abstract: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    claims: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    citations: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    drawings: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PatentSections", {
     description: "Optional patent content sections extracted from markdown-like patent text.",

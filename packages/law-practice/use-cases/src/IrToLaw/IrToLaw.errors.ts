@@ -8,7 +8,8 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { AlignmentStatus } from "@beep/langextract/Extraction";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -91,9 +92,11 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
 export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError>($I`IrToLawExtractionError`)(
   "IrToLawExtractionError",
   {
-    alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional LangExtract alignment status copied from the rejected extraction.",
-    }),
+    alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional LangExtract alignment status copied from the rejected extraction.",
+      }),
     label: S.NonEmptyString.annotateKey({
       description: "Required extraction label that failed validation.",
     }),

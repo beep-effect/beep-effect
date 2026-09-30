@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { O } from "@beep/utils";
 import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
@@ -584,38 +584,113 @@ const statusFlags = {
 
 class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
   {
-    detach: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    jobMaxRuntime: S.String.pipe(SchemaUtils.withKeyDefaults("")),
-    allowStaleBase: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    detach: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    jobMaxRuntime: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
+    allowStaleBase: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    amend: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     base: S.String,
-    bots: S.String.pipe(SchemaUtils.withKeyDefaults("greptile")),
-    ciParity: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    collectAll: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    bots: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("greptile")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("greptile"))
+    ),
+    ciParity: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    collectAll: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    fast: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     head: S.String,
     json: S.Boolean,
-    merged: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    monitor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    noFailFast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    noEdit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    merged: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    monitor: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    noFailFast: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    noEdit: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     packetDir: S.String,
     plan: S.Boolean,
-    pr: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    pushOnly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    remote: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    replyBody: S.String.pipe(SchemaUtils.withKeyDefaults("")),
-    replyThread: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    pr: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    pushOnly: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    remote: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    replyBody: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
+    replyThread: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     requireGreptileIssues: S.optionalKey(S.Finite),
-    requireGreptileScore: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    requireGreptileScore: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     requireReviewComments: S.optionalKey(S.Finite),
-    resolveThreads: S.String.pipe(SchemaUtils.withKeyDefaults("")),
-    retriggerGreptile: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    reuseVerified: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    stagedOnly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    startPrEarly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    summary: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    tier: YeetProofTier.pipe(SchemaUtils.withKeyDefaults("full")),
+    resolveThreads: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
+    retriggerGreptile: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    reuseVerified: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    stagedOnly: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    startPrEarly: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    summary: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    tier: YeetProofTier.pipe(
+      S.withConstructorDefault(Effect.succeed("full" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("full" as const))
+    ),
   },
   $I.annote("SharedOptions", {
     description: "CLI option bag shared by Yeet commands before handler defaults are applied.",
@@ -933,10 +1008,16 @@ const YeetMonitorCommandRoute = LiteralKit([
 const SelectYeetMonitorCommandRoute = Fn({
   input: S.Struct({
     plan: S.Boolean,
-    settleTimeout: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    settleTimeout: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     untilEvent: S.Boolean,
     untilMerged: S.Boolean,
-    untilReady: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    untilReady: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     watch: S.Boolean,
   }),
   output: YeetMonitorCommandRoute,

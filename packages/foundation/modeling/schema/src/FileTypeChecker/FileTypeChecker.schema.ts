@@ -5,7 +5,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Number as Num, Order, Result, SchemaTransformation } from "effect";
+import { Effect, Number as Num, Order, Result, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -13,7 +13,6 @@ import * as Str from "effect/String";
 import { FileExtension } from "../FileExtension.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { MimeType } from "../MimeType.ts";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type { SchemaAST } from "effect";
 
 const $I = $SchemaId.create("FileTypeChecker/FileTypeChecker.schema");
@@ -331,13 +330,19 @@ const CompatibleFileExtension = S.Union([FileExtension, CatalogOnlyCompatibleExt
 
 type CompatibleFileExtension = typeof CompatibleFileExtension.Type;
 
+const fileSignatureStructSkippedBytesDefault = A.empty<number>();
+const fileSignatureStructCompatibleExtensionsDefault = A.empty<CompatibleFileExtension>();
 const FileSignatureStruct = S.Struct({
   sequence: S.NonEmptyArray(Byte),
-  offset: S.Natural.pipe(SchemaUtils.withKeyDefaults(0)),
-  skippedBytes: S.Array(S.Natural).pipe(SchemaUtils.withEmptyArrayDefaults<number>()),
-  description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  offset: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0)), S.withDecodingDefaultTypeKey(Effect.succeed(0))),
+  skippedBytes: S.Array(S.Natural).pipe(
+    S.withConstructorDefault(Effect.succeed(fileSignatureStructSkippedBytesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(fileSignatureStructSkippedBytesDefault))
+  ),
+  description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   compatibleExtensions: S.Array(CompatibleFileExtension).pipe(
-    SchemaUtils.withEmptyArrayDefaults<CompatibleFileExtension>()
+    S.withConstructorDefault(Effect.succeed(fileSignatureStructCompatibleExtensionsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(fileSignatureStructCompatibleExtensionsDefault))
   ),
 });
 
@@ -627,7 +632,10 @@ export declare namespace DetectedFileInfo {
  */
 export class DetectFileOptions extends S.Class<DetectFileOptions>($I`DetectFileOptions`)(
   {
-    chunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(64)),
+    chunkSize: ChunkSize.pipe(
+      S.withConstructorDefault(Effect.succeed(64)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(64))
+    ),
   },
   $I.annote("DetectFileOptions", {
     description: "Options controlling how many leading bytes file detection inspects.",
@@ -674,7 +682,10 @@ export declare namespace DetectFileOptions {
 export class ValidateFileTypeOptions extends S.Class<ValidateFileTypeOptions>($I`ValidateFileTypeOptions`)(
   {
     ...DetectFileOptions.fields,
-    excludeSimilarTypes: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    excludeSimilarTypes: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("ValidateFileTypeOptions", {
     description: "Options controlling byte-window size and acceptance of closely related formats.",

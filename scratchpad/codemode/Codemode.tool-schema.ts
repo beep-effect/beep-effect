@@ -9,7 +9,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { flow, HashSet, JsonPointer, Result } from "effect";
+import { flow, HashSet, JsonPointer, Result, Effect } from "effect";
 import { dual } from "effect/Function";
 import type { JsonSchema } from "effect/JsonSchema";
 import * as S from "effect/Schema";
@@ -526,7 +526,7 @@ export const jsonSchemaToTypeScript: {
 export class InputProperty extends S.Class<InputProperty>($I`InputProperty`)(
   {
     name: S.String,
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     required: S.Boolean,
   },
   $I.annote("InputProperty", {

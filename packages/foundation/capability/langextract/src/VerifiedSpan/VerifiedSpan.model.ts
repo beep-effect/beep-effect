@@ -9,8 +9,7 @@ import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { DateTime, Tuple } from "effect";
+import { DateTime, Effect, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
@@ -376,7 +375,7 @@ const VerifiedSpanLocationFailureReason = LiteralKit([
 const VerifiedSpanAnchorFailureReason = LiteralKit(["invalid-anchor", "quote-mismatch"]);
 
 const VerifiedSpanAttemptFailureStruct = S.Struct({
-  candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   reason: VerifiedSpanAttemptFailureReason,
   stage: VerifiedSpanAttemptFailureStage,
 });
@@ -572,7 +571,10 @@ const VerifiedSpanNormalizationVersion = S.Literal(VERIFIED_SPAN_NORMALIZATION_V
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 const attemptIdEquivalence = S.toEquivalence(VerifiedSpanAttemptId);
 
-const OptionalVerifiedSpanAttemptId = VerifiedSpanAttemptId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalVerifiedSpanAttemptId = VerifiedSpanAttemptId.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
 
 type VerifiedSpanAttemptRecordFields = {
   readonly attemptId: typeof VerifiedSpanAttemptId;

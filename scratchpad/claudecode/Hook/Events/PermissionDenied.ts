@@ -8,7 +8,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -51,7 +50,7 @@ export class Input extends S.Class<Input>($I`PermissionDeniedInput`)(
     hook_event_name: S.Literal("PermissionDenied"),
     tool_name: S.String,
     tool_input: S.Record(S.String, S.Unknown),
-    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    tool_use_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: S.String,
   },
   $I.annote("PermissionDeniedInput", {
@@ -83,7 +82,7 @@ export class Input extends S.Class<Input>($I`PermissionDeniedInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PermissionDeniedHookSpecificOutput`)(
   {
     hookEventName: S.Literal("PermissionDenied"),
-    retry: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    retry: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionDeniedHookSpecificOutput", {
     description: "Retry instruction returned by a PermissionDenied hook.",
@@ -111,12 +110,12 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Permissio
  */
 export class Output extends S.Class<Output>($I`PermissionDeniedOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionDeniedOutput", {
     description: "Output returned by a PermissionDenied hook handler.",

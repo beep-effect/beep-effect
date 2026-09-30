@@ -6,10 +6,10 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import { HttpsUrl } from "@beep/schema/URL";
-import { DateTime, Result } from "effect";
+import { DateTime, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -268,7 +268,7 @@ export class ProductVariant extends S.Class<ProductVariant>($I`ProductVariant`)(
  */
 export class Component extends S.Class<Component>($I`Component`)(
   {
-    finishId: EntityId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    finishId: EntityId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     id: EntityId,
     kind: ComponentKind,
     label: S.NonEmptyString,

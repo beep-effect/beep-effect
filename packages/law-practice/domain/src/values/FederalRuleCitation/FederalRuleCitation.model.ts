@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { FederalRuleComponentSpan } from "../ComponentSpan/index.ts";
@@ -63,14 +63,14 @@ export class FederalRuleCitation extends S.Class<FederalRuleCitation>($I`Federal
     }),
     subsection: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Subsection chain (e.g., "(b)(6)") — undefined when not cited.',
       })
     ),
     spans: FederalRuleComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating each recognized sub-part of the citation within the source text.",
       })
