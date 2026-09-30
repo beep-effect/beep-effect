@@ -7,8 +7,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPositionRelator.values");
@@ -65,10 +65,12 @@ const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPosit
  */
 export class LegalPositionGrounding extends S.Class<LegalPositionGrounding>($I`LegalPositionGrounding`)(
   {
-    foundingExercise: S.OptionFromNullOr(LawPractice.PowerExerciseId).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description:
-        "Founding exercise of the relation whose power the producing exercise used; absent for a norm-founded relation.",
-    }),
+    foundingExercise: S.OptionFromNullOr(LawPractice.PowerExerciseId)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description:
+          "Founding exercise of the relation whose power the producing exercise used; absent for a norm-founded relation.",
+      }),
     producingExercise: LawPractice.PowerExerciseId.annotateKey({
       description: "Exercise that brought this position into being.",
     }),

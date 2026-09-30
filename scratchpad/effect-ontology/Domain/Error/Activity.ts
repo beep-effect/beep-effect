@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { dual, O, P } from "@beep/utils";
-import { Inspectable, Match } from "effect";
+import { Inspectable, Match, Effect } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
 
@@ -41,7 +41,7 @@ const ActivityErrorCases = S.TaggedUnion({
     message: ErrorMessage.annotateKey({
       description: "Human-readable service failure diagnostic.",
     }),
-    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+    retryable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))).annotateKey({
       description: "Whether workflow retry policy may safely retry the operation.",
     }),
   },

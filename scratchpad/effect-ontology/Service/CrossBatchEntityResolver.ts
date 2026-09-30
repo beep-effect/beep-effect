@@ -16,7 +16,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
@@ -185,6 +184,11 @@ class MatchedEntity extends S.Class<MatchedEntity>($I`MatchedEntity`)(
   })
 ) {}
 
+const crossBatchResolverConfigCandidateThresholdDefault = UnitInterval.make(0.6);
+const crossBatchResolverConfigResolutionThresholdDefault = UnitInterval.make(0.8);
+const crossBatchResolverConfigMaxCandidatesPerEntityDefault = PosInt.make(20);
+const crossBatchResolverConfigMaxBlockingCandidatesDefault = PosInt.make(100);
+const crossBatchResolverConfigCanonicalNamespaceDefault = IRI.make("https://example.org/entities/");
 /**
  * Configuration for cross-batch entity resolution
  *
@@ -203,23 +207,23 @@ class MatchedEntity extends S.Class<MatchedEntity>($I`MatchedEntity`)(
 export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>($I`CrossBatchResolverConfig`)(
   {
     candidateThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.6)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigCandidateThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigCandidateThresholdDefault)),
       S.annotateKey({ description: "Minimum similarity admitted by candidate retrieval." })
     ),
     resolutionThreshold: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigResolutionThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigResolutionThresholdDefault)),
       S.annotateKey({ description: "Minimum similarity required to reuse a canonical entity." })
     ),
     maxCandidatesPerEntity: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(20)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigMaxCandidatesPerEntityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigMaxCandidatesPerEntityDefault)),
       S.annotateKey({ description: "Positive maximum number of ANN candidates per entity." })
     ),
     maxBlockingCandidates: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(100)),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigMaxBlockingCandidatesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigMaxBlockingCandidatesDefault)),
       S.annotateKey({ description: "Positive maximum number of token-blocking candidates." })
     ),
     canonicalNamespace: IRI.pipe(
-      SchemaUtils.withKeyDefaults(IRI.make("https://example.org/entities/")),
+      S.withConstructorDefault(Effect.succeed(crossBatchResolverConfigCanonicalNamespaceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(crossBatchResolverConfigCanonicalNamespaceDefault)),
       S.annotateKey({ description: "Namespace used for newly created canonical entity IRIs." })
     ),
   },

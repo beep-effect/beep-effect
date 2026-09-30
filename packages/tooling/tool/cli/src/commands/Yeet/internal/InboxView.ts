@@ -25,7 +25,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, HashMap, HashSet, MutableHashSet, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -423,7 +423,7 @@ export class YeetPrWave extends S.Class<YeetPrWave>($I`YeetPrWave`)(
   {
     prNumber: S.Finite,
     entries: S.NonEmptyArray(YeetInboxEntry),
-    redSetKey: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redSetKey: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetPrWave", {
     description:
@@ -714,6 +714,8 @@ export const YEET_HOOK_SESSION_SCHEMA_VERSION = "yeet-hook-session/v1";
 
 const hookSessionsDirName = "sessions";
 
+const yeetHookSessionStateSeenIdsDefault = A.empty<string>();
+const yeetHookSessionStateFirstSeenAtDefault = {};
 /**
  * One harness session's inbox-hook bookkeeping, as the hook writes it.
  *
@@ -745,8 +747,14 @@ const hookSessionsDirName = "sessions";
 export class YeetHookSessionState extends S.Class<YeetHookSessionState>($I`YeetHookSessionState`)(
   {
     schemaVersion: S.Literal(YEET_HOOK_SESSION_SCHEMA_VERSION),
-    seenIds: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    firstSeenAt: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
+    seenIds: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetHookSessionStateSeenIdsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetHookSessionStateSeenIdsDefault))
+    ),
+    firstSeenAt: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetHookSessionStateFirstSeenAtDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetHookSessionStateFirstSeenAtDefault))
+    ),
   },
   $I.annote("YeetHookSessionState", {
     description: "One harness session's inbox-hook state: rows already handed to it and when each was first handed.",

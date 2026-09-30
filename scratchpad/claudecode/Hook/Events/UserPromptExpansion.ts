@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -120,7 +120,7 @@ export class Input extends S.Class<Input>($I`UserPromptExpansionInput`)(
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromptExpansionHookSpecificOutput`)(
   {
     hookEventName: S.Literal("UserPromptExpansion"),
-    additionalContext: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    additionalContext: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("UserPromptExpansionHookSpecificOutput", {
     description: "UserPromptExpansion-specific response returned to Claude Code.",
@@ -148,14 +148,14 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromp
  */
 export class Output extends S.Class<Output>($I`UserPromptExpansionOutput`)(
   {
-    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(SchemaUtils.withNoneDefault),
-    reason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    decision: S.OptionFromOptionalKey(S.Literal("block")).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("UserPromptExpansionOutput", {
     description: "Output returned by a UserPromptExpansion handler.",

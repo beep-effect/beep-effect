@@ -27,7 +27,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -169,6 +169,8 @@ export const HeavyAdmissionEventName = LiteralKit(["pull_request", "push", "merg
  */
 export type HeavyAdmissionEventName = typeof HeavyAdmissionEventName.Type;
 
+const heavyAdmissionEventLabelsDefault = A.empty<string>();
+const heavyAdmissionEventChangedPathsDefault = A.empty<string>();
 /**
  * Typed view of what the admission decision reads.
  *
@@ -199,9 +201,18 @@ export type HeavyAdmissionEventName = typeof HeavyAdmissionEventName.Type;
 export class HeavyAdmissionEvent extends S.Class<HeavyAdmissionEvent>($I`HeavyAdmissionEvent`)(
   {
     eventName: HeavyAdmissionEventName,
-    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
-    draft: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    labels: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(heavyAdmissionEventLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(heavyAdmissionEventLabelsDefault))
+    ),
+    draft: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    changedPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(heavyAdmissionEventChangedPathsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(heavyAdmissionEventChangedPathsDefault))
+    ),
   },
   $I.annote("HeavyAdmissionEvent", {
     description:
@@ -362,10 +373,17 @@ class GhEventLabel extends S.Class<GhEventLabel>($I`GhEventLabel`)(
   $I.annote("GhEventLabel", { description: "One label on the pull request of a GitHub event payload." })
 ) {}
 
+const ghEventPullRequestLabelsDefault = A.empty<GhEventLabel>();
 class GhEventPullRequest extends S.Class<GhEventPullRequest>($I`GhEventPullRequest`)(
   {
-    draft: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-    labels: S.Array(GhEventLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<GhEventLabel>())),
+    draft: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    labels: S.Array(GhEventLabel).pipe(
+      S.withConstructorDefault(Effect.succeed(ghEventPullRequestLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ghEventPullRequestLabelsDefault))
+    ),
     base: S.Struct({ ref: S.String }),
   },
   $I.annote("GhEventPullRequest", {
@@ -396,7 +414,10 @@ class GhEventPullRequest extends S.Class<GhEventPullRequest>($I`GhEventPullReque
  */
 export class GhPullRequestEventPayload extends S.Class<GhPullRequestEventPayload>($I`GhPullRequestEventPayload`)(
   {
-    action: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    action: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
     pull_request: GhEventPullRequest,
   },
   $I.annote("GhPullRequestEventPayload", {
@@ -427,8 +448,8 @@ const decodeGhPullRequestEventPayload = S.decodeUnknownEffect(S.fromJsonString(G
 export class HeavyAdmissionReadInput extends S.Class<HeavyAdmissionReadInput>($I`HeavyAdmissionReadInput`)(
   {
     eventName: HeavyAdmissionEventName,
-    eventPath: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    base: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    eventPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    base: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     cwd: S.String,
   },
   $I.annote("HeavyAdmissionReadInput", {

@@ -22,7 +22,7 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { LiteralKit } from "./LiteralKit/index.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
@@ -36,13 +36,13 @@ const FileInfoSize = S.ByteSize.pipe(
 );
 
 const OptionalStatDate = (description: string) =>
-  S.Date.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.Date.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 const OptionalStatFinite = (description: string) =>
-  S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 const OptionalStatSize = (description: string) =>
-  FileInfoSize.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({ description });
+  FileInfoSize.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 /**
  * File-system entry kinds recognized by {@link FileInfo}.

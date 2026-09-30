@@ -18,6 +18,7 @@ import {
   FourHintAnnotations,
 } from "@beep/mcp-kit";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 
@@ -33,7 +34,10 @@ const defaultBudgetBytes = PosInt.make(8000);
 const PracticeKgToolNodeKind = S.Union([KgNodeKind, S.Literal("bundle")]);
 const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Literal("bundle-manifest")]);
 
-const BudgetBytes = PosInt.pipe(SchemaUtils.withKeyDefaults(defaultBudgetBytes)).annotateKey({
+const BudgetBytes = PosInt.pipe(
+  S.withConstructorDefault(Effect.succeed(defaultBudgetBytes)),
+  S.withDecodingDefaultTypeKey(Effect.succeed(defaultBudgetBytes))
+).annotateKey({
   description: "Maximum serialized response size in bytes. Defaults to 8000.",
 });
 
@@ -70,11 +74,15 @@ class FindParams extends S.Class<FindParams>($I`FindParams`)(
   $I.annote("FindParams", { description: "Parameters for finding graph spine nodes." })
 ) {}
 
+const searchTextParamsLimitDefault = PosInt.make(20);
 class SearchTextParams extends S.Class<SearchTextParams>($I`SearchTextParams`)(
   {
     budgetBytes: BudgetBytes,
     family: S.optionalKey(S.NonEmptyString),
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
+    limit: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(searchTextParamsLimitDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(searchTextParamsLimitDefault))
+    ),
     query: S.NonEmptyString,
   },
   $I.annote("SearchTextParams", { description: "Parameters for BM25 corpus full-text search." })
@@ -96,7 +104,10 @@ class GetDocumentParams extends S.Class<GetDocumentParams>($I`GetDocumentParams`
     budgetBytes: BudgetBytes,
     digest: S.optionalKey(S.NonEmptyString),
     organized_path: S.optionalKey(S.NonEmptyString),
-    range: DocumentRange.pipe(SchemaUtils.withKeyDefaults(defaultDocumentRange)),
+    range: DocumentRange.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultDocumentRange)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultDocumentRange))
+    ),
   },
   $I.annote("GetDocumentParams", { description: "Document lookup by digest or organized corpus path." })
 ) {}

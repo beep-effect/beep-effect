@@ -133,11 +133,11 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  */
 export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I`AiMetricsForwarderInput`)(
   {
-    claudeProjectsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    codexSessionsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    dataRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    claudeProjectsRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    codexSessionsRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    dataRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     homeDir: S.String,
     includeAll: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
@@ -147,16 +147,16 @@ export class AiMetricsForwarderInput extends S.Class<AiMetricsForwarderInput>($I
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILES))
     ),
-    maxFileBytes: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
-    openClawUnitPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    maxFileBytes: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    openClawUnitPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     parquetExportMode: AiMetricsParquetExportMode.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsParquetExportMode.Enum.snapshot)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsParquetExportMode.Enum.snapshot))
     ),
     rawArchiveKey: AiMetricsRawArchiveKey,
-    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     repoRoot: S.String,
-    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
     target: AiMetricsDeployTarget.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
@@ -256,7 +256,7 @@ export class AiMetricsForwarderOtlpExported extends S.Class<AiMetricsForwarderOt
     ingestRunId: S.String,
     sessionSpanCount: S.Natural,
     spanCount: S.Natural,
-    status: S.Literal("exported").pipe(SchemaUtils.withConstantDefault("exported")),
+    status: S.Literal("exported").pipe(S.withConstructorDefault(Effect.succeed("exported"))),
     target: AiMetricsDeployTarget,
     turnSpanCount: S.Natural,
   },
@@ -308,7 +308,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
     endpointTraceUrl: S.String,
     ingestRunId: S.String,
     message: S.String,
-    status: S.Literal("failed").pipe(SchemaUtils.withConstantDefault("failed")),
+    status: S.Literal("failed").pipe(S.withConstructorDefault(Effect.succeed("failed"))),
     target: AiMetricsDeployTarget,
   },
   $I.annote("AiMetricsForwarderOtlpExportFailed", {
@@ -423,8 +423,10 @@ export class AiMetricsForwarderRunResult extends S.Class<AiMetricsForwarderRunRe
     configSnapshotId: S.String,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    otlpExport: S.OptionFromOptionalKey(AiMetricsForwarderOtlpExport).pipe(SchemaUtils.withNoneDefault),
-    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    otlpExport: S.OptionFromOptionalKey(AiMetricsForwarderOtlpExport).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     parquetExportMode: AiMetricsParquetExportMode,
     parquetTables: S.Array(S.String),
     rawArchiveDir: S.String,
@@ -484,13 +486,13 @@ export class AiMetricsForwarderTimerInput extends S.Class<AiMetricsForwarderTime
 )(
   {
     command: AiMetricsForwarderTimerCommand,
-    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     intervalMinutes: S.Int.check(S.isGreaterThan(0)).pipe(
       S.withConstructorDefault(Effect.succeed(30)),
       S.withDecodingDefaultKey(Effect.succeed(30))
     ),
     lockPath: S.String,
-    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     serviceName: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics-forwarder")),
       S.withDecodingDefaultKey(Effect.succeed("beep-ai-metrics-forwarder"))

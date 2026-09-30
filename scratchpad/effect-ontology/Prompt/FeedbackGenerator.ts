@@ -6,8 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { Formatter, flow, HashSet, Inspectable, pipe, SchemaIssue } from "effect";
+import { Formatter, flow, HashSet, Inspectable, pipe, SchemaIssue, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -57,7 +56,7 @@ export class Violation extends S.Class<Violation>($I`Violation`)(
     /** Optional rejected input retained when schema decoding enabled input reporting. */
     actual: S.Unknown.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("Violation.actual", {
         description: "Optional rejected input retained when schema decoding enabled input reporting.",
       })

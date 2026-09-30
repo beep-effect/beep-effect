@@ -8,7 +8,6 @@
 import { $PandocAstId } from "@beep/identity";
 import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, P, R } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -191,7 +190,7 @@ class InvalidPandocDocument extends S.TaggedClass<InvalidPandocDocument>($I`Inva
     checkedInvariantIds: PandocCheckedInvariantIds,
     issues: S.Array(PandocLosslessIssue),
     message: S.NonEmptyString,
-    wire: S.OptionFromOptionalKey(PandocConformanceWire).pipe(SchemaUtils.withNoneDefault),
+    wire: S.OptionFromOptionalKey(PandocConformanceWire).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("InvalidPandocDocument", {
     description: "Input that fails the Pandoc JSON envelope or a pinned current-constructor payload invariant.",

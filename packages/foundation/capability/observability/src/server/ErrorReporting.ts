@@ -6,8 +6,7 @@
  */
 import bc from "@beep/colors";
 import { $ObservabilityId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import { ErrorReporter, Inspectable, Match, pipe } from "effect";
+import { Effect, ErrorReporter, Inspectable, Match, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { renderObservedCause, summarizeCause } from "../CauseDiagnostics.ts";
@@ -36,7 +35,10 @@ const writeErrorLine = (line: string): void => {
  */
 export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOptions>($I`ConsoleErrorReporterOptions`)(
   {
-    includeCause: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({
+    includeCause: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Whether to render the pretty Effect cause after the error line.",
     }),
   },
@@ -63,10 +65,16 @@ export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOpt
  */
 export class ErrorReporterLayerOptions extends S.Class<ErrorReporterLayerOptions>($I`ErrorReporterLayerOptions`)(
   {
-    includeCause: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({
+    includeCause: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Whether the registered reporter should render the pretty Effect cause.",
     }),
-    mergeWithExisting: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({
+    mergeWithExisting: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ).annotateKey({
       description: "Whether to merge this reporter with already registered reporters.",
     }),
   },

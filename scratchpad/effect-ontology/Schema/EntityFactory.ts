@@ -1,19 +1,3 @@
-/**
- * Entity Schema Factory (Stage 1)
- *
- * **Details**
- *
- * Creates Effect Schemas for entity extraction in the two-stage ODKE pipeline.
- * Stage 1: Extract all named entities and map them to ontology classes.
- *
- * This schema ensures entity consistency by requiring unique IDs that will
- * be used in Stage 2 for relation extraction.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
-import { SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -21,6 +5,7 @@ import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
+import { Effect } from "effect";
 
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
@@ -104,7 +89,7 @@ export const makeEntitySchema = dual2(
               extractLocalNameFromIri(property.id),
               (property.isFunctional ? valueSchema : S.Union([valueSchema, S.Array(valueSchema)])).pipe(
                 S.OptionFromOptionalKey,
-                SchemaUtils.withNoneDefault
+                S.withConstructorDefault(Effect.succeedNone)
               ),
             ])
           )
@@ -138,11 +123,11 @@ export const makeEntitySchema = dual2(
             "Array of class names (e.g., 'Player', 'Team') - use local names, not full URIs (at least one required)",
         })
       ),
-      attributes: AttributesSchema.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+      attributes: AttributesSchema.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
         description: `Entity attributes - use allowed property names${propList}`,
       }),
       mentions: S.Array(EvidenceSpan)
-        .pipe(S.check(S.isNonEmpty()), S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
+        .pipe(S.check(S.isNonEmpty()), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))
         .annotate({
           description: "Text spans where this entity appears in source (include startChar/endChar offsets)",
         }),

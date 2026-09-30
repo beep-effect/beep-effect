@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -16,7 +16,7 @@ const ContextType = LiteralKit(["sentence", "paragraph"]);
 
 const ContextMaxLength = NonNegativeInt.pipe(
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   S.annotateKey({
     description: "Maximum characters to return. Omit for no explicit length limit.",
   })

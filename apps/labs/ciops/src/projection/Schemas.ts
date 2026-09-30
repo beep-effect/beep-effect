@@ -710,7 +710,7 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`
     schemaVersion: S.Literal("yeet-admission-journal/v3"),
     nonce: S.String,
     pid: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checkoutRoot: S.String,
     branch: S.String,
   },

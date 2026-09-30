@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -45,7 +45,7 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PermissionRequest");
 export class PermissionRule extends S.Class<PermissionRule>($I`PermissionRule`)(
   {
     toolName: S.String,
-    ruleContent: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ruleContent: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionRule", {
     description: "Permission rule suggested or persisted by Claude Code.",
@@ -115,9 +115,9 @@ const PermissionDecisionBehavior = LiteralKit(["allow", "deny"]).pipe(
 export class PermissionSuggestion extends S.Class<PermissionSuggestion>($I`PermissionSuggestion`)(
   {
     type: S.String,
-    rules: S.OptionFromOptionalKey(PermissionRules).pipe(SchemaUtils.withNoneDefault),
-    behavior: S.OptionFromOptionalKey(PermissionBehavior).pipe(SchemaUtils.withNoneDefault),
-    destination: S.OptionFromOptionalKey(PermissionDestination).pipe(SchemaUtils.withNoneDefault),
+    rules: S.OptionFromOptionalKey(PermissionRules).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    behavior: S.OptionFromOptionalKey(PermissionBehavior).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    destination: S.OptionFromOptionalKey(PermissionDestination).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionSuggestion", {
     description: "Permission update suggested with a pending tool request.",
@@ -164,7 +164,7 @@ export class Input extends S.Class<Input>($I`PermissionRequestInput`)(
     hook_event_name: S.Literal("PermissionRequest"),
     tool_name: S.String,
     tool_input: S.Record(S.String, S.Unknown),
-    permission_suggestions: S.OptionFromOptionalKey(PermissionSuggestions).pipe(SchemaUtils.withNoneDefault),
+    permission_suggestions: S.OptionFromOptionalKey(PermissionSuggestions).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionRequestInput", {
     description: "Input for the PermissionRequest hook event.",
@@ -349,10 +349,10 @@ const PermissionUpdates = PermissionUpdate.pipe(
 export class PermissionDecision extends S.Class<PermissionDecision>($I`PermissionRequestDecision`)(
   {
     behavior: PermissionDecisionBehavior,
-    updatedInput: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
-    updatedPermissions: S.OptionFromOptionalKey(PermissionUpdates).pipe(SchemaUtils.withNoneDefault),
-    message: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    interrupt: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    updatedInput: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    updatedPermissions: S.OptionFromOptionalKey(PermissionUpdates).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    message: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    interrupt: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionRequestDecision", {
     description: "Allow or deny decision returned by a PermissionRequest hook.",
@@ -412,12 +412,12 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Permissio
  */
 export class Output extends S.Class<Output>($I`PermissionRequestOutput`)(
   {
-    continue: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    systemMessage: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(SchemaUtils.withNoneDefault),
+    continue: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopReason: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suppressOutput: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    systemMessage: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    terminalSequence: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hookSpecificOutput: S.OptionFromOptionalKey(HookSpecificOutput).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("PermissionRequestOutput", {
     description: "Output returned by a PermissionRequest hook handler.",

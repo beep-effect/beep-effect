@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { MimeType, NonNegativeInt, NonNegNum } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
@@ -23,6 +23,8 @@ import {
   PreprocessingOptions,
 } from "./DocumentMetadata.ts";
 import { ValidationPolicy } from "./Shacl.ts";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
 const defaultValidationPolicy = ValidationPolicy.decodeUnknownSync({});
@@ -112,7 +114,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
       description: "Content-addressed ontology version used by the batch.",
     }),
     shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional storage URI of caller-supplied SHACL shapes.",
       })
@@ -127,7 +129,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
       description: "UTC instant at which the immutable manifest was created.",
     }),
     validationPolicy: ValidationPolicy.pipe(
-      SchemaUtils.withKeyDefaults(defaultValidationPolicy),
+      S.withConstructorDefault(Effect.succeed(defaultValidationPolicy)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultValidationPolicy)),
       S.annotateKey({
         description: "Complete policy controlling workflow failure for SHACL results.",
       })
@@ -182,15 +184,15 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
     ontologyUri: GcsUri,
     ontologyId: OntologyName,
     targetNamespace: Namespace,
-    ontologyEmbeddingsUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    ontologyEmbeddingsUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
     chunking: ChunkingParams.pipe(
-      SchemaUtils.withKeyDefaults(defaultChunkingParams.standard),
+      S.withConstructorDefault(Effect.succeed(defaultChunkingParams.standard)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultChunkingParams.standard)),
       S.annotateKey({ description: "Schema-defaulted preprocessing chunking hints for extraction." })
     ),
-    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    language: S.OptionFromOptionalKey(LanguageCode).pipe(SchemaUtils.withNoneDefault),
+    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    language: S.OptionFromOptionalKey(LanguageCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExtractionActivityInput", {
     description: "Document, ontology, namespace, acceleration, and provenance inputs for extraction.",
@@ -264,8 +266,8 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
     batchId: BatchId,
     resolvedGraphUri: GcsUri,
     ontologyUri: GcsUri,
-    shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
-    validationPolicy: ValidationPolicy.pipe(SchemaUtils.withKeyDefaults(defaultValidationPolicy)),
+    shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    validationPolicy: ValidationPolicy.pipe(S.withConstructorDefault(Effect.succeed(defaultValidationPolicy)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultValidationPolicy))),
   },
   $I.annote("ValidationActivityInput", {
     description: "Resolved graph, ontology, optional shapes, and complete SHACL failure policy.",
@@ -274,6 +276,7 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
   static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ValidationActivityInput));
 }
 
+const validationActivityViolationSummarySampleMessagesDefault = A.empty<string>();
 /**
  * Aggregated SHACL results for one severity.
  *
@@ -306,7 +309,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
       description: "Number of results having the summarized severity.",
     }),
     sampleMessages: S.Array(S.NonEmptyString).pipe(
-      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.withConstructorDefault(Effect.succeed(validationActivityViolationSummarySampleMessagesDefault)), S.withDecodingDefaultType(Effect.succeed(validationActivityViolationSummarySampleMessagesDefault)),
       S.annotateKey({
         description: "Bounded representative diagnostics selected by the validation adapter.",
       })
@@ -317,6 +320,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
   })
 ) {}
 
+const validationActivityOutputViolationSummaryDefault = A.empty<ValidationActivityViolationSummary>();
 /**
  * Compact output of the SHACL validation activity.
  *
@@ -353,7 +357,7 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
     conforms: S.Boolean,
     violations: NonNegativeInt,
     violationSummary: S.Array(ValidationActivityViolationSummary).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ValidationActivityViolationSummary>()
+      S.withConstructorDefault(Effect.succeed(validationActivityOutputViolationSummaryDefault)), S.withDecodingDefaultType(Effect.succeed(validationActivityOutputViolationSummaryDefault))
     ),
     reportUri: GcsUri,
     durationMs: NonNegNum,
@@ -436,10 +440,10 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
     ontologyVersion: OntologyVersion,
     ontologyUri: GcsUri,
     targetNamespace: Namespace,
-    shaclUri: GcsUri.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    shaclUri: GcsUri.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     documentIds: S.NonEmptyArray(DocumentId),
-    ontologyEmbeddingsUri: GcsUri.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    preprocessing: PreprocessingOptions.pipe(SchemaUtils.withKeyDefaults(defaultPreprocessingOptions)),
+    ontologyEmbeddingsUri: GcsUri.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    preprocessing: PreprocessingOptions.pipe(S.withConstructorDefault(Effect.succeed(defaultPreprocessingOptions)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultPreprocessingOptions))),
   },
   $I.annote("BatchWorkflowPayload", {
     description:

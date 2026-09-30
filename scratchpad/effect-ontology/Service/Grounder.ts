@@ -16,7 +16,7 @@ import * as Crypto from "effect/Crypto";
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
 import { Context, Effect, HashMap, Layer, Stream } from "effect";
 import * as A from "effect/Array";
@@ -248,6 +248,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
   }
 }
 
+const relationEntityContextTypesDefault = A.empty();
 /**
  * Display metadata for an entity occupying a relation position.
  *
@@ -272,7 +273,7 @@ export class RelationEntityContext extends S.Class<RelationEntityContext>($I`Rel
   {
     entityId: EntityId,
     mention: S.NonEmptyString,
-    types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    types: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(relationEntityContextTypesDefault)), S.withDecodingDefaultType(Effect.succeed(relationEntityContextTypesDefault))),
   },
   $I.annote("RelationEntityContext", {
     description: "Optional display metadata for an entity occupying a relation position.",
@@ -308,9 +309,9 @@ export class RelationVerificationInput extends S.Class<RelationVerificationInput
   {
     context: S.NonEmptyString,
     relation: Relation,
-    subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
-    predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(SchemaUtils.withNoneDefault),
-    object: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
+    subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    object: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RelationVerificationInput", {
     description: "Canonical relation plus optional decoded ontology and entity display metadata.",

@@ -6,7 +6,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
 import { ConstitutionalComponentSpan } from "../ComponentSpan/index.ts";
@@ -56,28 +57,28 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
     type: S.tag("constitutional"),
     jurisdiction: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Jurisdiction code: "US", 2-letter state code, or undefined for bare "Const.".',
       })
     ),
     article: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Article number (parsed from Roman numerals) — mutually exclusive with amendment / preamble.",
       })
     ),
     amendment: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Amendment number (parsed from Roman numerals) — mutually exclusive with article / preamble.",
       })
     ),
     preamble: S.Boolean.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description:
           "True when the citation references the Preamble. Mutually exclusive with article / amendment (#321).",
@@ -85,33 +86,33 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
     ),
     section: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Section identifier (string to handle non-numeric like "3-a").',
       })
     ),
     clause: NonNegativeInt.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Clause number (always numeric).",
       })
     ),
     currentLocation: S.Struct({
-      article: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      amendment: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      section: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      clause: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+      article: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      amendment: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      section: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+      clause: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     }).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Post-reform ("now …") location for historical-reform citations (#789).',
       })
     ),
     spans: ConstitutionalComponentSpan.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Component spans locating the sub-parts of this constitutional citation within the source text.",
       })

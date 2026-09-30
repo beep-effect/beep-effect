@@ -40,7 +40,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -464,7 +464,10 @@ export class YeetBaseConflictCapsule extends S.Class<YeetBaseConflictCapsule>($I
     mergeable: S.NullOr(S.String),
     mergeStateStatus: S.NullOr(S.String),
     prNumber: S.Finite,
-    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(SchemaUtils.withKeyDefaults(0)),
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
   },
   $I.annote("YeetBaseConflictCapsule", {
     description: "One pull request head that no longer merges into its base, with the raw merge fields observed.",

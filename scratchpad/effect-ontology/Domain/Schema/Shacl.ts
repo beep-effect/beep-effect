@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Duration } from "effect";
+import { Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
@@ -123,19 +123,19 @@ export type ShaclValidationReport = typeof ShaclValidationReport.Type;
 class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`ValidationPolicyFields`)(
   {
     failOnViolation: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether Violation-level results fail the workflow when logOnly is false.",
       })
     ),
     failOnWarning: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether Warning-level results fail the workflow when logOnly is false.",
       })
     ),
     logOnly: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether all validation results are logged without failing the workflow.",
       })

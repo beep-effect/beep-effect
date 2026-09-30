@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Frontmatter/OutputStyle");
 
@@ -37,10 +37,10 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/OutputStyle");
  */
 export class OutputStyleFrontmatter_ extends S.Class<OutputStyleFrontmatter_>($I`OutputStyleFrontmatter`)(
   {
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    keepCodingInstructions: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    forceForPlugin: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    keepCodingInstructions: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forceForPlugin: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OutputStyleFrontmatter", {
     description: "Runtime model for the YAML frontmatter of a Claude Code output-style file.",

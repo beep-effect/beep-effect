@@ -10,7 +10,7 @@ import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str } from "@beep/utils";
-import { flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
+import { Effect, flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import type { JsonSchema, Type as JsonSchemaType } from "effect/JsonSchema";
 import * as S from "effect/Schema";
@@ -608,7 +608,7 @@ export const jsonSchemaToTypeScript: {
 export class InputProperty extends S.Class<InputProperty>($I`InputProperty`)(
   {
     name: S.String,
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     required: S.Boolean,
   },
   $I.annote("InputProperty", {

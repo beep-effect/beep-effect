@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { AnchoredBox } from "./AnchoredBox.ts";
 import { CommandId, GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
@@ -578,7 +578,10 @@ export class RestoreSnapshotRequest extends S.Class<RestoreSnapshotRequest>($I`R
   {
     commandId: CommandId,
     origin: CommandOrigin,
-    allowedRenderers: AllowedRenderers.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+    allowedRenderers: AllowedRenderers.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ).annotateKey({
       description: "Optional host renderer allowlist; absence preserves every decoded panel.",
     }),
   },

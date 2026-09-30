@@ -5,7 +5,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Result, Tuple } from "effect";
+import { Effect, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { LocalDateFromString } from "../LocalDate/index.ts";
@@ -288,8 +288,8 @@ export class SpecificationSource extends S.Class<SpecificationSource>($I`Specifi
     canonicalUrl: URLStr,
     revision: SpecificationRevision,
     contentSha256: Sha256Hex,
-    license: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    scope: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    license: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scope: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SpecificationSource", {
     description: "Immutable authority record used to ground conformance claims.",
@@ -323,9 +323,9 @@ export class SpecificationSource extends S.Class<SpecificationSource>($I`Specifi
 export class SpecificationReference extends S.Class<SpecificationReference>($I`SpecificationReference`)(
   {
     sourceId: S.NonEmptyString,
-    section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(URLStr).pipe(SchemaUtils.withNoneDefault),
-    localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(URLStr).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SpecificationReference", {
     description: "Locator from an invariant to a section of a registered authority.",

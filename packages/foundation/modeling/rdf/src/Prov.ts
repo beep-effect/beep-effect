@@ -8,7 +8,7 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { DateTime } from "effect";
+import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
@@ -250,13 +250,13 @@ export type ProvDateTime = typeof ProvDateTime.Type;
  */
 export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
   {
-    observedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    publishedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    ingestedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    assertedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    derivedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    effectiveAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    supersededAt: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    observedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    publishedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    ingestedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    assertedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    derivedAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    effectiveAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    supersededAt: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("LifecycleTimes", {
     description: "Explicit lifecycle time fields retained outside plain PROV activity timestamps.",
@@ -296,16 +296,18 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
 export class Entity extends S.Class<Entity>($I`Entity`)(
   {
     provType: S.tag("Entity"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    wasGeneratedBy: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    wasAttributedTo: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    hadPrimarySource: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    wasQuotedFrom: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    wasRevisionOf: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    wasDerivedFrom: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    generatedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    invalidatedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.Union([S.String, S.Finite, S.Boolean])).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    wasGeneratedBy: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    wasAttributedTo: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    hadPrimarySource: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    wasQuotedFrom: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    wasRevisionOf: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    wasDerivedFrom: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    generatedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    invalidatedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(S.Union([S.String, S.Finite, S.Boolean])).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("Entity", {
     description: "PROV entity.",
@@ -343,11 +345,11 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
 export class Activity extends S.Class<Activity>($I`Activity`)(
   {
     provType: S.tag("Activity"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    used: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    wasAssociatedWith: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    startedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
-    endedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    used: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    wasAssociatedWith: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    startedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    endedAtTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Activity", {
     description: "PROV activity.",
@@ -385,8 +387,8 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
 export class Agent extends S.Class<Agent>($I`Agent`)(
   {
     provType: S.tag("Agent"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Agent", {
     description: "PROV agent.",
@@ -425,8 +427,8 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
 export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
   {
     provType: S.tag("SoftwareAgent"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SoftwareAgent", {
     description: "PROV software agent.",
@@ -465,8 +467,8 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
 export class Plan extends S.Class<Plan>($I`Plan`)(
   {
     provType: S.tag("Plan"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Plan", {
     description: "PROV plan in the early extension tier.",
@@ -505,7 +507,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
 export class Collection extends S.Class<Collection>($I`Collection`)(
   {
     provType: S.tag("Collection"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
     hadMember: S.Array(ObjectRef),
   },
   $I.annote("Collection", {
@@ -545,8 +547,8 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
 export class Person extends S.Class<Person>($I`Person`)(
   {
     provType: S.tag("Person"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Person", {
     description: "PROV person in the early extension tier.",
@@ -585,8 +587,8 @@ export class Person extends S.Class<Person>($I`Person`)(
 export class Organization extends S.Class<Organization>($I`Organization`)(
   {
     provType: S.tag("Organization"),
-    id: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Organization", {
     description: "PROV organization in the early extension tier.",
@@ -638,7 +640,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
     provType: S.tag("Usage"),
     activity: ObjectRef,
     entity: ObjectRef,
-    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Usage", {
     description: "PROV usage relation.",
@@ -671,7 +673,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
     provType: S.tag("Generation"),
     entity: ObjectRef,
     activity: ObjectRef,
-    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Generation", {
     description: "PROV generation relation.",
@@ -705,7 +707,7 @@ export class Association extends S.Class<Association>($I`Association`)(
     provType: S.tag("Association"),
     activity: ObjectRef,
     agent: ObjectRef,
-    hadPlan: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
+    hadPlan: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Association", {
     description: "PROV association relation.",
@@ -771,7 +773,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
     provType: S.tag("Delegation"),
     delegate: ObjectRef,
     responsible: ObjectRef,
-    activity: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
+    activity: S.OptionFromOptionalKey(ObjectRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Delegation", {
     description: "PROV delegation relation.",
@@ -933,7 +935,7 @@ export class Start extends S.Class<Start>($I`Start`)(
     provType: S.tag("Start"),
     activity: ObjectRef,
     trigger: ObjectRef,
-    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Start", {
     description: "PROV start relation.",
@@ -967,7 +969,7 @@ export class End extends S.Class<End>($I`End`)(
     provType: S.tag("End"),
     activity: ObjectRef,
     trigger: ObjectRef,
-    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
+    atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("End", {
     description: "PROV end relation.",
@@ -1066,7 +1068,7 @@ export type ProvRecord = typeof ProvRecord.Type;
 export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
   {
     records: S.Array(ProvRecord),
-    lifecycle: S.OptionFromOptionalKey(LifecycleTimes).pipe(SchemaUtils.withNoneDefault),
+    lifecycle: S.OptionFromOptionalKey(LifecycleTimes).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProvBundle", {
     description: "Bounded provenance bundle exported by the semantic-web surface.",

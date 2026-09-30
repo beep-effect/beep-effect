@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Number as N, pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Effect, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -62,10 +62,10 @@ export const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
  */
 export class DockBox extends S.Class<DockBox>($I`DockBox`)(
   {
-    left: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    top: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    width: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    height: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    left: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    top: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    width: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    height: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
   },
   $I.annote("DockBox", { description: "A finite non-negative rectangle in host pixel coordinates." })
 ) {}
@@ -149,7 +149,9 @@ export class DockGeometry extends S.Class<DockGeometry>($I`DockGeometry`)(
   {
     groups: S.Array(GroupGeometry),
     sashes: S.Array(SashGeometry),
-    floating: S.Array(FloatingGeometry).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingGeometry>>([])),
+    floating: S.Array(FloatingGeometry).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<FloatingGeometry>>([]))
+    ),
   },
   $I.annote("DockGeometry", { description: "Ordered leaf rectangles and split sash hit rectangles." })
 ) {
@@ -228,9 +230,9 @@ export const resolveAnchoredBox: Dual2<AnchoredBox, DockBox, DockBox> = dual(
  */
 export class GeometryOptions extends S.Class<GeometryOptions>($I`GeometryOptions`)(
   {
-    gap: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
-    minSashThickness: Extent.pipe(SchemaUtils.withConstantDefault<number>(8)),
-    minGroupExtent: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    gap: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
+    minSashThickness: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(8))),
+    minGroupExtent: Extent.pipe(S.withConstructorDefault(Effect.succeed<number>(0))),
   },
   $I.annote("GeometryOptions", {
     description:
