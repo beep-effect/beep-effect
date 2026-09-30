@@ -124,10 +124,16 @@ export {
   makeEffectVitestFindingKey,
   makeSchemaFirstEntryKey,
   SchemaCrispeningPolicyPath,
+  SchemaFirstBacklogRow,
   SchemaFirstInventoryDocument,
   SchemaFirstInventoryPath,
   SchemaFirstLintOptions,
   SchemaFirstLintSummary,
+  SchemaFirstOccurrenceAnchor,
+  SchemaFirstParityFindings,
+  SchemaFirstParityRuleId,
+  SchemaFirstParityRuleSummary,
+  schemaFirstBacklogRowKeys,
   schemaFirstEntryOrder,
   sortSchemaFirstEntries,
 } from "./Lint.schemas.ts";
@@ -173,6 +179,7 @@ export {
  * @since 0.0.0
  */
 export {
+  diffSchemaFirstParity,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
@@ -189,7 +196,9 @@ export {
   SchemaFirstInventoryEntry,
   SchemaFirstSourceFileGlobs,
   schemaCrispeningFamilyForFile,
+  schemaFirstParityEntriesFromSourceFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
+  toSchemaFirstBacklog,
 } from "./SchemaFirst.ts";
 /**
  * Schema-parity codemod command.

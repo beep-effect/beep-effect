@@ -1,6 +1,6 @@
 /**
- * Oxlint rule reporting Effect Schema decoder/encoder compiler calls created
- * inside function bodies instead of hoisted module constants.
+ * Oxlint rule reporting Effect Schema decoder/encoder calls whose schema is
+ * constructed inline inside a function body.
  *
  * @packageDocumentation
  * @since 0.1.0
@@ -23,8 +23,9 @@ import {
 import type { ESTree } from "@oxlint/plugins";
 import type { AstNode, MaybeNode } from "./utils.ts";
 
-// Effect Schema decoder/encoder APIs allocate compiled functions. Keep them
-// outside function bodies so hot paths do not rebuild compilers per call.
+// Effect caches each schema's parser per AST, so a decoder/encoder over a hoisted schema
+// compiles once however often it is called. A schema constructed inline in a function body
+// is a new AST on every call, misses that cache, and recompiles.
 const COMPILER_METHODS = HashSet.fromIterable([
   "is",
   "asserts",
@@ -60,27 +61,36 @@ const COMPILER_METHODS = HashSet.fromIterable([
 const SCHEMA_NAMED_SOURCES = HashSet.fromIterable(["effect", "effect/Schema"]);
 const SCHEMA_MODULE_SOURCES = HashSet.fromIterable(["effect/Schema"]);
 
-const isStaticSchemaReference = (node: MaybeNode): boolean => {
-  const expression = unwrapExpression(node);
-  if (O.isNone(expression)) return false;
+// Schema instance methods that derive a new schema, and so a new AST, from their receiver.
+const SCHEMA_BUILDER_METHODS = HashSet.fromIterable(["annotate", "annotateKey", "check", "pipe"]);
 
-  if (expression.value.type === "Identifier") {
-    const [firstChar] = expression.value.name;
-    return firstChar !== undefined && Str.toUpperCase(firstChar) === firstChar;
-  }
+type ModuleStatement = ESTree.Program["body"][number];
+type BindingTarget = { readonly type: string; readonly name?: string } | null | undefined;
 
-  return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
-};
-
-const messageHigh = (method: string) =>
-  `Hoist Schema.${method}(...) to module scope: both the inline schema literal and the compiled function are rebuilt on every call. Move the compiled function to a module-level const.`;
-
-const messageMedium = (method: string) =>
-  `Hoist Schema.${method}(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const.`;
+const inlineSchemaMessage = (method: string) =>
+  `Hoist the schema passed to Schema.${method}(...) to module scope: inline schema construction defeats the per-AST parser cache, so every call builds and compiles a new schema.`;
 
 /**
- * Oxlint rule that reports Effect Schema decoder and encoder compiler calls
- * created inside function bodies instead of hoisted module constants.
+ * Oxlint rule that reports Effect Schema decoder and encoder calls whose
+ * schema is constructed inline inside a function body.
+ *
+ * **Details**
+ *
+ * A plain schema reference is not reported: Effect caches each schema's
+ * parser per AST, so `Schema.decodeUnknownSync(Model)` inside a function
+ * compiles `Model` once. Only inline construction such as
+ * `Schema.decodeSync(Schema.Array(Model))` builds a new AST per call, and so
+ * does a schema derived from a module-level one through `.pipe(...)`,
+ * `.check(...)`, `.annotate(...)` or `.annotateKey(...)`, such as
+ * `Schema.decodeSync(Model.pipe(Schema.check(...)))`.
+ *
+ * An inline construction is reported only when it is hoistable: every leaf
+ * identifier resolves to a module-scope binding (an import local or a
+ * top-level `const`, `class` or `function`), whatever its spelling. For a
+ * derived schema that covers the receiver and every argument. A schema built
+ * from a function parameter or a body-local binding (including
+ * `rowSchema.pipe(...)` over one) cannot move to module scope and is left
+ * alone, as is any construction taking a function literal argument.
  *
  * **Example** (Schema compile rule description)
  *
@@ -90,7 +100,7 @@ const messageMedium = (method: string) =>
  *
  * const description = plugin.rules["no-inline-schema-compile"]?.meta.docs.description
  *
- * strictEqual(description?.includes("hoist them to module scope"), true)
+ * strictEqual(description?.includes("per-AST parser cache"), true)
  * ```
  *
  * @category tools
@@ -100,17 +110,50 @@ export default defineRule({
   meta: {
     type: "problem",
     docs: {
-      description: "Disallow Schema decoder/encoder compiler calls inside function bodies; hoist them to module scope.",
+      description:
+        "Disallow Schema decoder/encoder calls over a schema constructed inline in a function body; hoist the schema to module scope so the per-AST parser cache applies.",
     },
   },
   createOnce(context) {
     // Local names bound to the Schema module via imports (namespace, default, named, aliases).
     const schemaIdentifiers = MutableHashSet.empty<string>();
+    // Names bound at module scope: import locals and top-level const/let/var, class and function
+    // declarations, collected up front so a use above its declaration still resolves.
+    const moduleBindings = MutableHashSet.empty<string>();
     let functionDepth = 0;
 
     const before = () => {
       MutableHashSet.clear(schemaIdentifiers);
+      MutableHashSet.clear(moduleBindings);
       functionDepth = 0;
+    };
+
+    const recordModuleBinding = (target: BindingTarget) => {
+      if (P.isNotNullish(target) && Str.Equivalence(target.type, "Identifier") && P.isString(target.name)) {
+        MutableHashSet.add(moduleBindings, target.name);
+      }
+    };
+
+    const recordModuleStatement = (statement: ModuleStatement | null): void =>
+      Match.value(statement).pipe(
+        Match.when({ type: "VariableDeclaration" }, ({ declarations }) =>
+          A.forEach(declarations, (d) => recordModuleBinding(d.id))
+        ),
+        Match.when({ type: "ClassDeclaration" }, ({ id }) => recordModuleBinding(id)),
+        Match.when({ type: "FunctionDeclaration" }, ({ id }) => recordModuleBinding(id)),
+        Match.when({ type: "ImportDeclaration" }, ({ specifiers }) =>
+          A.forEach(specifiers, (s) => recordModuleBinding(s.local))
+        ),
+        Match.when({ type: "ExportNamedDeclaration" }, ({ declaration }) => recordModuleStatement(declaration)),
+        Match.orElse(() => undefined)
+      );
+
+    // A schema expression is hoistable only when every leaf resolves to a module-scope binding.
+    const isStaticSchemaReference = (node: MaybeNode): boolean => {
+      const expression = unwrapExpression(node);
+      if (O.isNone(expression)) return false;
+      if (expression.value.type === "Identifier") return MutableHashSet.has(moduleBindings, expression.value.name);
+      return expression.value.type === "MemberExpression" && isStaticSchemaReference(expression.value.object);
     };
 
     const isSchemaReceiver = (node: O.Option<AstNode>): boolean =>
@@ -145,6 +188,24 @@ export default defineRule({
         )
       );
 
+    // Narrow `node` to a `<receiver>.<builder>(...)` call that derives a new schema, yielding the
+    // receiver + arguments. A bare `Model.pipe()` returns its receiver unchanged, so it needs arguments.
+    const asSchemaBuilderCall = (
+      node: MaybeNode
+    ): O.Option<{ readonly receiver: O.Option<AstNode>; readonly args: ReadonlyArray<ESTree.Argument> }> =>
+      unwrapExpression(node).pipe(
+        O.filter((expression) => expression.type === "CallExpression"),
+        O.filter((call) => A.isReadonlyArrayNonEmpty(call.arguments)),
+        O.flatMap((call) =>
+          unwrapMemberExpression(call.callee).pipe(
+            O.filter((access) =>
+              O.exists(getPropertyName(access.property), (method) => HashSet.has(SCHEMA_BUILDER_METHODS, method))
+            ),
+            O.map((access) => ({ receiver: access.object, args: call.arguments }))
+          )
+        )
+      );
+
     const isStaticSchemaExpression = (node: MaybeNode): boolean => {
       const expression = unwrapExpression(node);
       if (O.isNone(expression)) return false;
@@ -174,29 +235,26 @@ export default defineRule({
           ({ argument, operator }) =>
             (Str.Equivalence(operator, "-") || Str.Equivalence(operator, "+")) && isStaticSchemaExpression(argument)
         ),
-        Match.discriminator("type")("CallExpression", (call) =>
-          O.match(asSchemaMethodCall(call), {
-            onNone: thunkFalse,
-            onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-          })
-        ),
+        Match.discriminator("type")("CallExpression", isStaticInlineConstruction),
         Match.orElse(thunkFalse)
       );
     };
 
-    const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
-      O.match(asSchemaMethodCall(node), {
-        onNone: thunkFalse,
-        onSome: ({ args }) => A.every(args, isStaticSchemaExpression),
-      });
+    // The nodes an inline construction is built from: the arguments of a `<schemaBinding>.<method>(...)`
+    // call, or the receiver plus arguments of a builder such as `Model.pipe(Schema.check(...))`.
+    const inlineConstructionParts = (node: MaybeNode): O.Option<ReadonlyArray<MaybeNode>> =>
+      O.orElse(
+        O.map(asSchemaMethodCall(node), ({ args }) => args),
+        () => O.map(asSchemaBuilderCall(node), ({ receiver, args }) => A.prepend(args, O.getOrUndefined(receiver)))
+      );
 
-    // High when the first argument is itself a nested static schema call (literal + compiler both
-    // rebuilt); medium when it is a plain static schema reference (only the compiler rebuilt).
-    const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> => {
-      const high = firstArg !== undefined && isNestedStaticSchemaCall(firstArg);
-      if (high) return O.some(messageHigh(method));
-      return isStaticSchemaReference(firstArg) ? O.some(messageMedium(method)) : O.none();
-    };
+    const isStaticInlineConstruction = (node: MaybeNode): boolean =>
+      O.exists(inlineConstructionParts(node), A.every(isStaticSchemaExpression));
+
+    // Report only when the first argument constructs a static schema inline; a plain schema
+    // reference hits the per-AST parser cache and is fine inside a function body.
+    const reportMessage = (method: string, firstArg: MaybeNode): O.Option<string> =>
+      isStaticInlineConstruction(firstArg) ? O.some(inlineSchemaMessage(method)) : O.none();
 
     const tracksSchema = (source: string, binding: ImportBinding): boolean =>
       ImportBinding.match(binding, {
@@ -220,6 +278,9 @@ export default defineRule({
 
     return {
       before,
+      Program(node) {
+        A.forEach(node.body, recordModuleStatement);
+      },
       ImportDeclaration(node) {
         if (node.importKind === "type") return;
         const source = node.source.value;

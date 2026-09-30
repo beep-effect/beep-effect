@@ -20,17 +20,15 @@ const DEFAULT_MISSING_ENTRY_REMEDIATION =
 
 const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
   "SFV4-static-api":
-    "Prefer schema-derived .match/.guards/.cases or LiteralKit helpers, or run bun run beep lint schema-first --write with a justification when behavior intentionally differs.",
+    "Prefer schema-derived .match/.guards/.cases, or LiteralKit's $match, is, Enum, or toTaggedUnion, or run bun run beep lint schema-first --write with a justification when behavior intentionally differs.",
   "SFV4-numeric-domain":
     "Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional.",
   "SFV4-boundary-codec":
     "Replace direct JSON.parse with S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
   "SFV4-defaults":
-    "Move option/request fallback values into schema fields with S.withConstructorDefault and S.withDecodingDefault*; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
+    "Move option/request fallback values into schema fields with S.withConstructorDefault and S.withDecodingDefaultTypeKey (or S.withDecodingDefaultType for missing-or-undefined input); inventory the exception only when the fallback intentionally differs from schema construction semantics.",
   "SFV4-equivalence":
-    "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
-  "SFV4-tagged-error-equivalence":
-    "Remove the class-level toEquivalence hook; Effect derives Schema class equivalence from the declared fields by construction. Opaque causes use Defect from @beep/schema, which declares its own always-equal equivalence.",
+    "Derive comparison from S.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
   "SFV4-precision-audit":
     "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.",
   "SFV4-arbitrary-tests":
@@ -43,6 +41,10 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
     "Return O.Option, Result, Effect, or Exit instead of a null/undefined-typed return; run bun run beep lint schema-first --write when the boundary (3rd-party/react) intentionally returns null/undefined.",
   "SFV4-getsomes-struct":
     "Replace R.getSomes over an inline Option-struct literal with O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; inventory the exception only for intentionally homogeneous dynamic-key dictionaries.",
+  "SFV4-default-wrapper":
+    "Replace the SchemaUtils default wrapper with Effect's own combinators: S.withConstructorDefault for construction, S.withDecodingDefaultTypeKey for a missing key, and S.withDecodingDefaultType where missing or undefined input takes the default (the withEmptyArrayDefaults case); keep a thunk lazy with Effect.sync.",
+  "SFV4-opaque-wrapper":
+    "Use S.Defect(options) or S.Unknown from effect/Schema; where a field's payload must stay out of equality, put S.overrideToEquivalence on that field instead of an always-equal wrapper.",
 };
 
 /**
