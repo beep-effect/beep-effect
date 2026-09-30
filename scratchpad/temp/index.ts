@@ -6,7 +6,7 @@
 //   NonEmptyTrimmedStr,
 //   NonNegativeInt,
 //   PosInt,
-//   SchemaUtils, Timezone,
+//   SchemaUtils,
 // } from "@beep/schema";
 // import { pipe } from "effect/Function";
 // import { URI } from "@beep/rdf";
@@ -298,7 +298,7 @@
 //       S.OptionFromOptionalKey,
 //       S.withConstructorDefault(Effect.succeedNone),
 //     ),
-//     timezone: Timezone.pipe(
+//     timezone: S.TimeZoneNamedFromString.pipe(
 //       S.OptionFromOptionalKey,
 //       S.withConstructorDefault(Effect.succeedNone),
 //     ),

@@ -93,7 +93,7 @@
 ## SFV4-null-return refinements
 
 - Internal soft decoders returning `null` are strong candidates when callers immediately branch on null. Examples: `packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts:22-32` and `packages/foundation/modeling/schema/src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:41-85`; both can return `Option<Uint8Array>`.
-- UI adapter contracts can legitimately return `null`. `packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts:114-120` bridges date/time picker empty values; keep this as a 3rd-party/UI boundary escape hatch.
+- UI adapter contracts can legitimately return `null`. The date/time picker adapter (once in the retired `DateTimeUtcFromValid` concept, removed in the effect-schema-parity group D PR; now private helpers in `packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx`) bridges date/time picker empty values; keep this as a 3rd-party/UI boundary escape hatch.
 - Encoded HTTP-header omission can legitimately use `undefined` when the decoded/domain side is already `Option`. Example: one-way secure-header transforms such as `packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts:137-144`.
 - Exported helpers that duplicate an existing Option surface are still candidates. `packages/foundation/modeling/schema/src/Csp/Csp.schema.ts:824-830` returns `string | undefined`, while `ContentSecurityPolicyHeader.createValue` at `:885-904` already exposes `Effect<Option<string>, SecureHeaderError>`.
 
