@@ -28,7 +28,7 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { Defect } from "@beep/schema";
-import { Effect, ErrorReporter, HashMap, SchemaIssue, SchemaTransformation } from "effect";
+import { ErrorReporter } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HttpStatus from "effect/http/HttpStatus";
@@ -71,24 +71,10 @@ const makeStatusConstructor =
     new ctor({ message, status, cause: O.isOption(cause) ? cause : O.fromUndefinedOr(cause) });
 
 // The retired `@beep/schema` `HttpStatus4XX` / `HttpStatus5XX` kits: the status name on the
-// encoded side and its code on the decoded side, over the same names. `effect/http/HttpStatus`
-// resolves each code, so an unnamed code in the range still fails to decode, as before.
-const statusNameCodec = <const Name extends HttpStatus.Literal>(names: A.NonEmptyReadonlyArray<Name>) => {
-  const nameByCode = HashMap.fromIterable(A.map(names, (name) => [HttpStatus.fromLiteral(name), name] as const));
-  return S.Literals(names).pipe(
-    S.decodeTo(
-      S.Literals(A.map(names, HttpStatus.fromLiteral)),
-      SchemaTransformation.transformEffect({
-        decode: (name) => Effect.succeed(HttpStatus.fromLiteral(name)),
-        encode: (code) =>
-          Effect.mapError(
-            Effect.fromOption(HashMap.get(nameByCode, code)),
-            () => new SchemaIssue.InvalidValue({ message: `Unknown HTTP status code ${code}.` }, code)
-          ),
-      })
-    )
-  );
-};
+// encoded side and its code on the decoded side, over the same names. Each name maps to its
+// `effect/http/HttpStatus` code, so an unnamed code in the range still fails to decode, as before.
+const statusNameCodec = <const Name extends HttpStatus.Literal>(names: A.NonEmptyReadonlyArray<Name>) =>
+  S.Literals(names).transform(A.map(names, HttpStatus.fromLiteral));
 
 const ClientErrorStatus = statusNameCodec([
   "BadRequest",
