@@ -151,13 +151,10 @@ const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reas
     A.empty<Cause.Reason<unknown>>
   );
 
+const isStackDefect = S.is(S.Defect({ includeStack: true }));
+
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
-  P.hasInspectableObjectShape(value) &&
-  safeBoolean(() =>
-    S.is(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)))(value)
-  )
-    ? O.some(value)
-    : O.none();
+  P.hasInspectableObjectShape(value) && safeBoolean(() => isStackDefect(value)) ? O.some(value) : O.none();
 
 const contextFromDrizzleMessageMatch = (matched: RegExpMatchArray): DrizzleErrorContext => {
   const paramsText = O.getOrUndefined(O.map(O.fromUndefinedOr(matched[2]), Str.trim));

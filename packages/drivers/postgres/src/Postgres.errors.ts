@@ -337,12 +337,10 @@ const extractPostgresError = (value: unknown, seen: ReadonlyArray<object> = []):
 
 const optionFrom = <A>(value: A | undefined): O.Option<A> => O.fromUndefinedOr(value);
 
+const isStackDefect = S.is(S.Defect({ includeStack: true }));
+
 const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
-  !isCause(value) &&
-  P.hasInspectableObjectShape(value) &&
-  safeBoolean(() =>
-    S.is(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)))(value)
-  )
+  !isCause(value) && P.hasInspectableObjectShape(value) && safeBoolean(() => isStackDefect(value))
     ? optionFrom(value)
     : O.none();
 
