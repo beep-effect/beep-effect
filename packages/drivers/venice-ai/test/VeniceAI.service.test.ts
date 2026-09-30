@@ -35,6 +35,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import swaggerFixture from "./fixtures/swagger.json" with { type: "json" };
 
 const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
 
@@ -154,21 +155,12 @@ const expectRoundTrip = Effect.fnUntraced(function* <Codec extends S.Codec<unkno
 });
 
 const sortStrings = A.sort(Order.String);
-const swaggerFile = new URL("../swagger.yaml", import.meta.url);
 
 const descriptorIds = () => sortStrings(A.map(VENICE_AI_OPERATION_DESCRIPTORS, (descriptor) => descriptor.operationId));
 
-const readSwagger = Effect.gen(function* () {
-  const raw = yield* Effect.tryPromise({
-    try: () => Bun.file(swaggerFile).text(),
-    catch: () =>
-      VeniceAIError.make({
-        path: O.some("swagger.yaml"),
-        reason: "request encoding",
-      }),
-  });
-  return yield* decodeOpenApiSpec(Bun.YAML.parse(raw));
-});
+// JSON snapshot of `swagger.yaml`, so the fixture loads on Node and Bun without a YAML parser.
+// Regenerate it whenever `swagger.yaml` changes.
+const readSwagger = decodeOpenApiSpec(swaggerFixture);
 
 const hasOperationId = (operation: unknown): operation is { readonly operationId: string } =>
   P.isObject(operation) && P.hasProperty(operation, "operationId") && P.isString(operation.operationId);
