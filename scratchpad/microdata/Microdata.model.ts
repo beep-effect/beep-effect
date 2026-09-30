@@ -18,7 +18,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Double } from "@beep/schema/Double";
 import { Int64 } from "@beep/schema/Int";
-import { UriReferenceString } from "@beep/schema/JSONSchema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import {
@@ -66,6 +65,8 @@ const vCardUtcOffsetPattern = /^[+-](?:[01]\d|2[0-3])(?:[0-5]\d)?$/;
 const vCardTextPattern =
   /^(?:[\t ]|[\x21-\x2B]|[\x2D-\x5B]|[\x5D-\x7E]|[\u0080-\uD7FF\uE000-\uFFFF]|[\u{10000}-\u{10FFFF}]|\\(?:\\|,|[nN]))*$/u;
 const vCardUriSchemePattern = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const vCardUriAsciiPattern = /^[\x21-\x7e]*$/u;
+const vCardUriPercentEncodingPattern = /^(?:[^%]|%[0-9A-Fa-f]{2})*$/u;
 const privateLanguageTagPattern = /^x(?:-[A-Za-z0-9]{1,8})+$/i;
 const rfc5646LanguageTagPattern =
   /^(?:[A-Za-z]{2,3}(?:-[A-Za-z]{3}){0,3}|[A-Za-z]{4}|[A-Za-z]{5,8})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|\d{3}))?(?:-(?:[A-Za-z0-9]{5,8}|\d[A-Za-z0-9]{3}))*(?:-[0-9A-WY-Za-wy-z](?:-[A-Za-z0-9]{2,8})+)*(?:-x(?:-[A-Za-z0-9]{1,8})+)?$/i;
@@ -2206,6 +2207,12 @@ export type VCardTextString = typeof VCardTextString.Type;
 /**
  * RFC 3986 URI value required by RFC 6350 section 4.2.
  *
+ * **Gotchas**
+ *
+ * Validation checks the absolute scheme prefix, printable ASCII characters,
+ * and well-formed percent encoding. It does not parse the RFC 3986 authority,
+ * host, port, or path grammar.
+ *
  * **Example** (Decode an absolute vCard URI)
  *
  * ```ts
@@ -2221,8 +2228,12 @@ export type VCardTextString = typeof VCardTextString.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const VCardUriString = UriReferenceString.pipe(
-  S.check(makePatternCheck($I`VCardUriStringCheck`, "an absolute RFC 3986 URI", vCardUriSchemePattern)),
+export const VCardUriString = S.String.pipe(
+  S.check(
+    makePatternCheck($I`VCardUriStringAsciiCheck`, "printable ASCII URI characters", vCardUriAsciiPattern),
+    makePatternCheck($I`VCardUriStringPercentEncodingCheck`, "well-formed URI percent encoding", vCardUriPercentEncodingPattern),
+    makePatternCheck($I`VCardUriStringCheck`, "an absolute RFC 3986 URI", vCardUriSchemePattern)
+  ),
   S.brand("VCardUriString"),
   $I.annoteSchema("VCardUriString", { description: "Absolute RFC 3986 URI lexical value admitted by RFC 6350." }),
   SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
