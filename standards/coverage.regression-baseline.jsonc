@@ -30507,30 +30507,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/ArrayBuffer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/ArrayOf.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/AtURI.ts": {
           "lines": 98.5,
           "statements": 98.57,
@@ -30568,18 +30544,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/BufferEncoding.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Bytes.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31887,126 +31851,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts": {
-          "lines": 90.47,
-          "statements": 90.9,
-          "branches": 100,
-          "functions": 84.61,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts": {
-          "lines": 92.5,
-          "statements": 92.5,
-          "branches": 100,
-          "functions": 88.46,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 0,
-            "functions": 3
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.guards.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.rebuild.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 91.66,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts": {
-          "lines": 95.91,
-          "statements": 94.33,
-          "branches": 92.59,
-          "functions": 94.73,
-          "uncovered": {
-            "lines": 2,
-            "statements": 3,
-            "branches": 2,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Graph/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/HashSet.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Html.ts": {
           "lines": 100,
           "statements": 100,
@@ -32499,30 +32343,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/MutableHashMap.ts": {
-          "lines": 95.74,
-          "statements": 95.74,
-          "branches": 75,
-          "functions": 95.23,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 6,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/MutableHashSet.ts": {
-          "lines": 94.87,
-          "statements": 94.87,
-          "branches": 72.22,
-          "functions": 94.11,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 5,
-            "functions": 1
-          }
-        },
         "packages/foundation/modeling/schema/src/NoOpen/NoOpen.schema.ts": {
           "lines": 95.83,
           "statements": 95.83,
@@ -32797,18 +32617,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/RegExp.ts": {
-          "lines": 93.75,
-          "statements": 94.11,
-          "branches": 0,
-          "functions": 83.33,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 2,
-            "functions": 1
           }
         },
         "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts": {
