@@ -2,10 +2,10 @@ import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   ComposerSendDecision,
@@ -36,8 +36,8 @@ const decisionSummary = (decision: ComposerSendDecision): string =>
 describe("composerPolicy.decideSend", () => {
   it("explains document-complexity refusals without misdiagnosing trusted raw content", () => {
     const issue = DocumentComplexitySafetyViolation.make({
-      maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),
-      observedNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES + 1),
+      maxNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES),
+      observedNodes: S.Natural.make(MAX_SAFE_DOCUMENT_NODES + 1),
     });
 
     expect(unsafeDocumentMessage([issue])).toBe(

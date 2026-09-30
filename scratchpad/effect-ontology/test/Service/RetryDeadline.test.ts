@@ -1,4 +1,3 @@
-import { PosInt } from "@beep/schema/Int";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Duration, Effect, Fiber, Ref } from "effect";
 import * as Result from "effect/Result";
@@ -6,6 +5,8 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { StageTimeoutService, StageTimeoutServiceTest, TimeoutError } from "../../Service/LlmControl/StageTimeout.ts";
 import { RetryPolicy, retryEffect } from "../../Service/Retry.ts";
+
+const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeRetryPolicyResult = S.decodeResult(RetryPolicy);
 
 class TransientFailure extends S.TaggedError<TransientFailure>()("TransientFailure", {}) {}

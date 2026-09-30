@@ -6,7 +6,6 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Brand, Chunk, Effect } from "effect";
 import { dual } from "effect/Function";
@@ -34,7 +33,7 @@ const getRangeEnd = (options: { readonly end: number } | number): number =>
  * @category models
  * @since 0.0.0
  */
-export type SentenceIndex = Brand.Branded<NonNegativeInt, "SentenceIndex">;
+export type SentenceIndex = Brand.Branded<number, "SentenceIndex">;
 
 /**
  * Construct a branded sentence index after validating it is non-negative.
@@ -52,7 +51,7 @@ export type SentenceIndex = Brand.Branded<NonNegativeInt, "SentenceIndex">;
  * @since 0.0.0
  */
 export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<SentenceIndex>(
-  S.makeFilter(S.is(NonNegativeInt))
+  S.makeFilter(S.is(S.Natural))
 );
 
 /**
@@ -70,7 +69,7 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
  * @category validation
  * @since 0.0.0
  */
-export const SentenceIndex = NonNegativeInt.pipe(
+export const SentenceIndex = S.Natural.pipe(
   S.brand("SentenceIndex"),
   $I.annoteSchema("SentenceIndex", {
     description: "Non-negative ordered index for an NLP sentence.",

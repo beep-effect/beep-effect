@@ -18,7 +18,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { RdfStore } from "./Rdf.ts";
 import { cloneRdfStore, rdfStoreApplyRules, rdfStoreSize } from "./Rdf.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 
@@ -223,15 +224,14 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>($I`ReasoningConfig
  * **Example** (Inspect reasoning result)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
- * import { NonNegNum } from "@beep/schema/Number"
+ * import * as S from "effect/Schema"
  * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
  *
  * const result = ReasoningResult.make({
- *   inferredTripleCount: NonNegativeInt.make(3),
- *   totalTripleCount: NonNegativeInt.make(10),
- *   rulesApplied: NonNegativeInt.make(2),
- *   durationMs: NonNegNum.make(12)
+ *   inferredTripleCount: S.Natural.make(3),
+ *   totalTripleCount: S.Natural.make(10),
+ *   rulesApplied: S.Natural.make(2),
+ *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(12)
  * })
  * console.log(result.hasInferences) // true
  * ```
@@ -241,10 +241,10 @@ export class ReasoningConfig extends S.Class<ReasoningConfig>($I`ReasoningConfig
  */
 export class ReasoningResult extends S.Class<ReasoningResult>($I`ReasoningResult`)(
   {
-    inferredTripleCount: NonNegativeInt,
-    totalTripleCount: NonNegativeInt,
-    rulesApplied: NonNegativeInt,
-    durationMs: NonNegNum,
+    inferredTripleCount: S.Natural,
+    totalTripleCount: S.Natural,
+    rulesApplied: S.Natural,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("ReasoningResult", {
     description: "Inferred triple counts, rules applied, and elapsed milliseconds.",
@@ -256,15 +256,14 @@ export class ReasoningResult extends S.Class<ReasoningResult>($I`ReasoningResult
    * **Example** (Inspect reasoning result.has inferences)
    *
    * ```ts
-   * import { NonNegativeInt } from "@beep/schema"
-   * import { NonNegNum } from "@beep/schema/Number"
+   * import * as S from "effect/Schema"
    * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
    *
    * const result = ReasoningResult.make({
-   *   inferredTripleCount: NonNegativeInt.make(3),
-   *   totalTripleCount: NonNegativeInt.make(10),
-   *   rulesApplied: NonNegativeInt.make(2),
-   *   durationMs: NonNegNum.make(12)
+   *   inferredTripleCount: S.Natural.make(3),
+   *   totalTripleCount: S.Natural.make(10),
+   *   rulesApplied: S.Natural.make(2),
+   *   durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(12)
    * })
    * console.log(result.hasInferences) // true
    * ```
@@ -478,10 +477,10 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
       if (A.isReadonlyArrayEmpty(allRules)) {
         yield* Effect.logDebug("No rules to apply");
         return ReasoningResult.make({
-          inferredTripleCount: NonNegativeInt.make(0),
-          totalTripleCount: NonNegativeInt.make(initialSize),
-          rulesApplied: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make((yield* Clock.currentTimeMillis) - startTime),
+          inferredTripleCount: S.Natural.make(0),
+          totalTripleCount: S.Natural.make(initialSize),
+          rulesApplied: S.Natural.make(0),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make((yield* Clock.currentTimeMillis) - startTime),
         });
       }
 
@@ -501,15 +500,15 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
       yield* Effect.logInfo("Reasoner.reason complete", {
         inferredTriples: inferredCount,
         totalTriples: finalSize,
-        rulesApplied: NonNegativeInt.make(allRules.length),
-        durationMs: NonNegNum.make(durationMs),
+        rulesApplied: S.Natural.make(allRules.length),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(durationMs),
       });
 
       return ReasoningResult.make({
-        inferredTripleCount: NonNegativeInt.make(inferredCount),
-        totalTripleCount: NonNegativeInt.make(finalSize),
-        rulesApplied: NonNegativeInt.make(allRules.length),
-        durationMs: NonNegNum.make(durationMs),
+        inferredTripleCount: S.Natural.make(inferredCount),
+        totalTripleCount: S.Natural.make(finalSize),
+        rulesApplied: S.Natural.make(allRules.length),
+        durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(durationMs),
       });
     });
 

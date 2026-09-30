@@ -1,5 +1,4 @@
 import { ContradictionCandidatePage, ListContradictionCandidatesRpc } from "@beep/epistemic-use-cases/public";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { it } from "@beep/test-runner";
 import { NodeHttpServer } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
@@ -63,7 +62,7 @@ const encodeRpcJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeRpcJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const AuthProbeRpcs = RpcGroup.make(ListContradictionCandidatesRpc);
 const listCandidates = vi.fn(() =>
-  Effect.succeed(ContradictionCandidatePage.make({ items: [], total: NonNegativeInt.make(0) }))
+  Effect.succeed(ContradictionCandidatePage.make({ items: [], total: S.Natural.make(0) }))
 );
 const AuthProbeHandlers = AuthProbeRpcs.toLayer({ ListContradictionCandidates: listCandidates });
 const authProbeToken = Redacted.make("boundary-test-session-token");

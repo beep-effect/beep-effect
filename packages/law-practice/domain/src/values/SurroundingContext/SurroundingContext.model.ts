@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/SurroundingContext/SurroundingContext.model");
@@ -23,12 +22,12 @@ const $I = $LawPracticeDomainId.create("values/SurroundingContext/SurroundingCon
  * **Example** (Make with text and span)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SurroundingContext } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const context = SurroundingContext.make({
  *   text: "The court in Roe v. Wade, 410 U.S. 113, held that...",
- *   span: { start: NonNegativeInt.make(0), end: NonNegativeInt.make(51) },
+ *   span: { start: S.Natural.make(0), end: S.Natural.make(51) },
  * })
  *
  * console.log(context.text) // "The court in Roe v. Wade, 410 U.S. 113, held that..."
@@ -44,10 +43,10 @@ export class SurroundingContext extends S.Class<SurroundingContext>($I`Surroundi
       description: "The sentence or paragraph text.",
     }),
     span: S.Struct({
-      start: NonNegativeInt.annotateKey({
+      start: S.Natural.annotateKey({
         description: "Absolute character offset where the context begins in the source document.",
       }),
-      end: NonNegativeInt.annotateKey({
+      end: S.Natural.annotateKey({
         description: "Absolute character offset where the context ends in the source document.",
       }),
     }).annotateKey({

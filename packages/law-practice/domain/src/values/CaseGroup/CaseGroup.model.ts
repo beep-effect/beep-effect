@@ -24,23 +24,23 @@ const $I = $LawPracticeDomainId.create("values/CaseGroup/CaseGroup.model");
  * **Example** (Constructing CaseGroup with make)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { CaseGroup, FullCaseCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const group = CaseGroup.make({
  *   primaryCitation: FullCaseCitation.make({
  *     text: "410 U.S. 113",
  *     span: Span.make({
- *       cleanStart: NonNegativeInt.make(0),
- *       cleanEnd: NonNegativeInt.make(12),
- *       originalStart: NonNegativeInt.make(0),
- *       originalEnd: NonNegativeInt.make(12),
+ *       cleanStart: S.Natural.make(0),
+ *       cleanEnd: S.Natural.make(12),
+ *       originalStart: S.Natural.make(0),
+ *       originalEnd: S.Natural.make(12),
  *     }),
  *     confidence: 1,
  *     matchedText: "410 U.S. 113",
  *     processTimeMs: 0,
- *     patternsChecked: NonNegativeInt.make(1),
- *     volume: NonNegativeInt.make(410),
+ *     patternsChecked: S.Natural.make(1),
+ *     volume: S.Natural.make(410),
  *     reporter: "U.S.",
  *   }),
  *   mentions: [],

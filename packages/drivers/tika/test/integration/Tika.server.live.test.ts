@@ -1,7 +1,6 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika";
@@ -70,7 +69,7 @@ const liveOperation = Effect.fn("TikaLive.operation")(function* (
       locator: ArtifactLocator.make({ kind: "file", value: locatorValue }),
       name,
       relativePath,
-      sizeBytes: NonNegativeInt.make(bytes.length),
+      sizeBytes: S.Natural.make(bytes.length),
     }),
   });
 });

@@ -10,7 +10,6 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context, Effect } from "effect";
@@ -27,13 +26,12 @@ const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
  * const seed = SyncItemSeed.make({
  *   itemKind: "file",
- *   localGeneration: S.decodeUnknownSync(NonNegativeInt)(1),
+ *   localGeneration: S.decodeUnknownSync(S.Natural)(1),
  *   localRelPath: S.decodeUnknownSync(VaultRelPath)("matters/client-default/complaint.pdf"),
  *   provider: "box",
  *   syncState: "pending",
@@ -50,7 +48,7 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     contentDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the local bytes last observed for this item; none for folders.",
     }),
-    contentSizeBytes: S.Option(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+    contentSizeBytes: S.Option(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Size in bytes of the local content last observed; none for folders.",
     }),
     itemKind: SyncItemKind.annotateKey({
@@ -62,10 +60,10 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     lastPushedDigest: S.Option(DocumentContentDigest).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Digest of the content most recently pushed to the provider; none before first push.",
     }),
-    lastPushedGeneration: S.Option(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+    lastPushedGeneration: S.Option(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Local generation counter captured by the most recent successful push.",
     }),
-    localGeneration: NonNegativeInt.annotateKey({
+    localGeneration: S.Natural.annotateKey({
       description: "Monotonic counter incremented per observed local change.",
     }),
     localRelPath: VaultRelPath.annotateKey({

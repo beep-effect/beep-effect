@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientChannel, CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CacheExecutablePin } from "./Cache.schemas.ts";
 
@@ -127,7 +127,7 @@ export class CacheSyntheticRun extends S.Class<CacheSyntheticRun>($I`CacheSynthe
     exitCode: S.Int,
     outputSha256: Sha256Hex,
     logSha256: Sha256Hex,
-    logBytes: NonNegativeInt,
+    logBytes: S.Natural,
     violations: S.Array(CacheCaptureViolation),
   },
   $I.annote("CacheSyntheticRun", {
@@ -174,9 +174,9 @@ export class CacheSyntheticNonExecution extends S.Class<CacheSyntheticNonExecuti
   {
     id: S.NonEmptyString,
     processExitCode: S.Int,
-    summaryTaskCount: NonNegativeInt,
-    selectedTaskCount: NonNegativeInt,
-    executionRecordCount: NonNegativeInt,
+    summaryTaskCount: S.Natural,
+    selectedTaskCount: S.Natural,
+    executionRecordCount: S.Natural,
     commands: S.Array(S.String),
     outputPresent: S.Boolean,
     replayLogPresent: S.Boolean,

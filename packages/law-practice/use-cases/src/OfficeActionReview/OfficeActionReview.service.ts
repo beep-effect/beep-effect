@@ -181,7 +181,6 @@ export interface OfficeActionReviewDeps {
  * import { makeOfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import type { OfficeActionReviewDeps } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { NonNegativeInt } from "@beep/schema"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Effect, Exit } from "effect"
  * import * as S from "effect/Schema"
@@ -223,7 +222,7 @@ export interface OfficeActionReviewDeps {
  *       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
  *       name: "office-action.txt",
  *       relativePath,
- *       sizeBytes: NonNegativeInt.make(21),
+ *       sizeBytes: S.Natural.make(21),
  *       text: "Claim 1 rejected."
  *     })
  *   })

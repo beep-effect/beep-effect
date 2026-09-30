@@ -13,7 +13,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, Fiber, HashSet, Queue, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -21,6 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
@@ -46,9 +46,11 @@ const backpressureConfigSamplingRateDefault = UnitInterval.make(0.1);
  * **Example** (Construct a tight sampling config)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BackpressureConfig } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = BackpressureConfig.make({
  *   maxQueuedEvents: PosInt.make(8),

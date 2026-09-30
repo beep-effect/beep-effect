@@ -7,12 +7,13 @@ import * as Arbitrary from "effect/Arbitrary";
  */
 import { $ScratchpadId } from "@beep/identity";
 import { HttpUrl } from "@beep/ontology/Ontology.models";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Match, Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
 import { SourceType } from "../Model/EnrichedContent.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
@@ -152,7 +153,7 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
         description: "Optional extracted headline.",
       })
     ),
-    wordCount: S.OptionFromNullishOr(NonNegativeInt).pipe(
+    wordCount: S.OptionFromNullishOr(S.Natural).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional non-negative extracted word count.",
@@ -309,16 +310,16 @@ export type BatchIngestResult = typeof BatchIngestResult.Type;
 
 class BatchIngestSummary extends S.Class<BatchIngestSummary>($I`BatchIngestSummary`)(
   {
-    total: NonNegativeInt.annotateKey({
+    total: S.Natural.annotateKey({
       description: "Total number of processed URLs.",
     }),
-    success: NonNegativeInt.annotateKey({
+    success: S.Natural.annotateKey({
       description: "Number of newly ingested URLs.",
     }),
-    duplicate: NonNegativeInt.annotateKey({
+    duplicate: S.Natural.annotateKey({
       description: "Number of URLs resolved as duplicate content.",
     }),
-    error: NonNegativeInt.annotateKey({
+    error: S.Natural.annotateKey({
       description: "Number of URLs that failed ingestion.",
     }),
   },
@@ -333,10 +334,10 @@ const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): Batch
   const error = A.length(A.filter(results, BatchIngestResult.guards.error));
 
   return BatchIngestSummary.make({
-    total: NonNegativeInt.make(A.length(results)),
-    success: NonNegativeInt.make(success),
-    duplicate: NonNegativeInt.make(duplicate),
-    error: NonNegativeInt.make(error),
+    total: S.Natural.make(A.length(results)),
+    success: S.Natural.make(success),
+    duplicate: S.Natural.make(duplicate),
+    error: S.Natural.make(error),
   });
 };
 
@@ -424,7 +425,7 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.pipe(
 export type BatchIngestResponse = typeof BatchIngestResponse.Type;
 
 const listLinksQueryLimitDefault = PosInt.make(20);
-const listLinksQueryOffsetDefault = NonNegativeInt.make(0);
+const listLinksQueryOffsetDefault = S.Natural.make(0);
 /**
  * Normalized query for listing ingested links.
  *
@@ -468,7 +469,7 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
         description: "Positive page size; defaults to twenty.",
       })
     ),
-    offset: NonNegativeInt.pipe(
+    offset: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(listLinksQueryOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryOffsetDefault)),
       S.annotateKey({
         description: "Non-negative pagination offset; defaults to zero.",
@@ -527,7 +528,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
     status: LinkStatus.annotateKey({
       description: "Current ingestion lifecycle status.",
     }),
-    wordCount: S.OptionFromNullishOr(NonNegativeInt).pipe(
+    wordCount: S.OptionFromNullishOr(S.Natural).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional non-negative extracted word count." })
     ),
@@ -573,9 +574,9 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
       S.withConstructorDefault(Effect.succeed(listLinksResponseLinksDefault)), S.withDecodingDefaultType(Effect.succeed(listLinksResponseLinksDefault)),
       S.annotateKey({ description: "Current page of link summaries." })
     ),
-    total: NonNegativeInt.annotateKey({ description: "Total matching link count." }),
+    total: S.Natural.annotateKey({ description: "Total matching link count." }),
     limit: PosInt.annotateKey({ description: "Positive requested page size." }),
-    offset: NonNegativeInt.annotateKey({ description: "Non-negative page offset." }),
+    offset: S.Natural.annotateKey({ description: "Non-negative page offset." }),
     hasMore: S.Boolean.annotateKey({ description: "Whether another result page follows." }),
   },
   $I.annote("ListLinksResponse", {
@@ -626,7 +627,7 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
     keyEntities: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(linkDetailKeyEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(linkDetailKeyEntitiesDefault))),
     storageUri: GcsUri,
     status: LinkStatus,
-    wordCount: S.OptionFromNullishOr(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    wordCount: S.OptionFromNullishOr(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
     publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     fetchedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),

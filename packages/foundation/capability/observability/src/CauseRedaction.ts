@@ -33,7 +33,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Effect, flow, Match, Result } from "effect";
 import { dual } from "effect/Function";
@@ -42,13 +42,13 @@ import * as S from "effect/Schema";
 import { CauseClassification, summarizeCause } from "./CauseDiagnostics.ts";
 import type { CauseSummary } from "./CauseDiagnostics.ts";
 
-const decodeNonNegativeIntResult = S.decodeResult(NonNegativeInt);
+const decodeNonNegativeIntResult = S.decodeResult(S.Natural);
 
 const $I = $ObservabilityId.create("CauseRedaction");
 
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-const decodeNonNegativeInt = (input: number): NonNegativeInt =>
+const decodeNonNegativeInt = (input: number): number =>
   Result.getOrThrowWith(decodeNonNegativeIntResult(input), schemaIssueToError);
 
 /**
@@ -74,12 +74,11 @@ export const REDACTION_PLACEHOLDER = "[REDACTED]" as const;
  * **Example** (Use default message limit)
  *
  * ```ts import.meta.vitest name="Use default message limit"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DEFAULT_MESSAGE_LIMIT, RedactCauseOptions } from "@beep/observability"
  *
  * const options = RedactCauseOptions.make({
- *   messageLimit: S.decodeUnknownSync(NonNegativeInt)(DEFAULT_MESSAGE_LIMIT)
+ *   messageLimit: S.decodeUnknownSync(S.Natural)(DEFAULT_MESSAGE_LIMIT)
  * })
  * options.messageLimit // => 256
  * ```
@@ -95,12 +94,11 @@ export const DEFAULT_MESSAGE_LIMIT = 256 as const;
  * **Example** (Use default detail limit)
  *
  * ```ts import.meta.vitest name="Use default detail limit"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { DEFAULT_DETAIL_LIMIT, RedactCauseOptions } from "@beep/observability"
  *
  * const options = RedactCauseOptions.make({
- *   detailLimit: S.decodeUnknownSync(NonNegativeInt)(DEFAULT_DETAIL_LIMIT)
+ *   detailLimit: S.decodeUnknownSync(S.Natural)(DEFAULT_DETAIL_LIMIT)
  * })
  * options.detailLimit // => 2048
  * ```
@@ -300,12 +298,12 @@ export class RedactCauseOptions extends S.Class<RedactCauseOptions>($I`RedactCau
     ).annotateKey({
       description: "Target channel; client strips internal detail, diagnostic keeps bounded detail.",
     }),
-    messageLimit: NonNegativeInt.pipe(
+    messageLimit: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(decodeNonNegativeInt(DEFAULT_MESSAGE_LIMIT)))
     ).annotateKey({
       description: "Maximum length of the sanitized message before truncation.",
     }),
-    detailLimit: NonNegativeInt.pipe(
+    detailLimit: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(decodeNonNegativeInt(DEFAULT_DETAIL_LIMIT)))
     ).annotateKey({
       description: "Maximum length of the sanitized diagnostic detail before truncation.",

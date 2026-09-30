@@ -8,7 +8,6 @@ import { $LangExtractId } from "@beep/identity";
 import { ExtractionExample, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -99,14 +98,14 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
  * **Example** (Build extraction options)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LangExtractOptions } from "@beep/langextract/Extraction"
  * import { UnitInterval } from "@beep/nlp/Handoff"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * console.log(LangExtractOptions.make({
  *   fuzzyThreshold: O.some(UnitInterval.make(0.9)),
- *   maxExtractions: O.some(NonNegativeInt.make(5))
+ *   maxExtractions: O.some(S.Natural.make(5))
  * }))
  * ```
  *
@@ -116,7 +115,7 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
 export class LangExtractOptions extends S.Class<LangExtractOptions>($I`LangExtractOptions`)(
   {
     fuzzyThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    maxExtractions: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    maxExtractions: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("LangExtractOptions", {
     description: "Options for model parsing and deterministic source alignment.",
@@ -238,11 +237,11 @@ class GroundedExtractionUnaligned extends S.Class<GroundedExtractionUnaligned>($
  * **Example** (Create grounded extraction)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { GroundedExtraction } from "@beep/langextract/Extraction"
  * import { Contract } from "@beep/nlp/Handoff"
- * import { NonNegativeInt } from "@beep/schema"
  *
- * const span = Contract.Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(12) })
+ * const span = Contract.Span.make({ start: S.Natural.make(0), end: S.Natural.make(12) })
  * console.log(GroundedExtraction.cases.match_exact.make({
  *   label: "person",
  *   matchedText: "Ada Lovelace",
@@ -347,14 +346,14 @@ export class LangExtractRequest extends S.Class<LangExtractRequest>($I`LangExtra
  * **Example** (Create diagnostics counts)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LangExtractDiagnostics } from "@beep/langextract/Extraction"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * console.log(LangExtractDiagnostics.make({
- *   alignedCount: NonNegativeInt.make(1),
- *   candidateCount: NonNegativeInt.make(1),
- *   promptChars: NonNegativeInt.make(120),
- *   unalignedCount: NonNegativeInt.make(0)
+ *   alignedCount: S.Natural.make(1),
+ *   candidateCount: S.Natural.make(1),
+ *   promptChars: S.Natural.make(120),
+ *   unalignedCount: S.Natural.make(0)
  * }))
  * ```
  *
@@ -363,10 +362,10 @@ export class LangExtractRequest extends S.Class<LangExtractRequest>($I`LangExtra
  */
 export class LangExtractDiagnostics extends S.Class<LangExtractDiagnostics>($I`LangExtractDiagnostics`)(
   {
-    alignedCount: NonNegativeInt,
-    candidateCount: NonNegativeInt,
-    promptChars: NonNegativeInt,
-    unalignedCount: NonNegativeInt,
+    alignedCount: S.Natural,
+    candidateCount: S.Natural,
+    promptChars: S.Natural,
+    unalignedCount: S.Natural,
   },
   $I.annote("LangExtractDiagnostics", {
     description: "Sanitized extraction diagnostics containing counts only.",
@@ -379,10 +378,10 @@ export class LangExtractDiagnostics extends S.Class<LangExtractDiagnostics>($I`L
  * **Example** (Build extraction result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { LangExtractDiagnostics, LangExtractResult } from "@beep/langextract/Extraction"
  * import { Contract } from "@beep/nlp/Handoff"
  * import { DocumentId } from "@beep/nlp/Core"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const provenance = Contract.Provenance.make({ generatedBy: "@beep/langextract", source: "doc-1", timestamp: 0 })
  * const annotatedDocument = Contract.AnnotatedDocument.make({
@@ -396,10 +395,10 @@ export class LangExtractDiagnostics extends S.Class<LangExtractDiagnostics>($I`L
  * console.log(LangExtractResult.make({
  *   annotatedDocument,
  *   diagnostics: LangExtractDiagnostics.make({
- *     alignedCount: NonNegativeInt.make(0),
- *     candidateCount: NonNegativeInt.make(0),
- *     promptChars: NonNegativeInt.make(0),
- *     unalignedCount: NonNegativeInt.make(0)
+ *     alignedCount: S.Natural.make(0),
+ *     candidateCount: S.Natural.make(0),
+ *     promptChars: S.Natural.make(0),
+ *     unalignedCount: S.Natural.make(0)
  *   }),
  *   documentId: DocumentId.make("doc-1"),
  *   extractions: [],

@@ -11,7 +11,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -461,7 +461,7 @@ export class OpenclawSecretsReloadOutput extends S.Class<OpenclawSecretsReloadOu
     ok: S.Boolean.annotateKey({
       description: "Whether the runtime snapshot swap succeeded.",
     }),
-    warningCount: NonNegativeInt.annotateKey({
+    warningCount: S.Natural.annotateKey({
       description: "Number of warnings emitted during the reload.",
     }),
   },
@@ -475,10 +475,10 @@ export class OpenclawSecretsReloadOutput extends S.Class<OpenclawSecretsReloadOu
  *
  * **Example** (Usage)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { OpenclawSecretsReloaded } from "@beep/openclaw/Openclaw.models"
  *
- * const reloaded = OpenclawSecretsReloaded.make({ _tag: "Reloaded", warningCount: NonNegativeInt.make(0) })
+ * const reloaded = OpenclawSecretsReloaded.make({ _tag: "Reloaded", warningCount: S.Natural.make(0) })
  * console.log(reloaded.warningCount) // 0
  * ```
  *
@@ -490,7 +490,7 @@ export class OpenclawSecretsReloaded extends S.Class<OpenclawSecretsReloaded>($I
     _tag: S.tag("Reloaded").annotateKey({
       description: "Discriminator for successful secrets reloads.",
     }),
-    warningCount: NonNegativeInt.annotateKey({
+    warningCount: S.Natural.annotateKey({
       description: "Number of warnings emitted during the reload.",
     }),
   },
@@ -545,11 +545,10 @@ export class OpenclawSecretsReloadDegraded extends S.Class<OpenclawSecretsReload
  *
  * **Example** (Usage)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
  * import { OpenclawSecretsReload, OpenclawSecretsReloaded } from "@beep/openclaw/Openclaw.models"
  * import * as S from "effect/Schema"
  *
- * const outcome = OpenclawSecretsReloaded.make({ _tag: "Reloaded", warningCount: NonNegativeInt.make(0) })
+ * const outcome = OpenclawSecretsReloaded.make({ _tag: "Reloaded", warningCount: S.Natural.make(0) })
  * console.log(S.is(OpenclawSecretsReload)(outcome)) // true
  * ```
  *
@@ -568,13 +567,13 @@ export const OpenclawSecretsReload = S.Union([OpenclawSecretsReloaded, OpenclawS
  *
  * **Example** (Usage)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import type { OpenclawSecretsReload } from "@beep/openclaw/Openclaw.models"
  * import { OpenclawSecretsReloaded } from "@beep/openclaw/Openclaw.models"
  *
  * const outcome: OpenclawSecretsReload = OpenclawSecretsReloaded.make({
  *   _tag: "Reloaded",
- *   warningCount: NonNegativeInt.make(0)
+ *   warningCount: S.Natural.make(0)
  * })
  * console.log(outcome._tag)
  * ```
@@ -629,12 +628,12 @@ const openclawGatewayHealthPluginsLoadedDefault = A.empty();
  *
  * **Example** (Usage)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { OpenclawGatewayHealth } from "@beep/openclaw/Openclaw.models"
  *
  * const health = OpenclawGatewayHealth.make({
  *   ok: true,
- *   pluginErrorCount: NonNegativeInt.make(0),
+ *   pluginErrorCount: S.Natural.make(0),
  *   pluginsLoaded: ["telegram", "ollama"]
  * })
  * console.log(health.ok) // true
@@ -656,7 +655,7 @@ export class OpenclawGatewayHealth extends S.Class<OpenclawGatewayHealth>($I`Ope
     ok: S.Boolean.annotateKey({
       description: "Top-level gateway health verdict.",
     }),
-    pluginErrorCount: NonNegativeInt.annotateKey({
+    pluginErrorCount: S.Natural.annotateKey({
       description: "Number of plugin errors reported by the gateway.",
     }),
     pluginsLoaded: S.Array(S.String)
@@ -996,7 +995,7 @@ export type OpenclawLiveAcceptanceStep = typeof OpenclawLiveAcceptanceStep.Type;
  *
  * **Example** (Usage)
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import {
  *   OpenclawAbsolutePath,
  *   OpenclawAgentTurn,
@@ -1021,7 +1020,7 @@ export type OpenclawLiveAcceptanceStep = typeof OpenclawLiveAcceptanceStep.Type;
  *   localModelId: "gemma3:4b",
  *   restoredReload: OpenclawSecretsReloaded.make({
  *     _tag: "Reloaded",
- *     warningCount: NonNegativeInt.make(0)
+ *     warningCount: S.Natural.make(0)
  *   }),
  *   skillInventory: OpenclawSkillInventory.make({
  *     skills: [

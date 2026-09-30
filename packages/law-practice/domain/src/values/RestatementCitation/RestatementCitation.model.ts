@@ -26,21 +26,21 @@ const $I = $LawPracticeDomainId.create("values/RestatementCitation/RestatementCi
  * **Example** (Make RestatementCitation value)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RestatementCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = RestatementCitation.make({
  *   text: "Restatement (Second) of Torts § 402A",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Restatement (Second) of Torts § 402A",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  *   edition: "Second",
  *   subject: "Torts",
  *   section: "402A",

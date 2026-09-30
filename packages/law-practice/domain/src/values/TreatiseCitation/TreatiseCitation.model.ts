@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CitationBase } from "../CitationBase/index.ts";
@@ -29,22 +28,22 @@ const $I = $LawPracticeDomainId.create("values/TreatiseCitation/TreatiseCitation
  * **Example** (Make Wright & Miller citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Span, TreatiseCitation } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = TreatiseCitation.make({
  *   text: "5 Wright & Miller § 1234",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "5 Wright & Miller § 1234",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(5),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(5),
  *   title: "Wright & Miller",
  *   section: "1234",
  * })
@@ -59,7 +58,7 @@ export class TreatiseCitation extends S.Class<TreatiseCitation>($I`TreatiseCitat
   {
     ...CitationBase.fields,
     type: S.tag("treatise"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Volume number (string for hyphenated volumes).",
     }),
     title: S.String.annotateKey({
@@ -75,7 +74,7 @@ export class TreatiseCitation extends S.Class<TreatiseCitation>($I`TreatiseCitat
         description: 'Edition + year, when present in trailing parenthetical (e.g., "5th ed. 2008").',
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

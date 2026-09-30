@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, NonNegNum } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Effect } from "effect";
 
@@ -90,22 +90,22 @@ const InferenceGraphFormat = LiteralKit(["turtle", "trig"]).annotate(
  */
 export class InferenceStats extends S.Class<InferenceStats>($I`InferenceStats`)(
   {
-    originalTriples: NonNegativeInt.annotateKey({
+    originalTriples: S.Natural.annotateKey({
       description: "Number of triples in the input graph before reasoning.",
     }),
-    enrichedTriples: NonNegativeInt.annotateKey({
+    enrichedTriples: S.Natural.annotateKey({
       description: "Number of triples in the graph after reasoning reaches its configured result.",
     }),
-    inferredTriples: NonNegativeInt.annotateKey({
+    inferredTriples: S.Natural.annotateKey({
       description: "Number of triples derived by reasoning.",
     }),
-    inferenceRatio: NonNegNum.annotateKey({
+    inferenceRatio: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Finite ratio of inferred triples to original triples.",
     }),
-    predicateBreakdown: S.Record(S.String, NonNegativeInt).annotateKey({
+    predicateBreakdown: S.Record(S.String, S.Natural).annotateKey({
       description: "Non-negative inferred-triple counts keyed by predicate IRI.",
     }),
-    durationMs: NonNegNum.annotateKey({
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Finite non-negative inference duration in milliseconds.",
     }),
   },

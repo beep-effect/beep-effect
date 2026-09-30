@@ -7,13 +7,14 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, flow, Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PosInt } from "../../internal/PosInt.ts";
 import { ApplicationNumber } from "../ApplicationNumber/index.ts";
 import { KindCode } from "../KindCode/index.ts";
 import { OfficeCode } from "../OfficeCode/index.ts";

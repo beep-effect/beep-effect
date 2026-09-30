@@ -23,7 +23,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Context, Duration, Effect, pipe, Stream } from "effect";
@@ -35,6 +35,7 @@ import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
+import { PosInt } from "../schema/PosInt.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process";
 

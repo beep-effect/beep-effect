@@ -8,7 +8,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -366,8 +365,8 @@ const makeHeadDocumentId = (
 const findingLocation = (path: string, line: number, column: number): KnowledgeFindingLocation =>
   KnowledgeFindingLocation.make({
     path: sanitizePublicFindingText(path),
-    line: NonNegativeInt.make(line),
-    column: NonNegativeInt.make(column),
+    line: S.Natural.make(line),
+    column: S.Natural.make(column),
   });
 
 const missingPathCandidate = (
@@ -806,7 +805,7 @@ const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(fun
         severity: "blocking",
         documentId: sanitizePublicFindingText(candidate.documentId),
         subject: sanitizePublicFindingText(candidate.subject),
-        occurrence: NonNegativeInt.make(occurrence),
+        occurrence: S.Natural.make(occurrence),
         location: KnowledgeFindingLocation.make({
           ...candidate.location,
           path: sanitizePublicFindingText(candidate.location.path),

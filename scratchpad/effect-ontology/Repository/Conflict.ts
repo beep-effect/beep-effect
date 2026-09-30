@@ -8,7 +8,6 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
@@ -108,14 +107,14 @@ export const ConflictRecord = ConflictRecordDefinition.pipe(
  */
 export type ConflictRecord = typeof ConflictRecord.Type;
 
-const ConflictCounts = S.Struct({ total: NonNegativeInt, pending: NonNegativeInt }).pipe(
+const ConflictCounts = S.Struct({ total: S.Natural, pending: S.Natural }).pipe(
   $I.annoteSchema("ConflictCounts", {
     description: "Unpaginated total and pending conflict counts for one query scope.",
   })
 );
 const decodeConflictCounts = S.decodeEffect(ConflictCounts);
 
-const CountRow = S.Struct({ count: NonNegativeInt });
+const CountRow = S.Struct({ count: S.Natural });
 
 type ConflictComparableClaim = {
   readonly objectValue: string;

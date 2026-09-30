@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
@@ -481,7 +481,7 @@ export type PatternId = typeof PatternId.Type;
  * @category models
  * @since 0.0.0
  */
-export const MarkRange = S.Tuple([NonNegativeInt, NonNegativeInt]).pipe(
+export const MarkRange = S.Tuple([S.Natural, S.Natural]).pipe(
   $I.annoteSchema("MarkRange", {
     description: "Inclusive [start, end] range of marked pattern elements.",
   })

@@ -12,7 +12,7 @@ import { EntityNode } from "@beep/nlp/Graph/Schema";
 import { Contract } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
@@ -42,7 +42,7 @@ import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 const documentId = DocumentId.make("1".repeat(64));
 const document = SourceDocument.make({
   acquired: ProvenanceEventId.make("2".repeat(64)),
-  bytes: NonNegativeInt.make(1),
+  bytes: S.Natural.make(1),
   id: documentId,
   mediaType: "text/markdown",
   origin: Origin.cases.Fixture.make({
@@ -90,8 +90,8 @@ const grounded = (
     label,
     matchedText: text,
     span: Contract.Span.make({
-      end: NonNegativeInt.make(start + text.length),
-      start: NonNegativeInt.make(start),
+      end: S.Natural.make(start + text.length),
+      start: S.Natural.make(start),
     }),
     text,
   });
@@ -116,10 +116,10 @@ const langExtractLayer = (extractions: ReadonlyArray<GroundedExtraction>) =>
             version: "nlp-ir/1.1",
           }),
           diagnostics: LangExtractDiagnostics.make({
-            alignedCount: NonNegativeInt.make(A.length(extractions)),
-            candidateCount: NonNegativeInt.make(A.length(extractions)),
-            promptChars: NonNegativeInt.make(request.text.length),
-            unalignedCount: NonNegativeInt.make(0),
+            alignedCount: S.Natural.make(A.length(extractions)),
+            candidateCount: S.Natural.make(A.length(extractions)),
+            promptChars: S.Natural.make(request.text.length),
+            unalignedCount: S.Natural.make(0),
           }),
           documentId: NlpDocumentId.make(request.documentId),
           extractions,
@@ -347,7 +347,7 @@ describe("C0 hosted extractor", () => {
       confidence: O.none(),
       label: "relation",
       matchedText: text,
-      span: Contract.Span.make({ end: NonNegativeInt.make(text.length), start: NonNegativeInt.make(0) }),
+      span: Contract.Span.make({ end: S.Natural.make(text.length), start: S.Natural.make(0) }),
       text,
     });
     it.layer(Layer.merge(baseLayer, hostedLayer([extraction])), { timeout: "30 seconds" })((it) => {

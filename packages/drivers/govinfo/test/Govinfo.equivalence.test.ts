@@ -1,10 +1,15 @@
 import { GovinfoError, GovinfoErrorOptions, Search } from "@beep/govinfo";
+import { NonNegativeInt64 } from "@beep/govinfo/domain/values/GovinfoNumeric";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { pipe } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const sameError = S.toEquivalence(GovinfoError);
+const decodeNonNegativeInt64 = S.decodeUnknownResult(NonNegativeInt64);
 const sameBadRequest = S.toEquivalence(Search.FailureBadRequest);
 const sameNotFound = S.toEquivalence(Search.FailureNotFound);
 const sameInternalServerError = S.toEquivalence(Search.FailureInternalServerError);
@@ -34,5 +39,17 @@ describe("Govinfo declared-field equivalence", () => {
     const internal = Search.FailureInternalServerError.make({ cause: O.none() });
     const internalTwin = Search.FailureInternalServerError.make({ cause: O.none() });
     expect(sameInternalServerError(internal, internalTwin)).toBe(true);
+  });
+});
+
+describe("GovInfo numeric values", () => {
+  it("keeps the signed 64-bit integer message for an out-of-range count", () => {
+    const decoded = decodeNonNegativeInt64(BigInt("9223372036854775808"));
+
+    pipe(decoded, Result.isFailure, assertTrue);
+    if (Result.isFailure(decoded)) {
+      expect(decoded.failure.message).toContain("Expected a signed 64-bit integer");
+    }
+    assertSuccess(decodeNonNegativeInt64(BigInt("9223372036854775807")), BigInt("9223372036854775807"));
   });
 });

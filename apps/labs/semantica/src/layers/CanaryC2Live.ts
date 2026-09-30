@@ -1,4 +1,4 @@
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -30,6 +30,7 @@ import { CanaryC1 } from "@/services/CanaryC1";
 import { CanaryC2 } from "@/services/CanaryC2";
 import { RdfProjection } from "@/services/RdfProjection";
 import { Reasoner } from "@/services/Reasoner";
+import { PosInt } from "../schema/PosInt.ts";
 
 const C2_SCHEMA_VERSION = "c2-eval-report/v1";
 const C2_STAGE = "c2";
@@ -359,18 +360,18 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
       }
       const ended = yield* Clock.currentTimeMillis;
       const telemetry = EvalRunTelemetry.make({
-        coldStartMs: NonNegativeInt.make(coldStartMs),
+        coldStartMs: S.Natural.make(coldStartMs),
         dependencyBytes: O.none(),
         diskGrowthBytes: base.baseTelemetry.diskGrowthBytes,
         mode: base.baseTelemetry.mode,
         modelBytes: O.none(),
-        p95Ms: NonNegativeInt.make(queryP95),
+        p95Ms: S.Natural.make(queryP95),
         reportDigest,
-        rssBytes: NonNegativeInt.make(N.multiply(process.resourceUsage().maxRSS, 1_024)),
+        rssBytes: S.Natural.make(N.multiply(process.resourceUsage().maxRSS, 1_024)),
         runId: base.report.base.run.id,
         schemaVersion: "eval-telemetry/v1",
         startedAt: base.baseTelemetry.startedAt,
-        wallClockMs: NonNegativeInt.make(N.max(0, ended - started)),
+        wallClockMs: S.Natural.make(N.max(0, ended - started)),
       });
       const output = options.out.pipe(
         O.getOrElse(() => path.join(".beep/semantica/runs", base.report.base.run.id, base.baseTelemetry.mode, "c2"))

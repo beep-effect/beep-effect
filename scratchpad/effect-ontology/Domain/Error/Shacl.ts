@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { ShaclSeverity, ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorIri } from "./Base.ts";
@@ -152,10 +151,10 @@ export class ValidationPolicyError extends S.TaggedError<ValidationPolicyError>(
     message: ErrorMessage.annotateKey({
       description: "Human-readable policy rejection diagnostic.",
     }),
-    violationCount: NonNegativeInt.annotateKey({
+    violationCount: S.Natural.annotateKey({
       description: "Number of SHACL violation results.",
     }),
-    warningCount: NonNegativeInt.annotateKey({
+    warningCount: S.Natural.annotateKey({
       description: "Number of SHACL warning results.",
     }),
     severity: ValidationPolicySeverity.annotateKey({

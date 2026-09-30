@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -210,22 +210,22 @@ const fullCaseCitationJusticesDefault = A.empty<string>();
  * **Example** (Making a full case citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = FullCaseCitation.make({
  *   text: "410 U.S. 113",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(12),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(12),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(12),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(12),
  *   }),
  *   confidence: 1,
  *   matchedText: "410 U.S. 113",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(410),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(410),
  *   reporter: "U.S.",
  * })
  *
@@ -238,20 +238,20 @@ const fullCaseCitationJusticesDefault = A.empty<string>();
 export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`FullCaseCitation`)(
   {
     type: S.tag("case"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
     }),
     reporter: S.String.annotateKey({
       description: "Reporter abbreviation.",
     }),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: 'Page number — optional for blank page placeholder citations (e.g., "___" or "---").',
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -285,7 +285,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
         description: "Normalized court string: spaces collapsed, trailing period ensured.",
       })
     ),
-    year: NonNegativeInt.pipe(
+    year: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -317,9 +317,9 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     parallelCitations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
       })
     ).pipe(
       S.OptionFromOptionalKey,
@@ -353,7 +353,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
       })
     ),
     subsequentHistoryOf: S.Struct({
-      index: NonNegativeInt,
+      index: S.Natural,
       priorId: CitationId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
       signal: HistorySignal,
     }).pipe(
@@ -367,9 +367,9 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     date: S.Struct({
       iso: S.String,
       parsed: S.Struct({
-        year: NonNegativeInt,
-        month: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-        day: NonNegativeInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+        year: S.Natural,
+        month: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+        day: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
       }).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     }).pipe(
       S.OptionFromOptionalKey,
@@ -381,9 +381,9 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
     ),
     possibleInterpretations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
         confidence: S.Finite,
         reason: S.String,
       })
@@ -449,7 +449,7 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
           'Procedural prefix for non-adversarial cases (e.g. "In re" from "In re Smith"), populated by Phase 7 (Party Name extraction).',
       })
     ),
-    nominativeVolume: NonNegativeInt.pipe(
+    nominativeVolume: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -534,22 +534,22 @@ export class FullCaseCitation extends CitationBase.extend<FullCaseCitation>($I`F
    * **Example** (Format a Bluebook citation)
    *
    * ```ts
+   * import * as S from "effect/Schema"
    * import { FullCaseCitation, Span } from "@beep/law-practice-domain"
-   * import { NonNegativeInt } from "@beep/schema"
    *
    * const citation = FullCaseCitation.make({
    *   text: "410 U.S. 113",
    *   span: Span.make({
-   *     cleanStart: NonNegativeInt.make(0),
-   *     cleanEnd: NonNegativeInt.make(12),
-   *     originalStart: NonNegativeInt.make(0),
-   *     originalEnd: NonNegativeInt.make(12),
+   *     cleanStart: S.Natural.make(0),
+   *     cleanEnd: S.Natural.make(12),
+   *     originalStart: S.Natural.make(0),
+   *     originalEnd: S.Natural.make(12),
    *   }),
    *   confidence: 1,
    *   matchedText: "410 U.S. 113",
    *   processTimeMs: 0,
-   *   patternsChecked: NonNegativeInt.make(1),
-   *   volume: NonNegativeInt.make(410),
+   *   patternsChecked: S.Natural.make(1),
+   *   volume: S.Natural.make(410),
    *   reporter: "U.S.",
    * })
    *
@@ -636,9 +636,9 @@ export declare namespace FullCaseCitation {
     readonly date: O.Option<{
       readonly iso: string;
       readonly parsed: O.Option<{
-        readonly year: NonNegativeInt;
-        readonly month: O.Option<NonNegativeInt>;
-        readonly day: O.Option<NonNegativeInt>;
+        readonly year: number;
+        readonly month: O.Option<number>;
+        readonly day: O.Option<number>;
       }>;
     }>;
     readonly defendant: O.Option<string>;
@@ -651,28 +651,28 @@ export declare namespace FullCaseCitation {
     readonly inferredCourt: O.Option<CourtInference>;
     readonly justices: ReadonlyArray<string>;
     readonly nominativeReporter: O.Option<string>;
-    readonly nominativeVolume: O.Option<NonNegativeInt>;
+    readonly nominativeVolume: O.Option<number>;
     readonly normalizedCourt: O.Option<string>;
     readonly normalizedReporter: O.Option<string>;
-    readonly page: O.Option<NonNegativeInt>;
+    readonly page: O.Option<number>;
     readonly parallelCitations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
     readonly parentheticals: ReadonlyArray<Parenthetical.Type>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly plaintiff: O.Option<string>;
     readonly plaintiffNormalized: O.Option<string>;
     readonly possibleInterpretations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
         readonly confidence: number;
         readonly reason: string;
       }>
@@ -683,14 +683,14 @@ export declare namespace FullCaseCitation {
     readonly spans: O.Option<CaseComponentSpan>;
     readonly subsequentHistoryEntries: ReadonlyArray<SubsequentHistoryEntry>;
     readonly subsequentHistoryOf: O.Option<{
-      readonly index: NonNegativeInt;
+      readonly index: number;
       readonly priorId: O.Option<CitationId>;
       readonly signal: HistorySignal;
     }>;
     readonly type: "case";
     readonly unpublished: boolean;
-    readonly volume: NonNegativeInt | string;
-    readonly year: O.Option<NonNegativeInt>;
+    readonly volume: number | string;
+    readonly year: O.Option<number>;
   }
 
   /**
@@ -774,21 +774,21 @@ export declare namespace FullCaseCitation {
  * **Example** (Making an Id citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { IdCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = IdCitation.make({
  *   text: "Id. at 460",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(10),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(10),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(10),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(10),
  *   }),
  *   confidence: 1,
  *   matchedText: "Id. at 460",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "id"
@@ -800,7 +800,7 @@ export declare namespace FullCaseCitation {
 export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
   {
     type: S.tag("id"),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -820,7 +820,7 @@ export class IdCitation extends CitationBase.extend<IdCitation>($I`IdCitation`)(
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -962,10 +962,10 @@ export declare namespace IdCitation {
     readonly defendantNormalized: O.Option<string>;
     readonly parenthetical: O.Option<string>;
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly plaintiff: O.Option<string>;
     readonly plaintiffNormalized: O.Option<string>;
@@ -1014,21 +1014,21 @@ export declare namespace IdCitation {
  * **Example** (Making a supra citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { SupraCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = SupraCitation.make({
  *   text: "Smith, supra, at 460",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(20),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(20),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(20),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(20),
  *   }),
  *   confidence: 1,
  *   matchedText: "Smith, supra, at 460",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
+ *   patternsChecked: S.Natural.make(1),
  * })
  *
  * console.log(citation.type) // "supra"
@@ -1047,7 +1047,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
         description: "Party name extracted from citation text (undefined for standalone supra references).",
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -1067,7 +1067,7 @@ export class SupraCitation extends CitationBase.extend<SupraCitation>($I`SupraCi
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -1156,10 +1156,10 @@ export declare namespace SupraCitation {
     readonly parenthetical: O.Option<string>;
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly partyName: O.Option<string>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly spans: O.Option<SupraComponentSpan>;
     readonly type: "supra";
@@ -1199,22 +1199,22 @@ export declare namespace SupraCitation {
  * **Example** (Making a short-form case citation)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ShortFormCaseCitation, Span } from "@beep/law-practice-domain"
- * import { NonNegativeInt } from "@beep/schema"
  *
  * const citation = ShortFormCaseCitation.make({
  *   text: "500 F.2d at 125",
  *   span: Span.make({
- *     cleanStart: NonNegativeInt.make(0),
- *     cleanEnd: NonNegativeInt.make(15),
- *     originalStart: NonNegativeInt.make(0),
- *     originalEnd: NonNegativeInt.make(15),
+ *     cleanStart: S.Natural.make(0),
+ *     cleanEnd: S.Natural.make(15),
+ *     originalStart: S.Natural.make(0),
+ *     originalEnd: S.Natural.make(15),
  *   }),
  *   confidence: 1,
  *   matchedText: "500 F.2d at 125",
  *   processTimeMs: 0,
- *   patternsChecked: NonNegativeInt.make(1),
- *   volume: NonNegativeInt.make(500),
+ *   patternsChecked: S.Natural.make(1),
+ *   volume: S.Natural.make(500),
  *   reporter: "F.2d",
  * })
  *
@@ -1227,20 +1227,20 @@ export declare namespace SupraCitation {
 export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCitation>($I`ShortFormCaseCitation`)(
   {
     type: S.tag("shortFormCase"),
-    volume: S.Union([NonNegativeInt, S.String]).annotateKey({
+    volume: S.Union([S.Natural, S.String]).annotateKey({
       description: "Reporter volume number (numeric, or a string for non-numeric volumes).",
     }),
     reporter: S.String.annotateKey({
       description: "Reporter abbreviation.",
     }),
-    page: NonNegativeInt.pipe(
+    page: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Page number of the referenced reporter citation.",
       })
     ),
-    pincite: NonNegativeInt.pipe(
+    pincite: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -1260,7 +1260,7 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
           "True if `pincite` was inherited from a preceding same-authority citation per Bluebook Rule 4.1 / Indigo Book R6.2.2. Defaults to false when no inheritance occurred.",
       })
     ),
-    pinciteInheritedFrom: NonNegativeInt.pipe(
+    pinciteInheritedFrom: S.Natural.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -1345,9 +1345,9 @@ export class ShortFormCaseCitation extends CitationBase.extend<ShortFormCaseCita
     ),
     parallelCitations: S.Array(
       S.Struct({
-        volume: S.Union([NonNegativeInt, S.String]),
+        volume: S.Union([S.Natural, S.String]),
         reporter: S.String,
-        page: NonNegativeInt,
+        page: S.Natural,
       })
     ).pipe(
       S.OptionFromOptionalKey,
@@ -1424,12 +1424,12 @@ export declare namespace ShortFormCaseCitation {
     readonly inferredCaseNameSpan: O.Option<Span>;
     readonly inferredDefendant: O.Option<string>;
     readonly inferredPlaintiff: O.Option<string>;
-    readonly page: O.Option<NonNegativeInt>;
+    readonly page: O.Option<number>;
     readonly parallelCitations: O.Option<
       ReadonlyArray<{
-        readonly volume: NonNegativeInt | string;
+        readonly volume: number | string;
         readonly reporter: string;
-        readonly page: NonNegativeInt;
+        readonly page: number;
       }>
     >;
     readonly parallelGroup: O.Option<ParallelGroup>;
@@ -1437,15 +1437,15 @@ export declare namespace ShortFormCaseCitation {
     readonly parentheticalNode: O.Option<Parenthetical.Type>;
     readonly partyName: O.Option<string>;
     readonly partyNameNormalized: O.Option<string>;
-    readonly pincite: O.Option<NonNegativeInt>;
+    readonly pincite: O.Option<number>;
     readonly pinciteInfo: O.Option<PinciteInfo>;
     readonly pinciteInherited: boolean;
-    readonly pinciteInheritedFrom: O.Option<NonNegativeInt>;
+    readonly pinciteInheritedFrom: O.Option<number>;
     readonly pinciteInheritedFromId: O.Option<CitationId>;
     readonly reporter: string;
     readonly spans: O.Option<ShortFormCaseComponentSpan>;
     readonly type: "shortFormCase";
-    readonly volume: NonNegativeInt | string;
+    readonly volume: number | string;
   }
 
   /**

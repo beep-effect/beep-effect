@@ -7,7 +7,7 @@ import {
   TextAnchor,
   TextAnchorVerificationReceipt,
 } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, Option, Result } from "effect";
 import * as A from "effect/Array";
@@ -30,9 +30,9 @@ const makeExtraction = (documentHash: string, chunkHash: string, textHash: strin
   const document = DocumentId.make(documentHash);
   const chunk = ChunkId.make(chunkHash);
   const anchor = TextAnchor.make({
-    endChar: NonNegativeInt.make(Str.length(label)),
+    endChar: S.Natural.make(Str.length(label)),
     quote: label,
-    startChar: NonNegativeInt.make(0),
+    startChar: S.Natural.make(0),
   });
   const body = ClaimBody.cases.Entity.make({
     cluster: Option.none(),

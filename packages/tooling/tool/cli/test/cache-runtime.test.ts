@@ -20,7 +20,7 @@ import {
 import { QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
@@ -29,6 +29,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 describe("cache runtime identity input", () => {
   it.effect("rejects supplied values in either environment before planned Turbo execution", () =>
@@ -231,7 +232,7 @@ const runtimeNode = CacheCensusNode.make({
     interruptible: false,
     outputLogs: "full",
   }),
-  inputCount: NonNegativeInt.make(0),
+  inputCount: S.Natural.make(0),
   inputsDigest: runtimeDigest,
 });
 const runtimeLayer = FsUtilsLive.pipe(

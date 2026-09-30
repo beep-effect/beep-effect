@@ -74,7 +74,6 @@ import {
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { CurrentMcpCaller, TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
 import { Context, DateTime, Duration, Effect, HashMap, Ref, Result, Semaphore } from "effect";
@@ -385,7 +384,7 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
           policyRevision: state.frozen.policyRevision,
           prevHash: state.lastHash,
           runKey: state.runKey,
-          seq: NonNegativeInt.make(state.nextSeq),
+          seq: S.Natural.make(state.nextSeq),
           sinkClass: executionRequest.sinkClass,
         };
         const record = sealExecutionDecision(

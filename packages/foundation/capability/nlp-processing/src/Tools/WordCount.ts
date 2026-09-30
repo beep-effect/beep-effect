@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
@@ -27,8 +26,8 @@ class WordCountParameters extends S.Class<WordCountParameters>($I`WordCountParam
 
 class WordCountSuccess extends S.Class<WordCountSuccess>($I`WordCountSuccess`)(
   {
-    characterCount: NonNegativeInt,
-    wordCount: NonNegativeInt,
+    characterCount: S.Natural,
+    wordCount: S.Natural,
   },
   $I.annote("WordCountSuccess", {
     description: "Count word-like tokens and characters in text.",

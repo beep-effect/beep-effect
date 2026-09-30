@@ -8,7 +8,6 @@ import {
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { ClaimEvidenceReviewPanel } from "@beep/epistemic-ui";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -19,6 +18,7 @@ import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import { constVoid } from "effect/Function";
+import * as S from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const digest = "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca";
@@ -37,8 +37,8 @@ const explanation = ClaimEvidenceExplanation.make({
     assertion: "The source states fact.",
     subject: "Example source",
     evidence: EvidenceSpan.make({
-      startChar: NonNegativeInt.make(0),
-      endChar: NonNegativeInt.make(4),
+      startChar: S.Natural.make(0),
+      endChar: S.Natural.make(4),
       quote: "fact",
       confidence: UnitInterval.make(0.82),
     }),

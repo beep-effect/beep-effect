@@ -16,7 +16,6 @@ import { ClaimGateViolation } from "@beep/epistemic-domain/values";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt } from "@beep/schema";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -25,6 +24,7 @@ import {
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import type * as DomainEvidence from "@beep/epistemic-domain/entities/Evidence";
 import type { ClaimGateResult } from "@beep/epistemic-domain/values";
@@ -61,7 +61,7 @@ const buildRequest = (
         properties: [
           ShaclPropertyShape.make({
             path: makeNamedNode(EVIDENCE_QUOTE_IRI),
-            minCount: O.some(NonNegativeInt.make(1)),
+            minCount: O.some(S.Natural.make(1)),
             datatype: O.some(makeNamedNode(XSD_STRING.value)),
           }),
         ],

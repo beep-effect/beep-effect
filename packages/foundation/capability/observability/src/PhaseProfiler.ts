@@ -26,7 +26,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Duration, Effect, Exit, Match, Metric } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -96,11 +96,10 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  * **Example** (Construct a PhaseProfile)
  *
  * ```ts import.meta.vitest name="Construct a PhaseProfile"
- * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  * import { PhaseProfile } from "@beep/observability"
  *
- * const durationMs = S.decodeUnknownSync(NonNegativeInt)(42)
+ * const durationMs = S.decodeUnknownSync(S.Natural)(42)
  * const profile = PhaseProfile.make({
  *   attributes: {},
  *   durationMs,
@@ -119,7 +118,7 @@ export class PhaseProfile extends S.Class<PhaseProfile>($I`PhaseProfile`)(
   {
     phase: S.NonEmptyString,
     outcome: PhaseOutcome,
-    durationMs: NonNegativeInt,
+    durationMs: S.Natural,
     attributes: S.Record(S.String, S.String),
   },
   $I.annote("PhaseProfile", {

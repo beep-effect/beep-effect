@@ -53,7 +53,6 @@ import {
   SupersedeEdgeFact,
 } from "@beep/epistemic-use-cases/server";
 import { PostgresDrizzle } from "@beep/postgres";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, O } from "@beep/utils";
@@ -62,6 +61,7 @@ import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { supersedeEdgeFactInTransaction, supersessionHeadOf } from "../EdgeAuthority/EdgeAuthority.repo.ts";
+import { PosInt } from "../internal/PosInt.ts";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type {
   ContradictionCandidateKey,
@@ -733,8 +733,8 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         total: pipe(
           totals,
           A.head,
-          O.map((row) => NonNegativeInt.make(row.total)),
-          O.getOrElse(() => NonNegativeInt.make(0))
+          O.map((row) => S.Natural.make(row.total)),
+          O.getOrElse(() => S.Natural.make(0))
         ),
       });
     }),

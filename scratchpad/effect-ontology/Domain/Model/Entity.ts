@@ -12,7 +12,7 @@ import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnc
 import { IRI } from "@beep/rdf";
 import type { ProvRecord } from "@beep/rdf/Prov";
 import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Hash, pipe, SchemaGetter, Tuple, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -98,8 +98,8 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
     encode: SchemaGetter.transform(
       (span: CanonicalEvidenceSpanEncoded): LegacyEvidenceSpanValue => ({
         text: span.quote,
-        startChar: NonNegativeInt.make(span.startChar),
-        endChar: NonNegativeInt.make(span.endChar),
+        startChar: S.Natural.make(span.startChar),
+        endChar: S.Natural.make(span.endChar),
         confidence: O.map(O.fromUndefinedOr(span.confidence), Confidence.make),
       })
     ),
@@ -373,7 +373,7 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
         description: "Ontology property values asserted for the entity.",
       })
     ),
-    chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Zero-based source chunk index when available." })
     ),
@@ -790,8 +790,8 @@ export const EvidenceSpanArbitrary = Arbitrary.schema(EvidenceSpanModel).pipe(
   Arbitrary.map((value) =>
     EvidenceSpanModel.make({
       ...value,
-      startChar: NonNegativeInt.make(0),
-      endChar: NonNegativeInt.make(value.quote.length),
+      startChar: S.Natural.make(0),
+      endChar: S.Natural.make(value.quote.length),
     })
   )
 );

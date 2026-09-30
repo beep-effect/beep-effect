@@ -10,7 +10,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,6 +21,7 @@ import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
@@ -62,7 +62,7 @@ export type Embedding = typeof Embedding.Type;
  */
 interface CacheEntry {
   readonly embedding: Embedding;
-  readonly createdAt: NonNegativeInt;
+  readonly createdAt: S.Natural;
   readonly lastAccessedAt: number;
 }
 
@@ -93,9 +93,11 @@ const embeddingCacheConfigMaxEntriesDefault = PosInt.make(10_000);
  * **Example** (Configure cache lifetime and capacity)
  *
  * ```ts
- * import { PosInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Duration } from "effect"
  * import { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = EmbeddingCacheConfig.make({
  *   ttl: Duration.minutes(30),
@@ -123,8 +125,10 @@ export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`Embed
  * **Example** (Configure an embedding cache)
  *
  * ```ts
- * import { PosInt } from "@beep/schema/Int"
+ * import * as S from "effect/Schema"
  * import type { EmbeddingCacheConfigInput } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config: EmbeddingCacheConfigInput = { maxEntries: PosInt.make(100) }
  * console.log(config)
@@ -231,7 +235,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
               const evicted = evictLRU(map);
               return HashMap.set(evicted, hash, {
                 embedding,
-                createdAt: NonNegativeInt.make(now),
+                createdAt: S.Natural.make(now),
                 lastAccessedAt: now,
               });
             });
@@ -380,7 +384,7 @@ export class PersistentEmbeddingCache extends Context.Service<
  */
 const PersistentEmbeddingEntry = S.Struct({
   vector: Embedding,
-  createdAt: NonNegativeInt,
+  createdAt: S.Natural,
 });
 
 const EmbeddingBlob = S.Struct({
@@ -490,7 +494,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
       embeddings: {
         [hash]: {
           vector: embedding,
-          createdAt: NonNegativeInt.make(now),
+          createdAt: S.Natural.make(now),
         },
       },
     };
@@ -553,7 +557,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
           const evicted = evictLRU(m);
           return HashMap.set(evicted, hash, {
             embedding: persisted.value,
-            createdAt: NonNegativeInt.make(now),
+            createdAt: S.Natural.make(now),
             lastAccessedAt: now,
           });
         });
@@ -576,7 +580,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
         const evicted = evictLRU(map);
         return HashMap.set(evicted, hash, {
           embedding,
-          createdAt: NonNegativeInt.make(now),
+          createdAt: S.Natural.make(now),
           lastAccessedAt: now,
         });
       });
@@ -721,7 +725,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
             const evicted = evictLRU(map);
             return HashMap.set(evicted, hash, {
               embedding,
-              createdAt: NonNegativeInt.make(now),
+              createdAt: S.Natural.make(now),
               lastAccessedAt: now,
             });
           });

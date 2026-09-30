@@ -1,4 +1,4 @@
-import { EmailString, NonNegativeInt } from "@beep/schema";
+import { EmailString } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
@@ -270,7 +270,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
   it.effect(
     "preserves encoded contact wire shape while decoding optional fields to Option",
     Effect.fnUntraced(function* () {
-      const submittedAt = NonNegativeInt.make(5_000);
+      const submittedAt = S.Natural.make(5_000);
       const encoded = {
         company: "OIP Builders",
         email: "builder@example.com",

@@ -7,7 +7,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
@@ -98,8 +98,8 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
 )(
   {
     type: S.tag("TextPositionSelector"),
-    start: NonNegativeInt,
-    end: NonNegativeInt,
+    start: S.Natural,
+    end: S.Natural,
   },
   $I.annote("WebAnnotationTextPositionSelector", {
     description: "Web Annotation text-position selector DTO.",

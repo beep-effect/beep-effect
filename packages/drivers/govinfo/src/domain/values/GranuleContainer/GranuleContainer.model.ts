@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { PosInt } from "../../../internal/PosInt.ts";
 import { NonNegativeInt64 } from "../GovinfoNumeric.ts";
 import { GranuleMetadata } from "../GranuleMetadata/index.ts";
 
@@ -78,7 +78,7 @@ export class GranuleContainer extends S.Class<GranuleContainer>($I`GranuleContai
     }),
 
     /** Numeric offset reported by older GovInfo granule list responses. */
-    offset: NonNegativeInt.annotateKey({
+    offset: S.Natural.annotateKey({
       description: "Numeric offset reported by older GovInfo granule list responses.",
     }),
 

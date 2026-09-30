@@ -20,7 +20,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Clock, Duration, Effect, Random, Tuple } from "effect";
 import { dual } from "effect/Function";
@@ -145,12 +145,12 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  * **Example** (Combine empty metrics monoid)
  *
  * ```ts import.meta.vitest name="Combine empty metrics monoid"
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const combined = ExecutionMetrics.combine(
  *   ExecutionMetrics.empty(),
- *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: NonNegativeInt.make(2) })
+ *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: S.Natural.make(2) })
  * )
  *
  * combined.nodesProcessed // => 2
@@ -161,13 +161,13 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  */
 export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetrics`)(
   {
-    cacheHits: NonNegativeInt,
-    cacheMisses: NonNegativeInt,
+    cacheHits: S.Natural,
+    cacheMisses: S.Natural,
     duration: S.Duration,
-    nodesCreated: NonNegativeInt,
-    nodesProcessed: NonNegativeInt,
+    nodesCreated: S.Natural,
+    nodesProcessed: S.Natural,
     /** Tokens consumed by LLM-backed operations. */
-    tokensConsumed: NonNegativeInt.annotateKey({
+    tokensConsumed: S.Natural.annotateKey({
       description: "Tokens consumed by LLM-backed operations.",
     }),
   },
@@ -177,12 +177,12 @@ export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetr
 ) {
   static readonly empty = () =>
     ExecutionMetrics.make({
-      cacheHits: NonNegativeInt.make(0),
-      cacheMisses: NonNegativeInt.make(0),
+      cacheHits: S.Natural.make(0),
+      cacheMisses: S.Natural.make(0),
       duration: Duration.zero,
-      nodesCreated: NonNegativeInt.make(0),
-      nodesProcessed: NonNegativeInt.make(0),
-      tokensConsumed: NonNegativeInt.make(0),
+      nodesCreated: S.Natural.make(0),
+      nodesProcessed: S.Natural.make(0),
+      tokensConsumed: S.Natural.make(0),
     });
 
   static readonly combine: {
@@ -192,12 +192,12 @@ export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetr
     2,
     (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics =>
       ExecutionMetrics.make({
-        cacheHits: NonNegativeInt.make(m1.cacheHits + m2.cacheHits),
-        cacheMisses: NonNegativeInt.make(m1.cacheMisses + m2.cacheMisses),
+        cacheHits: S.Natural.make(m1.cacheHits + m2.cacheHits),
+        cacheMisses: S.Natural.make(m1.cacheMisses + m2.cacheMisses),
         duration: Duration.sum(m1.duration, m2.duration),
-        nodesCreated: NonNegativeInt.make(m1.nodesCreated + m2.nodesCreated),
-        nodesProcessed: NonNegativeInt.make(m1.nodesProcessed + m2.nodesProcessed),
-        tokensConsumed: NonNegativeInt.make(m1.tokensConsumed + m2.tokensConsumed),
+        nodesCreated: S.Natural.make(m1.nodesCreated + m2.nodesCreated),
+        nodesProcessed: S.Natural.make(m1.nodesProcessed + m2.nodesProcessed),
+        tokensConsumed: S.Natural.make(m1.tokensConsumed + m2.tokensConsumed),
       })
   );
 }
@@ -270,11 +270,11 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
     complexity: S.tag("O(1)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: NonNegNum.annotateKey({
+    memoryCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: NonNegNum.annotateKey({
+    tokenCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -310,11 +310,11 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
     complexity: S.tag("O(n)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: NonNegNum.annotateKey({
+    memoryCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: NonNegNum.annotateKey({
+    tokenCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -350,11 +350,11 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
     complexity: S.tag("O(n log n)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: NonNegNum.annotateKey({
+    memoryCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: NonNegNum.annotateKey({
+    tokenCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -390,11 +390,11 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
     complexity: S.tag("O(n^2)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: NonNegNum.annotateKey({
+    memoryCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: NonNegNum.annotateKey({
+    tokenCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -453,8 +453,8 @@ export const OperationCost = Complexity.mapMembers(
       return {
         complexity: cost.complexity,
         estimatedTime: Duration.times(cost.estimatedTime, timeMultiplier),
-        memoryCost: NonNegNum.make(cost.memoryCost * nodeCount),
-        tokenCost: NonNegNum.make(cost.tokenCost * nodeCount),
+        memoryCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(cost.memoryCost * nodeCount),
+        tokenCost: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(cost.tokenCost * nodeCount),
       };
     });
 

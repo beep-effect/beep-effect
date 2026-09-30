@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   Cause,
@@ -246,14 +246,14 @@ type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "
  * **Example** (Describe a successful hook result)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { Testing } from "effect-claudecode"
  *
  * const result = Testing.RunHookResult.make({
  *   output: undefined,
  *   stdout: "",
  *   stderr: "",
- *   exitCode: NonNegativeInt.make(0),
+ *   exitCode: S.Natural.make(0),
  *   errorTag: undefined
  * })
  * ```
@@ -266,7 +266,7 @@ export class RunHookResult extends S.Class<RunHookResult>($I`RunHookResult`)(
     output: S.Unknown,
     stdout: S.String,
     stderr: S.String,
-    exitCode: NonNegativeInt,
+    exitCode: S.Natural,
     errorTag: S.UndefinedOr(S.String),
   },
   $I.annote("RunHookResult", {
@@ -354,7 +354,7 @@ export const runHookWithMockStdin: {
 
       const { exitCode, errorTag } = classifyExit(exit);
 
-      return RunHookResult.make({ output, stdout, stderr, exitCode: NonNegativeInt.make(exitCode), errorTag });
+      return RunHookResult.make({ output, stdout, stderr, exitCode: S.Natural.make(exitCode), errorTag });
     })
 );
 

@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 import { CurrentMcpDispatchAnchor, McpCallerIdentity, McpDispatchAnchor } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
@@ -78,7 +77,7 @@ describe("dispatch anchor", () => {
 
 describe("McpCallerIdentity", () => {
   it("defaults sessionId to None", () => {
-    const identity = McpCallerIdentity.make({ clientId: NonNegativeInt.make(3) });
+    const identity = McpCallerIdentity.make({ clientId: S.Natural.make(3) });
     assertNone(identity.sessionId);
   });
 });

@@ -15,7 +15,6 @@ import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/Assistant
 import { ChatActionError } from "@beep/agents-use-cases/public";
 import { decodeSafeDocumentUnsafe } from "@beep/md";
 import { Document, P as MdP, Text } from "@beep/md/Md.model";
-import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
@@ -25,6 +24,7 @@ import { ConfigProvider, Deferred, Duration, Effect, Layer, Match, pipe, Stream 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as S from "effect/Schema";
 import type * as P from "effect/Predicate";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
@@ -58,7 +58,7 @@ const userOnlyTimeline = ThreadTimeline.make({
   turns: [
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(1),
-      turnIndex: NonNegativeInt.make(0),
+      turnIndex: S.Natural.make(0),
       items: [TimelineMessageItem.make({ role: "user", content })],
       costMicros: 0,
     }),
@@ -70,7 +70,7 @@ const completedTimeline = ThreadTimeline.make({
     ...userOnlyTimeline.turns,
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(2),
-      turnIndex: NonNegativeInt.make(1),
+      turnIndex: S.Natural.make(1),
       items: [TimelineMessageItem.make({ role: "assistant", content })],
       costMicros: 0,
     }),

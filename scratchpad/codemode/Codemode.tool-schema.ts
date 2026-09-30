@@ -7,7 +7,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { NonNegativeInt } from "@beep/schema/Number";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str } from "@beep/utils";
 import { Effect, flow, HashSet, JsonPointer, Result, SchemaTransformation } from "effect";
@@ -36,8 +35,8 @@ interface Node {
   readonly enum: O.Option<ReadonlyArray<S.Json>>;
   readonly format: O.Option<string>;
   readonly items: O.Option<SubSchema>;
-  readonly maxItems: O.Option<NonNegativeInt>;
-  readonly minItems: O.Option<NonNegativeInt>;
+  readonly maxItems: O.Option<number>;
+  readonly minItems: O.Option<number>;
   readonly not: O.Option<boolean | JsonSchema>;
   readonly oneOf: O.Option<A.NonEmptyReadonlyArray<SubSchema>>;
   readonly properties: O.Option<Definitions>;
@@ -80,8 +79,8 @@ const Node = RawJsonSchema.pipe(
       enum: S.Array(S.Json).pipe(S.OptionFromOptionalKey),
       format: S.OptionFromOptionalKey(S.String),
       items: S.OptionFromOptionalKey(SubSchema),
-      maxItems: S.OptionFromOptionalKey(NonNegativeInt),
-      minItems: S.OptionFromOptionalKey(NonNegativeInt),
+      maxItems: S.OptionFromOptionalKey(S.Natural),
+      minItems: S.OptionFromOptionalKey(S.Natural),
       not: S.OptionFromOptionalKey(RawSubSchema),
       oneOf: S.OptionFromOptionalKey(SubSchemaList),
       properties: S.OptionFromOptionalKey(SubSchemaRecord),

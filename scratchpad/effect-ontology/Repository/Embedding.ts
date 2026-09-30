@@ -18,7 +18,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -35,6 +35,7 @@ import { SqlClient } from "effect/sql";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { EmbeddingRow } from "./schema.ts";
 import { Embeddings, embeddings } from "./schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -109,7 +110,7 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  * **Example** (Construct a hybrid-search hit)
  *
  * ```ts
- * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { EmbeddingEntityType, HybridSearchResult } from "@effect-ontology/Repository/Embedding"
  *
@@ -117,8 +118,8 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  *   entityId: "ada_lovelace",
  *   entityType: EmbeddingEntityType.Enum.entity,
  *   rrfScore: UnitInterval.make(0.8),
- *   vectorRank: NonNegativeInt.make(1),
- *   textRank: NonNegativeInt.make(2)
+ *   vectorRank: S.Natural.make(1),
+ *   textRank: S.Natural.make(2)
  * })
  * console.log(hit.rrfScore) // 0.8
  * ```
@@ -132,8 +133,8 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
     entityId: S.NonEmptyString,
     entityType: EmbeddingEntityType,
     rrfScore: UnitInterval,
-    vectorRank: NonNegativeInt,
-    textRank: NonNegativeInt,
+    vectorRank: S.Natural,
+    textRank: S.Natural,
   },
   $I.annote("HybridSearchResult", {
     description: "Repository entity and its reciprocal-rank-fusion search scores.",

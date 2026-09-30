@@ -1,7 +1,6 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
-import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
@@ -131,7 +130,7 @@ export const makeExtractOperationFixture = Effect.fn("TikaFixtures.makeExtractOp
       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
       name,
       relativePath,
-      sizeBytes: NonNegativeInt.make(bytes.length),
+      sizeBytes: S.Natural.make(bytes.length),
       ...(overrides.omitSourceContent === true ? {} : { bytes }),
     }),
     ...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(overrides.maxMaterializedBytes) }),

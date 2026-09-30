@@ -8,7 +8,7 @@ import {
   TextAnchor,
   TextAnchorVerificationReceipt,
 } from "@beep/provenance";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
@@ -18,6 +18,7 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { F1FixtureId } from "@/fixtures/F1";
@@ -86,7 +87,7 @@ const run = EvalRun.make({ ...runBody, id: Result.getOrThrow(makeRunId(runBody))
 const documentId = DocumentId.make(Str.repeat(64)("6"));
 const document = SourceDocument.make({
   acquired: ProvenanceEventId.make(Str.repeat(64)("7")),
-  bytes: NonNegativeInt.make(12),
+  bytes: S.Natural.make(12),
   id: documentId,
   mediaType: "text/markdown",
   origin: Origin.cases.Fixture.make({
@@ -132,7 +133,7 @@ const metricRun = (w1: ReadonlyArray<CorpusPaperId>): EvalRun => {
 const w1Document = (id: DocumentId, paper: CorpusPaperId): SourceDocument =>
   SourceDocument.make({
     acquired: ProvenanceEventId.make(id),
-    bytes: NonNegativeInt.make(32),
+    bytes: S.Natural.make(32),
     id,
     mediaType: "application/pdf",
     origin: Origin.cases.W1Paper.make({
@@ -174,12 +175,12 @@ const hostedOutcome = (
   const entityClaims = A.map(entities, (entity) => {
     const body = ClaimBody.cases.Entity.make({
       cluster: O.some(entity.cluster),
-      endChar: NonNegativeInt.make(entity.endChar),
+      endChar: S.Natural.make(entity.endChar),
       entityType: "entity",
       kind: "Entity",
       label: entity.quote,
       quote: entity.quote,
-      startChar: NonNegativeInt.make(entity.startChar),
+      startChar: S.Natural.make(entity.startChar),
     });
     const id = Result.getOrThrow(
       makeClaimId({ body, chunk, document: source.id, method: "hosted-langextract", model: hosted })
@@ -200,12 +201,12 @@ const hostedOutcome = (
   const object = A.getUnsafe(entityClaims, 1);
   const relationEntity = A.headNonEmpty(entities);
   const relationBody = ClaimBody.cases.Relation.make({
-    endChar: NonNegativeInt.make(relationEntity.endChar),
+    endChar: S.Natural.make(relationEntity.endChar),
     kind: "Relation",
     object: object.id,
     predicate,
     quote: relationEntity.quote,
-    startChar: NonNegativeInt.make(relationEntity.startChar),
+    startChar: S.Natural.make(relationEntity.startChar),
     subject: subject.id,
   });
   const relationId = Result.getOrThrow(
@@ -251,11 +252,11 @@ const goldFiles = (
     labels: A.map(entities, (entity) =>
       GoldEntityLabel.make({
         cluster: entity.cluster,
-        endChar: NonNegativeInt.make(entity.endChar),
+        endChar: S.Natural.make(entity.endChar),
         entityType: "entity",
         label: entity.quote,
         quote: entity.quote,
-        startChar: NonNegativeInt.make(entity.startChar),
+        startChar: S.Natural.make(entity.startChar),
         verified: true,
       })
     ),
@@ -267,16 +268,16 @@ const goldFiles = (
   GoldFile.make({
     labels: [
       GoldRelationLabel.make({
-        endChar: NonNegativeInt.make(A.headNonEmpty(entities).endChar),
+        endChar: S.Natural.make(A.headNonEmpty(entities).endChar),
         object: A.getUnsafe(entities, 1).quote,
-        objectEndChar: NonNegativeInt.make(A.getUnsafe(entities, 1).endChar),
-        objectStartChar: NonNegativeInt.make(A.getUnsafe(entities, 1).startChar),
+        objectEndChar: S.Natural.make(A.getUnsafe(entities, 1).endChar),
+        objectStartChar: S.Natural.make(A.getUnsafe(entities, 1).startChar),
         predicate,
         quote: A.headNonEmpty(entities).quote,
-        startChar: NonNegativeInt.make(A.headNonEmpty(entities).startChar),
+        startChar: S.Natural.make(A.headNonEmpty(entities).startChar),
         subject: A.headNonEmpty(entities).quote,
-        subjectEndChar: NonNegativeInt.make(A.headNonEmpty(entities).endChar),
-        subjectStartChar: NonNegativeInt.make(A.headNonEmpty(entities).startChar),
+        subjectEndChar: S.Natural.make(A.headNonEmpty(entities).endChar),
+        subjectStartChar: S.Natural.make(A.headNonEmpty(entities).startChar),
         verified: true,
       }),
     ],

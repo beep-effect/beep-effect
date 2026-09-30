@@ -8,7 +8,6 @@
 import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   Cause,
@@ -88,6 +87,7 @@ import {
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
 
@@ -147,8 +147,8 @@ const createManifest = Effect.fn("HttpServer.createManifest")(function* (request
           storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
             Effect.map((content) =>
               O.getOrElse(
-                O.map(content, (value) => NonNegativeInt.make(new TextEncoder().encode(value).length)),
-                () => NonNegativeInt.make(0)
+                O.map(content, (value) => S.Natural.make(new TextEncoder().encode(value).length)),
+                () => S.Natural.make(0)
               )
             )
           ),
@@ -523,9 +523,9 @@ export const TimelineRouter = HttpRouter.addAll([
       return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)(
         TimelineClaimsResponse.make({
           claims: validClaims,
-          total: NonNegativeInt.make(total),
+          total: S.Natural.make(total),
           limit: PosInt.make(limit),
-          offset: NonNegativeInt.make(offset),
+          offset: S.Natural.make(offset),
           hasMore,
         })
       );
@@ -582,8 +582,8 @@ export const TimelineRouter = HttpRouter.addAll([
         ArticleDetailResponse.make({
           article: yield* articleRowToArticleSummary(article),
           claims: claimsWithRank,
-          entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
-          conflictCount: NonNegativeInt.make(conflictCounts.total),
+          entityCount: S.Natural.make(HashSet.size(uniqueSubjects)),
+          conflictCount: S.Natural.make(conflictCounts.total),
         })
       );
     })
@@ -604,8 +604,8 @@ export const TimelineRouter = HttpRouter.addAll([
       return yield* HttpServerResponse.schemaJson(ConflictsResponse)(
         ConflictsResponse.make({
           conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict),
-          total: NonNegativeInt.make(counts.total),
-          pendingCount: NonNegativeInt.make(counts.pending),
+          total: S.Natural.make(counts.total),
+          pendingCount: S.Natural.make(counts.pending),
         })
       );
     })
@@ -749,7 +749,7 @@ export const SearchRouter = HttpRouter.addAll([
             ClaimSearchResponse.make({
               query: request.query,
               claims: validClaims,
-              total: NonNegativeInt.make(filteredClaims.length),
+              total: S.Natural.make(filteredClaims.length),
               limit,
               offset,
               hasMore,
@@ -838,7 +838,7 @@ export const SearchRouter = HttpRouter.addAll([
                 iri,
                 label,
                 types,
-                claimCount: NonNegativeInt.make(entity.claimCount),
+                claimCount: S.Natural.make(entity.claimCount),
                 topClaims: [],
               });
             })
@@ -848,7 +848,7 @@ export const SearchRouter = HttpRouter.addAll([
             EntitySearchResponse.make({
               query: request.query,
               entities,
-              total: NonNegativeInt.make(entities.length),
+              total: S.Natural.make(entities.length),
             })
           );
         }),
@@ -995,18 +995,18 @@ export const SearchRouter = HttpRouter.addAll([
 
               return ArticleSearchResult.make({
                 article: yield* articleRowToArticleSummary(article),
-                claimCount: NonNegativeInt.make(claims.length),
-                conflictCount: NonNegativeInt.make(conflictCounts.total),
+                claimCount: S.Natural.make(claims.length),
+                conflictCount: S.Natural.make(conflictCounts.total),
               });
             })
           );
 
-          const total = NonNegativeInt.make(filtered.length);
+          const total = S.Natural.make(filtered.length);
 
           return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)(
             ArticleSearchResponse.make({
               articles: results,
-              total: NonNegativeInt.make(total),
+              total: S.Natural.make(total),
               limit,
               offset,
               hasMore,

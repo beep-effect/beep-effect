@@ -10,7 +10,6 @@ import {
   Utf16TextRange,
 } from "@beep/langextract/VerifiedSpan";
 import { Contract } from "@beep/nlp/Handoff";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -38,8 +37,8 @@ describe("verified-span hostile-text contract", () => {
       const source = "A😀B";
       const converted = yield* convertTextOffsetRange(source)(
         TextOffsetRange.make({
-          end: NonNegativeInt.make(2),
-          start: NonNegativeInt.make(1),
+          end: S.Natural.make(2),
+          start: S.Natural.make(1),
           unit: "unicode-code-point",
         })
       );
@@ -213,8 +212,8 @@ describe("verified-span hostile-text contract", () => {
       const first = "See 410 U.S.\f";
       const second = "113 for the rule.";
       const source = yield* reconstructSourceText([
-        RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: first }),
-        RawTextChunk.make({ startChar: NonNegativeInt.make(Str.length(first)), text: second }),
+        RawTextChunk.make({ startChar: S.Natural.make(0), text: first }),
+        RawTextChunk.make({ startChar: S.Natural.make(Str.length(first)), text: second }),
       ]);
       const anchor = yield* locateRawText(source, "410 U.S. 113");
 
@@ -232,8 +231,8 @@ describe("verified-span hostile-text contract", () => {
     "fails malformed reconstruction without inventing a separator",
     Effect.fnUntraced(function* () {
       const failure = yield* reconstructSourceText([
-        RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: "page one\f" }),
-        RawTextChunk.make({ startChar: NonNegativeInt.make(8), text: "page two" }),
+        RawTextChunk.make({ startChar: S.Natural.make(0), text: "page one\f" }),
+        RawTextChunk.make({ startChar: S.Natural.make(8), text: "page two" }),
       ]).pipe(Effect.flip);
 
       expect(failure.reason).toBe("malformed-source");
@@ -258,7 +257,7 @@ describe("verified-span hostile-text contract", () => {
           GroundedExtraction.cases.match_fuzzy.make({
             label: "quotation",
             matchedText: "“Affirmed.”",
-            span: Contract.Span.make({ end: NonNegativeInt.make(27), start: NonNegativeInt.make(16) }),
+            span: Contract.Span.make({ end: S.Natural.make(27), start: S.Natural.make(16) }),
             text: '"Affrmed."',
           }),
         ],
@@ -267,7 +266,7 @@ describe("verified-span hostile-text contract", () => {
 
       expect(strict).toEqual([{ endChar: 27, quote: "“Affirmed.”", startChar: 16 }]);
       expect(fuzzyFailure.reason).toBe("not-found");
-      assertSome(fuzzyFailure.candidateIndex, NonNegativeInt.make(0));
+      assertSome(fuzzyFailure.candidateIndex, S.Natural.make(0));
     })
   );
 
@@ -304,21 +303,21 @@ describe("verified-span hostile-text contract", () => {
     "validates both declared offset units against source boundaries",
     Effect.fnUntraced(function* () {
       const emptySource = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: NonNegativeInt.make(1), start: NonNegativeInt.make(0), unit: "utf16-code-unit" }),
+        TextOffsetRange.make({ end: S.Natural.make(1), start: S.Natural.make(0), unit: "utf16-code-unit" }),
         ""
       ).pipe(Effect.flip);
       const utf16Range = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: NonNegativeInt.make(3), start: NonNegativeInt.make(1), unit: "utf16-code-unit" }),
+        TextOffsetRange.make({ end: S.Natural.make(3), start: S.Natural.make(1), unit: "utf16-code-unit" }),
         "A😀B"
       );
       const splitSurrogate = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: NonNegativeInt.make(2), start: NonNegativeInt.make(1), unit: "utf16-code-unit" }),
+        TextOffsetRange.make({ end: S.Natural.make(2), start: S.Natural.make(1), unit: "utf16-code-unit" }),
         "A😀B"
       ).pipe(Effect.flip);
       const missingCodePoint = yield* convertTextOffsetRange(
         TextOffsetRange.make({
-          end: NonNegativeInt.make(4),
-          start: NonNegativeInt.make(1),
+          end: S.Natural.make(4),
+          start: S.Natural.make(1),
           unit: "unicode-code-point",
         }),
         "A😀B"
@@ -341,7 +340,7 @@ describe("verified-span hostile-text contract", () => {
       });
       const emptyReconstruction = yield* reconstructSourceText([]).pipe(Effect.flip);
       const oversizedReconstruction = yield* reconstructSourceText([
-        RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: oversizedSource }),
+        RawTextChunk.make({ startChar: S.Natural.make(0), text: oversizedSource }),
       ]).pipe(Effect.flip);
       const emptyBatch = yield* locateGroundedExtractions("source")([]);
       const absentBatchSource = yield* locateGroundedExtractions([extraction], "").pipe(Effect.flip);
@@ -358,15 +357,15 @@ describe("verified-span hostile-text contract", () => {
   it("rejects empty and reversed ranges at construction and decode boundaries", () => {
     expect(() =>
       TextOffsetRange.make({
-        end: NonNegativeInt.make(1),
-        start: NonNegativeInt.make(1),
+        end: S.Natural.make(1),
+        start: S.Natural.make(1),
         unit: "utf16-code-unit",
       })
     ).toThrow();
     expect(() =>
       Utf16TextRange.make({
-        endChar: NonNegativeInt.make(1),
-        startChar: NonNegativeInt.make(2),
+        endChar: S.Natural.make(1),
+        startChar: S.Natural.make(2),
       })
     ).toThrow();
     pipe(
@@ -409,8 +408,8 @@ it.effect("encodes TextOffsetRange through its generation link", () =>
     if (link === undefined || link.transformation._tag !== "Transformation")
       throw new Error("Missing generation transformation");
     const value = TextOffsetRange.make({
-      start: NonNegativeInt.make(1),
-      end: NonNegativeInt.make(4),
+      start: S.Natural.make(1),
+      end: S.Natural.make(4),
       unit: "utf16-code-unit",
     });
     const codec = S.make<S.Codec<TextOffsetRange, unknown>>(
@@ -429,7 +428,7 @@ it.effect("encodes Utf16TextRange through its generation link", () =>
     const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
     if (link === undefined || link.transformation._tag !== "Transformation")
       throw new Error("Missing generation transformation");
-    const value = Utf16TextRange.make({ startChar: NonNegativeInt.make(1), endChar: NonNegativeInt.make(4) });
+    const value = Utf16TextRange.make({ startChar: S.Natural.make(1), endChar: S.Natural.make(4) });
     const codec = S.make<S.Codec<Utf16TextRange, unknown>>(
       SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(Utf16TextRange.ast), link.transformation)
     );

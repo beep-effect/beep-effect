@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, NonNegNum, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Effect, identity, Number as Num, Order } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -404,8 +404,8 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1>($I`S
     sessionId: Sha256Hex,
     target: SequenceBreakTarget,
     notifierRev: S.NonEmptyString,
-    claimedEpochMs: NonNegativeInt,
-    expiresEpochMs: NonNegativeInt,
+    claimedEpochMs: S.Natural,
+    expiresEpochMs: S.Natural,
   }).check(
     S.makeFilter((input) => isGreaterThanOrEqualToNumber(input.expiresEpochMs, input.claimedEpochMs), {
       identifier: "SequenceBreakDampingIntervalInvariant",
@@ -424,8 +424,8 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1>($I`S
           decode: (value) =>
             SequenceBreakDampingV1.make({
               ...value,
-              claimedEpochMs: NonNegativeInt.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
-              expiresEpochMs: NonNegativeInt.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
+              claimedEpochMs: S.Natural.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
+              expiresEpochMs: S.Natural.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
             }),
           encode: identity,
         })
@@ -488,7 +488,7 @@ export class SequenceBreakNotificationV1 extends S.Class<SequenceBreakNotificati
     target: SequenceBreakTarget,
     waitReason: HookPulseWaitReason,
     stage: SequenceBreakNotificationStage,
-    ageMs: NonNegNum,
+    ageMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     evidenceTier: S.Literal("derived").pipe(S.withConstructorDefault(Effect.succeed("derived"))),
     transport: SequenceBreakNotificationTransport,
     delivery: SequenceBreakDeliveryOutcome,

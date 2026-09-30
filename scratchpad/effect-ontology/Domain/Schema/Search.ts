@@ -6,12 +6,12 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt } from "@beep/schema";
 import { SchemaGetter, Effect } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
 import { ArticleSummary, ClaimRank, ClaimWithRank, OrderedUtcRange } from "./Timeline.ts";
 import * as A from "effect/Array";
+import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Search");
 
@@ -26,7 +26,7 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
 );
 
 const claimSearchRequestLimitDefault = PosInt.make(20);
-const claimSearchRequestOffsetDefault = NonNegativeInt.make(0);
+const claimSearchRequestOffsetDefault = S.Natural.make(0);
 /**
  * Body for full-text and faceted claim search.
  *
@@ -54,7 +54,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
     dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(S.withConstructorDefault(Effect.succeedNone)),
     rank: S.OptionFromOptionalKey(ClaimRank).pipe(S.withConstructorDefault(Effect.succeedNone)),
     limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(claimSearchRequestLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(claimSearchRequestLimitDefault))),
-    offset: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(claimSearchRequestOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(claimSearchRequestOffsetDefault))),
+    offset: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(claimSearchRequestOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(claimSearchRequestOffsetDefault))),
   },
   $I.annote("ClaimSearchRequest", {
     description: "Claim-search body with normalized filters and constrained pagination defaults.",
@@ -64,12 +64,12 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
 const PredicateFacet = S.Struct({
   iri: IRI,
   label: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  count: NonNegativeInt,
+  count: S.Natural,
 });
 
 const SourceFacet = S.Struct({
   name: S.NonEmptyString,
-  count: NonNegativeInt,
+  count: S.Natural,
 });
 
 const claimSearchFacetsPredicatesDefault = A.empty<typeof PredicateFacet.Type>();
@@ -108,9 +108,9 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
   {
     query: S.NonEmptyString,
     claims: S.Array(ClaimWithRank).pipe(S.withConstructorDefault(Effect.succeed(claimSearchResponseClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(claimSearchResponseClaimsDefault))),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
     facets: S.OptionFromOptionalKey(ClaimSearchFacets).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
@@ -182,7 +182,7 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
     iri: IRI,
     label: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     types: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(entitySearchResultTypesDefault)), S.withDecodingDefaultType(Effect.succeed(entitySearchResultTypesDefault))),
-    claimCount: NonNegativeInt,
+    claimCount: S.Natural,
     topClaims: S.Array(EntityTopClaim).pipe(S.withConstructorDefault(Effect.succeed(entitySearchResultTopClaimsDefault)), S.withDecodingDefaultType(Effect.succeed(entitySearchResultTopClaimsDefault))),
   },
   $I.annote("EntitySearchResult", {
@@ -214,7 +214,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
   {
     query: S.NonEmptyString,
     entities: S.Array(EntitySearchResult).pipe(S.withConstructorDefault(Effect.succeed(entitySearchResponseEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(entitySearchResponseEntitiesDefault))),
-    total: NonNegativeInt,
+    total: S.Natural,
   },
   $I.annote("EntitySearchResponse", {
     description: "Entity-search response with an always-present result collection and non-negative total.",
@@ -306,7 +306,7 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
 ) {}
 
 const articleSearchRequestLimitDefault = PosInt.make(20);
-const articleSearchRequestOffsetDefault = NonNegativeInt.make(0);
+const articleSearchRequestOffsetDefault = S.Natural.make(0);
 /**
  * Body for searching source articles.
  *
@@ -330,7 +330,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(S.withConstructorDefault(Effect.succeedNone)),
     limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(articleSearchRequestLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(articleSearchRequestLimitDefault))),
-    offset: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(articleSearchRequestOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(articleSearchRequestOffsetDefault))),
+    offset: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(articleSearchRequestOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(articleSearchRequestOffsetDefault))),
   },
   $I.annote("ArticleSearchRequest", {
     description: "Article-search body with normalized filters and constrained pagination defaults.",
@@ -365,8 +365,8 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
 export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`ArticleSearchResult`)(
   {
     article: ArticleSummary,
-    claimCount: NonNegativeInt,
-    conflictCount: NonNegativeInt,
+    claimCount: S.Natural,
+    conflictCount: S.Natural,
   },
   $I.annote("ArticleSearchResult", {
     description: "Article-search hit with non-negative extracted-claim and pending-conflict counts.",
@@ -398,9 +398,9 @@ const articleSearchResponseArticlesDefault = A.empty<ArticleSearchResult>();
 export class ArticleSearchResponse extends S.Class<ArticleSearchResponse>($I`ArticleSearchResponse`)(
   {
     articles: S.Array(ArticleSearchResult).pipe(S.withConstructorDefault(Effect.succeed(articleSearchResponseArticlesDefault)), S.withDecodingDefaultType(Effect.succeed(articleSearchResponseArticlesDefault))),
-    total: NonNegativeInt,
+    total: S.Natural,
     limit: PosInt,
-    offset: NonNegativeInt,
+    offset: S.Natural,
     hasMore: S.Boolean,
   },
   $I.annote("ArticleSearchResponse", {

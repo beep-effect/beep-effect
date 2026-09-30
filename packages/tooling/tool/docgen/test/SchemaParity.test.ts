@@ -3,7 +3,7 @@ import * as Core from "@beep/repo-docgen/Core";
 import * as Domain from "@beep/repo-docgen/Domain";
 import * as Printer from "@beep/repo-docgen/Printer";
 import * as ProofManifest from "@beep/repo-docgen/ProofManifest";
-import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -43,7 +43,7 @@ describe("schema parity", () => {
     const file = ProofManifest.DocgenProofManifestFile.make({
       path: "src/index.ts",
       sha256: Sha256Hex.make("0".repeat(64)),
-      bytes: NonNegativeInt.make(128),
+      bytes: S.Natural.make(128),
     });
 
     expect(Result.getOrThrow(encodeUnknownProofManifestDocgenProofManifestFileResult(file))).toEqual({

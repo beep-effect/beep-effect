@@ -8,12 +8,13 @@
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Config, ConfigProvider, Context, Duration, Effect, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { RetryPolicy } from "./Retry.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Config");
 

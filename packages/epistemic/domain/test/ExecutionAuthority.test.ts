@@ -37,7 +37,6 @@ import {
   verifyFrozenGrantSetDigest,
   verifyOutcomeBinding,
 } from "@beep/epistemic-domain";
-import { NonNegativeInt } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -147,7 +146,7 @@ const decisionContent = (input: {
     policyRevision: revision,
     prevHash: input.prevHash,
     runKey: ExecutionRunKey.make(input.runKey ?? "b".repeat(64)),
-    seq: NonNegativeInt.make(input.seq),
+    seq: S.Natural.make(input.seq),
     sinkClass: "network-egress",
     verdict: "allowed",
   }) as const;
