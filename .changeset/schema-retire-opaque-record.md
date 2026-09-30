@@ -68,11 +68,15 @@ the transient repo-cli rules `unknown-json-retirement` and
 `opaque-record-retirement`. This PR applies `opaque-record-retirement` to
 packages, apps, scratchpad and infra, tooling first (147 files, 0 quarantined;
 the 4 residue sites are the archival research probe
-`goals/effect-schema-parity/research/tools/facet-probe.ts`, left as recorded
+`goals/effect-schema-parity/research/tools/facet-probe.ts`, kept unchanged as
+non-runnable evidence: it compares the retired wrappers against upstream, so it
+imports the deleted `@beep/schema/Opaque` and no longer runs; its recorded
+output in `goals/effect-schema-parity/research/2026-09-29-p3-gates.md` is the
 evidence) and removes both rules in its last commit.
 
-- `Defect(options)` becomes `S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))`
-  at the owning field, so `S.toEquivalence` of the owning error keeps ignoring
+- `Defect(options)` becomes `S.Defect(options).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))`
+  at the owning field (the shared always-true thunk; see the
+  `schema-always-equivalent` changeset), so `S.toEquivalence` of the owning error keeps ignoring
   the cause; `OpaqueUnknown` becomes the same override over `S.Unknown`. Encoded
   JSON is unchanged. repo-cli's 44 cause fields share that composition as one
   internal `OpaqueDefect` schema, and the epistemic use-case errors share their
