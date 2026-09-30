@@ -1770,7 +1770,6 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ],
@@ -1779,7 +1778,6 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ]
