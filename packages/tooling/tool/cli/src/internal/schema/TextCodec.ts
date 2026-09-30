@@ -15,7 +15,6 @@
 import { Effect, SchemaIssue } from "effect";
 import * as Toml from "effect/encoding/Toml";
 import * as Yaml from "effect/encoding/Yaml";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const parseText =
@@ -26,7 +25,7 @@ const parseText =
       catch: (cause) =>
         new S.SchemaError(
           new SchemaIssue.InvalidValue({
-            message: `Invalid ${format} input (${P.isError(cause) ? cause.message : String(cause)}).`,
+            message: `Invalid ${format} input (${String(cause)}).`,
           })
         ),
     });
