@@ -249,7 +249,7 @@ export const wrapArray = <T>(value: T | ReadonlyArray<T>): readonly T[] =>
 export class ResponseHeader extends S.Class<ResponseHeader>($I`ResponseHeader`)(
   {
     name: S.String,
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ResponseHeader", {
     description: "A response header.",

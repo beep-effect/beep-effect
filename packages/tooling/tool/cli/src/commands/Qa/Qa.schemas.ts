@@ -122,16 +122,34 @@ export const DurationSeconds = S.Int.check(
  */
 export class QaRecordOptions extends S.Class<QaRecordOptions>($I`QaRecordOptions`)(
   {
-    app: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
-    beacon: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    budgetMb: BudgetMib.pipe(SchemaUtils.withKeyDefaults(20)),
-    cursor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    duration: S.Option(DurationSeconds).pipe(SchemaUtils.withNoneDefault),
-    lane: CaptureLane.pipe(SchemaUtils.withKeyDefaults(CaptureLane.Enum.playwright)),
-    port: CollectorBindPort.pipe(SchemaUtils.withKeyDefaults(43117)),
-    round: S.Option(RoundNumber).pipe(SchemaUtils.withNoneDefault),
-    scenario: S.String.pipe(SchemaUtils.withKeyDefaults(DEFAULT_SCENARIO_PATH)),
-    url: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
+    app: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    beacon: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    budgetMb: BudgetMib.pipe(
+      S.withConstructorDefault(Effect.succeed(20)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(20))
+    ),
+    cursor: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    duration: S.Option(DurationSeconds).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lane: CaptureLane.pipe(
+      S.withConstructorDefault(Effect.succeed(CaptureLane.Enum.playwright)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(CaptureLane.Enum.playwright))
+    ),
+    port: CollectorBindPort.pipe(
+      S.withConstructorDefault(Effect.succeed(43117)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(43117))
+    ),
+    round: S.Option(RoundNumber).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    scenario: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_SCENARIO_PATH)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_SCENARIO_PATH))
+    ),
+    url: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("QaRecordOptions", {
     description: "Validated options accepted by `beep qa record`.",
@@ -161,13 +179,13 @@ export class QaRecordOptions extends S.Class<QaRecordOptions>($I`QaRecordOptions
  */
 export class QaExtractOptions extends S.Class<QaExtractOptions>($I`QaExtractOptions`)(
   {
-    budgetMb: S.Option(BudgetMib).pipe(SchemaUtils.withNoneDefault),
+    budgetMb: S.Option(BudgetMib).pipe(S.withConstructorDefault(Effect.succeedNone)),
     dryRun: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
-    rules: S.Option(ExtractionRuleSet).pipe(SchemaUtils.withNoneDefault),
-    session: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
+    rules: S.Option(ExtractionRuleSet).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    session: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("QaExtractOptions", {
     description: "Validated options accepted by `beep qa extract`.",
@@ -192,7 +210,7 @@ export class QaExtractOptions extends S.Class<QaExtractOptions>($I`QaExtractOpti
  */
 export class QaReportOptions extends S.Class<QaReportOptions>($I`QaReportOptions`)(
   {
-    session: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
+    session: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("QaReportOptions", {
     description: "Validated options accepted by `beep qa report`.",
@@ -217,7 +235,7 @@ export class QaReportOptions extends S.Class<QaReportOptions>($I`QaReportOptions
  */
 export class QaMarkOptions extends S.Class<QaMarkOptions>($I`QaMarkOptions`)(
   {
-    data: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
+    data: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     label: S.String.check(
       S.isMinLength(1, {
         identifier: $I`QaMarkLabelNonEmptyCheck`,
@@ -251,7 +269,7 @@ export class QaMarkOptions extends S.Class<QaMarkOptions>($I`QaMarkOptions`)(
 export class QaJudgePackOptions extends S.Class<QaJudgePackOptions>($I`QaJudgePackOptions`)(
   {
     round: RoundNumber,
-    surface: S.Option(S.String).pipe(SchemaUtils.withNoneDefault),
+    surface: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("QaJudgePackOptions", {
     description: "Validated options accepted by `beep qa judge-pack`.",

@@ -8,7 +8,7 @@
 import { $NlpId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { thunkFalse, thunkTrue } from "@beep/utils";
-import { Brand } from "effect";
+import { Brand, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -222,20 +222,20 @@ export class Token extends S.Class<Token>($I`Token`)(
     index: TokenIndex,
     start: CharPosition,
     end: CharPosition,
-    pos: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    lemma: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    stem: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    normal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    prefix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    suffix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    case: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    uniqueId: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
-    abbrevFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    contractionFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    stopWordFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    precedingSpaces: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    pos: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    lemma: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stem: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    normal: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shape: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    prefix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    suffix: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    case: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    uniqueId: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    abbrevFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    contractionFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stopWordFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    precedingSpaces: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     tags: S.Array(S.String),
   },
   $I.annote("Token", {

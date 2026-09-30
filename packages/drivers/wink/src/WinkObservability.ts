@@ -8,7 +8,6 @@
 import { $WinkId } from "@beep/identity";
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import { observeWorkflow, summarizeCause } from "@beep/observability";
-import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Inspectable, Metric } from "effect";
 import { dual } from "effect/Function";
@@ -81,8 +80,14 @@ export class WinkWorkflowObservationOptions extends S.Class<WinkWorkflowObservat
   $I`WinkWorkflowObservationOptions`
 )(
   {
-    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
-    metricAttributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
+    attributes: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyStringRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringRecord))
+    ),
+    metricAttributes: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyStringRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringRecord))
+    ),
     name: S.String,
   },
   $I.annote("WinkWorkflowObservationOptions", {
@@ -111,9 +116,15 @@ export class WinkWorkflowObservationOptions extends S.Class<WinkWorkflowObservat
  */
 export class WinkToolObservationOptions extends S.Class<WinkToolObservationOptions>($I`WinkToolObservationOptions`)(
   {
-    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
+    attributes: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(emptyStringRecord)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyStringRecord))
+    ),
     operation: S.String,
-    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    retryable: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     toolName: S.String,
   },
   $I.annote("WinkToolObservationOptions", {

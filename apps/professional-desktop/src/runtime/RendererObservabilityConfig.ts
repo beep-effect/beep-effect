@@ -7,7 +7,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogLevel } from "@beep/schema/Logs";
+import * as LogLevel from "effect/LogLevel";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("runtime/RendererObservabilityConfig");
@@ -46,7 +46,7 @@ export class RendererObservabilityConfig extends S.Class<RendererObservabilityCo
     buildCommit: S.OptionFromOptional(S.NonEmptyString),
     deploymentEnvironment: S.NonEmptyString,
     launchId: S.NonEmptyString,
-    logLevel: LogLevel,
+    logLevel: S.Literals(LogLevel.values),
     otlpUrl: S.OptionFromOptional(S.NonEmptyString),
     qaSessionId: S.NonEmptyString,
   },

@@ -4,9 +4,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 import { Model, pg } from "./Kit.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("beep/Shared");
 
@@ -39,7 +39,7 @@ const $I = $ScratchpadId.create("beep/Shared");
  */
 export class EmptyResponse extends Model<EmptyResponse>("EmptyResponse")(
   {
-    acknowledged: SchemaUtils.withKeyDefaults(S.Boolean, true).pipe(pg.boolean(), pg.columnName("acknowledged")),
+    acknowledged: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)), pg.boolean(), pg.columnName("acknowledged")),
   },
   $I.annote("EmptyResponse", {
     description: "200 response with no body for endpoints that return nothing meaningful.",

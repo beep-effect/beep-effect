@@ -20,7 +20,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, Match, Order, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import { dual, flow } from "effect/Function";
@@ -128,7 +128,7 @@ export class YeetMonitorReviewComment extends S.TaggedClass<YeetMonitorReviewCom
     line: S.OptionFromNullOr(S.Finite),
     path: S.String,
     url: S.String,
-    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    authorType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMonitorReviewComment", {
     description: "Normalized GitHub inline review comment streamed during Yeet monitoring.",
@@ -164,7 +164,7 @@ export class YeetMonitorIssueComment extends S.TaggedClass<YeetMonitorIssueComme
     createdAt: S.String,
     id: S.Finite,
     url: S.String,
-    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    authorType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMonitorIssueComment", {
     description: "Normalized GitHub pull request conversation comment streamed during Yeet monitoring.",
@@ -215,7 +215,7 @@ export class YeetMonitorReviewBody extends S.TaggedClass<YeetMonitorReviewBody>(
     state: S.String,
     submittedAt: S.String,
     url: S.String,
-    authorType: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    authorType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMonitorReviewBody", {
     description: "Normalized GitHub pull request review body streamed during Yeet monitoring.",

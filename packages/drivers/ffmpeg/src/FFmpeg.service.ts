@@ -7,7 +7,7 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $FfmpegId } from "@beep/identity/packages";
-import { Fn, SchemaUtils } from "@beep/schema";
+import { Fn } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Number as N, Order, Path, pipe, Ref, Stream } from "effect";
@@ -75,13 +75,13 @@ type FFmpegConfigInputOptions = (typeof FFmpegConfigInput)["~type.make.in"];
 
 class FfprobeStream extends S.Class<FfprobeStream>($I`FfprobeStream`)(
   {
-    avg_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    duration: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(VideoDimension).pipe(SchemaUtils.withNoneDefault),
-    nb_frames: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    r_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    start_time: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(VideoDimension).pipe(SchemaUtils.withNoneDefault),
+    avg_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    duration: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    height: S.OptionFromOptionalKey(VideoDimension).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    nb_frames: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    r_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    start_time: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    width: S.OptionFromOptionalKey(VideoDimension).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("FfprobeStream", {
     description: "Internal ffprobe stream payload.",
@@ -90,8 +90,8 @@ class FfprobeStream extends S.Class<FfprobeStream>($I`FfprobeStream`)(
 
 class FfprobeFormat extends S.Class<FfprobeFormat>($I`FfprobeFormat`)(
   {
-    duration: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
-    start_time: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
+    duration: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    start_time: S.OptionFromOptionalKey(NumberOrString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("FfprobeFormat", {
     description: "Internal ffprobe format payload.",
@@ -100,7 +100,7 @@ class FfprobeFormat extends S.Class<FfprobeFormat>($I`FfprobeFormat`)(
 
 class FfprobeOutput extends S.Class<FfprobeOutput>($I`FfprobeOutput`)(
   {
-    format: S.OptionFromOptionalKey(FfprobeFormat).pipe(SchemaUtils.withNoneDefault),
+    format: S.OptionFromOptionalKey(FfprobeFormat).pipe(S.withConstructorDefault(Effect.succeedNone)),
     streams: S.Array(FfprobeStream),
   },
   $I.annote("FfprobeOutput", {
@@ -612,7 +612,7 @@ export class BuildExtractFrameAtArgsOptions extends S.Class<BuildExtractFrameAtA
 )(
   {
     maxWidth: S.OptionFromOptionalKey(VideoDimension).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BuildExtractFrameAtArgsOptions.maxWidth", {
         description:
           "Optional maximum output width in pixels applied via a scale filter; absent, frames keep the source resolution.",
@@ -730,7 +730,7 @@ export class BuildExtractClipArgsOptions extends S.Class<BuildExtractClipArgsOpt
       })
     ),
     duration: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("BuildExtractClipArgsOptions.duration", {
         description: "Optional duration text (seconds) passed as output-side -t (never -to); absent, no -t is emitted.",
       })

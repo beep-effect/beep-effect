@@ -6,7 +6,7 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -78,7 +78,9 @@ export class BundleBuildInput extends S.Class<BundleBuildInput>($I`BundleBuildIn
     bundleRoot: S.NonEmptyString,
     mutableRoot: S.NonEmptyString,
     recordingPath: S.NonEmptyString,
-    retentionAuthorizationPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    retentionAuthorizationPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("BundleBuildInput", {
     description: "Caller-selected final roots and frozen provider recording for one transactional bundle build.",

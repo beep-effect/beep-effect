@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Fragment, HtmlChild, Html as HtmlElement } from "./Html.model.ts";
 import { Comment, Doctype } from "./Html.nodes.ts";
@@ -128,7 +128,7 @@ export type HtmlDocumentChild = typeof HtmlDocumentChild.Type;
 export class HtmlDocument extends S.TaggedClass<HtmlDocument>($I`HtmlDocument`)(
   "#document",
   {
-    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(S.withConstructorDefault(Effect.succeedNone)),
     children: S.Array(DocumentChild),
   },
   $I.annote("HtmlDocument", {

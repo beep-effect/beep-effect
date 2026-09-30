@@ -27,10 +27,11 @@
  */
 import bc from "@beep/colors";
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, LogLevel } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Effect, Inspectable, Layer, Logger, Match, References } from "effect";
 import { dual } from "effect/Function";
+import * as LogLevel from "effect/LogLevel";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -201,7 +202,7 @@ export class PrettyLoggerConfig extends S.Class<PrettyLoggerConfig>($I`PrettyLog
 export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
   {
     format: LogFormat,
-    minLogLevel: LogLevel,
+    minLogLevel: S.Literals(LogLevel.values),
   },
   $I.annote("LoggingConfig", {
     description: "Shared logger configuration for browser-safe and server-safe console logging.",
@@ -232,7 +233,7 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
  * @category layers
  * @since 0.0.0
  */
-export const layerMinimumLogLevel = (minLogLevel: LogLevel): Layer.Layer<never> =>
+export const layerMinimumLogLevel = (minLogLevel: LogLevel.LogLevel): Layer.Layer<never> =>
   Layer.succeed(References.MinimumLogLevel, minLogLevel);
 
 /**
@@ -319,7 +320,7 @@ const themePalette = (theme: PrettyLogTheme): PrettyPalette =>
     Match.exhaustive
   );
 
-const levelColor = (palette: PrettyPalette, level: LogLevel) =>
+const levelColor = (palette: PrettyPalette, level: LogLevel.LogLevel) =>
   Match.value(level).pipe(
     Match.when("Trace", () => palette.trace(level)),
     Match.when("Debug", () => palette.debug(level)),

@@ -513,19 +513,22 @@ export type FrameFilenamePadding = typeof FrameFilenamePadding.Type;
 export class FFmpegConfigInput extends S.Class<FFmpegConfigInput>($I`FFmpegConfigInput`)(
   {
     ffmpegPath: S.String.pipe(
-      SchemaUtils.withKeyDefaults("ffmpeg"),
+      S.withConstructorDefault(Effect.succeed("ffmpeg")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ffmpeg")),
       $I.annoteKey("FFmpegConfigInput.ffmpegPath", {
         description: "Executable path or command name used for ffmpeg.",
       })
     ),
     ffprobePath: S.String.pipe(
-      SchemaUtils.withKeyDefaults("ffprobe"),
+      S.withConstructorDefault(Effect.succeed("ffprobe")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ffprobe")),
       $I.annoteKey("FFmpegConfigInput.ffprobePath", {
         description: "Executable path or command name used for ffprobe.",
       })
     ),
     forceKillAfterMillis: PositiveMilliseconds.pipe(
-      SchemaUtils.withKeyDefaults(2000),
+      S.withConstructorDefault(Effect.succeed(2000)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2000)),
       $I.annoteKey("FFmpegConfigInput.forceKillAfterMillis", {
         description: "Timeout in milliseconds before an interrupted native process is force-killed.",
       })
@@ -632,43 +635,43 @@ export class VideoProbe extends S.Class<VideoProbe>($I`VideoProbe`)(
       })
     ),
     durationSeconds: S.OptionFromOptionalKey(NonNegativeSeconds).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.durationSeconds", {
         description: "Detected non-negative duration in seconds, when ffprobe reported one.",
       })
     ),
     fps: S.OptionFromOptionalKey(PositiveFrameRate).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.fps", {
         description: "Detected positive frame rate, when ffprobe reported one.",
       })
     ),
     frameCount: S.OptionFromOptionalKey(FrameCount).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.frameCount", {
         description: "Detected non-negative frame count, when ffprobe reported one.",
       })
     ),
     height: S.OptionFromOptionalKey(VideoDimension).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.height", {
         description: "Detected positive video height in pixels, when ffprobe reported one.",
       })
     ),
     rFrameRate: S.OptionFromOptionalKey(PositiveFrameRate).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.rFrameRate", {
         description: "Detected real base frame rate (ffprobe r_frame_rate), when ffprobe reported one.",
       })
     ),
     startTimeSeconds: S.OptionFromOptionalKey(S.Finite).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.startTimeSeconds", {
         description: "Detected stream or container start time in seconds, when ffprobe reported one.",
       })
     ),
     width: S.OptionFromOptionalKey(VideoDimension).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("VideoProbe.width", {
         description: "Detected positive video width in pixels, when ffprobe reported one.",
       })
@@ -1084,7 +1087,7 @@ export class FFmpegProgressEvent extends S.Class<FFmpegProgressEvent>($I`FFmpegP
       })
     ),
     outTimeSeconds: S.OptionFromOptionalKey(NonNegativeSeconds).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegProgressEvent.outTimeSeconds", {
         description: "Output timestamp in seconds, when ffmpeg reported one.",
       })
@@ -1100,7 +1103,7 @@ export class FFmpegProgressEvent extends S.Class<FFmpegProgressEvent>($I`FFmpegP
       })
     ),
     speed: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegProgressEvent.speed", {
         description: "Raw ffmpeg speed text, when ffmpeg reported one.",
       })

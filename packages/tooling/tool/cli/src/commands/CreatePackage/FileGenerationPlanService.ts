@@ -157,6 +157,8 @@ export class PlannedSymlink extends S.Class<PlannedSymlink>($I`PlannedSymlink`)(
   })
 ) {}
 
+const fileGenerationPlanInputAssetsDefault = A.empty<PlannedAsset>();
+const fileGenerationPlanInputSymlinksDefault = A.empty<PlannedSymlink>();
 /**
  * Input payload used to create a generation pla.
  *
@@ -178,8 +180,16 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
     outputDir: S.String,
     directories: S.Array(RelativePlanPath),
     files: S.Array(PlannedFile),
-    assets: PlannedAsset.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedAsset>())),
-    symlinks: PlannedSymlink.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedSymlink>())),
+    assets: PlannedAsset.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(fileGenerationPlanInputAssetsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(fileGenerationPlanInputAssetsDefault))
+    ),
+    symlinks: PlannedSymlink.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(fileGenerationPlanInputSymlinksDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(fileGenerationPlanInputSymlinksDefault))
+    ),
   },
   $I.annote("FileGenerationPlanInput", {
     description: "Input payload used to create a generation plan.",

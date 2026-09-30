@@ -140,6 +140,8 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
   })
 ) {}
 
+const similaritySearchOptionsLimitDefault = PosInt.make(20);
+const similaritySearchOptionsMinSimilarityDefault = UnitInterval.make(0.5);
 /**
  * Bounded result count and cosine-similarity threshold for vector search.
  *
@@ -158,8 +160,8 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
  */
 export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I`SimilaritySearchOptions`)(
   {
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    minSimilarity: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.5))),
+    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsLimitDefault))),
+    minSimilarity: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsMinSimilarityDefault))),
   },
   $I.annote("SimilaritySearchOptions", {
     description: "Bounded result count and cosine-similarity threshold for vector search.",
@@ -175,6 +177,9 @@ export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I
  */
 export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~type.make.in"];
 
+const hybridSearchOptionsLimitDefault = PosInt.make(20);
+const hybridSearchOptionsVectorWeightDefault = UnitInterval.make(0.6);
+const hybridSearchOptionsTextWeightDefault = UnitInterval.make(0.4);
 /**
  * Bounded result count and fusion weights for hybrid vector and text search.
  *
@@ -193,9 +198,9 @@ export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~ty
  */
 export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridSearchOptions`)(
   {
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-    vectorWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
-    textWeight: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.4))),
+    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsLimitDefault))),
+    vectorWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsVectorWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsVectorWeightDefault))),
+    textWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsTextWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsTextWeightDefault))),
   },
   $I.annote("HybridSearchOptions", {
     description: "Bounded result count and fusion weights for hybrid vector and text search.",

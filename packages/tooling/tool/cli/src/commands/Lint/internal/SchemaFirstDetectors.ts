@@ -46,7 +46,7 @@ const SCHEMA_CLASS_FIELDS_CALL_PATTERN =
 const NUMERIC_DOMAIN_TOKENS = ["timeout", "count", "size", "rate", "limit", "ms", "seconds"] as const;
 const STATIC_API_SCHEMA_SIGNAL_PATTERN = /\b(?:S\.(?:TaggedUnion|toTaggedUnion)|LiteralKit|MappedLiteralKit)\s*\(/;
 const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
-  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
+  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|[A-Za-z_$][\w$]*Entity\.Entity|SchemaUtils\.toEquivalence)\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;

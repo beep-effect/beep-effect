@@ -6,9 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/DeletePackage/schemas");
@@ -314,8 +314,10 @@ export class BaselineWriterStep extends S.Class<BaselineWriterStep>($I`BaselineW
   {
     label: S.NonEmptyString,
     args: S.Array(S.NonEmptyString),
-    exitPolicy: BaselineWriterExitPolicy.pipe(SchemaUtils.withConstantDefault<BaselineWriterExitPolicy>("zero-only")),
-    verifiedOutput: S.OptionFromOptionalKey(PosixPath).pipe(SchemaUtils.withNoneDefault),
+    exitPolicy: BaselineWriterExitPolicy.pipe(
+      S.withConstructorDefault(Effect.succeed<BaselineWriterExitPolicy>("zero-only"))
+    ),
+    verifiedOutput: S.OptionFromOptionalKey(PosixPath).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("BaselineWriterStep", {
     description: "One delete-package baseline writer step with exit policy and optional verified output file.",

@@ -119,6 +119,34 @@ machine ids, quote only the minimal identifying error text.
   keeps them current. Then a retirement PR's regeneration diff contains only
   its own rows.
 
+## 2026-09-29 — A new test file cannot enter the effect-vitest baseline without rewriting it
+
+- **What I was doing:** P1, adding the two repo-cli tests for
+  `lint effect-schema-inventory`. Each imports `NodeServices`, which the
+  effect-vitest detector reports as one EV010 `platform-resource-provenance-review`
+  judgment row, the same row `effect-vitest-store.test.ts` already carries.
+- **Evidence:** `bun run beep lint effect-vitest` reported
+  `2 new finding(s)`; the prescribed `bun run beep lint effect-vitest --write`
+  rewrote `standards/effect-vitest.inventory.jsonc` by about 100k lines
+  (5,008 rows down to 4,764: 246 rows already resolved on `main`, plus
+  reordering). The two rows were inserted by hand at their sorted position
+  instead (42 added lines; the check then reports `introduced=0 resolved=246`).
+- **What would have prevented it:** An additive mode such as
+  `lint effect-vitest --admit <file>` that appends reviewed rows for named
+  files without dropping resolved rows, or a main that keeps the baseline
+  tight so `--write` is a small diff.
+
+## 2026-09-29 — The committed schema catalog is stale on main
+
+- **What I was doing:** P1, checking generated baselines after adding the
+  inventory schemas.
+- **Evidence:** `bun run beep lint schema-catalog` exits 1 with
+  `stale standards/schema-catalog.generated.jsonc`; `--write` changes about
+  8,500 lines, almost all in files this goal does not touch (lab apps,
+  todox, infra), so the refresh was not taken into the P1 change.
+- **What would have prevented it:** A hosted lane, or a Yeet cheap gate, that
+  keeps the catalog current per PR; today nothing fails when it drifts.
+
 ## 2026-09-29 — `lint effect-vitest --write` rewrites the whole inventory for a two-file change
 
 - **What I was doing:** P4 gate cut: recording the reviewed rows for one new

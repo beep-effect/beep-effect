@@ -11,7 +11,6 @@ import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { UUID } from "@beep/schema/String";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
 import { Context, DateTime, Effect, Equal, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
@@ -22,6 +21,7 @@ import type { ConflictActor, ConflictKind, ConflictsQuery, ConflictTransition } 
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { ConflictInsertRow } from "./schema.ts";
 import { Claims, Conflicts, claims, conflicts } from "./schema.ts";
+import { UUID } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Conflict");
 const UUIDString = UUID.pipe(S.decodeTo(S.String));

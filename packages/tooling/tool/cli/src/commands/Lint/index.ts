@@ -12,6 +12,20 @@
  */
 export * from "./EcosystemPolarity.ts";
 /**
+ * Schema inventory fixture models and codecs.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./EffectSchemaInventory.schemas.ts";
+/**
+ * Pinned Effect schema inventory command and fixture utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./EffectSchemaInventory.ts";
+/**
  * Effect Vitest canon detector utilities.
  *
  * @category cli-commands

@@ -22,8 +22,8 @@ import {
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import { decodeYeetAttemptJournalEvent } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";

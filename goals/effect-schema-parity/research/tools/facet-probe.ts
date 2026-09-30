@@ -3,14 +3,14 @@
 // 1. Opaque: the identity-exclusion facet. Field and tagged-error equivalence for
 //    today's `Defect` / `OpaqueUnknown` against upstream `S.Defect` / `S.Unknown`,
 //    with and without `S.overrideToEquivalence`.
-// 2. PR 3b: each SchemaUtils default helper shape against its upstream
-//    composition, compared on construction, missing-key decode, undefined-key
-//    decode and encode (JSON bytes).
+// 2. PR 3b: each retired SchemaUtils default helper shape, in the form the PR 3b
+//    codemod rewrote it to (`Effect.succeedNone`; a constructed default bound to
+//    one const), against the census upstream composition, compared on
+//    construction, missing-key decode, undefined-key decode and encode (JSON bytes).
 //
 // Deterministic, no network. Run from the repo root:
 //   bun run goals/effect-schema-parity/research/tools/facet-probe.ts
 import { Defect, OpaqueUnknown } from "@beep/schema/Opaque";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
@@ -97,20 +97,28 @@ const observe = <Field extends S.Top & { readonly DecodingServices: never; reado
   ];
 };
 
+const constructedArrayDefault = ["a", "b"];
+const emptyArrayDefault = A.empty<string>();
 const shapes = [
   [
     "withNoneDefault on S.OptionFromOptionalKey",
-    observe(S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault), "x"),
+    observe(S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)), "x"),
     observe(S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none()))), "x"),
   ],
   [
     "withNoneDefault on S.OptionFromNullOr",
-    observe(S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault), "x"),
+    observe(S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)), "x"),
     observe(S.OptionFromNullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none()))), "x"),
   ],
   [
     "withKeyDefaults(v), literal default",
-    observe(S.String.pipe(SchemaUtils.withKeyDefaults("fallback")), "x"),
+    observe(
+      S.String.pipe(
+        S.withConstructorDefault(Effect.succeed("fallback")),
+        S.withDecodingDefaultTypeKey(Effect.succeed("fallback"))
+      ),
+      "x"
+    ),
     observe(
       S.String.pipe(
         S.withConstructorDefault(Effect.succeed("fallback")),
@@ -121,7 +129,13 @@ const shapes = [
   ],
   [
     "withKeyDefaults(schema, v), constructed default",
-    observe(SchemaUtils.withKeyDefaults(S.Array(S.String), ["a", "b"]), ["x"]),
+    observe(
+      S.Array(S.String).pipe(
+        S.withConstructorDefault(Effect.succeed(constructedArrayDefault)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(constructedArrayDefault))
+      ),
+      ["x"]
+    ),
     observe(
       S.Array(S.String).pipe(
         S.withConstructorDefault(Effect.succeed(["a", "b"])),
@@ -132,7 +146,13 @@ const shapes = [
   ],
   [
     "withEmptyArrayDefaults<T>()",
-    observe(S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()), ["x"]),
+    observe(
+      S.Array(S.String).pipe(
+        S.withConstructorDefault(Effect.succeed(emptyArrayDefault)),
+        S.withDecodingDefaultType(Effect.succeed(emptyArrayDefault))
+      ),
+      ["x"]
+    ),
     observe(
       S.Array(S.String).pipe(
         S.withConstructorDefault(Effect.succeed(A.empty<string>())),
@@ -143,7 +163,7 @@ const shapes = [
   ],
   [
     "withConstantDefault(v) on a literal",
-    observe(S.Literal("v1").pipe(SchemaUtils.withConstantDefault("v1")), "v1"),
+    observe(S.Literal("v1").pipe(S.withConstructorDefault(Effect.succeed("v1"))), "v1"),
     observe(S.Literal("v1").pipe(S.withConstructorDefault(Effect.succeed("v1"))), "v1"),
   ],
 ] as const;

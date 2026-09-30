@@ -34,7 +34,7 @@ import {
 } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -168,7 +168,7 @@ export class OntologyRepairProposal extends S.Class<OntologyRepairProposal>($I`O
 export class RunOntologyValidationInput extends S.Class<RunOntologyValidationInput>($I`RunOntologyValidationInput`)(
   {
     session: Session,
-    inference: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(SchemaUtils.withNoneDefault),
+    inference: S.OptionFromOptionalKey(OntologyInferenceResult).pipe(S.withConstructorDefault(Effect.succeedNone)),
     maxResults: NonNegativeInt.pipe(
       S.withConstructorDefault(Effect.succeed(100)),
       S.withDecodingDefaultKey(Effect.succeed(100))

@@ -151,7 +151,7 @@ export class ExtractionRunError extends S.TaggedError<ExtractionRunError>($I`Ext
       description: "Human-readable extraction-run failure diagnostic.",
     }),
     runId: S.OptionFromOptionalKey(ExtractionRunIdSchema).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional extraction run associated with the failure.",
       })

@@ -10,7 +10,7 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { annotateFourHints, destructiveWriteToolHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { PrefixMap } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
 import * as S from "effect/Schema";
@@ -25,8 +25,10 @@ import { OntologyRepairProposal, RunOntologyValidationResult } from "../aggregat
 
 const $I = $OntologyUseCasesId.create("tools/OntologyToolkit");
 
-const OptionalSessionHandle = S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault);
-const OptionalBaseIri = S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault);
+const OptionalSessionHandle = S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
+const OptionalBaseIri = S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Semantic rdfc-1.0 fingerprint used by stateless ontology CAS.

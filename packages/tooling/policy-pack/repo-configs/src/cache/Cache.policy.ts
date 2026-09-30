@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -327,7 +328,7 @@ export class CacheTaskContract extends S.Class<CacheTaskContract>($I`CacheTaskCo
     negativeCases: S.NonEmptyArray(S.NonEmptyString),
     crossRoot: S.Boolean,
     configuration: CacheTaskConfiguration,
-    activation: CacheActivationProjection.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    activation: CacheActivationProjection.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CacheTaskContract", { description: "Complete reviewed obligations for a finite executable computation." })
 ) {}

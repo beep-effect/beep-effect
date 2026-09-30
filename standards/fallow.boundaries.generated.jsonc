@@ -2495,7 +2495,6 @@
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -2504,7 +2503,6 @@
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]

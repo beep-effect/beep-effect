@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 import { HooksSection } from "../Settings/HooksSection.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("claudecode/Frontmatter/Skill");
 
@@ -128,25 +129,25 @@ export type FrontmatterShell = typeof FrontmatterShell.Type;
  */
 export class SkillFrontmatter extends S.Class<SkillFrontmatter>($I`SkillFrontmatter`)(
   {
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    when_to_use: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    license: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    metadata: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
-    compatibility: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    "disable-model-invocation": S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    "user-invocable": S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
-    context: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    agent: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    model: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    effort: S.OptionFromOptionalKey(EffortLevel).pipe(SchemaUtils.withNoneDefault),
-    arguments: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    "allowed-tools": S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    "disallowed-tools": S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    "argument-hint": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    paths: S.OptionFromOptionalKey(StringOrStringArray).pipe(SchemaUtils.withNoneDefault),
-    shell: S.OptionFromOptionalKey(FrontmatterShell).pipe(SchemaUtils.withNoneDefault),
-    hooks: S.OptionFromOptionalKey(HooksSection).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    description: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    when_to_use: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    license: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    metadata: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    compatibility: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "disable-model-invocation": S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "user-invocable": S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    context: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agent: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    model: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    effort: S.OptionFromOptionalKey(EffortLevel).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    arguments: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "allowed-tools": S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "disallowed-tools": S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    "argument-hint": S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    paths: S.OptionFromOptionalKey(StringOrStringArray).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    shell: S.OptionFromOptionalKey(FrontmatterShell).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hooks: S.OptionFromOptionalKey(HooksSection).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SkillFrontmatter", {
     description: "Runtime model for the YAML frontmatter of a Claude Code SKILL.md file.",

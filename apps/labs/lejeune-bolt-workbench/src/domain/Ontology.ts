@@ -6,11 +6,10 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { HttpsUrl } from "@beep/schema/URL";
-import { DateTime, Result } from "effect";
+import { DateTime, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -100,19 +99,17 @@ export const IsoDate = S.String.check(
 /** Runtime type decoded by {@link IsoDate}. @category models @since 0.0.0 */
 export type IsoDate = typeof IsoDate.Type;
 
-const isSharedIsoString = S.is(ISOStr);
+// A string that re-formats to itself is already trimmed, non-empty, and parseable.
 const ValidIsoTimestampCheck = S.makeFilter(
   (value: string) =>
     Result.try({
-      try: () =>
-        isSharedIsoString(value) &&
-        O.exists(DateTime.make(value), (dateTime) => Str.Equivalence(DateTime.formatIso(dateTime), value)),
+      try: () => O.exists(DateTime.make(value), (dateTime) => Str.Equivalence(DateTime.formatIso(dateTime), value)),
       catch: () => false,
     }).pipe(Result.getOrElse(() => false)),
   {
     identifier: $I`ValidIsoTimestampCheck`,
     title: "Valid ISO UTC Timestamp",
-    description: "Safely reuses the shared ISO timestamp schema to reject impossible instants.",
+    description: "Rejects impossible instants by requiring the value to round-trip through DateTime.formatIso.",
     message: "Expected a valid ISO UTC timestamp.",
     arbitraryConstraint: {
       patterns: [
@@ -271,7 +268,7 @@ export class ProductVariant extends S.Class<ProductVariant>($I`ProductVariant`)(
  */
 export class Component extends S.Class<Component>($I`Component`)(
   {
-    finishId: EntityId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    finishId: EntityId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     id: EntityId,
     kind: ComponentKind,
     label: S.NonEmptyString,

@@ -11,13 +11,13 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, Layer, Ref } from "effect";
 import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/Shutdown");
 
+const shutdownConfigDrainTimeoutDefault = Duration.seconds(30);
 /**
  * Maximum duration allowed for graceful in-flight request draining.
  *
@@ -36,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/Shutdown");
  */
 export class ShutdownConfig extends S.Class<ShutdownConfig>($I`ShutdownConfig`)(
   {
-    drainTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(30))),
+    drainTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(shutdownConfigDrainTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(shutdownConfigDrainTimeoutDefault))),
   },
   $I.annote("ShutdownConfig", {
     description: "Maximum duration allowed for graceful in-flight request draining.",

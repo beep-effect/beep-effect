@@ -26,8 +26,6 @@ const LEGACY_CASE_EXPORT_PREFIXES = ["ExpectCT", "XSSProtection"] as const;
 const RETIRED_SUITE_EXPORT_PREFIXES = ["Blockchain", "Dom", "Http", "Location", "Person"] as const;
 const RETIRED_INTERNAL_EXPORT_KEYS = ["./internal/markdown", "./internal/yaml"] as const;
 const PROMOTED_CONCEPT_ROOT_SHIMS = [
-  "DateTimeUtcFromValid",
-  "Duration",
   "FilePath",
   "Fn",
   "Glob",
@@ -36,7 +34,6 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "LocalDate",
   "MappedLiteralKit",
   "Record",
-  "Timestamp",
 ] as const;
 
 /**

@@ -1,4 +1,5 @@
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   attemptJournalPath,
   decodeYeetAttemptJournalEvent,
@@ -28,7 +29,6 @@ import {
   YeetStatusWorktree,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
-import { UUID } from "@beep/schema/String";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";

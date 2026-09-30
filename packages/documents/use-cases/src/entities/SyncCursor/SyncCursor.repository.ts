@@ -9,11 +9,9 @@
 import * as DomainSyncCursor from "@beep/documents-domain/entities/SyncCursor";
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 import type * as O from "effect/Option";
 
 const $I = $DocumentsUseCasesId.create("entities/SyncCursor/SyncCursor.repository");
@@ -42,10 +40,10 @@ const $I = $DocumentsUseCasesId.create("entities/SyncCursor/SyncCursor.repositor
  */
 export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
   {
-    lastError: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastError: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Most recent stream-read failure message; none while the cursor is healthy.",
     }),
-    lastEventId: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    lastEventId: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Identifier of the last remote event processed; none before the first event.",
     }),
     provider: DmsProvider.annotateKey({

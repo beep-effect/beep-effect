@@ -7,7 +7,6 @@
 
 import { $N3Id } from "@beep/identity/packages";
 import * as Rdf from "@beep/rdf/Rdf";
-import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Context, Effect, Layer, Match, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -47,7 +46,7 @@ const PrefixMapWithEmptyDefault = Rdf.PrefixMap.pipe(
 export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3ParseTurtleRequest`)(
   {
     source: S.String,
-    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("N3ParseTurtleRequest", {
     description: "N3 Turtle parse request.",

@@ -9,9 +9,8 @@ import os from "node:os";
 import process from "node:process";
 import tty from "node:tty";
 import { $ChalkId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { flow, Match, pipe } from "effect";
+import { Effect, flow, Match, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ColorSupport, ColorSupportLevel } from "./ChalkSchema.ts";
@@ -53,10 +52,18 @@ class SupportsColorOptionsModel extends S.Class<SupportsColorOptionsModel>($I`Su
 
 type SupportsColorOptions = typeof SupportsColorOptionsModel.Encoded;
 
+const runtimeProcessLikeModelArgvDefault = A.empty<string>();
+const runtimeProcessLikeModelEnvDefault = {};
 class RuntimeProcessLikeModel extends S.Class<RuntimeProcessLikeModel>($I`RuntimeProcessLike`)(
   {
-    argv: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(SchemaUtils.withKeyDefaults({})),
+    argv: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(runtimeProcessLikeModelArgvDefault)),
+      S.withDecodingDefaultType(Effect.succeed(runtimeProcessLikeModelArgvDefault))
+    ),
+    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(
+      S.withConstructorDefault(Effect.succeed(runtimeProcessLikeModelEnvDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runtimeProcessLikeModelEnvDefault))
+    ),
     osRelease: S.optionalKey(S.String),
     platform: S.optionalKey(S.String),
   },
