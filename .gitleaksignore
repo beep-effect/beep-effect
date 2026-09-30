@@ -123,3 +123,7 @@ ceebcebce7e0ffff8dd377f524e05c9ceafde756:packages/effect/src/Config.ts:generic-a
 7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/effect/HTTPAPI.md:curl-auth-header:1039
 7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/effect/test/unstable/eventlog/EventLogIdentityDerivation.test.ts:generic-api-key:6
 7d11d177cfcc0f5ff00f3c90428238fd4c490ef6:packages/platform/node/test/NodeHttpServer.test.ts:generic-api-key:853
+# PR #1338 (effect-schema-parity P2): the venice-ai OpenAPI JSON snapshot carried the
+# public jwt.io sample token in one intermediate commit; the fixture is redacted at the head.
+e081aea6aef0c979251013960d8d93adba86eb7d:packages/drivers/venice-ai/test/fixtures/swagger.json:jwt:9643
+e081aea6aef0c979251013960d8d93adba86eb7d:packages/drivers/venice-ai/test/fixtures/swagger.json:jwt:9783
