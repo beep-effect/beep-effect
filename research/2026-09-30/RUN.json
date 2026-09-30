@@ -1,0 +1,115 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-30",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-27T08:19:00-05:00",
+    "end": "2026-09-30T08:19:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 72,
+    "sunday_weekly": false
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-27",
+    "lastSuccessfulPr": 1308,
+    "lastSuccessfulRun": "2026-09-27T08:19:00-05:00"
+  },
+  "counts": {
+    "total": 25,
+    "window_new": 17,
+    "refute": 12,
+    "by_axis": {
+      "law": 8,
+      "effect": 8,
+      "agents": 9
+    }
+  },
+  "novelty": {
+    "window_new": 17,
+    "exclusion_url_collisions": 9,
+    "exclusion_collision_pct": 37.5,
+    "unique_claim_urls": 24,
+    "collision_urls": [
+      "https://patent.dev/heads-up-complete-your-uspto-profile-by-august-18/",
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://github.com/Effect-TS/effect/pull/8336",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://www.instantdb.com/essays/instant_team_joins_openai",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004"
+    ],
+    "window_new_collision_pct": 11.8,
+    "note": "Hard collisions are intentional refute-quota re-cites + Effect #8336 GitHub settle re-cite + patent.dev soft companion. HOLD breaks use fresh version-specific npmjs URLs. Gate \u226440%."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "not-invoked (local packet only)"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all"],
+      "error": "client-not-enrolled",
+      "detail": "X connector search_posts_all: client-not-enrolled (Appropriate Level of API Access) \u2014 skipped; continued without X."
+    },
+    {
+      "source": "arxiv-list-html",
+      "error": "empty-new-listing",
+      "detail": "arxiv.org/list/cs.AI|cs.CR|cs.SE/new HTML returned no abs links; used export.arxiv.org API query successfully."
+    },
+    {
+      "source": "local-gh",
+      "error": "bad-credentials-unused",
+      "detail": "local gh unused by design; preferred cursor-github MCP for PR/issue status."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-avoided",
+      "detail": "npm tip probes via registry.npmjs.org JSON; HOLD-break claims cite fresh version-specific npmjs package URLs for novelty."
+    },
+    {
+      "source": "routine-catchup",
+      "error": "skipped-dates-09-28-09-29",
+      "detail": "Sep 28+29 nightly automation failed; this packet is intentional ~72h catch-up. Wednesday \u2014 no weekly consolidation."
+    }
+  ],
+  "capabilities": {
+    "cursor-github": "ok",
+    "registry.npmjs.org": "ok",
+    "arxiv-export-api": "ok",
+    "WebFetch": "ok",
+    "WebSearch": "ok",
+    "user-X": "blocked-client-not-enrolled"
+  },
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed."
+  },
+  "headline_deltas": [
+    "Effect #8336 MERGED Sep 28 \u2192 effect@4.0.0-rc.118 published; #8577 OPEN staging rc.119.",
+    "Zero canary.15 \u2192 canary.20; head tip 1.11.0-head-*-20260930.",
+    "jazz-tools alpha.57 \u2192 alpha.58 (Sep 30).",
+    "Evolu @evolu/common@8.12.0 published (#713 MERGED Sep 27 evening).",
+    "Legora UK Legal AI Scholars (King's/City/BPP) \u2014 Sep 29.",
+    "Legora Munich office; Germany users ~3k\u219213k; in-house 8\u00d7 \u2014 Sep 28.",
+    "Harvey\u2013Everlaw MCP + iManage/TR MCP still not GA; iManage ChatGPT plugin live foil.",
+    "SKILLLITE arXiv 2609.36879 \u2014 malicious skill auditing with compact LLMs.",
+    "Latent monitor evasion arXiv 2609.36490 \u2014 feedback-channel attack on activation monitors.",
+    "Assay / Progressive Disclosure / AgentBug-Smith / SAGE papers (2609.36170 / 35692 / 37864 / 36043).",
+    "SEP-2640 Tier-1 SDKs still OPEN; MCP #3306 blocked; SEP-3004 still closed-unmerged.",
+    "drizzle #6162 / Instant 2027-08-31 / USPTO four-field \u2014 HOLDs reconfirmed."
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": false,
+    "called_cloud_agent": false,
+    "wrote_goals_or_inbox": false
+  },
+  "written_at": "2026-09-30T08:25:00-05:00"
+}
