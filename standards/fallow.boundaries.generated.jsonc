@@ -2319,7 +2319,6 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -2327,7 +2326,6 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -3487,7 +3485,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/types",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3496,7 +3493,6 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/types",
           "@beep/utils"
         ]
       },

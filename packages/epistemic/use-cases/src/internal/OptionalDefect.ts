@@ -22,11 +22,17 @@ import * as S from "effect/Schema";
  * **Example** (Declare an optional cause field)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { optionalDefect } from "./OptionalDefect.ts"
  *
- * const Failure = S.Struct({ cause: optionalDefect("Underlying driver defect.") })
+ * // The composition `optionalDefect` produces for a field:
+ * const cause = S.OptionFromOptionalKey(
+ *   S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+ * )
+ *   .pipe(S.withConstructorDefault(Effect.succeedNone))
+ *   .annotateKey({ description: "Underlying driver defect." })
+ * const Failure = S.Struct({ cause })
  * console.log(O.isNone(Failure.make({}).cause)) // true
  * ```
  *
