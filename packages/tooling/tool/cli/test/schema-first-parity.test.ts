@@ -3,6 +3,10 @@ import {
   diffSchemaFirstParity,
   makeSchemaFirstEntryKey,
   SchemaFirstInventoryDocument,
+  SchemaFirstInventoryEntry,
+  SchemaFirstLintOptions,
+  SchemaFirstParityFindings,
+  SchemaFirstRender,
   schemaFirstParityEntriesFromSourceFile,
   toSchemaFirstBacklog,
 } from "@beep/repo-cli/test/Lint";
@@ -20,7 +24,6 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project } from "ts-morph";
 import { expectReportedExit } from "./support/CommandTest.ts";
-import type { SchemaFirstInventoryEntry } from "@beep/repo-cli/test/Lint";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
@@ -188,6 +191,74 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
           ])
         )
       ).toEqual(["SFV4-default-wrapper title::withNoneDefault@<hash>"]);
+    })
+  );
+  it.effect("names the upstream form for every SchemaUtils default wrapper", () =>
+    Effect.gen(function* () {
+      const entries = yield* parityEntries([
+        'import * as S from "effect/Schema";',
+        'import { SchemaUtils } from "@beep/schema";',
+        "export const Widget = S.Struct({",
+        '  constant: S.String.pipe(SchemaUtils.withConstantDefault("none")),',
+        '  keyed: S.String.pipe(SchemaUtils.optionalKeyWithDefault("none")),',
+        '  encoded: S.String.pipe(SchemaUtils.withEncodeDefault(() => "none")),',
+        "  flag: SchemaUtils.boolWithDefault(false),",
+        "  keyFlag: SchemaUtils.boolKeyWithDefault(true),",
+        "});",
+      ]);
+
+      expect(readable(entries)).toEqual([
+        "SFV4-default-wrapper Widget.constant::withConstantDefault@<hash>",
+        "SFV4-default-wrapper Widget.keyed::optionalKeyWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.encoded::withEncodeDefault@<hash>",
+        "SFV4-default-wrapper Widget.flag::boolWithDefault@<hash>",
+        "SFV4-default-wrapper Widget.keyFlag::boolKeyWithDefault@<hash>",
+      ]);
+      expect(A.map(entries, (entry) => entry.reason)).toEqual([
+        "SchemaUtils.withConstantDefault wraps an upstream schema default; use S.withConstructorDefault(Effect.succeed(value)) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.optionalKeyWithDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.succeed(value)) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.withEncodeDefault wraps an upstream schema default; use S.withDecodingDefaultTypeKey(Effect.sync(thunk)) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.boolWithDefault wraps an upstream schema default; use S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(value))) directly so the default stays on Effect's own combinators.",
+        "SchemaUtils.boolKeyWithDefault wraps an upstream schema default; use S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultTypeKey(Effect.succeed(value))) directly so the default stays on Effect's own combinators.",
+      ]);
+    })
+  );
+
+  it.effect("reaches SchemaUtils through a namespace import of the @beep/schema root", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import * as BeepSchema from "@beep/schema";',
+            'import * as Opaque from "@beep/schema/Opaque";',
+            "export const Widget = S.Struct({",
+            "  byMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.SchemaUtils.withNoneDefault),",
+            '  byElement: S.OptionFromOptionalKey(S.Finite).pipe(BeepSchema["SchemaUtils"].withNoneDefault),',
+            "  otherMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema.Other.withNoneDefault),",
+            "  computedMember: S.OptionFromOptionalKey(S.String).pipe(BeepSchema[key].withNoneDefault),",
+            "  notRoot: S.OptionFromOptionalKey(S.String).pipe(Opaque.SchemaUtils.withNoneDefault),",
+            "});",
+          ])
+        )
+      ).toEqual([
+        "SFV4-default-wrapper Widget.byMember::withNoneDefault@<hash>",
+        "SFV4-default-wrapper Widget.byElement::withNoneDefault@<hash>",
+      ]);
+    })
+  );
+
+  it.effect("anchors a wrapper outside any named declaration at <module>", () =>
+    Effect.gen(function* () {
+      expect(
+        readable(
+          yield* parityEntries([
+            'import * as S from "effect/Schema";',
+            'import { SchemaUtils } from "@beep/schema";',
+            "void S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);",
+          ])
+        )
+      ).toEqual(["SFV4-default-wrapper <module>::withNoneDefault@<hash>"]);
     })
   );
 });
@@ -442,6 +513,59 @@ it.layer(testLayer, { timeout: "60 seconds" })("schema-first parity ratchet comm
         "[schema-first] parity backlog written: occurrences=3 previous_baseline=4 dropped=1"
       );
       expect(A.length(yield* backlogAnchors)).toBe(3);
+    })
+  );
+});
+
+const unanchoredEntry = SchemaFirstInventoryEntry.make({
+  file: fixtureFile,
+  symbol: "Widget",
+  kind: "schema-policy-advisory",
+  status: "candidate",
+  owner: "@beep/example",
+  reason: "Legacy entry without a rule, line, or anchor.",
+});
+
+it.layer(TestConsole.layer, { timeout: "30 seconds" })("schema-first parity rendering", (it) => {
+  it.effect("keys an anchored entry without a rule id under an empty rule", () =>
+    Effect.sync(() => {
+      expect(
+        makeSchemaFirstEntryKey(
+          SchemaFirstInventoryEntry.make({ ...unanchoredEntry, occurrence: "Widget::withNoneDefault@0123456789ab" })
+        )
+      ).toBe(`${fixtureFile}::::Widget::withNoneDefault@0123456789ab`);
+    })
+  );
+
+  it.effect("renders an introduced entry without a rule, line, or anchor with neutral fallbacks", () =>
+    Effect.gen(function* () {
+      const input = yield* SchemaFirstRender.parityRatchetInput(
+        SchemaFirstParityFindings.make({
+          introduced: [unanchoredEntry],
+          resolved: [],
+          rules: [],
+          liveCount: 1,
+          baselineCount: 0,
+        }),
+        SchemaFirstLintOptions.make({})
+      );
+      const [regression] = input.regressions;
+
+      expect(regression?.present).toBe(true);
+      expect(regression?.lines).toContain(
+        `- ${fixtureFile}:0 :: Widget [] Legacy entry without a rule, line, or anchor.`
+      );
+      expect(A.some(regression?.lines ?? [], Str.includes('"ruleId":"schema-first-inventory"'))).toBe(true);
+    })
+  );
+
+  it.effect("lists stale inventory entries with a policy finding each", () =>
+    Effect.gen(function* () {
+      yield* SchemaFirstRender.logStaleEntries([unanchoredEntry]);
+      const errorLines = consoleLines(yield* TestConsole.errorLines);
+
+      expect(errorLines).toContain("[schema-first] stale inventory entries:");
+      expect(errorLines).toContain(`- ${fixtureFile} :: Widget [schema-policy-advisory]`);
     })
   );
 });
