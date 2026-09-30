@@ -16,7 +16,6 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -144,8 +143,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
 
         const report = yield* readReport;
         expect(report.rows).toStrictEqual([]);
-        assertTrue(O.isSome(report.gate));
-        const gate = report.gate.value;
+        const gate = yield* Effect.fromOption(report.gate);
         expect(gate.compiler).toBe(FIXTURE_COMPILER);
         expect(gate.baselinePath).toBe(CHECK_CENSUS_BASELINE_PATH);
         expect(A.map(gate.comparisons, (comparison) => comparison.instantiations)).toStrictEqual(["unchanged"]);
@@ -166,10 +164,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
 
       expectReportedExit(exit);
       const report = yield* readReport;
-      assertTrue(O.isSome(report.gate));
-      expect(A.map(report.gate.value.comparisons, (comparison) => comparison.instantiations)).toStrictEqual([
-        "increase",
-      ]);
+      const gate = yield* Effect.fromOption(report.gate);
+      expect(A.map(gate.comparisons, (comparison) => comparison.instantiations)).toStrictEqual(["increase"]);
       expect(yield* loggedSince(mark)).toContain(
         "FAIL @fixture/consumer: single-checker instantiations increased by 200."
       );
@@ -189,8 +185,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       expect(row?.overlay.instantiations).toBe(1000);
       expect(row?.delta.instantiations).toBe(0);
       expect(row?.buildOverlapFiles).toBe(1);
-      assertTrue(O.isSome(report.gate));
-      assertSome(report.gate.value.filter, "consumer");
+      const gate = yield* Effect.fromOption(report.gate);
+      assertSome(gate.filter, "consumer");
       expect(yield* loggedSince(mark)).toContain("@fixture/consumer");
     })
   );
@@ -204,10 +200,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       const exit = yield* Effect.exit(runCheckCensusCommand(["--output-json", REPORT_PATH]));
 
       assertTrue(Exit.isFailure(exit));
-      const error = Cause.findErrorOption(exit.cause);
-      assertTrue(O.isSome(error));
-      expect(error.value._tag).toBe("QualityScriptCommandError");
-      expect(error.value.message).toContain("Instantiations");
+      const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
+      expect(error._tag).toBe("QualityScriptCommandError");
+      expect(error.message).toContain("Instantiations");
       expect(yield* fs.exists(REPORT_PATH)).toBe(false);
     })
   );
