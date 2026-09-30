@@ -118,6 +118,19 @@ describe("@beep/file-processing SourceText", () => {
     })
   );
 
+  it.effect(
+    "fails closed for an offset past the canonical source",
+    Effect.fnUntraced(function* () {
+      const source = ResolvedSourceText.make({ identity, text: "abc" });
+      const failure = yield* Effect.flip(pageSourceTextContainingOffset(source, 3));
+
+      expect(failure).toMatchObject({
+        message: "Source-text offset 3 is outside the canonical source.",
+        reason: "page-out-of-range",
+      });
+    })
+  );
+
   it("rejects impossible page relationships", () => {
     const validPage = {
       endOffset: 5,
