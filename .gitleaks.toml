@@ -31,14 +31,6 @@ regexes = [
 ]
 
 [[allowlists]]
-description = "The Venice OpenAPI JSON test fixture (a snapshot of swagger.yaml) carries the public jwt.io sample token as a schema example; it signs nothing."
-targetRules = ["jwt"]
-condition = "AND"
-regexTarget = "secret"
-regexes = ['''^eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c$''']
-paths = ['''^(?:/repo/)?packages/drivers/venice-ai/test/fixtures/swagger\.json$''']
-
-[[allowlists]]
 description = "CauseRedaction is a secret-redaction helper; its JSDoc @example blocks and tests intentionally contain placeholder secret-shaped strings (sk-/token=/API_KEY=) to demonstrate redaction. These are not real secrets. Anchored at the repo root (with an optional /repo/ CI-mount prefix) so a nested attacker-controlled path like evil/packages/.../CauseRedaction.ts cannot inherit the allowlist."
 paths = [
   '''^(?:/repo/)?packages/foundation/capability/observability/src/CauseRedaction\.ts$''',

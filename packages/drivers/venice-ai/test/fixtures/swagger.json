@@ -9640,7 +9640,7 @@
                         "token": {
                           "type": "string",
                           "description": "The token to sign with the wallet",
-                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                          "example": "<redacted-example-jwt>"
                         }
                       },
                       "required": ["token"]
@@ -9780,7 +9780,7 @@
                   "token": {
                     "type": "string",
                     "description": "The token obtained from https://api.venice.ai/api/v1/api_keys/generate_web3_key",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                    "example": "<redacted-example-jwt>"
                   }
                 },
                 "required": ["apiKeyType", "address", "signature", "token"],
