@@ -97092,6 +97092,27 @@
       "reason": "Effect FileSystem hashes host migration SQL that native drizzle reads through node:fs. Keep shared host-visible fixture content, ordered journal assertions and sequential registration."
     },
     {
+      "id": "EV010:packages/drivers/venice-ai/test/VeniceAI.service.test.ts:26:@effect/platform-node-shared/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/venice-ai",
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node-shared/NodeFileSystem",
+      "occurrence": "v2:0e05763e5fcc752e4625053fb9f88b418835ccbb36c9b1342d9f817e582b0679",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node-shared/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/drivers/acp/test/integration/client.integration.test.ts:5:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",

@@ -1,6 +1,8 @@
+import { fileURLToPath } from "node:url";
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { decodeJsonString } from "@beep/schema/Json";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -20,9 +22,11 @@ import {
   VeniceAiChat,
   VeniceAiLanguageModel,
 } from "@beep/venice-ai";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Deferred, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import { Context, Deferred, Effect, FileSystem, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -158,8 +162,12 @@ const sortStrings = A.sort(Order.String);
 const descriptorIds = () => sortStrings(A.map(VENICE_AI_OPERATION_DESCRIPTORS, (descriptor) => descriptor.operationId));
 
 // JSON snapshot of `swagger.yaml`, so the fixture loads on Node and Bun without a YAML parser.
-// Regenerate it whenever `swagger.yaml` changes.
+// `x-beep-source-sha256` records the SHA-256 of the swagger.yaml bytes it was generated from.
 const readSwagger = decodeOpenApiSpec(swaggerFixture);
+const swaggerSourcePath = fileURLToPath(new URL("../swagger.yaml", import.meta.url));
+const hashSwaggerSource = S.decodeEffect(Sha256HexFromBytes);
+const regenerateSwaggerSnapshot =
+  "test/fixtures/swagger.json is stale for swagger.yaml: regenerate it from swagger.yaml (JSON with the jwt.io example token redacted) and set x-beep-source-sha256 to the new sha256 of swagger.yaml";
 
 const hasOperationId = (operation: unknown): operation is { readonly operationId: string } =>
   P.isObject(operation) && P.hasProperty(operation, "operationId") && P.isString(operation.operationId);
@@ -526,6 +534,17 @@ describe("@beep/venice-ai", () => {
       yield* expectRoundTrip(VeniceAIError, error);
     }),
     { arbitrary: fcRuns(15) }
+  );
+
+  it.layer(Layer.mergeAll(NodeFileSystem.layer, NodeCrypto.layer), { timeout: "5 seconds" })((it) =>
+    it.effect(
+      "pins the JSON OpenAPI snapshot to the swagger.yaml bytes it was generated from",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const sourceHash = yield* hashSwaggerSource(yield* fs.readFile(swaggerSourcePath));
+        expect(swaggerFixture["x-beep-source-sha256"], regenerateSwaggerSnapshot).toBe(sourceHash);
+      })
+    )
   );
 
   it.layer(makeVeniceAIUnitLayer(), { timeout: "5 seconds" })((it) =>
