@@ -10,7 +10,6 @@ import {
   writeCheckCensusBaseline,
 } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { encodeJsonString } from "@beep/schema/Json";
 import { expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
@@ -31,6 +30,7 @@ const TestLayer = Layer.mergeAll(FsUtilsLive, TestConsole.layer).pipe(Layer.prov
 
 const runCheckCensusCommand = Command.runWith(checkCensusCommand, { version: "0.0.0" });
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CheckCensusReport));
+const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const FIXTURE_COMPILER = "7.0.2+fixture";
 const REPORT_PATH = "out/check-census.json";
