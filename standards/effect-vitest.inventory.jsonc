@@ -5279,7 +5279,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Keep the native layer lifetime and existing default budget. These headless stateless engine or independently scoped registry fixtures have no measured setup cost warranting a deadline change; disposal controls prove the three registry scopes."
     },
     {
       "id": "EV014:packages/foundation/ui-system/dock/test/DockPolicy.test.ts:107:it.layer@2#1",
