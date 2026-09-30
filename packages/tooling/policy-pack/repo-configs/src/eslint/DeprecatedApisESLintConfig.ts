@@ -119,6 +119,9 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
             "packages/drivers/graph-3d/stories/*.tsx",
             "packages/foundation/*/*/scripts/*.ts",
             "packages/foundation/*/*/test/fixtures/*.ts",
+            // Typeperf fixtures are programs of their own (one tsconfig.<name>.json
+            // each, measured by check-census), so no package project claims them.
+            "packages/foundation/modeling/schema/test/fixtures/typeperf/*.ts",
             "packages/foundation/ui-system/ui/.storybook/*.ts",
             "packages/foundation/ui-system/ui/.storybook/*.tsx",
             "packages/tooling/*/*/scripts/*.ts",
