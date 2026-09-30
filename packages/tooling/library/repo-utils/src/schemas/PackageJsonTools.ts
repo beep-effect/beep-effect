@@ -6,7 +6,6 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { ArrayOfStrings } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, identity, JsonPointer, Order, pipe, SchemaIssue, Tuple } from "effect";
@@ -263,7 +262,7 @@ const renderIssuePath = (path: StandardSchemaV1.Issue["path"]): ReadonlyArray<st
  */
 export class PackageJsonValidationIssue extends S.Class<PackageJsonValidationIssue>($I`PackageJsonValidationIssue`)(
   {
-    path: ArrayOfStrings.annotateKey({
+    path: S.Array(S.String).annotateKey({
       description: "Path segments identifying the invalid package.json location.",
     }),
     pointer: JsonPointerText.annotateKey({

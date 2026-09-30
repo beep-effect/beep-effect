@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MutableHashMapFromSelf, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import type { SafeObject } from "@beep/schema/SafeObject";
 import { A, N, O, P } from "@beep/utils";
-import { type Effect, MutableHashMap, Result } from "effect";
+import { type Effect, MutableHashMap, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -289,9 +289,16 @@ export class Binding extends S.Class<Binding>($I`Binding`)(
  * @category models
  * @since 0.0.0
  */
-export const Scope = MutableHashMapFromSelf({
-  key: S.String,
-  value: Binding,
+export const Scope = S.declare(MutableHashMap.isMutableHashMap<string, Binding>, {
+  expected: "MutableHashMap",
+  toCodec: () =>
+    S.link<MutableHashMap.MutableHashMap<string, Binding>>()(
+      S.Array(S.Tuple([S.String, Binding])),
+      SchemaTransformation.transform({
+        decode: MutableHashMap.fromIterable,
+        encode: A.fromIterable,
+      })
+    ),
 }).pipe(
   $I.annoteSchema("Scope", {
     description: "Mutable Effect hash map containing immutable guest bindings.",

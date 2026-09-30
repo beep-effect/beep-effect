@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2883 |
-| publicExports | 20397 |
+| publicModules | 2867 |
+| publicExports | 20281 |
 | openModules | 375 |
-| openExports | 3085 |
+| openExports | 3065 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3323 |
+| exampleImportFindings | 3302 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3322 |
+| no-root-package-import | 3301 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1475 | 23 | 157 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 225 | 1361 | 23 | 136 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -134,7 +134,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 76 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 86 | 2 | 3 |
 | 77 | `@beep/face-detection` | `packages/drivers/face-detection` | needs-remediation | 4 | 34 | 0 | 7 |
 | 78 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 86 | 0 | 23 |
-| 79 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 113 | 0 | 79 |
+| 79 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 111 | 0 | 79 |
 | 80 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 26 | 0 | 3 |
 | 81 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 1 |
 | 82 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 29 | 478 | 0 | 81 |
@@ -171,7 +171,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
 | 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 289 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 281 | 2401 | 47 | 290 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 3 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -634,11 +634,9 @@ Module findings:
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ArrayBuffer.ts:99` `ArrayBuf` (const) - 2 example import violation(s)
 - `src/AtURI.ts:240` `AtUri` (const) - 1 example import violation(s)
 - `src/AtURI.ts:269` `AtUri` (type) - 1 example import violation(s)
 - `src/AtURI.ts:292` `AtUri` (namespace) - 1 example import violation(s)
-- `src/Bytes.ts:50` `Bytes` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:138` `Annotation` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:189` `makeAnnotationResult` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.collector.ts:43` `collectConformanceAnnotationsResult` (const) - 1 example import violation(s)
@@ -693,17 +691,6 @@ Export findings:
 - `src/Fn/Fn.schema.ts:593` `Fn` (function) - 5 example import violation(s)
 - `src/Fn/Fn.schema.ts:476` `AnyFn` (const) - 1 example import violation(s)
 - `src/Fn/Fn.schema.ts:498` `AnyFn` (type) - 1 example import violation(s)
-- `src/Graph/Graph.edge.ts:228` `Edge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:32` `isEdge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:52` `isGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:83` `rebuildImmutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:146` `rebuildMutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:239` `toRawEdgeEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:265` `toRawGraphEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:312` `formatGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:387` `makeGraphEquivalence` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:463` `isImmutableGraphValue` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:483` `isMutableGraphValue` (const) - 1 example import violation(s)
 - `src/Http/Http.headers.shared.ts:275` `makeHeaderEncodeForbidden` (const) - 1 example import violation(s)
 - `src/HttpStatus/HttpStatus.shared.ts:26` `$I` (const) - 1 example import violation(s)
 - `src/Int64.ts:124` `Int64FromString` (const) - 1 example import violation(s)
@@ -721,12 +708,6 @@ Export findings:
 - `src/LocalDate/LocalDate.schema.ts:343` `fromDateTime` (const) - 1 example import violation(s)
 - `src/Markdown.ts:184` `MarkdownTextToHtml` (const) - 1 example import violation(s)
 - `src/Markdown.ts:222` `decodeMarkdownTextAs` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:112` `MutableHashMapFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashMap.ts:195` `MutableHashMapFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:169` `isMutableHashMap` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:82` `MutableHashSetFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashSet.ts:160` `MutableHashSetFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:134` `isMutableHashSet` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:153` `NoSniffHeader` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:255` `Header` (const) - 1 example import violation(s)
 - `src/Opaque.ts:52` `Defect` (const) - 2 example import violation(s)
@@ -740,8 +721,6 @@ Export findings:
 - `src/Port.ts:152` `PortFromString` (type) - 1 example import violation(s)
 - `src/Record/Record.schema.ts:31` `UnknownRecord` (const) - 1 example import violation(s)
 - `src/Record/Record.schema.ts:53` `UnknownRecord` (type) - 1 example import violation(s)
-- `src/RegExp.ts:108` `RegExpFromStr` (const) - 1 example import violation(s)
-- `src/RegExp.ts:138` `RegExpFromStr` (type) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:40` `SafeObject` (const) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:93` `SafeObjectFromObjectKeyword` (const) - 1 example import violation(s)
 - `src/SafeObject/SafeObject.schema.ts:40` `Schema` (const) - 1 example import violation(s)
@@ -787,10 +766,10 @@ Export findings:
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:194` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:230` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:330` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:370` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:174` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:210` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:300` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:335` `export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 
@@ -1739,9 +1718,9 @@ Export findings:
 - `src/VerifiedSpan/VerifiedSpan.behavior.ts:392` `convertTextOffsetRange` (const) - 2 example import violation(s)
 - `src/VerifiedSpan/VerifiedSpan.behavior.ts:438` `reconstructSourceText` (const) - 2 example import violation(s)
 - `src/VerifiedSpan/VerifiedSpan.behavior.ts:494` `locateGroundedExtractions` (const) - 1 example import violation(s)
-- `src/VerifiedSpan/VerifiedSpan.model.ts:108` `TextOffsetRange` (class) - 1 example import violation(s)
-- `src/VerifiedSpan/VerifiedSpan.model.ts:166` `Utf16TextRange` (class) - 1 example import violation(s)
-- `src/VerifiedSpan/VerifiedSpan.model.ts:208` `RawTextChunk` (class) - 1 example import violation(s)
+- `src/VerifiedSpan/VerifiedSpan.model.ts:109` `TextOffsetRange` (class) - 1 example import violation(s)
+- `src/VerifiedSpan/VerifiedSpan.model.ts:167` `Utf16TextRange` (class) - 1 example import violation(s)
+- `src/VerifiedSpan/VerifiedSpan.model.ts:209` `RawTextChunk` (class) - 1 example import violation(s)
 
 ### @beep/api-transport
 
@@ -2138,11 +2117,11 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 1 example import violation(s)
 
 Export findings:
-- `src/components/effect-date-time-picker.tsx:712` `EffectDateTimeLocalizationProvider` (function) - 1 example import violation(s)
-- `src/components/effect-date-time-picker.tsx:744` `EffectDatePicker` (function) - 1 example import violation(s)
-- `src/components/effect-date-time-picker.tsx:791` `EffectDateTimePicker` (function) - 1 example import violation(s)
-- `src/components/effect-date-time-picker.tsx:831` `EffectTimePicker` (function) - 1 example import violation(s)
-- `src/components/effect-date-time-picker.tsx:362` `AdapterEffectDateTime` (class) - 1 example import violation(s)
+- `src/components/effect-date-time-picker.tsx:676` `EffectDateTimeLocalizationProvider` (function) - 1 example import violation(s)
+- `src/components/effect-date-time-picker.tsx:708` `EffectDatePicker` (function) - 1 example import violation(s)
+- `src/components/effect-date-time-picker.tsx:755` `EffectDateTimePicker` (function) - 1 example import violation(s)
+- `src/components/effect-date-time-picker.tsx:795` `EffectTimePicker` (function) - 1 example import violation(s)
+- `src/components/effect-date-time-picker.tsx:326` `AdapterEffectDateTime` (class) - 1 example import violation(s)
 - `src/hooks/useNumberInput.ts:531` `getStepFactor` (const) - 1 example import violation(s)
 - `src/index.ts:29` `export { VERSION } from "./Version.ts";` (re-export) - 1 example import violation(s)
 
@@ -2825,17 +2804,17 @@ Export findings:
 - `src/EvidenceLadder.ts:309` `advanceToPersisted` (const) - 1 example import violation(s)
 - `src/EvidenceLadder.ts:335` `advanceToDelivered` (const) - 1 example import violation(s)
 - `src/EvidenceLadder.ts:361` `advanceToSemanticallyApplied` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:42` `EvidenceDigest` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:74` `EvidenceSubject` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:131` `EvidenceReceipt` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:157` `AttestationResource` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:181` `GateSummaryVerifier` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:205` `GateVerificationResult` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:233` `GateVerifiedLevel` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:281` `GateResultSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:358` `GateSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:379` `GateSummaryPredicateType` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:397` `GateSummaryReceipt` (const) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:43` `EvidenceDigest` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:75` `EvidenceSubject` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:132` `EvidenceReceipt` (const) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:158` `AttestationResource` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:182` `GateSummaryVerifier` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:206` `GateVerificationResult` (const) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:234` `GateVerifiedLevel` (const) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:282` `GateResultSummary` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:359` `GateSummary` (class) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:380` `GateSummaryPredicateType` (const) - 1 example import violation(s)
+- `src/EvidenceReceipt.ts:398` `GateSummaryReceipt` (const) - 1 example import violation(s)
 - `src/Gate.ts:39` `GateId` (const) - 1 example import violation(s)
 - `src/Gate.ts:78` `makeGateId` (const) - 1 example import violation(s)
 - `src/Gate.ts:101` `GateSeverity` (const) - 1 example import violation(s)
@@ -2848,20 +2827,20 @@ Export findings:
 - `src/Gate.ts:324` `GateDeclaration` (class) - 1 example import violation(s)
 - `src/Gate.ts:377` `GateRegistry` (class) - 1 example import violation(s)
 - `src/Gate.ts:398` `GateOutcome` (const) - 1 example import violation(s)
-- `src/Gate.ts:518` `GateAuditRecord` (const) - 1 example import violation(s)
-- `src/Gate.ts:584` `GateVerdict` (const) - 1 example import violation(s)
-- `src/Recovery.ts:59` `BudgetDuration` (const) - 1 example import violation(s)
-- `src/Recovery.ts:87` `RecoveryBudget` (class) - 1 example import violation(s)
-- `src/Recovery.ts:113` `RecoveryBudgetConsumed` (class) - 1 example import violation(s)
-- `src/Recovery.ts:138` `RecoveryAttemptOutcome` (const) - 1 example import violation(s)
-- `src/Recovery.ts:166` `RecoveryAttemptReceipt` (class) - 1 example import violation(s)
-- `src/Recovery.ts:195` `FailureTerminalReason` (const) - 1 example import violation(s)
-- `src/Recovery.ts:307` `FailureReceiptPredicate` (class) - 1 example import violation(s)
-- `src/Recovery.ts:328` `FailurePredicateType` (const) - 1 example import violation(s)
-- `src/Recovery.ts:346` `FailureReceipt` (const) - 1 example import violation(s)
-- `src/Recovery.ts:370` `NoRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:393` `BoundedRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:424` `RecoveryPolicy` (const) - 1 example import violation(s)
+- `src/Gate.ts:463` `GateAuditRecord` (const) - 1 example import violation(s)
+- `src/Gate.ts:530` `GateVerdict` (const) - 1 example import violation(s)
+- `src/Recovery.ts:60` `BudgetDuration` (const) - 1 example import violation(s)
+- `src/Recovery.ts:88` `RecoveryBudget` (class) - 1 example import violation(s)
+- `src/Recovery.ts:114` `RecoveryBudgetConsumed` (class) - 1 example import violation(s)
+- `src/Recovery.ts:139` `RecoveryAttemptOutcome` (const) - 1 example import violation(s)
+- `src/Recovery.ts:167` `RecoveryAttemptReceipt` (class) - 1 example import violation(s)
+- `src/Recovery.ts:196` `FailureTerminalReason` (const) - 1 example import violation(s)
+- `src/Recovery.ts:308` `FailureReceiptPredicate` (class) - 1 example import violation(s)
+- `src/Recovery.ts:329` `FailurePredicateType` (const) - 1 example import violation(s)
+- `src/Recovery.ts:347` `FailureReceipt` (const) - 1 example import violation(s)
+- `src/Recovery.ts:371` `NoRecoveryPolicy` (class) - 1 example import violation(s)
+- `src/Recovery.ts:394` `BoundedRecoveryPolicy` (class) - 1 example import violation(s)
+- `src/Recovery.ts:425` `RecoveryPolicy` (const) - 1 example import violation(s)
 - `src/SchemaReference.ts:27` `SchemaReferenceId` (const) - 1 example import violation(s)
 - `src/SchemaReference.ts:64` `SchemaReference` (class) - 1 example import violation(s)
 - `src/SkillCompletion.ts:59` `SkillCompletionReceipt` (class) - 1 example import violation(s)
@@ -3789,8 +3768,8 @@ Export findings:
 - `src/commands/Lint/SchemaFirst.ts:130` `export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.ts";` (re-export) - 1 example import violation(s)
 - `src/commands/Lint/SchemaFirst.ts:147` `export { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";` (re-export) - 1 example import violation(s)
 - `src/commands/Lint/SchemaFirst.ts:380` `lintSchemaFirstCommand` (const) - 1 example import violation(s)
-- `src/commands/Lint/SchemaTopology.ts:418` `collectSchemaTopologyViolations` (const) - 1 example import violation(s)
-- `src/commands/Qa/CitedArtifactExistsGate.ts:233` `evaluateCitedArtifactExists` (const) - 1 example import violation(s)
+- `src/commands/Lint/SchemaTopology.ts:421` `collectSchemaTopologyViolations` (const) - 1 example import violation(s)
+- `src/commands/Qa/CitedArtifactExistsGate.ts:235` `evaluateCitedArtifactExists` (const) - 1 example import violation(s)
 - `src/commands/Qa/Control.ts:42` `requireLiveHandle` (const) - 1 example import violation(s)
 - `src/commands/Qa/Control.ts:89` `stopLiveSession` (const) - 1 example import violation(s)
 - `src/commands/Qa/Control.ts:118` `markLiveSession` (const) - 1 example import violation(s)
@@ -3804,13 +3783,13 @@ Export findings:
 - `src/commands/Qa/Extract.ts:791` `runQaExtract` (const) - 1 example import violation(s)
 - `src/commands/Qa/Inventory.schemas.ts:534` `decodeQaInventory` (const) - 1 example import violation(s)
 - `src/commands/Qa/Inventory.schemas.ts:562` `encodeQaInventory` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeCheck.ts:359` `crossCheckAgainstRound` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeCheck.ts:394` `raiseCrossCheckFailure` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeCheck.ts:452` `requireInventoryRound` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeCheck.ts:511` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
-- `src/commands/Qa/JudgeContract.ts:176` `evaluateCitedEventIdExists` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeContract.ts:312` `evaluateDeclaredRoundCoherent` (const) - 1 example import violation(s)
-- `src/commands/Qa/JudgeContract.ts:706` `evaluateJudgeOutputInventoryDecodes` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeCheck.ts:360` `crossCheckAgainstRound` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeCheck.ts:395` `raiseCrossCheckFailure` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeCheck.ts:453` `requireInventoryRound` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
+- `src/commands/Qa/JudgeContract.ts:177` `evaluateCitedEventIdExists` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeContract.ts:313` `evaluateDeclaredRoundCoherent` (const) - 1 example import violation(s)
+- `src/commands/Qa/JudgeContract.ts:707` `evaluateJudgeOutputInventoryDecodes` (const) - 1 example import violation(s)
 - `src/commands/Qa/JudgeIngest.ts:101` `inventoryJsonPath` (const) - 1 example import violation(s)
 - `src/commands/Qa/JudgeIngest.ts:121` `parseJudgeOutput` (const) - 1 example import violation(s)
 - `src/commands/Qa/JudgeIngest.ts:165` `runQaJudgeIngest` (const) - 1 example import violation(s)
@@ -3930,14 +3909,15 @@ Export findings:
 - `src/commands/Worktree/Worktree.command.ts:876` `renderWorktreeRemovalReceipt` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.command.ts:1066` `worktreeCommand` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.schemas.ts:204` `WorktreeUpstreamVerdict` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.schemas.ts:392` `WorktreeSessionMarker` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.schemas.ts:432` `WorktreeInvokerExemption` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.schemas.ts:488` `WorktreeRemovalRequest` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:144` `WorktreeMergedPullRequestProbe` (class) - 2 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:344` `worktreeArchivePlan` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:470` `WorktreeRemovalService` (class) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:531` `runWorktreeGitCapture` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Worktree.service.ts:1509` `WorktreeRemovalServiceLayer` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.schemas.ts:312` `WorktreeResidueManifest` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.schemas.ts:393` `WorktreeSessionMarker` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.schemas.ts:433` `WorktreeInvokerExemption` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.schemas.ts:489` `WorktreeRemovalRequest` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:146` `WorktreeMergedPullRequestProbe` (class) - 2 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:346` `worktreeArchivePlan` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:472` `WorktreeRemovalService` (class) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:533` `runWorktreeGitCapture` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Worktree.service.ts:1515` `WorktreeRemovalServiceLayer` (const) - 1 example import violation(s)
 - `src/commands/Yeet/Yeet.command.ts:522` `yeetMonitorDurationMillis` (const) - 1 example import violation(s)
 
 ### @beep/ai-sync

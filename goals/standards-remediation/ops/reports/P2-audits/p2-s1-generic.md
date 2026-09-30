@@ -221,7 +221,7 @@ for every one of its built-in generic derived schemas. Converting these
 *describe schema types themselves* (custom `Schema<Type,Encoded,R>`
 combinators), not decodable data instances — `S.Class` is for the latter.
 **Verdict: unconvertible.** File reverted
-(`git checkout -- packages/foundation/modeling/schema/src/MutableHashMap.ts`).
+(the `@beep/schema` `MutableHashMap` module, since retired in the effect-schema-parity group E PR).
 
 This same shape (interface extends `S.declareConstructor`/`S.decodeTo`/
 `S.Bottom`/`VariantSchema.Field`, with `Rebuild: this`) accounts for the
@@ -307,7 +307,7 @@ individually compile-tested). File reverted
   diff from an unrelated concurrent lane (`ProjectWithinBudgetOptions`
   positional-arg collapse) — not touched, not mine, left as-is per the
   concurrency rule.
-- `packages/foundation/modeling/schema/src/MutableHashMap.ts` — reverted, `git diff` empty.
+- The `@beep/schema` `MutableHashMap` module (since retired in the effect-schema-parity group E PR) — reverted, `git diff` empty.
 - `packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts` — reverted, `git diff` empty.
 
 No `standards/*.jsonc` file touched. No commits made.
