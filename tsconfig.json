@@ -770,17 +770,11 @@
       "@beep/postgres/sqlstate": [
         "./packages/drivers/postgres/src/PostgresSqlState.models.ts"
       ],
-      "@beep/schema/BigDecimal": [
-        "./packages/foundation/modeling/schema/src/BigDecimal.ts"
-      ],
       "@beep/schema/BinaryFileExtension": [
         "./packages/foundation/modeling/schema/src/BinaryFileExtension.ts"
       ],
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
-      ],
-      "@beep/schema/CommonTextSchemas": [
-        "./packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
       ],
       "@beep/schema/Cuid": [
         "./packages/foundation/modeling/schema/src/Cuid.ts"
@@ -819,14 +813,8 @@
       "@beep/schema/Jsonl": [
         "./packages/foundation/modeling/schema/src/Jsonl.ts"
       ],
-      "@beep/schema/KebabStr": [
-        "./packages/foundation/modeling/schema/src/KebabStr.ts"
-      ],
       "@beep/schema/LocalDate": [
         "./packages/foundation/modeling/schema/src/LocalDate/index.ts"
-      ],
-      "@beep/schema/Logs": [
-        "./packages/foundation/modeling/schema/src/Logs.ts"
       ],
       "@beep/schema/Markdown": [
         "./packages/foundation/modeling/schema/src/Markdown.ts"
@@ -839,9 +827,6 @@
       ],
       "@beep/schema/Options": [
         "./packages/foundation/modeling/schema/src/Options.ts"
-      ],
-      "@beep/schema/PascalStr": [
-        "./packages/foundation/modeling/schema/src/PascalStr.ts"
       ],
       "@beep/schema/Percentage": [
         "./packages/foundation/modeling/schema/src/Percentage.ts"
@@ -869,15 +854,6 @@
       ],
       "@beep/schema/Slug": [
         "./packages/foundation/modeling/schema/src/Slug.ts"
-      ],
-      "@beep/schema/SnakeStr": [
-        "./packages/foundation/modeling/schema/src/SnakeStr.ts"
-      ],
-      "@beep/schema/StatusCauseError": [
-        "./packages/foundation/modeling/schema/src/StatusCauseError.ts"
-      ],
-      "@beep/schema/String": [
-        "./packages/foundation/modeling/schema/src/String.ts"
       ],
       "@beep/schema/Toml": [
         "./packages/foundation/modeling/schema/src/Toml.ts"
@@ -1785,9 +1761,6 @@
       ],
       "@beep/law-practice-server/LegalPositionRecord": [
         "./packages/law-practice/server/src/LegalPositionRecord/index.ts"
-      ],
-      "@beep/schema/FileInfo": [
-        "./packages/foundation/modeling/schema/src/FileInfo.ts"
       ],
       "@beep/effect-drizzle": [
         "./packages/ecosystem/effect-drizzle/src/index.ts"

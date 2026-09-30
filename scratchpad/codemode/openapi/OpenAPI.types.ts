@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MappedLiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P, pipe, R } from "@beep/utils";
 import { Effect, flow, HashMap, Layer, Redacted, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
@@ -15,6 +15,7 @@ import type * as HttpClient from "effect/http/HttpClient";
 import type { ToolError } from "../Codemode.tool-error.ts";
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.types");
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 /**
  * An already-decoded OpenAPI 3.x object. YAML and JSON text parsing is the
@@ -105,7 +106,7 @@ export type JsonSchema = typeof JsonSchema.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const OperationId = NonEmptyTrimmedStr.pipe(
+export const OperationId = TrimmedNonEmptyString.pipe(
   S.brand("OpenApiOperationId"),
   $I.annoteSchema("OperationId", {
     description: "A non-empty OpenAPI operationId.",
@@ -273,12 +274,12 @@ export class Operation extends S.Class<Operation>($I`Operation`)(
  */
 export class ApiKeyHeader extends S.TaggedClass<ApiKeyHeader>($I`ApiKeyHeader`)(
   "header",
-  { name: NonEmptyTrimmedStr },
+  { name: TrimmedNonEmptyString },
   $I.annote("ApiKeyHeader", {
     description: "An API key carried in an HTTP header.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyHeader => ApiKeyHeader.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyHeader => ApiKeyHeader.make({ name });
 }
 
 /**
@@ -302,12 +303,12 @@ export class ApiKeyHeader extends S.TaggedClass<ApiKeyHeader>($I`ApiKeyHeader`)(
  */
 export class ApiKeyQuery extends S.TaggedClass<ApiKeyQuery>($I`ApiKeyQuery`)(
   "query",
-  { name: NonEmptyTrimmedStr },
+  { name: TrimmedNonEmptyString },
   $I.annote("ApiKeyQuery", {
     description: "An API key carried in a query parameter.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyQuery => ApiKeyQuery.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyQuery => ApiKeyQuery.make({ name });
 }
 
 /**
@@ -339,12 +340,12 @@ export class ApiKeyQuery extends S.TaggedClass<ApiKeyQuery>($I`ApiKeyQuery`)(
  */
 export class ApiKeyCookie extends S.TaggedClass<ApiKeyCookie>($I`ApiKeyCookie`)(
   "cookie",
-  { name: NonEmptyTrimmedStr },
+  { name: TrimmedNonEmptyString },
   $I.annote("ApiKeyCookie", {
     description: "An unsupported cookie-carried API key retained for diagnostics.",
   })
 ) {
-  static readonly new = (name: string): ApiKeyCookie => ApiKeyCookie.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ApiKeyCookie => ApiKeyCookie.make({ name });
 }
 
 /**
@@ -430,13 +431,13 @@ export class SecuritySchemeApiKey extends S.TaggedClass<SecuritySchemeApiKey>($I
  */
 export class SecuritySchemeHttp extends S.TaggedClass<SecuritySchemeHttp>($I`SecuritySchemeHttp`)(
   "http",
-  { scheme: NonEmptyTrimmedStr },
+  { scheme: TrimmedNonEmptyString },
   $I.annote("SecuritySchemeHttp", {
     description: "An OpenAPI HTTP authentication scheme.",
   })
 ) {
   static readonly new = (scheme: string): SecuritySchemeHttp =>
-    SecuritySchemeHttp.make({ scheme: NonEmptyTrimmedStr.make(scheme) });
+    SecuritySchemeHttp.make({ scheme });
 }
 
 /**
@@ -657,7 +658,7 @@ export class CredentialApiKey extends S.TaggedClass<CredentialApiKey>($I`Credent
 export class CredentialHeader extends S.TaggedClass<CredentialHeader>($I`CredentialHeader`)(
   "header",
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     value: S.Redacted(S.String),
   },
   $I.annote("CredentialHeader", {
@@ -666,7 +667,7 @@ export class CredentialHeader extends S.TaggedClass<CredentialHeader>($I`Credent
 ) {
   static readonly new = (name: string, value: string): CredentialHeader =>
     CredentialHeader.make({
-      name: NonEmptyTrimmedStr.make(name),
+      name,
       value: Redacted.make(value),
     });
 }
@@ -738,7 +739,7 @@ export type Credential = typeof Credential.Type;
  */
 export class AuthContext extends S.Class<AuthContext>($I`AuthContext`)(
   {
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     definition: SecurityScheme,
     scopes: S.Array(S.String),
     operation: Operation,
@@ -754,7 +755,7 @@ export class AuthContext extends S.Class<AuthContext>($I`AuthContext`)(
     operation: Operation
   ): AuthContext =>
     AuthContext.make({
-      name: NonEmptyTrimmedStr.make(name),
+      name,
       definition,
       scopes,
       operation,
@@ -1006,8 +1007,8 @@ export type InputStyle = typeof InputStyle.Type;
  */
 export class InputField extends S.Class<InputField>($I`InputField`)(
   {
-    inputName: NonEmptyTrimmedStr,
-    name: NonEmptyTrimmedStr,
+    inputName: TrimmedNonEmptyString,
+    name: TrimmedNonEmptyString,
     location: InputLocation,
     required: S.Boolean,
     schema: JsonSchema,
@@ -1028,8 +1029,8 @@ export class InputField extends S.Class<InputField>($I`InputField`)(
     explode: O.Option<boolean>
   ): InputField =>
     InputField.make({
-      inputName: NonEmptyTrimmedStr.make(inputName),
-      name: NonEmptyTrimmedStr.make(name),
+      inputName,
+      name,
       location,
       required,
       schema,
@@ -1095,7 +1096,7 @@ export class Body extends S.Class<Body>($I`Body`)(
   {
     required: S.Boolean,
     mode: BodyMode,
-    mediaType: NonEmptyTrimmedStr,
+    mediaType: TrimmedNonEmptyString,
   },
   $I.annote("Body", {
     description: "How an operation's JSON request body is assembled.",
@@ -1105,7 +1106,7 @@ export class Body extends S.Class<Body>($I`Body`)(
     Body.make({
       required,
       mode,
-      mediaType: NonEmptyTrimmedStr.make(mediaType),
+      mediaType,
     });
 }
 
@@ -1217,7 +1218,7 @@ const SecuritySchemeMap = S.HashMap(S.String, SecurityScheme);
 export class Plan extends S.Class<Plan>($I`Plan`)(
   {
     operation: Operation,
-    url: NonEmptyTrimmedStr,
+    url: TrimmedNonEmptyString,
     fields: S.Array(InputField),
     body: S.OptionFromOptionalKey(Body).pipe(S.withConstructorDefault(Effect.succeedNone)),
     security: S.Array(SecurityRequirement),
@@ -1241,7 +1242,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
   ): Plan =>
     Plan.make({
       operation,
-      url: NonEmptyTrimmedStr.make(url),
+      url,
       fields,
       body,
       security,

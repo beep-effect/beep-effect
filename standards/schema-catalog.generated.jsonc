@@ -12550,6 +12550,14 @@
       "description": "Target channel for a redaction; client strips internal detail, diagnostic keeps bounded detail."
     },
     {
+      "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+      "symbol": "ObservabilityCoreConfig",
+      "kind": "struct-const",
+      "owner": "@beep/observability",
+      "identity": "ObservabilityCoreConfig",
+      "description": "Browser-safe shared observability configuration."
+    },
+    {
       "file": "packages/foundation/capability/observability/src/HttpError.ts",
       "symbol": "BadGatewayError",
       "kind": "tagged-error",
@@ -17644,14 +17652,6 @@
       "description": "A normalized AT Protocol Lexicon AT URI string shaped as at://AUTHORITY[/COLLECTION[/RKEY]]."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/BigDecimal.ts",
-      "symbol": "BigDecimalFromNumber",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "BigDecimalFromNumber",
-      "description": "A BigDecimal from a number"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/BinaryFileExtension.ts",
       "symbol": "BinaryFileExtension",
       "kind": "literal-kit",
@@ -17990,30 +17990,6 @@
       "owner": "@beep/schema",
       "identity": "RgbToOklch",
       "description": "Decodes normalized RGB values into canonical OKLCH coordinates."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "CommaSeparatedList",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "CommaSeparatedList",
-      "description": "Comma-separated text decoded into a trimmed non-empty string list."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "NormalizedBooleanString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "NormalizedBooleanString",
-      "description": "Normalized boolean value decoded from common boolean string values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CommonTextSchemas.ts",
-      "symbol": "TrimmedNonEmptyText",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "TrimmedNonEmptyText",
-      "description": "Trimmed text that must be non-empty after normalization."
     },
     {
       "file": "packages/foundation/modeling/schema/src/ContinentCode.ts",
@@ -18534,22 +18510,6 @@
       "owner": "@beep/schema",
       "identity": "VideoExtension",
       "description": "A file extension for a mime type that is a video."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
-      "symbol": "FileInfo",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "FileInfo",
-      "description": "File-system stat metadata discriminated by entry kind."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileInfo.ts",
-      "symbol": "FileInfoType",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "FileInfoType",
-      "description": "The supported kinds of file-system entries, with a helper for constructing union members."
     },
     {
       "file": "packages/foundation/modeling/schema/src/FilePath/FilePath.guards.ts",
@@ -19759,14 +19719,6 @@
       "description": "Schema transformation that parses strict JSONL text into unknown values."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/KebabStr.ts",
-      "symbol": "KebabCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "KebabCaseStr",
-      "description": "A branded kebab-case string."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
       "symbol": "LiteralKitEnumMappingCoverageError",
       "kind": "tagged-error",
@@ -19811,22 +19763,6 @@
       "owner": "@beep/schema",
       "identity": "LocalDateFromString",
       "description": "LocalDateFromString - Schema that transforms ISO date strings (YYYY-MM-DD) to LocalDate"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Logs.ts",
-      "symbol": "LogLevel",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "LogLevel",
-      "description": "Log levels supported"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Logs.ts",
-      "symbol": "LogSeverity",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "LogSeverity",
-      "description": "Log severities supported"
     },
     {
       "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
@@ -19957,14 +19893,6 @@
       "symbol": "ParserOptionsError",
       "kind": "tagged-error",
       "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/PascalStr.ts",
-      "symbol": "PascalCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "PascalCaseStr",
-      "description": "A branded PascalCase string."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Percentage.ts",
@@ -20454,84 +20382,6 @@
       "owner": "@beep/schema",
       "identity": "Slug",
       "description": "Canonical lowercase kebab-case slug safe for a single URL path segment."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SnakeStr.ts",
-      "symbol": "SnakeCaseStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "SnakeCaseStr",
-      "description": "A branded snake_case string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseFields",
-      "kind": "schema-const",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseInput",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "StatusCauseInput",
-      "description": "Normalized status/cause input payload."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
-      "symbol": "StatusCauseInputOptions",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "StatusCauseInputOptions",
-      "description": "Normalized status/cause input options."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "NonEmptyTrimmedStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NonEmptyTrimmedStr",
-      "description": "Non-empty trimmed string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "NullableStr",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "NullableStr",
-      "description": "A nullable string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "OptionFromNullableStr",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OptionFromNullableStr",
-      "description": "An option from a nullable string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "OptionFromOptionalStrWithNoneDefault",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OptionFromOptionalStrWithNoneDefault",
-      "description": "Optional string property codec decoded as Option with None as the missing-key default."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "StrFromUnknown",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "StrFromUnknown",
-      "description": "Schema transformation that decodes any unknown input into a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "UUID",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "UUID",
-      "description": "Universally Unique Identifier"
     },
     {
       "file": "packages/foundation/modeling/schema/src/TerritoryCode.ts",

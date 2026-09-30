@@ -8,7 +8,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import {
   LiteralKit,
-  NonEmptyTrimmedStr,
   NonNegativeInt,
   PosInt,
   SafeObject as SafeObjectSchema,
@@ -36,6 +35,7 @@ import {
 } from "./Codemode.values.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
+const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 export type { SafeObject } from "@beep/schema/SafeObject";
 
@@ -101,12 +101,12 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
  * @since 0.0.0
  */
 export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
-  { name: NonEmptyTrimmedStr },
+  { name: TrimmedNonEmptyString },
   $I.annote("ToolCall", {
     description: "Canonical name of one admitted tool call.",
   })
 ) {
-  static readonly new = (name: string): ToolCall => ToolCall.make({ name: NonEmptyTrimmedStr.make(name) });
+  static readonly new = (name: string): ToolCall => ToolCall.make({ name });
 }
 
 /**
@@ -129,7 +129,7 @@ export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
 export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted`)(
   {
     index: NonNegativeInt,
-    name: NonEmptyTrimmedStr,
+    name: TrimmedNonEmptyString,
     input: S.Unknown,
   },
   $I.annote("ToolCallStarted", {
@@ -146,7 +146,7 @@ export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted
 
 const endedFields = {
   index: NonNegativeInt,
-  name: NonEmptyTrimmedStr,
+  name: TrimmedNonEmptyString,
   input: S.Unknown,
   durationMs: NonNegativeInt,
 };

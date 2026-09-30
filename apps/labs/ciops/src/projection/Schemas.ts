@@ -8,7 +8,6 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UUID } from "@beep/schema/String";
 import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
 
@@ -710,7 +709,10 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`
     schemaVersion: S.Literal("yeet-admission-journal/v3"),
     nonce: S.String,
     pid: S.Finite,
-    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    attemptId: S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     checkoutRoot: S.String,
     branch: S.String,
   },

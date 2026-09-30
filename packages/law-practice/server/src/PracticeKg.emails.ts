@@ -8,7 +8,6 @@
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { parseOutlookHeaders, rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
-import { FileInfo } from "@beep/schema/FileInfo";
 import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -79,10 +78,10 @@ const walkForHeaderFiles = Effect.fn("PracticeKg.walkForHeaderFiles")(function* 
       const info = yield* fs
         .stat(canonical)
         .pipe(PracticeKgProjectionError.mapError(`Failed inspecting "${absolute}".`));
-      if (FileInfo.guards.Directory(info)) {
+      if (info.type === "Directory") {
         return yield* walkForHeaderFiles(canonical, canonicalRoot);
       }
-      return FileInfo.guards.File(info) && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
+      return info.type === "File" && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
     })
   );
   return A.flatten(children);
@@ -101,7 +100,7 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
   const archiveInfo = yield* fs
     .stat(archiveRoot)
     .pipe(PracticeKgProjectionError.mapError(`Failed inspecting email archive export "${archiveRoot}".`));
-  if (!FileInfo.guards.Directory(archiveInfo)) {
+  if (archiveInfo.type !== "Directory") {
     return A.empty();
   }
   const canonicalArchiveRoot = yield* fs

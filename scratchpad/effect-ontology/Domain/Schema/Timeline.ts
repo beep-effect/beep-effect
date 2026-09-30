@@ -10,12 +10,12 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { UUID } from "@beep/schema/String";
-import { DateTime, SchemaGetter, Effect } from "effect";
+import { DateTime, Effect, SchemaGetter } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
 import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
-import * as A from "effect/Array";
+import { UUID } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));

@@ -15,7 +15,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
-import { UUID } from "@beep/schema/String";
 import { Chunk, Clock, DateTime, Duration, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -39,7 +38,7 @@ import {
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
-import { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");

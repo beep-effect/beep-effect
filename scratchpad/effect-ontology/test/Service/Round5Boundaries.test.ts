@@ -1,12 +1,11 @@
 import { PosInt } from "@beep/schema/Int";
-import { UUID } from "@beep/schema/String";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { IsoDateTimeString } from "../../Contract/ProgressStreaming.ts";
-import { ExtractionRunId } from "../../Domain/Identity.ts";
+import { ExtractionRunId, UUID } from "../../Domain/Identity.ts";
 import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
