@@ -77,6 +77,23 @@ describe("oxlint rules", () => {
       specifiers: [{ local: identifier("S"), type: "ImportNamespaceSpecifier" }],
       type: "ImportDeclaration",
     } as never);
+    visitors.Program!({
+      body: [
+        {
+          declarations: [{ id: identifier("Model"), init: null, type: "VariableDeclarator" }],
+          kind: "const",
+          type: "VariableDeclaration",
+        },
+        {
+          importKind: "value",
+          source: { type: "Literal", value: "./models" },
+          specifiers: [{ local: identifier("Models"), type: "ImportNamespaceSpecifier" }],
+          type: "ImportDeclaration",
+        },
+      ],
+      sourceType: "module",
+      type: "Program",
+    } as never);
     visitors.FunctionDeclaration!({} as never);
     const staticArray = schemaCall("decodeSync", [schemaCall("Array", [identifier("Model")])]);
     const staticMember = schemaCall("decodeSync", [member(identifier("Models"), "User")]);
@@ -88,9 +105,8 @@ describe("oxlint rules", () => {
     visitors.CallExpression!(runtimeMember as never);
     visitors["FunctionDeclaration:exit"]!({} as never);
 
-    expect(reports).toHaveLength(2);
+    expect(reports).toHaveLength(1);
     expect(Result.getOrThrow(decodeReportedNode(reports[0])).node).toBe(staticArray.callee);
-    expect(Result.getOrThrow(decodeReportedNode(reports[1])).node).toBe(staticMember.callee);
   });
 
   for (const rule of OXLINT_RULES) {
