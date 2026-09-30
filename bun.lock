@@ -841,7 +841,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
-        "@beep/schema": "workspace:^",
         "@effect/ai-anthropic": "catalog:",
         "effect": "catalog:",
       },
@@ -1328,7 +1327,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
-        "@beep/schema": "workspace:^",
         "@effect/ai-openai": "catalog:",
         "effect": "catalog:",
       },
@@ -2364,7 +2362,6 @@
         "@beep/dock": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/pretext": "workspace:^",
-        "@beep/schema": "workspace:^",
         "@effect/atom-react": "catalog:",
         "effect": "catalog:",
       },

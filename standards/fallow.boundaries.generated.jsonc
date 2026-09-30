@@ -1064,14 +1064,12 @@
         "allow": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -1550,7 +1548,6 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema",
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
@@ -1558,7 +1555,6 @@
           "@beep/dock-react",
           "@beep/identity",
           "@beep/pretext",
-          "@beep/schema",
           "@beep/test-runner"
         ]
       },
@@ -2893,14 +2889,12 @@
         "allow": [
           "@beep/identity",
           "@beep/openai",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
