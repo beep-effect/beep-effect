@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
-import { Effect, HashMap, Path, pipe } from "effect";
+import { Effect, HashMap, HashSet, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { todayYmd } from "../../../internal/cli/Timing.ts";
-import { diffMembership } from "../../../internal/ratchet/index.ts";
+import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import {
   isActiveSchemaFirstRuleAdvisory,
   LiteralKitConstAssertionViolation,
@@ -26,6 +26,7 @@ import {
 import { SchemaFirstRender } from "../SchemaFirst.render.ts";
 import { SchemaFirstArbitraryCoverage } from "./SchemaFirstArbitraryCoverage.ts";
 import { SchemaFirstDetectors } from "./SchemaFirstDetectors.ts";
+import { diffSchemaFirstParity, toSchemaFirstBacklog } from "./SchemaFirstParity.ts";
 import { isSchemaCrispeningPolicyExempt } from "./SchemaFirstPolicy.ts";
 import {
   isSchemaFirstExcludedFile,
@@ -38,7 +39,13 @@ import {
   writeSchemaFirstInventoryDocument,
 } from "./SchemaFirstStore.ts";
 import type { CallExpression, SourceFile } from "ts-morph";
-import type { SchemaCrispeningPolicyDocument, SchemaFirstEntryKind, SchemaFirstLintOptions } from "../Lint.schemas.ts";
+import type {
+  SchemaCrispeningPolicyDocument,
+  SchemaFirstBacklogRow,
+  SchemaFirstEntryKind,
+  SchemaFirstLintOptions,
+  SchemaFirstParityFindings,
+} from "../Lint.schemas.ts";
 import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
 import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
@@ -100,7 +107,7 @@ const appendCandidate = (
   A.appendInPlace(entries, SchemaFirstInventoryEntry.make({ file, symbol, kind, status: "candidate", reason, owner }));
 };
 
-const appendArbitraryAndTaggedErrorEntries = (
+const appendArbitraryEntries = (
   entries: Array<SchemaFirstInventoryEntry>,
   sourceFile: SourceFile,
   filePath: string,
@@ -110,13 +117,6 @@ const appendArbitraryAndTaggedErrorEntries = (
     entries,
     SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile(sourceFile, filePath, owner)
   );
-  if (isExcludedTypeScriptSourcePath(filePath) || !SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) return;
-  for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
-    appendOptionEntry(
-      entries,
-      SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(declaration, filePath, owner)
-    );
-  }
 };
 
 const appendInterfaceEntries = (
@@ -306,12 +306,17 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const project = yield* makeSchemaFirstProject();
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
+  const parityEntries = A.empty<SchemaFirstInventoryEntry>();
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath()));
     const owner = ownerResolver(sourceFile.getFilePath());
-    appendArbitraryAndTaggedErrorEntries(entries, sourceFile, filePath, owner);
+    appendArbitraryEntries(entries, sourceFile, filePath, owner);
     if (isSchemaFirstExcludedFile(filePath)) continue;
+    A.appendAllInPlace(
+      parityEntries,
+      yield* SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner)
+    );
     appendInterfaceEntries(entries, sourceFile, filePath, owner);
     appendTypeAliasEntries(entries, sourceFile, filePath, owner);
     appendCallEntries(entries, sourceFile, filePath, owner);
@@ -322,19 +327,39 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     appendEquivalenceEntries(entries, sourceFile, filePath, owner);
   }
 
-  return SchemaFirstInventoryDocument.make({
-    version: 1,
-    generatedOn: todayYmd(),
-    scope: A.fromIterable(SchemaFirstIncludedGlobs),
-    entries: sortSchemaFirstEntries(
-      A.dedupeWith(entries, (left, right) => makeSchemaFirstEntryKey(left) === makeSchemaFirstEntryKey(right))
-    ),
-  });
+  return {
+    document: SchemaFirstInventoryDocument.make({
+      version: 1,
+      generatedOn: todayYmd(),
+      scope: A.fromIterable(SchemaFirstIncludedGlobs),
+      entries: sortSchemaFirstEntries(
+        A.dedupeWith(entries, (left, right) => makeSchemaFirstEntryKey(left) === makeSchemaFirstEntryKey(right))
+      ),
+      backlog: toSchemaFirstBacklog(parityEntries),
+    }),
+    parityEntries,
+  };
 });
+
+// The parity backlog only shrinks on `--write`: occurrences the committed backlog does not
+// already track stay out unless `--admit-parity-backlog` explicitly admits them.
+const parityBacklogToWrite = (
+  options: SchemaFirstLintOptions,
+  parityEntries: ReadonlyArray<SchemaFirstInventoryEntry>,
+  parity: SchemaFirstParityFindings
+): ReadonlyArray<SchemaFirstBacklogRow> => {
+  const introducedKeys = HashSet.fromIterable(A.map(parity.introduced, makeSchemaFirstEntryKey));
+  return toSchemaFirstBacklog(
+    options.admitParityBacklog
+      ? parityEntries
+      : A.filter(parityEntries, (entry) => !HashSet.has(introducedKeys, makeSchemaFirstEntryKey(entry)))
+  );
+};
 
 const mergeInventory = (
   liveDocument: SchemaFirstInventoryDocument,
-  existingDocument: O.Option<SchemaFirstInventoryDocument>
+  existingDocument: O.Option<SchemaFirstInventoryDocument>,
+  backlog: ReadonlyArray<SchemaFirstBacklogRow>
 ): SchemaFirstInventoryDocument => {
   const existingByKey = pipe(
     existingDocument,
@@ -358,11 +383,13 @@ const mergeInventory = (
     generatedOn: liveDocument.generatedOn,
     scope: liveDocument.scope,
     entries: sortSchemaFirstEntries(mergedEntries),
+    backlog,
   });
 };
 
 const collectSchemaFirstLintFindings = (
   liveDocument: SchemaFirstInventoryDocument,
+  parity: SchemaFirstParityFindings,
   existingDocument: O.Option<SchemaFirstInventoryDocument>,
   mergedDocument: SchemaFirstInventoryDocument,
   policyDocument: O.Option<SchemaCrispeningPolicyDocument>
@@ -389,10 +416,6 @@ const collectSchemaFirstLintFindings = (
   const defaultsAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-defaults"));
   const staticApiAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-static-api"));
   const equivalenceAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-equivalence"));
-  const taggedErrorEquivalenceAdvisories = A.filter(
-    policyFilteredEntries,
-    isActiveSchemaFirstRuleAdvisory("SFV4-tagged-error-equivalence")
-  );
   const precisionAuditAdvisories = A.filter(
     policyFilteredEntries,
     isActiveSchemaFirstRuleAdvisory("SFV4-precision-audit")
@@ -424,7 +447,6 @@ const collectSchemaFirstLintFindings = (
     defaultsAdvisories,
     staticApiAdvisories,
     equivalenceAdvisories,
-    taggedErrorEquivalenceAdvisories,
     precisionAuditAdvisories,
     arbitraryTestsAdvisories,
     numericDomainAdvisories,
@@ -437,7 +459,6 @@ const collectSchemaFirstLintFindings = (
       ...defaultsAdvisories,
       ...staticApiAdvisories,
       ...equivalenceAdvisories,
-      ...taggedErrorEquivalenceAdvisories,
       ...precisionAuditAdvisories,
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,
@@ -446,6 +467,7 @@ const collectSchemaFirstLintFindings = (
       ...nullReturnAdvisories,
       ...getsomesStructAdvisories,
     ],
+    parity,
     policyExemptCount,
   };
 };
@@ -478,12 +500,30 @@ const schemaFirstLintHasFailures = (
  * @since 0.0.0
  */
 export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (options: SchemaFirstLintOptions) {
-  const liveDocument = yield* scanSchemaFirstInventory();
+  const { document: liveDocument, parityEntries } = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
-  const mergedDocument = mergeInventory(liveDocument, existingDocument);
+  const parity = diffSchemaFirstParity(
+    parityEntries,
+    pipe(
+      existingDocument,
+      O.map((document) => document.backlog),
+      O.getOrElse(A.empty<SchemaFirstBacklogRow>)
+    )
+  );
+  const mergedDocument = mergeInventory(
+    liveDocument,
+    existingDocument,
+    parityBacklogToWrite(options, parityEntries, parity)
+  );
   const policyDocument = yield* readCrispeningPolicyDocument();
-  const findings = collectSchemaFirstLintFindings(liveDocument, existingDocument, mergedDocument, policyDocument);
+  const findings = collectSchemaFirstLintFindings(
+    liveDocument,
+    parity,
+    existingDocument,
+    mergedDocument,
+    policyDocument
+  );
   const summary = SchemaFirstRender.makeSchemaFirstLintSummary({
     liveDocument,
     mergedDocument,
@@ -502,6 +542,7 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   yield* SchemaFirstRender.logEnforcedCandidates(findings.enforcedCandidates);
   yield* SchemaFirstRender.logLiteralKitConstAssertionViolations(literalKitConstAssertionViolations);
   yield* SchemaFirstRender.logActiveAdvisories(findings.activeAdvisories);
+  yield* enforceRatchet(yield* SchemaFirstRender.parityRatchetInput(findings.parity, options));
 
   if (schemaFirstLintHasFailures(options, findings, literalKitConstAssertionViolations)) {
     return yield* failWithReportedExit("schema-first: inventory enforcement failed.");

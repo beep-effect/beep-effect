@@ -146,3 +146,109 @@ machine ids, quote only the minimal identifying error text.
   todox, infra), so the refresh was not taken into the P1 change.
 - **What would have prevented it:** A hosted lane, or a Yeet cheap gate, that
   keeps the catalog current per PR; today nothing fails when it drifts.
+
+## 2026-09-29 — `lint effect-vitest --write` rewrites the whole inventory for a two-file change
+
+- **What I was doing:** P4 gate cut: recording the reviewed rows for one new
+  repo-cli test file and three edited tests in `lint-command.test.ts`.
+- **Evidence:** `bun run beep lint effect-vitest --write` rewrote
+  `standards/effect-vitest.inventory.jsonc` as a 100,845-line diff (50,312
+  insertions, 50,533 deletions) across dozens of unrelated test files. The
+  committed file carries hand-merged compact one-line rows (for example near
+  line 27006) and row sets that differ from a fresh scan, so the writer's
+  canonical output never round-trips it. The lane reverted and spliced the
+  four live rows in by hand (84 insertions, 357 deletions, only the two
+  touched files); `lint effect-vitest` then read `introduced=0`.
+- **What would have prevented it:** A `--write --files <path>...` mode that
+  replaces only the named files' rows, or a canonical re-format of the
+  committed inventory on `main` so `--write` is a no-op on untouched files.
+
+## 2026-09-29 — Ten concurrent until-ready monitors drained the account's GraphQL pool
+
+- **What I was doing:** Driving ten open PRs of the retirement train, each with
+  its own detached `bun run beep yeet monitor --until-ready` job.
+- **Evidence:** every `gh api graphql` call returned `graphql_rate_limit`
+  ("API rate limit already exceeded") while the REST core pool sat at
+  5,000/5,000; each monitor log repeated `merge readiness is unknown; the PR
+  could not be read` and kept polling; `yeet reply` could not post or resolve
+  threads until the hourly reset. `gh api rate_limit` still reported about
+  4,990 GraphQL points remaining, so the usual probe did not show the outage.
+- **What would have prevented it:** Poll checks and mergeability over REST and
+  keep GraphQL for review threads only; back off on a rate-limit error instead
+  of polling at the same cadence; or let one monitor job watch several PRs.
+  The train fell back to a REST-only watcher and re-submits a monitor per PR
+  only for the final merge-ready verdict.
+
+## 2026-09-29 — A merge left Heavy reds on main and two sessions repaired them twice
+
+- **What I was doing:** Merging `origin/main` into the train's lanes after the
+  codemod engine (#1337) landed.
+- **Evidence:** `bun run beep lint effect-vitest` exits 1 on `main` with one
+  new finding for `schema-parity-codemod.test.ts`; Heavy / Lint Policy and
+  Heavy / Coverage Regression are red on every PR's merged preview. #1337 was
+  judged merge-ready before its Heavy matrix had reported. Two sessions then
+  opened repair PRs within fifteen minutes of each other (#1348, and a one-row
+  duplicate that was closed).
+- **What would have prevented it:** The merge-ready verdict must wait for the
+  admitted Heavy jobs of the current head; a main-red repair should be claimed
+  in one visible place (an inbox row or an issue) before a lane is opened.
+
+## 2026-09-29 — PR titles were taken from the newest commit
+
+- **What I was doing:** Opening PRs with `yeet publish --start-pr-early --pr`
+  on branches whose newest commit was a merge of `origin/main` or a transient
+  `chore(repo-cli)` commit.
+- **Evidence:** seven PRs were titled `Merge remote-tracking branch
+  'origin/main' into …` or after the last housekeeping commit. The squash
+  title is server-side commitlint input, so each had to be retitled by hand.
+- **What would have prevented it:** Derive the PR title from the first
+  non-merge commit of the branch, or require `--title` when the newest commit
+  is a merge.
+
+## 2026-09-29 — Two gates disagree about a same-name type alias
+
+- **What I was doing:** Clearing a hosted `JSDoc Ratchet` red on the text/misc
+  retirement (`schemaAnnotationFindings` 1 > 0) by adding the same-name decoded
+  type alias next to `DerivedThreadTitle`.
+- **Evidence:** the alias satisfied the ratchet and the next round went red on
+  `Fallow Advisory Envelopes`: `fallow dead-code` reported the alias as an
+  unused type export (`apps/professional-desktop/src/chat/DerivedThreadTitle.ts:73`).
+  The fix was to use the alias at the one decode site in `ChatOrchestrator.ts`.
+- **What would have prevented it:** the ratchet's alias expectation and the
+  dead-code gate should agree: either the ratchet accepts an exported schema
+  whose decoded type is only consumed inline, or the alias rule is scoped to
+  schemas whose type is referenced by name. One local command that runs both
+  (`beep ci lane jsdoc-ratchet` and `beep ci lane fallow`) before pushing would
+  have caught the pair in one round.
+
+## 2026-09-29 — The duplication gate flags the doctrine's consumer-local compositions
+
+- **What I was doing:** Retiring `@beep/schema` `Int`: the upstream-first
+  doctrine puts a named `PosInt` composition in each consuming package instead
+  of a shared abstraction, so 25 packages gained an identical
+  `internal/PosInt.ts`.
+- **Evidence:** hosted `Fallow Advisory Envelopes` red on the numeric PR:
+  `fallow audit --gate new-only` reports one introduced clone group
+  (`dup:6f87acd9`, 19 instances, 51 tokens, 39 lines, suggested name `PosInt`).
+  The audit's own remedy ("extract into a shared function") is exactly what the
+  doctrine forbids for retired foundation concepts.
+- **What would have prevented it:** a doctrine-level rule for the duplication
+  gate: consumer-local compositions that replace a retired shared concept are
+  admitted duplication, marked with the existing `fallow-ignore-file
+  code-duplication` convention (11 files already use it) and a one-line reason
+  naming the retirement. The P3 lane brief now says so.
+
+## 2026-09-29 — A consumer that lands on main after the merge-base is invisible to the lane
+
+- **What I was doing:** Driving the text/misc retirement PR after two unrelated
+  PRs merged on main.
+- **Evidence:** one of them added `packages/tooling/tool/cli/test/support/ProofJobWait.ts`
+  with `import type { UUID } from "@beep/schema/String"`, a subpath the PR
+  retires. Every local gate on the branch was green; the hosted fallow
+  dead-code lane, which runs on the merged preview, reported the file as an
+  unresolved import, and the envelope attributed it as not applicable while
+  still failing the job.
+- **What would have prevented it:** the retirement lane brief now says to merge
+  `origin/main` and grep for the retired subpaths before every push; a hosted
+  guard that lists new imports of a subpath the PR deletes would name the file
+  directly instead of leaving it to the dead-code envelope's exit code.

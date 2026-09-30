@@ -1439,6 +1439,17 @@ Schema class factory call, including through a referenced annotation record.
 Intentional divergences enter `standards/schema-first.inventory.jsonc` through
 `bun run beep lint schema-first --write` with a justification.
 
+Amended 2026-09-29: the `SFV4-tagged-error-equivalence` rule is retired by
+the `effect-schema-parity` P4 gate cut (the F26 correction in that
+exploration's "First gate cut" ruling, 2026-09-14). The derived-equivalence
+decision above stands; only the lint is gone. The always-equal field recipe
+moves to the upstream form,
+`S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))` or the
+same override on `S.Unknown`, because `Defect` and `OpaqueUnknown` from
+`@beep/schema` retire with the Opaque concept under
+"2026-09-29: Upstream-First Foundation/Modeling"; the schema-first rule
+`SFV4-opaque-wrapper` tracks their remaining uses.
+
 Rationale:
 
 The 2026-08-24 rule encoded a premise that upstream removed two RCs later. A

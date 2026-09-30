@@ -40,11 +40,13 @@ const ClaimCountDatabaseRow = S.Struct({ count: NonNegativeInt }).pipe(
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
+const ClaimSelectRows = Claims.select.pipe(S.Array, S.mutable);
 const decodeClaimRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Claims.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ClaimSelectRows)(rows));
 
+const CorrectionSelectRows = Corrections.select.pipe(S.Array, S.mutable);
 const decodeCorrectionRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Corrections.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(CorrectionSelectRows)(rows));
 
 const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
@@ -180,8 +182,9 @@ export class CorrectionChainEntry extends S.Class<CorrectionChainEntry>($I`Corre
   })
 ) {}
 
+const CorrectionChainEntryRows = CorrectionChainEntry.pipe(S.Array, S.mutable);
 const decodeCorrectionChainEntries = (rows: unknown) =>
-  S.decodeUnknownEffect(CorrectionChainEntry.pipe(S.Array, S.mutable))(rows).pipe(
+  S.decodeUnknownEffect(CorrectionChainEntryRows)(rows).pipe(
     Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
   );
 
