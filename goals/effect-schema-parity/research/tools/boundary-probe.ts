@@ -8,6 +8,9 @@
 // it is only as stable as the Bun/ICU build that runs it.
 //
 // Run from the repo root: bun run goals/effect-schema-parity/research/tools/boundary-probe.ts
+// Pinned evidence: this probe compares the retired @beep/schema group D and E concepts with
+// their upstream replacements, so it only resolves at commit 45d0490d22 (PR #1334), before
+// those concepts were deleted. Check that commit out in a scratch worktree to re-run it.
 import { Timezones } from "@beep/data";
 import { ArrayBuf } from "@beep/schema/ArrayBuffer";
 import * as ArrayOf from "@beep/schema/ArrayOf";

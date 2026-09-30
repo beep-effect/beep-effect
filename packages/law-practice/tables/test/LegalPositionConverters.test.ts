@@ -10,10 +10,10 @@ import * as Arbitrary from "effect/Arbitrary";
  * direction looks fine on its own.
  *
  * These are the repo's first persisted entities carrying set-valued fields, so
- * one suite is about nothing else. `effect/Schema`'s `HashSet` encodes a set to
- * a tagged `{"_id":"HashSet","values":[...]}` wrapper and refuses to decode
- * either that wrapper or a plain array, which makes a jsonb round trip fail in
- * both directions; `HashSet` from `@beep/schema` encodes to a plain array and
+ * one suite is about nothing else. A bare `S.HashSet` encodes a set to a tagged
+ * `{"_id":"HashSet","values":[...]}` wrapper and refuses to decode either that
+ * wrapper or a plain array, which makes a jsonb round trip fail in both
+ * directions; `S.toCodecJson(S.HashSet(Item))` encodes to a plain array and
  * decodes one back. The suite asserts the stored shape is a real JSON array and
  * that what comes back out is a real `HashSet`, because a converter that only
  * asserted equality would pass under either schema.

@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2879 |
-| publicExports | 20424 |
+| publicModules | 2863 |
+| publicExports | 20313 |
 | openModules | 372 |
-| openExports | 3079 |
+| openExports | 3057 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3311 |
+| exampleImportFindings | 3288 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3310 |
+| no-root-package-import | 3287 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 8 | 230 | 2 | 204 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 216 | 6 | 118 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 237 | 1505 | 20 | 150 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 221 | 1391 | 20 | 129 |
 | 8 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 9 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 17 | 51 | 1 | 3 |
 | 10 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 16 | 546 | 9 | 52 |
@@ -179,7 +179,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 86 | 0 | 14 |
 | 122 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 123 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 124 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 249 | 2538 | 4 | 326 |
+| 124 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 249 | 2541 | 4 | 325 |
 | 125 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 7 | 14 | 0 | 3 |
 | 126 | `@beep/tailscale` | `packages/drivers/tailscale` | needs-remediation | 5 | 29 | 0 | 3 |
 | 127 | `@beep/todox` | `apps/todox` | clean | 16 | 57 | 0 | 0 |
@@ -631,11 +631,9 @@ Module findings:
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ArrayBuffer.ts:99` `ArrayBuf` (const) - 2 example import violation(s)
 - `src/AtURI.ts:240` `AtUri` (const) - 1 example import violation(s)
 - `src/AtURI.ts:269` `AtUri` (type) - 1 example import violation(s)
 - `src/AtURI.ts:292` `AtUri` (namespace) - 1 example import violation(s)
-- `src/Bytes.ts:50` `Bytes` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:138` `Annotation` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.annotations.ts:189` `makeAnnotationResult` (const) - 1 example import violation(s)
 - `src/Conformance/Conformance.collector.ts:43` `collectConformanceAnnotationsResult` (const) - 1 example import violation(s)
@@ -683,12 +681,12 @@ Export findings:
 - `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
 - `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
 - `src/Email.ts:96` `Email` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:52` `Added` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:86` `Deleted` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:121` `Modified` (class) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:155` `Info` (const) - 2 example import violation(s)
-- `src/FileDiff.schema.ts:177` `Info` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:195` `Info` (namespace) - 1 example import violation(s)
+- `src/FileDiff.schema.ts:68` `Added` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:102` `Deleted` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:137` `Modified` (class) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:171` `Info` (const) - 2 example import violation(s)
+- `src/FileDiff.schema.ts:193` `Info` (type) - 1 example import violation(s)
+- `src/FileDiff.schema.ts:211` `Info` (namespace) - 1 example import violation(s)
 - `src/Fixed32.ts:68` `Fixed32` (const) - 1 example import violation(s)
 - `src/Fixed64.ts:58` `Fixed64` (const) - 1 example import violation(s)
 - `src/Float.ts:57` `Float` (const) - 1 example import violation(s)
@@ -696,17 +694,6 @@ Export findings:
 - `src/Fn/Fn.schema.ts:593` `Fn` (function) - 5 example import violation(s)
 - `src/Fn/Fn.schema.ts:476` `AnyFn` (const) - 1 example import violation(s)
 - `src/Fn/Fn.schema.ts:498` `AnyFn` (type) - 1 example import violation(s)
-- `src/Graph/Graph.edge.ts:228` `Edge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:32` `isEdge` (const) - 1 example import violation(s)
-- `src/Graph/Graph.guards.ts:52` `isGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:83` `rebuildImmutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.rebuild.ts:146` `rebuildMutableGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:239` `toRawEdgeEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:265` `toRawGraphEncoded` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:312` `formatGraph` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:387` `makeGraphEquivalence` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:463` `isImmutableGraphValue` (const) - 1 example import violation(s)
-- `src/Graph/Graph.shared.ts:483` `isMutableGraphValue` (const) - 1 example import violation(s)
 - `src/Http/Http.headers.shared.ts:275` `makeHeaderEncodeForbidden` (const) - 1 example import violation(s)
 - `src/HttpStatus/HttpStatus.shared.ts:26` `$I` (const) - 1 example import violation(s)
 - `src/Int64.ts:124` `Int64FromString` (const) - 1 example import violation(s)
@@ -722,12 +709,6 @@ Export findings:
 - `src/LocalDate/LocalDate.schema.ts:343` `fromDateTime` (const) - 1 example import violation(s)
 - `src/Markdown.ts:184` `MarkdownTextToHtml` (const) - 1 example import violation(s)
 - `src/Markdown.ts:222` `decodeMarkdownTextAs` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:112` `MutableHashMapFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashMap.ts:195` `MutableHashMapFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashMap.ts:169` `isMutableHashMap` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:82` `MutableHashSetFromSelf` (interface) - 1 example import violation(s)
-- `src/MutableHashSet.ts:160` `MutableHashSetFromSelf` (const) - 1 example import violation(s)
-- `src/MutableHashSet.ts:134` `isMutableHashSet` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:153` `NoSniffHeader` (const) - 1 example import violation(s)
 - `src/NoSniff/NoSniff.schema.ts:255` `Header` (const) - 1 example import violation(s)
 - `src/PascalStr.ts:29` `PascalCaseStr` (const) - 1 example import violation(s)
@@ -735,19 +716,17 @@ Export findings:
 - `src/Port.ts:71` `Port` (const) - 1 example import violation(s)
 - `src/Port.ts:125` `PortFromString` (const) - 1 example import violation(s)
 - `src/Port.ts:152` `PortFromString` (type) - 1 example import violation(s)
-- `src/RegExp.ts:108` `RegExpFromStr` (const) - 1 example import violation(s)
-- `src/RegExp.ts:138` `RegExpFromStr` (type) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:92` `BlockedHostError` (class) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:278` `isBlockedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:323` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:388` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:91` `BlockedHostError` (class) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:279` `isBlockedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:324` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
+- `src/SafeRemoteHost.ts:389` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
 - `src/SchemaUtils/encoders.ts:59` `encodeEffect` (const) - 1 example import violation(s)
 - `src/SchemaUtils/encoders.ts:116` `encodeUnknownEffect` (const) - 1 example import violation(s)
 - `src/SchemaUtils/toEquivalence.ts:70` `toEquivalence` (const) - 1 example import violation(s)
 - `src/SchemaUtils/withCodecStatics.ts:420` `withCodecStatics` (const) - 1 example import violation(s)
 - `src/SchemaUtils/withKeyDefaults.ts:120` `withEmptyArrayDefaults` (function) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:403` `SecureHeaderError` (type) - 1 example import violation(s)
-- `src/SecureHeaderError/SecureHeaderError.errors.ts:403` `Error` (type) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:404` `SecureHeaderError` (type) - 1 example import violation(s)
+- `src/SecureHeaderError/SecureHeaderError.errors.ts:404` `Error` (type) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:168` `createHeadersObject` (const) - 1 example import violation(s)
 - `src/SecureHeaderOptions/SecureHeaderOptions.schema.ts:200` `createSecureHeaders` (const) - 1 example import violation(s)
 - `src/SemanticVersion.ts:57` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
@@ -762,25 +741,25 @@ Export findings:
 - `src/Sint64.ts:58` `Sint64` (const) - 1 example import violation(s)
 - `src/SnakeStr.ts:29` `SnakeCaseStr` (const) - 1 example import violation(s)
 - `src/SnakeStr.ts:58` `SnakeCaseStr` (type) - 2 example import violation(s)
-- `src/StatusCauseError.ts:48` `StatusCauseFields` (const) - 1 example import violation(s)
-- `src/StatusCauseError.ts:228` `makeStatusCauseError` (const) - 1 example import violation(s)
-- `src/String.ts:241` `StrFromUnknown` (const) - 1 example import violation(s)
-- `src/String.ts:271` `StrFromUnknown` (type) - 1 example import violation(s)
-- `src/String.ts:290` `OptionFromOptionalStrWithNoneDefault` (const) - 1 example import violation(s)
+- `src/StatusCauseError.ts:47` `StatusCauseFields` (const) - 1 example import violation(s)
+- `src/StatusCauseError.ts:227` `makeStatusCauseError` (const) - 1 example import violation(s)
+- `src/String.ts:240` `StrFromUnknown` (const) - 1 example import violation(s)
+- `src/String.ts:270` `StrFromUnknown` (type) - 1 example import violation(s)
+- `src/String.ts:289` `OptionFromOptionalStrWithNoneDefault` (const) - 1 example import violation(s)
 - `src/Timestamp/Timestamp.schema.ts:352` `fromDateTime` (const) - 1 example import violation(s)
 - `src/Timestamp/Timestamp.schema.ts:390` `fromString` (const) - 1 example import violation(s)
 - `src/Timestamp/Timestamp.schema.ts:435` `nowEffect` (const) - 1 example import violation(s)
-- `src/Toml.ts:84` `TomlTextToUnknown` (const) - 1 example import violation(s)
-- `src/Toml.ts:126` `decodeTomlTextAs` (const) - 1 example import violation(s)
+- `src/Toml.ts:85` `TomlTextToUnknown` (const) - 1 example import violation(s)
+- `src/Toml.ts:127` `decodeTomlTextAs` (const) - 1 example import violation(s)
 - `src/Uint32.ts:68` `Uint32` (const) - 1 example import violation(s)
 - `src/Uint64.ts:58` `Uint64` (const) - 1 example import violation(s)
 - `src/Xml.ts:86` `XmlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Xml.ts:131` `decodeXmlTextAs` (const) - 1 example import violation(s)
 - `src/Yaml.ts:86` `YamlTextToUnknown` (const) - 1 example import violation(s)
 - `src/Yaml.ts:128` `decodeYamlTextAs` (const) - 1 example import violation(s)
-- `src/index.ts:226` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:262` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:362` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
+- `src/index.ts:196` `export * as HttpMethod from "./HttpMethod/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:232` `export * as JSONSchema from "./JSONSchema/index.ts";` (re-export) - 1 example import violation(s)
+- `src/index.ts:305` `export * from "./Port.ts";` (re-export) - 2 example import violation(s)
 
 ### @beep/pglite
 
@@ -4051,40 +4030,39 @@ Export findings:
 - `claudecode/Frontmatter/Render.ts:239` `renderOutputStyle` (const) - 1 example import violation(s)
 - `claudecode/Frontmatter/Skill.ts:129` `SkillFrontmatter` (class) - 1 example import violation(s)
 - `claudecode/Frontmatter/Subagent.ts:81` `SubagentFrontmatter` (class) - 1 example import violation(s)
-- `claudecode/Testing.ts:264` `RunHookResult` (class) - 1 example import violation(s)
+- `claudecode/Testing.ts:265` `RunHookResult` (class) - 1 example import violation(s)
 - `codemode/Codemode.result.ts:371` `encodeResultModel` (const) - 1 example import violation(s)
 - `codemode/Codemode.service.ts:177` `resolveExecutionLimits` (const) - 1 example import violation(s)
 - `codemode/Codemode.service.ts:206` `execute` (const) - 1 example import violation(s)
 - `codemode/Codemode.service.ts:247` `make` (const) - 1 example import violation(s)
-- `codemode/Codemode.tool-runtime.ts:1112` `prepare` (const) - 1 example import violation(s)
-- `codemode/Codemode.tool-runtime.ts:1147` `searchIndex` (const) - 1 example import violation(s)
-- `codemode/Codemode.tool-runtime.ts:1323` `make` (const) - 1 example import violation(s)
-- `codemode/Codemode.values.ts:146` `CodeModePromise` (class) - 1 example import violation(s)
-- `codemode/Codemode.values.ts:470` `isCodeModeValue` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.errors.ts:257` `constructAggregateErrorValue` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.execute.ts:80` `executeWithLimits` (const) - 1 example import violation(s)
+- `codemode/Codemode.tool-runtime.ts:1113` `prepare` (const) - 1 example import violation(s)
+- `codemode/Codemode.tool-runtime.ts:1148` `searchIndex` (const) - 1 example import violation(s)
+- `codemode/Codemode.tool-runtime.ts:1324` `make` (const) - 1 example import violation(s)
+- `codemode/Codemode.values.ts:182` `CodeModePromise` (class) - 1 example import violation(s)
+- `codemode/Codemode.values.ts:506` `isCodeModeValue` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.errors.ts:258` `constructAggregateErrorValue` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.execute.ts:81` `executeWithLimits` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.iterator.ts:101` `preserveConsumerError` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.methods.ts:219` `invokeIntrinsic` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.methods.ts:619` `invokeArrayFrom` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.methods.ts:718` `invokeGroupBy` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.methods.ts:936` `applyCollectionCallback` (const) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.model.ts:292` `Scope` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:482` `MemberReference` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:553` `CodeModeFunction` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:635` `CodeModeGenerator` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:710` `GeneratorMethodReference` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:1106` `PromiseInstanceMethodReference` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:1939` `tryInterpreter` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.model.ts:2026` `asNode` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:101` `PromiseRuntime` (class) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:395` `resolvePromiseValue` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:481` `resolvePromise` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:583` `invokePromiseMethod` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:756` `invokePromiseInstanceMethod` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.promises.ts:855` `constructPromise` (const) - 1 example import violation(s)
-- `codemode/interpreter/Interpreter.runtime.ts:482` `Interpreter` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:560` `CodeModeFunction` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:642` `CodeModeGenerator` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:717` `GeneratorMethodReference` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:1113` `PromiseInstanceMethodReference` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:1946` `tryInterpreter` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.model.ts:2033` `asNode` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:100` `PromiseRuntime` (class) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:394` `resolvePromiseValue` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:480` `resolvePromise` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:582` `invokePromiseMethod` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:755` `invokePromiseInstanceMethod` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.promises.ts:854` `constructPromise` (const) - 1 example import violation(s)
+- `codemode/interpreter/Interpreter.runtime.ts:481` `Interpreter` (class) - 1 example import violation(s)
 - `codemode/interpreter/Interpreter.scope.ts:67` `ScopeStack` (class) - 1 example import violation(s)
-- `codemode/openapi/OpenAPI.runtime.ts:683` `invoke` (const) - 1 example import violation(s)
+- `codemode/openapi/OpenAPI.runtime.ts:684` `invoke` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:531` `componentDefinitions` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:926` `operationInput` (const) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.specification.ts:1119` `operationOutput` (const) - 1 example import violation(s)
@@ -4104,7 +4082,7 @@ Export findings:
 - `codemode/openapi/OpenAPI.types.ts:1273` `AppliedAuth` (class) - 1 example import violation(s)
 - `codemode/openapi/OpenAPI.types.ts:1391` `FromSpecResult` (class) - 1 example import violation(s)
 - `codemode/openapi/index.ts:412` `fromSpec` (const) - 2 example import violation(s)
-- `codemode/stdlib/StdLib.json.ts:72` `invokeJsonMethod` (const) - 1 example import violation(s)
+- `codemode/stdlib/StdLib.json.ts:71` `invokeJsonMethod` (const) - 1 example import violation(s)
 - `codemode/stdlib/StdLib.math.ts:184` `invokeMathSumPrecise` (const) - 1 example import violation(s)
 - `codemode/stdlib/StdLib.object.ts:201` `invokeObjectFromEntries` (const) - 1 example import violation(s)
 - `codemode/stdlib/StdLib.url.ts:155` `invokeUriFunction` (const) - 1 example import violation(s)

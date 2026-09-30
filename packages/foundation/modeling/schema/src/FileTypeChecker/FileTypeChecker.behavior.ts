@@ -10,7 +10,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isArrayBuf } from "../ArrayBuffer.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { FileTypeCatalog } from "./FileTypeChecker.catalog.ts";
 import {
@@ -227,7 +226,7 @@ const selectFileChunker = Match.type<FileContent>().pipe(
     isArrayBufferRepresentation,
     (buffer): FileChunker =>
       (chunkSize) =>
-        isArrayBuf(buffer) ? pipe(copyBoundedArrayBuffer(buffer, chunkSize), O.flatMap(decodeBoundedBytes)) : O.none()
+        pipe(copyBoundedArrayBuffer(buffer, chunkSize), O.flatMap(decodeBoundedBytes))
   ),
   Match.orElse((): FileChunker => O.none)
 );

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { ArrayOfNonEmptyStrings } from "@beep/schema";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
@@ -55,9 +54,11 @@ export class EmailArtifact extends ProductEntity.Entity<EmailArtifact>()(Workspa
     receivedAt: UtcIsoTimestamp.annotateKey({
       description: "ISO timestamp when the email artifact was received.",
     }).pipe(pg.text(), pg.columnName("received_at")),
-    sourceSpans: ArrayOfNonEmptyStrings.annotateKey({
-      description: "Source span identifiers covered by this email artifact.",
-    }).pipe(pg.jsonb(), pg.columnName("source_spans")),
+    sourceSpans: S.Array(S.NonEmptyString)
+      .annotateKey({
+        description: "Source span identifiers covered by this email artifact.",
+      })
+      .pipe(pg.jsonb(), pg.columnName("source_spans")),
     subject: S.String.annotateKey({
       description: "Literal email subject preserved from the import source.",
     }).pipe(pg.text()),

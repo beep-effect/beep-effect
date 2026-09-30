@@ -6,14 +6,14 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result } from "effect";
+import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
-import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
@@ -36,7 +36,32 @@ const SingleCharacterText = S.String.check(
   })
 );
 
-const decodeRegExpResult = S.decodeResult(RegExpFromStr);
+const canMakeRegExp = (pattern: string): boolean => Result.isSuccess(Result.try(() => new globalThis.RegExp(pattern)));
+
+const RegExpPatternCheck = S.makeFilter(canMakeRegExp, {
+  identifier: $I`RegExpPatternCheck`,
+  title: "RegExp String",
+  description: "A string that can be converted to a JavaScript RegExp with new RegExp(value).",
+  message: "Expected a valid regular expression pattern string",
+});
+
+// The encoded side stays a plain pattern string, never the `{ source, flags }`
+// object that `S.toCodecJson(S.RegExp)` writes. The pattern check runs before
+// the transformation, so constructing the RegExp cannot throw.
+const RegExpFromPattern = S.String.check(RegExpPatternCheck).pipe(
+  S.decodeTo(
+    S.RegExp,
+    SchemaTransformation.transform({
+      decode: (pattern: string) => new globalThis.RegExp(pattern),
+      encode: Struct.get("source"),
+    })
+  ),
+  $I.annoteSchema("RegExpFromPattern", {
+    description: "A regular expression decoded from its pattern string.",
+  })
+);
+
+const decodeRegExpResult = S.decodeResult(RegExpFromPattern);
 /**
  * A parser header configuration input.
  *
