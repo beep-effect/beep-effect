@@ -191,9 +191,11 @@ export declare namespace MemoryReviewConflict {
   export type Encoded = S.Codec.Encoded<typeof MemoryReviewConflict>;
 }
 
+const isAwareInstantString = S.is(S.String.check(S.isPattern(awareInstant)));
+
 const requireAware = (now: DateTime.DateTime | string): Effect.Effect<DateTime.Utc, MemoryReviewRejected> => {
   if (P.isString(now)) {
-    if (!S.is(S.String.check(S.isPattern(awareInstant)))(now)) {
+    if (!isAwareInstantString(now)) {
       return Effect.fail(MemoryReviewRejected.make({ reason: "review conflict timestamp must be timezone-aware" }));
     }
     return DateTime.makeUnsafe(now).pipe(DateTime.toUtc, Effect.succeed);

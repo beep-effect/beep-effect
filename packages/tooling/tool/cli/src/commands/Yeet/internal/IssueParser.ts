@@ -142,13 +142,15 @@ const issueIdPathIdentity = (packageName: O.Option<string>, file: O.Option<strin
     O.filter(Str.isNonEmpty)
   );
 
+// `position` is the finding's line, or the content anchor of a finding that has one; an
+// anchored id survives line shifts.
 const issueId = (
   step: RepoPlanStep,
   category: QualityIssueCategory,
   message: string,
   packageName: O.Option<string>,
   file: O.Option<string>,
-  line: O.Option<number>
+  position: O.Option<string>
 ): string =>
   A.join(
     [
@@ -159,14 +161,15 @@ const issueId = (
         O.getOrElse(() => "repo")
       ),
       pipe(
-        line,
-        O.map((value) => `${value}`),
+        position,
         O.getOrElse(() => "0")
       ),
       Str.slice(0, 96)(message),
     ],
     "::"
   );
+
+const linePosition = O.map((line: number) => `${line}`);
 
 const issueBase = (
   context: RepoRunContext,
@@ -261,7 +264,7 @@ const diagnosticIssueFromLine = (
   return O.some(
     QualityIssue.make({
       ...issueBase(context, step, result, category, message, inferredPackageName),
-      id: issueId(step, category, message, inferredPackageName, file, startLine),
+      id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
       severity: severityForLine(match.groups.severity ?? "error"),
       confidence: "structured",
       evidence: [line],
@@ -308,7 +311,10 @@ const schemaFirstPolicyIssueFromLine = (
           `${finding.ruleId}: ${finding.message}`,
           inferredPackageName,
           file,
-          startLine
+          pipe(
+            O.fromUndefinedOr(finding.occurrence),
+            O.orElse(() => linePosition(startLine))
+          )
         ),
         subCategory: finding.ruleId,
         severity,

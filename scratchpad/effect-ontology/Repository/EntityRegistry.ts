@@ -285,12 +285,15 @@ const decodeOneCanonicalEntitySqlRow = (rows: unknown) =>
   normalizeDecodedRows(OneCanonicalEntitySqlRow.decodeUnknownEffect(rows));
 const decodeOneEntityAliasSqlRow = (rows: unknown) =>
   normalizeDecodedRows(OneEntityAliasSqlRow.decodeUnknownEffect(rows));
+const CanonicalEntitySelectRows = CanonicalEntities.select.pipe(S.Array, S.mutable);
 const decodeCanonicalEntityDrizzleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(CanonicalEntities.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(CanonicalEntitySelectRows)(rows));
+const EntityAliasSelectRows = EntityAliases.select.pipe(S.Array, S.mutable);
 const decodeEntityAliasDrizzleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(EntityAliases.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(EntityAliasSelectRows)(rows));
+const BlockingCandidateSqlRows = BlockingCandidateSqlRow.pipe(S.Array, S.mutable);
 const decodeBlockingCandidateSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(BlockingCandidateSqlRow.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(BlockingCandidateSqlRows)(rows));
 const decodeOneCountSqlRow = (rows: unknown) => normalizeDecodedRows(OneCountSqlRow.decodeUnknownEffect(rows));
 const decodeOneRegistryStatsSqlRow = (rows: unknown) =>
   normalizeDecodedRows(OneRegistryStatsSqlRow.decodeUnknownEffect(rows));

@@ -166,11 +166,13 @@ export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeQueryError = normalizeDrizzleError("execute");
 
+const ConflictRecordRows = ConflictRecord.pipe(S.Array, S.mutable);
 const decodeConflictRecords = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecord.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecordRows)(rows));
 
+const ConflictSelectRows = Conflicts.select.pipe(S.Array, S.mutable);
 const decodeConflictRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Conflicts.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ConflictSelectRows)(rows));
 
 const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
