@@ -334,10 +334,12 @@ const LlmExampleRows = S.Tuple([LlmExamples.select]).pipe(SchemaUtils.withCodecS
 const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(LlmExampleRows.decodeUnknownEffect(rows));
+const LlmExampleSelectRows = LlmExamples.select.pipe(S.Array, S.mutable);
 const decodeLlmExampleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(LlmExamples.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleSelectRows)(rows));
+const ScoredExampleSqlRows = ScoredExample.pipe(S.Array, S.mutable);
 const decodeScoredExampleSqlRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ScoredExample.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ScoredExampleSqlRows)(rows));
 const decodeOneExampleStatsSqlRow = (rows: unknown) => normalizeDecodedRows(ExampleStatsRows.decodeUnknownEffect(rows));
 
 // =============================================================================

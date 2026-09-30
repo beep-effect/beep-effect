@@ -2191,6 +2191,35 @@ describe("yeet quality issue index", () => {
     );
   });
 
+  it("keys an anchored parity finding by its occurrence anchor, not its line", () => {
+    const lintStep = feedbackStep("feedback:lint", "lint");
+    const parityIssueAt = (line: number) =>
+      qualityIssuesFromStepResult(
+        context,
+        lintStep,
+        RepoStepRunResult.make({
+          stepId: lintStep.id,
+          commandText: "bun run beep lint schema-first",
+          exitCode: 1,
+          output:
+            '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-default-wrapper",' +
+            `"severity":"error","file":"packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts","line":${line},` +
+            '"symbol":"Widget.title","occurrence":"Widget.title::withNoneDefault@3f2a9c41b0de",' +
+            '"message":"SchemaUtils.withNoneDefault wraps an upstream schema default.",' +
+            '"remediation":"Use S.withConstructorDefault directly."}',
+          rawOutputRef: ".beep/yeet/logs/lint-schema-first.log",
+        })
+      );
+    const [before] = parityIssueAt(12);
+    const [after] = parityIssueAt(40);
+
+    expect(before?.id).toBe(after?.id);
+    expect(before?.id).toContain("::Widget.title::withNoneDefault@3f2a9c41b0de::");
+    expect(before?.id).not.toContain("::12::");
+    expect(before).toMatchObject({ subCategory: "SFV4-default-wrapper", line: 12 });
+    expect(after).toMatchObject({ line: 40 });
+  });
+
   it("renders deterministic per-package Markdown packets", () => {
     const checkStep = feedbackStep("feedback:check", "check");
     const lintStep = feedbackStep("feedback:lint", "lint");

@@ -197,6 +197,8 @@ const utf8Size = (value: string): number => new TextEncoder().encode(value).byte
  * @category serialization
  * @since 0.0.0
  */
+const ContentBlocksJsonString = S.JsonObject.pipe(S.Array, S.fromJsonString);
+
 export const getMessageAsDict = Effect.fn("NotificationMessage.getMessageAsDict")(function* (
   message: NotificationMessage,
 ) {
@@ -215,7 +217,7 @@ export const getMessageAsDict = Effect.fn("NotificationMessage.getMessageAsDict"
   if (O.isNone(message.contentBlocks) || message.contentBlocks.value.length === 0) return payload;
   const blocks: Array<{ readonly [key: string]: S.Json }> = [];
   for (const block of message.contentBlocks.value) blocks.push(block);
-  const encoded = yield* S.encodeEffect(S.JsonObject.pipe(S.Array, S.fromJsonString))(blocks);
+  const encoded = yield* S.encodeEffect(ContentBlocksJsonString)(blocks);
   const bytes = utf8Size(encoded);
   if (bytes > MAX_CONTENT_BLOCKS_BYTES) {
     yield* Effect.logWarning(

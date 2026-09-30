@@ -40,8 +40,9 @@ const ArticleCountDatabaseRow = S.Struct({ count: S.Int }).pipe(
 const normalizeQueryError = normalizeDrizzleError("execute");
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
+const ArticleSelectRows = Articles.select.pipe(S.Array, S.mutable);
 const decodeArticleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(Articles.select.pipe(S.Array, S.mutable))(rows));
+  normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
 
 const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 

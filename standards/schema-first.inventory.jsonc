@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-28",
+  "generatedOn": "2026-09-29",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -936,6 +936,671 @@
       "line": 28,
       "owner": "@beep/repo-cli",
       "reason": "Hook adapter regression encodes and decodes fixed hook payload JSON through S.fromJsonString codecs to prove adapter wiring; the payloads are fixed fixtures, not a schema law."
+    }
+  ],
+  "backlog": [
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "apps/practice-kg-mcp/src/PracticeKgMcp.errors.ts",
+      "occurrences": [
+        "PackageFailure.cause::Defect@6d879d37ba9a",
+        "PracticeKgHostError.cause::Defect@6d879d37ba9a",
+        "SmokeFailure.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "apps/professional-desktop/src/chat/ui/YouTubeWatchOpener.tsx",
+      "occurrences": ["YouTubeWatchOpenFailed.cause::Defect@46aa5268b53a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "occurrences": [
+        "BrowserFileReadError.cause::Defect@a79433bb7c26",
+        "VaultDirectoryPickerInvocationError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "apps/professional-desktop/src/runtime/Pglite.ts",
+      "occurrences": [
+        "IncompatiblePgliteDataDir.cause::OpaqueUnknown@647591f550f2"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/acp/src/Acp.errors.ts",
+      "occurrences": [
+        "AcpProcessExitedError.cause::Defect@c3d3437d004c",
+        "AcpProtocolParseError.cause::Defect@c3d3437d004c",
+        "AcpSpawnError.cause::Defect@c3d3437d004c",
+        "AcpTransportError.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts",
+      "occurrences": [
+        "AiProviderCliHomeFileSystemError.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+      "occurrences": [
+        "DrizzleError.cause::Defect@c3d3437d004c",
+        "optionFromSafeDefect::Defect@2901e34cc29a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
+      "occurrences": ["DuckDbDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
+      "occurrences": [
+        "EcfrError.cause::Defect@c3d3437d004c",
+        "EcfrErrorOptions.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/exiftool/src/Exiftool.errors.ts",
+      "occurrences": ["ExiftoolDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+      "occurrences": ["FaceDetectionDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
+      "occurrences": ["FFmpegDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
+      "occurrences": [
+        "GovinfoError.cause::Defect@c3d3437d004c",
+        "GovinfoErrorOptions.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
+      "occurrences": [
+        "FailureBadRequest.cause::Defect@fc857743e41a",
+        "FailureInternalServerError.cause::Defect@fc857743e41a",
+        "FailureNotFound.cause::Defect@fc857743e41a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
+      "occurrences": ["HubSpotErrorOptions.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "occurrences": ["DatasetLoadError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/obs/src/Obs.errors.ts",
+      "occurrences": ["ObsDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
+      "occurrences": ["OnePasswordCliDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/openclaw/src/Openclaw.errors.ts",
+      "occurrences": [
+        "OpenclawCommandSpawnError.cause::Defect@d98a81b8a4fd",
+        "OpenclawOutputParseError.cause::Defect@e6b42ba98a2a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/pglite/src/Pglite.errors.ts",
+      "occurrences": [
+        "PgliteError.cause::Defect@c3d3437d004c",
+        "decodeDefectOption::Defect@9fcd6c7aef51"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
+      "occurrences": ["PhoenixErrorOptions.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+      "occurrences": [
+        "PostgresError.cause::Defect@c3d3437d004c",
+        "optionFromSafeDefect::Defect@2901e34cc29a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+      "occurrences": [
+        "RunpodDocsErrorOptionsInput.cause::Defect@6d879d37ba9a",
+        "RunpodErrorOptionsInput.cause::Defect@6d879d37ba9a",
+        "RunpodRawErrorOptions.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+      "occurrences": ["SanityErrorOptions.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/tailscale/src/Tailscale.errors.ts",
+      "occurrences": [
+        "TailscaleCommandOutputError.cause::Defect@ef77f58543d1",
+        "TailscaleCommandSpawnError.cause::Defect@95c9dc29afa2",
+        "TailscaleCommandTimeoutError.cause::Defect@5084691afede",
+        "TailscaleStatusParseError.cause::Defect@e6b42ba98a2a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/wink/src/Wink.errors.ts",
+      "occurrences": [
+        "WinkEngineError.cause::Defect@a79433bb7c26",
+        "WinkEntityError.cause::Defect@a79433bb7c26",
+        "WinkTokenizationError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+      "occurrences": ["CorpusManagerError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/wink/src/WinkSimilarity.service.ts",
+      "occurrences": ["SimilarityError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/wink/src/WinkUtils.service.ts",
+      "occurrences": ["WinkUtilsError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+      "occurrences": ["VectorizerError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/drivers/xai/src/XAi.errors.ts",
+      "occurrences": ["XAiErrorOptions.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.ports.ts",
+      "occurrences": [
+        "ClaimDispositionRepositoryUnavailable.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.errors.ts",
+      "occurrences": [
+        "ContradictionRepositoryUnavailable.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts",
+      "occurrences": ["optionalDefect::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts",
+      "occurrences": ["optionalDefect::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.errors.ts",
+      "occurrences": ["PathSafetyError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.errors.ts",
+      "occurrences": ["SourceTextResolverError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "occurrences": [
+        "BackendInitError.cause::Defect@a79433bb7c26",
+        "BackendOperationError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/nlp-processing/src/Core/Tokenization.ts",
+      "occurrences": ["TokenizationError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts",
+      "occurrences": [
+        "ExecutionError.cause::Defect@c3d3437d004c",
+        "OperationError.cause::Defect@a79433bb7c26",
+        "StorageError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+      "occurrences": ["ExportedToolError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/capability/observability/src/HttpError.ts",
+      "occurrences": [
+        "ClientHttpError.cause::Defect@c3d3437d004c",
+        "ServerHttpError.cause::Defect@c3d3437d004c",
+        "statusFields.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/html/scripts/generate.ts",
+      "occurrences": ["HtmlGenerationError.cause::Defect@3c0efe4cff27"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "occurrences": ["LexicalDecodeError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/md/src/Md.render.ts",
+      "occurrences": ["RenderError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "occurrences": ["PandocDecodeError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "occurrences": ["PandocMappingError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
+      "occurrences": ["ParserOptionsError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
+      "occurrences": ["BlockedHostError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "occurrences": ["commonFields.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+      "occurrences": ["AttachmentPortFailed.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+      "occurrences": ["MentionLookupError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+      "occurrences": ["MermaidRenderError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/law-practice/server/src/PracticeKg.claims.ts",
+      "occurrences": ["PracticeKgClaimsError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/law-practice/server/src/PracticeKg.errors.ts",
+      "occurrences": ["PracticeKgProjectionError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
+      "occurrences": [
+        "CandorRecordRepositoryUnavailable.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.ports.ts",
+      "occurrences": [
+        "LegalPositionRecordRepositoryUnavailable.cause::Defect@c3d3437d004c"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/law-practice/use-cases/src/PatentClaimCandidate/PatentClaimCandidate.ts",
+      "occurrences": ["PatentClaimCandidateError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/shared/domain/src/entity/EntityRef.ts",
+      "occurrences": [
+        "EntityRefInvariantErrorFields.actualId::OpaqueUnknown@b1ef22cc88d9"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+      "occurrences": ["AgentEffectivenessError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/archive.ts",
+      "occurrences": ["AiMetricsArchiveError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+      "occurrences": ["AiMetricsConfigSnapshotError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
+      "occurrences": ["AiMetricsDataRootError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
+      "occurrences": ["AiMetricsDerivedStorageError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/file-inventory.ts",
+      "occurrences": ["AiMetricsFileInventoryError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "occurrences": ["AiMetricsForwarderError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/harness-ledger.ts",
+      "occurrences": ["HarnessLedgerError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+      "occurrences": [
+        "AiMetricsIdentityRegistryError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
+      "occurrences": ["AiMetricsIngestError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/install.ts",
+      "occurrences": [
+        "AiMetricsInstallConfigurationError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
+      "occurrences": ["AiMetricsMirrorError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+      "occurrences": ["AiMetricsOtlpExportError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/privacy.ts",
+      "occurrences": ["AiMetricsPrivacyError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/retention.ts",
+      "occurrences": ["AiMetricsRetentionError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/scorecard.ts",
+      "occurrences": ["AiMetricsScorecardError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/source-discovery.ts",
+      "occurrences": [
+        "AiMetricsSourceDiscoveryError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-metrics/src/telemetry-v2-store.ts",
+      "occurrences": ["TelemetryV2StoreError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/ai-sync/src/models.ts",
+      "occurrences": ["AiSyncError.cause::Defect@3e97f21423fe"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/qa-capture/src/QaCapture.errors.ts",
+      "occurrences": ["QaCaptureDefect::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
+      "occurrences": ["DomainError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "occurrences": ["SqlTestHarnessError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+      "occurrences": ["AiMetricsCommandError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.errors.ts",
+      "occurrences": [
+        "AgentEffectivenessEvalScorerError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
+      "occurrences": [
+        "CiCommandError.cause::Defect@6d879d37ba9a",
+        "CiLanePartitionError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
+      "occurrences": ["CodexCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
+      "occurrences": [
+        "CodexFindingsIngestError.cause::Defect@6d879d37ba9a",
+        "CodexPacketWriteError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.errors.ts",
+      "occurrences": ["CodexSecurityError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
+      "occurrences": [
+        "CorpusCommandError.cause::Defect@6d879d37ba9a",
+        "PreservationArchiveIoError.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Files/Files.errors.ts",
+      "occurrences": [
+        "FilesCommandError.cause::Defect@6d879d37ba9a",
+        "PlatformErrorOptions.cause::Defect@a79433bb7c26"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "occurrences": ["GoalPlanOperationalError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "occurrences": [
+        "GraftCacheIoError.cause::Defect@a79433bb7c26",
+        "GraftCacheSourceError.cause::Defect@6d879d37ba9a",
+        "GraftCacheTargetError.cause::Defect@6d879d37ba9a",
+        "GraftDeepLockError.cause::Defect@6d879d37ba9a",
+        "GraftDeepPreflightError.cause::Defect@6d879d37ba9a",
+        "GraftDeepStepError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.errors.ts",
+      "occurrences": ["HarnessLedgerIoError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Image/Image.errors.ts",
+      "occurrences": ["ImageCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
+      "occurrences": ["KnowledgeOperationalError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Models/Models.errors.ts",
+      "occurrences": [
+        "ModelsCatalogError.cause::Defect@6d879d37ba9a",
+        "ModelsCommandError.cause::Defect@6d879d37ba9a",
+        "ModelsLedgerError.cause::Defect@6d879d37ba9a",
+        "ModelsLocatorError.cause::Defect@6d879d37ba9a",
+        "ModelsManifestError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.errors.ts",
+      "occurrences": ["QaCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+      "occurrences": [
+        "ChangesetGraphError.cause::Defect@6d879d37ba9a",
+        "ChangesetStatusError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      "occurrences": [
+        "QualityArtifactGeneratorError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.errors.ts",
+      "occurrences": ["ResearchCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.errors.ts",
+      "occurrences": ["SkillsCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.errors.ts",
+      "occurrences": ["SyncDataToTsError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.errors.ts",
+      "occurrences": ["VersionSyncError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.errors.ts",
+      "occurrences": [
+        "WorktreeCommandError.cause::Defect@6d879d37ba9a",
+        "WorktreePreservationError.cause::Defect@6d879d37ba9a"
+      ]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts",
+      "occurrences": ["YeetCommandError.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
+      "occurrences": ["commandErrorFields.cause::Defect@6d879d37ba9a"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "occurrences": ["FsGuardError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/cli/Json.ts",
+      "occurrences": ["CliJsonError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
+      "occurrences": ["RegistrationGeometryError.cause::Defect@c3d3437d004c"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts",
+      "occurrences": ["DirectoryHandleError.cause::Defect@a79433bb7c26"]
+    },
+    {
+      "ruleId": "SFV4-opaque-wrapper",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
+      "occurrences": ["QualitySchedulerError.cause::Defect@6d879d37ba9a"]
     }
   ]
 }
