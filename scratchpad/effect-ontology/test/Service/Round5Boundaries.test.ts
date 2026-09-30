@@ -1,10 +1,10 @@
 import { PosInt } from "@beep/schema/Int";
-import { ISOStr } from "@beep/schema/Timestamp";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { IsoDateTimeString } from "../../Contract/ProgressStreaming.ts";
 import { ExtractionRunId, UUID } from "../../Domain/Identity.ts";
 import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
@@ -12,7 +12,7 @@ import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
 
 const decodePosIntResult = S.decodeResult(PosInt);
-const isISOStr = S.is(ISOStr);
+const isIsoDateTimeString = S.is(IsoDateTimeString);
 const isUUID = S.is(UUID);
 
 describe("Round 5 canonical boundaries", () => {
@@ -27,7 +27,7 @@ describe("Round 5 canonical boundaries", () => {
       });
 
       assert.isTrue(isUUID(event.eventId));
-      assert.isTrue(isISOStr(event.timestamp));
+      assert.isTrue(isIsoDateTimeString(event.timestamp));
       assert.strictEqual(event.runId, runId);
     })
   );

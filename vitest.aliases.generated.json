@@ -9,9 +9,6 @@
   "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
   "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
   "@beep/schema": ["./packages/foundation/modeling/schema/src/index.ts"],
-  "@beep/schema/Duration": [
-    "./packages/foundation/modeling/schema/src/Duration/index.ts"
-  ],
   "@beep/schema/Glob": [
     "./packages/foundation/modeling/schema/src/Glob/index.ts"
   ],
@@ -691,9 +688,6 @@
   "@beep/schema/CurrencyCode": [
     "./packages/foundation/modeling/schema/src/CurrencyCode.ts"
   ],
-  "@beep/schema/DateTimeUtcFromValid": [
-    "./packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
-  ],
   "@beep/schema/Email": ["./packages/foundation/modeling/schema/src/Email.ts"],
   "@beep/schema/FileExtension": [
     "./packages/foundation/modeling/schema/src/FileExtension.ts"
@@ -755,12 +749,6 @@
     "./packages/foundation/modeling/schema/src/Sha256.ts"
   ],
   "@beep/schema/Slug": ["./packages/foundation/modeling/schema/src/Slug.ts"],
-  "@beep/schema/Timestamp": [
-    "./packages/foundation/modeling/schema/src/Timestamp/index.ts"
-  ],
-  "@beep/schema/Timezone": [
-    "./packages/foundation/modeling/schema/src/Timezone.ts"
-  ],
   "@beep/schema/Toml": ["./packages/foundation/modeling/schema/src/Toml.ts"],
   "@beep/schema/Transformations": [
     "./packages/foundation/modeling/schema/src/Transformations.ts"

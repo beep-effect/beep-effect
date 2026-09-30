@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { ISOStr } from "@beep/schema/Timestamp";
+import { IsoDateTimeString } from "@beep/skill-contract";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -288,14 +288,13 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  *
  * ```ts
  * import { WorktreeRepositoryHash, WorktreeResidueManifest } from "@beep/repo-cli/commands/Worktree"
- * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as O from "effect/Option"
  *
  * const manifest = WorktreeResidueManifest.make({
  *   name: "feature-x",
  *   branch: O.some("feat/feature-x"),
  *   head: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
- *   archivedAt: ISOStr.make("2026-09-02T12:34:56.000Z"),
+ *   archivedAt: "2026-09-02T12:34:56.000Z",
  *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
  *   repositoryHash: WorktreeRepositoryHash.make("0123456789ab"),
  *   patchPath: O.none(),
@@ -315,7 +314,7 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
     name: TrimmedNonEmptyString,
     branch: S.OptionFromNullOr(S.String),
     head: GitObjectId,
-    archivedAt: ISOStr,
+    archivedAt: IsoDateTimeString,
     archiveRef: S.NonEmptyString,
     repositoryHash: WorktreeRepositoryHash,
     patchPath: S.OptionFromNullOr(S.String),

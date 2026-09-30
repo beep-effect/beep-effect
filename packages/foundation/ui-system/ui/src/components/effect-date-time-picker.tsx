@@ -13,7 +13,6 @@
  * @since 0.0.0
  */
 
-import { applyTimezone, createDateTimeWithTimezone, createInvalidDateTime } from "@beep/schema/DateTimeUtcFromValid";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -153,6 +152,43 @@ const isBeforeDateTime = (value: DateTime.DateTime, comparing: DateTime.DateTime
 
 const isAfterDateTime = (value: DateTime.DateTime, comparing: DateTime.DateTime): boolean =>
   value.epochMilliseconds > comparing.epochMilliseconds;
+
+// makeUnsafe rejects NaN since effect 4.0.0-beta.104; fromEpochSeconds still admits it, and the
+// MUI picker adapter contract requires an invalid-date sentinel rather than null.
+const createInvalidDateTime = (): DateTime.DateTime => DateTime.fromEpochSeconds(Number.NaN);
+
+// MUI passes "UTC", "default"/"system" (the local zone), or an IANA name; an unknown name
+// leaves the value unchanged.
+const applyTimezone = (value: DateTime.DateTime, timezone: PickersTimezone): DateTime.DateTime => {
+  if (timezone === "UTC") {
+    return DateTime.toUtc(value);
+  }
+
+  if (timezone === "default" || timezone === "system") {
+    return DateTime.setZone(value, DateTime.zoneMakeLocal());
+  }
+
+  return pipe(
+    DateTime.zoneFromString(timezone),
+    O.map((zone) => DateTime.setZone(value, zone)),
+    O.getOrElse(() => value)
+  );
+};
+
+const createDateTimeWithTimezone = (
+  value: string | null | undefined,
+  timezone: PickersTimezone
+): DateTime.DateTime | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return pipe(
+    DateTime.make(value),
+    O.map((dateTime) => applyTimezone(dateTime, timezone)),
+    O.getOrElse(createInvalidDateTime)
+  );
+};
 
 type FormatOptionRule = {
   readonly pattern: RegExp;

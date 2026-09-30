@@ -120,5 +120,3 @@ whether the file was touched.
   schema and annotation
 - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` — tagged error and
   annotation examples
-- `packages/foundation/modeling/schema/src/Duration/Duration.input.ts` — class,
-  LiteralKit, and annotation examples

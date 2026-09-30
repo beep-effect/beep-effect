@@ -266,18 +266,18 @@ The package follows an Effect-inspired public module style while avoiding
 Effect-sized source files. Public schema concepts use flat concept subpaths:
 
 ```ts
-import * as Duration from "@beep/schema/Duration"
+import * as Color from "@beep/schema/Color"
 import * as Glob from "@beep/schema/Glob"
 
-Duration.Input
-Duration.FromInput
+Color.HexColor
+Color.HexToRgb
 Glob.Schema
 ```
 
 The package root remains a curated flat facade for convenience and migration:
 
 ```ts
-import { DurationInput, Glob } from "@beep/schema"
+import { Glob, HexColor } from "@beep/schema"
 ```
 
 Root exports are not the canonical place for full concept namespaces. New
@@ -288,15 +288,20 @@ constructor, guard, or type-level members.
 Concept source topology is role-file based:
 
 ```txt
-packages/foundation/modeling/schema/src/Duration/
-  Duration.schema.ts
-  Duration.input.ts
-  Duration.transforms.ts
+packages/foundation/modeling/schema/src/Color/
+  Color.adjust.ts
+  Color.hex.ts
+  Color.oklch.ts
+  Color.rgb.ts
+  Color.scale.ts
+  Color.shared.ts
+  Color.transforms.ts
+  Color.ts
   index.ts
 ```
 
 Only the concept index is public. Role files are source topology. Public
-consumers should not import `@beep/schema/Duration/Input` or similar role
+consumers should not import `@beep/schema/Color/Color.hex` or similar role
 subpaths. Utility namespaces such as `SchemaUtils` are the exception: when a
 helper is itself the public concept, helper leaves may stay public. Former
 topical suites are represented by PascalCase leaf concept modules and flat
@@ -313,9 +318,8 @@ semantic roles are allowed for clearer specialized modules such as parser,
 formatter, SQL projection, or color-conversion roles.
 
 Inside the namespace, concise role names are canonical. Prefer
-`Duration.Input`, `Duration.FromInput`, and `Glob.Schema` over repeated names
-such as `Duration.DurationInput` in new code. Legacy full names may remain as
-aliases while consumers migrate.
+`Glob.Schema` over repeated names such as `Glob.Glob` in new code. Legacy full
+names may remain as aliases while consumers migrate.
 Promote source concepts rather than individual exported symbols; for example,
 `HttpStatus` remains one concept module rather than a public subpath per status
 literal.

@@ -1,6 +1,5 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { ISOStr } from "@beep/schema/Timestamp";
 import { URLStr } from "@beep/schema/URL";
 import {
   AlwaysGateApplicability,
@@ -170,7 +169,7 @@ const gateSummaryReceipt = (gateResults: ReadonlyArray<GateResultSummary>) => {
     inputAttestations: [inputAttestation],
     policy,
     resourceUri: URLStr.make("https://beep.dev/resource/output/v1"),
-    timeVerified: ISOStr.make("2026-08-24T00:00:00.000Z"),
+    timeVerified: "2026-08-24T00:00:00.000Z",
     verificationResult: passed ? "PASSED" : "FAILED",
     verifiedLevels: passed ? ["BEEP_SKILL_CONTRACT_BLOCKING_GATES"] : ["FAILED"],
     verifier,
