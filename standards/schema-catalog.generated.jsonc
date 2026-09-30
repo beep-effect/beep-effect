@@ -15405,6 +15405,12 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+      "symbol": "BagOfWords",
+      "kind": "codec",
+      "owner": "@beep/nlp"
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
       "symbol": "DependencyEdge",
       "kind": "schema-class",
       "owner": "@beep/nlp",
@@ -17638,38 +17644,6 @@
       "description": "Age in years"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfInts",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfInts",
-      "description": "An array of integers"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfNonEmptyStrings",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfNonEmptyStrings",
-      "description": "An array of non-empty strings"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfNumbers",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfNumbers",
-      "description": "An array of numbers"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/ArrayOf.ts",
-      "symbol": "ArrayOfStrings",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "ArrayOfStrings",
-      "description": "An array of strings"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/AtURI.ts",
       "symbol": "AtUri",
       "kind": "brand",
@@ -17692,14 +17666,6 @@
       "owner": "@beep/schema",
       "identity": "BuffEncoding",
       "description": "A BufferEncoding string literal"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Bytes.ts",
-      "symbol": "Bytes",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Bytes",
-      "description": "A protobuf bytes value represented as a branded Uint8Array."
     },
     {
       "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
@@ -19038,54 +19004,6 @@
       "owner": "@beep/schema"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
-      "symbol": "GraphEncoded",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "GraphEncoded",
-      "description": "The encoded representation of an Effect graph value."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "EdgeIndex",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "EdgeIndex",
-      "description": "A branded non-negative graph edge index."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "EdgeIndexFromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "EdgeIndexFromString",
-      "description": "A graph edge index decoded from a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "NodeIndex",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "NodeIndex",
-      "description": "A branded non-negative graph node index."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
-      "symbol": "NodeIndexFromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "NodeIndexFromString",
-      "description": "A graph node index decoded from a string."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts",
-      "symbol": "GraphKindValue",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "GraphKindValue",
-      "description": "Public schema module export."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Html.ts",
       "symbol": "HtmlFragment",
       "kind": "brand",
@@ -20371,22 +20289,6 @@
       "owner": "@beep/schema",
       "identity": "ReferrerPolicyValueList",
       "description": "A fallback list of `Referrer-Policy` values for legacy browser support."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/RegExp.ts",
-      "symbol": "RegExpFromStr",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "RegExpFromStr",
-      "description": "A one-way schema that decodes RegExp-compatible pattern strings into JavaScript RegExp values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/RegExp.ts",
-      "symbol": "RegExpStr",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "RegExpStr",
-      "description": "A string that can be converted directly to a JavaScript RegExp using new RegExp(value)."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",

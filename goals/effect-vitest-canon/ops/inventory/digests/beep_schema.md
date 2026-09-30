@@ -29,7 +29,7 @@ Severity is an audit judgment, not a reproduced failure count.
 - `packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts`: 4 rows, 0 proposed findings.
 - `packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts`: 4 rows, 0 proposed findings.
 - `packages/foundation/modeling/schema/test/Address.test.ts`: 4 rows, 0 proposed findings.
-- `packages/foundation/modeling/schema/test/ArrayBuffer.test.ts`: 4 rows, 1 proposed findings.
+- The test file of the retired `ArrayBuffer` concept (removed in the effect-schema-parity group E PR): 4 rows, 1 proposed findings.
 
 Ties are alphabetical; row count is not a risk score. Full file-specific
 evidence and replacement sketches are retained in the four lens JSONL files.

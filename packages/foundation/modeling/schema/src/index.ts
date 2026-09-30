@@ -10,27 +10,12 @@
  * @since 0.0.0
  * @category validation
  */
-export * from "./ArrayBuffer.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./ArrayOf.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./AtURI.ts";
 /**
  * @since 0.0.0
  * @category validation
  */
 export * from "./BufferEncoding.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./Bytes.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -178,11 +163,6 @@ export * from "./Glob/index.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./Graph/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./Html.ts";
 /**
  * HTTP method schemas and literal-kit helpers.
@@ -276,16 +256,6 @@ export * from "./Markdown.ts";
  */
 export * from "./MimeType.ts";
 /**
- * @since 0.0.0
- * @category validation
- */
-export * from "./MutableHashMap.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./MutableHashSet.ts";
-/**
  * @category validation
  * @since 0.0.0
  */
@@ -335,11 +305,6 @@ export * from "./Primitive.ts";
  * @category schemas
  */
 export * from "./Record/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * from "./RegExp.ts";
 /**
  * Nominal safe-object schema and object-keyword normalization codec.
  *

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/LegalScopeContext/LegalScopeContext.model");
@@ -44,6 +43,11 @@ export const LegalScopeValue = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type LegalScopeValue = typeof LegalScopeValue.Type;
+
+// Stored as a plain JSON array in the jsonb column. `S.toCodecJson` is what
+// keeps that form: a bare `S.HashSet` encodes to a tagged `{"_id":"HashSet"}`
+// wrapper that no decoder accepts back.
+const LegalScopeAxis = LegalScopeValue.pipe(S.HashSet, S.toCodecJson);
 
 /**
  * The scope a legal position is recorded as holding within, on exactly five
@@ -99,19 +103,19 @@ export type LegalScopeValue = typeof LegalScopeValue.Type;
  */
 export class LegalScopeContext extends S.Class<LegalScopeContext>($I`LegalScopeContext`)(
   {
-    material: StoredHashSet(LegalScopeValue).annotateKey({
+    material: LegalScopeAxis.annotateKey({
       description: "Recorded subject matter the position is about.",
     }),
-    quantitative: StoredHashSet(LegalScopeValue).annotateKey({
+    quantitative: LegalScopeAxis.annotateKey({
       description: "Recorded amounts or counts the position is bounded by.",
     }),
-    subjective: StoredHashSet(LegalScopeValue).annotateKey({
+    subjective: LegalScopeAxis.annotateKey({
       description: "Recorded persons or classes the position is held in respect of.",
     }),
-    temporal: StoredHashSet(LegalScopeValue).annotateKey({
+    temporal: LegalScopeAxis.annotateKey({
       description: "Recorded times the position is held to apply within.",
     }),
-    territorial: StoredHashSet(LegalScopeValue).annotateKey({
+    territorial: LegalScopeAxis.annotateKey({
       description: "Recorded jurisdictions or territories the position is held to apply within.",
     }),
   },
