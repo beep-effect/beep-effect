@@ -50,10 +50,12 @@ log, 2026-09-12 entry, amended 2026-09-29), and the derived equivalence
 above is the law.
 
 Opaque payloads declare their own identity rule at the field: a `cause`
-field uses `S.Defect(options).pipe(S.overrideToEquivalence(() => () => true))`
+field uses `S.Defect(options).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))`
 so it stays payload and two errors that differ only in their defect compare
 equal, and a local opaque field does the same with
-`S.Unknown.pipe(S.overrideToEquivalence(() => () => true))`. `Defect` and
+`S.Unknown.pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))`.
+`SchemaUtils.alwaysEquivalent` is the one shared always-true equivalence thunk;
+do not repeat `() => () => true` at the field. `Defect` and
 `OpaqueUnknown` from `@beep/schema` wrap exactly these forms; they retire with
 the Opaque concept (goal `effect-schema-parity`), and the schema-first rule
 `SFV4-opaque-wrapper` tracks the remaining uses on its occurrence backlog.
@@ -96,6 +98,7 @@ The full chain. Each block is one boundary.
 ````ts
 // packages/drivers/postgres/src/Postgres.errors.ts (excerpt)
 import { $PostgresId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -114,7 +117,7 @@ export class PostgresError extends S.TaggedError<PostgresError>(
     operation: S.String,
     sqlState: S.OptionFromOptionalKey(S.String),
     query: S.OptionFromOptionalKey(S.String),
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<PostgresError>("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",
