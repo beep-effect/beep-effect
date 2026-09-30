@@ -201,6 +201,8 @@ export type VersionCategoryStatus = typeof VersionCategoryStatus.Type;
  * console.log(versionCategoryStatusFromDrift(["biome"])) // "drift"
  * ```
  *
+ * @param items - Drift items reported for the category.
+ * @returns `ok` when there are no items, `drift` otherwise.
  * @category utilities
  * @since 0.0.0
  */
