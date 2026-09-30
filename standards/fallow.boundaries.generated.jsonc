@@ -3010,7 +3010,6 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ],
@@ -3018,7 +3017,6 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
-          "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ]
