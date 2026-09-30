@@ -8,6 +8,7 @@
 
 import { $ArchitectureLabConfigId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabConfigId.create("WorkItemConfig");
@@ -81,10 +82,16 @@ export class WorkItemPublicConfig extends S.Class<WorkItemPublicConfig>($I`WorkI
  */
 export class WorkItemServerConfig extends S.Class<WorkItemServerConfig>($I`WorkItemServerConfig`)(
   {
-    repositoryName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("architecture-lab-work-items")).annotateKey({
+    repositoryName: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("architecture-lab-work-items")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("architecture-lab-work-items"))
+    ).annotateKey({
       description: "Repository name used for architecture lab WorkItem persistence.",
     }),
-    migrationSchemaName: WorkItemMigrationSchemaName.pipe(SchemaUtils.withKeyDefaults("architecture_lab")).annotateKey({
+    migrationSchemaName: WorkItemMigrationSchemaName.pipe(
+      S.withConstructorDefault(Effect.succeed("architecture_lab")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("architecture_lab"))
+    ).annotateKey({
       description: "Database schema name used for architecture lab WorkItem migrations.",
     }),
   },
@@ -115,7 +122,10 @@ export class WorkItemServerConfig extends S.Class<WorkItemServerConfig>($I`WorkI
  */
 export class WorkItemSecretConfig extends S.Class<WorkItemSecretConfig>($I`WorkItemSecretConfig`)(
   {
-    connectionName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("architecture-lab-proof")).annotateKey({
+    connectionName: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("architecture-lab-proof")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("architecture-lab-proof"))
+    ).annotateKey({
       description: "Secret connection reference name for the WorkItem backing connection.",
     }),
   },

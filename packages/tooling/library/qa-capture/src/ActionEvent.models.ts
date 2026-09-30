@@ -12,9 +12,9 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $QaCaptureId.create("ActionEvent.models");
@@ -500,7 +500,7 @@ export class PointerDownEvent extends S.Class<PointerDownEvent>($I`PointerDownEv
       })
     ),
     rect: S.OptionFromOptionalKey(DomRect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PointerDownEvent.rect", {
         description: "Bounding rectangle of the pressed element, when resolvable.",
       })
@@ -577,7 +577,7 @@ export class PointerUpEvent extends S.Class<PointerUpEvent>($I`PointerUpEvent`)(
       })
     ),
     rect: S.OptionFromOptionalKey(DomRect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PointerUpEvent.rect", {
         description: "Bounding rectangle of the release target, when resolvable.",
       })
@@ -649,7 +649,7 @@ export class PointerCancelEvent extends S.Class<PointerCancelEvent>($I`PointerCa
       })
     ),
     rect: S.OptionFromOptionalKey(DomRect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PointerCancelEvent.rect", {
         description: "Bounding rectangle of the cancellation target, when resolvable.",
       })
@@ -771,7 +771,7 @@ export class PointerEnterEvent extends S.Class<PointerEnterEvent>($I`PointerEnte
       })
     ),
     rect: S.OptionFromOptionalKey(DomRect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("PointerEnterEvent.rect", {
         description: "Bounding rectangle of the entered element, when resolvable.",
       })
@@ -976,7 +976,7 @@ export class KeyDownEvent extends S.Class<KeyDownEvent>($I`KeyDownEvent`)(
       })
     ),
     selectorPath: S.OptionFromOptionalKey(SelectorPath).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("KeyDownEvent.selectorPath", {
         description: "Deterministic selector of the key target, when resolvable.",
       })
@@ -1167,7 +1167,7 @@ export class ScrollEvent extends S.Class<ScrollEvent>($I`ScrollEvent`)(
       })
     ),
     selectorPath: S.OptionFromOptionalKey(SelectorPath).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ScrollEvent.selectorPath", {
         description: "Deterministic selector of the scrolled element; absent for the window scroller.",
       })

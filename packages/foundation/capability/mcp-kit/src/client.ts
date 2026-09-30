@@ -18,7 +18,6 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Deferred, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
@@ -212,15 +211,15 @@ const defaultClientInfo: ImplementationInput = { name: "@beep/mcp-kit/client", v
 export class McpClientOptions extends S.Class<McpClientOptions>($I`McpClientOptions`)(
   {
     protocolVersion: S.String.pipe(
-      SchemaUtils.withConstantDefault<string>(MCP_PROTOCOL_VERSION),
+      S.withConstructorDefault(Effect.succeed<string>(MCP_PROTOCOL_VERSION)),
       S.annotateKey({ description: "Protocol revision claimed in the header and request metadata." })
     ),
     clientInfo: McpSchema.Implementation.pipe(
-      SchemaUtils.withConstantDefault<ImplementationInput>(defaultClientInfo),
+      S.withConstructorDefault(Effect.succeed<ImplementationInput>(defaultClientInfo)),
       S.annotateKey({ description: "Client implementation info sent in request metadata." })
     ),
     clientCapabilities: McpSchema.ClientCapabilities.pipe(
-      SchemaUtils.withConstantDefault<ClientCapabilitiesInput>({}),
+      S.withConstructorDefault(Effect.succeed<ClientCapabilitiesInput>({})),
       S.annotateKey({ description: "Client capabilities sent in request metadata." })
     ),
   },
@@ -303,7 +302,7 @@ export type JsonRpcId = typeof JsonRpcId.Type;
  */
 export class JsonRpcMessage extends S.Class<JsonRpcMessage>($I`JsonRpcMessage`)(
   {
-    jsonrpc: S.Literal("2.0").pipe(SchemaUtils.withConstantDefault<"2.0">("2.0")),
+    jsonrpc: S.Literal("2.0").pipe(S.withConstructorDefault(Effect.succeed<"2.0">("2.0"))),
     id: JsonRpcId.pipe(S.NullOr, S.optionalKey),
     method: S.optionalKey(S.String),
     params: S.optionalKey(S.Unknown),

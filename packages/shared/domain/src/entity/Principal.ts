@@ -7,6 +7,7 @@
 
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Shared from "../identity/Shared/index.ts";
 
@@ -111,7 +112,7 @@ export class ServiceAccountPrincipal extends S.Class<ServiceAccountPrincipal>($I
       description: "Principal discriminator for a service-account actor.",
     }),
     onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional user id represented by the service account." })
     ),
     serviceAccountId: Shared.ServiceAccountId.annotateKey({
@@ -153,7 +154,7 @@ export class AgentPrincipal extends S.Class<AgentPrincipal>($I`AgentPrincipal`)(
     }),
     kind: S.tag("Agent").annotateKey({ description: "Principal discriminator for an AI-agent actor." }),
     onBehalfOfTeamId: S.OptionFromOptionalKey(Shared.TeamId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional team id represented by the agent." })
     ),
     onBehalfOfUserId: Shared.UserId.annotateKey({ description: "User id represented by the agent." }),
@@ -192,7 +193,7 @@ export class ConnectorAccountPrincipal extends S.Class<ConnectorAccountPrincipal
       description: "Principal discriminator for a connector-account actor.",
     }),
     onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional user id represented by the connector account." })
     ),
   },

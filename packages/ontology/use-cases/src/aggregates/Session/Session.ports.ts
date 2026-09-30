@@ -203,7 +203,7 @@ export class TurtleCodecError extends S.TaggedError<TurtleCodecError>($I`TurtleC
 export class ParseTurtleRequest extends S.Class<ParseTurtleRequest>($I`ParseTurtleRequest`)(
   {
     source: TurtleDocumentText,
-    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ParseTurtleRequest", {
     description: "Turtle parse request.",

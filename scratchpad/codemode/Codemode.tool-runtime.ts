@@ -327,6 +327,8 @@ export type ToolCallHooks<R = never> = {
   readonly onToolCallEnd?: (call: ToolCallEnded) => Effect.Effect<void, never, R>;
 };
 
+const searchInputLimitDefault = PosInt.make(10);
+const searchInputOffsetDefault = NonNegativeInt.make(0);
 /**
  * Search query and pagination controls for the built-in discovery function.
  *
@@ -353,10 +355,10 @@ export type ToolCallHooks<R = never> = {
  */
 export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
   {
-    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    namespace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10))),
-    offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    query: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    namespace: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(searchInputLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchInputLimitDefault))),
+    offset: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(searchInputOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchInputOffsetDefault))),
   },
   $I.annote("SearchInput", {
     description: "Search query and pagination controls for the built-in discovery function.",
@@ -431,7 +433,7 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
     remaining: NonNegativeInt,
-    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(SchemaUtils.withNoneDefault),
+    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SearchOutput", {
     description: "Paginated tool-discovery results.",
@@ -616,6 +618,7 @@ export const ToolRuntimeErrorKind = LiteralKit([
  */
 export type ToolRuntimeErrorKind = typeof ToolRuntimeErrorKind.Type;
 
+const toolRuntimeErrorSuggestionsDefault = A.empty<string>();
 /**
  * Normalized failure at the CodeMode Toolkit or plain-data boundary.
  *
@@ -639,7 +642,7 @@ export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRun
   {
     kind: ToolRuntimeErrorKind,
     message: S.String,
-    suggestions: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
+    suggestions: S.String.pipe(S.Array, S.withConstructorDefault(Effect.succeed(toolRuntimeErrorSuggestionsDefault)), S.withDecodingDefaultType(Effect.succeed(toolRuntimeErrorSuggestionsDefault))),
   },
   $I.annote("ToolRuntimeError", {
     description: "A normalized failure at the CodeMode Toolkit or plain-data boundary.",

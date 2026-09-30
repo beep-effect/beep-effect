@@ -8,10 +8,9 @@
 import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, NamedNode, ObjectTerm } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Context, Tuple } from "effect";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { Context, Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 
 const $I = $SemanticWebId.create("services/shacl-validation");
 
@@ -97,11 +96,11 @@ export type ShaclSeverity = typeof ShaclSeverity.Type;
 export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclPropertyShape`)(
   {
     path: NamedNode,
-    minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
-    maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
-    datatype: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    class: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
+    minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    datatype: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    class: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ShaclPropertyShape", {
     description: "SHACL property shape used by the bounded service contract.",
@@ -139,9 +138,9 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
  */
 export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
   {
-    id: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    targetNode: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    targetClass: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    id: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    targetNode: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    targetClass: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
     properties: S.Array(ShaclPropertyShape),
   },
   $I.annote("ShaclNodeShape", {
@@ -159,9 +158,9 @@ const makeShaclValidationViolationMember = <Severity extends ShaclSeverity>(seve
     path: NamedNode,
     message: S.String,
     severity: S.tag(severity.literal),
-    sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    sourceConstraintComponent: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
+    sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sourceConstraintComponent: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    value: S.OptionFromOptionalKey(ObjectTerm).pipe(S.withConstructorDefault(Effect.succeedNone)),
   });
 
 /**
@@ -249,8 +248,8 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
   {
     dataset: Dataset,
     shapes: S.Array(ShaclNodeShape),
-    shapesDataset: S.OptionFromOptionalKey(Dataset).pipe(SchemaUtils.withNoneDefault),
-    maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    shapesDataset: S.OptionFromOptionalKey(Dataset).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ShaclValidationRequest", {
     description: "SHACL validation request.",

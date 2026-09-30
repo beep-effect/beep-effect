@@ -12,7 +12,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -40,6 +39,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentKit");
 // Errors
 // =============================================================================
 
+const agentInputErrorMissingDefault = A.empty<string>();
 /**
  * Invalid or incomplete input supplied to an orchestration agent.
  *
@@ -64,7 +64,7 @@ export class AgentInputError extends S.TaggedError<AgentInputError>($I`AgentInpu
   {
     taskId: S.NonEmptyString,
     message: S.NonEmptyString,
-    missing: S.Array(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    missing: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(agentInputErrorMissingDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(agentInputErrorMissingDefault))),
   },
   $I.annote("AgentInputError", {
     description: "Invalid or incomplete input supplied to an orchestration agent.",

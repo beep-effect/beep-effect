@@ -8,7 +8,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { Context, Effect, HashMap, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -89,6 +89,7 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
  */
 export type SubgraphInput = (typeof Subgraph)["~type.make.in"];
 
+const extractOptionsMaxNodesDefault = PosInt.make(50);
 /**
  * Options controlling bounded breadth-first traversal.
  *
@@ -107,15 +108,15 @@ export type SubgraphInput = (typeof Subgraph)["~type.make.in"];
 export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
   {
     maxNodes: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(50)),
+      S.withConstructorDefault(Effect.succeed(extractOptionsMaxNodesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractOptionsMaxNodesDefault)),
       S.annotateKey({ description: "Maximum entities admitted, including seeds." })
     ),
     followOutgoing: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows entity-reference objects from each subject." })
     ),
     followIncoming: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
+      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows subjects of relations targeting each entity." })
     ),
   },
@@ -132,6 +133,10 @@ export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
  */
 export type ExtractOptionsInput = (typeof ExtractOptions)["~type.make.in"];
 
+const extractRelevantOptionsTopKDefault = PosInt.make(5);
+const extractRelevantOptionsHopsDefault = NonNegativeInt.make(1);
+const extractRelevantOptionsMinSimilarityDefault = Confidence.make(0.3);
+const extractRelevantOptionsFilterTypesDefault = A.empty<IRI>();
 /**
  * Options controlling semantic seed selection before graph traversal.
  *
@@ -150,19 +155,19 @@ export type ExtractOptionsInput = (typeof ExtractOptions)["~type.make.in"];
 export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`ExtractRelevantOptions`)(
   {
     topK: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsTopKDefault)),
       S.annotateKey({ description: "Maximum embedding matches used as traversal seeds." })
     ),
     hops: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(1)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsHopsDefault)),
       S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
     ),
     minSimilarity: Confidence.pipe(
-      SchemaUtils.withKeyDefaults(Confidence.make(0.3)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)),
       S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
     ),
     filterTypes: S.Array(IRI).pipe(
-      SchemaUtils.withEmptyArrayDefaults<IRI>(),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsFilterTypesDefault)), S.withDecodingDefaultType(Effect.succeed(extractRelevantOptionsFilterTypesDefault)),
       S.annotateKey({ description: "Optional ontology classes restricting semantic seed candidates." })
     ),
   },

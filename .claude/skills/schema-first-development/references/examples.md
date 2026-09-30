@@ -30,8 +30,8 @@ Why it matters:
 
 Files:
 
-- `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts`
 - `packages/foundation/ui-system/dock/src/Minima.ts`
+- `packages/foundation/modeling/lexical/src/Lexical.model.ts`
 
 Use these files when you need:
 
@@ -41,11 +41,15 @@ Use these files when you need:
 
 What to copy:
 
-- `SchemaUtils.withConstantDefault`
-- `SchemaUtils.withNoneDefault`
+- upstream `S.withConstructorDefault(Effect.succeed(value))` for a constant
+  constructor default, and `S.withConstructorDefault(Effect.succeedNone)` for an
+  `Option` field
+- `S.withConstructorDefault` plus `S.withDecodingDefaultTypeKey` with the same
+  value when a missing key should also default on decode (bind a constructed
+  value to one const first)
 - the `Minima.ts` field pattern:
-  `PixelAllowance.pipe(SchemaUtils.withConstantDefault<number>(0))` — note the
-  explicit type parameter, required when the field is branded
+  `PixelAllowance.pipe(S.withConstructorDefault(Effect.succeed<number>(0)))` —
+  note the explicit type parameter, required when the field is branded
 
 Why it matters:
 
@@ -153,8 +157,8 @@ Why it matters:
 - Need a `S.Class` domain payload:
   Start with `packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts`
 - Need schema-driven defaults and transforms:
-  Start with `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts`
-  and the field usage in `packages/foundation/ui-system/dock/src/Minima.ts`
+  Start with the field usage in `packages/foundation/ui-system/dock/src/Minima.ts`
+  (upstream `S.withConstructorDefault` / `S.withDecodingDefaultTypeKey`)
 - Need `Option` boundary fields or schema-backed errors:
   Start with `packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts`
 - Need a `kind` or `type` tagged union:

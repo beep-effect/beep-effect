@@ -6,7 +6,6 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -77,7 +76,7 @@ export class AiMetricsTranscriptTextSummaryInput extends S.Class<AiMetricsTransc
 )(
   {
     content: S.String,
-    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sourceKind: AiMetricsTranscriptSource,
     sourcePath: S.String,
   },

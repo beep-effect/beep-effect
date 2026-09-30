@@ -10,6 +10,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -94,16 +95,18 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
   "AiProviderCliHomeFileSystemError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform failure, when one was captured.",
       }),
     effectiveHomePath: S.NonEmptyString.annotateKey({
       description: "Shadow home directory path the operation maintained.",
     }),
-    entryName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Home entry name involved in the failed operation, when applicable.",
-    }),
+    entryName: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Home entry name involved in the failed operation, when applicable.",
+      }),
     operation: AiProviderCliHomeFsOperation.annotateKey({
       description: "Filesystem operation that failed.",
     }),
@@ -113,9 +116,11 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
     sharedHomePath: S.NonEmptyString.annotateKey({
       description: "Shared home directory path backing the layout.",
     }),
-    targetPath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Symlink target path, when the operation involved one.",
-    }),
+    targetPath: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Symlink target path, when the operation involved one.",
+      }),
   },
   $I.annoteError<AiProviderCliHomeFileSystemError>("AiProviderCliHomeFileSystemError", {
     description: "Filesystem failure raised while maintaining a provider CLI home layout.",

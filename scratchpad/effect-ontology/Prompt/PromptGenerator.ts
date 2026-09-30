@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { flow } from "effect/Function";
@@ -39,7 +39,7 @@ const renderUnknownJson: (value: unknown) => string = flow(
 /** Optional string collection used by ontology prompt context fields. */
 const OptionalStrings = S.Array(S.String).pipe(
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionalStrings", {
     description: "Optional immutable string collection with an Option-none constructor default.",
   })
@@ -52,6 +52,9 @@ const PromptRole = LiteralKit(["user", "assistant"]).pipe(
   })
 );
 
+const ontologyPromptContextClassesDefault = A.empty<ClassDefinition>();
+const ontologyPromptContextObjectPropertiesDefault = A.empty<PropertyDefinition>();
+const ontologyPromptContextDatatypePropertiesDefault = A.empty<PropertyDefinition>();
 /**
  * Ontology definitions and prior-stage values available while building a prompt.
  *
@@ -77,21 +80,21 @@ export class OntologyPromptContext extends S.Class<OntologyPromptContext>($I`Ont
   {
     /** Ontology classes available to the extraction stage. */
     classes: S.Array(ClassDefinition).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ClassDefinition>(),
+      S.withConstructorDefault(Effect.succeed(ontologyPromptContextClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyPromptContextClassesDefault)),
       $I.annoteKey("OntologyPromptContext.classes", {
         description: "Ontology classes available to the extraction stage.",
       })
     ),
     /** Ontology object properties that connect extracted entities. */
     objectProperties: S.Array(PropertyDefinition).pipe(
-      SchemaUtils.withEmptyArrayDefaults<PropertyDefinition>(),
+      S.withConstructorDefault(Effect.succeed(ontologyPromptContextObjectPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyPromptContextObjectPropertiesDefault)),
       $I.annoteKey("OntologyPromptContext.objectProperties", {
         description: "Ontology object properties that connect extracted entities.",
       })
     ),
     /** Ontology datatype properties that carry literal values. */
     datatypeProperties: S.Array(PropertyDefinition).pipe(
-      SchemaUtils.withEmptyArrayDefaults<PropertyDefinition>(),
+      S.withConstructorDefault(Effect.succeed(ontologyPromptContextDatatypePropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyPromptContextDatatypePropertiesDefault)),
       $I.annoteKey("OntologyPromptContext.datatypeProperties", {
         description: "Ontology datatype properties that carry literal values.",
       })
@@ -105,7 +108,7 @@ export class OntologyPromptContext extends S.Class<OntologyPromptContext>($I`Ont
     /** Optional entities emitted by the preceding extraction stage. */
     entities: S.Array(Entity).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("OntologyPromptContext.entities", {
         description: "Optional entities emitted by the preceding extraction stage.",
       })
@@ -113,7 +116,7 @@ export class OntologyPromptContext extends S.Class<OntologyPromptContext>($I`Ont
     /** Optional images available to a multimodal extraction request. */
     imageContexts: S.Array(ImageForPrompt).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("OntologyPromptContext.imageContexts", {
         description: "Optional images available to a multimodal extraction request.",
       })
@@ -219,7 +222,7 @@ const NegativeExampleOutput = S.Struct({
   /** Optional machine-readable category for the demonstrated mistake. */
   errorCategory: S.String.pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     $I.annoteKey("NegativeExampleOutput.errorCategory", {
       description: "Optional machine-readable category for the demonstrated mistake.",
     })
@@ -227,7 +230,7 @@ const NegativeExampleOutput = S.Struct({
   /** Optional textual pattern that must not be extracted. */
   pattern: S.String.pipe(
     S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     $I.annoteKey("NegativeExampleOutput.pattern", {
       description: "Optional textual pattern that must not be extracted.",
     })
@@ -272,7 +275,7 @@ export class ScoredExample extends S.Class<ScoredExample>($I`ScoredExample`)(
     ),
     /** Whether the example demonstrates behavior the model must avoid. */
     isNegative: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       $I.annoteKey("ScoredExample.isNegative", {
         description: "Whether the example demonstrates behavior the model must avoid.",
       })
@@ -280,7 +283,7 @@ export class ScoredExample extends S.Class<ScoredExample>($I`ScoredExample`)(
     /** Optional preformatted conversation turns for this example. */
     promptMessages: S.Array(ScoredExampleMessage).pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ScoredExample.promptMessages", {
         description: "Optional preformatted conversation turns for this example.",
       })
@@ -288,7 +291,7 @@ export class ScoredExample extends S.Class<ScoredExample>($I`ScoredExample`)(
     /** Optional explanation of a negative example's prohibited behavior. */
     explanation: S.String.pipe(
       S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ScoredExample.explanation", {
         description: "Optional explanation of a negative example's prohibited behavior.",
       })
@@ -299,6 +302,7 @@ export class ScoredExample extends S.Class<ScoredExample>($I`ScoredExample`)(
   })
 ) {}
 
+const structuredPromptWithExamplesExampleMessagesDefault = A.empty<ExampleMessage>();
 /**
  * Structured extraction prompt augmented with positive and negative examples.
  *
@@ -325,14 +329,14 @@ export class StructuredPromptWithExamples extends S.Class<StructuredPromptWithEx
     ...StructuredPromptFields,
     /** Positive few-shot example turns inserted before the request. */
     exampleMessages: S.Array(ExampleMessage).pipe(
-      SchemaUtils.withEmptyArrayDefaults<ExampleMessage>(),
+      S.withConstructorDefault(Effect.succeed(structuredPromptWithExamplesExampleMessagesDefault)), S.withDecodingDefaultType(Effect.succeed(structuredPromptWithExamplesExampleMessagesDefault)),
       $I.annoteKey("StructuredPromptWithExamples.exampleMessages", {
         description: "Positive few-shot example turns inserted before the request.",
       })
     ),
     /** Whether negative-example warnings were included in the system message. */
     hasNegativeExamples: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(false),
+      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       $I.annoteKey("StructuredPromptWithExamples.hasNegativeExamples", {
         description: "Whether negative-example warnings were included in the system message.",
       })

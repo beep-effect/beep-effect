@@ -7,7 +7,7 @@
 
 import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { identity, Result, SchemaTransformation } from "effect";
+import { Effect, identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
@@ -288,7 +288,7 @@ export type StrFromUnknown = typeof StrFromUnknown.Type;
  */
 export const OptionFromOptionalStrWithNoneDefault = S.String.pipe(
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault,
+  S.withConstructorDefault(Effect.succeedNone),
   $I.annoteSchema("OptionFromOptionalStrWithNoneDefault", {
     description: "Optional string property codec decoded as Option with None as the missing-key default.",
   })

@@ -14,10 +14,10 @@
 
 import { $ObsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type * as Effect from "effect/Effect";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const UnknownRecord = S.Record(S.String, S.Unknown);
@@ -197,13 +197,13 @@ export class ObsAuthChallenge extends S.Class<ObsAuthChallenge>($I`ObsAuthChalle
 export class ObsHello extends S.Class<ObsHello>($I`ObsHello`)(
   {
     authentication: S.OptionFromOptionalKey(ObsAuthChallenge).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsHello.authentication", {
         description: "Authentication challenge, present when the server requires a password.",
       })
     ),
     obsStudioVersion: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsHello.obsStudioVersion", {
         description: "OBS Studio version reported by the server, when available.",
       })
@@ -242,7 +242,7 @@ export class ObsHello extends S.Class<ObsHello>($I`ObsHello`)(
 export class ObsIdentify extends S.Class<ObsIdentify>($I`ObsIdentify`)(
   {
     authentication: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsIdentify.authentication", {
         description: "Authentication string derived from the Hello challenge, when the server requires it.",
       })
@@ -309,7 +309,7 @@ export class ObsIdentified extends S.Class<ObsIdentified>($I`ObsIdentified`)(
 export class ObsEventEnvelope extends S.Class<ObsEventEnvelope>($I`ObsEventEnvelope`)(
   {
     eventData: S.OptionFromOptionalKey(UnknownRecord).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsEventEnvelope.eventData", {
         description: "Event payload object, when the event carries data.",
       })
@@ -348,7 +348,7 @@ export class ObsEventEnvelope extends S.Class<ObsEventEnvelope>($I`ObsEventEnvel
 export class ObsRequestEnvelope extends S.Class<ObsRequestEnvelope>($I`ObsRequestEnvelope`)(
   {
     requestData: S.OptionFromOptionalKey(UnknownRecord).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsRequestEnvelope.requestData", {
         description: "Request payload object, when the request type takes data.",
       })
@@ -392,7 +392,7 @@ export class ObsRequestStatus extends S.Class<ObsRequestStatus>($I`ObsRequestSta
       })
     ),
     comment: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsRequestStatus.comment", {
         description: "Server-provided failure detail, when available.",
       })
@@ -445,7 +445,7 @@ export class ObsRequestResponseEnvelope extends S.Class<ObsRequestResponseEnvelo
       })
     ),
     responseData: S.OptionFromOptionalKey(UnknownRecord).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsRequestResponseEnvelope.responseData", {
         description: "Response payload object, when the request type returns data.",
       })
@@ -1241,7 +1241,7 @@ export class ObsRecordDirectory extends S.Class<ObsRecordDirectory>($I`ObsRecord
 export class ObsCreatedScene extends S.Class<ObsCreatedScene>($I`ObsCreatedScene`)(
   {
     sceneUuid: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsCreatedScene.sceneUuid", {
         description: "UUID of the created scene, when the server reports one.",
       })
@@ -1272,7 +1272,7 @@ export class ObsCreatedScene extends S.Class<ObsCreatedScene>($I`ObsCreatedScene
 export class ObsSceneSummary extends S.Class<ObsSceneSummary>($I`ObsSceneSummary`)(
   {
     sceneIndex: S.OptionFromOptionalKey(S.Int).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsSceneSummary.sceneIndex", {
         description: "Position of the scene in the scene list, when reported.",
       })
@@ -1283,7 +1283,7 @@ export class ObsSceneSummary extends S.Class<ObsSceneSummary>($I`ObsSceneSummary
       })
     ),
     sceneUuid: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsSceneSummary.sceneUuid", {
         description: "UUID of the scene, when the server reports one.",
       })
@@ -1349,7 +1349,7 @@ export class ObsSceneList extends S.Class<ObsSceneList>($I`ObsSceneList`)(
 export class ObsCreatedInput extends S.Class<ObsCreatedInput>($I`ObsCreatedInput`)(
   {
     inputUuid: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsCreatedInput.inputUuid", {
         description: "UUID of the newly created input, when the server reports one.",
       })

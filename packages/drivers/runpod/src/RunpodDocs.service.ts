@@ -47,7 +47,7 @@ const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
  */
 export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`RunpodDocsIndexEntry`)(
   {
-    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     section: S.NonEmptyString,
     title: S.NonEmptyString,
     url: RunpodDocsUrl,
@@ -84,7 +84,10 @@ export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`Runpo
 export class RunpodDocsIndex extends S.Class<RunpodDocsIndex>($I`RunpodDocsIndex`)(
   {
     entries: S.NonEmptyArray(RunpodDocsIndexEntry),
-    title: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("Runpod Documentation")),
+    title: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("Runpod Documentation")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("Runpod Documentation"))
+    ),
   },
   $I.annote("RunpodDocsIndex", {
     description: "Parsed Runpod documentation index from docs.runpod.io/llms.txt.",
@@ -111,11 +114,18 @@ class ResolvedRunpodDocsConfig extends S.Class<ResolvedRunpodDocsConfig>($I`Reso
   })
 ) {}
 
+const docsParseStateEntriesDefault = A.empty<RunpodDocsIndexEntry>();
 class DocsParseState extends S.Class<DocsParseState>($I`DocsParseState`)(
   {
-    entries: S.Array(RunpodDocsIndexEntry).pipe(SchemaUtils.withEmptyArrayDefaults<RunpodDocsIndexEntry>()),
-    section: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultDocsSection)),
-    title: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    entries: S.Array(RunpodDocsIndexEntry).pipe(
+      S.withConstructorDefault(Effect.succeed(docsParseStateEntriesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(docsParseStateEntriesDefault))
+    ),
+    section: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultDocsSection)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultDocsSection))
+    ),
+    title: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("DocsParseState", {
     description: "Internal parser state for Runpod's llms.txt index.",

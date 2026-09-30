@@ -14,7 +14,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { runMain as platformRunMain } from "@effect/platform-node-shared/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node-shared/NodeStdio";
 import { Cause, Effect, Exit, Stdio, Stream } from "effect";
@@ -70,8 +69,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Runner");
 export class HookProcessOutput extends S.TaggedClass<HookProcessOutput>($I`HookProcessOutput`)(
   "HookProcessOutput",
   {
-    stdout: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    stderr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     exitCode: S.Finite,
   },
   $I.annote("HookProcessOutput", {

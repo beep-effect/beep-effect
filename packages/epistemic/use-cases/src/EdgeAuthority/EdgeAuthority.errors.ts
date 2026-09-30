@@ -17,6 +17,7 @@ import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { optionalDefect } from "../internal/OptionalDefect.ts";
@@ -151,7 +152,7 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I
     logicalKey: LogicalEdgeKey.annotateKey({
       description: "Logical edge whose supersession was rejected.",
     }),
-    observedVersion: PosInt.pipe(S.OptionFromNullOr, SchemaUtils.withNoneDefault).annotateKey({
+    observedVersion: PosInt.pipe(S.OptionFromNullOr, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Version actually found at the open head; absent when no open head could be read.",
     }),
   },

@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Order, pipe, SchemaTransformation } from "effect";
@@ -36,7 +36,7 @@ const OptionalNonEmptyTrimmed = S.optionalKey(S.Union([S.String, S.Option(NonEmp
       encode: O.flatten,
     })
   ),
-  SchemaUtils.withNoneDefault
+  S.withConstructorDefault(Effect.succeedNone)
 );
 const AiMetricsEncodedSha256 = S.toEncoded(Sha256Hex).pipe(
   $I.annoteSchema("AiMetricsEncodedSha256", {
@@ -178,7 +178,7 @@ export class AiMetricsRawEventEnvelope extends S.Class<AiMetricsRawEventEnvelope
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("AiMetricsRawEventEnvelope", {
     description: "Safe raw-event envelope that retains only hashes, line numbers, event names, and timestamps.",
@@ -213,24 +213,32 @@ export class AiMetricsSanitizedTranscript extends S.Class<AiMetricsSanitizedTran
 )(
   {
     acceptedEvents: S.Natural,
-    agentNicknameHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
-    agentRoleHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    agentNicknameHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    agentRoleHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(S.withConstructorDefault(Effect.succeedNone)),
     eventNames: S.Array(S.String),
-    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    forkedFromIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
-    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    parentSessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
-    parentThreadIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    firstTimestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    forkedFromIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    lastTimestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    parentSessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    parentThreadIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     rawEventEnvelopes: S.Array(AiMetricsRawEventEnvelope),
     rejectedLines: S.Natural,
-    sessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(SchemaUtils.withNoneDefault),
+    sessionIdHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: AiMetricsEncodedSha256,
     sourceRole: AiMetricsSourceRole.pipe(
       S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
       S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
     ),
-    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    threadSpawn: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
     totalLines: S.Natural,
   },
   $I.annote("AiMetricsSanitizedTranscript", {
@@ -322,10 +330,10 @@ export class AiMetricsPrivacyError extends S.TaggedError<AiMetricsPrivacyError>(
 
 class GenericTranscriptLine extends S.Class<GenericTranscriptLine>($I`GenericTranscriptLine`)(
   {
-    event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sessionId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    event: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("GenericTranscriptLine", {
     description: "Minimal event metadata decoded from arbitrary transcript JSONL lines.",
@@ -341,7 +349,7 @@ class CodexSubagentSource extends S.Class<CodexSubagentSource>($I`CodexSubagentS
     forked_from_id: OptionalNonEmptyTrimmed,
     parent_session_id: OptionalNonEmptyTrimmed,
     parent_thread_id: OptionalNonEmptyTrimmed,
-    thread_spawn: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    thread_spawn: S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CodexSubagentSource", {
     description: "Hash-only source metadata shape decoded from Codex session_meta lines.",
@@ -350,7 +358,7 @@ class CodexSubagentSource extends S.Class<CodexSubagentSource>($I`CodexSubagentS
 
 class CodexSessionSource extends S.Class<CodexSessionSource>($I`CodexSessionSource`)(
   {
-    subagent: S.OptionFromOptionalKey(CodexSubagentSource).pipe(SchemaUtils.withNoneDefault),
+    subagent: S.OptionFromOptionalKey(CodexSubagentSource).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CodexSessionSource", {
     description: "Codex session_meta source metadata used for attribution.",
@@ -362,7 +370,7 @@ class CodexSessionPayload extends S.Class<CodexSessionPayload>($I`CodexSessionPa
     id: OptionalNonEmptyTrimmed,
     parent_session_id: OptionalNonEmptyTrimmed,
     parent_thread_id: OptionalNonEmptyTrimmed,
-    source: S.OptionFromOptionalKey(CodexSessionSource).pipe(SchemaUtils.withNoneDefault),
+    source: S.OptionFromOptionalKey(CodexSessionSource).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("CodexSessionPayload", {
     description: "Codex session_meta payload fields used for privacy-preserving attribution.",
@@ -371,7 +379,7 @@ class CodexSessionPayload extends S.Class<CodexSessionPayload>($I`CodexSessionPa
 
 class CodexSessionMetaLine extends S.Class<CodexSessionMetaLine>($I`CodexSessionMetaLine`)(
   {
-    payload: S.OptionFromOptionalKey(CodexSessionPayload).pipe(SchemaUtils.withNoneDefault),
+    payload: S.OptionFromOptionalKey(CodexSessionPayload).pipe(S.withConstructorDefault(Effect.succeedNone)),
     type: S.String,
   },
   $I.annote("CodexSessionMetaLine", {

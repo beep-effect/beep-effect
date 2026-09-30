@@ -8,7 +8,7 @@
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Config, ConfigProvider, Context, Duration, Effect, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
@@ -23,241 +23,273 @@ const EmbeddingProvider = LiteralKit(["nomic", "voyage"]);
 const InferenceProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]);
 const RdfOutputFormat = LiteralKit(["Turtle", "N-Triples", "JSON-LD"]);
 
+const llmSettingsApiKeyDefault = Redacted.make("");
+const llmSettingsRetryPolicyDefault = RetryPolicy.make({});
+const llmSettingsMaxTokensDefault = PosInt.make(4096);
+const llmSettingsTemperatureDefault = UnitInterval.make(0.1);
 const LlmSettings = S.Struct({
   provider: LlmProvider.pipe(
-    SchemaUtils.withKeyDefaults(LlmProvider.Enum.anthropic),
+    S.withConstructorDefault(Effect.succeed(LlmProvider.Enum.anthropic)), S.withDecodingDefaultTypeKey(Effect.succeed(LlmProvider.Enum.anthropic)),
     S.annotateKey({ description: "Configured language-model provider." })
   ),
   model: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("claude-haiku-4-5"),
+    S.withConstructorDefault(Effect.succeed("claude-haiku-4-5")), S.withDecodingDefaultTypeKey(Effect.succeed("claude-haiku-4-5")),
     S.annotateKey({ description: "Provider model identifier." })
   ),
   apiKey: S.Redacted(S.String).pipe(
-    SchemaUtils.withKeyDefaults(Redacted.make("")),
+    S.withConstructorDefault(Effect.succeed(llmSettingsApiKeyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmSettingsApiKeyDefault)),
     S.annotateKey({ description: "Redacted language-model provider credential." })
   ),
   retryPolicy: RetryPolicy.pipe(
-    SchemaUtils.withKeyDefaults(RetryPolicy.make({})),
+    S.withConstructorDefault(Effect.succeed(llmSettingsRetryPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmSettingsRetryPolicyDefault)),
     S.annotateKey({ description: "Attempt, retry-delay, and overall-deadline policy for language-model calls." })
   ),
   maxTokens: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(4096)),
+    S.withConstructorDefault(Effect.succeed(llmSettingsMaxTokensDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmSettingsMaxTokensDefault)),
     S.annotateKey({ description: "Maximum output-token budget for one language-model response." })
   ),
   temperature: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.1)),
+    S.withConstructorDefault(Effect.succeed(llmSettingsTemperatureDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmSettingsTemperatureDefault)),
     S.annotateKey({ description: "Normalized provider sampling temperature." })
   ),
   enablePromptCaching: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether supported providers may cache stable prompt prefixes." })
   ),
 });
 
+const storageSettingsBucketDefault = O.none();
+const storageSettingsLocalPathDefault = O.none();
 const StorageSettings = S.Struct({
   type: StorageType.pipe(
-    SchemaUtils.withKeyDefaults(StorageType.Enum.local),
+    S.withConstructorDefault(Effect.succeed(StorageType.Enum.local)), S.withDecodingDefaultTypeKey(Effect.succeed(StorageType.Enum.local)),
     S.annotateKey({ description: "Storage backend selected for ontology artifacts." })
   ),
   bucket: S.Option(S.String).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(storageSettingsBucketDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(storageSettingsBucketDefault)),
     S.annotateKey({ description: "Optional cloud-storage bucket." })
   ),
   localPath: S.Option(S.String).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(storageSettingsLocalPathDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(storageSettingsLocalPathDefault)),
     S.annotateKey({ description: "Optional local storage root." })
   ),
   prefix: S.String.pipe(
-    SchemaUtils.withKeyDefaults(""),
+    S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed("")),
     S.annotateKey({ description: "Key prefix applied to stored artifacts." })
   ),
 });
 
+const ontologySettingsRegistryPathDefault = O.none();
+const ontologySettingsCacheTtlDefault = Duration.hours(1);
 const OntologySettings = S.Struct({
   path: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("ontology.ttl"),
+    S.withConstructorDefault(Effect.succeed("ontology.ttl")), S.withDecodingDefaultTypeKey(Effect.succeed("ontology.ttl")),
     S.annotateKey({ description: "Primary ontology document path." })
   ),
   externalVocabsPath: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("ontologies/external/merged-external.ttl"),
+    S.withConstructorDefault(Effect.succeed("ontologies/external/merged-external.ttl")), S.withDecodingDefaultTypeKey(Effect.succeed("ontologies/external/merged-external.ttl")),
     S.annotateKey({ description: "Bundled external vocabulary document merged with the primary ontology." })
   ),
   registryPath: S.Option(S.String).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(ontologySettingsRegistryPathDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologySettingsRegistryPathDefault)),
     S.annotateKey({ description: "Optional ontology registry manifest path." })
   ),
   cacheTtl: S.Duration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.hours(1)),
+    S.withConstructorDefault(Effect.succeed(ontologySettingsCacheTtlDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologySettingsCacheTtlDefault)),
     S.annotateKey({ description: "Lifetime of a cached ontology document." })
   ),
   strictValidation: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether ontology URI mismatches fail validation." })
   ),
 });
 
+const runtimeSettingsConcurrencyDefault = PosInt.make(4);
+const runtimeSettingsLlmConcurrencyLimitDefault = PosInt.make(2);
 const RuntimeSettings = S.Struct({
   concurrency: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(4)),
+    S.withConstructorDefault(Effect.succeed(runtimeSettingsConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runtimeSettingsConcurrencyDefault)),
     S.annotateKey({ description: "Maximum general workflow concurrency." })
   ),
   llmConcurrencyLimit: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(2)),
+    S.withConstructorDefault(Effect.succeed(runtimeSettingsLlmConcurrencyLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runtimeSettingsLlmConcurrencyLimitDefault)),
     S.annotateKey({ description: "Maximum concurrent language-model calls." })
   ),
   enableTracing: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether runtime tracing is enabled." })
   ),
 });
 
+const grounderSettingsConfidenceThresholdDefault = UnitInterval.make(0.8);
+const grounderSettingsBatchSizeDefault = PosInt.make(5);
 const GrounderSettings = S.Struct({
   enabled: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether the grounding stage is enabled." })
   ),
   confidenceThreshold: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+    S.withConstructorDefault(Effect.succeed(grounderSettingsConfidenceThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(grounderSettingsConfidenceThresholdDefault)),
     S.annotateKey({ description: "Minimum normalized grounding confidence." })
   ),
   batchSize: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(5)),
+    S.withConstructorDefault(Effect.succeed(grounderSettingsBatchSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(grounderSettingsBatchSizeDefault)),
     S.annotateKey({ description: "Maximum entities processed in one grounding batch." })
   ),
 });
 
+const embeddingSettingsDimensionDefault = PosInt.make(768);
+const embeddingSettingsVoyageApiKeyDefault = O.none();
+const embeddingSettingsTimeoutDefault = Duration.seconds(30);
+const embeddingSettingsRateLimitRpmDefault = PosInt.make(100);
+const embeddingSettingsMaxConcurrentDefault = PosInt.make(10);
+const embeddingSettingsCachePathDefault = O.none();
+const embeddingSettingsCacheTtlDefault = Duration.hours(24);
+const embeddingSettingsCacheMaxEntriesDefault = PosInt.make(10_000);
+const embeddingSettingsEntityIndexPathDefault = O.none();
 const EmbeddingSettings = S.Struct({
   provider: EmbeddingProvider.pipe(
-    SchemaUtils.withKeyDefaults(EmbeddingProvider.Enum.nomic),
+    S.withConstructorDefault(Effect.succeed(EmbeddingProvider.Enum.nomic)), S.withDecodingDefaultTypeKey(Effect.succeed(EmbeddingProvider.Enum.nomic)),
     S.annotateKey({ description: "Configured embedding provider." })
   ),
   model: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("nomic-embed-text-v1.5"),
+    S.withConstructorDefault(Effect.succeed("nomic-embed-text-v1.5")), S.withDecodingDefaultTypeKey(Effect.succeed("nomic-embed-text-v1.5")),
     S.annotateKey({ description: "Embedding model identifier." })
   ),
   dimension: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(768)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsDimensionDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsDimensionDefault)),
     S.annotateKey({ description: "Expected embedding vector dimension." })
   ),
   transformersModelId: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("Xenova/nomic-embed-text-v1"),
+    S.withConstructorDefault(Effect.succeed("Xenova/nomic-embed-text-v1")), S.withDecodingDefaultTypeKey(Effect.succeed("Xenova/nomic-embed-text-v1")),
     S.annotateKey({ description: "Transformers.js model identifier for local inference." })
   ),
   voyageApiKey: S.String.pipe(
     S.Redacted,
     S.Option,
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsVoyageApiKeyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsVoyageApiKeyDefault)),
     S.annotateKey({ description: "Optional redacted Voyage API credential." })
   ),
   voyageModel: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("voyage-3.5-lite"),
+    S.withConstructorDefault(Effect.succeed("voyage-3.5-lite")), S.withDecodingDefaultTypeKey(Effect.succeed("voyage-3.5-lite")),
     S.annotateKey({ description: "Voyage embedding model identifier." })
   ),
   timeout: S.Duration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsTimeoutDefault)),
     S.annotateKey({ description: "Maximum duration of one embedding request." })
   ),
   rateLimitRpm: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(100)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsRateLimitRpmDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsRateLimitRpmDefault)),
     S.annotateKey({ description: "Embedding-provider requests allowed per minute." })
   ),
   maxConcurrent: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(10)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsMaxConcurrentDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsMaxConcurrentDefault)),
     S.annotateKey({ description: "Maximum concurrent embedding requests." })
   ),
   cachePath: S.Option(S.String).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsCachePathDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsCachePathDefault)),
     S.annotateKey({ description: "Optional persistent embedding-cache path." })
   ),
   cacheTtl: S.Duration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.hours(24)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsCacheTtlDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsCacheTtlDefault)),
     S.annotateKey({ description: "Lifetime of a cached embedding." })
   ),
   cacheMaxEntries: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(10_000)),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsCacheMaxEntriesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsCacheMaxEntriesDefault)),
     S.annotateKey({ description: "Maximum number of in-memory embedding-cache entries." })
   ),
   entityIndexPath: S.Option(S.String).pipe(
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(embeddingSettingsEntityIndexPathDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingSettingsEntityIndexPathDefault)),
     S.annotateKey({ description: "Optional persistent entity-index path." })
   ),
 });
 
 const ExtractionSettings = S.Struct({
   runsDir: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("./output/runs"),
+    S.withConstructorDefault(Effect.succeed("./output/runs")), S.withDecodingDefaultTypeKey(Effect.succeed("./output/runs")),
     S.annotateKey({ description: "Base directory for extraction-run artifacts." })
   ),
   strictPersistence: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether claim-persistence failures fail the extraction workflow." })
   ),
 });
 
+const entityRegistrySettingsCandidateThresholdDefault = UnitInterval.make(0.6);
+const entityRegistrySettingsResolutionThresholdDefault = UnitInterval.make(0.8);
+const entityRegistrySettingsMaxCandidatesPerEntityDefault = PosInt.make(20);
+const entityRegistrySettingsMaxBlockingCandidatesDefault = PosInt.make(100);
 const EntityRegistrySettings = S.Struct({
   enabled: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether persistent cross-batch entity resolution is enabled." })
   ),
   candidateThreshold: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.6)),
+    S.withConstructorDefault(Effect.succeed(entityRegistrySettingsCandidateThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityRegistrySettingsCandidateThresholdDefault)),
     S.annotateKey({ description: "Minimum similarity for candidate retrieval." })
   ),
   resolutionThreshold: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+    S.withConstructorDefault(Effect.succeed(entityRegistrySettingsResolutionThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityRegistrySettingsResolutionThresholdDefault)),
     S.annotateKey({ description: "Minimum similarity for a final entity-resolution decision." })
   ),
   maxCandidatesPerEntity: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(20)),
+    S.withConstructorDefault(Effect.succeed(entityRegistrySettingsMaxCandidatesPerEntityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityRegistrySettingsMaxCandidatesPerEntityDefault)),
     S.annotateKey({ description: "Maximum ANN candidates retained per entity." })
   ),
   maxBlockingCandidates: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(100)),
+    S.withConstructorDefault(Effect.succeed(entityRegistrySettingsMaxBlockingCandidatesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityRegistrySettingsMaxBlockingCandidatesDefault)),
     S.annotateKey({ description: "Maximum token-blocking candidates retained per entity." })
   ),
   canonicalNamespace: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("https://example.org/entities/"),
+    S.withConstructorDefault(Effect.succeed("https://example.org/entities/")), S.withDecodingDefaultTypeKey(Effect.succeed("https://example.org/entities/")),
     S.annotateKey({ description: "Namespace used for generated canonical entity IRIs." })
   ),
 });
 
 const InferenceSettings = S.Struct({
   enabled: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether the inference stage is enabled." })
   ),
   profile: InferenceProfile.pipe(
-    SchemaUtils.withKeyDefaults(InferenceProfile.Enum.rdfs),
+    S.withConstructorDefault(Effect.succeed(InferenceProfile.Enum.rdfs)), S.withDecodingDefaultTypeKey(Effect.succeed(InferenceProfile.Enum.rdfs)),
     S.annotateKey({ description: "Rule profile used by the inference stage." })
   ),
   persistDerived: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether derived claims are persisted." })
   ),
 });
 
 const ValidationSettings = S.Struct({
   logOnly: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether validation failures are logged without failing workflows." })
   ),
   failOnViolation: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether SHACL violations fail a workflow." })
   ),
   failOnWarning: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether SHACL warnings fail a workflow." })
   ),
 });
 
+const rdfSettingsPrefixesDefault = {
+      schema: IRI.make(CoreVocab.schema.iri),
+      rdf: IRI.make(CoreVocab.rdf.iri),
+      rdfs: IRI.make(CoreVocab.rdfs.iri),
+      owl: IRI.make(CoreVocab.owl.iri),
+      xsd: IRI.make(XSD_NAMESPACE),
+    };
 const RdfSettings = S.Struct({
   baseNamespace: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("https://example.org/kg/"),
+    S.withConstructorDefault(Effect.succeed("https://example.org/kg/")), S.withDecodingDefaultTypeKey(Effect.succeed("https://example.org/kg/")),
     S.annotateKey({ description: "Base namespace used for generated graph identifiers." })
   ),
   outputFormat: RdfOutputFormat.pipe(
-    SchemaUtils.withKeyDefaults(RdfOutputFormat.Enum.Turtle),
+    S.withConstructorDefault(Effect.succeed(RdfOutputFormat.Enum.Turtle)), S.withDecodingDefaultTypeKey(Effect.succeed(RdfOutputFormat.Enum.Turtle)),
     S.annotateKey({ description: "Default RDF serialization format." })
   ),
   prefixes: S.Struct({
@@ -267,51 +299,50 @@ const RdfSettings = S.Struct({
     owl: IRI,
     xsd: IRI,
   }).pipe(
-    SchemaUtils.withKeyDefaults({
-      schema: IRI.make(CoreVocab.schema.iri),
-      rdf: IRI.make(CoreVocab.rdf.iri),
-      rdfs: IRI.make(CoreVocab.rdfs.iri),
-      owl: IRI.make(CoreVocab.owl.iri),
-      xsd: IRI.make(XSD_NAMESPACE),
-    }),
+    S.withConstructorDefault(Effect.succeed(rdfSettingsPrefixesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(rdfSettingsPrefixesDefault)),
     S.annotateKey({ description: "Stable RDF namespace-prefix map." })
   ),
 });
 
+const apiSettingsKeysDefault = O.none();
 const ApiSettings = S.Struct({
   keys: S.String.pipe(
     S.Redacted,
     S.Option,
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(apiSettingsKeysDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(apiSettingsKeysDefault)),
     S.annotateKey({ description: "Optional redacted comma-separated API keys." })
   ),
   requireAuth: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
+    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether versioned API endpoints require authentication." })
   ),
 });
 
+const jinaSettingsApiKeyDefault = O.none();
+const jinaSettingsRateLimitRpmDefault = PosInt.make(20);
+const jinaSettingsTimeoutDefault = Duration.seconds(30);
+const jinaSettingsMaxConcurrentDefault = PosInt.make(5);
 const JinaSettings = S.Struct({
   apiKey: S.String.pipe(
     S.Redacted,
     S.Option,
-    SchemaUtils.withKeyDefaults(O.none()),
+    S.withConstructorDefault(Effect.succeed(jinaSettingsApiKeyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jinaSettingsApiKeyDefault)),
     S.annotateKey({ description: "Optional redacted Jina Reader API credential." })
   ),
   rateLimitRpm: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(20)),
+    S.withConstructorDefault(Effect.succeed(jinaSettingsRateLimitRpmDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jinaSettingsRateLimitRpmDefault)),
     S.annotateKey({ description: "Jina Reader requests allowed per minute." })
   ),
   timeout: S.Duration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+    S.withConstructorDefault(Effect.succeed(jinaSettingsTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jinaSettingsTimeoutDefault)),
     S.annotateKey({ description: "Maximum duration of one Jina Reader request." })
   ),
   maxConcurrent: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(5)),
+    S.withConstructorDefault(Effect.succeed(jinaSettingsMaxConcurrentDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jinaSettingsMaxConcurrentDefault)),
     S.annotateKey({ description: "Maximum concurrent Jina Reader requests." })
   ),
   baseUrl: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("https://r.jina.ai"),
+    S.withConstructorDefault(Effect.succeed("https://r.jina.ai")), S.withDecodingDefaultTypeKey(Effect.succeed("https://r.jina.ai")),
     S.annotateKey({ description: "Jina Reader service base URL." })
   ),
 });
@@ -353,19 +384,19 @@ const defaultJinaSettings = JinaSettings.make({});
  */
 export class AppConfig extends S.Class<AppConfig>($I`AppConfig`)(
   {
-    llm: LlmSettings.pipe(SchemaUtils.withKeyDefaults(defaultLlmSettings)),
-    storage: StorageSettings.pipe(SchemaUtils.withKeyDefaults(defaultStorageSettings)),
-    ontology: OntologySettings.pipe(SchemaUtils.withKeyDefaults(defaultOntologySettings)),
-    runtime: RuntimeSettings.pipe(SchemaUtils.withKeyDefaults(defaultRuntimeSettings)),
-    grounder: GrounderSettings.pipe(SchemaUtils.withKeyDefaults(defaultGrounderSettings)),
-    embedding: EmbeddingSettings.pipe(SchemaUtils.withKeyDefaults(defaultEmbeddingSettings)),
-    extraction: ExtractionSettings.pipe(SchemaUtils.withKeyDefaults(defaultExtractionSettings)),
-    entityRegistry: EntityRegistrySettings.pipe(SchemaUtils.withKeyDefaults(defaultEntityRegistrySettings)),
-    inference: InferenceSettings.pipe(SchemaUtils.withKeyDefaults(defaultInferenceSettings)),
-    validation: ValidationSettings.pipe(SchemaUtils.withKeyDefaults(defaultValidationSettings)),
-    rdf: RdfSettings.pipe(SchemaUtils.withKeyDefaults(defaultRdfSettings)),
-    api: ApiSettings.pipe(SchemaUtils.withKeyDefaults(defaultApiSettings)),
-    jina: JinaSettings.pipe(SchemaUtils.withKeyDefaults(defaultJinaSettings)),
+    llm: LlmSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultLlmSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultLlmSettings))),
+    storage: StorageSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultStorageSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultStorageSettings))),
+    ontology: OntologySettings.pipe(S.withConstructorDefault(Effect.succeed(defaultOntologySettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultOntologySettings))),
+    runtime: RuntimeSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultRuntimeSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultRuntimeSettings))),
+    grounder: GrounderSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultGrounderSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultGrounderSettings))),
+    embedding: EmbeddingSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultEmbeddingSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultEmbeddingSettings))),
+    extraction: ExtractionSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultExtractionSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultExtractionSettings))),
+    entityRegistry: EntityRegistrySettings.pipe(S.withConstructorDefault(Effect.succeed(defaultEntityRegistrySettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultEntityRegistrySettings))),
+    inference: InferenceSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultInferenceSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultInferenceSettings))),
+    validation: ValidationSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultValidationSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultValidationSettings))),
+    rdf: RdfSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultRdfSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultRdfSettings))),
+    api: ApiSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultApiSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultApiSettings))),
+    jina: JinaSettings.pipe(S.withConstructorDefault(Effect.succeed(defaultJinaSettings)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultJinaSettings))),
   },
   $I.annote("AppConfig", {
     description: "Schema-backed configuration for ontology extraction, storage, inference, and provider services.",

@@ -7,6 +7,7 @@
 import { $GovinfoId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
+import { Effect } from "effect";
 import { HttpApiSchema } from "effect/http-api";
 import * as S from "effect/Schema";
 import { SearchBody } from "../..//values/index.ts";
@@ -115,7 +116,7 @@ export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`Failu
   "FailureBadRequest",
   {
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(() => () => true))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
   },
@@ -147,7 +148,7 @@ export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNo
   "FailureNotFound",
   {
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(() => () => true))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     status: S.tag(HttpStatus4XX.From.Enum.NotFound),
   },
@@ -181,7 +182,7 @@ export class FailureInternalServerError extends S.TaggedError<FailureInternalSer
   "FailureInternalServerError",
   {
     cause: S.OptionFromOptionalKey(S.Defect().pipe(S.overrideToEquivalence(() => () => true))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
     status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
   },

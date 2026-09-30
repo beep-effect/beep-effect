@@ -6,8 +6,8 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -146,13 +146,13 @@ export class ObsError extends S.TaggedError<ObsError>($I`ObsError`)(
   "ObsError",
   {
     cause: S.OptionFromOptionalKey(ObsDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsError.cause", {
         description: "Inspectable originating defect, when available.",
       })
     ),
     closeCode: S.OptionFromOptionalKey(ObsWebSocketCloseCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsError.closeCode", {
         description: "WebSocket close code observed when the obs-websocket connection dropped, when available.",
       })
@@ -168,19 +168,19 @@ export class ObsError extends S.TaggedError<ObsError>($I`ObsError`)(
       })
     ),
     requestStatusCode: S.OptionFromOptionalKey(ObsRequestStatusCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsError.requestStatusCode", {
         description: "obs-websocket RequestStatus code returned by a failed request, when available.",
       })
     ),
     requestStatusComment: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsError.requestStatusComment", {
         description: "obs-websocket RequestStatus comment returned by a failed request, when available.",
       })
     ),
     requestType: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("ObsError.requestType", {
         description: "obs-websocket request type involved in the failure, when available.",
       })

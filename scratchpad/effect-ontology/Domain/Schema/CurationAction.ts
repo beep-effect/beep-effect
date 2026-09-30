@@ -14,10 +14,11 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { SchemaUtils, UUID } from "@beep/schema";
+import { UUID } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
+import { Effect } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/CurationAction");
 
@@ -40,21 +41,22 @@ const ActionBase = {
     description: "Ontology registry identifier that scopes the curation action.",
   }),
   curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({ description: "Optional non-empty identifier of the curator." })
   ),
   note: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({ description: "Optional curator note." })
   ),
   timestamp: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
+    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({
       description: "Optional caller-supplied UTC action instant; services stamp missing values at execution.",
     })
   ),
 };
 
+const curationActionDefinitionConfidenceDefault = Confidence.make(1);
 const CurationActionDefinition = S.TaggedUnion({
   CorrectTripleAction: {
     ...ActionBase,
@@ -66,33 +68,33 @@ const CurationActionDefinition = S.TaggedUnion({
     }).annotateKey({
       description: "Complete canonical RDF triple that replaces the original claim.",
     }),
-    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    storeAsExample: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    storeAsExample: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
   },
   MarkAsWrongAction: {
     ...ActionBase,
     claimId: ClaimId,
-    errorCategory: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    negativePattern: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    storeAsNegativeExample: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    errorCategory: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    negativePattern: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    storeAsNegativeExample: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
   },
   AddAliasAction: {
     ...ActionBase,
     canonicalEntity: NamedNode,
     aliasMention: S.NonEmptyString,
-    resolutionMethod: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("manual")),
-    confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(1))),
+    resolutionMethod: S.NonEmptyString.pipe(S.withConstructorDefault(Effect.succeed("manual")), S.withDecodingDefaultTypeKey(Effect.succeed("manual"))),
+    confidence: Confidence.pipe(S.withConstructorDefault(Effect.succeed(curationActionDefinitionConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(curationActionDefinitionConfidenceDefault))),
   },
   PromoteToPreferredAction: {
     ...ActionBase,
     claimId: ClaimId,
-    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   LinkToWikidataAction: {
     ...ActionBase,
     canonicalEntity: NamedNode,
     wikidataQid: WikidataQid,
-    reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+    reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
 });
 
@@ -314,7 +316,7 @@ export type CurationAction = typeof CurationAction.Type;
 
 const EventBase = {
   ontologyId: OntologyName,
-  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  curatorId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   timestamp: S.DateTimeUtcFromString,
 };
 
@@ -328,8 +330,8 @@ const CurationEventDefinition = S.TaggedUnion({
   ClaimDeprecatedEvent: {
     ...EventBase,
     claimId: ClaimId,
-    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    negativeExampleId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    negativeExampleId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   AliasAddedEvent: {
     ...EventBase,
@@ -345,7 +347,7 @@ const CurationEventDefinition = S.TaggedUnion({
     ...EventBase,
     canonicalEntity: NamedNode,
     wikidataQid: WikidataQid,
-    reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+    reconciliationScore: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
 });
 

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /**
@@ -43,7 +43,7 @@ import * as S from "effect/Schema";
  */
 export const optionalDefect = (description: string) =>
   S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-    .pipe(SchemaUtils.withNoneDefault)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,
     });

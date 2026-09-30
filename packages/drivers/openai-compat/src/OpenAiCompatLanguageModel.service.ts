@@ -53,16 +53,22 @@ const encodeUnknownJsonEffect = S.encodeUnknownEffect(UnknownJson);
 
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
 const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
-const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault);
-const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
-const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault);
-const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(S.withConstructorDefault(Effect.succeedNone));
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(
+  S.withConstructorDefault(Effect.succeedNone)
+);
+const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(S.withConstructorDefault(Effect.succeedNone));
+const OptionalString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 const OptionalNullableTemperature = OpenAiCompatTemperature.pipe(
   S.NullOr,
   S.OptionFromOptionalKey,
-  SchemaUtils.withNoneDefault
+  S.withConstructorDefault(Effect.succeedNone)
 );
-const OptionalNullableUnitInterval = UnitInterval.pipe(S.NullOr, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const OptionalNullableUnitInterval = UnitInterval.pipe(
+  S.NullOr,
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
 const decodeFinishReasonOption = S.decodeUnknownOption(OpenAiCompatFinishReason);
 const knownFinishReasonToResponse = (reason: OpenAiCompatFinishReason): Response.FinishReason =>
   OpenAiCompatFinishReason.$match(reason, {

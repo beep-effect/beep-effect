@@ -7,10 +7,9 @@
 
 import { DmsProvider, RemoteItemId, SyncItemKind } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 import type { DmsMirrorUnavailable } from "./Sync.errors.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/DmsMirror");
@@ -44,7 +43,7 @@ export class DmsRemoteItem extends S.Class<DmsRemoteItem>($I`DmsRemoteItem`)(
     name: S.NonEmptyString.annotateKey({
       description: "Item name on the provider side.",
     }),
-    parentRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    parentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the remote parent folder; none for the provider mirror root.",
     }),
     remoteId: RemoteItemId.annotateKey({
@@ -124,19 +123,19 @@ export class DmsRemoteEvent extends S.Class<DmsRemoteEvent>($I`DmsRemoteEvent`)(
     eventType: DmsEventType.annotateKey({
       description: "Provider-neutral kind of remote change.",
     }),
-    itemKind: S.Option(SyncItemKind).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    itemKind: S.Option(SyncItemKind).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Kind of the affected remote item; none when the event omits it.",
     }),
-    name: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    name: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Item name reported by the event; none when the event omits it.",
     }),
-    parentRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    parentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the item's parent folder; none when the event omits it.",
     }),
     payload: S.Record(S.String, S.Unknown).annotateKey({
       description: "Provider event snapshot preserved verbatim for conflict review.",
     }),
-    remoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    remoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the affected remote item; none when the event omits it.",
     }),
   },
@@ -198,7 +197,7 @@ export class EnsureFolderInput extends S.Class<EnsureFolderInput>($I`EnsureFolde
     name: S.NonEmptyString.annotateKey({
       description: "Folder name to ensure under the parent.",
     }),
-    parentRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    parentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the parent folder; none targets the provider mirror root.",
     }),
   },
@@ -237,7 +236,7 @@ export class UploadFileInput extends S.Class<UploadFileInput>($I`UploadFileInput
     name: S.NonEmptyString.annotateKey({
       description: "File name to create under the parent.",
     }),
-    parentRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    parentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the parent folder; none targets the provider mirror root.",
     }),
   },
@@ -315,7 +314,7 @@ export class MoveItemInput extends S.Class<MoveItemInput>($I`MoveItemInput`)(
     itemKind: SyncItemKind.annotateKey({
       description: "Whether the moved remote item is a file or a folder.",
     }),
-    newParentRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    newParentRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the destination folder; none targets the provider mirror root.",
     }),
     remoteId: RemoteItemId.annotateKey({
@@ -389,7 +388,7 @@ export class RenameItemInput extends S.Class<RenameItemInput>($I`RenameItemInput
  */
 export class PollEventsInput extends S.Class<PollEventsInput>($I`PollEventsInput`)(
   {
-    streamPosition: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    streamPosition: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Opaque provider stream position to poll from; none bootstraps at the provider's now.",
     }),
   },
@@ -583,16 +582,18 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
     connected: S.Boolean.annotateKey({
       description: "Whether the mirror adapter can reach the provider.",
     }),
-    disconnectReason: S.Option(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Why the provider is disconnected; none while the probe reports connected.",
-    }),
-    probedAt: S.Option(S.DateTimeUtc).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    disconnectReason: S.Option(DmsMirrorDisconnectReason)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Why the provider is disconnected; none while the probe reports connected.",
+      }),
+    probedAt: S.Option(S.DateTimeUtc).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "When the adapter last actually asked the provider; none when no probe has contacted it.",
     }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the probe describes.",
     }),
-    rootRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    rootRemoteId: S.Option(RemoteItemId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Provider identifier of the resolved mirror-root folder; none when it could not be resolved.",
     }),
   },

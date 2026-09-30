@@ -6,9 +6,9 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, flow, pipe, Result } from "effect";
+import { Cause, Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -94,10 +94,12 @@ export type DrizzleOperation = typeof DrizzleOperation.Type;
  */
 export class DrizzleErrorContext extends S.Class<DrizzleErrorContext>($I`DrizzleErrorContext`)(
   {
-    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Raw SQL parameter values captured before normalized errors redact them.",
-    }),
-    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Raw SQL parameter values captured before normalized errors redact them.",
+      }),
+    query: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "SQL statement text captured from an explicit or native Drizzle error context.",
     }),
   },
@@ -314,14 +316,14 @@ export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
       description: "Driver operation being normalized.",
     }),
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Inspectable defect retained as the normalized technical cause.",
       }),
-    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    query: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional SQL statement text retained for diagnostics.",
     }),
-    params: S.OptionFromOptionalKey(RedactedSqlParams).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    params: S.OptionFromOptionalKey(RedactedSqlParams).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional SQL parameter values after redaction.",
     }),
   },

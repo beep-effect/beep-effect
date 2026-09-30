@@ -6,8 +6,9 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("Govinfo.errors");
@@ -117,13 +118,13 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
     cause: S.OptionFromOptionalKey(
       S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
     ).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
     ),
     status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status associated with the GovInfo failure when one was available.",
       })
@@ -155,14 +156,14 @@ export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
     cause: S.OptionFromOptionalKey(
       S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
     ).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Original native or third-party defect when one was available.",
       })
     ),
     reason: GovinfoErrorReason,
     status: S.OptionFromOptionalKey(GovinfoHttpStatus).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "HTTP response status associated with the GovInfo failure when one was available.",
       })

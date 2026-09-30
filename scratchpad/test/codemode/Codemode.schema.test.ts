@@ -16,7 +16,12 @@ import {
 import * as ToolRuntime from "../../codemode/Codemode.tool-runtime.ts";
 import { CopyOutMode, copyIn, copyOut, SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
 import { CodeModeDate, CodeModeNumber } from "../../codemode/Codemode.values.ts";
-import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
+import {
+  IdentifierSegment,
+  identifierSegment,
+  jsonSchemaToTypeScript,
+  toTypeScript,
+} from "../../codemode/Codemode.tool-schema.ts";
 import {
   Binding,
   CodeModeGenerator,
@@ -107,6 +112,31 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
     { arbitrary: fcRuns(runs) }
   );
 };
+
+describe("CodeMode JSON Schema rendering", () => {
+  it("renders boolean definitions and property subschemas", () => {
+    expect(jsonSchemaToTypeScript({ $defs: { Nothing: false }, $ref: "#/$defs/Nothing" })).toBe("never");
+    expect(jsonSchemaToTypeScript({ $defs: { Anything: true }, $ref: "#/$defs/Anything" })).toBe("unknown");
+    expect(
+      jsonSchemaToTypeScript({
+        type: "object",
+        properties: { item: { $ref: "#/$defs/Nothing" } },
+        required: ["item"],
+        $defs: { Nothing: false },
+      })
+    ).toBe("{ item: never }");
+    expect(jsonSchemaToTypeScript({ type: "object", properties: { a: false, b: true }, required: ["a"] })).toBe(
+      "{ a: never; b?: unknown }"
+    );
+  });
+
+  it("renders an empty or true `not` as never and a false `not` as unknown", () => {
+    expect(jsonSchemaToTypeScript({ not: {} })).toBe("never");
+    expect(jsonSchemaToTypeScript({ not: true })).toBe("never");
+    expect(jsonSchemaToTypeScript({ not: false })).toBe("unknown");
+    expect(toTypeScript(S.Never)).toBe("never");
+  });
+});
 
 describe("CodeMode schema laws", () => {
   it.effect(

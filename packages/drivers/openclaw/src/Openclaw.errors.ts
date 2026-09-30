@@ -11,7 +11,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { OpenclawDiagnosticText, OpenclawExitCode } from "./Openclaw.models.ts";
 
@@ -111,9 +111,11 @@ export class OpenclawCommandExitError extends S.TaggedError<OpenclawCommandExitE
   "OpenclawCommandExitError",
   {
     ...commandContextFields,
-    diagnostics: S.OptionFromOptionalKey(OpenclawDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Trimmed capped diagnostics, attached only for secret-free operations.",
-    }),
+    diagnostics: S.OptionFromOptionalKey(OpenclawDiagnosticText)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Trimmed capped diagnostics, attached only for secret-free operations.",
+      }),
     exitCode: OpenclawExitCode.annotateKey({
       description: "Nonzero exit status returned by the process.",
     }),

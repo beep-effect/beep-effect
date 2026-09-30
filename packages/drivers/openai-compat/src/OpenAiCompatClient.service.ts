@@ -6,7 +6,6 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, Match, pipe, Stream } from "effect";
 import * as AiError from "effect/ai/AiError";
@@ -54,9 +53,14 @@ const moduleName = "OpenAiCompatClient";
  */
 export class OpenAiCompatClientOptions extends S.Class<OpenAiCompatClientOptions>($I`OpenAiCompatClientOptions`)(
   {
-    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault),
-    apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults("https://api.openai.com/v1")),
-    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
+    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    apiUrl: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("https://api.openai.com/v1")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("https://api.openai.com/v1"))
+    ),
+    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("OpenAiCompatClientOptions", {
     description: "Runtime configuration accepted by the OpenAI-compatible client layer.",

@@ -7,7 +7,6 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -199,7 +198,7 @@ export class AiMetricsOutcomeLabelInput extends S.Class<AiMetricsOutcomeLabelInp
     followUpFix: S.Boolean,
     interventionCount: AiMetricsNonNegativeInteger,
     labeledAtEpochMillis: S.optionalKey(S.Finite),
-    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    note: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     rating: AiMetricsRating,
@@ -234,7 +233,7 @@ export class AiMetricsBenchmarkCaseInput extends S.Class<AiMetricsBenchmarkCaseI
     benchmarkCaseId: S.String,
     expectedChecks: S.Array(S.String),
     promptHash: S.String,
-    promptRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    promptRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     title: S.String,
   },
   $I.annote("AiMetricsBenchmarkCaseInput", {
@@ -306,7 +305,7 @@ export class AiMetricsBenchmarkRunInput extends S.Class<AiMetricsBenchmarkRunInp
     benchmarkCaseId: S.String,
     configSnapshotId: S.String,
     elapsedMs: AiMetricsNonNegativeInteger,
-    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    note: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     recordedAtEpochMillis: S.optionalKey(S.Finite),

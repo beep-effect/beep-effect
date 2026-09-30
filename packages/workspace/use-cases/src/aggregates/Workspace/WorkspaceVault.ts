@@ -6,7 +6,6 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { Context, Effect, flow } from "effect";
@@ -38,9 +37,11 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Workspace/WorkspaceVault");
  */
 export class WorkspaceVaultConfig extends S.Class<WorkspaceVaultConfig>($I`WorkspaceVaultConfig`)(
   {
-    vaultRootPath: S.OptionFromNullOr(WorkspaceVaultRootPath).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Configured local vault root path, absent before onboarding.",
-    }),
+    vaultRootPath: S.OptionFromNullOr(WorkspaceVaultRootPath)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Configured local vault root path, absent before onboarding.",
+      }),
     workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
       description: "Workspace owning the vault configuration.",
     }),

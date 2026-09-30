@@ -8,6 +8,7 @@
 import { $AiSyncId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -470,8 +471,8 @@ export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyn
     domain: AiSyncDomainId,
     tier: AiSyncSourceTier,
     url: AiSyncSourceUrl,
-    versionPin: AiSyncVersionPin.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    contentHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    versionPin: AiSyncVersionPin.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    contentHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     isOfficial: S.Boolean,
     driftMechanism: AiSyncDriftMechanism,
   },
@@ -529,7 +530,7 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
     agent: AiSyncAgentId,
     domain: AiSyncDomainId,
     status: AiSyncSupportStatus,
-    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     rationale: S.String,
   },
   $I.annote("AiSyncSchemaCell", {
@@ -562,7 +563,7 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
 export class AiSyncDriftFinding extends S.Class<AiSyncDriftFinding>($I`AiSyncDriftFinding`)(
   {
     sourceId: AiSyncSourceId,
-    expectedHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    expectedHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     actualHash: AiSyncContentHash,
     message: S.String,
   },
@@ -788,14 +789,12 @@ export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
   "AiSyncError",
   {
     message: S.String,
-    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    cause: S.Defect({ includeStack: true }).pipe(
-      S.overrideToEquivalence(() => () => true),
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
-    ),
+    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.Defect({ includeStack: true })
+      .pipe(S.overrideToEquivalence(() => () => true))
+      .pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<AiSyncError>("AiSyncError", {
     description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",

@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { HashMap, MutableHashMap, MutableHashSet, Order, Tuple } from "effect";
+import { HashMap, MutableHashMap, MutableHashSet, Order, Tuple, Effect } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -210,6 +210,9 @@ const selectExpandedTermCase = ExpandedTermSource.$match({
   related: () => ExpandedTerm.cases.related,
 });
 
+const queryExpansionOptionsOriginalWeightDefault = UnitInterval.make(1);
+const queryExpansionOptionsSynonymWeightDefault = UnitInterval.make(0.8);
+const queryExpansionOptionsHierarchyWeightDefault = UnitInterval.make(0.5);
 /**
  * Query expansion options
  *
@@ -237,15 +240,15 @@ export class QueryExpansionOptions extends S.Class<QueryExpansionOptions>($I`Que
       description: "Whether narrower ontology concepts contribute specialized terms.",
     }),
     originalWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(1)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)),
       S.annotateKey({ description: "Weight assigned to the original query term." })
     ),
     synonymWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)),
       S.annotateKey({ description: "Weight assigned to alternate-label synonyms." })
     ),
     hierarchyWeight: UnitInterval.pipe(
-      SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)),
       S.annotateKey({ description: "Weight assigned to broader and narrower concepts." })
     ),
   },

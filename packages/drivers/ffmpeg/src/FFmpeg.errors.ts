@@ -6,8 +6,8 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -100,25 +100,25 @@ const optionsFromInput = (options: FFmpegErrorContextInput): FFmpegErrorFromUnkn
 export class FFmpegErrorContext extends S.Class<FFmpegErrorContext>($I`FFmpegErrorContext`)(
   {
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorContext.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorContext.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorContext.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorContext.stdout", {
         description: "Captured standard output text, when available.",
       })
@@ -157,31 +157,31 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
 )(
   {
     cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorFromUnknownOptions.cause", {
         description: "Inspectable originating defect, when available.",
       })
     ),
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorFromUnknownOptions.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorFromUnknownOptions.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorFromUnknownOptions.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegErrorFromUnknownOptions.stdout", {
         description: "Captured standard output text, when available.",
       })
@@ -211,19 +211,19 @@ export class FFmpegError extends S.TaggedError<FFmpegError>($I`FFmpegError`)(
   "FFmpegError",
   {
     command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegError.command", {
         description: "Native executable path or command name involved in the failure, when available.",
       })
     ),
     cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegError.cause", {
         description: "Inspectable originating defect, when available.",
       })
     ),
     exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegError.exitCode", {
         description: "Native process exit status, when the process returned one.",
       })
@@ -239,13 +239,13 @@ export class FFmpegError extends S.TaggedError<FFmpegError>($I`FFmpegError`)(
       })
     ),
     stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegError.stderr", {
         description: "Captured standard error text, when available.",
       })
     ),
     stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("FFmpegError.stdout", {
         description: "Captured standard output text, when available.",
       })

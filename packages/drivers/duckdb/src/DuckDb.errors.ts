@@ -12,8 +12,9 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O, P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -80,15 +81,15 @@ export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run",
 export type DuckDbOperation = typeof DuckDbOperation.Type;
 
 const DuckDbErrorLeadingContextFields = {
-  cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  cause: S.OptionFromOptionalKey(S.Unknown).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Inspectable originating defect, when available.",
   }),
-  databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  databasePath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "DuckDB database path active when the failure occurred.",
   }),
 } satisfies S.Struct.Fields;
 const DuckDbErrorTrailingContextFields = {
-  statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  statement: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "SQL statement active when the failure occurred.",
   }),
 } satisfies S.Struct.Fields;
@@ -125,7 +126,10 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
 )(
   {
     ...DuckDbErrorLeadingContextFields,
-    message: S.String.pipe(SchemaUtils.withKeyDefaults("DuckDB operation failed.")).annotateKey({
+    message: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("DuckDB operation failed.")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("DuckDB operation failed."))
+    ).annotateKey({
       description: "Human-readable failure summary.",
     }),
     ...DuckDbErrorTrailingContextFields,

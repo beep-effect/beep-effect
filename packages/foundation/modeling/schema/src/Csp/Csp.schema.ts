@@ -830,7 +830,7 @@ export class ContentSecurityPolicyResponseHeader extends S.Class<ContentSecurity
 )(
   {
     name: ContentSecurityPolicyHeaderName,
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ContentSecurityPolicyResponseHeader", {
     description: "A rendered Content-Security-Policy response header name and optional serialized value.",

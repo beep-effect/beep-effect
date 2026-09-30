@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -878,7 +878,7 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
     archiveObjectCount: S.Natural,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     parquetExportMode: AiMetricsParquetExportMode,
     parquetTables: S.Array(AiMetricsDerivedTable),
     sourceFileCount: S.Natural,

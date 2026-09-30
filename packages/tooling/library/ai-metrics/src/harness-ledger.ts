@@ -8,7 +8,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, pipe, Random } from "effect";
 import { dual } from "effect/Function";
@@ -333,7 +333,10 @@ export type LedgerDisposition = typeof LedgerDisposition.Type;
 export class HarnessFingerprintParts extends S.Class<HarnessFingerprintParts>($I`HarnessFingerprintParts`)(
   {
     modelId: S.NonEmptyString,
-    reasoningEffort: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(harnessFingerprintUnknown)),
+    reasoningEffort: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed(harnessFingerprintUnknown)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(harnessFingerprintUnknown))
+    ),
     harnessSessionHash: Sha256Hex,
     harnessBaselineHash: Sha256Hex,
   },
@@ -494,8 +497,8 @@ export const harnessFingerprintFromParts = Effect.fn("AiMetrics.harnessFingerpri
  */
 export class HarnessFingerprintInput extends S.Class<HarnessFingerprintInput>($I`HarnessFingerprintInput`)(
   {
-    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     // Structural subset of `AiMetricsConfigSnapshotResult`, so a snapshot result
     // is passed as-is without coupling this schema to the whole manifest.
     snapshot: S.Struct({ baselineHash: S.String, sessionHash: S.String }),
@@ -773,6 +776,7 @@ export const makeHarnessLedgerRowId = Effect.fn("AiMetrics.makeHarnessLedgerRowI
   return HarnessLedgerRowId.make(`hl-${day}-${pipe(suffix.toString(16), Str.padStart(8, "0"))}`);
 });
 
+const harnessLedgerRowTouchedDefault = HashSet.empty<ContextSurfaceId>();
 /**
  * One immutable harness evidence ledger row.
  *
@@ -829,19 +833,22 @@ export class HarnessLedgerRow extends S.Class<HarnessLedgerRow>($I`HarnessLedger
     rowId: HarnessLedgerRowId,
     createdAt: S.DateTimeUtcFromString,
     edit: HarnessEditRef,
-    hypothesis: S.OptionFromOptionalKey(BehavioralClaim).pipe(SchemaUtils.withNoneDefault),
+    hypothesis: S.OptionFromOptionalKey(BehavioralClaim).pipe(S.withConstructorDefault(Effect.succeedNone)),
     mechanismClass: MechanismClass,
-    touched: S.HashSet(ContextSurfaceId).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<ContextSurfaceId>())),
+    touched: S.HashSet(ContextSurfaceId).pipe(
+      S.withConstructorDefault(Effect.succeed(harnessLedgerRowTouchedDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(harnessLedgerRowTouchedDefault))
+    ),
     fingerprint: HarnessFingerprint,
-    repoRevision: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    delta: S.OptionFromOptionalKey(HarnessLedgerDelta).pipe(SchemaUtils.withNoneDefault),
+    repoRevision: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    delta: S.OptionFromOptionalKey(HarnessLedgerDelta).pipe(S.withConstructorDefault(Effect.succeedNone)),
     disposition: LedgerDisposition,
-    dispositionEvidence: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    resurrectWhen: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    previousRowId: S.OptionFromOptionalKey(HarnessLedgerRowId).pipe(SchemaUtils.withNoneDefault),
-    targetSurface: S.OptionFromOptionalKey(ContextSurfaceId).pipe(SchemaUtils.withNoneDefault),
+    dispositionEvidence: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    resurrectWhen: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    previousRowId: S.OptionFromOptionalKey(HarnessLedgerRowId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    targetSurface: S.OptionFromOptionalKey(ContextSurfaceId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     windowSessions: S.OptionFromOptionalKey(S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1))).pipe(
-      SchemaUtils.withNoneDefault
+      S.withConstructorDefault(Effect.succeedNone)
     ),
   }).check(
     S.makeFilter(

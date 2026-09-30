@@ -7,7 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, N, O, P } from "@beep/utils";
-import { type Effect, MutableHashMap, Result, SchemaTransformation } from "effect";
+import { Effect, MutableHashMap, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -254,7 +254,7 @@ export class Binding extends S.Class<Binding>($I`Binding`)(
   {
     mutable: S.Boolean,
     value: S.Unknown,
-    initialized: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    initialized: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
   },
   $I.annote("Binding", {
     description: "One guest lexical binding; scope updates replace this immutable value.",
@@ -389,7 +389,7 @@ export class StatementReturn extends S.TaggedClass<StatementReturn>($I`Statement
 export class StatementBreak extends S.TaggedClass<StatementBreak>($I`StatementBreak`)(
   "Break",
   {
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StatementBreak", {
     description: "A guest break statement transfers control, optionally to a label.",
@@ -419,7 +419,7 @@ export class StatementBreak extends S.TaggedClass<StatementBreak>($I`StatementBr
 export class StatementContinue extends S.TaggedClass<StatementContinue>($I`StatementContinue`)(
   "Continue",
   {
-    label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    label: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("StatementContinue", {
     description: "A guest continue statement transfers control, optionally to a label.",
@@ -1815,10 +1815,10 @@ export class InterpreterRuntimeError extends S.TaggedError<InterpreterRuntimeErr
   "InterpreterRuntimeError",
   {
     message: S.String,
-    node: S.OptionFromOptionalKey(AstNode).pipe(SchemaUtils.withNoneDefault),
-    kind: DiagnosticKind.pipe(SchemaUtils.withKeyDefaults(DiagnosticKind.Enum.ExecutionFailure)),
-    suggestions: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    errorName: ErrorConstructorName.pipe(SchemaUtils.withKeyDefaults(ErrorConstructorName.Enum.Error)),
+    node: S.OptionFromOptionalKey(AstNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    kind: DiagnosticKind.pipe(S.withConstructorDefault(Effect.succeed(DiagnosticKind.Enum.ExecutionFailure)), S.withDecodingDefaultTypeKey(Effect.succeed(DiagnosticKind.Enum.ExecutionFailure))),
+    suggestions: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    errorName: ErrorConstructorName.pipe(S.withConstructorDefault(Effect.succeed(ErrorConstructorName.Enum.Error)), S.withDecodingDefaultTypeKey(Effect.succeed(ErrorConstructorName.Enum.Error))),
   },
   $I.annote("InterpreterRuntimeError", {
     description: "Typed failure raised while evaluating a guest program.",

@@ -309,10 +309,10 @@ export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionErr
  */
 export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelector>($I`AiMetricsRetentionSelector`)(
   S.Struct({
-    beforeEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    beforeEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
     dataRoot: S.String,
-    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
-    untilEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    untilEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilter(
       (selector) => {
@@ -476,7 +476,7 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
     rawArchiveObjects: S.Array(AiMetricsRetentionRawArchiveItem),
     reports: S.Array(AiMetricsRetentionFileItem),
     schemaVersion: S.Literal("beep.ai_metrics.retention_inventory.v1").pipe(
-      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_inventory.v1")
+      S.withConstructorDefault(Effect.succeed("beep.ai_metrics.retention_inventory.v1"))
     ),
     selectedDerivedExportCount: S.Natural,
     selectedRawArchiveObjectCount: S.Natural,
@@ -534,7 +534,7 @@ export class AiMetricsRetentionMutationResult extends S.Class<AiMetricsRetention
     explicitWindow: S.Boolean,
     mode: AiMetricsRetentionMutationMode,
     schemaVersion: S.Literal("beep.ai_metrics.retention_mutation.v1").pipe(
-      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_mutation.v1")
+      S.withConstructorDefault(Effect.succeed("beep.ai_metrics.retention_mutation.v1"))
     ),
   },
   $I.annote("AiMetricsRetentionMutationResult", {
@@ -630,7 +630,7 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
     keptDerivedExportCount: S.Natural,
     maxSnapshotExports: S.Natural,
     schemaVersion: S.Literal("beep.ai_metrics.retention_enforcement.v1").pipe(
-      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_enforcement.v1")
+      S.withConstructorDefault(Effect.succeed("beep.ai_metrics.retention_enforcement.v1"))
     ),
   },
   $I.annote("AiMetricsRetentionEnforcementResult", {
@@ -681,7 +681,7 @@ export class AiMetricsRetentionRestoreDrillInput extends S.Class<AiMetricsRetent
   $I`AiMetricsRetentionRestoreDrillInput`
 )(
   {
-    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     maxObjects: S.Int.check(S.isGreaterThan(0)).pipe(
       S.withConstructorDefault(Effect.succeed(1)),
       S.withDecodingDefaultKey(Effect.succeed(1))
@@ -737,7 +737,7 @@ export class AiMetricsRetentionRestoreDrillResult extends S.Class<AiMetricsReten
     replayedObjectCount: S.Natural,
     restoreRoot: S.String,
     schemaVersion: S.Literal("beep.ai_metrics.retention_restore_drill.v1").pipe(
-      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_restore_drill.v1")
+      S.withConstructorDefault(Effect.succeed("beep.ai_metrics.retention_restore_drill.v1"))
     ),
     transcriptTextPrinted: S.Boolean,
   },

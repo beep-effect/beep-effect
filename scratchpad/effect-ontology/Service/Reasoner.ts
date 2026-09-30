@@ -19,7 +19,6 @@ import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -135,6 +134,8 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
  */
 export type ReasoningProfile = typeof ReasoningProfile.Type;
 
+const reasoningConfigCustomRulesDefault = A.empty();
+const reasoningConfigMaxIterationsDefault = PosInt.make(100);
 /**
  * Configuration for reasoning operations
  *
@@ -152,9 +153,9 @@ export type ReasoningProfile = typeof ReasoningProfile.Type;
  */
 export class ReasoningConfig extends S.Class<ReasoningConfig>($I`ReasoningConfig`)(
   {
-    profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs")),
-    customRules: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
-    maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
+    profile: ReasoningProfile.pipe(S.withConstructorDefault(Effect.succeed("rdfs" as const)), S.withDecodingDefaultTypeKey(Effect.succeed("rdfs" as const))),
+    customRules: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(reasoningConfigCustomRulesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigCustomRulesDefault))),
+    maxIterations: PosInt.pipe(S.withConstructorDefault(Effect.succeed(reasoningConfigMaxIterationsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigMaxIterationsDefault))),
   },
   $I.annote("ReasoningConfig", {
     description: "Reasoning profile, optional custom rules, and iteration bound.",

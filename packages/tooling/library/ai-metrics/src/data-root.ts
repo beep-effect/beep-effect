@@ -35,7 +35,7 @@ const OptionalNonBlank = S.optionalKey(NonBlankStringInput).pipe(
       encode: O.flatten,
     })
   ),
-  SchemaUtils.withNoneDefault
+  S.withConstructorDefault(Effect.succeedNone)
 );
 
 const startsWithWindowsRootSeparator = P.or(Str.startsWith("\\"), Str.startsWith("/"));

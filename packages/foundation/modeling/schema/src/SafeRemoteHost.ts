@@ -45,7 +45,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
 
@@ -95,7 +94,7 @@ export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`Blocked
       description: "Normalized hostname that was rejected (lowercased, brackets stripped).",
     }),
     url: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Originating URL when the guard was invoked on a full URL.",
       })
@@ -106,7 +105,7 @@ export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`Blocked
     cause: S.OptionFromOptionalKey(
       S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
     ).pipe(
-      SchemaUtils.withNoneDefault,
+      S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Underlying parse failure when the URL could not be decoded.",
       })

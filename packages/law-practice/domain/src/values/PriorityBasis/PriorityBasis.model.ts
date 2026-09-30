@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { HohfeldPosition } from "../HohfeldPosition/index.ts";
 import { LegalScopeValue } from "../LegalScopeContext/index.ts";
@@ -115,13 +115,15 @@ export type PriorityBasisDesignation = typeof PriorityBasisDesignation.Type;
  */
 export class PriorityBasis extends S.Class<PriorityBasis>($I`PriorityBasis`)(
   {
-    authority: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Level of the authority the asserter claims stands behind the position.",
-    }),
-    forum: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    authority: S.OptionFromNullOr(PriorityBasisDesignation)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Level of the authority the asserter claims stands behind the position.",
+      }),
+    forum: S.OptionFromNullOr(PriorityBasisDesignation).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Forum the priority claim is made in or for.",
     }),
-    jurisdiction: S.OptionFromNullOr(LegalScopeValue).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    jurisdiction: S.OptionFromNullOr(LegalScopeValue).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Jurisdiction the priority claim is made under, recorded as a scope designation.",
     }),
     party: LawPractice.PartyId.annotateKey({
@@ -130,21 +132,29 @@ export class PriorityBasis extends S.Class<PriorityBasis>($I`PriorityBasis`)(
     position: HohfeldPosition.annotateKey({
       description: "Position the priority is claimed for, as the kind and content pair.",
     }),
-    proofStandard: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Standard of proof the asserter says applies.",
-    }),
-    sourcePrecedence: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Asserted precedence between the competing sources; recorded, never ranked.",
-    }),
-    specificity: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Asserted specificity argument between the competing provisions; recorded, never ranked.",
-    }),
-    time: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    proofStandard: S.OptionFromNullOr(PriorityBasisDesignation)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Standard of proof the asserter says applies.",
+      }),
+    sourcePrecedence: S.OptionFromNullOr(PriorityBasisDesignation)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Asserted precedence between the competing sources; recorded, never ranked.",
+      }),
+    specificity: S.OptionFromNullOr(PriorityBasisDesignation)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Asserted specificity argument between the competing provisions; recorded, never ranked.",
+      }),
+    time: S.OptionFromNullOr(PriorityBasisDesignation).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Temporal argument as the asserter put it, deliberately a designation rather than a timestamp.",
     }),
-    viewpoint: S.OptionFromNullOr(PriorityBasisDesignation).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Institutional viewpoint the claim is made from.",
-    }),
+    viewpoint: S.OptionFromNullOr(PriorityBasisDesignation)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Institutional viewpoint the claim is made from.",
+      }),
   },
   $I.annote("PriorityBasis", {
     description: "The recorded basis for a priority claim between two legal positions, never an outcome.",

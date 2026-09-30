@@ -6,7 +6,7 @@
  */
 
 import { $DiscordId } from "@beep/identity";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { URLStr } from "@beep/schema";
 import { Context, Effect, Layer, pipe, Redacted } from "effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
@@ -35,9 +35,9 @@ const decodeErrorStatusOption = S.decodeUnknownOption(DiscordHttpStatus);
 
 class DiscordRawChannel extends S.Class<DiscordRawChannel>($I`DiscordRawChannel`)(
   {
-    guild_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    guild_id: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     id: S.String,
-    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    name: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("DiscordRawChannel", {
     description: "Subset of Discord channel response fields needed for sanitized proof.",
@@ -50,7 +50,7 @@ class DiscordRawMessage extends S.Class<DiscordRawMessage>($I`DiscordRawMessage`
   {
     channel_id: S.String,
     id: S.String,
-    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("DiscordRawMessage", {
     description: "Subset of Discord message response fields needed for sanitized proof.",

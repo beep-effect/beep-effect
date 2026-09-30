@@ -776,7 +776,7 @@ const EffectVitestOccurrence = S.String.check(S.isPattern(/^v2:[a-f0-9]{64}$/u))
       "Versioned SHA-256 anchor of lexical registration titles and the complete containing statement token stream.",
   })
 );
-const optionalText = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const optionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Names the pinned primitive and concise built-in remediation available before P0d.
@@ -832,10 +832,10 @@ const EffectVitestFindingFields = S.Struct({
   package: S.NonEmptyString,
   file: S.NonEmptyString,
   line: EffectVitestPositiveLine,
-  endLine: EffectVitestPositiveLine.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  endLine: EffectVitestPositiveLine.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   symbol: optionalText,
   testName: optionalText,
-  occurrence: EffectVitestOccurrence.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  occurrence: EffectVitestOccurrence.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   class: S.NonEmptyString,
   evidence: EffectVitestEvidence,
   replacement: EffectVitestReplacement,

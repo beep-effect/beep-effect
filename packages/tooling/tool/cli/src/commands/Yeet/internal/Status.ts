@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -185,9 +185,9 @@ export class YeetStatusArtifact extends S.Class<YeetStatusArtifact>($I`YeetStatu
     mode: S.optionalKey(S.String),
     outcome: S.optionalKey(S.String),
     repairCommand: S.optionalKey(S.String),
-    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reviewedHeadSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     schemaVersion: S.optionalKey(S.String),
-    greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    greptileScore: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     laneDigests: YeetStatusLaneDigest.pipe(S.Array, S.optionalKey),
   },
   $I.annote("YeetStatusArtifact", {
@@ -232,15 +232,17 @@ export class YeetStatusReviewThread extends S.Class<YeetStatusReviewThread>($I`Y
     threadId: S.String,
     author: S.String,
     excerpt: S.String,
-    path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    line: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    commentDatabaseId: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    commentDatabaseId: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetStatusReviewThread", {
     description: "One unresolved pull request review thread with the context needed to triage and reply to it.",
   })
 ) {}
 
+const yeetStatusRemoteChecksDefault = A.empty<YeetWatchCheck>();
+const yeetStatusRemoteLabelsDefault = A.empty<string>();
 /**
  * Optional remote pull request summary for `yeet status --remote`.
  *
@@ -264,11 +266,18 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     // Each check's whole record (signal, link, workflow, GitHub's instants), so
     // a row the merge loop writes carries the same capsule a --watch row does.
     // The key default keeps artifacts written before checks existed decoding.
-    checks: YeetWatchCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetWatchCheck>())),
+    checks: YeetWatchCheck.pipe(
+      S.Array,
+      S.withConstructorDefault(Effect.succeed(yeetStatusRemoteChecksDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusRemoteChecksDefault))
+    ),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
-    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    labels: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusRemoteLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusRemoteLabelsDefault))
+    ),
     mergeStateStatus: S.optionalKey(S.String),
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
@@ -281,12 +290,21 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     pendingOptionalCheckCount: S.optionalKey(S.Finite),
     unresolvedReviewThreadCount: S.optionalKey(S.Finite),
     unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
-    unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     followUpThreadCount: S.optionalKey(S.Finite),
-    followUpThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    followUpThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     acknowledgedThreadCount: S.optionalKey(S.Finite),
-    acknowledgedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    headSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    acknowledgedThreads: S.Array(YeetStatusReviewThread).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    headSha: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     rerunFailedCommand: S.optionalKey(S.String),
     rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
@@ -298,6 +316,8 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
   })
 ) {}
 
+const yeetStatusSnapshotStaleGatesDefault = A.empty();
+const yeetStatusSnapshotUnprovenGatesDefault = A.empty();
 /**
  * Machine-readable status snapshot emitted by `yeet status`.
  *
@@ -340,13 +360,19 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     statusPath: S.String,
     verdict: YeetStatusArtifact,
     worktree: YeetStatusWorktree,
-    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
-    unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
+    mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    staleGates: S.Array(GateStale).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusSnapshotStaleGatesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusSnapshotStaleGatesDefault))
+    ),
+    unprovenGates: S.Array(GateUnproven).pipe(
+      S.withConstructorDefault(Effect.succeed(yeetStatusSnapshotUnprovenGatesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusSnapshotUnprovenGatesDefault))
+    ),
     // Stamped by the merge loop (B7): push, settle, closeout, and ready
     // instants for the head this snapshot describes. A one-shot `yeet status`
     // read leaves it absent.
-    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
@@ -381,12 +407,16 @@ class GhStatusLabel extends S.Class<GhStatusLabel>($I`GhStatusLabel`)(
   $I.annote("GhStatusLabel", { description: "One label on the pull request as gh pr view reports it." })
 ) {}
 
+const ghStatusPullRequestLabelsDefault = A.empty<GhStatusLabel>();
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
     id: S.String,
     headRefOid: S.String,
     isDraft: S.Boolean,
-    labels: S.Array(GhStatusLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<GhStatusLabel>())),
+    labels: S.Array(GhStatusLabel).pipe(
+      S.withConstructorDefault(Effect.succeed(ghStatusPullRequestLabelsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ghStatusPullRequestLabelsDefault))
+    ),
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
     number: S.Finite,
@@ -443,7 +473,10 @@ class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusRevi
 class GhStatusReviewThreadPageInfo extends S.Class<GhStatusReviewThreadPageInfo>($I`GhStatusReviewThreadPageInfo`)(
   {
     hasNextPage: S.Boolean,
-    endCursor: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+    endCursor: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
   },
   $I.annote("GhStatusReviewThreadPageInfo", {
     description: "Cursor metadata for one page of the Yeet review-thread status read.",

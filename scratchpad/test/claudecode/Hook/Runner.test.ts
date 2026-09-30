@@ -9,7 +9,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -35,8 +34,8 @@ class TestInput extends S.Class<TestInput>($I`TestInput`)({
 class TestOutput extends S.Class<TestOutput>($I`TestOutput`)({
   echoed: S.Finite,
   sessionId: S.String,
-  promptId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  permissionMode: S.OptionFromOptionalKey(HookPermissionMode).pipe(SchemaUtils.withNoneDefault),
+  promptId: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  permissionMode: S.OptionFromOptionalKey(HookPermissionMode).pipe(S.withConstructorDefault(Effect.succeedNone)),
 }) {}
 
 class TestFailure extends S.TaggedError<TestFailure>($I`TestFailure`)("TestFailure", {

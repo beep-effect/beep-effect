@@ -160,9 +160,11 @@ export class DatasetMeta extends S.Class<DatasetMeta>($I`DatasetMeta`)(
       description: "Resolved location (file path or URL) the dataset was loaded from.",
     }),
     /** Content size in bytes when known. */
-    sizeBytes: S.OptionFromOptionalKey(NonNegativeInteger).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Content size in bytes when known.",
-    }),
+    sizeBytes: S.OptionFromOptionalKey(NonNegativeInteger)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Content size in bytes when known.",
+      }),
     /** Source channel: `"file"` or `"url"`. */
     sourceType: DatasetSourceType.annotateKey({
       description: 'Source channel: `"file"` or `"url"`.',
@@ -228,10 +230,16 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
  */
 export class DatasetLoadTextOptions extends S.Class<DatasetLoadTextOptions>($I`DatasetLoadTextOptions`)(
   {
-    encoding: TextEncoding.pipe(SchemaUtils.withKeyDefaults("utf-8")).annotateKey({
+    encoding: TextEncoding.pipe(
+      S.withConstructorDefault(Effect.succeed("utf-8" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("utf-8" as const))
+    ).annotateKey({
       description: 'Text decoding label applied to local file bytes (default: "utf-8").',
     }),
-    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+    timeout: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
+    ).annotateKey({
       description: "Remote URL load timeout in milliseconds.",
     }),
   },
@@ -260,7 +268,10 @@ export class DatasetLoadLinesOptions extends S.Class<DatasetLoadLinesOptions>($I
     skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop empty lines after optional trimming.",
     }),
-    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+    timeout: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
+    ).annotateKey({
       description: "Remote URL load timeout in milliseconds.",
     }),
     trim: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
@@ -292,7 +303,10 @@ export class DatasetLoadJsonlOptions extends S.Class<DatasetLoadJsonlOptions>($I
     skipInvalid: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop malformed JSONL records instead of failing the load.",
     }),
-    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+    timeout: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
+    ).annotateKey({
       description: "Remote URL load timeout in milliseconds.",
     }),
   },
@@ -318,7 +332,10 @@ export class DatasetLoadJsonlOptions extends S.Class<DatasetLoadJsonlOptions>($I
  */
 export class DatasetLoadJsonOptions extends S.Class<DatasetLoadJsonOptions>($I`DatasetLoadJsonOptions`)(
   {
-    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+    timeout: PositiveInteger.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT_MS)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT_MS))
+    ).annotateKey({
       description: "Remote URL load timeout in milliseconds.",
     }),
   },
@@ -367,7 +384,7 @@ export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`Dataset
   "DatasetLoadError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform, HTTP, timeout, or schema failure when available.",
       }),

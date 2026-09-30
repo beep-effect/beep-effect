@@ -8,7 +8,7 @@
 import { $RunpodId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { flow, pipe, Result } from "effect";
+import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
@@ -165,13 +165,13 @@ export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 export class RunpodError extends S.TaggedError<RunpodError>($I`RunpodError`)(
   "RunpodError",
   {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(RunpodHttpMethod).pipe(SchemaUtils.withNoneDefault),
-    methodName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(SchemaUtils.withNoneDefault),
-    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    method: S.OptionFromOptionalKey(RunpodHttpMethod).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    methodName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: RunpodErrorReason,
-    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<RunpodError>("RunpodError", {
     description: "Redacted technical failure raised by the Runpod REST API driver boundary.",
@@ -251,10 +251,10 @@ export class RunpodError extends S.TaggedError<RunpodError>($I`RunpodError`)(
 export class RunpodDocsError extends S.TaggedError<RunpodDocsError>($I`RunpodDocsError`)(
   "RunpodDocsError",
   {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: RunpodDocsErrorReason,
-    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annoteError<RunpodDocsError>("RunpodDocsError", {
     description: "Redacted technical failure raised by the Runpod documentation index boundary.",
@@ -299,8 +299,8 @@ export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErr
     // Sanitized string label so the exported options schema round-trips
     // deterministically. Raw thrown causes are accepted via the private
     // `RunpodErrorOptionsInput` and normalized through `causeFromUnknown`.
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RunpodErrorOptions", {
     description: "Sanitized options for configuring RunpodError instances.",
@@ -372,9 +372,9 @@ export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`R
     // Sanitized string label so the exported options schema round-trips
     // deterministically. Raw thrown causes are accepted via the private
     // `RunpodDocsErrorOptionsInput` and normalized through `causeFromUnknown`.
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    url: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RunpodDocsErrorOptions", {
     description: "Sanitized options for configuring RunpodDocsError instances.",

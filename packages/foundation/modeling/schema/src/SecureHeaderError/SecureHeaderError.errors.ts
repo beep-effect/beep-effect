@@ -4,16 +4,15 @@
  * @packageDocumentation
  */
 import { $SchemaId } from "@beep/identity";
-import { Tuple } from "effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
   message: S.String,
   cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).pipe(
-    SchemaUtils.withNoneDefault
+    S.withConstructorDefault(Effect.succeedNone)
   ),
 } satisfies S.Struct.Fields;
 

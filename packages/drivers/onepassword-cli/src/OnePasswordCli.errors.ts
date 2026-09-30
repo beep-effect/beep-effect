@@ -6,8 +6,8 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -43,21 +43,27 @@ const errorOptionsFromInput = (options: OnePasswordCliErrorContextInput): OnePas
   });
 
 const OnePasswordCliProcessContextFields = {
-  cause: S.OptionFromOptionalKey(OnePasswordCliDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  cause: S.OptionFromOptionalKey(OnePasswordCliDefect).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Inspectable originating defect, when available.",
   }),
-  command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+  command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
     description: "Executable command used for the 1Password CLI operation, when available.",
   }),
-  exitCode: S.OptionFromOptionalKey(OnePasswordCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "1Password CLI process exit status, when the process returned one.",
-  }),
-  stderr: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Trim-normalized redacted standard error captured from the 1Password CLI, when available.",
-  }),
-  stdout: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Trim-normalized redacted standard output captured from the 1Password CLI, when available.",
-  }),
+  exitCode: S.OptionFromOptionalKey(OnePasswordCliExitCode)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({
+      description: "1Password CLI process exit status, when the process returned one.",
+    }),
+  stderr: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({
+      description: "Trim-normalized redacted standard error captured from the 1Password CLI, when available.",
+    }),
+  stdout: S.OptionFromOptionalKey(OnePasswordCliDiagnosticText)
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({
+      description: "Trim-normalized redacted standard output captured from the 1Password CLI, when available.",
+    }),
 } satisfies S.Struct.Fields;
 
 /**

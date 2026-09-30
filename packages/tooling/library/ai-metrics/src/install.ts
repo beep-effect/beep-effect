@@ -177,20 +177,33 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
  */
 export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiMetricsInstallInput`)(
   {
-    candidateTools: S.Array(AiMetricsTool).pipe(SchemaUtils.withKeyDefaults(defaultCandidateTools)),
-    dataRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    defaultTool: AiMetricsTool.pipe(SchemaUtils.withKeyDefaults(AiMetricsTool.Enum.phoenix)),
-    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    homeDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    litellmGatewayEnabled: SchemaUtils.BoolKeyDefaultTrue,
-    phoenixImage: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixImage)),
-    privacyMode: AiMetricsPrivacyMode.pipe(
-      SchemaUtils.withKeyDefaults(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui)
+    candidateTools: S.Array(AiMetricsTool).pipe(
+      S.withConstructorDefault(Effect.succeed(defaultCandidateTools)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultCandidateTools))
     ),
-    publicBaseUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    stateHome: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    target: AiMetricsDeployTarget.pipe(SchemaUtils.withKeyDefaults(AiMetricsDeployTarget.Enum.local)),
+    dataRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    defaultTool: AiMetricsTool.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsTool.Enum.phoenix)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsTool.Enum.phoenix))
+    ),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    homeDir: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    litellmGatewayEnabled: SchemaUtils.BoolKeyDefaultTrue,
+    phoenixImage: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultPhoenixImage)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultPhoenixImage))
+    ),
+    privacyMode: AiMetricsPrivacyMode.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui))
+    ),
+    publicBaseUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    stateHome: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    target: AiMetricsDeployTarget.pipe(
+      S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
+    ),
     tailnetOnly: SchemaUtils.BoolKeyDefaultTrue,
   },
   $I.annote("AiMetricsInstallInput", {
@@ -353,11 +366,11 @@ export class AiMetricsInstallSpec extends S.Class<AiMetricsInstallSpec>($I`AiMet
     candidateTools: S.Array(AiMetricsTool),
     defaultScoreWeights: AiMetricsScoreWeights,
     defaultTool: AiMetricsTool,
-    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     litellmGatewayEnabled: S.Boolean,
     plannedCommands: S.Array(S.String),
     privacyMode: AiMetricsPrivacyMode,
-    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     services: S.Array(AiMetricsServiceSpec),
     stackName: S.String,
     storage: AiMetricsStorageLayout,
@@ -467,7 +480,10 @@ export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>(
     description: S.NonEmptyString,
     mutatesHost: S.Boolean,
     order: AiMetricsInstallPlanStepOrder,
-    required: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    required: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
     requiresRemote: S.Boolean,
     stepId: S.NonEmptyString,
     title: S.NonEmptyString,
@@ -615,6 +631,7 @@ export const AiMetricsInstallDoctorStatus = LiteralKit(["passed", "warning", "fa
  */
 export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.Type;
 
+const aiMetricsInstallDoctorCheckMetadataDefault = {};
 /**
  * One named contract check with its outcome and supporting detail.
  *
@@ -647,7 +664,10 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
   {
     checkId: S.NonEmptyString,
     message: S.NonEmptyString,
-    metadata: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
+    metadata: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(aiMetricsInstallDoctorCheckMetadataDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(aiMetricsInstallDoctorCheckMetadataDefault))
+    ),
     status: AiMetricsInstallDoctorCheckStatus,
   },
   $I.annote("AiMetricsInstallDoctorCheck", {
@@ -655,6 +675,7 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
   })
 ) {}
 
+const aiMetricsInstallDoctorInputInstallDefault = AiMetricsInstallInput.make({});
 /**
  * The install choices and optional discovery evidence a doctor run evaluates.
  *
@@ -683,8 +704,13 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
  */
 export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorInput>($I`AiMetricsInstallDoctorInput`)(
   {
-    install: AiMetricsInstallInput.pipe(SchemaUtils.withKeyDefaults(AiMetricsInstallInput.make({}))),
-    sourceDiscovery: S.OptionFromOptionalKey(AiMetricsSourceDiscoveryResult).pipe(SchemaUtils.withNoneDefault),
+    install: AiMetricsInstallInput.pipe(
+      S.withConstructorDefault(Effect.succeed(aiMetricsInstallDoctorInputInstallDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(aiMetricsInstallDoctorInputInstallDefault))
+    ),
+    sourceDiscovery: S.OptionFromOptionalKey(AiMetricsSourceDiscoveryResult).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   },
   $I.annote("AiMetricsInstallDoctorInput", {
     description: "Install spec and optional source discovery evidence consumed by the P5a doctor.",
@@ -812,7 +838,7 @@ export class AiMetricsInstallApplyDryRunResult extends S.Class<AiMetricsInstallA
   $I`AiMetricsInstallApplyDryRunResult`
 )(
   {
-    dryRun: S.Literal(true).pipe(SchemaUtils.withConstantDefault(true)),
+    dryRun: S.Literal(true).pipe(S.withConstructorDefault(Effect.succeed(true))),
     message: S.NonEmptyString,
     plan: AiMetricsInstallPlan,
     target: AiMetricsDeployTarget,

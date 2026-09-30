@@ -38,9 +38,12 @@ const defaultMaxAge = 60 * 60 * 24;
  */
 export class ExpectCTConfig extends S.Class<ExpectCTConfig>($I`ExpectCTConfig`)(
   {
-    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(SchemaUtils.withKeyDefaults(defaultMaxAge)),
+    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(
+      S.withConstructorDefault(Effect.succeed(defaultMaxAge)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultMaxAge))
+    ),
     enforce: SchemaUtils.BoolKeyDefaultFalse,
-    reportURI: S.OptionFromOptionalKey(internal.StringOrUrl).pipe(SchemaUtils.withNoneDefault),
+    reportURI: S.OptionFromOptionalKey(internal.StringOrUrl).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExpectCTConfig", {
     description: "Optional configuration values for the `Expect-CT` header.",
@@ -144,7 +147,7 @@ export type ExpectCTOption = typeof ExpectCTOption.Type;
 export class ExpectCTResponseHeader extends S.Class<ExpectCTResponseHeader>($I`ExpectCTResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromUndefinedOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ExpectCTResponseHeader", {
     description: "The `Expect-CT` response header.",

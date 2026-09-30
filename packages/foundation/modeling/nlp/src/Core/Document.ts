@@ -6,9 +6,9 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Brand, Chunk, pipe, Result } from "effect";
+import { Brand, Chunk, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -203,7 +203,7 @@ export class Document extends S.Class<Document>($I`Document`)(
     text: S.String,
     tokens: S.Chunk(Token),
     sentences: S.Chunk(Sentence),
-    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("Document", {
     description: "Immutable NLP document with token and sentence structure.",

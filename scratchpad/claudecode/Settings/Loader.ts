@@ -12,7 +12,6 @@
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, FileSystem, Order, Path, flow, Result } from "effect";
 import * as A from "effect/Array";
@@ -60,9 +59,9 @@ const $I = $ScratchpadId.create("claudecode/Settings/Loader");
  */
 export class LoadOptions extends S.Class<LoadOptions>($I`LoadOptions`)(
   {
-    settingsPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    managedSettingsRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    managedSettingsRoots: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault),
+    settingsPath: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    managedSettingsRoot: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    managedSettingsRoots: S.OptionFromOptionalKey(S.String.pipe(S.Array)).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("LoadOptions", {
     description: "Optional settings and managed-policy source overrides.",

@@ -6,8 +6,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
-import { DateTime, flow, Match, pipe, Result } from "effect";
+import { DateTime, Effect, flow, Match, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Base64Url from "effect/encoding/Base64Url";
 import { dual } from "effect/Function";
@@ -125,7 +124,7 @@ export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError>($I`ProvR
  */
 export class ProvRdfCodecOptions extends S.Class<ProvRdfCodecOptions>($I`ProvRdfCodecOptions`)(
   {
-    graph: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    graph: S.OptionFromOptionalKey(NamedNode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProvRdfCodecOptions", {
     description: "Selects the RDF graph that owns the projected provenance quads.",

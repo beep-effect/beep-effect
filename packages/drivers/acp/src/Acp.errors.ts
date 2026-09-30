@@ -8,7 +8,7 @@
 import { $AcpId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AcpSchema from "./_generated/schema.gen.ts";
@@ -35,11 +35,11 @@ export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError
   "AcpSpawnError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original spawn failure cause, when one was available.",
       }),
-    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    command: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "ACP command that failed to spawn, when available.",
     }),
   },
@@ -75,12 +75,12 @@ export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>(
   "AcpProcessExitedError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original process-exit cause, when one was available.",
       }),
     code: S.OptionFromOptionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Non-negative ACP process exit code, when the process returned one.",
       }),
@@ -116,7 +116,7 @@ export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>(
   "AcpProtocolParseError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original parse failure cause, when one was available.",
       }),
@@ -164,7 +164,7 @@ export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTr
   "AcpTransportError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
-      .pipe(SchemaUtils.withNoneDefault)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Original transport failure cause, when one was available.",
       }),
@@ -198,7 +198,7 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpReques
     code: AcpSchema.ErrorCode.annotateKey({
       description: "JSON-RPC error code returned by the ACP peer.",
     }),
-    data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    data: S.OptionFromOptionalKey(S.Json).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
     }),
     errorMessage: S.String.annotateKey({

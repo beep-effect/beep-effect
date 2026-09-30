@@ -14,7 +14,6 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as A from "@beep/utils/Array";
 import * as N from "@beep/utils/Number";
@@ -236,8 +235,8 @@ class VaultSelectionManual extends S.Class<VaultSelectionManual>($I`VaultSelecti
     kind: S.tag("manual"),
     // A rejected path is retained so the reopened form does not force the
     // operator to retype it (the saving state unmounts the form in between).
-    draftPath: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    message: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    draftPath: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    message: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("VaultSelectionManual", {
     description: "A manual vault-path form is open because no native folder picker is available.",
