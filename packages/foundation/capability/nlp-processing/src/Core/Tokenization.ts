@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
@@ -42,7 +43,7 @@ type TokenizationShape = {
 export class TokenizationError extends S.TaggedError<TokenizationError>($I`TokenizationError`)(
   "TokenizationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     operation: S.String,
   },
   $I.annoteError<TokenizationError>("TokenizationError", {

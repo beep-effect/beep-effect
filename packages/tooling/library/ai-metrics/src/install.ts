@@ -134,7 +134,7 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
 )(
   "AiMetricsInstallConfigurationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsInstallConfigurationError>("AiMetricsInstallConfigurationError", {

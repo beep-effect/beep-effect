@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
 import { Tool } from "effect/ai";
@@ -114,7 +115,9 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
 export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
     message: S.String,
     toolName: S.String,
   },

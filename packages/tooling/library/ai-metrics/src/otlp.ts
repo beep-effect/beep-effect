@@ -170,7 +170,7 @@ export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Typ
 export class AiMetricsOtlpExportError extends S.TaggedError<AiMetricsOtlpExportError>($I`AiMetricsOtlpExportError`)(
   "AiMetricsOtlpExportError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsOtlpExportError>("AiMetricsOtlpExportError", {

@@ -15,6 +15,7 @@ import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
 
@@ -111,7 +112,7 @@ export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.mak
   "ParserOptionsError",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(alwaysEquivalent))
     ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.String,
   },

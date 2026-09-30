@@ -187,7 +187,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 201,
+      "line": 203,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },

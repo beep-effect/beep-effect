@@ -6,6 +6,7 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
@@ -256,7 +257,7 @@ export class PandocDecodeError extends S.TaggedError<PandocDecodeError>($I`Pando
   "PandocDecodeError",
   {
     message: S.String,
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<PandocDecodeError>("PandocDecodeError", {
     description: "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded.",

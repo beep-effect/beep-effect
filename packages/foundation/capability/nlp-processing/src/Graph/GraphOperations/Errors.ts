@@ -12,6 +12,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -113,7 +114,7 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
 export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     nodeId: NodeId,
     operationName: S.String,
   },
@@ -181,7 +182,7 @@ export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
 export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     operation: S.Literals(["store", "retrieve", "delete", "query"]),
   },
   $I.annoteError<StorageError>("StorageError", {
@@ -212,7 +213,9 @@ export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
 export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
     message: S.String,
   },
   $I.annoteError<ExecutionError>("ExecutionError", {

@@ -94,7 +94,9 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCl
 )(
   "AiProviderCliHomeFileSystemError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform failure, when one was captured.",

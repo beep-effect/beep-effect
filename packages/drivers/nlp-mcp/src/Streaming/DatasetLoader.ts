@@ -383,7 +383,9 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
 export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    )
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Underlying platform, HTTP, timeout, or schema failure when available.",

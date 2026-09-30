@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
@@ -312,7 +312,7 @@ export class AiMetricsIdentityRegistryError extends S.TaggedError<AiMetricsIdent
 )(
   "AiMetricsIdentityRegistryError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsIdentityRegistryError>("AiMetricsIdentityRegistryError", {

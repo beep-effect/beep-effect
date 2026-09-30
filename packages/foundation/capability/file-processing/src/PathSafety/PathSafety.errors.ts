@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -87,7 +87,9 @@ export class PathSafetyError extends S.TaggedError<PathSafetyError>($I`PathSafet
   "PathSafetyError",
   {
     candidate: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.OptionFromOptionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ),
     message: S.String,
     reason: PathSafetyViolationReason,
     resolved: S.OptionFromOptionalKey(S.String),

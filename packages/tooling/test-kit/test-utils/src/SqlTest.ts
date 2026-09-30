@@ -537,7 +537,7 @@ export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`S
   "SqlTestHarnessError",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       $I.annoteKey("SqlTestHarnessError.cause", {

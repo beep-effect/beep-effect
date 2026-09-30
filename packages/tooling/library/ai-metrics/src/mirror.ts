@@ -7,7 +7,7 @@
 
 import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Layer, Path, pipe, Tuple } from "effect";
 import * as R from "effect/Record";
@@ -399,7 +399,7 @@ const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
 export class AiMetricsMirrorError extends S.TaggedError<AiMetricsMirrorError>($I`AiMetricsMirrorError`)(
   "AiMetricsMirrorError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsMirrorError>("AiMetricsMirrorError", {

@@ -8,6 +8,7 @@
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { thunkNull, thunkUndefined } from "@beep/utils/thunk";
 import { useAtom, useAtomMount } from "@effect/atom-react";
@@ -48,11 +49,9 @@ export class YouTubeWatchOpenFailed extends S.TaggedError<YouTubeWatchOpenFailed
     request: YouTubeWatchRequest.annotateKey({
       description: "Validated canonical YouTube watch request that can be retried.",
     }),
-    cause: S.Defect({ includeStack: true })
-      .pipe(S.overrideToEquivalence(() => () => true))
-      .annotateKey({
-        description: "Native opener defect retained for structured diagnostics only.",
-      }),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)).annotateKey({
+      description: "Native opener defect retained for structured diagnostics only.",
+    }),
   },
   $I.annoteError<YouTubeWatchOpenFailed>("YouTubeWatchOpenFailed", {
     description: "The Tauri native opener rejected a validated YouTube watch request.",

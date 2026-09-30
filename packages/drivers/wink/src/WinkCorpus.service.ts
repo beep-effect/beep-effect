@@ -8,7 +8,7 @@
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -360,7 +360,7 @@ export class CorpusManagerError extends S.TaggedError<CorpusManagerError>($I`Cor
   "CorpusManagerError",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     corpusId: S.OptionFromOptionalKey(S.String),
     message: S.String,

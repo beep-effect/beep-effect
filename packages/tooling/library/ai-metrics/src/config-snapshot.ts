@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
@@ -560,7 +560,7 @@ export class AiMetricsConfigSnapshotError extends S.TaggedError<AiMetricsConfigS
 )(
   "AiMetricsConfigSnapshotError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsConfigSnapshotError>("AiMetricsConfigSnapshotError", {

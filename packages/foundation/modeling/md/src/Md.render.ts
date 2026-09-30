@@ -6,7 +6,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { HtmlFragment } from "@beep/schema";
+import { HtmlFragment, SchemaUtils } from "@beep/schema";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
 import { Effect, flow, identity, Match, Number as N, Order, Result, Tuple } from "effect";
@@ -135,7 +135,7 @@ export class RenderError extends S.TaggedError<RenderError>($I`RenderError`)(
   {
     adapter: S.String,
     message: S.String,
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<RenderError>("RenderError", {
     description: "Typed error raised when a Markdown render adapter fails.",

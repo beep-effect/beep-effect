@@ -212,7 +212,7 @@ export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsArchiveError>("AiMetricsArchiveError", {

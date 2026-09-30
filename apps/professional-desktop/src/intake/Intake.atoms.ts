@@ -12,6 +12,7 @@ import { DefaultVaultFilingContext, slugVaultSegment } from "@beep/documents-dom
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
+import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt } from "@beep/schema/Number";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -545,7 +546,7 @@ export class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDire
 )(
   "VaultDirectoryPickerInvocationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<VaultDirectoryPickerInvocationError>("VaultDirectoryPickerInvocationError", {
     description: "Technical failure raised while invoking the Tauri workspace vault picker.",
@@ -570,7 +571,7 @@ export class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDire
 export class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
   "BrowserFileReadError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<BrowserFileReadError>("BrowserFileReadError", {
     description: "Technical failure raised while reading a browser File into memory.",

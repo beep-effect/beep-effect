@@ -6,12 +6,13 @@
 import { $SchemaId } from "@beep/identity";
 import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
+import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
   message: S.String,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).pipe(
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(alwaysEquivalent))).pipe(
     S.withConstructorDefault(Effect.succeedNone)
   ),
 } satisfies S.Struct.Fields;

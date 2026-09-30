@@ -7,7 +7,7 @@
 
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -128,7 +128,7 @@ const TelemetryV2StoreOperation = LiteralKit([
 export class TelemetryV2StoreError extends S.TaggedError<TelemetryV2StoreError>($I`TelemetryV2StoreError`)(
   "TelemetryV2StoreError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: TelemetryV2StoreOperation,
   },

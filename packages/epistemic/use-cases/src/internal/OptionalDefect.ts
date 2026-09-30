@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { SchemaUtils } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -28,7 +29,7 @@ import * as S from "effect/Schema";
  *
  * // The composition `optionalDefect` produces for a field:
  * const cause = S.OptionFromOptionalKey(
- *   S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+ *   S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
  * )
  *   .pipe(S.withConstructorDefault(Effect.succeedNone))
  *   .annotateKey({ description: "Underlying driver defect." })
@@ -42,7 +43,7 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)))
+  S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)))
     .pipe(S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,

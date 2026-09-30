@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 /**
@@ -23,7 +24,7 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export const OpaqueDefect = S.Defect({ includeStack: true })
-  .pipe(S.overrideToEquivalence(() => () => true))
+  .pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
   .annotate({
     identifier: "OpaqueDefect",
     description: "A thrown cause carried with its stack but excluded from identity.",

@@ -302,7 +302,7 @@ export class AiMetricsSourceDiscoveryError extends S.TaggedError<AiMetricsSource
 )(
   "AiMetricsSourceDiscoveryError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsSourceDiscoveryError>("AiMetricsSourceDiscoveryError", {

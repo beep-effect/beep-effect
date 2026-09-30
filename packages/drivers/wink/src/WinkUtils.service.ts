@@ -7,7 +7,7 @@
 
 import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Effect, Inspectable, Layer } from "effect";
 import { dual } from "effect/Function";
@@ -159,7 +159,7 @@ const sanitizeNGramResult = (
 export class WinkUtilsError extends S.TaggedError<WinkUtilsError>($I`WinkUtilsError`)(
   "WinkUtilsError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
   },

@@ -109,7 +109,7 @@ export class BackendInitError extends S.TaggedError<BackendInitError>($I`Backend
   "BackendInitError",
   {
     backend: S.String,
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<BackendInitError>("BackendInitError", {
@@ -154,7 +154,7 @@ export class BackendOperationError extends S.TaggedError<BackendOperationError>(
   "BackendOperationError",
   {
     backend: S.String,
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
     operation: S.String,
   },

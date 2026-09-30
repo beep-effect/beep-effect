@@ -90,7 +90,7 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderError>($I`AiMetricsForwarderError`)(
   "AiMetricsForwarderError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsForwarderError>("AiMetricsForwarderError", {

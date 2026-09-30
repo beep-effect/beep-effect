@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -55,10 +55,7 @@ const $I = $HtmlId.create("scripts/generate");
 class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGenerationError`)(
   "HtmlGenerationError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(
-      S.overrideToEquivalence(() => () => true),
-      S.optionalKey
-    ),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent), S.optionalKey),
     message: S.String,
   },
   $I.annoteError<HtmlGenerationError>("HtmlGenerationError", {

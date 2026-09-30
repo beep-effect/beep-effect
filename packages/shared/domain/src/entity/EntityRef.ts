@@ -6,6 +6,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
@@ -16,7 +17,7 @@ const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
 const EntityRefInvariantErrorFields = {
   actualEntityType: S.String,
-  actualId: S.Unknown.pipe(S.overrideToEquivalence(() => () => true)),
+  actualId: S.Unknown.pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   entityType: S.String,
 } satisfies S.Struct.Fields;
 // actualId is opaque unknown: equivalence is declared diagnostic identity, actualId stays payload.

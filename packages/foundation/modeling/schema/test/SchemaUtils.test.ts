@@ -1,7 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
-import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
+import { alwaysEquivalent, toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
@@ -66,6 +66,37 @@ describe("toEquivalence", () => {
 
     expect(pipe({ name: "document toEquivalence", tags: ["docs", "tests"] }, sameAsExpected)).toBe(true);
     expect(pipe({ name: "document toEquivalence", tags: ["tests", "docs"] }, sameAsExpected)).toBe(false);
+  });
+});
+
+describe("alwaysEquivalent", () => {
+  const Failure = S.Struct({
+    url: S.String,
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
+    payload: S.Unknown.pipe(S.overrideToEquivalence(alwaysEquivalent)),
+  });
+  const sameFailure = S.toEquivalence(Failure);
+
+  it("is exported from the SchemaUtils barrel", () => {
+    expect(SchemaUtils.alwaysEquivalent).toBe(alwaysEquivalent);
+  });
+
+  it("leaves opaque fields out of the owning schema's identity", () => {
+    expect(
+      sameFailure(
+        { url: "https://example.com", cause: new Error("first"), payload: { id: 1 } },
+        { url: "https://example.com", cause: new Error("second"), payload: "other" }
+      )
+    ).toBe(true);
+  });
+
+  it("keeps the declared fields in the owning schema's identity", () => {
+    expect(
+      sameFailure(
+        { url: "https://example.com", cause: new Error("same"), payload: 1 },
+        { url: "https://example.org", cause: new Error("same"), payload: 1 }
+      )
+    ).toBe(false);
   });
 });
 

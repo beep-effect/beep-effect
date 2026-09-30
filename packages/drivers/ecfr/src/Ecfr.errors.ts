@@ -82,7 +82,7 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -120,7 +120,7 @@ export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

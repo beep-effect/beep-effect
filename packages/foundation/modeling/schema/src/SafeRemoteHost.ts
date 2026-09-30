@@ -45,6 +45,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { alwaysEquivalent } from "./SchemaUtils/toEquivalence.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
 
@@ -103,7 +104,7 @@ export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`Blocked
       description: "Safe diagnostic message explaining why the host was blocked.",
     }),
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

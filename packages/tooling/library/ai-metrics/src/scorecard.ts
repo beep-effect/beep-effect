@@ -7,6 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -51,7 +52,7 @@ const $I = $RepoAiMetricsId.create("scorecard");
 export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsScorecardError>("AiMetricsScorecardError", {

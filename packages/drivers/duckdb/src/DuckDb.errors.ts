@@ -12,14 +12,14 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $DuckdbId.create("DuckDb.errors");
-const DuckDbDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true));
+const DuckDbDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent));
 
 type DuckDbErrorContextInput = {
   readonly cause?: unknown;

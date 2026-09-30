@@ -221,7 +221,7 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },

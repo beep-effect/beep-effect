@@ -3100,7 +3100,7 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`Lex
   "LexicalDecodeError",
   {
     message: S.String,
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
   },
   $I.annoteError<LexicalDecodeError>("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",

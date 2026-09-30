@@ -78,7 +78,7 @@ export class ContradictionRepositoryUnavailable extends S.TaggedError<Contradict
   "ContradictionRepositoryUnavailable",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional driver defect retained for boundary diagnostics." })

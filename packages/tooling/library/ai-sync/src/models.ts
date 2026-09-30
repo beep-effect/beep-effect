@@ -793,7 +793,7 @@ export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
     relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     cause: S.Defect({ includeStack: true }).pipe(
-      S.overrideToEquivalence(() => () => true),
+      S.overrideToEquivalence(SchemaUtils.alwaysEquivalent),
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
     ),

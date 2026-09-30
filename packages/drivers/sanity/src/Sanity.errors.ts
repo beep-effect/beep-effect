@@ -187,7 +187,9 @@ export class SanityError extends S.TaggedError<SanityError>($I`SanityError`)(
  */
 export class SanityErrorOptions extends S.Class<SanityErrorOptions>($I`SanityErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Original unknown cause used to derive a redacted diagnostic label.",
     }),
     status: S.optionalKey(SanityHttpStatus).annotateKey({

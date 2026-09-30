@@ -6,7 +6,7 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -116,7 +116,7 @@ export type GovinfoHttpStatus = typeof GovinfoHttpStatus.Type;
 export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`GovinfoErrorOptions`)(
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -154,7 +154,7 @@ export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
   "GovinfoError",
   {
     cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
     ).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({

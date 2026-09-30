@@ -309,7 +309,7 @@ export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErr
 
 class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`RunpodErrorOptionsInput`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     status: S.optionalKey(RunpodHttpStatusCode),
   },
   $I.annote("RunpodErrorOptionsInput", {
@@ -338,7 +338,7 @@ class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`Runpod
  */
 export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`RunpodRawErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     method: RunpodHttpMethod,
     path: S.String,
     reason: RunpodErrorReason,
@@ -383,7 +383,7 @@ export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`R
 
 class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($I`RunpodDocsErrorOptionsInput`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))),
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
     status: S.optionalKey(RunpodHttpStatusCode),
     url: S.optionalKey(S.String),
   },

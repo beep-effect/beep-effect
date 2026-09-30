@@ -239,7 +239,9 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I
   "AttachmentPortFailed",
   {
     message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),
-    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true))).annotateKey({
+    cause: S.optionalKey(
+      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
+    ).annotateKey({
       description: "Optional underlying defect retained for structured logs, never rendered directly.",
     }),
   },

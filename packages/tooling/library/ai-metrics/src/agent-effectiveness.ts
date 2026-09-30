@@ -460,7 +460,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
 export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AgentEffectivenessError>("AgentEffectivenessError", {

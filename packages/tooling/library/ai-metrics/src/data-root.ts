@@ -245,7 +245,7 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
 export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
   {
-    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(() => () => true)),
+    cause: S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
     message: S.String,
   },
   $I.annoteError<AiMetricsDataRootError>("AiMetricsDataRootError", {
